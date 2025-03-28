@@ -1,0 +1,320 @@
+openapi: 3.1.0
+info:
+  title: MCP Server Registry API
+  summary: API for discovering and accessing MCP servers metadata
+  description: |
+    REST API that centralizes metadata about publicly available MCP servers by allowing server creators to submit 
+    and maintain metadata about their servers in a standardized format. This API enables MCP client 
+    applications and "server aggregator" type consumers to discover and install MCP servers.
+  version: 0.0.1
+  contact:
+    name: MCP Community Working Group
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  # TODO: Still think a unique name would be better; maybe we open a public discussion on the topic and let people submit ideas?
+  - url: https://registry.modelcontextprotocol.io
+    description: MCP Server Registry
+# TODO: Webhooks here would be interesting, but out of scope for MVP
+
+paths:
+  /v0/servers:
+    get:
+      summary: List MCP servers
+      description: Returns a list of all registered MCP servers
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results per page (maximum 5000)
+          schema:
+            type: integer
+            default: 5000
+            maximum: 5000
+            minimum: 1
+        - name: offset
+          in: query
+          description: Number of results to skip for pagination
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: A list of MCP servers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerList'
+  /v0/servers/{id}:
+    get:
+      summary: Get MCP server details
+      description: Returns detailed information about a specific MCP server
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique ID of the server
+          schema:
+            type: string
+            format: uuid
+        - name: version
+          in: query
+          description: Desired packaged version (as logged by the canonical registry)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed server information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerDetail'
+        '404':
+          description: Server not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server not found"
+components:
+  schemas:
+  jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
+    Repository:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          example: "https://github.com/modelcontextprotocol/servers"
+        subfolder:
+          type: string
+          example: "src/filesystem"
+        branch:
+          type: string
+          example: "main"
+        commit:
+          type: string
+          example: "d94b5f7ec7c6d7602c78a5e9b8a5b8c94d093eda"
+    
+    Server:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - repository
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1"
+        name:
+          type: string
+          example: "@modelcontextprotocol/servers/src/filesystem"
+        description:
+          type: string
+          example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+        repository:
+          $ref: '#/components/schemas/Repository'
+        version:
+          type: string
+          description: Dynamically pulled from registry_canonical reference
+          example: "0.0.3"
+      $schema: "https://json-schema.org/draft/2020-12/schema"
+    
+    ServerList:
+      type: object
+      required:
+        - servers
+        - total_count
+      properties:
+        servers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Server'
+        next:
+          type: string
+          format: uri
+          example: "https://registry.modelcontextprotocol.io/servers?offset=50"
+        total_count:
+          type: integer
+          example: 1
+    
+    Argument:
+      type: object
+      required:
+        - name
+        - description
+        - is_required
+      properties:
+        name:
+          type: string
+          example: "path"
+        description:
+          type: string
+          example: "Path to access"
+        is_required:
+          type: boolean
+          example: true
+        is_repeatable:
+          type: boolean
+          example: false
+        is_editable:
+          type: boolean
+          example: true
+        choices:
+          type: array
+          items:
+            type: string
+          example: []
+        default_value:
+          type: string
+          example: "/Users/username/Desktop"
+    
+    PositionalArgument:
+      allOf:
+        - $ref: '#/components/schemas/Argument'
+        - type: object
+          required:
+            - position
+          properties:
+            position:
+              type: integer
+              example: 1
+    
+    NamedArgument:
+      allOf:
+        - $ref: '#/components/schemas/Argument'
+        - type: object
+          properties:
+            short_flag:
+              type: string
+              example: "-y"
+            long_flag:
+              type: string
+              example: "--mount"
+            requires_value:
+              type: boolean
+              example: true
+    
+    Subcommand:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+          example: "run"
+        description:
+          type: string
+          example: "Run the Docker container"
+        is_required:
+          type: boolean
+          example: true
+        subcommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subcommand'
+        positional_arguments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionalArgument'
+        named_arguments:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedArgument'
+    
+    CommandArguments:
+      type: object
+      properties:
+        subcommands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subcommand'
+        positional_arguments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionalArgument'
+        named_arguments:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedArgument'
+    
+    EnvironmentVariable:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+          example: "LOG_LEVEL"
+        description:
+          type: string
+          example: "Logging level (debug, info, warn, error)"
+        required:
+          type: boolean
+          example: false
+    
+    Registry:
+      type: object
+      required:
+        - name
+        - package_name
+      properties:
+        name:
+          type: string
+          enum: [npm, docker, pypi, homebrew]
+          example: "npm"
+        package_name:
+          type: string
+          example: "@modelcontextprotocol/server-filesystem"
+        license:
+          type: string
+          example: "MIT"
+        command_arguments:
+          $ref: '#/components/schemas/CommandArguments'
+        environment_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnvironmentVariable'
+    
+    Remote:
+      type: object
+      required:
+        - transport_type
+        - url
+      properties:
+        transport_type:
+          type: string
+          enum: [streamable, sse, ws]
+          example: "sse"
+        url:
+          type: string
+          format: uri
+          example: "https://mcp-fs.example.com/sse"
+    
+    ServerDetail:
+      allOf:
+        - $ref: '#/components/schemas/Server'
+        - type: object
+          properties:
+            registry_canonical:
+              type: string
+              enum: [npm, docker, pypi, crates]
+              example: "npm"
+            registries:
+              type: array
+              items:
+                $ref: '#/components/schemas/Registry'
+            remotes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Remote'
