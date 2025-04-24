@@ -75,7 +75,6 @@ func main() {
 
 	// Start server in a goroutine so it doesn't block signal handling
 	go func() {
-		log.Printf("HTTP server listening on %s", cfg.ServerAddress)
 		if err := server.Start(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to start server: %v", err)
 		}

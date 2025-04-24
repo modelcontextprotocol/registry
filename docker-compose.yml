@@ -1,0 +1,25 @@
+services:
+  registry:
+    image: registry
+    container_name: registry
+    links:
+      - mongodb
+    depends_on:
+      - mongodb
+    environment:
+      - MCP_REGISTRY_DATABASE_URL=mongodb://mongodb:27017
+      - MCP_REGISTRY_ENVIRONMENT=test
+    ports:
+      - 8080:8080
+    restart: "unless-stopped"
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - './data:/data/db'
+    ports:
+      - 27017:27017
+    restart: "unless-stopped"

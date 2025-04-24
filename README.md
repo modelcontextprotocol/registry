@@ -70,11 +70,11 @@ You can build and run the service using Docker:
 # Build the Docker image
 docker build -t registry .
 
-# Run the container
-docker run -p 8080:8080 registry
+# Run the registry and MongoDB with docker compose
+docker compose up
 ```
 
-This will build and start the MCP Registry service in a container, exposing it on port 8080.
+This will start the MCP Registry service and MongoDB with Docker, exposing it on port 8080.
 
 ### Using the Fake Service
 
