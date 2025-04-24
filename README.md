@@ -57,7 +57,7 @@ This will create the `registry` binary in the `build/` directory.
 
 Alternatively, run
 ```bash
-DATABASE_URL="mongodb://localhost:27017" ./build/registry 
+MCP_REGISTRY_DATABASE_URL="mongodb://localhost:27017" ./build/registry
 ```
 
 By default, the service will run on `http://localhost:8080`.
@@ -83,7 +83,7 @@ For development and testing purposes, the application includes a fake service wi
 1. Set the environment to "test":
 
 ```bash
-export APP_ENV=test
+export MCP_REGISTRY_ENVIRONMENT=test
 ./build/registry
 ```
 
@@ -183,19 +183,17 @@ Simple ping endpoint that returns environment configuration information:
 }
 ```
 
-
 ## Configuration
 
 The service can be configured using environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `APP_ENV` | Application environment (production, test) | `production` |
-| `APP_VERSION`| Application version | `dev` |
-| `DATABASE_URL` | MongoDB connection string | `mongodb://localhost:27017` |
-| `DATABASE_NAME` | MongoDB database name | `mcp-registry` |
-| `COLLECTION_NAME` | MongoDB collection name for server registry | `servers_v2` |
-
+| `MCP_REGISTRY_ENVIRONMENT`     | Application environment (production, test) | `production` |
+| `MCP_REGISTRY_APP_VERSION`     | Application version | `dev` |
+| `MCP_REGISTRY_DATABASE_URL`    | MongoDB connection string | `mongodb://localhost:27017` |
+| `MCP_REGISTRY_DATABASE_NAME`   | MongoDB database name | `mcp-registry` |
+| `MCP_REGISTRY_COLLECTION_NAME` | MongoDB collection name for server registry | `servers_v2` |
 
 ## Testing
 
@@ -215,4 +213,3 @@ You can specify specific endpoints to test:
 ## License
 
 See the [LICENSE](LICENSE) file for details.
-
