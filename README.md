@@ -30,6 +30,8 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 │   └── service/   # Business logic
 ├── pkg/           # Public libraries
 ├── scripts/       # Utility scripts
+├── tools/         # Command line tools
+│   └── importer/  # MongoDB data importer tool
 └── build/         # Build artifacts
 ```
 
@@ -108,6 +110,19 @@ The fake service is useful for:
 - Frontend development without a real backend
 - Testing API integrations
 - Example data structure reference
+
+## Tools
+
+### Data Importer
+
+A command-line tool for importing server data from a JSON file into a MongoDB database:
+
+```bash
+cd tools/importer
+go run main.go -uri mongodb://localhost:27017 -db mcp_registry -collection servers -seed ../../data/seed.json
+```
+
+For more details on the importer tool, see the [importer README](./tools/importer/README.md).
 
 ## API Documentation
 
