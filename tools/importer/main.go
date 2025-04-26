@@ -48,7 +48,7 @@ func init() {
 
 func main() {
 	// Create a context with timeout for the database operations
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	// Handle graceful shutdown
@@ -146,10 +146,14 @@ func convertToServerDetails(rawData []map[string]interface{}) []model.ServerDeta
 			server.Description = desc
 		}
 		if version, ok := data["version"].(string); ok {
-			server.Version = version
-		}
-		if canonical, ok := data["registrycanonical"].(string); ok {
-			server.RegistryCanonical = canonical
+			if version == "" || version == "latest" {
+				version = "0.0.1"
+			}
+			server.VersionDetail = model.VersionDetail{
+				Version:     version,
+				ReleaseDate: time.Now().Format(time.RFC3339),
+				IsLatest:    true,
+			}
 		}
 
 		// Extract repository
@@ -339,6 +343,12 @@ func importData(ctx context.Context, collection *mongo.Collection, servers []mod
 		// Create filter based on server ID
 		filter := bson.M{"id": server.ID}
 
+		if server.VersionDetail.Version == "" {
+			server.VersionDetail.Version = "0.0.1"
+			server.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
+			server.VersionDetail.IsLatest = true
+
+		}
 		// Create update document
 		update := bson.M{"$set": server}
 

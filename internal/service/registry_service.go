@@ -81,3 +81,21 @@ func (s *registryServiceImpl) GetByID(id string) (*model.ServerDetail, error) {
 
 	return serverDetail, nil
 }
+
+// Publish adds a new server detail to the registry
+func (s *registryServiceImpl) Publish(serverDetail *model.ServerDetail) error {
+	// Create a timeout context for the database operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if serverDetail == nil {
+		return database.ErrInvalidInput
+	}
+
+	err := s.db.Publish(ctx, serverDetail)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

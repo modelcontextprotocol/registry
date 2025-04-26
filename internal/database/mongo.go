@@ -40,11 +40,15 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 	// Create indexes for better query performance
 	models := []mongo.IndexModel{
 		{
-			Keys:    bson.D{{Key: "name", Value: 1}},
-			Options: options.Index().SetUnique(true),
+			Keys: bson.D{{Key: "name", Value: 1}},
 		},
 		{
 			Keys:    bson.D{{Key: "id", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		// add an index for the combination of name and version
+		{
+			Keys:    bson.D{{Key: "name", Value: 1}, {Key: "versiondetail.version", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	}
@@ -73,7 +77,9 @@ func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, curs
 	}
 
 	// Convert Go map to MongoDB filter
-	mongoFilter := bson.M{}
+	mongoFilter := bson.M{
+		"versiondetail.islatest": true,
+	}
 	// Map common filter keys to MongoDB document paths
 	for k, v := range filter {
 		// Handle nested fields with dot notation
@@ -162,6 +168,53 @@ func (db *MongoDB) GetByID(ctx context.Context, id string) (*model.ServerDetail,
 
 	// Create and return a ServerDetail from the entry data
 	return &entry, nil
+}
+
+// Publish adds a new ServerDetail to the database
+func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	// find a server detail with the same name and check that the current version is greater than the existing one
+	filter := bson.M{
+		"name":                   serverDetail.Name,
+		"versiondetail.islatest": true,
+	}
+
+	var existingEntry model.ServerDetail
+	err := db.collection.FindOne(ctx, filter).Decode(&existingEntry)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return fmt.Errorf("error checking existing entry: %w", err)
+	}
+
+	// check that the current version is greater than the existing one
+	if serverDetail.VersionDetail.Version <= existingEntry.VersionDetail.Version {
+		return fmt.Errorf("version must be greater than existing version")
+	}
+
+	// update the existing entry to not be the latest version
+	if existingEntry.ID != "" {
+		_, err = db.collection.UpdateOne(ctx, bson.M{"id": existingEntry.ID}, bson.M{"$set": bson.M{"versiondetail.islatest": false}})
+		if err != nil {
+			return fmt.Errorf("error updating existing entry: %w", err)
+		}
+
+	}
+
+	serverDetail.ID = uuid.New().String()
+	serverDetail.VersionDetail.IsLatest = true
+	serverDetail.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
+
+	// Insert the entry into the database
+	_, err = db.collection.InsertOne(ctx, serverDetail)
+	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			return ErrAlreadyExists
+		}
+		return fmt.Errorf("error inserting entry: %w", err)
+	}
+
+	return nil
 }
 
 // Close closes the database connection

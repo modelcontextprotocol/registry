@@ -63,7 +63,7 @@ func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cur
 						include = false
 					}
 				case "version":
-					if entry.Version != value.(string) {
+					if entry.VersionDetail.Version != value.(string) {
 						include = false
 					}
 					// Add more filter options as needed
@@ -125,15 +125,52 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerDetail
 
 	if entry, exists := db.entries[id]; exists {
 		return &model.ServerDetail{
-			ID:          entry.ID,
-			Name:        entry.Name,
-			Description: entry.Description,
-			Version:     entry.Version,
-			Repository:  entry.Repository,
+			ID:            entry.ID,
+			Name:          entry.Name,
+			Description:   entry.Description,
+			VersionDetail: entry.VersionDetail,
+			Repository:    entry.Repository,
 		}, nil
 	}
 
 	return nil, ErrNotFound
+}
+
+// Publish adds a new ServerDetail to the database
+func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetail) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	// check for name
+	if serverDetail.Name == "" {
+		return ErrInvalidInput
+	}
+
+	// check that the name and the version are unique
+
+	for _, entry := range db.entries {
+		if entry.Name == serverDetail.Name && entry.VersionDetail.Version == serverDetail.VersionDetail.Version {
+			return ErrAlreadyExists
+		}
+	}
+
+	if serverDetail.Repository.URL == "" {
+		return ErrInvalidInput
+	}
+
+	db.entries[serverDetail.ID] = &model.Entry{
+		ID:            serverDetail.ID,
+		Name:          serverDetail.Name,
+		Description:   serverDetail.Description,
+		VersionDetail: serverDetail.VersionDetail,
+		Repository:    serverDetail.Repository,
+	}
+
+	return nil
 }
 
 // Close closes the database connection

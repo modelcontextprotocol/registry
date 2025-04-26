@@ -6,4 +6,5 @@ import "github.com/modelcontextprotocol/registry/internal/model"
 type RegistryService interface {
 	List(cursor string, limit int) ([]model.Entry, string, error)
 	GetByID(id string) (*model.ServerDetail, error)
+	Publish(serverDetail *model.ServerDetail) error
 }

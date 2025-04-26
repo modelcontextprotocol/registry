@@ -28,7 +28,11 @@ func NewFakeRegistryService() RegistryService {
 				Branch:    "main",
 				Commit:    "abc123def456",
 			},
-			Version: "1.0.0",
+			VersionDetail: model.VersionDetail{
+				Version:     "1.0.0",
+				ReleaseDate: time.Now().Format(time.RFC3339),
+				IsLatest:    true,
+			},
 		},
 		{
 			ID:          uuid.New().String(),
@@ -40,7 +44,11 @@ func NewFakeRegistryService() RegistryService {
 				Branch:    "develop",
 				Commit:    "def456ghi789",
 			},
-			Version: "2.1.0",
+			VersionDetail: model.VersionDetail{
+				Version:     "0.9.0",
+				ReleaseDate: time.Now().Format(time.RFC3339),
+				IsLatest:    false,
+			},
 		},
 		{
 			ID:          uuid.New().String(),
@@ -52,7 +60,11 @@ func NewFakeRegistryService() RegistryService {
 				Branch:    "feature/mcp-server",
 				Commit:    "789jkl012mno",
 			},
-			Version: "0.9.5",
+			VersionDetail: model.VersionDetail{
+				Version:     "0.9.5",
+				ReleaseDate: time.Now().Format(time.RFC3339),
+				IsLatest:    false,
+			},
 		},
 	}
 
@@ -101,6 +113,16 @@ func (s *fakeRegistryService) GetByID(id string) (*model.ServerDetail, error) {
 	}
 
 	return serverDetail, nil
+}
+
+// Publish adds a new server detail to the in-memory database
+func (s *fakeRegistryService) Publish(serverDetail *model.ServerDetail) error {
+	// Create a timeout context for the database operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Use the database's Publish method to add the server detail
+	return s.db.Publish(ctx, serverDetail)
 }
 
 // Close closes the in-memory database connection

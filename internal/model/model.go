@@ -1,11 +1,11 @@
 package model
 
 type Entry struct {
-	ID          string     `json:"id,omitempty"`
-	Name        string     `json:"name,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Repository  Repository `json:"repository,omitempty"`
-	Version     string     `json:"version,omitempty"`
+	ID            string        `json:"id,omitempty"`
+	Name          string        `json:"name,omitempty"`
+	Description   string        `json:"description,omitempty"`
+	Repository    Repository    `json:"repository,omitempty"`
+	VersionDetail VersionDetail `json:"version_detail,omitempty"`
 }
 
 type Repository struct {
@@ -14,16 +14,21 @@ type Repository struct {
 	Branch    string `json:"branch,omitempty"`
 	Commit    string `json:"commit,omitempty"`
 }
+type VersionDetail struct {
+	Version     string `json:"version,omitempty"`
+	ReleaseDate string `json:"release_date,omitempty"` //RFC 3339 date format
+	IsLatest    bool   `json:"is_latest,omitempty"`
+}
 
 type ServerDetail struct {
-	ID                string       `json:"id,omitempty"`
-	Name              string       `json:"name,omitempty"`
-	Description       string       `json:"description,omitempty"`
-	Version           string       `json:"version,omitempty"`
-	Repository        Repository   `json:"repository,omitempty"`
-	RegistryCanonical string       `json:"registry_canonical,omitempty"`
-	Registries        []Registries `json:"registries,omitempty"`
-	Remotes           []Remotes    `json:"remotes,omitempty"`
+	ID                string        `json:"id,omitempty"`
+	Name              string        `json:"name,omitempty"`
+	Description       string        `json:"description,omitempty"`
+	VersionDetail     VersionDetail `json:"version_detail,omitempty"`
+	Repository        Repository    `json:"repository,omitempty"`
+	RegistryCanonical string        `json:"registry_canonical,omitempty"`
+	Registries        []Registries  `json:"registries,omitempty"`
+	Remotes           []Remotes     `json:"remotes,omitempty"`
 }
 
 type Registries struct {

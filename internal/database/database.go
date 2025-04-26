@@ -21,6 +21,8 @@ type Database interface {
 	List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Entry, string, error)
 	// GetByID retrieves a single ServerDetail by it's ID
 	GetByID(ctx context.Context, id string) (*model.ServerDetail, error)
+	// Publish adds a new ServerDetail to the database
+	Publish(ctx context.Context, serverDetail *model.ServerDetail) error
 	// Close closes the database connection
 	Close() error
 }
