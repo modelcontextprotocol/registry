@@ -13,6 +13,11 @@ type Config struct {
 	LogLevel       string `env:"LOG_LEVEL" envDefault:"info"`
 	Environment    string `env:"ENVIRONMENT" envDefault:"production"`
 	Version        string `env:"VERSION" envDefault:"dev"`
+
+	// GitHub OAuth settings
+	GithubClientID     string `env:"GITHUB_CLIENT_ID" envDefault:""`
+	GithubClientSecret string `env:"GITHUB_CLIENT_SECRET" envDefault:""`
+	RequireAuth        bool   `env:"REQUIRE_AUTH" envDefault:"false"` // Whether to require authentication for publishing
 }
 
 // NewConfig creates a new configuration with default values

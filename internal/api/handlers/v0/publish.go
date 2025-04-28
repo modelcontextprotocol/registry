@@ -6,12 +6,24 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
 
+// httpError represents an HTTP error with a message and status code
+type httpError struct {
+	msg    string
+	status int
+}
+
+// Error returns the error message
+func (e *httpError) Error() string {
+	return e.msg
+}
+
 // PublishHandler handles requests to publish new server details to the registry
-func PublishHandler(registry service.RegistryService) http.HandlerFunc {
+func PublishHandler(registry service.RegistryService, authService auth.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Only allow POST method
 		if r.Method != http.MethodPost {
@@ -27,13 +39,16 @@ func PublishHandler(registry service.RegistryService) http.HandlerFunc {
 		}
 		defer r.Body.Close()
 
-		// Parse request body into ServerDetail struct
-		var serverDetail model.ServerDetail
-		err = json.Unmarshal(body, &serverDetail)
+		// Parse request body into PublishRequest struct
+		var publishReq model.PublishRequest
+		err = json.Unmarshal(body, &publishReq)
 		if err != nil {
-			http.Error(w, "Invalid request payload", http.StatusBadRequest)
+			http.Error(w, "Invalid request payload: "+err.Error(), http.StatusBadRequest)
 			return
 		}
+
+		// Get server details from the request
+		serverDetail := publishReq.ServerDetail
 
 		// Validate required fields
 		if serverDetail.Name == "" {
@@ -41,10 +56,29 @@ func PublishHandler(registry service.RegistryService) http.HandlerFunc {
 			return
 		}
 
-		// version is required
+		// Version is required
 		if serverDetail.VersionDetail.Version == "" {
 			http.Error(w, "Version is required", http.StatusBadRequest)
 			return
+		}
+
+		// Validate authentication credentials
+		if authService != nil {
+			publishReq.Authentication.RepoRef = serverDetail.Name
+			valid, err := authService.ValidateAuth(r.Context(), publishReq.Authentication)
+			if err != nil {
+				if err == auth.ErrAuthRequired {
+					http.Error(w, "Authentication is required for publishing", http.StatusUnauthorized)
+					return
+				}
+				http.Error(w, "Authentication failed: "+err.Error(), http.StatusUnauthorized)
+				return
+			}
+
+			if !valid {
+				http.Error(w, "Invalid authentication credentials", http.StatusUnauthorized)
+				return
+			}
 		}
 
 		// Call the publish method on the registry service

@@ -1,0 +1,38 @@
+{
+  "name": "io.github.<username>/<repository>",
+  "description": "<description>",
+  "version_detail": {
+    "version": "1.0.2"
+  },
+  "registries": [
+    {
+      "name": "npm",
+       "package_name": "<npm_package_name>",
+       "license": "MIT",
+      "command_arguments": {
+        "sub_commands": [
+          {
+            "name": "start",
+            "description": "Start the server",
+            "named_arguments": null
+          }
+        ],
+        "positional_arguments": null,
+        "environment_variables": [
+          {
+            "name": "PORT",
+            "description": "Port to run the server on",
+            "required": false
+          }
+        ],
+        "named_arguments": null
+      }
+    }
+  ],
+  "remotes": [
+    {
+      "transporttype": "http",
+      "url": "http://example.com/api"
+    }
+  ]
+}

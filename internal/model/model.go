@@ -1,5 +1,29 @@
 package model
 
+// AuthMethod represents the authentication method used
+type AuthMethod string
+
+const (
+	// AuthMethodGitHub represents GitHub OAuth authentication
+	AuthMethodGitHub AuthMethod = "github"
+	// AuthMethodNone represents no authentication
+	AuthMethodNone AuthMethod = "none"
+)
+
+// Authentication holds information about the authentication method and credentials
+type Authentication struct {
+	Method  AuthMethod `json:"method,omitempty"`
+	Token   string     `json:"token,omitempty"`
+	RepoRef string     `json:"repo_ref,omitempty"`
+}
+
+// PublishRequest represents a request to publish a server to the registry
+type PublishRequest struct {
+	ServerDetail    ServerDetail   `json:"server_detail"`
+	Authentication  Authentication `json:"authentication,omitempty"`
+	AuthStatusToken string         `json:"-"` // Used internally for device flows
+}
+
 type Entry struct {
 	ID            string        `json:"id,omitempty"`
 	Name          string        `json:"name,omitempty"`
@@ -25,8 +49,8 @@ type ServerDetail struct {
 	Name              string        `json:"name,omitempty"`
 	Description       string        `json:"description,omitempty"`
 	VersionDetail     VersionDetail `json:"version_detail,omitempty"`
-	Repository        Repository    `json:"repository,omitempty"`
-	RegistryCanonical string        `json:"registry_canonical,omitempty"`
+	Repository        Repository    `json:"-"` // Not included in the JSON response
+	RegistryCanonical string        `json:"-"` // Not included in the JSON response
 	Registries        []Registries  `json:"registries,omitempty"`
 	Remotes           []Remotes     `json:"remotes,omitempty"`
 }

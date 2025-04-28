@@ -192,15 +192,6 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 		return fmt.Errorf("version must be greater than existing version")
 	}
 
-	// update the existing entry to not be the latest version
-	if existingEntry.ID != "" {
-		_, err = db.collection.UpdateOne(ctx, bson.M{"id": existingEntry.ID}, bson.M{"$set": bson.M{"versiondetail.islatest": false}})
-		if err != nil {
-			return fmt.Errorf("error updating existing entry: %w", err)
-		}
-
-	}
-
 	serverDetail.ID = uuid.New().String()
 	serverDetail.VersionDetail.IsLatest = true
 	serverDetail.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
@@ -212,6 +203,15 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 			return ErrAlreadyExists
 		}
 		return fmt.Errorf("error inserting entry: %w", err)
+	}
+
+	// update the existing entry to not be the latest version
+	if existingEntry.ID != "" {
+		_, err = db.collection.UpdateOne(ctx, bson.M{"id": existingEntry.ID}, bson.M{"$set": bson.M{"versiondetail.islatest": false}})
+		if err != nil {
+			return fmt.Errorf("error updating existing entry: %w", err)
+		}
+
 	}
 
 	return nil

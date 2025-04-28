@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/api"
+	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
@@ -70,8 +71,23 @@ func main() {
 		}()
 	}
 
+	// Initialize authentication services
+	authService := auth.NewAuthService(cfg)
+
+	if cfg.RequireAuth {
+		log.Println("Authentication is required for package publishing")
+
+		if cfg.GithubClientID == "" || cfg.GithubClientSecret == "" {
+			log.Println("Warning: GitHub OAuth credentials not configured but authentication is required")
+		} else {
+			log.Println("GitHub OAuth authentication is configured")
+		}
+	} else {
+		log.Println("Authentication is optional for package publishing")
+	}
+
 	// Initialize HTTP server
-	server := api.NewServer(cfg, registryService)
+	server := api.NewServer(cfg, registryService, authService)
 
 	// Start server in a goroutine so it doesn't block signal handling
 	go func() {

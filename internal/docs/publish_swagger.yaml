@@ -1,0 +1,65 @@
+/v0/publish:
+    post:
+      tags:
+        - servers
+      summary: Publish a server to the registry
+      description: Adds a new server to the MCP registry with authentication
+      operationId: publishServer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                server_detail:
+                  $ref: '#/components/schemas/ServerDetail'
+                authentication:
+                  $ref: '#/components/schemas/Authentication'
+                auth_status_token:
+                  type: string
+                  description: Optional status token from a device authorization flow
+      responses:
+        '201':
+          description: Server published successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Server publication successful
+                  id:
+                    type: string
+                    example: 1234567890abcdef12345678
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Name is required
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Authentication is required for publishing
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to publish server details
