@@ -2,3 +2,4 @@ build/*
 data
 .env
 .mcpregistry*
+**/bin
