@@ -2,6 +2,7 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -65,12 +66,72 @@ func NewGitHubDeviceAuth(config GitHubOAuthConfig) *GitHubDeviceAuth {
 	}
 }
 
-// ValidateToken checks if a token has write:packages access to the required repository
-// and verifies that the user matches the owner in the required repository
+// ValidateToken validates if a GitHub token has the necessary permissions to access the required repository.
+// It verifies the token owner matches the repository owner or is a member of the owning organization.
+// It also verifies that the token was created for the same ClientID used to set up the authentication.
+// Returns true if valid, false otherwise along with an error explaining the validation failure.
 func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (bool, error) {
 	// If no repo is required, we can't validate properly
 	if requiredRepo == "" {
 		return false, fmt.Errorf("repository reference is required for token validation")
+	}
+
+	// First, validate that the token is associated with our ClientID
+	tokenReq, err := http.NewRequest("GET", "https://api.github.com/applications/"+g.config.ClientID+"/token", nil)
+	if err != nil {
+		return false, err
+	}
+
+	// The applications endpoint requires basic auth with client ID and secret
+	tokenReq.SetBasicAuth(g.config.ClientID, g.config.ClientSecret)
+	tokenReq.Header.Set("Accept", "application/vnd.github+json")
+
+	// Create request body with the token
+	type tokenCheck struct {
+		AccessToken string `json:"access_token"`
+	}
+
+	checkBody, err := json.Marshal(tokenCheck{AccessToken: token})
+	if err != nil {
+		return false, err
+	}
+
+	// POST instead of GET for security reasons per GitHub API
+	tokenReq, err = http.NewRequest("POST", "https://api.github.com/applications/"+g.config.ClientID+"/token", io.NopCloser(bytes.NewReader(checkBody)))
+	if err != nil {
+		return false, err
+	}
+
+	tokenReq.SetBasicAuth(g.config.ClientID, g.config.ClientSecret)
+	tokenReq.Header.Set("Accept", "application/vnd.github+json")
+	tokenReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	tokenResp, err := client.Do(tokenReq)
+	if err != nil {
+		return false, err
+	}
+	defer tokenResp.Body.Close()
+
+	// Check response - 200 means token is valid and associated with our app
+	// 404 means token is not associated with our app
+	if tokenResp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("token is not associated with this application (status: %d)", tokenResp.StatusCode)
+	}
+
+	var tokenInfo TokenValidationResponse
+	tokenRespBody, err := io.ReadAll(tokenResp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	if err := json.Unmarshal(tokenRespBody, &tokenInfo); err != nil {
+		return false, err
+	}
+
+	// Check if there's an error in the response
+	if tokenInfo.Error != "" {
+		return false, fmt.Errorf("token validation error: %s", tokenInfo.Error)
 	}
 
 	// Get the authenticated user
@@ -81,7 +142,7 @@ func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (boo
 
 	userReq.Header.Set("Accept", "application/vnd.github+json")
 	userReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	client := &http.Client{}
+	client = &http.Client{}
 	userResp, err := client.Do(userReq)
 	if err != nil {
 		return false, err
