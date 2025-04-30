@@ -7,9 +7,6 @@ The MCP Registry Publisher Tool is designed to publish Model Context Protocol (M
 You can build the publisher tool using the provided build script:
 
 ```bash
-# Make the build script executable
-chmod +x build.sh
-
 # Build for current platform
 ./build.sh
 
@@ -33,7 +30,7 @@ The compiled binary will be placed in the `bin` directory.
 
 - `--registry-url`: URL of the MCP registry (required)
 - `--mcp-file`: Path to the MCP configuration file (required)
-- `--login`: Force a new GitHub authentication even if a token already exists
+- `--login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
 
 ## Authentication
 
@@ -42,7 +39,7 @@ The tool uses GitHub device flow authentication:
 2. You'll be provided with a URL and a code to enter
 3. After successful authentication, the tool saves the token locally for future use
 
-_NOTE_ : Authentication is made on behalf of a GitHubApp which you must install on the repository you're publishing.
+_NOTE_ : Authentication is made on behalf of a OAuth App which you must authorize for respective resources (e.g `org`)
 
 ## Example
 
