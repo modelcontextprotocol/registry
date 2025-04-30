@@ -2,17 +2,12 @@
 package auth
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"regexp"
-)
-
-const (
-	GitHubValidateTokenURL = "https://api.github.com/applications/CLIENT_ID/token"
 )
 
 var (
@@ -71,69 +66,65 @@ func NewGitHubDeviceAuth(config GitHubOAuthConfig) *GitHubDeviceAuth {
 }
 
 // ValidateToken checks if a token has write:packages access to the required repository
+// and verifies that the user matches the owner in the required repository
 func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (bool, error) {
 	// If no repo is required, we can't validate properly
 	if requiredRepo == "" {
 		return false, fmt.Errorf("repository reference is required for token validation")
 	}
 
-	// First, check if the token is valid using the app token check endpoint
-	req, err := http.NewRequest("POST", GitHubValidateTokenURL, bytes.NewBuffer([]byte(`{"access_token": "`+token+`"}`)))
+	// Get the authenticated user
+	userReq, err := http.NewRequest("GET", "https://api.github.com/user", nil)
 	if err != nil {
 		return false, err
 	}
 
-	req.URL.Path = fmt.Sprintf("/applications/%s/token", g.config.ClientID)
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	req.SetBasicAuth(g.config.ClientID, g.config.ClientSecret)
-
+	userReq.Header.Set("Accept", "application/vnd.github+json")
+	userReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	userResp, err := client.Do(userReq)
 	if err != nil {
 		return false, err
 	}
-	defer resp.Body.Close()
+	defer userResp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, err
+	if userResp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("failed to get user info: status %d", userResp.StatusCode)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("token validation failed: %s", body)
+	var userInfo struct {
+		Login string `json:"login"`
 	}
 
-	var validationResp TokenValidationResponse
-	err = json.Unmarshal(body, &validationResp)
-	if err != nil {
-		return false, err
-	}
-
-	// Now check if the token has permissions to the specific repository
-	// Use the GitHub API to check repository-specific permissions
-	repoCheckURL := fmt.Sprintf("https://api.github.com/repos/%s", requiredRepo)
-	repoReq, err := http.NewRequest("GET", repoCheckURL, nil)
+	userBody, err := io.ReadAll(userResp.Body)
 	if err != nil {
 		return false, err
 	}
 
-	repoReq.Header.Set("Accept", "application/vnd.github+json")
-	repoReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	if err := json.Unmarshal(userBody, &userInfo); err != nil {
+		return false, err
+	}
 
-	repoResp, err := client.Do(repoReq)
+	// Extract owner from the required repo
+	owner, _, err := g.ExtractGitHubRepoFromName(requiredRepo)
 	if err != nil {
 		return false, err
 	}
-	defer repoResp.Body.Close()
 
-	// Read and check response
-	if repoResp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("token does not have access to repository: %s (status: %d)", requiredRepo, repoResp.StatusCode)
+	// Verify that the authenticated user matches the owner
+	if userInfo.Login != owner {
+		// Check if the user is a member of the organization
+		isMember, err := g.checkOrgMembership(token, userInfo.Login, owner)
+		if err != nil {
+			return false, fmt.Errorf("failed to check org membership: %s", owner)
+		}
+
+		if !isMember {
+			return false, fmt.Errorf("token belongs to user %s, but repository is owned by %s and user is not a member of the organization", userInfo.Login, owner)
+		}
 	}
 
-	// If we've reached this point, the token has access the repo
+	// If we've reached this point, the token has access the repo and the user matches the owner or is a member of the owner org
 	return true, nil
 }
 
@@ -155,4 +146,33 @@ func (g *GitHubDeviceAuth) ExtractGitHubRepo(repoURL string) (owner, repo string
 		return "", "", fmt.Errorf("invalid GitHub repository URL: %s", repoURL)
 	}
 	return matches[1], matches[2], nil
+}
+
+// checkOrgMembership checks if a user is a member of an organization
+func (g *GitHubDeviceAuth) checkOrgMembership(token, username, org string) (bool, error) {
+	// Create request to check if user is a member of the organization
+	// GitHub API endpoint: GET /orgs/{org}/members/{username}
+	// true if status code is 204 No Content
+	// false if status code is 404 Not Found
+	url := fmt.Sprint("https://api.github.com/orgs/", org, "/members/", username)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+
+	req.Header.Set("Accept", "application/vnd.github+json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNoContent {
+		return true, nil
+	}
+
+	return false, fmt.Errorf("failed to check org membership: status %d", resp.StatusCode)
 }

@@ -52,15 +52,7 @@ func (s *AuthServiceImpl) ValidateAuth(ctx context.Context, auth model.Authentic
 	switch auth.Method {
 	case model.AuthMethodGitHub:
 		// Extract repo reference from the repository URL if it's not provided
-		owner, repo, err := s.githubAuth.ExtractGitHubRepoFromName(auth.RepoRef)
-		if err != nil {
-			return false, err
-		}
-		repoRef := fmt.Sprintf("%s/%s", owner, repo)
-		if repoRef == "" {
-			return false, fmt.Errorf("repository reference is required for GitHub authentication")
-		}
-		return s.githubAuth.ValidateToken(auth.Token, repoRef)
+		return s.githubAuth.ValidateToken(auth.Token, auth.RepoRef)
 	default:
 		return false, ErrUnsupportedAuthMethod
 	}

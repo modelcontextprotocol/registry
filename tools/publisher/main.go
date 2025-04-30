@@ -13,8 +13,10 @@ import (
 )
 
 const (
-	tokenFilePath  = ".mcpregistry_token"
-	GithubClientID = "Iv23ctIMuVtIi2bxoi9o"
+	tokenFilePath = ".mcpregistry_token"
+
+	// TODO: Replace this with the official owned OAuth client ID
+	GithubClientID = "Ov23ct0x1531TPL3WJ9h"
 
 	// GitHub OAuth URLs
 	GitHubDeviceCodeURL  = "https://github.com/login/device/code"
@@ -123,7 +125,7 @@ func performDeviceFlowLogin() error {
 func requestDeviceCode() (string, string, string, error) {
 	payload := map[string]string{
 		"client_id": GithubClientID,
-		"scope":     "write:packages repo",
+		"scope":     "read:org read:user",
 	}
 
 	jsonData, err := json.Marshal(payload)
