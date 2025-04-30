@@ -115,8 +115,13 @@ echo "Testing publish endpoint: $HOST/v0/publish"
 response_file=$(mktemp)
 headers_file=$(mktemp)
 
+# Get token for authentication (or use dummy token for testing)
+AUTH_TOKEN=${AUTH_TOKEN:-"test_token"}
+
 # Execute curl with response body to file and headers+status to another file
-curl -s -X POST -H "Content-Type: application/json" \
+curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${AUTH_TOKEN}" \
   -d "@$PAYLOAD_FILE" \
   -D "$headers_file" \
   -o "$response_file" \

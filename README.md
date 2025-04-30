@@ -184,6 +184,53 @@ Response example:
 }
 ```
 
+#### Publish a Server Entry
+
+```
+POST /v0/publish
+```
+
+Publishes a new MCP server entry to the registry. Authentication is required via Bearer token in the Authorization header.
+
+Headers:
+- `Authorization`: Bearer token for authentication (e.g., `Bearer your_token_here`)
+- `Content-Type`: application/json
+
+Request body example:
+```json
+{
+  "server_detail": {
+    "name": "io.github.username/repository",
+    "description": "Your MCP server description",
+    "version_detail": {
+      "version": "1.0.0"
+    },
+    "registries": [
+      {
+        "name": "npm",
+        "package_name": "your-package-name",
+        "license": "MIT"
+      }
+    ],
+    "remotes": [
+      {
+        "transport_type": "http",
+        "url": "https://your-api-endpoint.com"
+      }
+    ]
+  },
+  "repo_ref": "username/repository"
+}
+```
+
+Response example:
+```json
+{
+  "message": "Server publication successful",
+  "id": "1234567890abcdef12345678"
+}
+```
+
 ### Ping Endpoint
 
 ```

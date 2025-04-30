@@ -20,7 +20,7 @@ type Authentication struct {
 // PublishRequest represents a request to publish a server to the registry
 type PublishRequest struct {
 	ServerDetail    ServerDetail   `json:"server_detail"`
-	Authentication  Authentication `json:"authentication,omitempty"`
+	Authentication  Authentication `json:"-"` // Now provided via Authorization header
 	AuthStatusToken string         `json:"-"` // Used internally for device flows
 }
 

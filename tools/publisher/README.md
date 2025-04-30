@@ -31,6 +31,7 @@ The compiled binary will be placed in the `bin` directory.
 - `--registry-url`: URL of the MCP registry (required)
 - `--mcp-file`: Path to the MCP configuration file (required)
 - `--login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
+- `--token`: Use the provided token instead of GitHub authentication (bypasses the device flow)
 
 ## Authentication
 
@@ -38,6 +39,7 @@ The tool uses GitHub device flow authentication:
 1. When first run (or with `--login` flag), the tool will initiate the GitHub device flow
 2. You'll be provided with a URL and a code to enter
 3. After successful authentication, the tool saves the token locally for future use
+4. The token is sent in the HTTP Authorization header with the Bearer scheme
 
 _NOTE_ : Authentication is made on behalf of a OAuth App which you must authorize for respective resources (e.g `org`)
 

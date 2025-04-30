@@ -5,22 +5,12 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
-
-// httpError represents an HTTP error with a message and status code
-type httpError struct {
-	msg    string
-	status int
-}
-
-// Error returns the error message
-func (e *httpError) Error() string {
-	return e.msg
-}
 
 // PublishHandler handles requests to publish new server details to the registry
 func PublishHandler(registry service.RegistryService, authService auth.Service) http.HandlerFunc {
@@ -62,23 +52,39 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 			return
 		}
 
-		// Validate authentication credentials
-		if authService != nil {
-			publishReq.Authentication.RepoRef = serverDetail.Name
-			valid, err := authService.ValidateAuth(r.Context(), publishReq.Authentication)
-			if err != nil {
-				if err == auth.ErrAuthRequired {
-					http.Error(w, "Authentication is required for publishing", http.StatusUnauthorized)
-					return
-				}
-				http.Error(w, "Authentication failed: "+err.Error(), http.StatusUnauthorized)
-				return
-			}
+		// Get auth token from Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Authorization header is required", http.StatusUnauthorized)
+			return
+		}
 
-			if !valid {
-				http.Error(w, "Invalid authentication credentials", http.StatusUnauthorized)
+		// Handle bearer token format (e.g., "Bearer xyz123")
+		token := authHeader
+		if len(authHeader) > 7 && strings.ToUpper(authHeader[:7]) == "BEARER " {
+			token = authHeader[7:]
+		}
+
+		// Setup authentication info
+		a := model.Authentication{
+			Method:  model.AuthMethodGitHub,
+			Token:   token,
+			RepoRef: serverDetail.Name,
+		}
+
+		valid, err := authService.ValidateAuth(r.Context(), a)
+		if err != nil {
+			if err == auth.ErrAuthRequired {
+				http.Error(w, "Authentication is required for publishing", http.StatusUnauthorized)
 				return
 			}
+			http.Error(w, "Authentication failed: "+err.Error(), http.StatusUnauthorized)
+			return
+		}
+
+		if !valid {
+			http.Error(w, "Invalid authentication credentials", http.StatusUnauthorized)
+			return
 		}
 
 		// Call the publish method on the registry service

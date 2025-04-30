@@ -5,6 +5,8 @@
       summary: Publish a server to the registry
       description: Adds a new server to the MCP registry with authentication
       operationId: publishServer
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -14,11 +16,9 @@
               properties:
                 server_detail:
                   $ref: '#/components/schemas/ServerDetail'
-                authentication:
-                  $ref: '#/components/schemas/Authentication'
-                auth_status_token:
+                repo_ref:
                   type: string
-                  description: Optional status token from a device authorization flow
+                  description: Repository reference used for authentication (defaults to server name if not provided)
       responses:
         '201':
           description: Server published successfully

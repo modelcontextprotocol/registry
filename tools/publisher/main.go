@@ -44,10 +44,12 @@ func main() {
 	var registryURL string
 	var mcpFilePath string
 	var forceLogin bool
+	var providedToken string
 
 	flag.StringVar(&registryURL, "registry-url", "", "URL of the registry(required)")
 	flag.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file(required)")
 	flag.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
+	flag.StringVar(&providedToken, "token", "", "use the provided token instead of GitHub authentication")
 
 	flag.Parse()
 
@@ -56,21 +58,29 @@ func main() {
 		return
 	}
 
-	// Check if token exists or force login is requested
-	_, statErr := os.Stat(tokenFilePath)
-	if forceLogin || os.IsNotExist(statErr) {
-		err := performDeviceFlowLogin()
+	var token string
+
+	// If a token is provided via the command line, use it
+	if providedToken != "" {
+		token = providedToken
+	} else {
+		// Check if token exists or force login is requested
+		_, statErr := os.Stat(tokenFilePath)
+		if forceLogin || os.IsNotExist(statErr) {
+			err := performDeviceFlowLogin()
+			if err != nil {
+				fmt.Printf("Failed to perform device flow login: %s\n", err.Error())
+				return
+			}
+		}
+
+		// Read the token from the file
+		var err error
+		token, err = readToken()
 		if err != nil {
-			fmt.Printf("Failed to perform device flow login: %s\n", err.Error())
+			fmt.Printf("Error reading token: %s\n", err.Error())
 			return
 		}
-	}
-
-	// Read the token
-	token, err := readToken()
-	if err != nil {
-		fmt.Printf("Error reading token: %s\n", err.Error())
-		return
 	}
 
 	// Read MCP file
@@ -255,13 +265,9 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 		return fmt.Errorf("error parsing mcp.json file: %w", err)
 	}
 
-	// Create the publish request payload
+	// Create the publish request payload (without authentication)
 	publishReq := map[string]interface{}{
 		"server_detail": mcpDetails,
-		"authentication": map[string]interface{}{
-			"method": "github",
-			"token":  token,
-		},
 	}
 
 	// Convert the request to JSON
@@ -282,6 +288,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 		return fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
