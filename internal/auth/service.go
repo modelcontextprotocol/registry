@@ -39,11 +39,6 @@ func (s *AuthServiceImpl) CheckAuthStatus(ctx context.Context, statusToken strin
 
 // ValidateAuth validates authentication credentials
 func (s *AuthServiceImpl) ValidateAuth(ctx context.Context, auth model.Authentication) (bool, error) {
-	// If authentication is not required, allow access
-	if !s.config.RequireAuth {
-		return true, nil
-	}
-
 	// If authentication is required but not provided
 	if auth.Method == "" || auth.Method == model.AuthMethodNone {
 		return false, ErrAuthRequired

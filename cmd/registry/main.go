@@ -74,18 +74,6 @@ func main() {
 	// Initialize authentication services
 	authService := auth.NewAuthService(cfg)
 
-	if cfg.RequireAuth {
-		log.Println("Authentication is required for package publishing")
-
-		if cfg.GithubClientID == "" || cfg.GithubClientSecret == "" {
-			log.Println("Warning: GitHub OAuth credentials not configured but authentication is required")
-		} else {
-			log.Println("GitHub OAuth authentication is configured")
-		}
-	} else {
-		log.Println("Authentication is optional for package publishing")
-	}
-
 	// Initialize HTTP server
 	server := api.NewServer(cfg, registryService, authService)
 

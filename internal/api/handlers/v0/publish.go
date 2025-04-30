@@ -65,9 +65,20 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 			token = authHeader[7:]
 		}
 
+		// Determine authentication method based on server name prefix
+		var authMethod model.AuthMethod
+		switch {
+		case strings.HasPrefix(serverDetail.Name, "io.github"):
+			authMethod = model.AuthMethodGitHub
+		// Additional cases can be added here for other prefixes
+		default:
+			// Keep the default auth method as AuthMethodNone
+			authMethod = model.AuthMethodNone
+		}
+
 		// Setup authentication info
 		a := model.Authentication{
-			Method:  model.AuthMethodGitHub,
+			Method:  authMethod,
 			Token:   token,
 			RepoRef: serverDetail.Name,
 		}

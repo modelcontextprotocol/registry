@@ -17,7 +17,6 @@ type Config struct {
 	// GitHub OAuth settings
 	GithubClientID     string `env:"GITHUB_CLIENT_ID" envDefault:""`
 	GithubClientSecret string `env:"GITHUB_CLIENT_SECRET" envDefault:""`
-	RequireAuth        bool   `env:"REQUIRE_AUTH" envDefault:"false"` // Whether to require authentication for publishing
 }
 
 // NewConfig creates a new configuration with default values
