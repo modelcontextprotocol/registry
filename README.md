@@ -228,3 +228,7 @@ You can specify specific endpoints to test:
 ## License
 
 See the [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+See the [CONTRIBUTING](CONTRIBUTING.md) file for details.
