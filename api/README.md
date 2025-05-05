@@ -98,7 +98,8 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
         {
           "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
-          "required": false
+          "required": false,
+          "default_value": "info"
         }
       ]
     },
@@ -170,7 +171,8 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
         {
           "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
-          "required": false
+          "required": false,
+          "default_value": "info"
         }
       ]
     }
@@ -223,7 +225,8 @@ API Response:
         {
           "name": "BRAVE_API_KEY",
           "description": "Brave Search API Key",
-          "required": true
+          "required": true,
+          "default_value": ""
         }
       ]
     }

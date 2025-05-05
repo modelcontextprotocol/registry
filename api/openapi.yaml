@@ -262,6 +262,9 @@ components:
         required:
           type: boolean
           example: false
+        default_value:
+          type: string
+          example: "info"
     
     Registry:
       type: object
