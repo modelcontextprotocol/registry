@@ -19,9 +19,8 @@ GET /v0/servers?limit=5000&offset=0
       "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
       "repository": {
         "url": "https://github.com/modelcontextprotocol/servers",
-        "subfolder": "src/filesystem",
-        "branch": "main",
-        "commit": "d94b5f7ec7c6d7602c78a5e9b8a5b8c94d093eda"
+        "source": "github",
+        "id": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
       },
       "version": "0.0.3"
     }
@@ -49,9 +48,8 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
   "version": "0.0.3",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
-    "subfolder": "src/filesystem",
-    "branch": "main",
-    "commit": "d94b5f7ec7c6d7602c78a5e9b8a5b8c94d093eda"
+    "source": "github",
+    "id": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
   },
   "registry_canonical": "npm",
   "registries": [
@@ -201,9 +199,8 @@ API Response:
   "version": "1.0.0",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
-    "subfolder": "src/brave-search",
-    "branch": "main",
-    "commit": "abc123"
+    "source": "github",
+    "id": "abc123de-f456-7890-ghij-klmnopqrstuv"
   },
   "registry_canonical": "npm",
   "registries": [
@@ -264,9 +261,8 @@ API Response:
   "version": "0.0.3",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
-    "subfolder": "src/filesystem",
-    "branch": "main",
-    "commit": "d94b5f7ec7c6d7602c78a5e9b8a5b8c94d093eda"
+    "source": "github",
+    "id": "d94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
   },
   "registry_canonical": "docker",
   "registries": [
@@ -354,8 +350,8 @@ API Response:
   "version": "1.0.0",
   "repository": {
     "url": "https://github.com/example/remote-fs",
-    "branch": "main",
-    "commit": "xyz789"
+    "source": "github",
+    "id": "xyz789ab-cdef-0123-4567-890ghijklmno"
   },
   "remotes": [
     {
