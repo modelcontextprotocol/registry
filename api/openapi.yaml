@@ -270,17 +270,17 @@ components:
           type: string
           example: "info"
     
-    Registry:
+    Package:
       type: object
       required:
+        - registry_name
         - name
-        - package_name
       properties:
-        name:
+        registry_name:
           type: string
           enum: [npm, docker, pypi, homebrew]
           example: "npm"
-        package_name:
+        name:
           type: string
           example: "@modelcontextprotocol/server-filesystem"
         license:
@@ -313,14 +313,14 @@ components:
         - $ref: '#/components/schemas/Server'
         - type: object
           properties:
-            registry_canonical:
+            package_canonical:
               type: string
               enum: [npm, docker, pypi, crates]
               example: "npm"
-            registries:
+            packages:
               type: array
               items:
-                $ref: '#/components/schemas/Registry'
+                $ref: '#/components/schemas/Package'
             remotes:
               type: array
               items:

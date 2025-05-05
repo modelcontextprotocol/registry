@@ -51,11 +51,11 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
     "source": "github",
     "id": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
   },
-  "registry_canonical": "npm",
-  "registries": [
+  "package_canonical": "npm",
+  "packages": [
     {
-      "name": "npm",
-      "package_name": "@modelcontextprotocol/server-filesystem",
+      "registry_name": "npm",
+      "name": "@modelcontextprotocol/server-filesystem",
       "license": "MIT",
       "command": {
         "name": "npx",
@@ -202,11 +202,11 @@ API Response:
     "source": "github",
     "id": "abc123de-f456-7890-ghij-klmnopqrstuv"
   },
-  "registry_canonical": "npm",
-  "registries": [
+  "package_canonical": "npm",
+  "packages": [
     {
-      "name": "npm",
-      "package_name": "@modelcontextprotocol/server-brave-search",
+      "registry_name": "npm",
+      "name": "@modelcontextprotocol/server-brave-search",
       "license": "MIT",
       "command": {
         "name": "npx",
@@ -264,11 +264,11 @@ API Response:
     "source": "github",
     "id": "d94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
   },
-  "registry_canonical": "docker",
-  "registries": [
+  "package_canonical": "docker",
+  "packages": [
     {
-      "name": "docker",
-      "package_name": "mcp/filesystem",
+      "registry_name": "docker",
+      "name": "mcp/filesystem",
       "license": "MIT",
       "command": {
         "name": "docker",
