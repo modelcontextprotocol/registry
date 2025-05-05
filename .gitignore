@@ -3,3 +3,5 @@ data
 .env
 .mcpregistry*
 **/bin
+cmd/registry/registry
+registry

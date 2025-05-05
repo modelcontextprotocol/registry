@@ -1,8 +1,10 @@
 # MCP Registry
 
-A reference implementation of a registry service for Model Context Protocol (MCP) servers.
+A community driven registry service for Model Context Protocol (MCP) servers.
 
-> **Note:** This project is currently a work in progress.
+## Development Status
+
+This project is being built in the open and is currently in the early stages of development. Please see the [overview discussion](https://github.com/modelcontextprotocol/registry/discussions/11) for the project scope and goals. If you would like to contribute, please check out the [contributing guidelines](CONTRIBUTING.md).
 
 ## Overview
 
@@ -18,55 +20,17 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 - Comprehensive API documentation
 - Pagination support for listing registry entries
 
-## Project Structure
-
-```
-├── cmd/           # Application entry points
-├── config/        # Configuration files
-├── internal/      # Private application code
-│   ├── api/       # HTTP server and request handlers
-│   ├── config/    # Configuration management
-│   ├── model/     # Data models
-│   └── service/   # Business logic
-├── pkg/           # Public libraries
-├── scripts/       # Utility scripts
-├── tools/         # Command line tools
-│   └── importer/  # MongoDB data importer tool
-└── build/         # Build artifacts
-```
-
 ## Getting Started
 
 ### Prerequisites
 
 - Go 1.18 or later
-- MongoDB (optional, for production use)
-- Docker (optional, for containerized deployment)
+- MongoDB
+- Docker (optional, but recommended for development)
 
-### Building
+## Running
 
-```bash
-make build
-```
-
-This will create the `registry` binary in the `build/` directory.
-
-### Running
-
-```bash
-./build/mcp-registry
-```
-
-Alternatively, run
-```bash
-MCP_REGISTRY_DATABASE_URL="mongodb://localhost:27017" ./build/registry
-```
-
-By default, the service will run on `http://localhost:8080`.
-
-### Docker Deployment
-
-You can build and run the service using Docker:
+The easiest way to get the registry running is to use `docker compose`. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
 
 ```bash
 # Build the Docker image
@@ -78,51 +42,31 @@ docker compose up
 
 This will start the MCP Registry service and MongoDB with Docker, exposing it on port 8080.
 
-### Using the Fake Service
+## Building
 
-For development and testing purposes, the application includes a fake service with pre-populated registry entries. To use the fake service:
-
-1. Set the environment to "test":
+If you prefer to run the service locally without Docker, you can build and run it directly using Go.
 
 ```bash
-export MCP_REGISTRY_ENVIRONMENT=test
-./build/registry
+# Build a registry executable
+go build ./cmd/registry
 ```
+This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
 
-Alternatively, run
+By default, the service will run on `http://localhost:8080`.
 
-```bash
-make run-test
+## Project Structure
+
 ```
-
-The fake service provides three sample MCP registry entries with the following capabilities:
-
-- Registry 1: Code generation and completion capabilities
-- Registry 2: Chat and knowledge base capabilities
-- Registry 3: Data visualization and analysis capabilities
-
-You can interact with the fake data through the API endpoints:
-
-- List all entries: `GET /servers`
-
-
-The fake service is useful for:
-- Frontend development without a real backend
-- Testing API integrations
-- Example data structure reference
-
-## Tools
-
-### Data Importer
-
-A command-line tool for importing server data from a JSON file into a MongoDB database:
-
-```bash
-cd tools/importer
-go run main.go -uri mongodb://localhost:27017 -db mcp_registry -collection servers -seed ../../data/seed.json
+├── cmd/           # Application entry points
+├── config/        # Configuration files
+├── internal/      # Private application code
+│   ├── api/       # HTTP server and request handlers
+│   ├── config/    # Configuration management
+│   ├── model/     # Data models
+│   └── service/   # Business logic
+├── pkg/           # Public libraries
+└── scripts/       # Utility scripts
 ```
-
-For more details on the importer tool, see the [importer README](./tools/importer/README.md).
 
 ## API Documentation
 
