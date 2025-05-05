@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -55,7 +56,12 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 
 	_, err = collection.Indexes().CreateMany(ctx, models)
 	if err != nil {
-		return nil, err
+		// Mongo will error if the index already exists, we can ignore this and continue.
+		if err.(mongo.CommandError).Code != 86 {
+			return nil, err
+		} else {
+			log.Printf("Indexes already exists, skipping.")
+		}
 	}
 
 	return &MongoDB{
