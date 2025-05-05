@@ -39,36 +39,35 @@ func main() {
 	// Initialize services based on environment
 	var registryService service.RegistryService
 
-	if cfg.Environment == "test" {
-		// Use fake registry service in test environment
-		registryService = service.NewFakeRegistryService()
-		log.Println("Using fake registry service with dummy data (test environment)")
-	} else {
-		// Use MongoDB for real registry service in production/other environments
-		// Create a context with timeout for MongoDB connection
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+	// Use MongoDB for real registry service in production/other environments
+	// Create a context with timeout for MongoDB connection
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-		// Connect to MongoDB
-		mongoDB, err := database.NewMongoDB(ctx, cfg.DatabaseURL, cfg.DatabaseName, cfg.CollectionName)
-		if err != nil {
-			log.Fatalf("Failed to connect to MongoDB: %v", err)
+	// Connect to MongoDB
+	mongoDB, err := database.NewMongoDB(ctx, cfg.DatabaseURL, cfg.DatabaseName, cfg.CollectionName)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+
+	// Create registry service with MongoDB
+	registryService = service.NewRegistryServiceWithDB(mongoDB)
+	log.Printf("MongoDB database name: %s", cfg.DatabaseName)
+	log.Printf("MongoDB collection name: %s", cfg.CollectionName)
+
+	// Store the MongoDB instance for later cleanup
+	defer func() {
+		if err := mongoDB.Close(); err != nil {
+			log.Printf("Error closing MongoDB connection: %v", err)
+		} else {
+			log.Println("MongoDB connection closed successfully")
 		}
+	}()
 
-		// Create registry service with MongoDB
-		registryService = service.NewRegistryServiceWithDB(mongoDB)
-		log.Printf("Using MongoDB-based registry service (%s environment)", cfg.Environment)
-		log.Printf("MongoDB database name: %s", cfg.DatabaseName)
-		log.Printf("MongoDB collection name: %s", cfg.CollectionName)
-
-		// Store the MongoDB instance for later cleanup
-		defer func() {
-			if err := mongoDB.Close(); err != nil {
-				log.Printf("Error closing MongoDB connection: %v", err)
-			} else {
-				log.Println("MongoDB connection closed successfully")
-			}
-		}()
+	if cfg.Import {
+		log.Println("Importing data...")
+		database.ImportSeedFile(mongoDB, cfg.SeedFilePath)
+		log.Println("Data import completed successfully")
 	}
 
 	// Initialize authentication services
@@ -92,11 +91,11 @@ func main() {
 	log.Println("Shutting down server...")
 
 	// Create context with timeout for shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	sctx, scancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer scancel()
 
 	// Gracefully shutdown the server
-	if err := server.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(sctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 

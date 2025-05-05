@@ -1,15 +1,12 @@
-package main
+package database
 
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/model"
@@ -18,48 +15,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	mongoURI       string
-	databaseName   string
-	collectionName string
-	seedFilePath   string
-	dropCollection bool
-)
-
-func init() {
-	flag.StringVar(&mongoURI, "uri", "mongodb://localhost:27017", "MongoDB connection URI")
-	flag.StringVar(&databaseName, "db", "mcp_registry", "MongoDB database name")
-	flag.StringVar(&collectionName, "collection", "servers", "MongoDB collection name")
-	flag.StringVar(&seedFilePath, "seed", "", "Path to seed.json file (default: data/seed.json)")
-	flag.BoolVar(&dropCollection, "drop", false, "Drop collection before importing")
-	flag.Parse()
-
+// ImportSeedFile populates the MongoDB database with initial data from a seed file.
+func ImportSeedFile(mongo *MongoDB, seedFilePath string) error {
 	// Set default seed file path if not provided
 	if seedFilePath == "" {
 		// Try to find the seed.json in the data directory
 		seedFilePath = filepath.Join("data", "seed.json")
 		if _, err := os.Stat(seedFilePath); os.IsNotExist(err) {
-			// Try from the repository root
-			repoRoot := filepath.Join("..", "..")
-			seedFilePath = filepath.Join(repoRoot, "data", "seed.json")
+			return fmt.Errorf("seed file not found at %s", seedFilePath)
 		}
 	}
-}
 
-func main() {
 	// Create a context with timeout for the database operations
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-
-	// Handle graceful shutdown
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-sigChan
-		log.Println("Received termination signal. Cleaning up...")
-		cancel()
-		os.Exit(0)
-	}()
 
 	// Read the seed file
 	seedData, err := readSeedFile(seedFilePath)
@@ -67,38 +36,9 @@ func main() {
 		log.Fatalf("Failed to read seed file: %v", err)
 	}
 
-	// Connect to MongoDB
-	log.Printf("Connecting to MongoDB at %s", mongoURI)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
-	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
-	}
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Fatalf("Failed to disconnect from MongoDB: %v", err)
-		}
-	}()
-
-	// Ping MongoDB to verify the connection
-	if err = client.Ping(ctx, nil); err != nil {
-		log.Fatalf("Failed to ping MongoDB: %v", err)
-	}
-	log.Println("Successfully connected to MongoDB")
-
-	// Get collection
-	db := client.Database(databaseName)
-	collection := db.Collection(collectionName)
-
-	// Drop collection if requested
-	if dropCollection {
-		log.Printf("Dropping collection %s", collectionName)
-		if err := collection.Drop(ctx); err != nil {
-			log.Fatalf("Failed to drop collection: %v", err)
-		}
-	}
-
-	// Import data
+	collection := mongo.collection
 	importData(ctx, collection, seedData)
+	return nil
 }
 
 // readSeedFile reads and parses the seed.json file
