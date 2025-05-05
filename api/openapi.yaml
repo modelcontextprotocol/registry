@@ -231,9 +231,13 @@ components:
           items:
             $ref: '#/components/schemas/NamedArgument'
     
-    CommandArguments:
+    Command:
       type: object
       properties:
+        name:
+          type: string
+          enum: [npx, docker, pypi, uvx] # TODO: Add all supported commands as a whitelist
+          example: "npx"
         subcommands:
           type: array
           items:
@@ -282,8 +286,8 @@ components:
         license:
           type: string
           example: "MIT"
-        command_arguments:
-          $ref: '#/components/schemas/CommandArguments'
+        command:
+          $ref: '#/components/schemas/Command'
         environment_variables:
           type: array
           items:

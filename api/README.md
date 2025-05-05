@@ -59,7 +59,8 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "name": "npm",
       "package_name": "@modelcontextprotocol/server-filesystem",
       "license": "MIT",
-      "command_arguments": {
+      "command": {
+        "name": "npx",
         "subcommands": [],
         "positional_arguments": [
           {
@@ -107,7 +108,8 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "name": "docker",
       "package_name": "mcp/filesystem",
       "license": "MIT",
-      "command_arguments": {
+      "command": {
+        "name": "docker",
         "subcommands": [
           {
             "name": "run",
@@ -209,7 +211,8 @@ API Response:
       "name": "npm",
       "package_name": "@modelcontextprotocol/server-brave-search",
       "license": "MIT",
-      "command_arguments": {
+      "command": {
+        "name": "npx",
         "subcommands": [],
         "positional_arguments": [],
         "named_arguments": [
@@ -271,7 +274,8 @@ API Response:
       "name": "docker",
       "package_name": "mcp/filesystem",
       "license": "MIT",
-      "command_arguments": {
+      "command": {
+        "name": "docker",
         "subcommands": [
           {
             "name": "run",
