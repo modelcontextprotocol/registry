@@ -283,9 +283,6 @@ components:
         name:
           type: string
           example: "@modelcontextprotocol/server-filesystem"
-        license:
-          type: string
-          example: "MIT"
         command:
           $ref: '#/components/schemas/Command'
         environment_variables:
