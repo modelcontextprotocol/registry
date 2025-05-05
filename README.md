@@ -65,7 +65,9 @@ By default, the service will run on `http://localhost:8080`.
 │   ├── model/     # Data models
 │   └── service/   # Business logic
 ├── pkg/           # Public libraries
-└── scripts/       # Utility scripts
+├── scripts/       # Utility scripts
+└── tools/         # Command line tools
+    └── publisher/ # Tool to publish MCP servers to the registry
 ```
 
 ## API Documentation
