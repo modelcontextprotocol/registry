@@ -41,6 +41,16 @@ The tool uses GitHub device flow authentication:
 3. After successful authentication, the tool saves the token locally for future use
 4. The token is sent in the HTTP Authorization header with the Bearer scheme
 
+### Required Environment Variable
+
+Before using the GitHub authentication, you need to set the following environment variable:
+
+```bash
+export MCP_REGISTRY_GITHUB_CLIENT_ID="your_github_client_id"
+```
+
+This environment variable is required for the GitHub device flow authentication. If not set, the authentication will fail.
+
 _NOTE_ : Authentication is made on behalf of a OAuth App which you must authorize for respective resources (e.g `org`)
 
 ## Example
@@ -91,6 +101,10 @@ _NOTE_ : Authentication is made on behalf of a OAuth App which you must authoriz
 2. Run the publisher tool:
 
 ```bash
+# First, set the required environment variable
+export MCP_REGISTRY_GITHUB_CLIENT_ID="your_github_client_id"
+
+# Then run the publisher tool
 ./bin/mcp-publisher --registry-url "https://mcp-registry.example.com" --mcp-file "./mcp.json"
 ```
 
@@ -100,6 +114,7 @@ _NOTE_ : Authentication is made on behalf of a OAuth App which you must authoriz
 
 ## Important Notes
 
+- The `MCP_REGISTRY_GITHUB_CLIENT_ID` environment variable must be set for GitHub authentication
 - The authentication token is saved in a file named `.mcpregistry_token` in the current directory
 - The tool requires an active internet connection to authenticate with GitHub and communicate with the registry
 - Make sure the repository and package mentioned in your `mcp.json` file exist and are accessible

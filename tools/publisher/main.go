@@ -15,12 +15,12 @@ import (
 const (
 	tokenFilePath = ".mcpregistry_token"
 
-	// TODO: Replace this with the official owned OAuth client ID
-	GithubClientID = "Ov23ct0x1531TPL3WJ9h"
-
 	// GitHub OAuth URLs
 	GitHubDeviceCodeURL  = "https://github.com/login/device/code"
 	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token"
+
+	// Environment variable for GitHub Client ID
+	EnvGithubClientID = "MCP_REGISTRY_GITHUB_CLIENT_ID"
 )
 
 // DeviceCodeResponse represents the response from GitHub's device code endpoint
@@ -56,6 +56,19 @@ func main() {
 	if registryURL == "" || mcpFilePath == "" {
 		flag.Usage()
 		return
+	}
+
+	// Check for GitHub client ID in environment if we're going to need it for authentication
+	if providedToken == "" && os.Getenv(EnvGithubClientID) == "" {
+		fmt.Printf("Warning: Environment variable %s is not set. This is required for GitHub authentication.\n", EnvGithubClientID)
+		fmt.Println("You can set it with: export " + EnvGithubClientID + "=your_github_client_id")
+		fmt.Println("Or provide a token directly with the --token flag.")
+
+		// Only return if we'll need to do GitHub auth
+		_, statErr := os.Stat(tokenFilePath)
+		if forceLogin || os.IsNotExist(statErr) {
+			return
+		}
 	}
 
 	var token string
@@ -101,6 +114,11 @@ func main() {
 }
 
 func performDeviceFlowLogin() error {
+	// Check if the environment variable is set
+	if os.Getenv(EnvGithubClientID) == "" {
+		return fmt.Errorf("environment variable %s must be set for GitHub authentication", EnvGithubClientID)
+	}
+
 	// Device flow login logic using GitHub's device flow
 	// First, request a device code
 	deviceCode, userCode, verificationURI, err := requestDeviceCode()
@@ -133,8 +151,13 @@ func performDeviceFlowLogin() error {
 
 // requestDeviceCode initiates the device authorization flow
 func requestDeviceCode() (string, string, string, error) {
+	clientID := os.Getenv(EnvGithubClientID)
+	if clientID == "" {
+		return "", "", "", fmt.Errorf("environment variable %s is not set", EnvGithubClientID)
+	}
+
 	payload := map[string]string{
-		"client_id": GithubClientID,
+		"client_id": clientID,
 		"scope":     "read:org read:user",
 	}
 
@@ -177,8 +200,13 @@ func requestDeviceCode() (string, string, string, error) {
 
 // pollForToken polls for access token after user completes authorization
 func pollForToken(deviceCode string) (string, error) {
+	clientID := os.Getenv(EnvGithubClientID)
+	if clientID == "" {
+		return "", fmt.Errorf("environment variable %s is not set", EnvGithubClientID)
+	}
+
 	payload := map[string]string{
-		"client_id":   GithubClientID,
+		"client_id":   clientID,
 		"device_code": deviceCode,
 		"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
 	}
