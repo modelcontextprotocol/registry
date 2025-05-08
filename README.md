@@ -197,11 +197,17 @@ The service can be configured using environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `MCP_REGISTRY_ENVIRONMENT`     | Application environment (production, test) | `production` |
-| `MCP_REGISTRY_APP_VERSION`     | Application version | `dev` |
-| `MCP_REGISTRY_DATABASE_URL`    | MongoDB connection string | `mongodb://localhost:27017` |
-| `MCP_REGISTRY_DATABASE_NAME`   | MongoDB database name | `mcp-registry` |
-| `MCP_REGISTRY_COLLECTION_NAME` | MongoDB collection name for server registry | `servers_v2` |
+| `MCP_REGISTRY_APP_VERSION`           | Application version | `dev` |
+| `MCP_REGISTRY_COLLECTION_NAME`       | MongoDB collection name | `servers_v2` |
+| `MCP_REGISTRY_DATABASE_NAME`         | MongoDB database name | `mcp-registry` |
+| `MCP_REGISTRY_DATABASE_URL`          | MongoDB connection string | `mongodb://localhost:27017` |
+| `MCP_REGISTRY_GITHUB_CLIENT_ID`      | GitHub App Client ID |  |
+| `MCP_REGISTRY_GITHUB_CLIENT_SECRET`  | GitHub App Client Secret |  |
+| `MCP_REGISTRY_LOG_LEVEL`             | Log level | `info` |
+| `MCP_REGISTRY_SEED_FILE_PATH`        | Path to import seed file | `data/seed.json` |
+| `MCP_REGISTRY_SEED_IMPORT`           | Import `seed.json` on first run | `true` |
+| `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
+
 
 ## Testing
 

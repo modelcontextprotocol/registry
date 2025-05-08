@@ -12,10 +12,10 @@ type Config struct {
 	CollectionName     string `env:"COLLECTION_NAME" envDefault:"servers_v2"`
 	LogLevel           string `env:"LOG_LEVEL" envDefault:"info"`
 	SeedFilePath       string `env:"SEED_FILE_PATH" envDefault:"data/seed.json"`
+	SeedImport         bool   `env:"SEED_IMPORT" envDefault:"true"`
 	Version            string `env:"VERSION" envDefault:"dev"`
 	GithubClientID     string `env:"GITHUB_CLIENT_ID" envDefault:""`
 	GithubClientSecret string `env:"GITHUB_CLIENT_SECRET" envDefault:""`
-	Import             bool   `env:"IMPORT" envDefault:"true"`
 }
 
 // NewConfig creates a new configuration with default values
