@@ -325,7 +325,27 @@ components:
           type: string
           format: uri
           example: "https://mcp-fs.example.com/sse"
-    
+
+    UriScheme:
+      type: object
+      required:
+        - scheme
+        - description
+      properties:
+        scheme:
+          type: string
+          description: "The URI scheme without colon (e.g., 'mcp-filesystem', 'crm-contacts')"
+          example: "file"
+        description:
+          type: string
+          description: "Brief description of the URI scheme's purpose in this server"
+          example: "Local filesystem access"
+        reference_url:
+          type: string
+          format: uri
+          description: "URL to the specification or documentation for this URI scheme"
+          example: "(e.g. JSON Schema Store, IANA, PyPI/NPM, MCP Registry)"
+
     ServerDetail:
       allOf:
         - $ref: '#/components/schemas/Server'
@@ -339,7 +359,12 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Package'
-            remotes:
-              type: array
-              items:
-                $ref: '#/components/schemas/Remote'
+          remotes:
+            type: array
+            items:
+              $ref: '#/components/schemas/Remote'
+          supported_uri_schemes:
+            type: array
+            description: "URI schemes supported by this MCP server"
+            items:
+              $ref: '#/components/schemas/UriScheme'                
