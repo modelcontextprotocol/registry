@@ -315,7 +315,7 @@ components:
       properties:
         transport_type:
           type: string
-          enum: [streamable, sse, ws]
+          enum: [streamable, sse]
           example: "sse"
         url:
           type: string
