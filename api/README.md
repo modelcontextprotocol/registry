@@ -22,7 +22,11 @@ GET /v0/servers?limit=5000&offset=0
         "source": "github",
         "id": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
       },
-      "version": "0.0.3"
+      "version_detail": {
+        "version": "1.0.2",
+        "release_date": "2023-06-15T10:30:00Z",
+        "is_latest": true
+      }
     }
   ],
   "next": "https://registry.modelcontextprotocol.io/servers?offset=50",
@@ -45,11 +49,15 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
   "id": "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1",
   "name": "@modelcontextprotocol/servers/src/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
-  "version": "0.0.3",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
     "id": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
+  },
+  "version_detail": {
+    "version": "1.0.2",
+    "release_date": "2023-06-15T10:30:00Z",
+    "is_latest": true
   },
   "package_canonical": "npm",
   "packages": [
@@ -194,11 +202,15 @@ API Response:
   "id": "brave-search-12345",
   "name": "@modelcontextprotocol/server-brave-search",
   "description": "MCP server for Brave Search API integration",
-  "version": "1.0.0",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
     "id": "abc123de-f456-7890-ghij-klmnopqrstuv"
+  },
+  "version_detail": {
+    "version": "1.0.2",
+    "release_date": "2023-06-15T10:30:00Z",
+    "is_latest": true
   },
   "package_canonical": "npm",
   "packages": [
@@ -255,11 +267,15 @@ API Response:
   "id": "filesystem-67890",
   "name": "@modelcontextprotocol/servers/src/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations",
-  "version": "0.0.3",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
     "id": "d94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
+  },
+  "version_detail": {
+    "version": "1.0.2",
+    "release_date": "2023-06-15T10:30:00Z",
+    "is_latest": true
   },
   "package_canonical": "docker",
   "packages": [
@@ -343,11 +359,15 @@ API Response:
   "id": "remote-fs-54321",
   "name": "Remote Brave Search Server",
   "description": "Cloud-hosted MCP Brave Search server",
-  "version": "1.0.0",
   "repository": {
     "url": "https://github.com/example/remote-fs",
     "source": "github",
     "id": "xyz789ab-cdef-0123-4567-890ghijklmno"
+  },
+  "version_detail": {
+    "version": "1.0.2",
+    "release_date": "2023-06-15T10:30:00Z",
+    "is_latest": true
   },
   "remotes": [
     {

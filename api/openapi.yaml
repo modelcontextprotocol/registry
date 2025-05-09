@@ -60,7 +60,7 @@ paths:
             format: uuid
         - name: version
           in: query
-          description: Desired packaged version (as logged by the canonical registry)
+          description: Desired MCP server version
           schema:
             type: string
       responses:
@@ -122,10 +122,26 @@ components:
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
         repository:
           $ref: '#/components/schemas/Repository'
-        version:
-          type: string
-          description: Dynamically pulled from registry_canonical reference
-          example: "0.0.3"
+        version_detail:
+          type: object
+          required:
+            - version
+            - release_date
+            - is_latest
+          properties:
+            version:
+              type: string
+              example: "1.0.2"
+              description: Equivalent of Implementation.version in MCP specification.
+            release_date:
+              type: string
+              format: date-time
+              example: "2023-06-15T10:30:00Z"
+              description: Datetime that the MCP server version was published to the registry.
+            is_latest:
+              type: boolean
+              example: true
+              description: Whether the MCP server version is the latest version available in the registry.
       $schema: "https://json-schema.org/draft/2020-12/schema"
     
     ServerList:
