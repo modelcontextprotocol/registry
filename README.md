@@ -1,5 +1,7 @@
 # MCP Registry
 
+English | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
+
 A community driven registry service for Model Context Protocol (MCP) servers.
 
 ## Development Status
@@ -50,13 +52,14 @@ If you prefer to run the service locally without Docker, you can build and run i
 # Build a registry executable
 go build ./cmd/registry
 ```
+
 This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
 
 By default, the service will run on `http://localhost:8080`.
 
 ## Project Structure
 
-```
+```text
 ├── cmd/           # Application entry points
 ├── config/        # Configuration files
 ├── internal/      # Private application code
@@ -74,7 +77,7 @@ By default, the service will run on `http://localhost:8080`.
 
 The API is documented using Swagger/OpenAPI. You can access the interactive Swagger UI at:
 
-```
+```text
 /v0/swagger/index.html
 ```
 
@@ -84,11 +87,12 @@ This provides a complete reference of all endpoints with request/response schema
 
 ### Health Check
 
-```
+```text
 GET /v0/health
 ```
 
 Returns the health status of the service:
+
 ```json
 {
   "status": "ok"
@@ -99,17 +103,19 @@ Returns the health status of the service:
 
 #### List Registry Server Entries
 
-```
+```text
 GET /v0/servers
 ```
 
 Lists MCP registry server entries with pagination support.
 
 Query parameters:
+
 - `limit`: Maximum number of entries to return (default: 30, max: 100)
 - `cursor`: Pagination cursor for retrieving next set of results
 
 Response example:
+
 ```json
 {
   "servers": [
@@ -122,9 +128,10 @@ Response example:
         "url": "https://github.com/example/mcp-server",
         "stars": 120
       },
-      "version": "1.0.0",
-    }],
-   "metadata": {
+      "version": "1.0.0"
+    }
+  ],
+  "metadata": {
     "next_cursor": "cursor-value-for-next-page"
   }
 }
@@ -132,17 +139,19 @@ Response example:
 
 #### Publish a Server Entry
 
-```
+```text
 POST /v0/publish
 ```
 
 Publishes a new MCP server entry to the registry. Authentication is required via Bearer token in the Authorization header.
 
 Headers:
+
 - `Authorization`: Bearer token for authentication (e.g., `Bearer your_token_here`)
 - `Content-Type`: application/json
 
 Request body example:
+
 ```json
 {
   "server_detail": {
@@ -170,6 +179,7 @@ Request body example:
 ```
 
 Response example:
+
 ```json
 {
   "message": "Server publication successful",
@@ -179,11 +189,12 @@ Response example:
 
 ### Ping Endpoint
 
-```
+```text
 GET /v0/ping
 ```
 
 Simple ping endpoint that returns environment configuration information:
+
 ```json
 {
   "environment": "dev",
@@ -195,19 +206,18 @@ Simple ping endpoint that returns environment configuration information:
 
 The service can be configured using environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MCP_REGISTRY_APP_VERSION`           | Application version | `dev` |
-| `MCP_REGISTRY_COLLECTION_NAME`       | MongoDB collection name | `servers_v2` |
-| `MCP_REGISTRY_DATABASE_NAME`         | MongoDB database name | `mcp-registry` |
-| `MCP_REGISTRY_DATABASE_URL`          | MongoDB connection string | `mongodb://localhost:27017` |
-| `MCP_REGISTRY_GITHUB_CLIENT_ID`      | GitHub App Client ID |  |
-| `MCP_REGISTRY_GITHUB_CLIENT_SECRET`  | GitHub App Client Secret |  |
-| `MCP_REGISTRY_LOG_LEVEL`             | Log level | `info` |
-| `MCP_REGISTRY_SEED_FILE_PATH`        | Path to import seed file | `data/seed.json` |
-| `MCP_REGISTRY_SEED_IMPORT`           | Import `seed.json` on first run | `true` |
-| `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
-
+| Variable                            | Description                     | Default                     |
+| ----------------------------------- | ------------------------------- | --------------------------- |
+| `MCP_REGISTRY_APP_VERSION`          | Application version             | `dev`                       |
+| `MCP_REGISTRY_COLLECTION_NAME`      | MongoDB collection name         | `servers_v2`                |
+| `MCP_REGISTRY_DATABASE_NAME`        | MongoDB database name           | `mcp-registry`              |
+| `MCP_REGISTRY_DATABASE_URL`         | MongoDB connection string       | `mongodb://localhost:27017` |
+| `MCP_REGISTRY_GITHUB_CLIENT_ID`     | GitHub App Client ID            |                             |
+| `MCP_REGISTRY_GITHUB_CLIENT_SECRET` | GitHub App Client Secret        |                             |
+| `MCP_REGISTRY_LOG_LEVEL`            | Log level                       | `info`                      |
+| `MCP_REGISTRY_SEED_FILE_PATH`       | Path to import seed file        | `data/seed.json`            |
+| `MCP_REGISTRY_SEED_IMPORT`          | Import `seed.json` on first run | `true`                      |
+| `MCP_REGISTRY_SERVER_ADDRESS`       | Listen address for the server   | `:8080`                     |
 
 ## Testing
 
