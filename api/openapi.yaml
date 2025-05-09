@@ -292,6 +292,7 @@ components:
       required:
         - registry_name
         - name
+        - version
       properties:
         registry_name:
           type: string
@@ -300,6 +301,9 @@ components:
         name:
           type: string
           example: "@modelcontextprotocol/server-filesystem"
+        version:
+          type: string
+          example: "1.0.2"
         command:
           $ref: '#/components/schemas/Command'
         environment_variables:
