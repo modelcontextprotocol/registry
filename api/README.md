@@ -65,122 +65,61 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "registry_name": "npm",
       "name": "@modelcontextprotocol/server-filesystem",
       "version": "1.0.2",
-      "command": {
-        "name": "npx",
-        "subcommands": [],
-        "positional_arguments": [
-          {
-            "position": 0,
-            "name": "package",
-            "description": "NPM package name",
-            "default_value": "@modelcontextprotocol/server-filesystem",
-            "is_required": true,
-            "is_editable": false,
-            "is_repeatable": false,
-            "choices": []
-          },
-          {
-            "position": 1,
-            "name": "path",
-            "description": "Path to access",
-            "default_value": "/Users/username/Desktop",
-            "is_required": true,
-            "is_editable": true,
-            "is_repeatable": true,
-            "choices": []
-          }
-        ],
-        "named_arguments": [
-          {
-            "short_flag": "-y",
-            "requires_value": false,
-            "is_required": false,
-            "is_editable": false,
-            "description": "Skip prompts and automatically answer yes",
-            "choices": []
-          }
-        ]
-      },
+      "arguments": [
+        {
+          "type": "positional",
+          "description": "Path to access",
+          "default": "/Users/username/Desktop",
+          "is_required": true,
+          "is_repeated": true
+        }
+      ],
       "environment_variables": [
         {
+          "type": "named",
           "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
-          "required": false,
-          "default_value": "info"
+          "default": "info"
         }
       ]
     },
     {
-      "name": "docker",
-      "package_name": "mcp/filesystem",
+      "registry_name": "docker",
+      "name": "mcp/filesystem",
       "version": "1.0.2",
-      "command": {
-        "name": "docker",
-        "subcommands": [
-          {
-            "name": "run",
-            "description": "Run the Docker container",
-            "is_required": true,
-            "subcommands": [],
-            "positional_arguments": [],
-            "named_arguments": [
-              {
-                "short_flag": "-i",
-                "requires_value": false,
-                "is_required": true,
-                "is_editable": false,
-                "description": "Run in interactive mode"
-              },
-              {
-                "long_flag": "--rm",
-                "requires_value": false,
-                "is_required": true,
-                "is_editable": false,
-                "description": "Remove container when it exits"
-              },
-              {
-                "long_flag": "--mount",
-                "requires_value": true,
-                "is_required": true,
-                "is_repeatable": true,
-                "is_editable": true,
-                "description": "Mount a volume into the container",
-                "default_value": "type=bind,src=/Users/username/Desktop,dst=/projects/Desktop",
-                "choices": []
-              }
-            ]
+      "runtime_arguments": [
+        {
+          "type": "template",
+          "description": "Mount a volume into the container",
+          "template": "--mount=type=bind,src={source_path},dst={target_path}",
+          "is_required": true,
+          "is_repeated": true,
+          "properties": {
+            "source_path": {
+              "description": "Source path on host",
+              "format": "filepath",
+              "is_required": true
+            },
+            "target_path": {
+              "description": "Path to mount in the container. It should be rooted in `/project` directory.",
+              "is_required": true,
+              "default": "/project",
+            }
           }
-        ],
-        "positional_arguments": [
-          {
-            "position": 0,
-            "name": "image",
-            "description": "Docker image name",
-            "default_value": "mcp/filesystem",
-            "is_required": true,
-            "is_editable": false,
-            "is_repeatable": false,
-            "choices": []
-          },
-          {
-            "position": 1,
-            "name": "root_path",
-            "description": "Root path for filesystem access",
-            "default_value": "/projects",
-            "is_required": true,
-            "is_editable": false,
-            "is_repeatable": false,
-            "choices": []
-          }
-        ],
-        "named_arguments": []
-      },
+        }
+      ],
+      "arguments": [
+        {
+          "type": "positional",
+          "value": "/project",
+        }
+      ]
       "environment_variables": [
         {
+          "type": "named",
           "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
-          "required": false,
-          "default_value": "info"
+          "default": "info"
         }
       ]
     }
@@ -220,25 +159,13 @@ API Response:
       "registry_name": "npm",
       "name": "@modelcontextprotocol/server-brave-search",
       "version": "1.0.2",
-      "command": {
-        "name": "npx",
-        "subcommands": [],
-        "positional_arguments": [],
-        "named_arguments": [
-          {
-            "short_flag": "-y",
-            "requires_value": false,
-            "is_required": false,
-            "description": "Skip prompts"
-          }
-        ]
-      },
       "environment_variables": [
         {
+          "type": "named",
           "name": "BRAVE_API_KEY",
           "description": "Brave Search API Key",
-          "required": true,
-          "default_value": ""
+          "is_required": true,
+          "is_secret": true
         }
       ]
     }
@@ -286,51 +213,33 @@ API Response:
       "registry_name": "docker",
       "name": "mcp/filesystem",
       "version": "1.0.2",
-      "command": {
-        "name": "docker",
-        "subcommands": [
-          {
-            "name": "run",
-            "description": "Run the Docker container",
-            "is_required": true,
-            "named_arguments": [
-              {
-                "short_flag": "-i",
-                "requires_value": false,
-                "is_required": true,
-                "description": "Run in interactive mode"
-              },
-              {
-                "long_flag": "--rm",
-                "requires_value": false,
-                "is_required": true,
-                "description": "Remove container when it exits"
-              },
-              {
-                "long_flag": "--mount",
-                "requires_value": true,
-                "is_required": true,
-                "is_repeatable": true,
-                "description": "Mount a volume into the container"
-              }
-            ]
+      "runtime_arguments": [
+        {
+          "type": "template",
+          "description": "Mount a volume into the container",
+          "template": "--mount=type=bind,src={source_path},dst={target_path}",
+          "is_required": true,
+          "is_repeated": true,
+          "properties": {
+            "source_path": {
+              "description": "Source path on host",
+              "format": "filepath",
+              "is_required": true
+            },
+            "target_path": {
+              "description": "Path to mount in the container. It should be rooted in `/project` directory.",
+              "is_required": true,
+              "default": "/project",
+            }
           }
-        ],
-        "positional_arguments": [
-          {
-            "position": 0,
-            "name": "image",
-            "description": "Docker image name",
-            "default_value": "mcp/filesystem"
-          },
-          {
-            "position": 1,
-            "name": "root_path",
-            "description": "Root path for filesystem access",
-            "default_value": "/projects"
-          }
-        ]
-      }
+        }
+      ],
+      "arguments": [
+        {
+          "type": "positional",
+          "value": "/project",
+        }
+      ]
     }
   ]
 }
@@ -340,17 +249,14 @@ claude_desktop_config.json:
 ```json
 {
   "filesystem": {
-    "command": "docker",
-    "args": [
-      "run",
-      "-i",
-      "--rm",
-      "--mount", "type=bind,src=/Users/username/Desktop,dst=/projects/Desktop",
-      "--mount", "type=bind,src=/path/to/other/allowed/dir,dst=/projects/other/allowed/dir,ro",
-      "--mount", "type=bind,src=/path/to/file.txt,dst=/projects/path/to/file.txt",
-      "mcp/filesystem",
-      "/projects"
-    ]
+    "server": "@modelcontextprotocol/servers/src/filesystem@1.0.2",
+    "package": "docker",
+    "settings": {
+      "mount_config": [
+        { "source_path": "/Users/username/Desktop", "target_path": "/project/desktop" },
+        { "source_path": "/path/to/other/allowed/dir", "target_path": "/project/other/allowed/dir,ro" },
+      ]
+    }
   }
 }
 ```
