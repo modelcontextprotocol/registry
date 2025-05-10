@@ -33,11 +33,14 @@ type Entry struct {
 }
 
 type Repository struct {
+	ID        string `json:"id,omitempty"`
 	URL       string `json:"url,omitempty"`
+	Source    string `json:"source,omitempty"`
 	SubFolder string `json:"subfolder,omitempty"`
 	Branch    string `json:"branch,omitempty"`
 	Commit    string `json:"commit,omitempty"`
 }
+
 type VersionDetail struct {
 	Version     string `json:"version,omitempty"`
 	ReleaseDate string `json:"release_date,omitempty"` //RFC 3339 date format
@@ -45,14 +48,14 @@ type VersionDetail struct {
 }
 
 type ServerDetail struct {
-	ID                string        `json:"id,omitempty"`
-	Name              string        `json:"name,omitempty"`
-	Description       string        `json:"description,omitempty"`
-	VersionDetail     VersionDetail `json:"version_detail,omitempty"`
-	Repository        Repository    `json:"-"` // Not included in the JSON response
-	RegistryCanonical string        `json:"-"` // Not included in the JSON response
-	Registries        []Registries  `json:"registries,omitempty"`
-	Remotes           []Remotes     `json:"remotes,omitempty"`
+	ID               string        `json:"id,omitempty"`
+	Name             string        `json:"name,omitempty"`
+	Description      string        `json:"description,omitempty"`
+	VersionDetail    VersionDetail `json:"version_detail,omitempty"`
+	Repository       Repository    `json:"repository,omitempty"`
+	PackageCanonical string        `json:"package_canonical,omitempty"`
+	Registries       []Registries  `json:"registries,omitempty"`
+	Remotes          []Remotes     `json:"remotes,omitempty"`
 }
 
 type Registries struct {
