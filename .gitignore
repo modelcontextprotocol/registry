@@ -4,3 +4,6 @@ data
 .mcpregistry*
 **/bin
 cmd/registry/registry
+
+# vscode
+.vscode/
