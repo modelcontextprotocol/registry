@@ -180,18 +180,23 @@ components:
         version:
           type: string
           example: "1.0.2"
+        runtime_hint:
+          type: string
+          description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtime_arguments` are present.
+          examples: [npx, uvx]
         runtime_arguments:
           type: array
-          description: List of arguments passed to the package's runtime command (such as docker or npx).
+          description: A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.
           items:
             $ref: '#/components/schemas/Argument'
         package_arguments:
           type: array
-          description: List of arguments passed to the package's binary.
+          description: A list of arguments to be passed to the package's binary.
           items:
             $ref: '#/components/schemas/Argument'
         environment_variables:
           type: array
+          description: A mapping of environment variables to be set when running the package.
           items:
             $ref: '#/components/schemas/KeyValueInput'
 
@@ -199,29 +204,35 @@ components:
       type: object
       properties:
         description:
-          description: A description of the input, which can be used by clients to provide context to the user.
+          description: A description of the input, which clients can use to provide context to the user.
           type: string
         is_required:
           type: boolean
           default: false
         format:
           type: string
-          description: Input format. Includes a variety of standardized formats, including `filepath`, which should be interpreted as a file on the user's filesystem.
+          description: |
+            Specifies the input format. Supported values include `filepath`, which should be interpreted as a file on the user's filesystem.
+
+            When the input is converted to a string, booleans should be represented by the strings "true" and "false", and numbers should be represented as decimal values.
           enum: [string, number, boolean, filepath]
           default: string
         value:
           type: string
-          description: The default value for the input. If this is not set, the user will be asked to provide a value. If the `variables` property is provided, then values wrapped in `{curly_braces}` will be replaced with the corresponding variables.
+          description: |
+            The default value for the input. If this is not set, the user may be prompted to provide a value.
+
+            Identifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged.
         is_secret:
           type: boolean
-          description: Whether the input is a secret value (e.g., password, token). If true, clients should handle the value securely.
+          description: Indicates whether the input is a secret value (e.g., password, token). If true, clients should handle the value securely.
           default: false
         default:
           type: string
           description: The default value for the input.
         choices:
           type: array
-          description: A list of possible values for the input. If given, the user must pick one of these values.
+          description: A list of possible values for the input. If provided, the user must select one of these values.
           items:
             type: string
           example: []
@@ -233,7 +244,7 @@ components:
           properties:
             variables:
               type: object
-              description: A map of variable names to their values. Keys in the input `value` wrapped in `{curly_braces}` will be replaced with the corresponding variables.
+              description: A map of variable names to their values. Keys in the input `value` that are wrapped in `{curly_braces}` will be replaced with the corresponding variable values.
               additionalProperties:
                 $ref: '#/components/schemas/Input'
 
@@ -244,19 +255,19 @@ components:
         - type: object
           required:
             - type
-            - name_hint
+            - value_hint
           properties:
             type:
               type: string
               enum: [positional]
               example: "positional"
-            name_hint:
+            value_hint:
               type: string
-              description: Name of the positional argument. This is not part of the command line, but can be used for reference by client configuration and used to hint users.
+              description: An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users.
               example: file_path
             is_repeated:
               type: boolean
-              description: Whether the input can be repeated multiple times in the command line.
+              description: Whether the argument can be repeated multiple times in the command line.
               default: false
 
     NamedArgument:
@@ -274,10 +285,11 @@ components:
               example: "named"
             name:
               type: string
+              description: The flag name, including any leading dashes.
               example: "--port"
             is_repeated:
               type: boolean
-              description: Whether the argument can be repeated multiple times. Has no effect for environment variables.
+              description: Whether the argument can be repeated multiple times.
               default: false
 
     KeyValueInput:

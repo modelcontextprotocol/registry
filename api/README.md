@@ -68,7 +68,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "package_arguments": [
         {
           "type": "positional",
-          "name_hint": "target_dir",
+          "value_hint": "target_dir",
           "description": "Path to access",
           "default": "/Users/username/Desktop",
           "is_required": true,
@@ -112,7 +112,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "package_arguments": [
         {
           "type": "positional",
-          "name_hint": "target_dir",
+          "value_hint": "target_dir",
           "value": "/project",
         }
       ],
@@ -238,7 +238,7 @@ API Response:
       "package_arguments": [
         {
           "type": "positional",
-          "name_hint": "target_dir",
+          "value_hint": "target_dir",
           "value": "/project",
         }
       ]
