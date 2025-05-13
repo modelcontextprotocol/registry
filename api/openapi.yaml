@@ -82,7 +82,6 @@ paths:
                     example: "Server not found"
 components:
   schemas:
-  jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
     Repository:
       type: object
       required:
