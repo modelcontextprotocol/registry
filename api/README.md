@@ -68,7 +68,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "package_arguments": [
         {
           "type": "positional",
-          "name": "target_dir",
+          "name_hint": "target_dir",
           "description": "Path to access",
           "default": "/Users/username/Desktop",
           "is_required": true,
@@ -77,7 +77,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       ],
       "environment_variables": [
         {
-          "key": "LOG_LEVEL",
+          "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
           "default": "info"
         }
@@ -91,7 +91,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
         {
           "type": "named",
           "description": "Mount a volume into the container",
-          "flag": "--mount",
+          "name": "--mount",
           "value": "type=bind,src={source_path},dst={target_path}",
           "is_required": true,
           "is_repeated": true,
@@ -112,13 +112,13 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "package_arguments": [
         {
           "type": "positional",
-          "name": "target_dir",
+          "name_hint": "target_dir",
           "value": "/project",
         }
       ],
       "environment_variables": [
         {
-          "key": "LOG_LEVEL",
+          "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
           "default": "info"
         }
@@ -162,7 +162,7 @@ API Response:
       "version": "1.0.2",
       "environment_variables": [
         {
-          "key": "BRAVE_API_KEY",
+          "name": "BRAVE_API_KEY",
           "description": "Brave Search API Key",
           "is_required": true,
           "is_secret": true
@@ -217,7 +217,7 @@ API Response:
         {
           "type": "named",
           "description": "Mount a volume into the container",
-          "flag": "--mount",
+          "name": "--mount",
           "value": "type=bind,src={source_path},dst={target_path}",
           "is_required": true,
           "is_repeated": true,
@@ -238,7 +238,7 @@ API Response:
       "package_arguments": [
         {
           "type": "positional",
-          "name": "target_dir",
+          "name_hint": "target_dir",
           "value": "/project",
         }
       ]

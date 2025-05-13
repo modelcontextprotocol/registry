@@ -244,13 +244,13 @@ components:
         - type: object
           required:
             - type
-            - name
+            - name_hint
           properties:
             type:
               type: string
               enum: [positional]
               example: "positional"
-            name:
+            name_hint:
               type: string
               description: Name of the positional argument. This is not part of the command line, but can be used for reference by client configuration and used to hint users.
               example: file_path
@@ -266,13 +266,13 @@ components:
         - type: object
           required:
             - type
-            - flag
+            - name
           properties:
             type:
               type: string
               enum: [named]
               example: "named"
-            flag:
+            name:
               type: string
               example: "--port"
             is_repeated:
@@ -287,7 +287,7 @@ components:
           required:
             - name
           properties:
-            key:
+            name:
               type: string
               description: Name of the header or environment variable.
               example: SOME_VARIABLE
