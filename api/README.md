@@ -77,8 +77,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       ],
       "environment_variables": [
         {
-          "type": "named",
-          "name": "LOG_LEVEL",
+          "key": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
           "default": "info"
         }
@@ -90,9 +89,10 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
       "version": "1.0.2",
       "runtime_arguments": [
         {
-          "type": "template",
+          "type": "named",
           "description": "Mount a volume into the container",
-          "template": "--mount=type=bind,src={source_path},dst={target_path}",
+          "flag": "--mount",
+          "value": "type=bind,src={source_path},dst={target_path}",
           "is_required": true,
           "is_repeated": true,
           "variables": {
@@ -115,11 +115,10 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
           "name": "target_dir",
           "value": "/project",
         }
-      ]
+      ],
       "environment_variables": [
         {
-          "type": "named",
-          "name": "LOG_LEVEL",
+          "key": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
           "default": "info"
         }
@@ -163,8 +162,7 @@ API Response:
       "version": "1.0.2",
       "environment_variables": [
         {
-          "type": "named",
-          "name": "BRAVE_API_KEY",
+          "key": "BRAVE_API_KEY",
           "description": "Brave Search API Key",
           "is_required": true,
           "is_secret": true
@@ -217,9 +215,10 @@ API Response:
       "version": "1.0.2",
       "runtime_arguments": [
         {
-          "type": "template",
+          "type": "named",
           "description": "Mount a volume into the container",
-          "template": "--mount=type=bind,src={source_path},dst={target_path}",
+          "flag": "--mount",
+          "value": "type=bind,src={source_path},dst={target_path}",
           "is_required": true,
           "is_repeated": true,
           "variables": {
@@ -255,7 +254,7 @@ claude_desktop_config.json:
     "server": "@modelcontextprotocol/servers/src/filesystem@1.0.2",
     "package": "docker",
     "settings": {
-      "mount_config": [
+      "--mount": [
         { "source_path": "/Users/username/Desktop", "target_path": "/project/desktop" },
         { "source_path": "/path/to/other/allowed/dir", "target_path": "/project/other/allowed/dir,ro" },
       ]
