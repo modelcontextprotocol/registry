@@ -115,19 +115,76 @@ Response example:
 {
   "servers": [
     {
-      "id": "1",
+      "id": "123e4567-e89b-12d3-a456-426614174000",
       "name": "Example MCP Server",
-      "description": "An example MCP server implementation",
       "url": "https://example.com/mcp",
-      "repository": {
-        "url": "https://github.com/example/mcp-server",
-        "stars": 120
-      },
-      "version": "1.0.0",
-    }],
-   "metadata": {
-    "next_cursor": "cursor-value-for-next-page"
+      "description": "An example MCP server",
+      "created_at": "2025-05-17T17:34:22.912Z",
+      "updated_at": "2025-05-17T17:34:22.912Z"
+    }
+  ],
+  "metadata": {
+    "next_cursor": "123e4567-e89b-12d3-a456-426614174000",
+    "count": 30
   }
+}
+```
+
+#### Get Server Details
+
+```
+GET /v0/servers/{id}
+```
+
+Retrieves detailed information about a specific MCP server entry.
+
+Path parameters:
+- `id`: Unique identifier of the server entry
+
+Response example:
+```json
+{
+  "id": "01129bff-3d65-4e3d-8e82-6f2f269f818c",
+  "name": "io.github.gongrzhe/redis-mcp-server",
+  "description": "A Redis MCP server (pushed to https://github.com/modelcontextprotocol/servers/tree/main/src/redis) implementation for interacting with Redis databases. This server enables LLMs to interact with Redis key-value stores through a set of standardized tools.",
+  "repository": {
+    "url": "https://github.com/GongRzhe/REDIS-MCP-Server",
+    "source": "github",
+    "id": "907849235"
+  },
+  "version_detail": {
+    "version": "0.0.1-seed",
+    "release_date": "2025-05-16T19:13:21Z",
+    "is_latest": true
+  },
+  "package_canonical": "docker",
+  "packages": [
+    {
+      "registry_name": "docker",
+      "name": "@gongrzhe/server-redis-mcp",
+      "version": "1.0.0",
+      "package_arguments": [
+        {
+          "description": "Docker image to run",
+          "is_required": true,
+          "format": "string",
+          "value": "mcp/redis",
+          "default": "mcp/redis",
+          "type": "positional",
+          "value_hint": "mcp/redis"
+        },
+        {
+          "description": "Redis server connection string",
+          "is_required": true,
+          "format": "string",
+          "value": "redis://host.docker.internal:6379",
+          "default": "redis://host.docker.internal:6379",
+          "type": "positional",
+          "value_hint": "host.docker.internal:6379"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -146,27 +203,62 @@ Headers:
 Request body example:
 ```json
 {
-  "server_detail": {
-    "name": "io.github.username/repository",
-    "description": "Your MCP server description",
-    "version_detail": {
-      "version": "1.0.0"
-    },
-    "registries": [
-      {
-        "name": "npm",
-        "package_name": "your-package-name",
-        "license": "MIT"
-      }
+    "description": "<your description here>",
+    "name": "io.github.<owner>/<server-name>",
+    "package_canonical": "<package_registry",
+    "packages": [
+        {
+            "registry_name": "npm",
+            "name": "@<owner>/<server-name>",
+            "version": "0.2.23",
+            "package_arguments": [
+                {
+                    "description": "Specify services and permissions.",
+                    "is_required": true,
+                    "format": "string",
+                    "value": "-s",
+                    "default": "-s",
+                    "type": "positional",
+                    "value_hint": "-s"
+                }
+            ],
+            "environment_variables": [
+                {
+                    "description": "API Key to access the server",
+                    "name": "API_KEY"
+                }
+            ]
+        },{
+            "registry_name": "docker",
+            "name": "@<owner>/<server-name>-cli",
+            "version": "0.123.223",
+            "runtime_hint": "docker",
+            "runtime_arguments": [
+                {
+                    "description": "Specify services and permissions.",
+                    "is_required": true,
+                    "format": "string",
+                    "value": "--mount",
+                    "default": "--mount",
+                    "type": "positional",
+                    "value_hint": "--mount"
+                }
+            ],
+            "environment_variables": [
+                {
+                    "description": "API Key to access the server",
+                    "name": "API_KEY"
+                }
+            ]
+        }
     ],
-    "remotes": [
-      {
-        "transport_type": "http",
-        "url": "https://your-api-endpoint.com"
-      }
-    ]
-  },
-  "repo_ref": "username/repository"
+    "repository": {
+        "url": "https://github.com//<owner>/<server-name>",
+        "source": "github"
+    },
+    "version_detail": {
+        "version": "0.0.1-<publisher_version>"
+    }
 }
 ```
 
