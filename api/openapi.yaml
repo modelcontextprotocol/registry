@@ -3,8 +3,8 @@ info:
   title: MCP Server Registry API
   summary: API for discovering and accessing MCP servers metadata
   description: |
-    REST API that centralizes metadata about publicly available MCP servers by allowing server creators to submit 
-    and maintain metadata about their servers in a standardized format. This API enables MCP client 
+    REST API that centralizes metadata about publicly available MCP servers by allowing server creators to submit
+    and maintain metadata about their servers in a standardized format. This API enables MCP client
     applications and "server aggregator" type consumers to discover and install MCP servers.
   version: 0.0.1
   contact:
@@ -82,7 +82,7 @@ paths:
                     example: "Server not found"
 components:
   schemas:
-  jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
+    jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
     Repository:
       type: object
       required:
@@ -101,7 +101,7 @@ components:
         id:
           type: string
           example: "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
-    
+
     Server:
       type: object
       required:
@@ -144,7 +144,7 @@ components:
               example: true
               description: Whether the MCP server version is the latest version available in the registry.
       $schema: "https://json-schema.org/draft/2020-12/schema"
-    
+
     ServerList:
       type: object
       required:
@@ -162,131 +162,7 @@ components:
         total_count:
           type: integer
           example: 1
-    
-    Argument:
-      type: object
-      required:
-        - name
-        - description
-        - is_required
-      properties:
-        name:
-          type: string
-          example: "path"
-        description:
-          type: string
-          example: "Path to access"
-        is_required:
-          type: boolean
-          example: true
-        is_repeatable:
-          type: boolean
-          example: false
-        is_editable:
-          type: boolean
-          example: true
-        choices:
-          type: array
-          items:
-            type: string
-          example: []
-        default_value:
-          type: string
-          example: "/Users/username/Desktop"
-    
-    PositionalArgument:
-      allOf:
-        - $ref: '#/components/schemas/Argument'
-        - type: object
-          required:
-            - position
-          properties:
-            position:
-              type: integer
-              example: 1
-    
-    NamedArgument:
-      allOf:
-        - $ref: '#/components/schemas/Argument'
-        - type: object
-          properties:
-            short_flag:
-              type: string
-              example: "-y"
-            long_flag:
-              type: string
-              example: "--mount"
-            requires_value:
-              type: boolean
-              example: true
-    
-    Subcommand:
-      type: object
-      required:
-        - name
-        - description
-      properties:
-        name:
-          type: string
-          example: "run"
-        description:
-          type: string
-          example: "Run the Docker container"
-        is_required:
-          type: boolean
-          example: true
-        subcommands:
-          type: array
-          items:
-            $ref: '#/components/schemas/Subcommand'
-        positional_arguments:
-          type: array
-          items:
-            $ref: '#/components/schemas/PositionalArgument'
-        named_arguments:
-          type: array
-          items:
-            $ref: '#/components/schemas/NamedArgument'
-    
-    Command:
-      type: object
-      properties:
-        name:
-          type: string
-          enum: [npx, docker, pypi, uvx] # TODO: Add all supported commands as a whitelist
-          example: "npx"
-        subcommands:
-          type: array
-          items:
-            $ref: '#/components/schemas/Subcommand'
-        positional_arguments:
-          type: array
-          items:
-            $ref: '#/components/schemas/PositionalArgument'
-        named_arguments:
-          type: array
-          items:
-            $ref: '#/components/schemas/NamedArgument'
-    
-    EnvironmentVariable:
-      type: object
-      required:
-        - name
-        - description
-      properties:
-        name:
-          type: string
-          example: "LOG_LEVEL"
-        description:
-          type: string
-          example: "Logging level (debug, info, warn, error)"
-        required:
-          type: boolean
-          example: false
-        default_value:
-          type: string
-          example: "info"
-    
+
     Package:
       type: object
       required:
@@ -304,13 +180,135 @@ components:
         version:
           type: string
           example: "1.0.2"
-        command:
-          $ref: '#/components/schemas/Command'
+        runtime_hint:
+          type: string
+          description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtime_arguments` are present.
+          examples: [npx, uvx]
+        runtime_arguments:
+          type: array
+          description: A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.
+          items:
+            $ref: '#/components/schemas/Argument'
+        package_arguments:
+          type: array
+          description: A list of arguments to be passed to the package's binary.
+          items:
+            $ref: '#/components/schemas/Argument'
         environment_variables:
           type: array
+          description: A mapping of environment variables to be set when running the package.
           items:
-            $ref: '#/components/schemas/EnvironmentVariable'
-    
+            $ref: '#/components/schemas/KeyValueInput'
+
+    Input:
+      type: object
+      properties:
+        description:
+          description: A description of the input, which clients can use to provide context to the user.
+          type: string
+        is_required:
+          type: boolean
+          default: false
+        format:
+          type: string
+          description: |
+            Specifies the input format. Supported values include `filepath`, which should be interpreted as a file on the user's filesystem.
+
+            When the input is converted to a string, booleans should be represented by the strings "true" and "false", and numbers should be represented as decimal values.
+          enum: [string, number, boolean, filepath]
+          default: string
+        value:
+          type: string
+          description: |
+            The default value for the input. If this is not set, the user may be prompted to provide a value.
+
+            Identifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged.
+        is_secret:
+          type: boolean
+          description: Indicates whether the input is a secret value (e.g., password, token). If true, clients should handle the value securely.
+          default: false
+        default:
+          type: string
+          description: The default value for the input.
+        choices:
+          type: array
+          description: A list of possible values for the input. If provided, the user must select one of these values.
+          items:
+            type: string
+          example: []
+
+    InputWithVariables:
+      allOf:
+        - $ref: '#/components/schemas/Input'
+        - type: object
+          properties:
+            variables:
+              type: object
+              description: A map of variable names to their values. Keys in the input `value` that are wrapped in `{curly_braces}` will be replaced with the corresponding variable values.
+              additionalProperties:
+                $ref: '#/components/schemas/Input'
+
+    PositionalArgument:
+      description: A positional input is a value inserted verbatim into the command line.
+      allOf:
+        - $ref: '#/components/schemas/InputWithVariables'
+        - type: object
+          required:
+            - type
+            - value_hint
+          properties:
+            type:
+              type: string
+              enum: [positional]
+              example: "positional"
+            value_hint:
+              type: string
+              description: An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users.
+              example: file_path
+            is_repeated:
+              type: boolean
+              description: Whether the argument can be repeated multiple times in the command line.
+              default: false
+
+    NamedArgument:
+      description: A command-line `--flag={value}`.
+      allOf:
+        - $ref: '#/components/schemas/InputWithVariables'
+        - type: object
+          required:
+            - type
+            - name
+          properties:
+            type:
+              type: string
+              enum: [named]
+              example: "named"
+            name:
+              type: string
+              description: The flag name, including any leading dashes.
+              example: "--port"
+            is_repeated:
+              type: boolean
+              description: Whether the argument can be repeated multiple times.
+              default: false
+
+    KeyValueInput:
+      allOf:
+        - $ref: '#/components/schemas/InputWithVariables'
+        - type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              description: Name of the header or environment variable.
+              example: SOME_VARIABLE
+
+    Argument:
+      anyOf:
+        - $ref: '#/components/schemas/PositionalArgument'
+        - $ref: '#/components/schemas/NamedArgument'
+
     Remote:
       type: object
       required:
@@ -325,7 +323,11 @@ components:
           type: string
           format: uri
           example: "https://mcp-fs.example.com/sse"
-    
+        headers:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValueInput'
+
     ServerDetail:
       allOf:
         - $ref: '#/components/schemas/Server'

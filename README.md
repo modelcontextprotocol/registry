@@ -57,6 +57,7 @@ By default, the service will run on `http://localhost:8080`.
 ## Project Structure
 
 ```
+├── api/           # OpenApi specification
 ├── cmd/           # Application entry points
 ├── config/        # Configuration files
 ├── internal/      # Private application code
