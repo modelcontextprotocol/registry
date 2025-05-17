@@ -10,19 +10,19 @@ import (
 
 // MemoryDB is an in-memory implementation of the Database interface
 type MemoryDB struct {
-	entries map[string]*model.Entry
+	entries map[string]*model.Server
 	mu      sync.RWMutex
 }
 
 // NewMemoryDB creates a new instance of the in-memory database
-func NewMemoryDB(e map[string]*model.Entry) *MemoryDB {
+func NewMemoryDB(e map[string]*model.Server) *MemoryDB {
 	return &MemoryDB{
 		entries: e,
 	}
 }
 
 // List retrieves all MCPRegistry entries with optional filtering and pagination
-func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Entry, string, error) {
+func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Server, string, error) {
 	if ctx.Err() != nil {
 		return nil, "", ctx.Err()
 	}
@@ -35,14 +35,14 @@ func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cur
 	defer db.mu.RUnlock()
 
 	// Convert all entries to a slice for pagination
-	var allEntries []*model.Entry
+	var allEntries []*model.Server
 	for _, entry := range db.entries {
 		entryCopy := *entry
 		allEntries = append(allEntries, &entryCopy)
 	}
 
 	// Simple filtering implementation
-	var filteredEntries []*model.Entry
+	var filteredEntries []*model.Server
 	for _, entry := range allEntries {
 		include := true
 
@@ -98,11 +98,11 @@ func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cur
 		endIdx = len(filteredEntries)
 	}
 
-	var result []*model.Entry
+	var result []*model.Server
 	if startIdx < len(filteredEntries) {
 		result = filteredEntries[startIdx:endIdx]
 	} else {
-		result = []*model.Entry{}
+		result = []*model.Server{}
 	}
 
 	// Determine next cursor
@@ -125,11 +125,13 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerDetail
 
 	if entry, exists := db.entries[id]; exists {
 		return &model.ServerDetail{
-			ID:            entry.ID,
-			Name:          entry.Name,
-			Description:   entry.Description,
-			VersionDetail: entry.VersionDetail,
-			Repository:    entry.Repository,
+			Server: model.Server{
+				ID:            entry.ID,
+				Name:          entry.Name,
+				Description:   entry.Description,
+				VersionDetail: entry.VersionDetail,
+				Repository:    entry.Repository,
+			},
 		}, nil
 	}
 
@@ -162,7 +164,7 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetai
 		return ErrInvalidInput
 	}
 
-	db.entries[serverDetail.ID] = &model.Entry{
+	db.entries[serverDetail.ID] = &model.Server{
 		ID:            serverDetail.ID,
 		Name:          serverDetail.Name,
 		Description:   serverDetail.Description,

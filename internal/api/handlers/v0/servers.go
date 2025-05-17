@@ -13,8 +13,8 @@ import (
 
 // Response is a paginated API response
 type PaginatedResponse struct {
-	Data     []model.Entry `json:"servers"`
-	Metadata Metadata      `json:"metadata,omitempty"`
+	Data     []model.Server `json:"servers"`
+	Metadata Metadata       `json:"metadata,omitempty"`
 }
 
 // Metadata contains pagination metadata

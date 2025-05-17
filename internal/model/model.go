@@ -24,88 +24,105 @@ type PublishRequest struct {
 	AuthStatusToken string         `json:"-"` // Used internally for device flows
 }
 
-type Entry struct {
-	ID            string        `json:"id,omitempty"`
-	Name          string        `json:"name,omitempty"`
-	Description   string        `json:"description,omitempty"`
-	Repository    Repository    `json:"repository,omitempty"`
-	VersionDetail VersionDetail `json:"version_detail,omitempty"`
-}
-
+// Repository represents a source code repository as defined in the spec
 type Repository struct {
-	ID        string `json:"id,omitempty"`
-	URL       string `json:"url,omitempty"`
-	Source    string `json:"source,omitempty"`
-	SubFolder string `json:"subfolder,omitempty"`
-	Branch    string `json:"branch,omitempty"`
-	Commit    string `json:"commit,omitempty"`
+	URL    string `json:"url" bson:"url"`
+	Source string `json:"source" bson:"source"`
+	ID     string `json:"id" bson:"id"`
 }
 
-type VersionDetail struct {
-	Version     string `json:"version,omitempty"`
-	ReleaseDate string `json:"release_date,omitempty"` //RFC 3339 date format
-	IsLatest    bool   `json:"is_latest,omitempty"`
+// ServerList represents the response for listing servers as defined in the spec
+type ServerList struct {
+	Servers    []Server `json:"servers" bson:"servers"`
+	Next       string   `json:"next,omitempty" bson:"next,omitempty"`
+	TotalCount int      `json:"total_count" bson:"total_count"`
 }
 
-type ServerDetail struct {
-	ID               string        `json:"id,omitempty"`
-	Name             string        `json:"name,omitempty"`
-	Description      string        `json:"description,omitempty"`
-	VersionDetail    VersionDetail `json:"version_detail,omitempty"`
-	Repository       Repository    `json:"repository,omitempty"`
-	PackageCanonical string        `json:"package_canonical,omitempty"`
-	Registries       []Registries  `json:"registries,omitempty"`
-	Remotes          []Remotes     `json:"remotes,omitempty"`
+// create an enum for Format
+type Format string
+
+const (
+	FormatString   Format = "string"
+	FormatNumber   Format = "number"
+	FormatBoolean  Format = "boolean"
+	FormatFilePath Format = "file_path"
+)
+
+// UserInput represents a user input as defined in the spec
+type Input struct {
+	Description string           `json:"description,omitempty" bson:"description,omitempty"`
+	IsRequired  bool             `json:"is_required,omitempty" bson:"is_required,omitempty"`
+	Format      Format           `json:"format,omitempty" bson:"format,omitempty"`
+	Value       string           `json:"value,omitempty" bson:"value,omitempty"`
+	IsSecret    bool             `json:"is_secret,omitempty" bson:"is_secret,omitempty"`
+	Default     string           `json:"default,omitempty" bson:"default,omitempty"`
+	Choices     []string         `json:"choices,omitempty" bson:"choices,omitempty"`
+	Template    string           `json:"template,omitempty" bson:"template,omitempty"`
+	Properties  map[string]Input `json:"properties,omitempty" bson:"properties,omitempty"`
 }
 
-type Registries struct {
-	Name             string  `json:"name,omitempty"`
-	PackageName      string  `json:"package_name,omitempty"`
-	License          string  `json:"license,omitempty"`
-	CommandArguments Command `json:"command_arguments,omitempty"`
+type InputWithVariables struct {
+	Input     `json:",inline" bson:",inline"`
+	Variables map[string]Input `json:"variables,omitempty" bson:"variables,omitempty"`
 }
 
-type Remotes struct {
-	TransportType string `json:"transport_type,omitempty"`
-	Url           string `json:"url,omitempty"`
+type KeyValueInput struct {
+	InputWithVariables `json:",inline" bson:",inline"`
+	Name               string `json:"name" bson:"name"`
 }
+type ArgumentType string
 
-type Command struct {
-	SubCommands          []SubCommand          `json:"sub_commands,omitempty"`
-	PositionalArguments  []PositionalArgument  `json:"positional_arguments,omitempty"`
-	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
-	NamedArguments       []NamedArguments      `json:"named_arguments,omitempty"`
-}
+const (
+	ArgumentTypePositional ArgumentType = "positional"
+	ArgumentTypeNamed      ArgumentType = "named"
+)
 
-type EnvironmentVariable struct {
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Required    bool   `json:"required,omitempty"`
-}
-
+// RuntimeArgument defines a type that can be either a PositionalArgument or a NamedArgument
 type Argument struct {
-	Name         string   `json:"name,omitempty"`
-	Description  string   `json:"description,omitempty"`
-	DefaultValue string   `json:"default_value,omitempty"`
-	IsRequired   bool     `json:"is_required,omitempty"`
-	IsEditable   bool     `json:"is_editable,omitempty"`
-	IsRepeatable bool     `json:"is_repeatable,omitempty"`
-	Choices      []string `json:"choices,omitempty"`
+	InputWithVariables `json:",inline" bson:",inline"`
+	Type               ArgumentType `json:"type" bson:"type"`
+	Name               string       `json:"name,omitempty" bson:"name,omitempty"`
+	IsRepeated         bool         `json:"is_repeated,omitempty" bson:"is_repeated,omitempty"`
+	ValueHint          string       `json:"value_hint,omitempty" bson:"value_hint,omitempty"`
 }
 
-type PositionalArgument struct {
-	Position int      `json:"position,omitempty"`
-	Argument Argument `json:"argument,omitempty"`
+type Package struct {
+	RegistryName         string          `json:"registry_name" bson:"registry_name"`
+	Name                 string          `json:"name" bson:"name"`
+	Version              string          `json:"version" bson:"version"`
+	RunTimeHint          string          `json:"runtime_hint,omitempty" bson:"runtime_hint,omitempty"`
+	RuntimeArguments     []Argument      `json:"runtime_arguments,omitempty" bson:"runtime_arguments,omitempty"`
+	PackageArguments     []Argument      `json:"package_arguments,omitempty" bson:"package_arguments,omitempty"`
+	EnvironmentVariables []KeyValueInput `json:"environment_variables,omitempty" bson:"environment_variables,omitempty"`
 }
 
-type SubCommand struct {
-	Name           string           `json:"name,omitempty"`
-	Description    string           `json:"description,omitempty"`
-	NamedArguments []NamedArguments `json:"named_arguments,omitempty"`
+// Remote represents a remote connection endpoint
+type Remote struct {
+	TransportType string  `json:"transport_type" bson:"transport_type"`
+	URL           string  `json:"url" bson:"url"`
+	Headers       []Input `json:"headers,omitempty" bson:"headers,omitempty"`
 }
-type NamedArguments struct {
-	ShortFlag     string   `json:"short_flag,omitempty"`
-	LongFlag      string   `json:"long_flag,omitempty"`
-	RequiresValue bool     `json:"requires_value,omitempty"`
-	Argument      Argument `json:"argument,omitempty"`
+
+// VersionDetail represents the version details of a server
+type VersionDetail struct {
+	Version     string `json:"version" bson:"version"`
+	ReleaseDate string `json:"release_date" bson:"release_date"`
+	IsLatest    bool   `json:"is_latest" bson:"is_latest"`
+}
+
+// Server represents a basic server information as defined in the spec
+type Server struct {
+	ID            string        `json:"id" bson:"id"`
+	Name          string        `json:"name" bson:"name"`
+	Description   string        `json:"description" bson:"description"`
+	Repository    Repository    `json:"repository" bson:"repository"`
+	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
+}
+
+// ServerDetail represents detailed server information as defined in the spec
+type ServerDetail struct {
+	Server           `json:",inline" bson:",inline"`
+	PackageCanonical string    `json:"package_canonical,omitempty" bson:"package_canonical,omitempty"`
+	Packages         []Package `json:"packages,omitempty" bson:"packages,omitempty"`
+	Remotes          []Remote  `json:"remotes,omitempty" bson:"remotes,omitempty"`
 }

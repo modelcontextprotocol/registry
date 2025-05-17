@@ -72,7 +72,7 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 }
 
 // List retrieves MCPRegistry entries with optional filtering and pagination
-func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Entry, string, error) {
+func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Server, string, error) {
 	if limit <= 0 {
 		// Set default limit if not provided
 		limit = 10
@@ -84,14 +84,16 @@ func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, curs
 
 	// Convert Go map to MongoDB filter
 	mongoFilter := bson.M{
-		"versiondetail.islatest": true,
+		"version_detail.is_latest": true,
 	}
 	// Map common filter keys to MongoDB document paths
 	for k, v := range filter {
 		// Handle nested fields with dot notation
 		switch k {
-		case "publisher.trusted":
-			mongoFilter["publisher.trusted"] = v
+		case "version":
+			mongoFilter["version_detail.version"] = v
+		case "name":
+			mongoFilter["name"] = v
 		default:
 			mongoFilter[k] = v
 		}
@@ -108,7 +110,7 @@ func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, curs
 		}
 
 		// Fetch the document at the cursor to get its sort values
-		var cursorDoc model.Entry
+		var cursorDoc model.Server
 		err := db.collection.FindOne(ctx, bson.M{"id": cursor}).Decode(&cursorDoc)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
@@ -138,7 +140,7 @@ func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, curs
 	defer mongoCursor.Close(ctx)
 
 	// Decode results
-	var results []*model.Entry
+	var results []*model.Server
 	if err = mongoCursor.All(ctx, &results); err != nil {
 		return nil, "", err
 	}
@@ -183,8 +185,8 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 	}
 	// find a server detail with the same name and check that the current version is greater than the existing one
 	filter := bson.M{
-		"name":                   serverDetail.Name,
-		"versiondetail.islatest": true,
+		"name":                     serverDetail.Name,
+		"version_detail.is_latest": true,
 	}
 
 	var existingEntry model.ServerDetail
