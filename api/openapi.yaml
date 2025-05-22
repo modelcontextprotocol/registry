@@ -176,7 +176,7 @@ components:
           example: "npm"
         name:
           type: string
-          example: "@modelcontextprotocol/server-filesystem"
+          example: "io.modelcontextprotocol/filesystem"
         version:
           type: string
           example: "1.0.2"

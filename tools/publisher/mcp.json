@@ -5,7 +5,7 @@
     "packages": [
         {
             "registry_name": "npm",
-            "name": "@<owner>/<server-name>",
+            "name": "io.github.<owner>/<server-name>",
             "version": "0.2.23",
             "package_arguments": [
                 {
@@ -26,7 +26,7 @@
             ]
         },{
             "registry_name": "docker>",
-            "name": "@<owner>/<server-name>-cli",
+            "name": "io.github.<owner>/<server-name>-cli",
             "version": "0.123.223",
             "runtime_hint": "docker",
             "runtime_arguments": [
