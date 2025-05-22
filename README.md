@@ -157,7 +157,6 @@ Response example:
     "release_date": "2025-05-16T19:13:21Z",
     "is_latest": true
   },
-  "package_canonical": "docker",
   "packages": [
     {
       "registry_name": "docker",
@@ -205,7 +204,6 @@ Request body example:
 {
     "description": "<your description here>",
     "name": "io.github.<owner>/<server-name>",
-    "package_canonical": "<package_registry",
     "packages": [
         {
             "registry_name": "npm",

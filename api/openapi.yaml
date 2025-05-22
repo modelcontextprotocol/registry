@@ -333,10 +333,6 @@ components:
         - $ref: '#/components/schemas/Server'
         - type: object
           properties:
-            package_canonical:
-              type: string
-              enum: [npm, docker, pypi, crates]
-              example: "npm"
             packages:
               type: array
               items:

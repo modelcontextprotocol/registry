@@ -70,7 +70,6 @@ cat > "$PAYLOAD_FILE" << EOF
     "url": "https://github.com/example/test-mcp-server",
     "branch": "main"
   },
-  "package_canonical": "test-mcp-server",
   "registries": [
     {
       "name": "npm",

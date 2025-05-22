@@ -122,7 +122,6 @@ type Server struct {
 // ServerDetail represents detailed server information as defined in the spec
 type ServerDetail struct {
 	Server           `json:",inline" bson:",inline"`
-	PackageCanonical string    `json:"package_canonical,omitempty" bson:"package_canonical,omitempty"`
 	Packages         []Package `json:"packages,omitempty" bson:"packages,omitempty"`
 	Remotes          []Remote  `json:"remotes,omitempty" bson:"remotes,omitempty"`
 }
