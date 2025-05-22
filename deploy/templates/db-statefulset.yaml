@@ -1,0 +1,4 @@
+# This may change to Postgres later, so make it easier to swap in later
+{{- if eq (required "Missing required value: registry.db" .Values.registry.db ) "mongo" }}
+{{ include "mcp-registry.mongodb-statefulset" . }}
+{{- end }}

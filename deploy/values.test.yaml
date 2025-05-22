@@ -1,0 +1,7 @@
+registry:
+  db_port: 27017
+  env:
+    - name: MCP_REGISTRY_DATABASE_URL
+      value: mongodb://mcp-db:27017
+    - name: MCP_REGISTRY_ENVIRONMENT
+      value: "test"

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: mcp-registry
+description: A Helm chart for deploying a MCP registry service
+version: 0.1.0

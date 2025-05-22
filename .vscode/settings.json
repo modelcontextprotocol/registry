@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "deploy/templates/*.tpl": "helm",
+        "deploy/templates/*.yaml": "helm",
+    }
+}

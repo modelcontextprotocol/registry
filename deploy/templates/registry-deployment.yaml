@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry
+  template:
+    metadata:
+      labels:
+        app: registry
+    spec:
+      containers:
+        - name: registry
+          image: {{ required "Missing required value: registry.image" .Values.registry.image }}
+          ports:
+            - containerPort: {{ .Values.registry.port }}
+          env:
+          {{- toYaml .Values.registry.env | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: {{ required "Missing required value: registry.github_secret_name" .Values.registry.github_secret_name }}

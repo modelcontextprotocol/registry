@@ -1,0 +1,15 @@
+registry:
+  port: 8080
+
+# DB component is run on as a stateful-set
+db:
+  storage_class_name: managed-csi
+  storage_request_size: 5Gi
+  mongo:
+    port_name: mongo
+    port: 27017
+    env:
+    - name: PUID
+      value: "1000"
+    - name: PGID
+      value: "1000"
