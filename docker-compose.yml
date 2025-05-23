@@ -9,6 +9,8 @@ services:
     environment:
       - MCP_REGISTRY_DATABASE_URL=mongodb://mongodb:27017
       - MCP_REGISTRY_ENVIRONMENT=test
+      - MCP_REGISTRY_GITHUB_CLIENT_ID
+      - MCP_REGISTRY_GITHUB_CLIENT_SECRET
     ports:
       - 8080:8080
     restart: "unless-stopped"
