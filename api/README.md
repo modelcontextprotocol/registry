@@ -26,7 +26,8 @@ GET /v0/servers?limit=5000&offset=0
         "version": "1.0.2",
         "release_date": "2023-06-15T10:30:00Z",
         "is_latest": true
-      }
+      },
+      "readme_url": "https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/filesystem/README.md"
     }
   ],
   "next": "https://registry.modelcontextprotocol.io/servers?offset=50",
@@ -59,6 +60,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
     "release_date": "2023-06-15T10:30:00Z",
     "is_latest": true
   },
+  "readme_url": "https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/filesystem/README.md"
   "package_canonical": "npm",
   "packages": [
     {
@@ -154,6 +156,7 @@ API Response:
     "release_date": "2023-06-15T10:30:00Z",
     "is_latest": true
   },
+  "readme_url": "https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/brave-search/README.md"
   "package_canonical": "npm",
   "packages": [
     {
@@ -207,6 +210,7 @@ API Response:
     "release_date": "2023-06-15T10:30:00Z",
     "is_latest": true
   },
+  "readme_url": "https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/filesystem/README.md"
   "package_canonical": "docker",
   "packages": [
     {
@@ -281,6 +285,7 @@ API Response:
     "release_date": "2023-06-15T10:30:00Z",
     "is_latest": true
   },
+  "readme_url": "https://raw.githubusercontent.com/example/remote-fs/refs/heads/main/README.md"
   "remotes": [
     {
       "transport_type": "sse",

@@ -110,6 +110,7 @@ components:
         - description
         - repository
         - version_detail
+        - readme_url
       properties:
         id:
           type: string
@@ -123,6 +124,10 @@ components:
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
         repository:
           $ref: '#/components/schemas/Repository'
+        readme_url:
+          type: string
+          description: URL to the README markdown file of the server
+          example: "https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/src/filesystem/README.md"
         version_detail:
           type: object
           required:
