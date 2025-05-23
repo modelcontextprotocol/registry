@@ -205,7 +205,7 @@ Request body example:
 {
     "description": "<your description here>",
     "name": "io.github.<owner>/<server-name>",
-    "package_canonical": "<package_registry",
+    "package_canonical": "<package_registry>",
     "packages": [
         {
             "registry_name": "npm",
