@@ -294,9 +294,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	}
 
 	// Create the publish request payload (without authentication)
-	publishReq := map[string]interface{}{
-		"server_detail": mcpDetails,
-	}
+	publishReq := mcpDetails
 
 	// Convert the request to JSON
 	jsonData, err := json.Marshal(publishReq)
