@@ -54,6 +54,39 @@ This will create the `registry` binary in the current directory. You'll need to 
 
 By default, the service will run on `http://localhost:8080`.
 
+
+### Prerequisites
+
+- Install GolangCI-Lint by following the [installation guide](https://golangci-lint.run/usage/install/).
+
+### Running the Linter
+
+To run the linter locally, execute the following command:
+
+```bash
+golangci-lint run
+```
+
+This will analyze the codebase and report any linting issues.
+
+### Fixing Linting Issues
+
+Some issues can be automatically fixed by running:
+
+```bash
+golangci-lint run --fix
+```
+
+### CI Integration
+
+The linter is also integrated into the CI pipeline using GitHub Actions. It runs automatically on `push` and `pull_request` events targeting the `main` branch or tags starting with `v*`. You can find the configuration in `.github/workflows/lint.yml`.
+
+### Custom Configuration
+
+The linter configuration is defined in the `.golangci.yml` file. You can modify this file to enable or disable specific linters or customize their behavior.
+
+For more details, refer to the [GolangCI-Lint documentation](https://golangci-lint.run/).
+
 ## Project Structure
 
 ```
