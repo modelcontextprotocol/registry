@@ -166,7 +166,7 @@ func requestDeviceCode() (string, string, string, error) {
 		return "", "", "", err
 	}
 
-	req, err := http.NewRequest("POST", GitHubDeviceCodeURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest(http.MethodPost, GitHubDeviceCodeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", "", "", err
 	}
@@ -222,7 +222,7 @@ func pollForToken(deviceCode string) (string, error) {
 	deadline := time.Now().Add(time.Duration(expiresIn) * time.Second)
 
 	for time.Now().Before(deadline) {
-		req, err := http.NewRequest("POST", GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
+		req, err := http.NewRequest(http.MethodPost, GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
 		if err != nil {
 			return "", err
 		}
@@ -311,7 +311,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	publishURL := registryURL + "v0/publish"
 
 	// Create and send the request
-	req, err := http.NewRequest("POST", publishURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest(http.MethodPost, publishURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
 	}
