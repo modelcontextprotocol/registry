@@ -77,7 +77,7 @@ func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (boo
 	}
 
 	// First, validate that the token is associated with our ClientID
-	tokenReq, err := http.NewRequest("GET", "https://api.github.com/applications/"+g.config.ClientID+"/token", nil)
+	tokenReq, err := http.NewRequest(http.MethodGet, "https://api.github.com/applications/"+g.config.ClientID+"/token", nil)
 	if err != nil {
 		return false, err
 	}
@@ -97,7 +97,7 @@ func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (boo
 	}
 
 	// POST instead of GET for security reasons per GitHub API
-	tokenReq, err = http.NewRequest("POST", "https://api.github.com/applications/"+g.config.ClientID+"/token", io.NopCloser(bytes.NewReader(checkBody)))
+	tokenReq, err = http.NewRequest(http.MethodPost, "https://api.github.com/applications/"+g.config.ClientID+"/token", io.NopCloser(bytes.NewReader(checkBody)))
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +135,7 @@ func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (boo
 	}
 
 	// Get the authenticated user
-	userReq, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+	userReq, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
 		return false, err
 	}
@@ -216,7 +216,7 @@ func (g *GitHubDeviceAuth) checkOrgMembership(token, username, org string) (bool
 	// true if status code is 204 No Content
 	// false if status code is 404 Not Found
 	url := fmt.Sprint("https://api.github.com/orgs/", org, "/members/", username)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return false, err
 	}
