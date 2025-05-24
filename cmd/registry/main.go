@@ -66,7 +66,9 @@ func main() {
 
 	if cfg.SeedImport {
 		log.Println("Importing data...")
-		database.ImportSeedFile(mongoDB, cfg.SeedFilePath)
+		if err := database.ImportSeedFile(mongoDB, cfg.SeedFilePath); err != nil {
+			log.Fatalf("Failed to import seed file: %v", err)
+		}
 		log.Println("Data import completed successfully")
 	}
 

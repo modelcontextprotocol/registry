@@ -89,7 +89,7 @@ func ServersHandler(registry service.RegistryService) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_ = json.NewEncoder(w).Encode(response)
 	}
 }
 
@@ -123,6 +123,6 @@ func ServersDetailHandler(registry service.RegistryService) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(serverDetail)
+		_ = json.NewEncoder(w).Encode(serverDetail)
 	}
 }

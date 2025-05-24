@@ -107,7 +107,7 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"message": "Server publication successful",
 			"id":      serverDetail.ID,
 		})
