@@ -126,3 +126,124 @@ type ServerDetail struct {
 	Packages         []Package `json:"packages,omitempty" bson:"packages,omitempty"`
 	Remotes          []Remote  `json:"remotes,omitempty" bson:"remotes,omitempty"`
 }
+
+package model
+
+// ... existing code ...
+
+// Status represents a generic status object
+type Status struct {
+	Code    int    `json:"code" bson:"code"`
+	Message string `json:"message" bson:"message"`
+}
+
+// ServerMetrics represents some basic metrics of a server
+type ServerMetrics struct {
+	CPUUsage    float64 `json:"cpu_usage" bson:"cpu_usage"`
+	MemoryUsage float64 `json:"memory_usage" bson:"memory_usage"`
+	Uptime      int64   `json:"uptime" bson:"uptime"`
+}
+
+// Tag represents a server tag or label
+type Tag struct {
+	Key   string `json:"key" bson:"key"`
+	Value string `json:"value" bson:"value"`
+}
+
+// ServerStatus defines a simple server health status
+type ServerStatus string
+
+const (
+	StatusHealthy   ServerStatus = "healthy"
+	StatusDegraded  ServerStatus = "degraded"
+	StatusUnhealthy ServerStatus = "unhealthy"
+)
+
+// ServerHealthCheck represents a health check result
+type ServerHealthCheck struct {
+	Timestamp string        `json:"timestamp" bson:"timestamp"`
+	Status    ServerStatus  `json:"status" bson:"status"`
+	Message   string        `json:"message" bson:"message"`
+	Metrics   ServerMetrics `json:"metrics" bson:"metrics"`
+}
+
+// User represents a registered user in the system
+type User struct {
+	ID        string `json:"id" bson:"id"`
+	Username  string `json:"username" bson:"username"`
+	Email     string `json:"email" bson:"email"`
+	IsAdmin   bool   `json:"is_admin" bson:"is_admin"`
+	CreatedAt string `json:"created_at" bson:"created_at"`
+}
+
+// Dummy utility function to generate a new server ID
+func NewServerID() string {
+	return "srv-" + RandomString(10)
+}
+
+// RandomString generates a random string of given length
+func RandomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letters[i%len(letters)]
+	}
+	return string(b)
+}
+
+// IsPackageValid performs a dummy package validation
+func (p Package) IsPackageValid() bool {
+	return p.Name != "" && p.Version != ""
+}
+
+// GetLatestPackageVersion returns the latest version from a list of packages
+func GetLatestPackageVersion(packages []Package) string {
+	if len(packages) == 0 {
+		return ""
+	}
+	// Dummy: just return the version of the first package
+	return packages[0].Version
+}
+
+// UpdateMetrics updates the server's metrics (dummy implementation)
+func (m *ServerMetrics) UpdateMetrics(cpu, mem float64, uptime int64) {
+	m.CPUUsage = cpu
+	m.MemoryUsage = mem
+	m.Uptime = uptime
+}
+
+// IsHealthy determines if the server is healthy based on dummy criteria
+func (h ServerHealthCheck) IsHealthy() bool {
+	return h.Status == StatusHealthy
+}
+
+// AddTag adds a new tag to a list of tags
+func AddTag(tags *[]Tag, key, value string) {
+	*tags = append(*tags, Tag{Key: key, Value: value})
+}
+
+// RemoveTag removes a tag by key
+func RemoveTag(tags *[]Tag, key string) {
+	for i, t := range *tags {
+		if t.Key == key {
+			*tags = append((*tags)[:i], (*tags)[i+1:]...)
+			break
+		}
+	}
+}
+
+// Dummy list of supported auth methods
+var SupportedAuthMethods = []AuthMethod{
+	AuthMethodGitHub,
+	AuthMethodNone,
+}
+
+// IsSupportedAuthMethod checks if the given auth method is supported
+func IsSupportedAuthMethod(method AuthMethod) bool {
+	for _, m := range SupportedAuthMethods {
+		if m == method {
+			return true
+		}
+	}
+	return false
+}
