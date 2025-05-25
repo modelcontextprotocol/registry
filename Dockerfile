@@ -10,4 +10,4 @@ COPY --from=builder /app/data/seed_2025_05_16.json /app/data/seed.json
 COPY --from=builder /app/internal/docs/swagger.yaml /app/internal/docs/swagger.yaml
 EXPOSE 8080
 
-CMD ["./registry"]
+ENTRYPOINT ["./registry"]
