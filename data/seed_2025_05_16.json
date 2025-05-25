@@ -13,7 +13,6 @@
       "release_date": "2025-05-16T18:56:49Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -42,7 +41,6 @@
       "release_date": "2025-05-16T18:56:52Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -96,7 +94,6 @@
       "release_date": "2025-05-16T18:56:54Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -125,7 +122,6 @@
       "release_date": "2025-05-16T18:56:57Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -165,7 +161,6 @@
       "release_date": "2025-05-16T18:57:01Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -239,7 +234,6 @@
       "release_date": "2025-05-16T18:57:04Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -305,7 +299,6 @@
       "release_date": "2025-05-16T18:57:06Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -338,7 +331,6 @@
       "release_date": "2025-05-16T18:57:10Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -408,7 +400,6 @@
       "release_date": "2025-05-16T18:57:12Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -431,7 +422,6 @@
       "release_date": "2025-05-16T18:57:16Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -472,7 +462,6 @@
       "release_date": "2025-05-16T18:57:18Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -501,7 +490,6 @@
       "release_date": "2025-05-16T18:57:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -524,7 +512,6 @@
       "release_date": "2025-05-16T18:57:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -547,7 +534,6 @@
       "release_date": "2025-05-16T18:57:24Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -570,7 +556,6 @@
       "release_date": "2025-05-16T18:57:26Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -622,7 +607,6 @@
       "release_date": "2025-05-16T18:57:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -671,7 +655,6 @@
       "release_date": "2025-05-16T18:57:35Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -700,7 +683,6 @@
       "release_date": "2025-05-16T18:57:37Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -729,7 +711,6 @@
       "release_date": "2025-05-16T18:57:40Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -779,7 +760,6 @@
       "release_date": "2025-05-16T18:57:44Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -839,7 +819,6 @@
       "release_date": "2025-05-16T18:57:46Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -872,7 +851,6 @@
       "release_date": "2025-05-16T18:57:48Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -895,7 +873,6 @@
       "release_date": "2025-05-16T18:57:50Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -918,7 +895,6 @@
       "release_date": "2025-05-16T18:57:54Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -956,7 +932,6 @@
       "release_date": "2025-05-16T18:57:58Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -989,7 +964,6 @@
       "release_date": "2025-05-16T18:58:02Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -1061,7 +1035,6 @@
       "release_date": "2025-05-16T18:58:05Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -1105,7 +1078,6 @@
       "release_date": "2025-05-16T18:58:07Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1138,7 +1110,6 @@
       "release_date": "2025-05-16T18:58:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1161,7 +1132,6 @@
       "release_date": "2025-05-16T18:58:14Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1240,7 +1210,6 @@
       "release_date": "2025-05-16T18:58:15Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1263,7 +1232,6 @@
       "release_date": "2025-05-16T18:58:19Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -1325,7 +1293,6 @@
       "release_date": "2025-05-16T18:58:23Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -1393,7 +1360,6 @@
       "release_date": "2025-05-16T18:58:24Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1416,7 +1382,6 @@
       "release_date": "2025-05-16T18:58:26Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1439,7 +1404,6 @@
       "release_date": "2025-05-16T18:58:28Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1462,7 +1426,6 @@
       "release_date": "2025-05-16T18:58:30Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -1491,7 +1454,6 @@
       "release_date": "2025-05-16T18:58:35Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -1587,7 +1549,6 @@
       "release_date": "2025-05-16T18:58:37Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1631,7 +1592,6 @@
       "release_date": "2025-05-16T18:58:39Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1654,7 +1614,6 @@
       "release_date": "2025-05-16T18:58:43Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -1695,7 +1654,6 @@
       "release_date": "2025-05-16T18:58:45Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1724,7 +1682,6 @@
       "release_date": "2025-05-16T18:58:49Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -1788,7 +1745,6 @@
       "release_date": "2025-05-16T18:58:53Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1821,7 +1777,6 @@
       "release_date": "2025-05-16T18:58:55Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1844,7 +1799,6 @@
       "release_date": "2025-05-16T18:58:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1867,7 +1821,6 @@
       "release_date": "2025-05-16T18:59:01Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1910,7 +1863,6 @@
       "release_date": "2025-05-16T18:59:03Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -1943,7 +1895,6 @@
       "release_date": "2025-05-16T18:59:06Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -1976,7 +1927,6 @@
       "release_date": "2025-05-16T18:59:10Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -2055,7 +2005,6 @@
       "release_date": "2025-05-16T18:59:13Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2084,7 +2033,6 @@
       "release_date": "2025-05-16T18:59:19Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -2175,7 +2123,6 @@
       "release_date": "2025-05-16T18:59:21Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -2212,7 +2159,6 @@
       "release_date": "2025-05-16T18:59:25Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -2253,7 +2199,6 @@
       "release_date": "2025-05-16T18:59:27Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2276,7 +2221,6 @@
       "release_date": "2025-05-16T18:59:29Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2299,7 +2243,6 @@
       "release_date": "2025-05-16T18:59:31Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2344,7 +2287,6 @@
       "release_date": "2025-05-16T18:59:34Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2367,7 +2309,6 @@
       "release_date": "2025-05-16T18:59:35Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -2396,7 +2337,6 @@
       "release_date": "2025-05-16T18:59:38Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2419,7 +2359,6 @@
       "release_date": "2025-05-16T18:59:39Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2442,7 +2381,6 @@
       "release_date": "2025-05-16T18:59:41Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2465,7 +2403,6 @@
       "release_date": "2025-05-16T18:59:46Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -2532,7 +2469,6 @@
       "release_date": "2025-05-16T18:59:48Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -2565,7 +2501,6 @@
       "release_date": "2025-05-16T18:59:50Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2594,7 +2529,6 @@
       "release_date": "2025-05-16T18:59:54Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -2648,7 +2582,6 @@
       "release_date": "2025-05-16T18:59:57Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -2712,7 +2645,6 @@
       "release_date": "2025-05-16T18:59:59Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2735,7 +2667,6 @@
       "release_date": "2025-05-16T19:00:04Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -2808,7 +2739,6 @@
       "release_date": "2025-05-16T19:00:06Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2853,7 +2783,6 @@
       "release_date": "2025-05-16T19:00:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2890,7 +2819,6 @@
       "release_date": "2025-05-16T19:00:10Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2913,7 +2841,6 @@
       "release_date": "2025-05-16T19:00:14Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -2942,7 +2869,6 @@
       "release_date": "2025-05-16T19:00:16Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -2979,7 +2905,6 @@
       "release_date": "2025-05-16T19:00:18Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3002,7 +2927,6 @@
       "release_date": "2025-05-16T19:00:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3025,7 +2949,6 @@
       "release_date": "2025-05-16T19:00:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3048,7 +2971,6 @@
       "release_date": "2025-05-16T19:00:25Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3081,7 +3003,6 @@
       "release_date": "2025-05-16T19:00:28Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3135,7 +3056,6 @@
       "release_date": "2025-05-16T19:00:31Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -3172,7 +3092,6 @@
       "release_date": "2025-05-16T19:00:34Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -3217,7 +3136,6 @@
       "release_date": "2025-05-16T19:00:38Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -3281,7 +3199,6 @@
       "release_date": "2025-05-16T19:00:40Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -3330,7 +3247,6 @@
       "release_date": "2025-05-16T19:00:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3353,7 +3269,6 @@
       "release_date": "2025-05-16T19:00:45Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3396,7 +3311,6 @@
       "release_date": "2025-05-16T19:00:47Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3419,7 +3333,6 @@
       "release_date": "2025-05-16T19:00:49Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -3448,7 +3361,6 @@
       "release_date": "2025-05-16T19:00:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3477,7 +3389,6 @@
       "release_date": "2025-05-16T19:00:55Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -3531,7 +3442,6 @@
       "release_date": "2025-05-16T19:00:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3575,7 +3485,6 @@
       "release_date": "2025-05-16T19:01:00Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -3604,7 +3513,6 @@
       "release_date": "2025-05-16T19:01:02Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -3627,7 +3535,6 @@
       "release_date": "2025-05-16T19:01:06Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -3709,7 +3616,6 @@
       "release_date": "2025-05-16T19:01:08Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -3750,7 +3656,6 @@
       "release_date": "2025-05-16T19:01:10Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -3779,7 +3684,6 @@
       "release_date": "2025-05-16T19:01:13Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -3844,7 +3748,6 @@
       "release_date": "2025-05-16T19:01:29Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4203,7 +4106,6 @@
       "release_date": "2025-05-16T19:01:35Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -4309,7 +4211,6 @@
       "release_date": "2025-05-16T19:01:39Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -4385,7 +4286,6 @@
       "release_date": "2025-05-16T19:01:41Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4414,7 +4314,6 @@
       "release_date": "2025-05-16T19:01:43Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -4449,7 +4348,6 @@
       "release_date": "2025-05-16T19:01:46Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -4478,7 +4376,6 @@
       "release_date": "2025-05-16T19:01:48Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -4507,7 +4404,6 @@
       "release_date": "2025-05-16T19:01:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4547,7 +4443,6 @@
       "release_date": "2025-05-16T19:01:53Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4570,7 +4465,6 @@
       "release_date": "2025-05-16T19:01:55Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4628,7 +4522,6 @@
       "release_date": "2025-05-16T19:02:00Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4651,7 +4544,6 @@
       "release_date": "2025-05-16T19:02:02Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -4680,7 +4572,6 @@
       "release_date": "2025-05-16T19:02:05Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4703,7 +4594,6 @@
       "release_date": "2025-05-16T19:02:07Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4726,7 +4616,6 @@
       "release_date": "2025-05-16T19:02:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4749,7 +4638,6 @@
       "release_date": "2025-05-16T19:02:11Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4772,7 +4660,6 @@
       "release_date": "2025-05-16T19:02:15Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -4816,7 +4703,6 @@
       "release_date": "2025-05-16T19:02:18Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4861,7 +4747,6 @@
       "release_date": "2025-05-16T19:02:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4905,7 +4790,6 @@
       "release_date": "2025-05-16T19:02:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4928,7 +4812,6 @@
       "release_date": "2025-05-16T19:02:25Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -4972,7 +4855,6 @@
       "release_date": "2025-05-16T19:02:28Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -5032,7 +4914,6 @@
       "release_date": "2025-05-16T19:02:30Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -5055,7 +4936,6 @@
       "release_date": "2025-05-16T19:02:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5078,7 +4958,6 @@
       "release_date": "2025-05-16T19:02:34Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -5112,7 +4991,6 @@
       "release_date": "2025-05-16T19:02:37Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -5145,7 +5023,6 @@
       "release_date": "2025-05-16T19:02:39Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5168,7 +5045,6 @@
       "release_date": "2025-05-16T19:02:43Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -5226,7 +5102,6 @@
       "release_date": "2025-05-16T19:02:45Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -5255,7 +5130,6 @@
       "release_date": "2025-05-16T19:02:48Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5295,7 +5169,6 @@
       "release_date": "2025-05-16T19:02:50Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5318,7 +5191,6 @@
       "release_date": "2025-05-16T19:02:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5341,7 +5213,6 @@
       "release_date": "2025-05-16T19:02:53Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5379,7 +5250,6 @@
       "release_date": "2025-05-16T19:03:02Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -5481,7 +5351,6 @@
       "release_date": "2025-05-16T19:03:05Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -5514,7 +5383,6 @@
       "release_date": "2025-05-16T19:03:07Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -5537,7 +5405,6 @@
       "release_date": "2025-05-16T19:03:10Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5581,7 +5448,6 @@
       "release_date": "2025-05-16T19:03:13Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5622,7 +5488,6 @@
       "release_date": "2025-05-16T19:03:14Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5645,7 +5510,6 @@
       "release_date": "2025-05-16T19:03:16Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5674,7 +5538,6 @@
       "release_date": "2025-05-16T19:03:19Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5697,7 +5560,6 @@
       "release_date": "2025-05-16T19:03:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5720,7 +5582,6 @@
       "release_date": "2025-05-16T19:03:23Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5765,7 +5626,6 @@
       "release_date": "2025-05-16T19:03:28Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -5835,7 +5695,6 @@
       "release_date": "2025-05-16T19:03:32Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -5907,7 +5766,6 @@
       "release_date": "2025-05-16T19:03:34Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -5930,7 +5788,6 @@
       "release_date": "2025-05-16T19:03:40Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -6056,7 +5913,6 @@
       "release_date": "2025-05-16T19:03:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6079,7 +5935,6 @@
       "release_date": "2025-05-16T19:03:44Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -6108,7 +5963,6 @@
       "release_date": "2025-05-16T19:03:46Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -6141,7 +5995,6 @@
       "release_date": "2025-05-16T19:03:49Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6174,7 +6027,6 @@
       "release_date": "2025-05-16T19:03:52Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6197,7 +6049,6 @@
       "release_date": "2025-05-16T19:03:54Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6252,7 +6103,6 @@
       "release_date": "2025-05-16T19:03:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6281,7 +6131,6 @@
       "release_date": "2025-05-16T19:03:59Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6326,7 +6175,6 @@
       "release_date": "2025-05-16T19:04:02Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6367,7 +6215,6 @@
       "release_date": "2025-05-16T19:04:03Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6390,7 +6237,6 @@
       "release_date": "2025-05-16T19:04:07Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6459,7 +6305,6 @@
       "release_date": "2025-05-16T19:04:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6482,7 +6327,6 @@
       "release_date": "2025-05-16T19:04:11Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6505,7 +6349,6 @@
       "release_date": "2025-05-16T19:04:14Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -6548,7 +6391,6 @@
       "release_date": "2025-05-16T19:04:17Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6582,7 +6424,6 @@
       "release_date": "2025-05-16T19:04:19Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6611,7 +6452,6 @@
       "release_date": "2025-05-16T19:04:22Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -6655,7 +6495,6 @@
       "release_date": "2025-05-16T19:04:24Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -6699,7 +6538,6 @@
       "release_date": "2025-05-16T19:04:28Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -6743,7 +6581,6 @@
       "release_date": "2025-05-16T19:04:30Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -6784,7 +6621,6 @@
       "release_date": "2025-05-16T19:04:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6832,7 +6668,6 @@
       "release_date": "2025-05-16T19:04:35Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6876,7 +6711,6 @@
       "release_date": "2025-05-16T19:04:37Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6910,7 +6744,6 @@
       "release_date": "2025-05-16T19:04:40Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6933,7 +6766,6 @@
       "release_date": "2025-05-16T19:04:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6956,7 +6788,6 @@
       "release_date": "2025-05-16T19:04:43Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -6979,7 +6810,6 @@
       "release_date": "2025-05-16T19:04:46Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7020,7 +6850,6 @@
       "release_date": "2025-05-16T19:04:48Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7043,7 +6872,6 @@
       "release_date": "2025-05-16T19:04:52Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -7117,7 +6945,6 @@
       "release_date": "2025-05-16T19:04:55Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -7162,7 +6989,6 @@
       "release_date": "2025-05-16T19:04:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7185,7 +7011,6 @@
       "release_date": "2025-05-16T19:04:59Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7208,7 +7033,6 @@
       "release_date": "2025-05-16T19:05:01Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7248,7 +7072,6 @@
       "release_date": "2025-05-16T19:05:04Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -7277,7 +7100,6 @@
       "release_date": "2025-05-16T19:05:05Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7300,7 +7122,6 @@
       "release_date": "2025-05-16T19:05:08Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7329,7 +7150,6 @@
       "release_date": "2025-05-16T19:05:10Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7352,7 +7172,6 @@
       "release_date": "2025-05-16T19:05:14Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -7427,7 +7246,6 @@
       "release_date": "2025-05-16T19:05:16Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7450,7 +7268,6 @@
       "release_date": "2025-05-16T19:05:18Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -7473,7 +7290,6 @@
       "release_date": "2025-05-16T19:05:20Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -7521,7 +7337,6 @@
       "release_date": "2025-05-16T19:05:30Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7613,7 +7428,6 @@
       "release_date": "2025-05-16T19:05:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7636,7 +7450,6 @@
       "release_date": "2025-05-16T19:05:34Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -7665,7 +7478,6 @@
       "release_date": "2025-05-16T19:05:36Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7694,7 +7506,6 @@
       "release_date": "2025-05-16T19:05:38Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7727,7 +7538,6 @@
       "release_date": "2025-05-16T19:05:41Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7760,7 +7570,6 @@
       "release_date": "2025-05-16T19:05:43Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7783,7 +7592,6 @@
       "release_date": "2025-05-16T19:05:48Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -7836,7 +7644,6 @@
       "release_date": "2025-05-16T19:05:51Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -7890,7 +7697,6 @@
       "release_date": "2025-05-16T19:05:53Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -7913,7 +7719,6 @@
       "release_date": "2025-05-16T19:05:56Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -7953,7 +7758,6 @@
       "release_date": "2025-05-16T19:05:59Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -7990,7 +7794,6 @@
       "release_date": "2025-05-16T19:06:01Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8013,7 +7816,6 @@
       "release_date": "2025-05-16T19:06:03Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8036,7 +7838,6 @@
       "release_date": "2025-05-16T19:06:05Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -8059,7 +7860,6 @@
       "release_date": "2025-05-16T19:06:07Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8082,7 +7882,6 @@
       "release_date": "2025-05-16T19:06:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8105,7 +7904,6 @@
       "release_date": "2025-05-16T19:06:11Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8143,7 +7941,6 @@
       "release_date": "2025-05-16T19:06:20Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -8217,7 +8014,6 @@
       "release_date": "2025-05-16T19:06:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8240,7 +8036,6 @@
       "release_date": "2025-05-16T19:06:25Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8263,7 +8058,6 @@
       "release_date": "2025-05-16T19:06:27Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8292,7 +8086,6 @@
       "release_date": "2025-05-16T19:06:30Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -8342,7 +8135,6 @@
       "release_date": "2025-05-16T19:06:33Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8377,7 +8169,6 @@
       "release_date": "2025-05-16T19:06:35Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8400,7 +8191,6 @@
       "release_date": "2025-05-16T19:06:38Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8433,7 +8223,6 @@
       "release_date": "2025-05-16T19:06:41Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8462,7 +8251,6 @@
       "release_date": "2025-05-16T19:06:43Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8485,7 +8273,6 @@
       "release_date": "2025-05-16T19:06:44Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8508,7 +8295,6 @@
       "release_date": "2025-05-16T19:06:47Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8552,7 +8338,6 @@
       "release_date": "2025-05-16T19:06:49Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8575,7 +8360,6 @@
       "release_date": "2025-05-16T19:06:52Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8598,7 +8382,6 @@
       "release_date": "2025-05-16T19:06:55Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8631,7 +8414,6 @@
       "release_date": "2025-05-16T19:06:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8654,7 +8436,6 @@
       "release_date": "2025-05-16T19:06:59Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -8691,7 +8472,6 @@
       "release_date": "2025-05-16T19:07:01Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8714,7 +8494,6 @@
       "release_date": "2025-05-16T19:07:04Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8754,7 +8533,6 @@
       "release_date": "2025-05-16T19:07:07Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -8787,7 +8565,6 @@
       "release_date": "2025-05-16T19:07:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8810,7 +8587,6 @@
       "release_date": "2025-05-16T19:07:11Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8833,7 +8609,6 @@
       "release_date": "2025-05-16T19:07:16Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8903,7 +8678,6 @@
       "release_date": "2025-05-16T19:07:18Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8926,7 +8700,6 @@
       "release_date": "2025-05-16T19:07:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8949,7 +8722,6 @@
       "release_date": "2025-05-16T19:07:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -8978,7 +8750,6 @@
       "release_date": "2025-05-16T19:07:25Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -9021,7 +8792,6 @@
       "release_date": "2025-05-16T19:07:29Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9075,7 +8845,6 @@
       "release_date": "2025-05-16T19:07:31Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9098,7 +8867,6 @@
       "release_date": "2025-05-16T19:07:33Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9121,7 +8889,6 @@
       "release_date": "2025-05-16T19:07:34Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9144,7 +8911,6 @@
       "release_date": "2025-05-16T19:07:38Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -9188,7 +8954,6 @@
       "release_date": "2025-05-16T19:07:40Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9222,7 +8987,6 @@
       "release_date": "2025-05-16T19:07:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9245,7 +9009,6 @@
       "release_date": "2025-05-16T19:07:44Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9268,7 +9031,6 @@
       "release_date": "2025-05-16T19:07:46Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -9302,7 +9064,6 @@
       "release_date": "2025-05-16T19:07:48Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -9335,7 +9096,6 @@
       "release_date": "2025-05-16T19:07:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9358,7 +9118,6 @@
       "release_date": "2025-05-16T19:07:53Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -9387,7 +9146,6 @@
       "release_date": "2025-05-16T19:07:55Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -9420,7 +9178,6 @@
       "release_date": "2025-05-16T19:07:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9443,7 +9200,6 @@
       "release_date": "2025-05-16T19:08:01Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -9525,7 +9281,6 @@
       "release_date": "2025-05-16T19:08:06Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -9598,7 +9353,6 @@
       "release_date": "2025-05-16T19:08:10Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -9670,7 +9424,6 @@
       "release_date": "2025-05-16T19:08:12Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -9693,7 +9446,6 @@
       "release_date": "2025-05-16T19:08:17Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -9766,7 +9518,6 @@
       "release_date": "2025-05-16T19:08:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9816,7 +9567,6 @@
       "release_date": "2025-05-16T19:08:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9849,7 +9599,6 @@
       "release_date": "2025-05-16T19:08:24Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9886,7 +9635,6 @@
       "release_date": "2025-05-16T19:08:26Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9909,7 +9657,6 @@
       "release_date": "2025-05-16T19:08:28Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9938,7 +9685,6 @@
       "release_date": "2025-05-16T19:08:30Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -9961,7 +9707,6 @@
       "release_date": "2025-05-16T19:08:32Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -9984,7 +9729,6 @@
       "release_date": "2025-05-16T19:08:34Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -10007,7 +9751,6 @@
       "release_date": "2025-05-16T19:08:36Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10030,7 +9773,6 @@
       "release_date": "2025-05-16T19:08:39Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10063,7 +9805,6 @@
       "release_date": "2025-05-16T19:08:41Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10086,7 +9827,6 @@
       "release_date": "2025-05-16T19:08:44Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10130,7 +9870,6 @@
       "release_date": "2025-05-16T19:08:46Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10159,7 +9898,6 @@
       "release_date": "2025-05-16T19:08:47Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -10182,7 +9920,6 @@
       "release_date": "2025-05-16T19:08:50Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10230,7 +9967,6 @@
       "release_date": "2025-05-16T19:08:54Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -10311,7 +10047,6 @@
       "release_date": "2025-05-16T19:08:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10360,7 +10095,6 @@
       "release_date": "2025-05-16T19:08:59Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10393,7 +10127,6 @@
       "release_date": "2025-05-16T19:09:01Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10416,7 +10149,6 @@
       "release_date": "2025-05-16T19:09:03Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10439,7 +10171,6 @@
       "release_date": "2025-05-16T19:09:06Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10468,7 +10199,6 @@
       "release_date": "2025-05-16T19:09:08Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10491,7 +10221,6 @@
       "release_date": "2025-05-16T19:09:10Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -10524,7 +10253,6 @@
       "release_date": "2025-05-16T19:09:12Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10559,7 +10287,6 @@
       "release_date": "2025-05-16T19:09:14Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -10588,7 +10315,6 @@
       "release_date": "2025-05-16T19:09:17Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -10617,7 +10343,6 @@
       "release_date": "2025-05-16T19:09:19Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10640,7 +10365,6 @@
       "release_date": "2025-05-16T19:09:21Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10681,7 +10405,6 @@
       "release_date": "2025-05-16T19:09:25Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -10756,7 +10479,6 @@
       "release_date": "2025-05-16T19:09:27Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10779,7 +10501,6 @@
       "release_date": "2025-05-16T19:09:30Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10814,7 +10535,6 @@
       "release_date": "2025-05-16T19:09:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10847,7 +10567,6 @@
       "release_date": "2025-05-16T19:09:34Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10870,7 +10589,6 @@
       "release_date": "2025-05-16T19:09:35Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10893,7 +10611,6 @@
       "release_date": "2025-05-16T19:09:39Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10959,7 +10676,6 @@
       "release_date": "2025-05-16T19:09:41Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -10982,7 +10698,6 @@
       "release_date": "2025-05-16T19:09:43Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11005,7 +10720,6 @@
       "release_date": "2025-05-16T19:09:45Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11028,7 +10742,6 @@
       "release_date": "2025-05-16T19:09:47Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -11051,7 +10764,6 @@
       "release_date": "2025-05-16T19:09:50Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -11104,7 +10816,6 @@
       "release_date": "2025-05-16T19:09:54Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -11148,7 +10859,6 @@
       "release_date": "2025-05-16T19:09:56Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11171,7 +10881,6 @@
       "release_date": "2025-05-16T19:09:58Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -11206,7 +10915,6 @@
       "release_date": "2025-05-16T19:10:00Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11229,7 +10937,6 @@
       "release_date": "2025-05-16T19:10:02Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11252,7 +10959,6 @@
       "release_date": "2025-05-16T19:10:06Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -11310,7 +11016,6 @@
       "release_date": "2025-05-16T19:10:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11365,7 +11070,6 @@
       "release_date": "2025-05-16T19:10:11Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11398,7 +11102,6 @@
       "release_date": "2025-05-16T19:10:15Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -11464,7 +11167,6 @@
       "release_date": "2025-05-16T19:10:17Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11520,7 +11222,6 @@
       "release_date": "2025-05-16T19:10:19Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11543,7 +11244,6 @@
       "release_date": "2025-05-16T19:10:21Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11566,7 +11266,6 @@
       "release_date": "2025-05-16T19:10:23Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -11595,7 +11294,6 @@
       "release_date": "2025-05-16T19:10:25Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11618,7 +11316,6 @@
       "release_date": "2025-05-16T19:10:28Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11683,7 +11380,6 @@
       "release_date": "2025-05-16T19:10:31Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -11727,7 +11423,6 @@
       "release_date": "2025-05-16T19:10:33Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11750,7 +11445,6 @@
       "release_date": "2025-05-16T19:10:36Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -11773,7 +11467,6 @@
       "release_date": "2025-05-16T19:10:38Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -11807,7 +11500,6 @@
       "release_date": "2025-05-16T19:10:40Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11830,7 +11522,6 @@
       "release_date": "2025-05-16T19:10:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11853,7 +11544,6 @@
       "release_date": "2025-05-16T19:10:44Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11876,7 +11566,6 @@
       "release_date": "2025-05-16T19:10:46Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11899,7 +11588,6 @@
       "release_date": "2025-05-16T19:10:47Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11922,7 +11610,6 @@
       "release_date": "2025-05-16T19:10:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -11978,7 +11665,6 @@
       "release_date": "2025-05-16T19:10:54Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12044,7 +11730,6 @@
       "release_date": "2025-05-16T19:10:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12088,7 +11773,6 @@
       "release_date": "2025-05-16T19:11:01Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12173,7 +11857,6 @@
       "release_date": "2025-05-16T19:11:03Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12208,7 +11891,6 @@
       "release_date": "2025-05-16T19:11:05Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -12237,7 +11919,6 @@
       "release_date": "2025-05-16T19:11:07Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12260,7 +11941,6 @@
       "release_date": "2025-05-16T19:11:09Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12283,7 +11963,6 @@
       "release_date": "2025-05-16T19:11:12Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12323,7 +12002,6 @@
       "release_date": "2025-05-16T19:11:14Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -12360,7 +12038,6 @@
       "release_date": "2025-05-16T19:11:16Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -12393,7 +12070,6 @@
       "release_date": "2025-05-16T19:11:20Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -12465,7 +12141,6 @@
       "release_date": "2025-05-16T19:11:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12509,7 +12184,6 @@
       "release_date": "2025-05-16T19:11:24Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12538,7 +12212,6 @@
       "release_date": "2025-05-16T19:11:27Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12578,7 +12251,6 @@
       "release_date": "2025-05-16T19:11:29Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12607,7 +12279,6 @@
       "release_date": "2025-05-16T19:11:31Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12630,7 +12301,6 @@
       "release_date": "2025-05-16T19:11:33Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -12664,7 +12334,6 @@
       "release_date": "2025-05-16T19:11:35Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12707,7 +12376,6 @@
       "release_date": "2025-05-16T19:11:39Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -12762,7 +12430,6 @@
       "release_date": "2025-05-16T19:11:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12806,7 +12473,6 @@
       "release_date": "2025-05-16T19:11:44Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12839,7 +12505,6 @@
       "release_date": "2025-05-16T19:11:46Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12872,7 +12537,6 @@
       "release_date": "2025-05-16T19:11:48Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12895,7 +12559,6 @@
       "release_date": "2025-05-16T19:11:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12936,7 +12599,6 @@
       "release_date": "2025-05-16T19:11:53Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -12959,7 +12621,6 @@
       "release_date": "2025-05-16T19:11:58Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -13041,7 +12702,6 @@
       "release_date": "2025-05-16T19:12:00Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -13075,7 +12735,6 @@
       "release_date": "2025-05-16T19:12:02Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13119,7 +12778,6 @@
       "release_date": "2025-05-16T19:12:06Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13172,7 +12830,6 @@
       "release_date": "2025-05-16T19:12:08Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -13195,7 +12852,6 @@
       "release_date": "2025-05-16T19:12:11Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13247,7 +12903,6 @@
       "release_date": "2025-05-16T19:12:14Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13282,7 +12937,6 @@
       "release_date": "2025-05-16T19:12:16Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13305,7 +12959,6 @@
       "release_date": "2025-05-16T19:12:19Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -13355,7 +13008,6 @@
       "release_date": "2025-05-16T19:12:21Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13378,7 +13030,6 @@
       "release_date": "2025-05-16T19:12:24Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13442,7 +13093,6 @@
       "release_date": "2025-05-16T19:12:27Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13465,7 +13115,6 @@
       "release_date": "2025-05-16T19:12:29Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13488,7 +13137,6 @@
       "release_date": "2025-05-16T19:12:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13533,7 +13181,6 @@
       "release_date": "2025-05-16T19:12:34Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13556,7 +13203,6 @@
       "release_date": "2025-05-16T19:12:36Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13579,7 +13225,6 @@
       "release_date": "2025-05-16T19:12:38Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -13602,7 +13247,6 @@
       "release_date": "2025-05-16T19:12:40Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13625,7 +13269,6 @@
       "release_date": "2025-05-16T19:12:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13648,7 +13291,6 @@
       "release_date": "2025-05-16T19:12:44Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -13677,7 +13319,6 @@
       "release_date": "2025-05-16T19:12:49Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -13766,7 +13407,6 @@
       "release_date": "2025-05-16T19:12:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13789,7 +13429,6 @@
       "release_date": "2025-05-16T19:12:55Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -13869,7 +13508,6 @@
       "release_date": "2025-05-16T19:12:57Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -13892,7 +13530,6 @@
       "release_date": "2025-05-16T19:12:59Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -13946,7 +13583,6 @@
       "release_date": "2025-05-16T19:13:03Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -13990,7 +13626,6 @@
       "release_date": "2025-05-16T19:13:04Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -14013,7 +13648,6 @@
       "release_date": "2025-05-16T19:13:07Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14042,7 +13676,6 @@
       "release_date": "2025-05-16T19:13:12Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -14136,7 +13769,6 @@
       "release_date": "2025-05-16T19:13:14Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14159,7 +13791,6 @@
       "release_date": "2025-05-16T19:13:17Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14199,7 +13830,6 @@
       "release_date": "2025-05-16T19:13:19Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14222,7 +13852,6 @@
       "release_date": "2025-05-16T19:13:21Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -14265,7 +13894,6 @@
       "release_date": "2025-05-16T19:13:24Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14288,7 +13916,6 @@
       "release_date": "2025-05-16T19:13:26Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14317,7 +13944,6 @@
       "release_date": "2025-05-16T19:13:28Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14346,7 +13972,6 @@
       "release_date": "2025-05-16T19:13:30Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14369,7 +13994,6 @@
       "release_date": "2025-05-16T19:13:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14398,7 +14022,6 @@
       "release_date": "2025-05-16T19:13:34Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14421,7 +14044,6 @@
       "release_date": "2025-05-16T19:13:37Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14479,7 +14101,6 @@
       "release_date": "2025-05-16T19:13:39Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14502,7 +14123,6 @@
       "release_date": "2025-05-16T19:13:41Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14525,7 +14145,6 @@
       "release_date": "2025-05-16T19:13:43Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14548,7 +14167,6 @@
       "release_date": "2025-05-16T19:13:45Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14571,7 +14189,6 @@
       "release_date": "2025-05-16T19:13:48Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -14632,7 +14249,6 @@
       "release_date": "2025-05-16T19:13:50Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14655,7 +14271,6 @@
       "release_date": "2025-05-16T19:13:53Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -14707,7 +14322,6 @@
       "release_date": "2025-05-16T19:13:55Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -14752,7 +14366,6 @@
       "release_date": "2025-05-16T19:13:57Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -14775,7 +14388,6 @@
       "release_date": "2025-05-16T19:14:00Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14825,7 +14437,6 @@
       "release_date": "2025-05-16T19:14:04Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14879,7 +14490,6 @@
       "release_date": "2025-05-16T19:14:06Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14902,7 +14512,6 @@
       "release_date": "2025-05-16T19:14:08Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14925,7 +14534,6 @@
       "release_date": "2025-05-16T19:14:10Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -14948,7 +14556,6 @@
       "release_date": "2025-05-16T19:14:13Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -15006,7 +14613,6 @@
       "release_date": "2025-05-16T19:14:15Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15029,7 +14635,6 @@
       "release_date": "2025-05-16T19:14:17Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15052,7 +14657,6 @@
       "release_date": "2025-05-16T19:14:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15087,7 +14691,6 @@
       "release_date": "2025-05-16T19:14:23Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -15146,7 +14749,6 @@
       "release_date": "2025-05-16T19:14:25Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15169,7 +14771,6 @@
       "release_date": "2025-05-16T19:14:27Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15198,7 +14799,6 @@
       "release_date": "2025-05-16T19:14:30Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15254,7 +14854,6 @@
       "release_date": "2025-05-16T19:14:34Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15287,7 +14886,6 @@
       "release_date": "2025-05-16T19:14:36Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15310,7 +14908,6 @@
       "release_date": "2025-05-16T19:14:38Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15345,7 +14942,6 @@
       "release_date": "2025-05-16T19:14:41Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -15400,7 +14996,6 @@
       "release_date": "2025-05-16T19:14:46Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -15450,7 +15045,6 @@
       "release_date": "2025-05-16T19:14:48Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -15479,7 +15073,6 @@
       "release_date": "2025-05-16T19:14:54Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -15577,7 +15170,6 @@
       "release_date": "2025-05-16T19:14:56Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -15606,7 +15198,6 @@
       "release_date": "2025-05-16T19:14:59Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15650,7 +15241,6 @@
       "release_date": "2025-05-16T19:15:01Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15683,7 +15273,6 @@
       "release_date": "2025-05-16T19:15:04Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -15748,7 +15337,6 @@
       "release_date": "2025-05-16T19:15:06Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15777,7 +15365,6 @@
       "release_date": "2025-05-16T19:15:09Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -15816,7 +15403,6 @@
       "release_date": "2025-05-16T19:15:12Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15860,7 +15446,6 @@
       "release_date": "2025-05-16T19:15:16Z",
       "is_latest": true
     },
-    "package_canonical": "docker",
     "packages": [
       {
         "registry_name": "docker",
@@ -15933,7 +15518,6 @@
       "release_date": "2025-05-16T19:15:18Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15956,7 +15540,6 @@
       "release_date": "2025-05-16T19:15:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -15985,7 +15568,6 @@
       "release_date": "2025-05-16T19:15:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16008,7 +15590,6 @@
       "release_date": "2025-05-16T19:15:26Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -16067,7 +15648,6 @@
       "release_date": "2025-05-16T19:15:30Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -16140,7 +15720,6 @@
       "release_date": "2025-05-16T19:15:32Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16181,7 +15760,6 @@
       "release_date": "2025-05-16T19:15:36Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16250,7 +15828,6 @@
       "release_date": "2025-05-16T19:15:38Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16279,7 +15856,6 @@
       "release_date": "2025-05-16T19:15:40Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16319,7 +15895,6 @@
       "release_date": "2025-05-16T19:15:42Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16348,7 +15923,6 @@
       "release_date": "2025-05-16T19:15:45Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16392,7 +15966,6 @@
       "release_date": "2025-05-16T19:15:47Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16415,7 +15988,6 @@
       "release_date": "2025-05-16T19:15:49Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16438,7 +16010,6 @@
       "release_date": "2025-05-16T19:15:51Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16461,7 +16032,6 @@
       "release_date": "2025-05-16T19:15:52Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16484,7 +16054,6 @@
       "release_date": "2025-05-16T19:15:56Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -16528,7 +16097,6 @@
       "release_date": "2025-05-16T19:15:58Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16569,7 +16137,6 @@
       "release_date": "2025-05-16T19:16:02Z",
       "is_latest": true
     },
-    "package_canonical": "pypi",
     "packages": [
       {
         "registry_name": "pypi",
@@ -16620,7 +16187,6 @@
       "release_date": "2025-05-16T19:16:04Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16643,7 +16209,6 @@
       "release_date": "2025-05-16T19:16:06Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16680,7 +16245,6 @@
       "release_date": "2025-05-16T19:16:08Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16709,7 +16273,6 @@
       "release_date": "2025-05-16T19:16:10Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16743,7 +16306,6 @@
       "release_date": "2025-05-16T19:16:12Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16766,7 +16328,6 @@
       "release_date": "2025-05-16T19:16:14Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16795,7 +16356,6 @@
       "release_date": "2025-05-16T19:16:17Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16832,7 +16392,6 @@
       "release_date": "2025-05-16T19:16:18Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16855,7 +16414,6 @@
       "release_date": "2025-05-16T19:16:20Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16878,7 +16436,6 @@
       "release_date": "2025-05-16T19:16:22Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16901,7 +16458,6 @@
       "release_date": "2025-05-16T19:16:25Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -16941,7 +16497,6 @@
       "release_date": "2025-05-16T19:16:27Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16964,7 +16519,6 @@
       "release_date": "2025-05-16T19:16:29Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -16987,7 +16541,6 @@
       "release_date": "2025-05-16T19:16:31Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17010,7 +16563,6 @@
       "release_date": "2025-05-16T19:16:33Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17056,7 +16608,6 @@
       "release_date": "2025-05-16T19:16:36Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -17085,7 +16636,6 @@
       "release_date": "2025-05-16T19:16:38Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17108,7 +16658,6 @@
       "release_date": "2025-05-16T19:16:40Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17131,7 +16680,6 @@
       "release_date": "2025-05-16T19:16:42Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17154,7 +16702,6 @@
       "release_date": "2025-05-16T19:16:44Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17177,7 +16724,6 @@
       "release_date": "2025-05-16T19:16:46Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -17211,7 +16757,6 @@
       "release_date": "2025-05-16T19:16:48Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17234,7 +16779,6 @@
       "release_date": "2025-05-16T19:16:50Z",
       "is_latest": true
     },
-    "package_canonical": "npm",
     "packages": [
       {
         "registry_name": "npm",
@@ -17273,7 +16817,6 @@
       "release_date": "2025-05-16T19:16:52Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17296,7 +16839,6 @@
       "release_date": "2025-05-16T19:16:54Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17319,7 +16861,6 @@
       "release_date": "2025-05-16T19:16:56Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17342,7 +16883,6 @@
       "release_date": "2025-05-16T19:16:58Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17365,7 +16905,6 @@
       "release_date": "2025-05-16T19:17:00Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17388,7 +16927,6 @@
       "release_date": "2025-05-16T19:17:02Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17411,7 +16949,6 @@
       "release_date": "2025-05-16T19:17:04Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",
@@ -17434,7 +16971,6 @@
       "release_date": "2025-05-16T19:17:06Z",
       "is_latest": true
     },
-    "package_canonical": "unknown",
     "packages": [
       {
         "registry_name": "unknown",

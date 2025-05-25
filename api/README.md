@@ -15,7 +15,7 @@ GET /v0/servers?limit=5000&offset=0
   "servers": [
     {
       "id": "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1",
-      "name": "@modelcontextprotocol/servers/src/filesystem",
+      "name": "io.modelcontextprotocol/filesystem",
       "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
       "repository": {
         "url": "https://github.com/modelcontextprotocol/servers",
@@ -47,7 +47,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
 ```json
 {
   "id": "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1",
-  "name": "@modelcontextprotocol/servers/src/filesystem",
+  "name": "io.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
@@ -59,7 +59,6 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
     "release_date": "2023-06-15T10:30:00Z",
     "is_latest": true
   },
-  "package_canonical": "npm",
   "packages": [
     {
       "registry_name": "npm",
@@ -142,7 +141,7 @@ API Response:
 ```json
 {
   "id": "brave-search-12345",
-  "name": "@modelcontextprotocol/server-brave-search",
+  "name": "io.modelcontextprotocol/brave-search",
   "description": "MCP server for Brave Search API integration",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
@@ -154,7 +153,6 @@ API Response:
     "release_date": "2023-06-15T10:30:00Z",
     "is_latest": true
   },
-  "package_canonical": "npm",
   "packages": [
     {
       "registry_name": "npm",
@@ -195,7 +193,7 @@ API Response:
 ```json
 {
   "id": "filesystem-67890",
-  "name": "@modelcontextprotocol/servers/src/filesystem",
+  "name": "io.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
@@ -207,7 +205,6 @@ API Response:
     "release_date": "2023-06-15T10:30:00Z",
     "is_latest": true
   },
-  "package_canonical": "docker",
   "packages": [
     {
       "registry_name": "docker",
