@@ -1,5 +1,7 @@
 # MCP Registry
 
+[English](README.md) | [中文](README.zh-CN.md)
+
 A community driven registry service for Model Context Protocol (MCP) servers.
 
 ## Development Status
