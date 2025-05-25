@@ -6,11 +6,11 @@
 
 ## 开发状态
 
-本项目正在公开开发中，目前处于早期开发阶段。请参阅[项目概述讨论](https://github.com/modelcontextprotocol/registry/discussions/11)以了解项目范围与目标。如需贡献，请参考[贡献指南](CONTRIBUTING.md)。
+本项目在公开环境下开发，目前处于早期阶段。请参阅[项目概述讨论](https://github.com/modelcontextprotocol/registry/discussions/11)以了解项目范围和目标。如需贡献，请查阅[贡献指南](CONTRIBUTING.md)。
 
 ## 概述
 
-MCP Registry 服务提供 MCP 服务器条目的集中式存储库。它允许发现和管理各种 MCP 实现及其相关的元数据、配置和功能。
+MCP Registry 服务为 MCP 服务器条目提供集中式存储库。它允许发现和管理各种 MCP 实现及其相关的元数据、配置和能力。
 
 ## 特性
 
@@ -32,7 +32,7 @@ MCP Registry 服务提供 MCP 服务器条目的集中式存储库。它允许�
 
 ## 运行
 
-最简单的启动方式是使用 `docker compose`。这会设置 MCP Registry 服务、导入种子数据并在本地 Docker 环境中运行 MongoDB。
+最简单的启动方式是使用 `docker compose`。这将设置 MCP Registry 服务，导入种子数据并在本地 Docker 环境中运行 MongoDB。
 
 ```bash
 # 构建 Docker 镜像
@@ -60,6 +60,7 @@ go build ./cmd/registry
 ## 项目结构
 
 ```text
+├── api/           # OpenApi 规范
 ├── cmd/           # 应用程序入口
 ├── config/        # 配置文件
 ├── internal/      # 私有应用代码
@@ -120,20 +121,75 @@ GET /v0/servers
 {
   "servers": [
     {
-      "id": "1",
+      "id": "123e4567-e89b-12d3-a456-426614174000",
       "name": "Example MCP Server",
-      "description": "An example MCP server implementation",
       "url": "https://example.com/mcp",
-      "repository": {
-        "url": "https://github.com/example/mcp-server",
-        "stars": 120
-      },
-      "version": "1.0.0"
+      "description": "An example MCP server",
+      "created_at": "2025-05-17T17:34:22.912Z",
+      "updated_at": "2025-05-17T17:34:22.912Z"
     }
   ],
   "metadata": {
-    "next_cursor": "cursor-value-for-next-page"
+    "next_cursor": "123e4567-e89b-12d3-a456-426614174000",
+    "count": 30
   }
+}
+```
+
+#### 获取服务器详情
+
+```
+GET /v0/servers/{id}
+```
+
+检索特定 MCP 服务器条目的详细信息。
+
+路径参数：
+- `id`: 服务器条目的唯一标识符
+
+响应示例：
+```json
+{
+  "id": "01129bff-3d65-4e3d-8e82-6f2f269f818c",
+  "name": "io.github.gongrzhe/redis-mcp-server",
+  "description": "A Redis MCP server (pushed to https://github.com/modelcontextprotocol/servers/tree/main/src/redis) implementation for interacting with Redis databases. This server enables LLMs to interact with Redis key-value stores through a set of standardized tools.",
+  "repository": {
+    "url": "https://github.com/GongRzhe/REDIS-MCP-Server",
+    "source": "github",
+    "id": "907849235"
+  },
+  "version_detail": {
+    "version": "0.0.1-seed",
+    "release_date": "2025-05-16T19:13:21Z",
+    "is_latest": true
+  },
+  "packages": [
+    {
+      "registry_name": "docker",
+      "name": "@gongrzhe/server-redis-mcp",
+      "version": "1.0.0",
+      "package_arguments": [
+        {
+          "description": "Docker image to run",
+          "is_required": true,
+          "format": "string",
+          "value": "mcp/redis",
+          "default": "mcp/redis",
+          "type": "positional",
+          "value_hint": "mcp/redis"
+        },
+        {
+          "description": "Redis server connection string",
+          "is_required": true,
+          "format": "string",
+          "value": "redis://host.docker.internal:6379",
+          "default": "redis://host.docker.internal:6379",
+          "type": "positional",
+          "value_hint": "host.docker.internal:6379"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -150,31 +206,65 @@ POST /v0/publish
 - `Authorization`: Bearer token（例如：`Bearer your_token_here`）
 - `Content-Type`: application/json
 
-请求示例：
+请求体示例：
 
 ```json
 {
-  "server_detail": {
-    "name": "io.github.username/repository",
-    "description": "Your MCP server description",
-    "version_detail": {
-      "version": "1.0.0"
-    },
-    "registries": [
-      {
-        "name": "npm",
-        "package_name": "your-package-name",
-        "license": "MIT"
-      }
+    "description": "<your description here>",
+    "name": "io.github.<owner>/<server-name>",
+    "packages": [
+        {
+            "registry_name": "npm",
+            "name": "@<owner>/<server-name>",
+            "version": "0.2.23",
+            "package_arguments": [
+                {
+                    "description": "Specify services and permissions.",
+                    "is_required": true,
+                    "format": "string",
+                    "value": "-s",
+                    "default": "-s",
+                    "type": "positional",
+                    "value_hint": "-s"
+                }
+            ],
+            "environment_variables": [
+                {
+                    "description": "API Key to access the server",
+                    "name": "API_KEY"
+                }
+            ]
+        },{
+            "registry_name": "docker",
+            "name": "@<owner>/<server-name>-cli",
+            "version": "0.123.223",
+            "runtime_hint": "docker",
+            "runtime_arguments": [
+                {
+                    "description": "Specify services and permissions.",
+                    "is_required": true,
+                    "format": "string",
+                    "value": "--mount",
+                    "default": "--mount",
+                    "type": "positional",
+                    "value_hint": "--mount"
+                }
+            ],
+            "environment_variables": [
+                {
+                    "description": "API Key to access the server",
+                    "name": "API_KEY"
+                }
+            ]
+        }
     ],
-    "remotes": [
-      {
-        "transport_type": "http",
-        "url": "https://your-api-endpoint.com"
-      }
-    ]
-  },
-  "repo_ref": "username/repository"
+    "repository": {
+        "url": "https://github.com//<owner>/<server-name>",
+        "source": "github"
+    },
+    "version_detail": {
+        "version": "0.0.1-<publisher_version>"
+    }
 }
 ```
 
