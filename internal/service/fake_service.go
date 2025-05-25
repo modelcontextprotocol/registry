@@ -17,16 +17,15 @@ type fakeRegistryService struct {
 // NewFakeRegistryService creates a new fake registry service with pre-populated data
 func NewFakeRegistryService() RegistryService {
 	// Sample registry entries with updated model structure
-	registries := []*model.Entry{
+	registries := []*model.Server{
 		{
 			ID:          uuid.New().String(),
 			Name:        "bluegreen/mcp-server",
 			Description: "A dummy MCP registry for testing",
 			Repository: model.Repository{
-				URL:       "https://github.com/example/mcp-1",
-				SubFolder: "server",
-				Branch:    "main",
-				Commit:    "abc123def456",
+				URL:    "https://github.com/example/mcp-1",
+				Source: "github",
+				ID:     "example/mcp-1",
 			},
 			VersionDetail: model.VersionDetail{
 				Version:     "1.0.0",
@@ -39,10 +38,9 @@ func NewFakeRegistryService() RegistryService {
 			Name:        "orangepurple/mcp-server",
 			Description: "Another dummy MCP registry for testing",
 			Repository: model.Repository{
-				URL:       "https://github.com/example/mcp-2",
-				SubFolder: "mcp",
-				Branch:    "develop",
-				Commit:    "def456ghi789",
+				URL:    "https://github.com/example/mcp-2",
+				Source: "github",
+				ID:     "example/mcp-2",
 			},
 			VersionDetail: model.VersionDetail{
 				Version:     "0.9.0",
@@ -55,10 +53,9 @@ func NewFakeRegistryService() RegistryService {
 			Name:        "greenyellow/mcp-server",
 			Description: "Yet another dummy MCP registry for testing",
 			Repository: model.Repository{
-				URL:       "https://github.com/example/mcp-3",
-				SubFolder: "",
-				Branch:    "feature/mcp-server",
-				Commit:    "789jkl012mno",
+				URL:    "https://github.com/example/mcp-3",
+				Source: "github",
+				ID:     "example/mcp-3",
 			},
 			VersionDetail: model.VersionDetail{
 				Version:     "0.9.5",
@@ -69,7 +66,7 @@ func NewFakeRegistryService() RegistryService {
 	}
 
 	// Create a new in-memory database
-	registryMap := make(map[string]*model.Entry)
+	registryMap := make(map[string]*model.Server)
 	for _, entry := range registries {
 		registryMap[entry.ID] = entry
 	}
@@ -80,7 +77,7 @@ func NewFakeRegistryService() RegistryService {
 }
 
 // List retrieves MCPRegistry entries with optional filtering and pagination
-func (s *fakeRegistryService) List(cursor string, limit int) ([]model.Entry, string, error) {
+func (s *fakeRegistryService) List(cursor string, limit int) ([]model.Server, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -90,9 +87,8 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]model.Entry, str
 	if err != nil {
 		return nil, "", err
 	}
-
-	// Convert from []*model.Entry to []model.Entry
-	result := make([]model.Entry, len(entries))
+	// Convert from []*model.Server to []model.Server
+	result := make([]model.Server, len(entries))
 	for i, entry := range entries {
 		result[i] = *entry
 	}

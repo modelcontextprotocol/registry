@@ -21,7 +21,7 @@ func NewRegistryServiceWithDB(db database.Database) RegistryService {
 }
 
 // GetAll returns all registry entries
-func (s *registryServiceImpl) GetAll() ([]model.Entry, error) {
+func (s *registryServiceImpl) GetAll() ([]model.Server, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -32,8 +32,8 @@ func (s *registryServiceImpl) GetAll() ([]model.Entry, error) {
 		return nil, err
 	}
 
-	// Convert from []*model.Entry to []model.Entry
-	result := make([]model.Entry, len(entries))
+	// Convert from []*model.Server to []model.Server
+	result := make([]model.Server, len(entries))
 	for i, entry := range entries {
 		result[i] = *entry
 	}
@@ -42,7 +42,7 @@ func (s *registryServiceImpl) GetAll() ([]model.Entry, error) {
 }
 
 // List returns registry entries with cursor-based pagination
-func (s *registryServiceImpl) List(cursor string, limit int) ([]model.Entry, string, error) {
+func (s *registryServiceImpl) List(cursor string, limit int) ([]model.Server, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -58,8 +58,8 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]model.Entry, str
 		return nil, "", err
 	}
 
-	// Convert from []*model.MCPRegistry to []model.MCPRegistry
-	result := make([]model.Entry, len(entries))
+	// Convert from []*model.Server to []model.Server
+	result := make([]model.Server, len(entries))
 	for i, entry := range entries {
 		result[i] = *entry
 	}
