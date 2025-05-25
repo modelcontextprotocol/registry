@@ -20,8 +20,7 @@ type Authentication struct {
 // PublishRequest represents a request to publish a server to the registry
 type PublishRequest struct {
 	ServerDetail    `json:",inline"`
-	Authentication  Authentication `json:"-"` // Now provided via Authorization header
-	AuthStatusToken string         `json:"-"` // Used internally for device flows
+	AuthStatusToken string `json:"-"` // Used internally for device flows
 }
 
 // Repository represents a source code repository as defined in the spec
@@ -121,7 +120,7 @@ type Server struct {
 
 // ServerDetail represents detailed server information as defined in the spec
 type ServerDetail struct {
-	Server           `json:",inline" bson:",inline"`
-	Packages         []Package `json:"packages,omitempty" bson:"packages,omitempty"`
-	Remotes          []Remote  `json:"remotes,omitempty" bson:"remotes,omitempty"`
+	Server   `json:",inline" bson:",inline"`
+	Packages []Package `json:"packages,omitempty" bson:"packages,omitempty"`
+	Remotes  []Remote  `json:"remotes,omitempty" bson:"remotes,omitempty"`
 }
