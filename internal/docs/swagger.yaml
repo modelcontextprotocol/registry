@@ -33,7 +33,9 @@ paths:
                   status:
                     type: string
                     example: ok
-                    
+                  github_client_id:
+                      type: string
+                      example: "your_github_client_id"
   /v0/ping:
     get:
       tags:

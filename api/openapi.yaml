@@ -176,7 +176,7 @@ components:
           example: "npm"
         name:
           type: string
-          example: "@modelcontextprotocol/server-filesystem"
+          example: "io.modelcontextprotocol/filesystem"
         version:
           type: string
           example: "1.0.2"
@@ -333,10 +333,6 @@ components:
         - $ref: '#/components/schemas/Server'
         - type: object
           properties:
-            package_canonical:
-              type: string
-              enum: [npm, docker, pypi, crates]
-              example: "npm"
             packages:
               type: array
               items:
