@@ -9,10 +9,11 @@ import (
 
 // Common database errors
 var (
-	ErrNotFound      = errors.New("record not found")
-	ErrAlreadyExists = errors.New("record already exists")
-	ErrInvalidInput  = errors.New("invalid input")
-	ErrDatabase      = errors.New("database error")
+	ErrNotFound       = errors.New("record not found")
+	ErrAlreadyExists  = errors.New("record already exists")
+	ErrInvalidInput   = errors.New("invalid input")
+	ErrDatabase       = errors.New("database error")
+	ErrInvalidVersion = errors.New("invalid version: cannot publish older version after newer version")
 )
 
 // Database defines the interface for database operations on MCPRegistry entries

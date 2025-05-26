@@ -3,6 +3,8 @@ package database
 import (
 	"context"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/modelcontextprotocol/registry/internal/model"
@@ -10,15 +12,73 @@ import (
 
 // MemoryDB is an in-memory implementation of the Database interface
 type MemoryDB struct {
-	entries map[string]*model.Server
+	entries map[string]*model.ServerDetail
 	mu      sync.RWMutex
 }
 
 // NewMemoryDB creates a new instance of the in-memory database
 func NewMemoryDB(e map[string]*model.Server) *MemoryDB {
-	return &MemoryDB{
-		entries: e,
+	// Convert Server entries to ServerDetail entries
+	serverDetails := make(map[string]*model.ServerDetail)
+	for k, v := range e {
+		serverDetails[k] = &model.ServerDetail{
+			Server: *v,
+		}
 	}
+	return &MemoryDB{
+		entries: serverDetails,
+	}
+}
+
+// compareSemanticVersions compares two semantic version strings
+// Returns:
+//
+//	-1 if version1 < version2
+//	 0 if version1 == version2
+//	+1 if version1 > version2
+func compareSemanticVersions(version1, version2 string) int {
+	// Simple semantic version comparison
+	// Assumes format: major.minor.patch
+
+	parts1 := strings.Split(version1, ".")
+	parts2 := strings.Split(version2, ".")
+
+	// Pad with zeros if needed
+	maxLen := len(parts1)
+	if len(parts2) > maxLen {
+		maxLen = len(parts2)
+	}
+
+	for len(parts1) < maxLen {
+		parts1 = append(parts1, "0")
+	}
+	for len(parts2) < maxLen {
+		parts2 = append(parts2, "0")
+	}
+
+	// Compare each part
+	for i := 0; i < maxLen; i++ {
+		num1, err1 := strconv.Atoi(parts1[i])
+		num2, err2 := strconv.Atoi(parts2[i])
+
+		// If parsing fails, fall back to string comparison
+		if err1 != nil || err2 != nil {
+			if parts1[i] < parts2[i] {
+				return -1
+			} else if parts1[i] > parts2[i] {
+				return 1
+			}
+			continue
+		}
+
+		if num1 < num2 {
+			return -1
+		} else if num1 > num2 {
+			return 1
+		}
+	}
+
+	return 0
 }
 
 // List retrieves all MCPRegistry entries with optional filtering and pagination
@@ -37,8 +97,8 @@ func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cur
 	// Convert all entries to a slice for pagination
 	var allEntries []*model.Server
 	for _, entry := range db.entries {
-		entryCopy := *entry
-		allEntries = append(allEntries, &entryCopy)
+		serverCopy := entry.Server
+		allEntries = append(allEntries, &serverCopy)
 	}
 
 	// Simple filtering implementation
@@ -124,15 +184,9 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerDetail
 	defer db.mu.RUnlock()
 
 	if entry, exists := db.entries[id]; exists {
-		return &model.ServerDetail{
-			Server: model.Server{
-				ID:            entry.ID,
-				Name:          entry.Name,
-				Description:   entry.Description,
-				VersionDetail: entry.VersionDetail,
-				Repository:    entry.Repository,
-			},
-		}, nil
+		// Return a copy of the ServerDetail
+		serverDetailCopy := *entry
+		return &serverDetailCopy, nil
 	}
 
 	return nil, ErrNotFound
@@ -153,24 +207,33 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetai
 	}
 
 	// check that the name and the version are unique
-
+	// Also check version ordering - don't allow publishing older versions after newer ones
+	var latestVersion string
 	for _, entry := range db.entries {
-		if entry.Name == serverDetail.Name && entry.VersionDetail.Version == serverDetail.VersionDetail.Version {
-			return ErrAlreadyExists
+		if entry.Name == serverDetail.Name {
+			if entry.VersionDetail.Version == serverDetail.VersionDetail.Version {
+				return ErrAlreadyExists
+			}
+
+			// Track the latest version for this package name
+			if latestVersion == "" || compareSemanticVersions(entry.VersionDetail.Version, latestVersion) > 0 {
+				latestVersion = entry.VersionDetail.Version
+			}
 		}
+	}
+
+	// If we found existing versions, check if the new version is older than the latest
+	if latestVersion != "" && compareSemanticVersions(serverDetail.VersionDetail.Version, latestVersion) < 0 {
+		return ErrInvalidVersion
 	}
 
 	if serverDetail.Repository.URL == "" {
 		return ErrInvalidInput
 	}
 
-	db.entries[serverDetail.ID] = &model.Server{
-		ID:            serverDetail.ID,
-		Name:          serverDetail.Name,
-		Description:   serverDetail.Description,
-		VersionDetail: serverDetail.VersionDetail,
-		Repository:    serverDetail.Repository,
-	}
+	// Store a copy of the entire ServerDetail
+	serverDetailCopy := *serverDetail
+	db.entries[serverDetail.ID] = &serverDetailCopy
 
 	return nil
 }

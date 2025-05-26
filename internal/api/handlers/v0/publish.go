@@ -3,11 +3,13 @@ package v0
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/auth"
+	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
@@ -106,6 +108,11 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 		// Call the publish method on the registry service
 		err = registry.Publish(&serverDetail)
 		if err != nil {
+			// Check for specific error types and return appropriate HTTP status codes
+			if errors.Is(err, database.ErrInvalidVersion) || errors.Is(err, database.ErrAlreadyExists) {
+				http.Error(w, "Failed to publish server details: "+err.Error(), http.StatusBadRequest)
+				return
+			}
 			http.Error(w, "Failed to publish server details: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
