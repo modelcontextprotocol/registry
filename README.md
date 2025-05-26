@@ -295,7 +295,7 @@ The service can be configured using environment variables:
 | `MCP_REGISTRY_GITHUB_CLIENT_ID`      | GitHub App Client ID |  |
 | `MCP_REGISTRY_GITHUB_CLIENT_SECRET`  | GitHub App Client Secret |  |
 | `MCP_REGISTRY_LOG_LEVEL`             | Log level | `info` |
-| `MCP_REGISTRY_SEED_FILE_PATH`        | Path to import seed file | `data/seed.json` |
+| `MCP_REGISTRY_SEED_FILE_PATH`        | Path to import seed file | `data/seed_2025_05_16.json` |
 | `MCP_REGISTRY_SEED_IMPORT`           | Import `seed.json` on first run | `true` |
 | `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
 
