@@ -36,20 +36,11 @@ The compiled binary will be placed in the `bin` directory.
 ## Authentication
 
 The tool uses GitHub device flow authentication:
-1. When first run (or with `--login` flag), the tool will initiate the GitHub device flow
-2. You'll be provided with a URL and a code to enter
-3. After successful authentication, the tool saves the token locally for future use
-4. The token is sent in the HTTP Authorization header with the Bearer scheme
-
-### Required Environment Variable
-
-Before using the GitHub authentication, you need to set the following environment variable:
-
-```bash
-export MCP_REGISTRY_GITHUB_CLIENT_ID="your_github_client_id"
-```
-
-This environment variable is required for the GitHub device flow authentication. If not set, the authentication will fail.
+1. The tool automatically retrieves the GitHub Client ID from the registry's health endpoint
+2. When first run (or with `--login` flag), the tool will initiate the GitHub device flow
+3. You'll be provided with a URL and a code to enter
+4. After successful authentication, the tool saves the token locally for future use
+5. The token is sent in the HTTP Authorization header with the Bearer scheme
 
 _NOTE_ : Authentication is made on behalf of a OAuth App which you must authorize for respective resources (e.g `org`)
 
@@ -64,47 +55,40 @@ _NOTE_ : Authentication is made on behalf of a OAuth App which you must authoriz
   "version_detail": {
     "version": "1.0.0"
   },
-  "registries": [
+  "packages": [
     {
-      "name": "npm",
-      "package_name": "your-npm-package",
-      "license": "MIT",
-      "command_arguments": {
-        "sub_commands": [
-          {
-            "name": "start",
-            "description": "Start the server",
-            "named_arguments": null
-          }
-        ],
-        "positional_arguments": null,
-        "environment_variables": [
-          {
-            "name": "PORT",
-            "description": "Port to run the server on",
-            "required": false
-          }
-        ],
-        "named_arguments": null
-      }
+      "registry_name": "npm",
+      "name": "your-npm-package",
+      "version": "1.0.0",
+      "package_arguments": [
+        {
+          "description": "Specify services and permissions",
+          "is_required": true,
+          "format": "string",
+          "value": "-s",
+          "default": "-s",
+          "type": "positional",
+          "value_hint": "-s"
+        }
+      ],
+      "environment_variables": [
+        {
+          "name": "API_KEY",
+          "description": "API Key to access the server"
+        }
+      ]
     }
   ],
-  "remotes": [
-    {
-      "transporttype": "http",
-      "url": "http://yourdomain.com/api"
-    }
-  ]
+  "repository": {
+    "url": "https://github.com/yourusername/your-repository",
+    "source": "github"
+  }
 }
 ```
 
 2. Run the publisher tool:
 
 ```bash
-# First, set the required environment variable
-export MCP_REGISTRY_GITHUB_CLIENT_ID="your_github_client_id"
-
-# Then run the publisher tool
 ./bin/mcp-publisher --registry-url "https://mcp-registry.example.com" --mcp-file "./mcp.json"
 ```
 
@@ -114,7 +98,7 @@ export MCP_REGISTRY_GITHUB_CLIENT_ID="your_github_client_id"
 
 ## Important Notes
 
-- The `MCP_REGISTRY_GITHUB_CLIENT_ID` environment variable must be set for GitHub authentication
+- The GitHub Client ID is automatically retrieved from the registry's health endpoint
 - The authentication token is saved in a file named `.mcpregistry_token` in the current directory
 - The tool requires an active internet connection to authenticate with GitHub and communicate with the registry
 - Make sure the repository and package mentioned in your `mcp.json` file exist and are accessible

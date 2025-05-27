@@ -251,7 +251,7 @@ Request body example:
         }
     ],
     "repository": {
-        "url": "https://github.com//<owner>/<server-name>",
+        "url": "https://github.com/<owner>/<server-name>",
         "source": "github"
     },
     "version_detail": {
