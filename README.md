@@ -289,6 +289,7 @@ The service can be configured using environment variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `MCP_REGISTRY_APP_VERSION`           | Application version | `dev` |
+| `MCP_REGISTRY_DATABASE_TYPE`         | Database type | `mongodb` |
 | `MCP_REGISTRY_COLLECTION_NAME`       | MongoDB collection name | `servers_v2` |
 | `MCP_REGISTRY_DATABASE_NAME`         | MongoDB database name | `mcp-registry` |
 | `MCP_REGISTRY_DATABASE_URL`          | MongoDB connection string | `mongodb://localhost:27017` |
