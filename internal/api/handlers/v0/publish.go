@@ -38,8 +38,13 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 		}
 
 		// Get server details from the request
-		serverDetail := publishReq.ServerDetail
+		var serverDetail model.ServerDetail
 
+		err = json.Unmarshal(body, &serverDetail)
+		if err != nil {
+			http.Error(w, "Invalid server detail payload: "+err.Error(), http.StatusBadRequest)
+			return
+		}
 		// Validate required fields
 		if serverDetail.Name == "" {
 			http.Error(w, "Name is required", http.StatusBadRequest)

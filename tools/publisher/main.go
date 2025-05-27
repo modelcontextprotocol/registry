@@ -18,9 +18,6 @@ const (
 	// GitHub OAuth URLs
 	GitHubDeviceCodeURL  = "https://github.com/login/device/code"
 	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token"
-
-	// Environment variable for GitHub Client ID
-	EnvGithubClientID = "MCP_REGISTRY_GITHUB_CLIENT_ID"
 )
 
 // DeviceCodeResponse represents the response from GitHub's device code endpoint
@@ -38,6 +35,11 @@ type AccessTokenResponse struct {
 	TokenType   string `json:"token_type"`
 	Scope       string `json:"scope"`
 	Error       string `json:"error,omitempty"`
+}
+
+type ServerHealthResponse struct {
+	Status         string `json:"status"`
+	GitHubClientId string `json:"github_client_id"`
 }
 
 func main() {
@@ -58,18 +60,31 @@ func main() {
 		return
 	}
 
-	// Check for GitHub client ID in environment if we're going to need it for authentication
-	if providedToken == "" && os.Getenv(EnvGithubClientID) == "" {
-		fmt.Printf("Warning: Environment variable %s is not set. This is required for GitHub authentication.\n", EnvGithubClientID)
-		fmt.Println("You can set it with: export " + EnvGithubClientID + "=your_github_client_id")
-		fmt.Println("Or provide a token directly with the --token flag.")
-
-		// Only return if we'll need to do GitHub auth
-		_, statErr := os.Stat(tokenFilePath)
-		if forceLogin || os.IsNotExist(statErr) {
-			return
-		}
+	// get the clientID from the server's health endpoint
+	healthURL := registryURL + "/v0/health"
+	resp, err := http.Get(healthURL)
+	if err != nil {
+		fmt.Printf("Error fetching health endpoint: %s\n", err.Error())
+		return
 	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Health endpoint returned status %d: %s\n", resp.StatusCode, body)
+		return
+	}
+	var healthResponse ServerHealthResponse
+	err = json.NewDecoder(resp.Body).Decode(&healthResponse)
+	if err != nil {
+		fmt.Printf("Error decoding health response: %s\n", err.Error())
+		return
+	}
+	if healthResponse.GitHubClientId == "" {
+		fmt.Println("GitHub Client ID is not set in the server's health response.")
+		return
+	}
+
+	githubClientID := healthResponse.GitHubClientId
 
 	var token string
 
@@ -80,7 +95,7 @@ func main() {
 		// Check if token exists or force login is requested
 		_, statErr := os.Stat(tokenFilePath)
 		if forceLogin || os.IsNotExist(statErr) {
-			err := performDeviceFlowLogin()
+			err := performDeviceFlowLogin(githubClientID)
 			if err != nil {
 				fmt.Printf("Failed to perform device flow login: %s\n", err.Error())
 				return
@@ -113,15 +128,15 @@ func main() {
 	fmt.Println("Successfully published to registry!")
 }
 
-func performDeviceFlowLogin() error {
-	// Check if the environment variable is set
-	if os.Getenv(EnvGithubClientID) == "" {
-		return fmt.Errorf("environment variable %s must be set for GitHub authentication", EnvGithubClientID)
+func performDeviceFlowLogin(githubClientID string) error {
+
+	if githubClientID == "" {
+		return fmt.Errorf("GitHub Client ID is required for device flow login")
 	}
 
 	// Device flow login logic using GitHub's device flow
 	// First, request a device code
-	deviceCode, userCode, verificationURI, err := requestDeviceCode()
+	deviceCode, userCode, verificationURI, err := requestDeviceCode(githubClientID)
 	if err != nil {
 		return fmt.Errorf("error requesting device code: %w", err)
 	}
@@ -134,7 +149,7 @@ func performDeviceFlowLogin() error {
 
 	// Poll for the token
 	fmt.Println("Waiting for authorization...")
-	token, err := pollForToken(deviceCode)
+	token, err := pollForToken(deviceCode, githubClientID)
 	if err != nil {
 		return fmt.Errorf("error polling for token: %w", err)
 	}
@@ -150,14 +165,13 @@ func performDeviceFlowLogin() error {
 }
 
 // requestDeviceCode initiates the device authorization flow
-func requestDeviceCode() (string, string, string, error) {
-	clientID := os.Getenv(EnvGithubClientID)
-	if clientID == "" {
-		return "", "", "", fmt.Errorf("environment variable %s is not set", EnvGithubClientID)
+func requestDeviceCode(githubClientID string) (string, string, string, error) {
+	if githubClientID == "" {
+		return "", "", "", fmt.Errorf("GitHub Client ID is required for device flow login")
 	}
 
 	payload := map[string]string{
-		"client_id": clientID,
+		"client_id": githubClientID,
 		"scope":     "read:org read:user",
 	}
 
@@ -199,14 +213,13 @@ func requestDeviceCode() (string, string, string, error) {
 }
 
 // pollForToken polls for access token after user completes authorization
-func pollForToken(deviceCode string) (string, error) {
-	clientID := os.Getenv(EnvGithubClientID)
-	if clientID == "" {
-		return "", fmt.Errorf("environment variable %s is not set", EnvGithubClientID)
+func pollForToken(deviceCode, githubClientID string) (string, error) {
+	if githubClientID == "" {
+		return "", fmt.Errorf("GitHub Client ID is required for device flow login")
 	}
 
 	payload := map[string]string{
-		"client_id":   clientID,
+		"client_id":   githubClientID,
 		"device_code": deviceCode,
 		"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
 	}
