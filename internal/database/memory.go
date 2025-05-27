@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
@@ -231,6 +232,8 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetai
 		return ErrInvalidInput
 	}
 
+	// Generate a new ID for the server detail
+	serverDetail.ID = uuid.New().String()
 	// Store a copy of the entire ServerDetail
 	serverDetailCopy := *serverDetail
 	db.entries[serverDetail.ID] = &serverDetailCopy

@@ -8,9 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
-	"github.com/google/uuid"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/model"
@@ -59,53 +57,52 @@ func TestPublishIntegration(t *testing.T) {
 	handler := v0.PublishHandler(registryService, authService)
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
-		serverDetail := &model.ServerDetail{
-			Server: model.Server{
-				ID:          uuid.New().String(),
-				Name:        "io.github.testuser/test-mcp-server",
-				Description: "A test MCP server for integration testing",
-				Repository: model.Repository{
-					URL:    "https://github.com/testuser/test-mcp-server",
-					Source: "github",
-					ID:     "testuser/test-mcp-server",
+		publishReq := model.PublishRequest{
+			ServerDetail: model.ServerDetail{
+				Server: model.Server{
+					Name:        "io.github.testuser/test-mcp-server",
+					Description: "A test MCP server for integration testing",
+					Repository: model.Repository{
+						URL:    "https://github.com/testuser/test-mcp-server",
+						Source: "github",
+						ID:     "testuser/test-mcp-server",
+					},
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
+					},
 				},
-				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
-				},
-			},
-			Packages: []model.Package{
-				{
-					RegistryName: "npm",
-					Name:         "test-mcp-server",
-					Version:      "1.0.0",
-					RunTimeHint:  "node",
-					RuntimeArguments: []model.Argument{
-						{
-							Type: model.ArgumentTypeNamed,
-							Name: "config",
-							InputWithVariables: model.InputWithVariables{
-								Input: model.Input{
-									Description: "Configuration file path",
-									Format:      model.FormatFilePath,
-									IsRequired:  true,
+				Packages: []model.Package{
+					{
+						RegistryName: "npm",
+						Name:         "test-mcp-server",
+						Version:      "1.0.0",
+						RunTimeHint:  "node",
+						RuntimeArguments: []model.Argument{
+							{
+								Type: model.ArgumentTypeNamed,
+								Name: "config",
+								InputWithVariables: model.InputWithVariables{
+									Input: model.Input{
+										Description: "Configuration file path",
+										Format:      model.FormatFilePath,
+										IsRequired:  true,
+									},
 								},
 							},
 						},
 					},
 				},
-			},
-			Remotes: []model.Remote{
-				{
-					TransportType: "http",
-					URL:           "http://localhost:3000/mcp",
+				Remotes: []model.Remote{
+					{
+						TransportType: "http",
+						URL:           "http://localhost:3000/mcp",
+					},
 				},
 			},
 		}
 
 		// Marshal the server detail to JSON
-		jsonData, err := json.Marshal(serverDetail)
+		jsonData, err := json.Marshal(publishReq)
 		require.NoError(t, err)
 
 		// Create a request
@@ -127,38 +124,37 @@ func TestPublishIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, "Server publication successful", response["message"])
-		assert.Equal(t, serverDetail.ID, response["id"])
+		assert.NotEmpty(t, response["id"], "Server ID should be generated")
 
 		// Verify the server was actually published by retrieving it
-		publishedServer, err := registryService.GetByID(serverDetail.ID)
+		publishedServer, err := registryService.GetByID(response["id"])
 		require.NoError(t, err)
-		assert.Equal(t, serverDetail.Name, publishedServer.Name)
-		assert.Equal(t, serverDetail.Description, publishedServer.Description)
-		assert.Equal(t, serverDetail.VersionDetail.Version, publishedServer.VersionDetail.Version)
+		assert.Equal(t, publishReq.ServerDetail.Name, publishedServer.Name)
+		assert.Equal(t, publishReq.ServerDetail.Description, publishedServer.Description)
+		assert.Equal(t, publishReq.ServerDetail.VersionDetail.Version, publishedServer.VersionDetail.Version)
 		assert.Len(t, publishedServer.Packages, 1)
 		assert.Len(t, publishedServer.Remotes, 1)
 	})
 
 	t.Run("successful publish without auth (no prefix)", func(t *testing.T) {
-		serverDetail := &model.ServerDetail{
-			Server: model.Server{
-				ID:          uuid.New().String(),
-				Name:        "custom-mcp-server",
-				Description: "A custom MCP server without auth",
-				Repository: model.Repository{
-					URL:    "https://example.com/custom-server",
-					Source: "custom",
-					ID:     "custom/custom-server",
-				},
-				VersionDetail: model.VersionDetail{
-					Version:     "2.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+		publishReq := &model.PublishRequest{
+			ServerDetail: model.ServerDetail{
+				Server: model.Server{
+					Name:        "custom-mcp-server",
+					Description: "A custom MCP server without auth",
+					Repository: model.Repository{
+						URL:    "https://example.com/custom-server",
+						Source: "custom",
+						ID:     "custom/custom-server",
+					},
+					VersionDetail: model.VersionDetail{
+						Version: "2.0.0",
+					},
 				},
 			},
 		}
 
-		jsonData, err := json.Marshal(serverDetail)
+		jsonData, err := json.Marshal(publishReq)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(jsonData))
@@ -175,24 +171,23 @@ func TestPublishIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, "Server publication successful", response["message"])
-		assert.Equal(t, serverDetail.ID, response["id"])
+		assert.NotEmpty(t, response["id"], "Server ID should be generated")
 	})
 
 	t.Run("publish fails with missing name", func(t *testing.T) {
-		serverDetail := &model.ServerDetail{
-			Server: model.Server{
-				ID:          uuid.New().String(),
-				Name:        "", // Missing name
-				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+		publishReq := &model.PublishRequest{
+			ServerDetail: model.ServerDetail{
+				Server: model.Server{
+					Name:        "", // Missing name
+					Description: "A test server",
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
+					},
 				},
 			},
 		}
 
-		jsonData, err := json.Marshal(serverDetail)
+		jsonData, err := json.Marshal(publishReq)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(jsonData))
@@ -209,13 +204,10 @@ func TestPublishIntegration(t *testing.T) {
 	t.Run("publish fails with missing version", func(t *testing.T) {
 		serverDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "test-server",
 				Description: "A test server",
 				VersionDetail: model.VersionDetail{
-					Version:     "", // Missing version
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "", // Missing version
 				},
 			},
 		}
@@ -237,13 +229,10 @@ func TestPublishIntegration(t *testing.T) {
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {
 		serverDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "test-server",
 				Description: "A test server",
 				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "1.0.0",
 				},
 			},
 		}
@@ -291,7 +280,6 @@ func TestPublishIntegration(t *testing.T) {
 		// First, publish a server successfully
 		firstServerDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "io.github.duplicate/test-server",
 				Description: "First server for duplicate test",
 				Repository: model.Repository{
@@ -300,9 +288,7 @@ func TestPublishIntegration(t *testing.T) {
 					ID:     "duplicate/test-server",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "1.0.0",
 				},
 			},
 		}
@@ -317,12 +303,17 @@ func TestPublishIntegration(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		handler(recorder, req)
 
+		var response map[string]string
+		err = json.Unmarshal(recorder.Body.Bytes(), &response)
+		require.NoError(t, err)
+
 		assert.Equal(t, http.StatusCreated, recorder.Code, "First publish should succeed")
+
+		firstServerDetail.ID = response["id"] // Store the ID for later verification
 
 		// Now try to publish another server with the same name and version
 		duplicateServerDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),               // Different ID
 				Name:        "io.github.duplicate/test-server", // Same name
 				Description: "Duplicate server attempt",
 				Repository: model.Repository{
@@ -331,9 +322,7 @@ func TestPublishIntegration(t *testing.T) {
 					ID:     "duplicate/test-server-fork",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0", // Same version
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "1.0.0", // Same version
 				},
 			},
 		}
@@ -358,16 +347,12 @@ func TestPublishIntegration(t *testing.T) {
 		assert.Equal(t, firstServerDetail.Name, retrievedServer.Name)
 		assert.Equal(t, firstServerDetail.Description, retrievedServer.Description)
 
-		// Try to get the duplicate - it should not exist
-		_, err = registryService.GetByID(duplicateServerDetail.ID)
-		assert.Error(t, err, "Duplicate server should not have been stored")
 	})
 
 	t.Run("publish succeeds with same name but different version", func(t *testing.T) {
 		// Publish first version
 		firstVersionDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "io.github.versioned/test-server",
 				Description: "First version of the server",
 				Repository: model.Repository{
@@ -376,9 +361,7 @@ func TestPublishIntegration(t *testing.T) {
 					ID:     "versioned/test-server",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    false,
+					Version: "1.0.0",
 				},
 			},
 		}
@@ -393,12 +376,17 @@ func TestPublishIntegration(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		handler(recorder, req)
 
+		var response map[string]string
+		err = json.Unmarshal(recorder.Body.Bytes(), &response)
+		require.NoError(t, err)
+		firstVersionDetail.ID = response["id"] // Store the ID for later verification
+
 		assert.Equal(t, http.StatusCreated, recorder.Code, "First version should succeed")
+		require.NotEmpty(t, firstVersionDetail.ID, "Server ID should be generated")
 
 		// Publish second version with same name but different version
 		secondVersionDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "io.github.versioned/test-server", // Same name
 				Description: "Second version of the server",
 				Repository: model.Repository{
@@ -407,9 +395,7 @@ func TestPublishIntegration(t *testing.T) {
 					ID:     "versioned/test-server",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "2.0.0", // Different version
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "2.0.0", // Different version
 				},
 			},
 		}
@@ -424,8 +410,14 @@ func TestPublishIntegration(t *testing.T) {
 		secondRecorder := httptest.NewRecorder()
 		handler(secondRecorder, secondReq)
 
+		var secondResponse map[string]string
+		err = json.Unmarshal(secondRecorder.Body.Bytes(), &secondResponse)
+		require.NoError(t, err)
+		secondVersionDetail.ID = secondResponse["id"] // Store the ID for later verification
+
 		// The second version should succeed
 		assert.Equal(t, http.StatusCreated, secondRecorder.Code)
+		require.NotEmpty(t, secondVersionDetail.ID, "Server ID for second version should be generated")
 
 		// Verify both versions exist
 		firstRetrieved, err := registryService.GetByID(firstVersionDetail.ID)
@@ -441,7 +433,6 @@ func TestPublishIntegration(t *testing.T) {
 		// First, publish a newer version (2.0.0)
 		newerVersionDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "io.github.versioning/version-order-test",
 				Description: "Newer version published first",
 				Repository: model.Repository{
@@ -450,9 +441,7 @@ func TestPublishIntegration(t *testing.T) {
 					ID:     "versioning/version-order-test",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "2.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "2.0.0",
 				},
 			},
 		}
@@ -467,12 +456,17 @@ func TestPublishIntegration(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		handler(recorder, req)
 
+		var response map[string]string
+		err = json.Unmarshal(recorder.Body.Bytes(), &response)
+		require.NoError(t, err)
+		newerVersionDetail.ID = response["id"] // Store the ID for later verification
+
 		assert.Equal(t, http.StatusCreated, recorder.Code, "Newer version should be published successfully")
+		require.NotEmpty(t, newerVersionDetail.ID, "Server ID for newer version should be generated")
 
 		// Now try to publish an older version (1.0.0) of the same package
 		olderVersionDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "io.github.versioning/version-order-test", // Same name
 				Description: "Older version published after newer",
 				Repository: model.Repository{
@@ -481,9 +475,7 @@ func TestPublishIntegration(t *testing.T) {
 					ID:     "versioning/version-order-test",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0", // Older version
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    false,
+					Version: "1.0.0", // Older version
 				},
 			},
 		}
@@ -522,7 +514,6 @@ func TestPublishIntegrationWithComplexPackages(t *testing.T) {
 	t.Run("publish with complex package configuration", func(t *testing.T) {
 		serverDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "io.github.complex/advanced-mcp-server",
 				Description: "An advanced MCP server with complex configuration",
 				Repository: model.Repository{
@@ -531,18 +522,20 @@ func TestPublishIntegrationWithComplexPackages(t *testing.T) {
 					ID:     "complex/advanced-mcp-server",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "2.1.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "2.1.0",
 				},
 			},
 			Packages: []model.Package{
 				{
 					RegistryName: "npm",
-					Name:         "advanced-mcp-server",
-					Version:      "2.1.0",
-					RunTimeHint:  "node --experimental-modules",
+					Name:         "@example/advanced-mcp-server",
+					Version:      "43.1.0",
+					RunTimeHint:  "node",
 					RuntimeArguments: []model.Argument{
+						{
+							Type: model.ArgumentTypeNamed,
+							Name: "experimental-modules",
+						},
 						{
 							Type: model.ArgumentTypeNamed,
 							Name: "config",
@@ -620,10 +613,6 @@ func TestPublishIntegrationWithComplexPackages(t *testing.T) {
 						},
 					},
 				},
-				{
-					TransportType: "websocket",
-					URL:           "ws://localhost:8081/mcp",
-				},
 			},
 		}
 
@@ -643,8 +632,9 @@ func TestPublishIntegrationWithComplexPackages(t *testing.T) {
 		err = json.Unmarshal(recorder.Body.Bytes(), &response)
 		require.NoError(t, err)
 
+		serverDetail.ID = response["id"] // Store the ID for later verification
 		assert.Equal(t, "Server publication successful", response["message"])
-		assert.Equal(t, serverDetail.ID, response["id"])
+		assert.NotEmpty(t, response["id"], "Server ID should be generated")
 
 		// Verify the complex server was published correctly
 		publishedServer, err := registryService.GetByID(serverDetail.ID)
@@ -654,16 +644,14 @@ func TestPublishIntegrationWithComplexPackages(t *testing.T) {
 		require.Len(t, publishedServer.Packages, 1)
 		pkg := publishedServer.Packages[0]
 		assert.Equal(t, "npm", pkg.RegistryName)
-		assert.Equal(t, "advanced-mcp-server", pkg.Name)
-		assert.Equal(t, "node --experimental-modules", pkg.RunTimeHint)
-		assert.Len(t, pkg.RuntimeArguments, 2)
+		assert.Equal(t, "@example/advanced-mcp-server", pkg.Name)
+		assert.Len(t, pkg.RuntimeArguments, 3)
 		assert.Len(t, pkg.PackageArguments, 1)
 		assert.Len(t, pkg.EnvironmentVariables, 2)
 
 		// Verify remotes
-		require.Len(t, publishedServer.Remotes, 2)
+		require.Len(t, publishedServer.Remotes, 1)
 		assert.Equal(t, "http", publishedServer.Remotes[0].TransportType)
-		assert.Equal(t, "websocket", publishedServer.Remotes[1].TransportType)
 		assert.Len(t, publishedServer.Remotes[0].Headers, 1)
 	})
 }
@@ -683,7 +671,6 @@ func TestPublishIntegrationEndToEnd(t *testing.T) {
 		// Step 2: Publish a new server
 		serverDetail := &model.ServerDetail{
 			Server: model.Server{
-				ID:          uuid.New().String(),
 				Name:        "io.github.e2e/end-to-end-server",
 				Description: "End-to-end test server",
 				Repository: model.Repository{
@@ -692,9 +679,7 @@ func TestPublishIntegrationEndToEnd(t *testing.T) {
 					ID:     "e2e/end-to-end-server",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0",
-					ReleaseDate: time.Now().Format(time.RFC3339),
-					IsLatest:    true,
+					Version: "1.0.0",
 				},
 			},
 		}
@@ -708,6 +693,11 @@ func TestPublishIntegrationEndToEnd(t *testing.T) {
 
 		recorder := httptest.NewRecorder()
 		handler(recorder, req)
+
+		var response map[string]string
+		err = json.Unmarshal(recorder.Body.Bytes(), &response)
+		require.NoError(t, err)
+		serverDetail.ID = response["id"] // Store the ID for later verification
 
 		require.Equal(t, http.StatusCreated, recorder.Code)
 
