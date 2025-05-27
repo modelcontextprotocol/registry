@@ -1,4 +1,4 @@
-package v0
+package v0_test
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
@@ -20,17 +21,17 @@ type MockRegistryService struct {
 }
 
 func (m *MockRegistryService) List(cursor string, limit int) ([]model.Server, string, error) {
-	args := m.Called(cursor, limit)
+	args := m.Mock.Called(cursor, limit)
 	return args.Get(0).([]model.Server), args.String(1), args.Error(2)
 }
 
 func (m *MockRegistryService) GetByID(id string) (*model.ServerDetail, error) {
-	args := m.Called(id)
+	args := m.Mock.Called(id)
 	return args.Get(0).(*model.ServerDetail), args.Error(1)
 }
 
 func (m *MockRegistryService) Publish(serverDetail *model.ServerDetail) error {
-	args := m.Called(serverDetail)
+	args := m.Mock.Called(serverDetail)
 	return args.Error(0)
 }
 
@@ -39,18 +40,20 @@ type MockAuthService struct {
 	mock.Mock
 }
 
-func (m *MockAuthService) StartAuthFlow(ctx context.Context, method model.AuthMethod, repoRef string) (map[string]string, string, error) {
-	args := m.Called(ctx, method, repoRef)
+func (m *MockAuthService) StartAuthFlow(
+	ctx context.Context, method model.AuthMethod, repoRef string,
+) (map[string]string, string, error) {
+	args := m.Mock.Called(ctx, method, repoRef)
 	return args.Get(0).(map[string]string), args.String(1), args.Error(2)
 }
 
 func (m *MockAuthService) CheckAuthStatus(ctx context.Context, statusToken string) (string, error) {
-	args := m.Called(ctx, statusToken)
+	args := m.Mock.Called(ctx, statusToken)
 	return args.String(0), args.Error(1)
 }
 
 func (m *MockAuthService) ValidateAuth(ctx context.Context, authentication model.Authentication) (bool, error) {
-	args := m.Called(ctx, authentication)
+	args := m.Mock.Called(ctx, authentication)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -87,12 +90,12 @@ func TestPublishHandler(t *testing.T) {
 			},
 			authHeader: "Bearer github_token_123",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, model.Authentication{
+				authSvc.Mock.On("ValidateAuth", mock.Anything, model.Authentication{
 					Method:  model.AuthMethodGitHub,
 					Token:   "github_token_123",
 					RepoRef: "io.github.example/test-server",
 				}).Return(true, nil)
-				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+				registry.Mock.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 			},
 			expectedStatus: http.StatusCreated,
 			expectedResponse: map[string]string{
@@ -122,12 +125,12 @@ func TestPublishHandler(t *testing.T) {
 			},
 			authHeader: "Bearer some_token",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, model.Authentication{
+				authSvc.Mock.On("ValidateAuth", mock.Anything, model.Authentication{
 					Method:  model.AuthMethodNone,
 					Token:   "some_token",
 					RepoRef: "example/test-server",
 				}).Return(true, nil)
-				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+				registry.Mock.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 			},
 			expectedStatus: http.StatusCreated,
 			expectedResponse: map[string]string{
@@ -140,7 +143,7 @@ func TestPublishHandler(t *testing.T) {
 			method:         http.MethodGet,
 			requestBody:    nil,
 			authHeader:     "",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusMethodNotAllowed,
 			expectedError:  "Method not allowed",
 		},
@@ -149,7 +152,7 @@ func TestPublishHandler(t *testing.T) {
 			method:         http.MethodPost,
 			requestBody:    "",
 			authHeader:     "",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Invalid request payload:",
 		},
@@ -169,7 +172,7 @@ func TestPublishHandler(t *testing.T) {
 				},
 			},
 			authHeader:     "",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Name is required",
 		},
@@ -189,7 +192,7 @@ func TestPublishHandler(t *testing.T) {
 				},
 			},
 			authHeader:     "",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Version is required",
 		},
@@ -209,7 +212,7 @@ func TestPublishHandler(t *testing.T) {
 				},
 			},
 			authHeader:     "", // Missing auth header
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Authorization header is required",
 		},
@@ -229,8 +232,8 @@ func TestPublishHandler(t *testing.T) {
 				},
 			},
 			authHeader: "Bearer token",
-			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, auth.ErrAuthRequired)
+			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
+				authSvc.Mock.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, auth.ErrAuthRequired)
 			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Authentication is required for publishing",
@@ -251,8 +254,8 @@ func TestPublishHandler(t *testing.T) {
 				},
 			},
 			authHeader: "Bearer invalid_token",
-			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, nil)
+			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
+				authSvc.Mock.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, nil)
 			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Invalid authentication credentials",
@@ -274,8 +277,8 @@ func TestPublishHandler(t *testing.T) {
 			},
 			authHeader: "Bearer token",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(true, nil)
-				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(assert.AnError)
+				authSvc.Mock.On("ValidateAuth", mock.Anything, mock.Anything).Return(true, nil)
+				registry.Mock.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "Failed to publish server details:",
@@ -292,7 +295,7 @@ func TestPublishHandler(t *testing.T) {
 			tc.setupMocks(mockRegistry, mockAuthService)
 
 			// Create handler
-			handler := PublishHandler(mockRegistry, mockAuthService)
+			handler := v0.PublishHandler(mockRegistry, mockAuthService)
 
 			// Prepare request body
 			var requestBody []byte
@@ -303,7 +306,7 @@ func TestPublishHandler(t *testing.T) {
 			}
 
 			// Create request
-			req, err := http.NewRequest(tc.method, "/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(context.Background(), tc.method, "/publish", bytes.NewBuffer(requestBody))
 			assert.NoError(t, err)
 
 			// Set auth header if provided
@@ -337,8 +340,8 @@ func TestPublishHandler(t *testing.T) {
 			}
 
 			// Assert that all expectations were met
-			mockRegistry.AssertExpectations(t)
-			mockAuthService.AssertExpectations(t)
+			mockRegistry.Mock.AssertExpectations(t)
+			mockAuthService.Mock.AssertExpectations(t)
 		})
 	}
 }
@@ -377,12 +380,12 @@ func TestPublishHandlerBearerTokenParsing(t *testing.T) {
 			mockAuthService := new(MockAuthService)
 
 			// Setup mock to capture the actual token passed
-			mockAuthService.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
+			mockAuthService.Mock.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
 				return auth.Token == tc.expectedToken
 			})).Return(true, nil)
-			mockRegistry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+			mockRegistry.Mock.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 
-			handler := PublishHandler(mockRegistry, mockAuthService)
+			handler := v0.PublishHandler(mockRegistry, mockAuthService)
 
 			serverDetail := model.ServerDetail{
 				Server: model.Server{
@@ -400,7 +403,7 @@ func TestPublishHandlerBearerTokenParsing(t *testing.T) {
 			requestBody, err := json.Marshal(serverDetail)
 			assert.NoError(t, err)
 
-			req, err := http.NewRequest(http.MethodPost, "/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/publish", bytes.NewBuffer(requestBody))
 			assert.NoError(t, err)
 			req.Header.Set("Authorization", tc.authHeader)
 
@@ -408,7 +411,7 @@ func TestPublishHandlerBearerTokenParsing(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			assert.Equal(t, http.StatusCreated, rr.Code)
-			mockAuthService.AssertExpectations(t)
+			mockAuthService.Mock.AssertExpectations(t)
 		})
 	}
 }
@@ -442,12 +445,12 @@ func TestPublishHandlerAuthMethodSelection(t *testing.T) {
 			mockAuthService := new(MockAuthService)
 
 			// Setup mock to capture the auth method
-			mockAuthService.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
+			mockAuthService.Mock.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
 				return auth.Method == tc.expectedAuthMethod
 			})).Return(true, nil)
-			mockRegistry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+			mockRegistry.Mock.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 
-			handler := PublishHandler(mockRegistry, mockAuthService)
+			handler := v0.PublishHandler(mockRegistry, mockAuthService)
 
 			serverDetail := model.ServerDetail{
 				Server: model.Server{
@@ -465,7 +468,7 @@ func TestPublishHandlerAuthMethodSelection(t *testing.T) {
 			requestBody, err := json.Marshal(serverDetail)
 			assert.NoError(t, err)
 
-			req, err := http.NewRequest(http.MethodPost, "/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/publish", bytes.NewBuffer(requestBody))
 			assert.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer test_token")
 
@@ -473,7 +476,7 @@ func TestPublishHandlerAuthMethodSelection(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			assert.Equal(t, http.StatusCreated, rr.Code)
-			mockAuthService.AssertExpectations(t)
+			mockAuthService.Mock.AssertExpectations(t)
 		})
 	}
 }

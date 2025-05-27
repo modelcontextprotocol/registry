@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -13,11 +15,10 @@ import (
 )
 
 const (
-	tokenFilePath = ".mcpregistry_token"
-
+	tokenFilePath = ".mcpregistry_token" // #nosec:G101
 	// GitHub OAuth URLs
-	GitHubDeviceCodeURL  = "https://github.com/login/device/code"
-	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token"
+	GitHubDeviceCodeURL  = "https://github.com/login/device/code"        // #nosec:G101
+	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token" // #nosec:G101
 )
 
 // DeviceCodeResponse represents the response from GitHub's device code endpoint
@@ -39,7 +40,7 @@ type AccessTokenResponse struct {
 
 type ServerHealthResponse struct {
 	Status         string `json:"status"`
-	GitHubClientId string `json:"github_client_id"`
+	GitHubClientID string `json:"github_client_id"`
 }
 
 func main() {
@@ -62,29 +63,36 @@ func main() {
 
 	// get the clientID from the server's health endpoint
 	healthURL := registryURL + "/v0/health"
-	resp, err := http.Get(healthURL)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, healthURL, nil)
 	if err != nil {
-		fmt.Printf("Error fetching health endpoint: %s\n", err.Error())
+		log.Printf("Error creating request: %s\n", err.Error())
+		return
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error fetching health endpoint: %s\n", err.Error())
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		fmt.Printf("Health endpoint returned status %d: %s\n", resp.StatusCode, body)
+		log.Printf("Health endpoint returned status %d: %s\n", resp.StatusCode, body)
 		return
 	}
 	var healthResponse ServerHealthResponse
 	err = json.NewDecoder(resp.Body).Decode(&healthResponse)
 	if err != nil {
-		fmt.Printf("Error decoding health response: %s\n", err.Error())
+		log.Printf("Error decoding health response: %s\n", err.Error())
 		return
 	}
-	if healthResponse.GitHubClientId == "" {
-		fmt.Println("GitHub Client ID is not set in the server's health response.")
+	if healthResponse.GitHubClientID == "" {
+		log.Println("GitHub Client ID is not set in the server's health response.")
 		return
 	}
 
-	githubClientID := healthResponse.GitHubClientId
+	githubClientID := healthResponse.GitHubClientID
 
 	var token string
 
@@ -97,7 +105,7 @@ func main() {
 		if forceLogin || os.IsNotExist(statErr) {
 			err := performDeviceFlowLogin(githubClientID)
 			if err != nil {
-				fmt.Printf("Failed to perform device flow login: %s\n", err.Error())
+				log.Printf("Failed to perform device flow login: %s\n", err.Error())
 				return
 			}
 		}
@@ -106,7 +114,7 @@ func main() {
 		var err error
 		token, err = readToken()
 		if err != nil {
-			fmt.Printf("Error reading token: %s\n", err.Error())
+			log.Printf("Error reading token: %s\n", err.Error())
 			return
 		}
 	}
@@ -114,22 +122,21 @@ func main() {
 	// Read MCP file
 	mcpData, err := os.ReadFile(mcpFilePath)
 	if err != nil {
-		fmt.Printf("Error reading MCP file: %s\n", err.Error())
+		log.Printf("Error reading MCP file: %s\n", err.Error())
 		return
 	}
 
 	// Publish to registry
 	err = publishToRegistry(registryURL, mcpData, token)
 	if err != nil {
-		fmt.Printf("Failed to publish to registry: %s\n", err.Error())
+		log.Printf("Failed to publish to registry: %s\n", err.Error())
 		return
 	}
 
-	fmt.Println("Successfully published to registry!")
+	log.Println("Successfully published to registry!")
 }
 
 func performDeviceFlowLogin(githubClientID string) error {
-
 	if githubClientID == "" {
 		return fmt.Errorf("GitHub Client ID is required for device flow login")
 	}
@@ -142,13 +149,13 @@ func performDeviceFlowLogin(githubClientID string) error {
 	}
 
 	// Display instructions to the user
-	fmt.Println("\nTo authenticate, please:")
-	fmt.Println("1. Go to:", verificationURI)
-	fmt.Println("2. Enter code:", userCode)
-	fmt.Println("3. Authorize this application")
+	log.Println("\nTo authenticate, please:")
+	log.Println("1. Go to:", verificationURI)
+	log.Println("2. Enter code:", userCode)
+	log.Println("3. Authorize this application")
 
 	// Poll for the token
-	fmt.Println("Waiting for authorization...")
+	log.Println("Waiting for authorization...")
 	token, err := pollForToken(deviceCode, githubClientID)
 	if err != nil {
 		return fmt.Errorf("error polling for token: %w", err)
@@ -160,7 +167,7 @@ func performDeviceFlowLogin(githubClientID string) error {
 		return fmt.Errorf("error saving token: %w", err)
 	}
 
-	fmt.Println("Successfully authenticated!")
+	log.Println("Successfully authenticated!")
 	return nil
 }
 
@@ -180,7 +187,7 @@ func requestDeviceCode(githubClientID string) (string, string, string, error) {
 		return "", "", "", err
 	}
 
-	req, err := http.NewRequest("POST", GitHubDeviceCodeURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, GitHubDeviceCodeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", "", "", err
 	}
@@ -235,7 +242,7 @@ func pollForToken(deviceCode, githubClientID string) (string, error) {
 	deadline := time.Now().Add(time.Duration(expiresIn) * time.Second)
 
 	for time.Now().Before(deadline) {
-		req, err := http.NewRequest("POST", GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
 		if err != nil {
 			return "", err
 		}
@@ -262,7 +269,6 @@ func pollForToken(deviceCode, githubClientID string) (string, error) {
 
 		if tokenResp.Error == "authorization_pending" {
 			// User hasn't authorized yet, wait and retry
-			fmt.Print(".")
 			time.Sleep(time.Duration(interval) * time.Second)
 			continue
 		}
@@ -272,7 +278,6 @@ func pollForToken(deviceCode, githubClientID string) (string, error) {
 		}
 
 		if tokenResp.AccessToken != "" {
-			fmt.Println() // Add newline after dots
 			return tokenResp.AccessToken, nil
 		}
 
@@ -322,7 +327,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	publishURL := registryURL + "v0/publish"
 
 	// Create and send the request
-	req, err := http.NewRequest("POST", publishURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, publishURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
 	}
@@ -346,6 +351,6 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 		return fmt.Errorf("publication failed with status %d: %s", resp.StatusCode, body)
 	}
 
-	println(string(body))
+	log.Println(string(body))
 	return nil
 }

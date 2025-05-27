@@ -15,6 +15,8 @@ type fakeRegistryService struct {
 }
 
 // NewFakeRegistryService creates a new fake registry service with pre-populated data
+//
+//nolint:ireturn // Factory function intentionally returns interface for dependency injection
 func NewFakeRegistryService() RegistryService {
 	// Sample registry entries with updated model structure
 	registries := []*model.Server{

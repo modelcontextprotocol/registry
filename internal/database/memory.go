@@ -84,7 +84,14 @@ func compareSemanticVersions(version1, version2 string) int {
 }
 
 // List retrieves all MCPRegistry entries with optional filtering and pagination
-func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Server, string, error) {
+//
+//gocognit:ignore
+func (db *MemoryDB) List(
+	ctx context.Context,
+	filter map[string]interface{},
+	cursor string,
+	limit int,
+) ([]*model.Server, string, error) {
 	if ctx.Err() != nil {
 		return nil, "", ctx.Err()
 	}
@@ -109,27 +116,25 @@ func (db *MemoryDB) List(ctx context.Context, filter map[string]interface{}, cur
 		include := true
 
 		// Apply filters if any
-		if filter != nil {
-			for key, value := range filter {
-				switch key {
-				case "name":
-					if entry.Name != value.(string) {
-						include = false
-					}
-				case "repoUrl":
-					if entry.Repository.URL != value.(string) {
-						include = false
-					}
-				case "serverDetail.id":
-					if entry.ID != value.(string) {
-						include = false
-					}
-				case "version":
-					if entry.VersionDetail.Version != value.(string) {
-						include = false
-					}
-					// Add more filter options as needed
+		for key, value := range filter {
+			switch key {
+			case "name":
+				if entry.Name != value.(string) {
+					include = false
 				}
+			case "repoUrl":
+				if entry.Repository.URL != value.(string) {
+					include = false
+				}
+			case "serverDetail.id":
+				if entry.ID != value.(string) {
+					include = false
+				}
+			case "version":
+				if entry.VersionDetail.Version != value.(string) {
+					include = false
+				}
+				// Add more filter options as needed
 			}
 		}
 

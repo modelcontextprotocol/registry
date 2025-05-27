@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/caarlos0/env/v11"
+	env "github.com/caarlos0/env/v11"
 )
 
 // Config holds the application configuration

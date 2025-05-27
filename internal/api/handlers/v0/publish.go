@@ -92,7 +92,7 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 
 		valid, err := authService.ValidateAuth(r.Context(), a)
 		if err != nil {
-			if err == auth.ErrAuthRequired {
+			if errors.Is(err, auth.ErrAuthRequired) {
 				http.Error(w, "Authentication is required for publishing", http.StatusUnauthorized)
 				return
 			}
@@ -119,9 +119,12 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{
+		if err := json.NewEncoder(w).Encode(map[string]string{
 			"message": "Server publication successful",
 			"id":      serverDetail.ID,
-		})
+		}); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	}
 }

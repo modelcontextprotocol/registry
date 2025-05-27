@@ -1,4 +1,4 @@
-package integrationtests
+package integrationtests_test
 
 import (
 	"bytes"
@@ -20,7 +20,9 @@ import (
 // MockAuthService implements a simple auth service for testing
 type MockAuthService struct{}
 
-func (m *MockAuthService) StartAuthFlow(ctx context.Context, method model.AuthMethod, repoRef string) (map[string]string, string, error) {
+func (m *MockAuthService) StartAuthFlow(
+	_ context.Context, _ model.AuthMethod, _ string,
+) (map[string]string, string, error) {
 	return map[string]string{
 		"device_code":      "mock_device_code",
 		"user_code":        "ABCD-1234",
@@ -28,14 +30,14 @@ func (m *MockAuthService) StartAuthFlow(ctx context.Context, method model.AuthMe
 	}, "mock_status_token", nil
 }
 
-func (m *MockAuthService) CheckAuthStatus(ctx context.Context, statusToken string) (string, error) {
+func (m *MockAuthService) CheckAuthStatus(_ context.Context, statusToken string) (string, error) {
 	if statusToken == "mock_status_token" {
 		return "mock_access_token", nil
 	}
 	return "", fmt.Errorf("invalid status token")
 }
 
-func (m *MockAuthService) ValidateAuth(ctx context.Context, authentication model.Authentication) (bool, error) {
+func (m *MockAuthService) ValidateAuth(_ context.Context, authentication model.Authentication) (bool, error) {
 	// Simple validation: for testing purposes, accept any non-empty token
 	switch authentication.Method {
 	case model.AuthMethodGitHub:
@@ -327,10 +329,10 @@ func TestPublishIntegration(t *testing.T) {
 			},
 		}
 
-		duplicateJsonData, err := json.Marshal(duplicateServerDetail)
+		duplicateJSONData, err := json.Marshal(duplicateServerDetail)
 		require.NoError(t, err)
 
-		duplicateReq := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(duplicateJsonData))
+		duplicateReq := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(duplicateJSONData))
 		duplicateReq.Header.Set("Content-Type", "application/json")
 		duplicateReq.Header.Set("Authorization", "Bearer github_token_duplicate")
 
@@ -346,7 +348,6 @@ func TestPublishIntegration(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, firstServerDetail.Name, retrievedServer.Name)
 		assert.Equal(t, firstServerDetail.Description, retrievedServer.Description)
-
 	})
 
 	t.Run("publish succeeds with same name but different version", func(t *testing.T) {
@@ -400,10 +401,10 @@ func TestPublishIntegration(t *testing.T) {
 			},
 		}
 
-		secondJsonData, err := json.Marshal(secondVersionDetail)
+		secondJSONData, err := json.Marshal(secondVersionDetail)
 		require.NoError(t, err)
 
-		secondReq := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(secondJsonData))
+		secondReq := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(secondJSONData))
 		secondReq.Header.Set("Content-Type", "application/json")
 		secondReq.Header.Set("Authorization", "Bearer github_token_v2")
 
@@ -480,10 +481,10 @@ func TestPublishIntegration(t *testing.T) {
 			},
 		}
 
-		olderJsonData, err := json.Marshal(olderVersionDetail)
+		olderJSONData, err := json.Marshal(olderVersionDetail)
 		require.NoError(t, err)
 
-		olderReq := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(olderJsonData))
+		olderReq := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(olderJSONData))
 		olderReq.Header.Set("Content-Type", "application/json")
 		olderReq.Header.Set("Authorization", "Bearer github_token_older")
 

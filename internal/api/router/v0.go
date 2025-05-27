@@ -11,7 +11,9 @@ import (
 )
 
 // RegisterV0Routes registers all v0 API routes to the provided router
-func RegisterV0Routes(mux *http.ServeMux, cfg *config.Config, registry service.RegistryService, authService auth.Service) {
+func RegisterV0Routes(
+	mux *http.ServeMux, cfg *config.Config, registry service.RegistryService, authService auth.Service,
+) {
 	// Register v0 endpoints
 	mux.HandleFunc("/v0/health", v0.HealthHandler(cfg))
 	mux.HandleFunc("/v0/servers", v0.ServersHandler(registry))

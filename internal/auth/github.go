@@ -3,6 +3,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -70,14 +71,19 @@ func NewGitHubDeviceAuth(config GitHubOAuthConfig) *GitHubDeviceAuth {
 // It verifies the token owner matches the repository owner or is a member of the owning organization.
 // It also verifies that the token was created for the same ClientID used to set up the authentication.
 // Returns true if valid, false otherwise along with an error explaining the validation failure.
-func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (bool, error) {
+func (g *GitHubDeviceAuth) ValidateToken(ctx context.Context, token string, requiredRepo string) (bool, error) {
 	// If no repo is required, we can't validate properly
 	if requiredRepo == "" {
 		return false, fmt.Errorf("repository reference is required for token validation")
 	}
 
 	// First, validate that the token is associated with our ClientID
-	tokenReq, err := http.NewRequest("GET", "https://api.github.com/applications/"+g.config.ClientID+"/token", nil)
+	tokenReq, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		"https://api.github.com/applications/"+g.config.ClientID+"/token",
+		nil,
+	)
 	if err != nil {
 		return false, err
 	}
@@ -97,7 +103,8 @@ func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (boo
 	}
 
 	// POST instead of GET for security reasons per GitHub API
-	tokenReq, err = http.NewRequest("POST", "https://api.github.com/applications/"+g.config.ClientID+"/token", io.NopCloser(bytes.NewReader(checkBody)))
+	tokenURL := "https://api.github.com/applications/" + g.config.ClientID + "/token"
+	tokenReq, err = http.NewRequestWithContext(ctx, http.MethodPost, tokenURL, io.NopCloser(bytes.NewReader(checkBody)))
 	if err != nil {
 		return false, err
 	}
@@ -135,7 +142,7 @@ func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (boo
 	}
 
 	// Get the authenticated user
-	userReq, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+	userReq, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
 		return false, err
 	}
@@ -175,17 +182,20 @@ func (g *GitHubDeviceAuth) ValidateToken(token string, requiredRepo string) (boo
 	// Verify that the authenticated user matches the owner
 	if userInfo.Login != owner {
 		// Check if the user is a member of the organization
-		isMember, err := g.checkOrgMembership(token, userInfo.Login, owner)
+		isMember, err := g.checkOrgMembership(ctx, token, userInfo.Login, owner)
 		if err != nil {
 			return false, fmt.Errorf("failed to check org membership: %s", owner)
 		}
 
 		if !isMember {
-			return false, fmt.Errorf("token belongs to user %s, but repository is owned by %s and user is not a member of the organization", userInfo.Login, owner)
+			return false, fmt.Errorf(
+				"token belongs to user %s, but repository is owned by %s and user is not a member of the organization",
+				userInfo.Login, owner)
 		}
 	}
 
-	// If we've reached this point, the token has access the repo and the user matches the owner or is a member of the owner org
+	// If we've reached this point, the token has access the repo and the user matches
+	// the owner or is a member of the owner org
 	return true, nil
 }
 
@@ -210,13 +220,13 @@ func (g *GitHubDeviceAuth) ExtractGitHubRepo(repoURL string) (owner, repo string
 }
 
 // checkOrgMembership checks if a user is a member of an organization
-func (g *GitHubDeviceAuth) checkOrgMembership(token, username, org string) (bool, error) {
+func (g *GitHubDeviceAuth) checkOrgMembership(ctx context.Context, token, username, org string) (bool, error) {
 	// Create request to check if user is a member of the organization
 	// GitHub API endpoint: GET /orgs/{org}/members/{username}
 	// true if status code is 204 No Content
 	// false if status code is 404 Not Found
 	url := fmt.Sprint("https://api.github.com/orgs/", org, "/members/", username)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return false, err
 	}

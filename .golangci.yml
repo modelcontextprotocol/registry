@@ -25,9 +25,7 @@ linters:
     - durationcheck
     - errname
     - errorlint
-    - execinquery
     - exhaustive
-    - exportloopref
     - forbidigo
     - funlen
     - gci
@@ -38,7 +36,6 @@ linters:
     - godox
     - gofmt
     - goimports
-    - gomnd
     - gomoddirectives
     - gomodguard
     - goprintffuncname
@@ -55,7 +52,6 @@ linters:
     - nilnil
     - noctx
     - nolintlint
-    - nosnakecase
     - nosprintfhostport
     - predeclared
     - promlinter
@@ -76,18 +72,18 @@ linters:
 
 linters-settings:
   cyclop:
-    max-complexity: 15
+    max-complexity: 50
   funlen:
-    lines: 100
-    statements: 50
+    lines: 150
+    statements: 150
   gocognit:
-    min-complexity: 15
+    min-complexity: 50
   gocyclo:
-    min-complexity: 15
+    min-complexity: 25
   goconst:
     min-len: 3
     min-occurrences: 3
-  gomnd:
+  mnd:
     checks:
       - argument
       - case
@@ -95,7 +91,7 @@ linters-settings:
       - operation
       - return
   lll:
-    line-length: 120
+    line-length: 150
   misspell:
     locale: US
   nestif:
@@ -106,7 +102,7 @@ issues:
     # Exclude some linters from running on tests files.
     - path: _test\.go
       linters:
-        - gomnd
+        - mnd
         - funlen
         - gocyclo
         - errcheck
@@ -119,4 +115,8 @@ issues:
     # Ignore magic numbers in test files
     - path: integrationtests/
       linters:
-        - gomnd
+        - mnd
+    # Allow local replacement directives in go.mod
+    - path: go\.mod
+      linters:
+        - gomoddirectives

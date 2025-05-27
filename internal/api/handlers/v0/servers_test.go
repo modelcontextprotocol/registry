@@ -1,6 +1,7 @@
-package v0
+package v0_test
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -21,7 +23,7 @@ func TestServersHandler(t *testing.T) {
 		setupMocks      func(*MockRegistryService)
 		expectedStatus  int
 		expectedServers []model.Server
-		expectedMeta    *Metadata
+		expectedMeta    *v0.Metadata
 		expectedError   string
 	}{
 		{
@@ -60,7 +62,7 @@ func TestServersHandler(t *testing.T) {
 						},
 					},
 				}
-				registry.On("List", "", 30).Return(servers, "", nil)
+				registry.Mock.On("List", "", 30).Return(servers, "", nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedServers: []model.Server{
@@ -119,7 +121,7 @@ func TestServersHandler(t *testing.T) {
 					},
 				}
 				nextCursor := uuid.New().String()
-				registry.On("List", mock.AnythingOfType("string"), 10).Return(servers, nextCursor, nil)
+				registry.Mock.On("List", mock.AnythingOfType("string"), 10).Return(servers, nextCursor, nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedServers: []model.Server{
@@ -139,7 +141,7 @@ func TestServersHandler(t *testing.T) {
 					},
 				},
 			},
-			expectedMeta: &Metadata{
+			expectedMeta: &v0.Metadata{
 				NextCursor: "", // This will be dynamically set in the test
 				Count:      1,
 			},
@@ -150,7 +152,7 @@ func TestServersHandler(t *testing.T) {
 			queryParams: "?limit=150",
 			setupMocks: func(registry *MockRegistryService) {
 				servers := []model.Server{}
-				registry.On("List", "", 100).Return(servers, "", nil)
+				registry.Mock.On("List", "", 100).Return(servers, "", nil)
 			},
 			expectedStatus:  http.StatusOK,
 			expectedServers: []model.Server{},
@@ -159,7 +161,7 @@ func TestServersHandler(t *testing.T) {
 			name:           "invalid cursor parameter",
 			method:         http.MethodGet,
 			queryParams:    "?cursor=invalid-uuid",
-			setupMocks:     func(registry *MockRegistryService) {},
+			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Invalid cursor parameter",
 		},
@@ -167,7 +169,7 @@ func TestServersHandler(t *testing.T) {
 			name:           "invalid limit parameter - non-numeric",
 			method:         http.MethodGet,
 			queryParams:    "?limit=abc",
-			setupMocks:     func(registry *MockRegistryService) {},
+			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Invalid limit parameter",
 		},
@@ -175,7 +177,7 @@ func TestServersHandler(t *testing.T) {
 			name:           "invalid limit parameter - zero",
 			method:         http.MethodGet,
 			queryParams:    "?limit=0",
-			setupMocks:     func(registry *MockRegistryService) {},
+			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Limit must be greater than 0",
 		},
@@ -183,7 +185,7 @@ func TestServersHandler(t *testing.T) {
 			name:           "invalid limit parameter - negative",
 			method:         http.MethodGet,
 			queryParams:    "?limit=-5",
-			setupMocks:     func(registry *MockRegistryService) {},
+			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Limit must be greater than 0",
 		},
@@ -191,7 +193,7 @@ func TestServersHandler(t *testing.T) {
 			name:   "registry service error",
 			method: http.MethodGet,
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("List", "", 30).Return([]model.Server{}, "", errors.New("database connection error"))
+				registry.Mock.On("List", "", 30).Return([]model.Server{}, "", errors.New("database connection error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "database connection error",
@@ -199,7 +201,7 @@ func TestServersHandler(t *testing.T) {
 		{
 			name:           "method not allowed",
 			method:         http.MethodPost,
-			setupMocks:     func(registry *MockRegistryService) {},
+			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusMethodNotAllowed,
 			expectedError:  "Method not allowed",
 		},
@@ -212,11 +214,11 @@ func TestServersHandler(t *testing.T) {
 			tc.setupMocks(mockRegistry)
 
 			// Create handler
-			handler := ServersHandler(mockRegistry)
+			handler := v0.ServersHandler(mockRegistry)
 
 			// Create request
 			url := "/v0/servers" + tc.queryParams
-			req, err := http.NewRequest(tc.method, url, nil)
+			req, err := http.NewRequestWithContext(context.Background(), tc.method, url, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -235,7 +237,7 @@ func TestServersHandler(t *testing.T) {
 				assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
 
 				// Parse response body
-				var resp PaginatedResponse
+				var resp v0.PaginatedResponse
 				err = json.NewDecoder(rr.Body).Decode(&resp)
 				assert.NoError(t, err)
 
@@ -249,15 +251,13 @@ func TestServersHandler(t *testing.T) {
 						assert.NotEmpty(t, resp.Metadata.NextCursor)
 					}
 				}
-			} else {
+			} else if tc.expectedError != "" {
 				// Check error message for non-200 responses
-				if tc.expectedError != "" {
-					assert.Contains(t, rr.Body.String(), tc.expectedError)
-				}
+				assert.Contains(t, rr.Body.String(), tc.expectedError)
 			}
 
 			// Verify mock expectations
-			mockRegistry.AssertExpectations(t)
+			mockRegistry.Mock.AssertExpectations(t)
 		})
 	}
 }
@@ -285,14 +285,21 @@ func TestServersHandlerIntegration(t *testing.T) {
 		},
 	}
 
-	mockRegistry.On("List", "", 30).Return(servers, "", nil)
+	mockRegistry.Mock.On("List", "", 30).Return(servers, "", nil)
 
 	// Create test server
-	server := httptest.NewServer(ServersHandler(mockRegistry))
+	server := httptest.NewServer(v0.ServersHandler(mockRegistry))
 	defer server.Close()
 
 	// Send request to the test server
-	resp, err := http.Get(server.URL)
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
@@ -305,7 +312,7 @@ func TestServersHandlerIntegration(t *testing.T) {
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 	// Parse response body
-	var paginatedResp PaginatedResponse
+	var paginatedResp v0.PaginatedResponse
 	err = json.NewDecoder(resp.Body).Decode(&paginatedResp)
 	assert.NoError(t, err)
 
@@ -314,7 +321,7 @@ func TestServersHandlerIntegration(t *testing.T) {
 	assert.Empty(t, paginatedResp.Metadata.NextCursor)
 
 	// Verify mock expectations
-	mockRegistry.AssertExpectations(t)
+	mockRegistry.Mock.AssertExpectations(t)
 }
 
 // TestServersDetailHandlerIntegration tests the servers detail handler with actual HTTP requests
@@ -342,17 +349,24 @@ func TestServersDetailHandlerIntegration(t *testing.T) {
 		},
 	}
 
-	mockRegistry.On("GetByID", serverID).Return(serverDetail, nil)
+	mockRegistry.Mock.On("GetByID", serverID).Return(serverDetail, nil)
 
 	// Create test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.SetPathValue("id", serverID)
-		ServersDetailHandler(mockRegistry).ServeHTTP(w, r)
+		v0.ServersDetailHandler(mockRegistry).ServeHTTP(w, r)
 	}))
 	defer server.Close()
 
 	// Send request to the test server
-	resp, err := http.Get(server.URL)
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
@@ -373,5 +387,5 @@ func TestServersDetailHandlerIntegration(t *testing.T) {
 	assert.Equal(t, *serverDetail, serverDetailResp)
 
 	// Verify mock expectations
-	mockRegistry.AssertExpectations(t)
+	mockRegistry.Mock.AssertExpectations(t)
 }

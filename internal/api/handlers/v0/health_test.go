@@ -1,11 +1,13 @@
-package v0
+package v0_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +18,7 @@ func TestHealthHandler(t *testing.T) {
 		name           string
 		config         *config.Config
 		expectedStatus int
-		expectedBody   HealthResponse
+		expectedBody   v0.HealthResponse
 	}{
 		{
 			name: "returns health status with github client id",
@@ -24,9 +26,9 @@ func TestHealthHandler(t *testing.T) {
 				GithubClientID: "test-github-client-id",
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody: HealthResponse{
+			expectedBody: v0.HealthResponse{
 				Status:         "ok",
-				GitHubClientId: "test-github-client-id",
+				GitHubClientID: "test-github-client-id",
 			},
 		},
 		{
@@ -35,9 +37,9 @@ func TestHealthHandler(t *testing.T) {
 				GithubClientID: "",
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody: HealthResponse{
+			expectedBody: v0.HealthResponse{
 				Status:         "ok",
-				GitHubClientId: "",
+				GitHubClientID: "",
 			},
 		},
 	}
@@ -45,10 +47,10 @@ func TestHealthHandler(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create handler with the test config
-			handler := HealthHandler(tc.config)
+			handler := v0.HealthHandler(tc.config)
 
 			// Create request
-			req, err := http.NewRequest("GET", "/health", nil)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/health", nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -66,7 +68,7 @@ func TestHealthHandler(t *testing.T) {
 			assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
 
 			// Parse response body
-			var resp HealthResponse
+			var resp v0.HealthResponse
 			err = json.NewDecoder(rr.Body).Decode(&resp)
 			assert.NoError(t, err)
 
@@ -83,11 +85,18 @@ func TestHealthHandlerIntegration(t *testing.T) {
 		GithubClientID: "integration-test-client-id",
 	}
 
-	server := httptest.NewServer(HealthHandler(cfg))
+	server := httptest.NewServer(v0.HealthHandler(cfg))
 	defer server.Close()
 
 	// Send request to the test server
-	resp, err := http.Get(server.URL)
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("Failed to create request: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("Failed to send request: %v", err)
 	}
@@ -100,14 +109,14 @@ func TestHealthHandlerIntegration(t *testing.T) {
 	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 	// Parse response body
-	var healthResp HealthResponse
+	var healthResp v0.HealthResponse
 	err = json.NewDecoder(resp.Body).Decode(&healthResp)
 	assert.NoError(t, err)
 
 	// Check the response body
-	expectedResp := HealthResponse{
+	expectedResp := v0.HealthResponse{
 		Status:         "ok",
-		GitHubClientId: "integration-test-client-id",
+		GitHubClientID: "integration-test-client-id",
 	}
 	assert.Equal(t, expectedResp, healthResp)
 }
