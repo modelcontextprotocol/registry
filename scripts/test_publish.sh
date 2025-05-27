@@ -2,6 +2,20 @@
 
 set -e 
 
+echo "=================================================="
+echo "MCP Registry Publish Endpoint Test Script"
+echo "=================================================="
+echo "This script expects the MCP Registry server to be running locally."
+echo "Please ensure the server is started using one of the following methods:"
+echo "  • Docker Compose: docker compose up"
+echo "  • Direct execution: go run cmd/registry/main.go"
+echo "  • Built binary: ./build/registry"
+echo ""
+echo "REQUIRED: Set the BEARER_TOKEN environment variable with a valid GitHub token"
+echo "Example: export BEARER_TOKEN=your_github_token_here"
+echo "=================================================="
+echo ""
+
 # Default values
 HOST="http://localhost:8080"
 VERBOSE=false
@@ -13,8 +27,19 @@ function show_usage {
   echo "  -h, --host      Base URL of the MCP Registry service (default: http://localhost:8080)"
   echo "  -v, --verbose   Show verbose output including full request payload"
   echo "  --help          Show this help message"
+  echo ""
+  echo "Environment Variables:"
+  echo "  BEARER_TOKEN    Required: GitHub token for authentication"
   exit 1
 }
+
+# Check if bearer token is set
+if [[ -z "$BEARER_TOKEN" ]]; then
+  echo "Error: BEARER_TOKEN environment variable is not set."
+  echo "Please set your GitHub token as an environment variable:"
+  echo "  export BEARER_TOKEN=your_github_token_here"
+  exit 1
+fi
 
 # Check if jq is installed
 if ! command -v jq &> /dev/null; then
@@ -27,19 +52,14 @@ if ! command -v jq &> /dev/null; then
 fi
 
 # Check if the API is running
-echo "Checking if the API is running at $HOST..."
+echo "Checking if the MCP Registry API is running at $HOST..."
 health_check=$(curl -s -o /dev/null -w "%{http_code}" "$HOST/v0/health" 2>/dev/null)
 if [[ "$health_check" != "200" ]]; then
-  echo "Warning: API might not be running at $HOST (health check returned $health_check)"
-  echo "Do you want to continue anyway? (y/n)"
-  read -r proceed
-  if [[ ! "$proceed" =~ ^[Yy]$ ]]; then
-    echo "Exiting. Please start the API and try again."
-    exit 1
-  fi
-  echo "Continuing as requested..."
+  echo "Error: MCP Registry API is not running at $HOST (health check returned $health_check)"
+  echo "Please start the server using one of the methods mentioned above and try again."
+  exit 1
 else
-  echo "API is running at $HOST"
+  echo "✓ MCP Registry API is running at $HOST"
 fi
 
 # Parse command line arguments
@@ -56,46 +76,51 @@ done
 # Create a temporary file for our JSON payload
 PAYLOAD_FILE=$(mktemp)
 
-# Create sample server detail payload
+# Create sample server detail payload based on current model structure
 cat > "$PAYLOAD_FILE" << EOF
 {
-  "name": "Test MCP Server",
-  "description": "A test server for MCP Registry",
-  "version_detail": {
-    "version": "1.0.2",
-    "release_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
-    "is_latest": true
-  },
+  "name": "io.github.example/test-mcp-server",
+  "description": "A test server for MCP Registry validation - published at $(date)",
   "repository": {
     "url": "https://github.com/example/test-mcp-server",
-    "branch": "main"
+    "source": "github",
+    "id": "example/test-mcp-server"
   },
-  "registries": [
+  "version_detail": {
+    "version": "1.0.$(date +%s)"
+  },
+  "packages": [
     {
-      "name": "npm",
-      "package_name": "test-mcp-server",
-      "license": "MIT",
-      "command_arguments": {
-        "sub_commands": [
-          {
-            "name": "start",
-            "description": "Start the server"
-          }
-        ],
-        "environment_variables": [
-          {
-            "name": "PORT",
-            "description": "Port to run the server on",
-            "required": false
-          }
-        ]
-      }
-    }
-  ],
-  "remotes": [
-    {
-      "transport_type": "http",
-      "url": "http://example.com/api"
+      "registry_name": "npm",
+      "name": "test-mcp-server",
+      "version": "1.0.$(date +%s)",
+      "runtime_hint": "node",
+      "runtime_arguments": [
+        {
+          "type": "positional",
+          "name": "config",
+          "description": "Configuration file path",
+          "format": "file_path",
+          "is_required": false,
+          "default": "./config.json"
+        }
+      ],
+      "environment_variables": [
+        {
+          "name": "PORT",
+          "description": "Port to run the server on",
+          "format": "number",
+          "is_required": false,
+          "default": "3000"
+        },
+        {
+          "name": "API_KEY",
+          "description": "API key for external service",
+          "format": "string",
+          "is_required": true,
+          "is_secret": true
+        }
+      ]
     }
   ]
 }
@@ -110,17 +135,16 @@ fi
 
 # Test publish endpoint
 echo "Testing publish endpoint: $HOST/v0/publish"
+echo "Using Bearer Token: ${BEARER_TOKEN:0:10}..." # Show only first 10 chars for security
+
 # Get response and status code in a single request
 response_file=$(mktemp)
 headers_file=$(mktemp)
 
-# Get token for authentication (or use dummy token for testing)
-AUTH_TOKEN=${AUTH_TOKEN:-"test_token"}
-
 # Execute curl with response body to file and headers+status to another file
 curl -s -X POST \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${AUTH_TOKEN}" \
+  -H "Authorization: Bearer ${BEARER_TOKEN}" \
   -d "@$PAYLOAD_FILE" \
   -D "$headers_file" \
   -o "$response_file" \
@@ -143,33 +167,54 @@ if [[ "${status_code:0:1}" == "2" ]]; then
   echo "Response:"
   echo "$http_response" | jq '.' 2>/dev/null || echo "$http_response"
   
-  # Extract the server ID from the response
-  server_id=$(echo "$http_response" | jq -r '.id')
+  # Check for server added message and extract UUID
+  message=$(echo "$http_response" | jq -r '.message // empty' 2>/dev/null)
+  server_id=$(echo "$http_response" | jq -r '.id // .server_id // empty' 2>/dev/null)
   
-  echo "Publish successful with ID: $server_id"
+  # Validate the response contains success indicators
+  success_indicators=0
   
-  # If we got a valid ID, verify it was actually created by calling the servers endpoint
-  if [[ ! -z "$server_id" && "$server_id" != "null" ]]; then
-    echo "-------------------------------------"
-    echo "Verifying server was published by checking servers endpoint..."
-    verify_response=$(curl -s "$HOST/v0/servers/$server_id")
-    echo "Response from servers endpoint:"
-    echo "$verify_response" | jq '.' 2>/dev/null || echo "$verify_response"
-    echo "-------------------------------------"
-    echo "Server verification response:"
-    echo "$verify_response" | jq '.' 2>/dev/null || echo "$verify_response"
-    echo "Server verification successful"
+  if [[ ! -z "$message" && "$message" != "null" ]]; then
+    echo "✓ Success message received: $message"
+    if [[ "$message" == *"server"* && ("$message" == *"added"* || "$message" == *"published"* || "$message" == *"created"*) ]]; then
+      ((success_indicators++))
+      echo "✓ Message indicates server was successfully added"
+    fi
+  fi
+  
+  if [[ ! -z "$server_id" && "$server_id" != "null" && "$server_id" != "empty" ]]; then
+    echo "✓ Server UUID received: $server_id"
+    # Validate UUID format (basic check for UUID pattern)
+    if [[ "$server_id" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+      ((success_indicators++))
+      echo "✓ Server ID appears to be a valid UUID format"
+    else
+      echo "⚠ Server ID format may not be a standard UUID: $server_id"
+      ((success_indicators++)) # Still count as success if we got an ID
+    fi
+  fi
+  
+  if [[ $success_indicators -ge 2 ]]; then
+    echo ""
+    echo "🎉 PUBLISH TEST PASSED!"
+    echo "   ✓ Server successfully published with ID: $server_id"
+    echo "   ✓ Success message: $message"
   else
-    echo "Error: No valid server ID returned from publish response"
-    echo "Response:"
-    echo "$http_response" | jq '.' 2>/dev/null || echo "$http_response"
+    echo ""
+    echo "❌ PUBLISH TEST FAILED!"
+    echo "   Expected: Success message about server being added AND a server UUID"
+    echo "   Received: message='$message', id='$server_id'"
     exit 1
   fi
   
 else
-  echo "Response:"
+  echo ""
+  echo "❌ PUBLISH TEST FAILED!"
+  echo "   Expected: 2xx status code"
+  echo "   Received: $status_code"
+  echo "   Response:"
   echo "$http_response" | jq '.' 2>/dev/null || echo "$http_response"
-  echo "Publish failed"
+  exit 1
 fi
 
 echo "-------------------------------------"
