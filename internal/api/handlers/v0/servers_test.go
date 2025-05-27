@@ -30,7 +30,7 @@ func TestServersHandler(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				servers := []model.Server{
 					{
-						ID:          "test-id-1",
+						ID:          "550e8400-e29b-41d4-a716-446655440001",
 						Name:        "test-server-1",
 						Description: "First test server",
 						Repository: model.Repository{
@@ -45,7 +45,7 @@ func TestServersHandler(t *testing.T) {
 						},
 					},
 					{
-						ID:          "test-id-2",
+						ID:          "550e8400-e29b-41d4-a716-446655440002",
 						Name:        "test-server-2",
 						Description: "Second test server",
 						Repository: model.Repository{
@@ -65,7 +65,7 @@ func TestServersHandler(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedServers: []model.Server{
 				{
-					ID:          "test-id-1",
+					ID:          "550e8400-e29b-41d4-a716-446655440001",
 					Name:        "test-server-1",
 					Description: "First test server",
 					Repository: model.Repository{
@@ -80,7 +80,7 @@ func TestServersHandler(t *testing.T) {
 					},
 				},
 				{
-					ID:          "test-id-2",
+					ID:          "550e8400-e29b-41d4-a716-446655440002",
 					Name:        "test-server-2",
 					Description: "Second test server",
 					Repository: model.Repository{
@@ -99,11 +99,11 @@ func TestServersHandler(t *testing.T) {
 		{
 			name:        "successful list with cursor and limit",
 			method:      http.MethodGet,
-			queryParams: "?cursor=test-id-3" + "&limit=10",
+			queryParams: "?cursor=550e8400-e29b-41d4-a716-446655440000" + "&limit=10",
 			setupMocks: func(registry *MockRegistryService) {
 				servers := []model.Server{
 					{
-						ID:          "test-id-3",
+						ID:          "550e8400-e29b-41d4-a716-446655440003",
 						Name:        "test-server-3",
 						Description: "Third test server",
 						Repository: model.Repository{
@@ -124,7 +124,7 @@ func TestServersHandler(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedServers: []model.Server{
 				{
-					ID:          "test-id-3",
+					ID:          "550e8400-e29b-41d4-a716-446655440003",
 					Name:        "test-server-3",
 					Description: "Third test server",
 					Repository: model.Repository{
@@ -269,7 +269,7 @@ func TestServersHandlerIntegration(t *testing.T) {
 
 	servers := []model.Server{
 		{
-			ID:          "integration-test-id",
+			ID:          "550e8400-e29b-41d4-a716-446655440004",
 			Name:        "integration-test-server",
 			Description: "Integration test server",
 			Repository: model.Repository{
