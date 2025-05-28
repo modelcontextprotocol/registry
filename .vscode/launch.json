@@ -21,7 +21,7 @@
             "program": "${workspaceFolder}/tools/publisher/main.go",
             "args": [
                 "-registry-url=http://localhost:8080",
-                "-mcp-file=${workspaceFolder}/tools/publisher/mcp.json",
+                "-mcp-file=${workspaceFolder}/tools/publisher/server.json",
             ],
         }
     ]
