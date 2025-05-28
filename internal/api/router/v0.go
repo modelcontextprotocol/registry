@@ -15,7 +15,7 @@ func RegisterV0Routes(
 	mux *http.ServeMux, cfg *config.Config, registry service.RegistryService, authService auth.Service,
 ) {
 	// Register v0 endpoints
-	mux.HandleFunc("/v0/health", v0.HealthHandler(cfg))
+	mux.HandleFunc("/v0/health", v0.HealthHandler(cfg, registry))
 	mux.HandleFunc("/v0/servers", v0.ServersHandler(registry))
 	mux.HandleFunc("/v0/servers/{id}", v0.ServersDetailHandler(registry))
 	mux.HandleFunc("/v0/ping", v0.PingHandler(cfg))

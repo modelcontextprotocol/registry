@@ -9,14 +9,36 @@ import (
 
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 )
+
+// fakeDBRegistryService is a test double for service.RegistryService
+type fakeDBRegistryService struct {
+	listErr error
+}
+
+func (f *fakeDBRegistryService) List(cursor string, limit int) ([]model.Server, string, error) {
+	return nil, "", f.listErr
+}
+
+// Implement other methods as no-ops or return zero values if needed for the interface
+func (f *fakeDBRegistryService) GetByID(id string) (*model.ServerDetail, error) {
+	return nil, nil
+}
+func (f *fakeDBRegistryService) Publish(serverDetail *model.ServerDetail) error {
+	return nil
+}
+func (f *fakeDBRegistryService) Close() error {
+	return nil
+}
 
 func TestHealthHandler(t *testing.T) {
 	// Test cases
 	testCases := []struct {
 		name           string
 		config         *config.Config
+		registry       *fakeDBRegistryService
 		expectedStatus int
 		expectedBody   v0.HealthResponse
 	}{
@@ -24,6 +46,9 @@ func TestHealthHandler(t *testing.T) {
 			name: "returns health status with github client id",
 			config: &config.Config{
 				GithubClientID: "test-github-client-id",
+			},
+			registry: &fakeDBRegistryService{
+				listErr: nil,
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody: v0.HealthResponse{
@@ -36,10 +61,27 @@ func TestHealthHandler(t *testing.T) {
 			config: &config.Config{
 				GithubClientID: "",
 			},
+			registry: &fakeDBRegistryService{
+				listErr: nil,
+			},
 			expectedStatus: http.StatusOK,
 			expectedBody: v0.HealthResponse{
 				Status:         "ok",
 				GitHubClientID: "",
+			},
+		},
+		{
+			name: "unhealthy database",
+			config: &config.Config{
+				GithubClientID: "test-github-client-id",
+			},
+			registry: &fakeDBRegistryService{
+				listErr: assert.AnError,
+			},
+			expectedStatus: http.StatusServiceUnavailable,
+			expectedBody: v0.HealthResponse{
+				Status:         "db_error",
+				GitHubClientID: "test-github-client-id",
 			},
 		},
 	}
@@ -47,7 +89,7 @@ func TestHealthHandler(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create handler with the test config
-			handler := v0.HealthHandler(tc.config)
+			handler := v0.HealthHandler(tc.config, tc.registry)
 
 			// Create request
 			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/health", nil)
@@ -84,8 +126,10 @@ func TestHealthHandlerIntegration(t *testing.T) {
 	cfg := &config.Config{
 		GithubClientID: "integration-test-client-id",
 	}
+	// Use a healthy fake registry service for integration
+	registry := &fakeDBRegistryService{listErr: nil}
 
-	server := httptest.NewServer(v0.HealthHandler(cfg))
+	server := httptest.NewServer(v0.HealthHandler(cfg, registry))
 	defer server.Close()
 
 	// Send request to the test server
