@@ -225,6 +225,7 @@ func (g *GitHubDeviceAuth) checkOrgMembership(ctx context.Context, token, userna
 	// GitHub API endpoint: GET /orgs/{org}/members/{username}
 	// true if status code is 204 No Content
 	// false if status code is 404 Not Found
+
 	url := fmt.Sprint("https://api.github.com/orgs/", org, "/members/", username)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

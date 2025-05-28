@@ -283,6 +283,80 @@ func TestPublishHandler(t *testing.T) {
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "Failed to publish server details:",
 		},
+		{
+			name:   "HTML injection attack in name field",
+			method: http.MethodPost,
+			requestBody: model.ServerDetail{
+				Server: model.Server{
+					ID:          "test-id-html",
+					Name:        "io.github.malicious/<script>alert('XSS')</script>test-server",
+					Description: "A test server with HTML injection attempt",
+					Repository: model.Repository{
+						URL:    "https://github.com/malicious/test-server",
+						Source: "github",
+						ID:     "malicious/test-server",
+					},
+					VersionDetail: model.VersionDetail{
+						Version:     "1.0.0",
+						ReleaseDate: "2025-05-25T00:00:00Z",
+						IsLatest:    true,
+					},
+				},
+			},
+			authHeader: "Bearer github_token_123",
+			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
+				// The auth service should receive the escaped HTML version of the name
+				authSvc.Mock.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
+					// Verify that the RepoRef contains escaped HTML, not the raw script tag
+					return auth.Method == model.AuthMethodGitHub &&
+						auth.Token == "github_token_123" &&
+						auth.RepoRef == "io.github.malicious/&lt;script&gt;alert(&#39;XSS&#39;)&lt;/script&gt;test-server"
+				})).Return(true, nil)
+				registry.Mock.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+			},
+			expectedStatus: http.StatusCreated,
+			expectedResponse: map[string]string{
+				"message": "Server publication successful",
+				"id":      "test-id-html",
+			},
+		},
+		{
+			name:   "HTML injection attack in name field with non-GitHub prefix",
+			method: http.MethodPost,
+			requestBody: model.ServerDetail{
+				Server: model.Server{
+					ID:          "test-id-html-non-github",
+					Name:        "malicious.com/<script>alert('XSS')</script>test-server",
+					Description: "A test server with HTML injection attempt (non-GitHub)",
+					Repository: model.Repository{
+						URL:    "https://malicious.com/test-server",
+						Source: "custom",
+						ID:     "malicious/test-server",
+					},
+					VersionDetail: model.VersionDetail{
+						Version:     "1.0.0",
+						ReleaseDate: "2025-05-25T00:00:00Z",
+						IsLatest:    true,
+					},
+				},
+			},
+			authHeader: "Bearer some_token",
+			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
+				// The auth service should receive the escaped HTML version of the name with AuthMethodNone
+				authSvc.Mock.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
+					// Verify that the RepoRef contains escaped HTML, not the raw script tag
+					return auth.Method == model.AuthMethodNone &&
+						auth.Token == "some_token" &&
+						auth.RepoRef == "malicious.com/&lt;script&gt;alert(&#39;XSS&#39;)&lt;/script&gt;test-server"
+				})).Return(true, nil)
+				registry.Mock.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+			},
+			expectedStatus: http.StatusCreated,
+			expectedResponse: map[string]string{
+				"message": "Server publication successful",
+				"id":      "test-id-html-non-github",
+			},
+		},
 	}
 
 	for _, tc := range testCases {

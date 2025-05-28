@@ -12,6 +12,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	"golang.org/x/net/html"
 )
 
 // PublishHandler handles requests to publish new server details to the registry
@@ -83,11 +84,13 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 			authMethod = model.AuthMethodNone
 		}
 
+		serverName := html.EscapeString(serverDetail.Name)
+
 		// Setup authentication info
 		a := model.Authentication{
 			Method:  authMethod,
 			Token:   token,
-			RepoRef: serverDetail.Name,
+			RepoRef: serverName,
 		}
 
 		valid, err := authService.ValidateAuth(r.Context(), a)
