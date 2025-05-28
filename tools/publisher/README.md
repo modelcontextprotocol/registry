@@ -46,7 +46,7 @@ _NOTE_ : Authentication is made on behalf of a OAuth App which you must authoriz
 
 ## Example
 
-1. Prepare your `mcp.json` file with your server details:
+1. Prepare your `server.json` file with your server details:
 
 ```json
 {
@@ -89,7 +89,7 @@ _NOTE_ : Authentication is made on behalf of a OAuth App which you must authoriz
 2. Run the publisher tool:
 
 ```bash
-./bin/mcp-publisher --registry-url "https://mcp-registry.example.com" --mcp-file "./mcp.json"
+./bin/mcp-publisher --registry-url "https://mcp-registry.example.com" --mcp-file "./server.json"
 ```
 
 3. Follow the authentication instructions in the terminal if prompted.
@@ -101,4 +101,4 @@ _NOTE_ : Authentication is made on behalf of a OAuth App which you must authoriz
 - The GitHub Client ID is automatically retrieved from the registry's health endpoint
 - The authentication token is saved in a file named `.mcpregistry_token` in the current directory
 - The tool requires an active internet connection to authenticate with GitHub and communicate with the registry
-- Make sure the repository and package mentioned in your `mcp.json` file exist and are accessible
+- Make sure the repository and package mentioned in your `server.json` file exist and are accessible
