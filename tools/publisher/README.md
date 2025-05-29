@@ -28,9 +28,10 @@ The compiled binary will be placed in the `bin` directory.
 
 ### Command-line Arguments
 
-- `--registry-url`: URL of the MCP registry (required)
-- `--mcp-file`: Path to the MCP configuration file (required)
-- `--login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
+- `-registry-url`: URL of the MCP registry (required)
+- `-mcp-file`: Path to the MCP configuration file (required)
+- `-login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
+- `-auth-method`: Authentication method to use (default: github-oauth)
 
 ## Authentication
 
