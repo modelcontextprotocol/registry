@@ -20,10 +20,10 @@ The compiled binary will be placed in the `bin` directory.
 
 ```bash
 # Basic usage
-./bin/mcp-publisher --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE>
+./bin/mcp-publisher -registry-url <REGISTRY_URL> -mcp-file <PATH_TO_MCP_FILE>
 
 # Force a new login even if a token exists
-./bin/mcp-publisher --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --login
+./bin/mcp-publisher -registry-url <REGISTRY_URL> -mcp-file <PATH_TO_MCP_FILE> -login
 ```
 
 ### Command-line Arguments
