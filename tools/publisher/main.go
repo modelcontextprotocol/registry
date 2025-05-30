@@ -88,15 +88,6 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 		return fmt.Errorf("error parsing mcp.json file: %w", err)
 	}
 
-	// Create the publish request payload (without authentication)
-	publishReq := mcpDetails
-
-	// Convert the request to JSON
-	jsonData, err := json.Marshal(publishReq)
-	if err != nil {
-		return fmt.Errorf("error serializing request: %w", err)
-	}
-
 	// Ensure the URL ends with the publish endpoint
 	if !strings.HasSuffix(registryURL, "/") {
 		registryURL += "/"
@@ -104,7 +95,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	publishURL := registryURL + "v0/publish"
 
 	// Create and send the request
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, publishURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, publishURL, bytes.NewBuffer(mcpData))
 	if err != nil {
 		return fmt.Errorf("error creating request: %w", err)
 	}
