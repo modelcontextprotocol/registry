@@ -80,10 +80,11 @@ The main application automatically selects the appropriate authentication provid
 var authProvider auth.Provider
 switch authMethod {
 case "github-oauth":
-    fallthrough
-default:
     log.Println("Using GitHub OAuth for authentication")
     authProvider = github.NewOAuthProvider(forceLogin, registryURL)
+default:
+    log.Printf("Unsupported authentication method: %s\n", authMethod)
+    return
 }
 
 // Check if login is needed and perform authentication
