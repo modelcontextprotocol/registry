@@ -72,9 +72,8 @@ func (cp *CustomProvider) Name() string {
 
 The main application automatically selects the appropriate authentication provider:
 
-1. If `--token` flag is provided, uses `TokenProvider`
-2. Otherwise, uses `GitHub OAuth Provider`
-3. Future providers can be added by extending the provider selection logic
+1.  Uses `GitHub OAuth Provider` by default
+2. Future providers can be added by extending the provider selection logic
 
 ```go
 // Create the appropriate auth provider based on user input
