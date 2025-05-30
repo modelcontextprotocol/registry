@@ -45,10 +45,11 @@ func main() {
 	var authProvider auth.Provider // Determine the authentication method
 	switch authMethod {
 	case "github-oauth":
-		fallthrough
-	default:
 		log.Println("Using GitHub OAuth for authentication")
 		authProvider = github.NewOAuthProvider(forceLogin, registryURL)
+	default:
+		log.Printf("Unsupported authentication method: %s\n", authMethod)
+		return
 	}
 
 	// Check if login is needed and perform authentication
