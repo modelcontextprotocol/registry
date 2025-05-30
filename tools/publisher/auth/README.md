@@ -18,7 +18,7 @@ The `Provider` interface is defined in `auth/interface.go` and provides the foll
 #### 1. GitHub OAuth Provider
 - **Location**: `auth/github/oauth.go`
 - **Usage**: Uses GitHub's device flow for authentication
-- **Example**: `github.NewOAuthProvider(clientID, forceLogin)`
+- **Example**: `github.NewOAuthProvider(forceLogin, registryURL)`
 
 
 ## How to Add New Authentication Providers
@@ -72,18 +72,18 @@ func (cp *CustomProvider) Name() string {
 
 The main application automatically selects the appropriate authentication provider:
 
-1.  Uses `GitHub OAuth Provider` by default
+1. Uses `GitHub OAuth Provider` by default
 2. Future providers can be added by extending the provider selection logic
 
 ```go
-// Create the appropriate auth provider based on user input
+// Create the appropriate auth provider based on configuration
 var authProvider auth.Provider
-if providedToken != "" {
-    // Use the provided token
-    authProvider = auth.NewTokenProvider(providedToken)
-} else {
-    // Use GitHub OAuth
-    authProvider = github.NewOAuthProvider(githubClientID, forceLogin)
+switch authMethod {
+case "github-oauth":
+    fallthrough
+default:
+    log.Println("Using GitHub OAuth for authentication")
+    authProvider = github.NewOAuthProvider(forceLogin, registryURL)
 }
 
 // Check if login is needed and perform authentication
