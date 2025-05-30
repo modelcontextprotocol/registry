@@ -14,11 +14,8 @@ import (
 
 // Server represents the HTTP server
 type Server struct {
-	config      *config.Config
-	registry    service.RegistryService
-	authService auth.Service
-	router      *http.ServeMux
-	server      *http.Server
+	config *config.Config
+	server *http.Server
 }
 
 // NewServer creates a new HTTP server
@@ -27,10 +24,7 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, auth
 	mux := router.New(cfg, registryService, authService)
 
 	server := &Server{
-		config:      cfg,
-		registry:    registryService,
-		authService: authService,
-		router:      mux,
+		config: cfg,
 		server: &http.Server{
 			Addr:              cfg.ServerAddress,
 			Handler:           mux,
