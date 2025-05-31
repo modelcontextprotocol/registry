@@ -11,48 +11,22 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
+
+	"github.com/modelcontextprotocol/registry/tools/publisher/auth"
+	"github.com/modelcontextprotocol/registry/tools/publisher/auth/github"
 )
-
-const (
-	tokenFilePath = ".mcpregistry_token" // #nosec:G101
-	// GitHub OAuth URLs
-	GitHubDeviceCodeURL  = "https://github.com/login/device/code"        // #nosec:G101
-	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token" // #nosec:G101
-)
-
-// DeviceCodeResponse represents the response from GitHub's device code endpoint
-type DeviceCodeResponse struct {
-	DeviceCode      string `json:"device_code"`
-	UserCode        string `json:"user_code"`
-	VerificationURI string `json:"verification_uri"`
-	ExpiresIn       int    `json:"expires_in"`
-	Interval        int    `json:"interval"`
-}
-
-// AccessTokenResponse represents the response from GitHub's access token endpoint
-type AccessTokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	Scope       string `json:"scope"`
-	Error       string `json:"error,omitempty"`
-}
-
-type ServerHealthResponse struct {
-	Status         string `json:"status"`
-	GitHubClientID string `json:"github_client_id"`
-}
 
 func main() {
 	var registryURL string
 	var mcpFilePath string
 	var forceLogin bool
-	var providedToken string
+	var authMethod string
 
-	flag.StringVar(&registryURL, "registry-url", "", "URL of the registry(required)")
-	flag.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file(required)")
+	// Command-line flags for configuration
+	flag.StringVar(&registryURL, "registry-url", "", "URL of the registry (required)")
+	flag.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file (required)")
 	flag.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
-	flag.StringVar(&providedToken, "token", "", "use the provided token instead of GitHub authentication")
+	flag.StringVar(&authMethod, "auth-method", "github-oauth", "authentication method to use (default: github-oauth)")
 
 	flag.Parse()
 
@@ -61,68 +35,37 @@ func main() {
 		return
 	}
 
-	// get the clientID from the server's health endpoint
-	healthURL := registryURL + "/v0/health"
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, healthURL, nil)
-	if err != nil {
-		log.Printf("Error creating request: %s\n", err.Error())
-		return
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Printf("Error fetching health endpoint: %s\n", err.Error())
-		return
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		log.Printf("Health endpoint returned status %d: %s\n", resp.StatusCode, body)
-		return
-	}
-	var healthResponse ServerHealthResponse
-	err = json.NewDecoder(resp.Body).Decode(&healthResponse)
-	if err != nil {
-		log.Printf("Error decoding health response: %s\n", err.Error())
-		return
-	}
-	if healthResponse.GitHubClientID == "" {
-		log.Println("GitHub Client ID is not set in the server's health response.")
-		return
-	}
-
-	githubClientID := healthResponse.GitHubClientID
-
-	var token string
-
-	// If a token is provided via the command line, use it
-	if providedToken != "" {
-		token = providedToken
-	} else {
-		// Check if token exists or force login is requested
-		_, statErr := os.Stat(tokenFilePath)
-		if forceLogin || os.IsNotExist(statErr) {
-			err := performDeviceFlowLogin(githubClientID)
-			if err != nil {
-				log.Printf("Failed to perform device flow login: %s\n", err.Error())
-				return
-			}
-		}
-
-		// Read the token from the file
-		var err error
-		token, err = readToken()
-		if err != nil {
-			log.Printf("Error reading token: %s\n", err.Error())
-			return
-		}
-	}
-
 	// Read MCP file
 	mcpData, err := os.ReadFile(mcpFilePath)
 	if err != nil {
 		log.Printf("Error reading MCP file: %s\n", err.Error())
+		return
+	}
+
+	var authProvider auth.Provider // Determine the authentication method
+	switch authMethod {
+	case "github-oauth":
+		log.Println("Using GitHub OAuth for authentication")
+		authProvider = github.NewOAuthProvider(forceLogin, registryURL)
+	default:
+		log.Printf("Unsupported authentication method: %s\n", authMethod)
+		return
+	}
+
+	// Check if login is needed and perform authentication
+	ctx := context.Background()
+	if authProvider.NeedsLogin() {
+		err := authProvider.Login(ctx)
+		if err != nil {
+			log.Printf("Failed to authenticate with %s: %s\n", authProvider.Name(), err.Error())
+			return
+		}
+	}
+
+	// Get the token
+	token, err := authProvider.GetToken(ctx)
+	if err != nil {
+		log.Printf("Error getting token from %s: %s\n", authProvider.Name(), err.Error())
 		return
 	}
 
@@ -134,172 +77,6 @@ func main() {
 	}
 
 	log.Println("Successfully published to registry!")
-}
-
-func performDeviceFlowLogin(githubClientID string) error {
-	if githubClientID == "" {
-		return fmt.Errorf("GitHub Client ID is required for device flow login")
-	}
-
-	// Device flow login logic using GitHub's device flow
-	// First, request a device code
-	deviceCode, userCode, verificationURI, err := requestDeviceCode(githubClientID)
-	if err != nil {
-		return fmt.Errorf("error requesting device code: %w", err)
-	}
-
-	// Display instructions to the user
-	log.Println("\nTo authenticate, please:")
-	log.Println("1. Go to:", verificationURI)
-	log.Println("2. Enter code:", userCode)
-	log.Println("3. Authorize this application")
-
-	// Poll for the token
-	log.Println("Waiting for authorization...")
-	token, err := pollForToken(deviceCode, githubClientID)
-	if err != nil {
-		return fmt.Errorf("error polling for token: %w", err)
-	}
-
-	// Store the token locally
-	err = saveToken(token)
-	if err != nil {
-		return fmt.Errorf("error saving token: %w", err)
-	}
-
-	log.Println("Successfully authenticated!")
-	return nil
-}
-
-// requestDeviceCode initiates the device authorization flow
-func requestDeviceCode(githubClientID string) (string, string, string, error) {
-	if githubClientID == "" {
-		return "", "", "", fmt.Errorf("GitHub Client ID is required for device flow login")
-	}
-
-	payload := map[string]string{
-		"client_id": githubClientID,
-		"scope":     "read:org read:user",
-	}
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, GitHubDeviceCodeURL, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", "", "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", "", "", err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", "", "", fmt.Errorf("request device code failed: %s", body)
-	}
-
-	var deviceCodeResp DeviceCodeResponse
-	err = json.Unmarshal(body, &deviceCodeResp)
-	if err != nil {
-		return "", "", "", err
-	}
-
-	return deviceCodeResp.DeviceCode, deviceCodeResp.UserCode, deviceCodeResp.VerificationURI, nil
-}
-
-// pollForToken polls for access token after user completes authorization
-func pollForToken(deviceCode, githubClientID string) (string, error) {
-	if githubClientID == "" {
-		return "", fmt.Errorf("GitHub Client ID is required for device flow login")
-	}
-
-	payload := map[string]string{
-		"client_id":   githubClientID,
-		"device_code": deviceCode,
-		"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
-	}
-
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return "", err
-	}
-
-	// Default polling interval and expiration time
-	interval := 5    // seconds
-	expiresIn := 900 // 15 minutes
-	deadline := time.Now().Add(time.Duration(expiresIn) * time.Second)
-
-	for time.Now().Before(deadline) {
-		req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
-		if err != nil {
-			return "", err
-		}
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Accept", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return "", err
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			return "", err
-		}
-
-		var tokenResp AccessTokenResponse
-		err = json.Unmarshal(body, &tokenResp)
-		if err != nil {
-			return "", err
-		}
-
-		if tokenResp.Error == "authorization_pending" {
-			// User hasn't authorized yet, wait and retry
-			time.Sleep(time.Duration(interval) * time.Second)
-			continue
-		}
-
-		if tokenResp.Error != "" {
-			return "", fmt.Errorf("token request failed: %s", tokenResp.Error)
-		}
-
-		if tokenResp.AccessToken != "" {
-			return tokenResp.AccessToken, nil
-		}
-
-		// If we reach here, something unexpected happened
-		return "", fmt.Errorf("failed to obtain access token")
-	}
-
-	return "", fmt.Errorf("device code authorization timed out")
-}
-
-// saveToken saves the GitHub access token to a local file
-func saveToken(token string) error {
-	return os.WriteFile(tokenFilePath, []byte(token), 0600)
-}
-
-// readToken reads the GitHub access token from a local file
-func readToken() (string, error) {
-	tokenData, err := os.ReadFile(tokenFilePath)
-	if err != nil {
-		return "", err
-	}
-	return string(tokenData), nil
 }
 
 // publishToRegistry sends the MCP server details to the registry with authentication
