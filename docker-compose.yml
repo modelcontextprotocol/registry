@@ -2,8 +2,6 @@ services:
   registry:
     image: registry
     container_name: registry
-    links:
-      - mongodb
     depends_on:
       - mongodb
     environment:
