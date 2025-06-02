@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -41,15 +42,15 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 	// Create indexes for better query performance
 	models := []mongo.IndexModel{
 		{
-			Keys: bson.D{{Key: "name", Value: 1}},
+			Keys: bson.D{bson.E{Key: "name", Value: 1}},
 		},
 		{
-			Keys:    bson.D{{Key: "id", Value: 1}},
+			Keys:    bson.D{bson.E{Key: "id", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		// add an index for the combination of name and version
 		{
-			Keys:    bson.D{{Key: "name", Value: 1}, {Key: "versiondetail.version", Value: 1}},
+			Keys:    bson.D{bson.E{Key: "name", Value: 1}, bson.E{Key: "versiondetail.version", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	}
@@ -57,11 +58,11 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 	_, err = collection.Indexes().CreateMany(ctx, models)
 	if err != nil {
 		// Mongo will error if the index already exists, we can ignore this and continue.
-		if err.(mongo.CommandError).Code != 86 {
+		var commandError mongo.CommandError
+		if errors.As(err, &commandError) && commandError.Code != 86 {
 			return nil, err
-		} else {
-			log.Printf("Indexes already exists, skipping.")
 		}
+		log.Printf("Indexes already exists, skipping.")
 	}
 
 	return &MongoDB{
@@ -72,7 +73,12 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 }
 
 // List retrieves MCPRegistry entries with optional filtering and pagination
-func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Server, string, error) {
+func (db *MongoDB) List(
+	ctx context.Context,
+	filter map[string]interface{},
+	cursor string,
+	limit int,
+) ([]*model.Server, string, error) {
 	if limit <= 0 {
 		// Set default limit if not provided
 		limit = 10
@@ -113,11 +119,10 @@ func (db *MongoDB) List(ctx context.Context, filter map[string]interface{}, curs
 		var cursorDoc model.Server
 		err := db.collection.FindOne(ctx, bson.M{"id": cursor}).Decode(&cursorDoc)
 		if err != nil {
-			if err == mongo.ErrNoDocuments {
-				// If cursor document not found, start from beginning
-			} else {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
 				return nil, "", err
 			}
+			// If cursor document not found, start from beginning
 		} else {
 			// Use the cursor document's ID to paginate (records with ID > cursor's ID)
 			mongoFilter["id"] = bson.M{"$gt": cursor}
@@ -168,7 +173,7 @@ func (db *MongoDB) GetByID(ctx context.Context, id string) (*model.ServerDetail,
 	var entry model.ServerDetail
 	err := db.collection.FindOne(ctx, filter).Decode(&entry)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("error retrieving entry: %w", err)
@@ -191,7 +196,7 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 
 	var existingEntry model.ServerDetail
 	err := db.collection.FindOne(ctx, filter).Decode(&existingEntry)
-	if err != nil && err != mongo.ErrNoDocuments {
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
 		return fmt.Errorf("error checking existing entry: %w", err)
 	}
 
@@ -215,11 +220,13 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 
 	// update the existing entry to not be the latest version
 	if existingEntry.ID != "" {
-		_, err = db.collection.UpdateOne(ctx, bson.M{"id": existingEntry.ID}, bson.M{"$set": bson.M{"versiondetail.islatest": false}})
+		_, err = db.collection.UpdateOne(
+			ctx,
+			bson.M{"id": existingEntry.ID},
+			bson.M{"$set": bson.M{"versiondetail.islatest": false}})
 		if err != nil {
 			return fmt.Errorf("error updating existing entry: %w", err)
 		}
-
 	}
 
 	return nil

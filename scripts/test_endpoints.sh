@@ -2,6 +2,17 @@
 
 set -e 
 
+echo "=================================================="
+echo "MCP Registry Endpoint Test Script"
+echo "=================================================="
+echo "This script expects the MCP Registry server to be running locally."
+echo "Please ensure the server is started using one of the following methods:"
+echo "  • Docker Compose: docker compose up"
+echo "  • Direct execution: go run cmd/registry/main.go"
+echo "  • Built binary: ./build/registry"
+echo "=================================================="
+echo ""
+
 # Default values
 HOST="http://localhost:8080"
 ENDPOINT="all"

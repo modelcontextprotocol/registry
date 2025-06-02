@@ -3,13 +3,16 @@ package v0
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/auth"
+	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	"golang.org/x/net/html"
 )
 
 // PublishHandler handles requests to publish new server details to the registry
@@ -81,16 +84,18 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 			authMethod = model.AuthMethodNone
 		}
 
+		serverName := html.EscapeString(serverDetail.Name)
+
 		// Setup authentication info
 		a := model.Authentication{
 			Method:  authMethod,
 			Token:   token,
-			RepoRef: serverDetail.Name,
+			RepoRef: serverName,
 		}
 
 		valid, err := authService.ValidateAuth(r.Context(), a)
 		if err != nil {
-			if err == auth.ErrAuthRequired {
+			if errors.Is(err, auth.ErrAuthRequired) {
 				http.Error(w, "Authentication is required for publishing", http.StatusUnauthorized)
 				return
 			}
@@ -106,15 +111,23 @@ func PublishHandler(registry service.RegistryService, authService auth.Service) 
 		// Call the publish method on the registry service
 		err = registry.Publish(&serverDetail)
 		if err != nil {
+			// Check for specific error types and return appropriate HTTP status codes
+			if errors.Is(err, database.ErrInvalidVersion) || errors.Is(err, database.ErrAlreadyExists) {
+				http.Error(w, "Failed to publish server details: "+err.Error(), http.StatusBadRequest)
+				return
+			}
 			http.Error(w, "Failed to publish server details: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{
+		if err := json.NewEncoder(w).Encode(map[string]string{
 			"message": "Server publication successful",
 			"id":      serverDetail.ID,
-		})
+		}); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 	}
 }

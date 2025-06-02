@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/auth"
@@ -31,8 +32,9 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, auth
 		authService: authService,
 		router:      mux,
 		server: &http.Server{
-			Addr:    cfg.ServerAddress,
-			Handler: mux,
+			Addr:              cfg.ServerAddress,
+			Handler:           mux,
+			ReadHeaderTimeout: 10 * time.Second,
 		},
 	}
 

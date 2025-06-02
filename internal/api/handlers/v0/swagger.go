@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/swaggo/files"
+	_ "github.com/swaggo/files" // Swagger files needed for embedding
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 

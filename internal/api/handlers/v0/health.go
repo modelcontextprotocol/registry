@@ -10,16 +10,18 @@ import (
 
 type HealthResponse struct {
 	Status         string `json:"status"`
-	GitHubClientId string `json:"github_client_id"`
+	GitHubClientID string `json:"github_client_id"`
 }
 
 // HealthHandler returns a handler for health check endpoint
 func HealthHandler(cfg *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(HealthResponse{
+		if err := json.NewEncoder(w).Encode(HealthResponse{
 			Status:         "ok",
-			GitHubClientId: cfg.GithubClientID,
-		})
+			GitHubClientID: cfg.GithubClientID,
+		}); err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		}
 	}
 }

@@ -1,6 +1,6 @@
 # MCP Registry Publisher Tool
 
-The MCP Registry Publisher Tool is designed to publish Model Context Protocol (MCP) server details to an MCP registry. This tool currently only handles GitHub authentication via device flow and manages the publishing process.
+The MCP Registry Publisher Tool is designed to publish Model Context Protocol (MCP) server details to an MCP registry. This tool uses GitHub OAuth device flow authentication to securely manage the publishing process.
 
 ## Building the Tool
 
@@ -20,29 +20,30 @@ The compiled binary will be placed in the `bin` directory.
 
 ```bash
 # Basic usage
-./bin/mcp-publisher --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE>
+./bin/mcp-publisher -registry-url <REGISTRY_URL> -mcp-file <PATH_TO_MCP_FILE>
 
 # Force a new login even if a token exists
-./bin/mcp-publisher --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --login
+./bin/mcp-publisher -registry-url <REGISTRY_URL> -mcp-file <PATH_TO_MCP_FILE> -login
 ```
 
 ### Command-line Arguments
 
-- `--registry-url`: URL of the MCP registry (required)
-- `--mcp-file`: Path to the MCP configuration file (required)
-- `--login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
-- `--token`: Use the provided token instead of GitHub authentication (bypasses the device flow)
+- `-registry-url`: URL of the MCP registry (required)
+- `-mcp-file`: Path to the MCP configuration file (required)
+- `-login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
+- `-auth-method`: Authentication method to use (default: github-oauth)
 
 ## Authentication
 
-The tool uses GitHub device flow authentication:
-1. The tool automatically retrieves the GitHub Client ID from the registry's health endpoint
-2. When first run (or with `--login` flag), the tool will initiate the GitHub device flow
-3. You'll be provided with a URL and a code to enter
-4. After successful authentication, the tool saves the token locally for future use
-5. The token is sent in the HTTP Authorization header with the Bearer scheme
+The tool has been simplified to use **GitHub OAuth device flow authentication exclusively**. Previous versions supported multiple authentication methods, but this version focuses solely on GitHub OAuth for better security and user experience.
 
-_NOTE_ : Authentication is made on behalf of a OAuth App which you must authorize for respective resources (e.g `org`)
+1. **Automatic Setup**: The tool automatically retrieves the GitHub Client ID from the registry's health endpoint
+2. **First Run Authentication**: When first run (or with the `--login` flag), the tool initiates the GitHub device flow
+3. **User Authorization**: You'll be provided with a URL and a verification code to enter on GitHub
+4. **Token Storage**: After successful authentication, the tool saves the access token locally in `.mcpregistry_token` for future use
+5. **Secure Communication**: The token is sent in the HTTP Authorization header with the Bearer scheme for all registry API calls
+
+**Note**: Authentication is performed via GitHub OAuth App, which you must authorize for the respective resources (e.g., organization access if publishing organization repositories).
 
 ## Example
 
@@ -98,7 +99,9 @@ _NOTE_ : Authentication is made on behalf of a OAuth App which you must authoriz
 
 ## Important Notes
 
-- The GitHub Client ID is automatically retrieved from the registry's health endpoint
-- The authentication token is saved in a file named `.mcpregistry_token` in the current directory
-- The tool requires an active internet connection to authenticate with GitHub and communicate with the registry
-- Make sure the repository and package mentioned in your `mcp.json` file exist and are accessible
+- **GitHub Authentication Only**: The tool exclusively uses GitHub OAuth device flow for authentication
+- **Automatic Client ID**: The GitHub Client ID is automatically retrieved from the registry's health endpoint
+- **Token Storage**: The authentication token is saved in `.mcpregistry_token` in the current directory
+- **Internet Required**: Active internet connection needed for GitHub authentication and registry communication
+- **Repository Access**: Ensure the repository and package mentioned in your `mcp.json` file exist and are accessible
+- **OAuth Permissions**: You may need to grant the OAuth app access to your GitHub organizations if publishing org repositories

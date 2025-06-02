@@ -33,7 +33,7 @@ func ImportSeedFile(mongo *MongoDB, seedFilePath string) error {
 	// Read the seed file
 	seedData, err := readSeedFile(seedFilePath)
 	if err != nil {
-		log.Fatalf("Failed to read seed file: %v", err)
+		return fmt.Errorf("failed to read seed file: %w", err)
 	}
 
 	collection := mongo.collection
@@ -48,7 +48,7 @@ func readSeedFile(path string) ([]model.ServerDetail, error) {
 	// Read the file content
 	fileContent, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %v", err)
+		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	// Parse the JSON content
@@ -57,9 +57,8 @@ func readSeedFile(path string) ([]model.ServerDetail, error) {
 		// Try parsing as a raw JSON array and then convert to our model
 		var rawData []map[string]interface{}
 		if jsonErr := json.Unmarshal(fileContent, &rawData); jsonErr != nil {
-			return nil, fmt.Errorf("failed to parse JSON: %v (original error: %v)", jsonErr, err)
+			return nil, fmt.Errorf("failed to parse JSON: %w (original error: %w)", jsonErr, err)
 		}
-
 	}
 
 	log.Printf("Found %d server entries in seed file", len(servers))
@@ -82,7 +81,6 @@ func importData(ctx context.Context, collection *mongo.Collection, servers []mod
 			server.VersionDetail.Version = "0.0.1-seed"
 			server.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
 			server.VersionDetail.IsLatest = true
-
 		}
 		// Create update document
 		update := bson.M{"$set": server}
@@ -95,11 +93,12 @@ func importData(ctx context.Context, collection *mongo.Collection, servers []mod
 			continue
 		}
 
-		if result.UpsertedCount > 0 {
+		switch {
+		case result.UpsertedCount > 0:
 			log.Printf("[%d/%d] Created server: %s", i+1, len(servers), server.Name)
-		} else if result.ModifiedCount > 0 {
+		case result.ModifiedCount > 0:
 			log.Printf("[%d/%d] Updated server: %s", i+1, len(servers), server.Name)
-		} else {
+		default:
 			log.Printf("[%d/%d] Server already up to date: %s", i+1, len(servers), server.Name)
 		}
 	}
