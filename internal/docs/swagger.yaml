@@ -2,12 +2,12 @@ openapi: 3.0.0
 info:
   title: Model Context Protocol Registry API
   description: API for the Model Context Protocol Registry
-  version: 0.1.0
-
+  version: "0.1.0"
+  
 servers:
   - url: /
     description: Default server
-
+  
 tags:
   - name: health
     description: Health checking operations
@@ -29,15 +29,13 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [status] # Added required field for clarity
                 properties:
                   status:
                     type: string
                     example: ok
                   github_client_id:
-                    type: string
-                    example: your_github_client_id
-
+                      type: string
+                      example: "your_github_client_id"
   /v0/ping:
     get:
       tags:
@@ -52,25 +50,16 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [status, version] # Added required fields
                 properties:
                   status:
                     type: string
                     example: ok
                   version:
                     type: string
-                    example: 0.1.0
+                    example: "0.1.0"
         '405':
           description: Method not allowed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Method not allowed # Added schema for consistency
-
+          
   /v0/servers:
     get:
       tags:
@@ -102,7 +91,6 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [servers, metadata] # Added required fields
                 properties:
                   servers:
                     type: array
@@ -112,25 +100,9 @@ paths:
                     $ref: '#/components/schemas/PaginationMetadata'
         '400':
           description: Invalid cursor or limit parameter
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Invalid cursor or limit parameter # Added schema
         '405':
           description: Method not allowed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Method not allowed # Added schema
-
+          
   /v0/publish:
     post:
       tags:
@@ -146,7 +118,6 @@ paths:
           application/json:
             schema:
               type: object
-              required: [server_detail] # Added required field, repo_ref is optional
               properties:
                 server_detail:
                   $ref: '#/components/schemas/ServerDetail'
@@ -160,14 +131,12 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [message, id] # Added required fields
                 properties:
                   message:
                     type: string
                     example: Server publication successful
                   id:
                     type: string
-                    format: uuid # Specified format for clarity
                     example: 1234567890abcdef12345678
         '400':
           description: Invalid request
@@ -175,7 +144,6 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [error]
                 properties:
                   error:
                     type: string
@@ -186,36 +154,23 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [error]
                 properties:
                   error:
                     type: string
                     example: Authentication is required for publishing
         '405':
           description: Method not allowed
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [error]
-                properties:
-                  error:
-                    type: string
-                    example: Method not allowed
         '500':
           description: Server error
           content:
             application/json:
               schema:
                 type: object
-                required: [error]
                 properties:
                   error:
                     type: string
                     example: Failed to publish server details
-
- ))^
-
+                    
   /v0/servers/{id}:
     get:
       tags:
@@ -240,37 +195,10 @@ paths:
                 $ref: '#/components/schemas/Server'
         '400':
           description: Invalid ID format
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [error]
-                properties:
-                  error:
-                    type: string
-                    example: Invalid ID format # Added schema
         '404':
           description: Server not found
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [error]
-                properties:
-                  error:
-                    type: string
-                    example: Server not found # Added schema
         '405':
           description: Method not allowed
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [error]
-                properties:
-                  error:
-                    type: string
-                    example: Method not allowed # Added schema
 
 components:
   securitySchemes:
@@ -278,56 +206,40 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: 'JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"'
-
+      description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
+  
   schemas:
     Server:
       type: object
-      required: [id, name, url, created_at, updated_at] # Added required fields
       properties:
         id:
           type: string
           format: uuid
-          example: 123e4567-e89b-12d3-a456-426614174000
+          example: "123e4567-e89b-12d3-a456-426614174000"
         name:
           type: string
-          example: Example MCP Server
+          example: "Example MCP Server"
         url:
           type: string
           format: uri
-          example: https://example.com/mcp
+          example: "https://example.com/mcp"
         description:
           type: string
-          example: An example MCP server
+          example: "An example MCP server"
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-    ServerDetail: # Added missing ServerDetail schema
-      type: object
-      required: [name, url]
-      properties:
-        name:
-          type: string
-          example: Example MCP Server
-        url:
-          type: string
-          format: uri
-          example: https://example.com/mcp
-        description:
-          type: string
-          example: An example MCP server
+          
     PaginationMetadata:
       type: object
-      required: [count] # Added required field
       properties:
         next_cursor:
           type: string
           format: uuid
-          example: 123e4567-e89b-12d3-a456-426614174000
-          nullable: true # Added nullable for optional cursor
+          example: "123e4567-e89b-12d3-a456-426614174000"
         count:
           type: integer
           example: 30
