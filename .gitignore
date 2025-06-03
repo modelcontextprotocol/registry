@@ -3,4 +3,4 @@ build/*
 .env
 .mcpregistry*
 **/bin
-*cmd/registry*
+cmd/registry/registry
