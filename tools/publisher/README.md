@@ -47,7 +47,7 @@ The tool has been simplified to use **GitHub OAuth device flow authentication ex
 
 ## Example
 
-1. Prepare your `mcp.json` file with your server details:
+1. Prepare your `server.json` file with your server details:
 
 ```json
 {
@@ -90,7 +90,7 @@ The tool has been simplified to use **GitHub OAuth device flow authentication ex
 2. Run the publisher tool:
 
 ```bash
-./bin/mcp-publisher --registry-url "https://mcp-registry.example.com" --mcp-file "./mcp.json"
+./bin/mcp-publisher --registry-url "https://mcp-registry.example.com" --mcp-file "./server.json"
 ```
 
 3. Follow the authentication instructions in the terminal if prompted.
@@ -103,5 +103,5 @@ The tool has been simplified to use **GitHub OAuth device flow authentication ex
 - **Automatic Client ID**: The GitHub Client ID is automatically retrieved from the registry's health endpoint
 - **Token Storage**: The authentication token is saved in `.mcpregistry_token` in the current directory
 - **Internet Required**: Active internet connection needed for GitHub authentication and registry communication
-- **Repository Access**: Ensure the repository and package mentioned in your `mcp.json` file exist and are accessible
+- **Repository Access**: Ensure the repository and package mentioned in your `server.json` file exist and are accessible
 - **OAuth Permissions**: You may need to grant the OAuth app access to your GitHub organizations if publishing org repositories
