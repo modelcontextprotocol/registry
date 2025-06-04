@@ -80,7 +80,7 @@ func main() {
 			}
 		}
 	default:
-		log.Printf("Invalid database type: %s", cfg.DatabaseType)
+		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypeMongoDB)
 		return
 	}
 
