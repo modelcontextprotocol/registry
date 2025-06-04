@@ -81,7 +81,7 @@ func main() {
 		}
 	default:
 		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypeMongoDB)
-		return
+		os.Exit(1)
 	}
 
 	// Initialize authentication services
