@@ -75,8 +75,9 @@ func main() {
 			log.Println("Importing data...")
 			if err := database.ImportSeedFile(mongoDB, cfg.SeedFilePath); err != nil {
 				log.Printf("Failed to import seed file: %v", err)
+			} else {
+				log.Println("Data import completed successfully")
 			}
-			log.Println("Data import completed successfully")
 		}
 	default:
 		log.Printf("Invalid database type: %s", cfg.DatabaseType)
