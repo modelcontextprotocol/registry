@@ -2,6 +2,8 @@ package database
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -246,6 +248,47 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetai
 	serverDetailCopy := *serverDetail
 	db.entries[serverDetail.ID] = &serverDetailCopy
 
+	return nil
+}
+
+// ImportSeed imports initial data from a seed file into memory database
+func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	// Read the seed file
+	seedData, err := ReadSeedFile(seedFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to read seed file: %w", err)
+	}
+
+	log.Printf("Importing %d servers into memory database", len(seedData))
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	for i, server := range seedData {
+		if server.ID == "" || server.Name == "" {
+			log.Printf("Skipping server %d: ID or Name is empty", i+1)
+			continue
+		}
+
+		// Set default version information if missing
+		if server.VersionDetail.Version == "" {
+			server.VersionDetail.Version = "0.0.1-seed"
+			server.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
+			server.VersionDetail.IsLatest = true
+		}
+
+		// Store a copy of the server detail
+		serverDetailCopy := server
+		db.entries[server.ID] = &serverDetailCopy
+
+		log.Printf("[%d/%d] Imported server: %s", i+1, len(seedData), server.Name)
+	}
+
+	log.Println("Memory database import completed successfully")
 	return nil
 }
 

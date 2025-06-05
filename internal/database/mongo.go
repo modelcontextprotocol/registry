@@ -232,6 +232,58 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 	return nil
 }
 
+// ImportSeed imports initial data from a seed file into MongoDB
+func (db *MongoDB) ImportSeed(ctx context.Context, seedFilePath string) error {
+	// Read the seed file
+	servers, err := ReadSeedFile(seedFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to read seed file: %w", err)
+	}
+
+	collection := db.collection
+
+	log.Printf("Importing %d servers into collection %s", len(servers), collection.Name())
+
+	for i, server := range servers {
+		if server.ID == "" || server.Name == "" {
+			log.Printf("Skipping server %d: ID or Name is empty", i+1)
+			continue
+		}
+
+		if server.VersionDetail.Version == "" {
+			server.VersionDetail.Version = "0.0.1-seed"
+			server.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
+			server.VersionDetail.IsLatest = true
+		}
+
+		// Create filter based on server ID
+		filter := bson.M{"id": server.ID}
+
+		// Create update document
+		update := bson.M{"$set": server}
+
+		// Use upsert to create if not exists or update if exists
+		opts := options.Update().SetUpsert(true)
+		result, err := collection.UpdateOne(ctx, filter, update, opts)
+		if err != nil {
+			log.Printf("Error importing server %s: %v", server.ID, err)
+			continue
+		}
+
+		switch {
+		case result.UpsertedCount > 0:
+			log.Printf("[%d/%d] Created server: %s", i+1, len(servers), server.Name)
+		case result.ModifiedCount > 0:
+			log.Printf("[%d/%d] Updated server: %s", i+1, len(servers), server.Name)
+		default:
+			log.Printf("[%d/%d] Server already up to date: %s", i+1, len(servers), server.Name)
+		}
+	}
+
+	log.Println("MongoDB database import completed successfully")
+	return nil
+}
+
 // Close closes the database connection
 func (db *MongoDB) Close() error {
 	return db.client.Disconnect(context.Background())
