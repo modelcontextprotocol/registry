@@ -114,6 +114,7 @@ type Server struct {
 	ID            string        `json:"id" bson:"id"`
 	Name          string        `json:"name" bson:"name"`
 	Description   string        `json:"description" bson:"description"`
+	URL           string        `json:"url" bson:"url"`
 	Repository    Repository    `json:"repository" bson:"repository"`
 	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
 }

@@ -65,6 +65,22 @@ func NewFakeRegistryService() RegistryService {
 				IsLatest:    false,
 			},
 		},
+		{
+			ID:          uuid.New().String(),
+			Name:        "bluewhite/mcp-server",
+			Description: "Another dummy MCP registry for testing with a URL",
+			URL:         "https://example.com/mcp",
+			Repository: model.Repository{
+				URL:    "https://github.com/example/mcp-4",
+				Source: "github",
+				ID:     "example/mcp-4",
+			},
+			VersionDetail: model.VersionDetail{
+				Version:     "0.8.5",
+				ReleaseDate: time.Now().Format(time.RFC3339),
+				IsLatest:    false,
+			},
+		},
 	}
 
 	// Create a new in-memory database
