@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -42,15 +41,4 @@ func ReadSeedFile(path string) ([]model.ServerDetail, error) {
 
 	log.Printf("Found %d server entries in seed file", len(servers))
 	return servers, nil
-}
-
-// ImportSeedFile populates the MongoDB database with initial data from a seed file.
-// Deprecated: Use Database.ImportSeed method instead
-func ImportSeedFile(mongo *MongoDB, seedFilePath string) error {
-	return mongo.ImportSeed(context.Background(), seedFilePath)
-}
-
-// readSeedFile reads and parses the seed.json file
-func readSeedFile(path string) ([]model.ServerDetail, error) {
-	return ReadSeedFile(path)
 }
