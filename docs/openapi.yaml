@@ -13,14 +13,13 @@ info:
     name: MIT
     identifier: MIT
 servers:
-  # TODO: Still think a unique name would be better; maybe we open a public discussion on the topic and let people submit ideas?
   - url: https://registry.modelcontextprotocol.io
     description: MCP Server Registry
-# TODO: Webhooks here would be interesting, but out of scope for MVP
-
+jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
 paths:
   /v0/servers:
     get:
+      operationId: listServers
       summary: List MCP servers
       description: Returns a list of all registered MCP servers
       parameters:
@@ -48,6 +47,7 @@ paths:
                 $ref: '#/components/schemas/ServerList'
   /v0/servers/{id}:
     get:
+      operationId: getServerDetails
       summary: Get MCP server details
       description: Returns detailed information about a specific MCP server
       parameters:
@@ -79,10 +79,10 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Server not found"
+                    examples:
+                      - "Server not found"
 components:
   schemas:
-    jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
     Repository:
       type: object
       required:
@@ -93,14 +93,19 @@ components:
         url:
           type: string
           format: uri
-          example: "https://github.com/modelcontextprotocol/servers"
+          examples:
+            - "https://github.com/modelcontextprotocol/servers"
         source:
           type: string
-          enum: [github, gitlab] # TODO: Add all supported sources as a whitelist
-          example: "github"
+          enum:
+            - github
+            - gitlab
+          examples:
+            - "github"
         id:
           type: string
-          example: "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
+          examples:
+            - "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
 
     Server:
       type: object
@@ -113,13 +118,16 @@ components:
         id:
           type: string
           format: uuid
-          example: "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1"
+          examples:
+            - "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1"
         name:
           type: string
-          example: "@modelcontextprotocol/servers/src/filesystem"
+          examples:
+            - "@modelcontextprotocol/servers/src/filesystem"
         description:
           type: string
-          example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+          examples:
+            - "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
         repository:
           $ref: '#/components/schemas/Repository'
         version_detail:
@@ -131,18 +139,20 @@ components:
           properties:
             version:
               type: string
-              example: "1.0.2"
+              examples:
+                - "1.0.2"
               description: Equivalent of Implementation.version in MCP specification.
             release_date:
               type: string
               format: date-time
-              example: "2023-06-15T10:30:00Z"
+              examples:
+                - "2023-06-15T10:30:00Z"
               description: Datetime that the MCP server version was published to the registry.
             is_latest:
               type: boolean
-              example: true
+              examples:
+                - true
               description: Whether the MCP server version is the latest version available in the registry.
-      $schema: "https://json-schema.org/draft/2020-12/schema"
 
     ServerList:
       type: object
@@ -157,10 +167,12 @@ components:
         next:
           type: string
           format: uri
-          example: "https://registry.modelcontextprotocol.io/servers?offset=50"
+          examples:
+            - "https://registry.modelcontextprotocol.io/v0/servers?offset=50&limit=5000"
         total_count:
           type: integer
-          example: 1
+          examples:
+            - 1
 
     Package:
       type: object
@@ -171,18 +183,27 @@ components:
       properties:
         registry_name:
           type: string
-          enum: [npm, docker, pypi, homebrew]
-          example: "npm"
+          enum:
+            - npm
+            - docker
+            - pypi
+            - homebrew
+          examples:
+            - "npm"
         name:
           type: string
-          example: "io.modelcontextprotocol/filesystem"
+          examples:
+            - "io.modelcontextprotocol/filesystem"
         version:
           type: string
-          example: "1.0.2"
+          examples:
+            - "1.0.2"
         runtime_hint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtime_arguments` are present.
-          examples: [npx, uvx]
+          examples:
+            - npx
+            - uvx
         runtime_arguments:
           type: array
           description: A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.
@@ -203,8 +224,8 @@ components:
       type: object
       properties:
         description:
-          description: A description of the input, which clients can use to provide context to the user.
           type: string
+          description: A description of the input, which clients can use to provide context to the user.
         is_required:
           type: boolean
           default: false
@@ -214,7 +235,11 @@ components:
             Specifies the input format. Supported values include `filepath`, which should be interpreted as a file on the user's filesystem.
 
             When the input is converted to a string, booleans should be represented by the strings "true" and "false", and numbers should be represented as decimal values.
-          enum: [string, number, boolean, filepath]
+          enum:
+            - string
+            - number
+            - boolean
+            - filepath
           default: string
         value:
           type: string
@@ -234,7 +259,9 @@ components:
           description: A list of possible values for the input. If provided, the user must select one of these values.
           items:
             type: string
-          example: []
+          examples:
+            - - "option1"
+              - "option2"
 
     InputWithVariables:
       allOf:
@@ -258,12 +285,15 @@ components:
           properties:
             type:
               type: string
-              enum: [positional]
-              example: "positional"
+              enum:
+                - positional
+              examples:
+                - "positional"
             value_hint:
               type: string
               description: An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users.
-              example: file_path
+              examples:
+                - file_path
             is_repeated:
               type: boolean
               description: Whether the argument can be repeated multiple times in the command line.
@@ -280,12 +310,15 @@ components:
           properties:
             type:
               type: string
-              enum: [named]
-              example: "named"
+              enum:
+                - named
+              examples:
+                - "named"
             name:
               type: string
               description: The flag name, including any leading dashes.
-              example: "--port"
+              examples:
+                - "--port"
             is_repeated:
               type: boolean
               description: Whether the argument can be repeated multiple times.
@@ -301,7 +334,8 @@ components:
             name:
               type: string
               description: Name of the header or environment variable.
-              example: SOME_VARIABLE
+              examples:
+                - SOME_VARIABLE
 
     Argument:
       anyOf:
@@ -316,12 +350,16 @@ components:
       properties:
         transport_type:
           type: string
-          enum: [streamable, sse]
-          example: "sse"
+          enum:
+            - streamable
+            - sse
+          examples:
+            - "sse"
         url:
           type: string
           format: uri
-          example: "https://mcp-fs.example.com/sse"
+          examples:
+            - "https://mcp-fs.example.com/sse"
         headers:
           type: array
           items:
