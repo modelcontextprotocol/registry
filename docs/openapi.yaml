@@ -108,7 +108,6 @@ components:
         - id
         - name
         - description
-        - repository
         - version_detail
       properties:
         id:
