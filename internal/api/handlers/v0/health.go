@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/service"
 )
 
 type HealthResponse struct {
@@ -14,11 +15,18 @@ type HealthResponse struct {
 }
 
 // HealthHandler returns a handler for health check endpoint
-func HealthHandler(cfg *config.Config) http.HandlerFunc {
+func HealthHandler(cfg *config.Config, registry service.RegistryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
+		status := "ok"
+		// Try a lightweight DB operation
+		_, _, err := registry.List("", 1)
+		if err != nil {
+			status = "db_error"
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(HealthResponse{
-			Status:         "ok",
+			Status:         status,
 			GitHubClientID: cfg.GithubClientID,
 		}); err != nil {
 			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
