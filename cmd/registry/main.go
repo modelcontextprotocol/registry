@@ -15,6 +15,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
 
@@ -33,44 +34,62 @@ func main() {
 
 	log.Printf("Starting MCP Registry Application v%s (commit: %s)", Version, GitCommit)
 
+	var (
+		registryService service.RegistryService
+		db              database.Database
+		err             error
+	)
+
 	// Initialize configuration
 	cfg := config.NewConfig()
 
 	// Initialize services based on environment
-	var registryService service.RegistryService
+	switch cfg.DatabaseType {
+	case config.DatabaseTypeMemory:
+		db = database.NewMemoryDB(map[string]*model.Server{})
+		registryService = service.NewRegistryServiceWithDB(db)
+	case config.DatabaseTypeMongoDB:
+		// Use MongoDB for real registry service in production/other environments
+		// Create a context with timeout for MongoDB connection
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
 
-	// Use MongoDB for real registry service in production/other environments
-	// Create a context with timeout for MongoDB connection
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+		// Connect to MongoDB
+		db, err = database.NewMongoDB(ctx, cfg.DatabaseURL, cfg.DatabaseName, cfg.CollectionName)
+		if err != nil {
+			log.Printf("Failed to connect to MongoDB: %v", err)
+			return
+		}
 
-	// Connect to MongoDB
-	mongoDB, err := database.NewMongoDB(ctx, cfg.DatabaseURL, cfg.DatabaseName, cfg.CollectionName)
-	if err != nil {
-		log.Printf("Failed to connect to MongoDB: %v", err)
+		// Create registry service with MongoDB
+		registryService = service.NewRegistryServiceWithDB(db)
+		log.Printf("MongoDB database name: %s", cfg.DatabaseName)
+		log.Printf("MongoDB collection name: %s", cfg.CollectionName)
+
+		// Store the MongoDB instance for later cleanup
+		defer func() {
+			if err := db.Close(); err != nil {
+				log.Printf("Error closing MongoDB connection: %v", err)
+			} else {
+				log.Println("MongoDB connection closed successfully")
+			}
+		}()
+	default:
+		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypeMongoDB)
 		return
 	}
 
-	// Create registry service with MongoDB
-	registryService = service.NewRegistryServiceWithDB(mongoDB)
-	log.Printf("MongoDB database name: %s", cfg.DatabaseName)
-	log.Printf("MongoDB collection name: %s", cfg.CollectionName)
-
-	// Store the MongoDB instance for later cleanup
-	defer func() {
-		if err := mongoDB.Close(); err != nil {
-			log.Printf("Error closing MongoDB connection: %v", err)
-		} else {
-			log.Println("MongoDB connection closed successfully")
-		}
-	}()
-
+	// Import seed data if requested (works for both memory and MongoDB)
 	if cfg.SeedImport {
 		log.Println("Importing data...")
-		if err := database.ImportSeedFile(mongoDB, cfg.SeedFilePath); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		defer cancel()
+
+		if err := db.ImportSeed(ctx, cfg.SeedFilePath); err != nil {
 			log.Printf("Failed to import seed file: %v", err)
+		} else {
+			log.Println("Data import completed successfully")
 		}
-		log.Println("Data import completed successfully")
 	}
 
 	// Initialize authentication services

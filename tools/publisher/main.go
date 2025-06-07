@@ -85,7 +85,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	var mcpDetails map[string]interface{}
 	err := json.Unmarshal(mcpData, &mcpDetails)
 	if err != nil {
-		return fmt.Errorf("error parsing mcp.json file: %w", err)
+		return fmt.Errorf("error parsing server.json file: %w", err)
 	}
 
 	// Create the publish request payload (without authentication)
