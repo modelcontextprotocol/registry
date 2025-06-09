@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  registry:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: registry
+    links:
+      - mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - MCP_REGISTRY_DATABASE_TYPE=mysql
+      - MCP_REGISTRY_MYSQL_DSN=mcp_user:mcp_password@tcp(mysql:3306)/mcp_registry?parseTime=true
+      - MCP_REGISTRY_ENVIRONMENT=${MCP_REGISTRY_ENVIRONMENT:-test}
+      - MCP_REGISTRY_GITHUB_CLIENT_ID=${MCP_REGISTRY_GITHUB_CLIENT_ID}
+      - MCP_REGISTRY_GITHUB_CLIENT_SECRET=${MCP_REGISTRY_GITHUB_CLIENT_SECRET}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=mcp_registry
+      - MYSQL_USER=mcp_user
+      - MYSQL_PASSWORD=mcp_password
+    volumes:
+      - './.db/mysql:/var/lib/mysql'
+      - './internal/database/mysql/mysql_schema.sql:/docker-entrypoint-initdb.d/mysql_schema.sql'
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    user: "1000:1000"  # Use your host user's UID:GID 

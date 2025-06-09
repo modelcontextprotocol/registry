@@ -9,6 +9,7 @@ type DatabaseType string
 const (
 	DatabaseTypeMongoDB DatabaseType = "mongodb"
 	DatabaseTypeMemory  DatabaseType = "memory"
+	DatabaseTypeMySQL   DatabaseType = "mysql"
 )
 
 // Config holds the application configuration
@@ -18,6 +19,7 @@ type Config struct {
 	DatabaseURL        string       `env:"DATABASE_URL" envDefault:"mongodb://localhost:27017"`
 	DatabaseName       string       `env:"DATABASE_NAME" envDefault:"mcp-registry"`
 	CollectionName     string       `env:"COLLECTION_NAME" envDefault:"servers_v2"`
+	MySQLDSN           string       `env:"MYSQL_DSN" envDefault:"mcp_user:mcp_password@tcp(localhost:3306)/mcp_registry?parseTime=true"`
 	LogLevel           string       `env:"LOG_LEVEL" envDefault:"info"`
 	SeedFilePath       string       `env:"SEED_FILE_PATH" envDefault:"data/seed.json"`
 	SeedImport         bool         `env:"SEED_IMPORT" envDefault:"true"`

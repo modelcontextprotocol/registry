@@ -38,6 +38,8 @@ const (
 	ConnectionTypeMemory ConnectionType = "memory"
 	// ConnectionTypeMongoDB represents a MongoDB database connection
 	ConnectionTypeMongoDB ConnectionType = "mongodb"
+	// ConnectionTypeMySQL represents a MySQL database connection
+	ConnectionTypeMySQL ConnectionType = "mysql"
 )
 
 // ConnectionInfo provides information about the database connection

@@ -74,12 +74,30 @@ func main() {
 				log.Println("MongoDB connection closed successfully")
 			}
 		}()
+	case config.DatabaseTypeMySQL:
+		// Create a context with timeout for MySQL connection
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		// Connect to MySQL
+		db, err = database.NewMySQLDB(ctx, cfg.MySQLDSN)
+		if err != nil {
+			log.Fatalf("Failed to connect to MySQL: %v", err)
+		}
+
+		// Create registry service
+		registryService = service.NewRegistryServiceWithDB(db)
+		log.Println("Connected to MySQL database")
 	default:
-		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypeMongoDB)
+		log.Printf("Invalid database type: %s; supported types: %s, %s, %s", 
+			cfg.DatabaseType, 
+			config.DatabaseTypeMemory, 
+			config.DatabaseTypeMongoDB,
+			config.DatabaseTypeMySQL)
 		return
 	}
 
-	// Import seed data if requested (works for both memory and MongoDB)
+	// Import seed data if requested (works for all database types)
 	if cfg.SeedImport {
 		log.Println("Importing data...")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
