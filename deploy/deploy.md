@@ -1,4 +1,4 @@
-# Deploy to mcp-registry w/ Kubernetes 
+# Deploy mcp-registry w/ Kubernetes 
 
 This helm chart defines resources required to run the mcp-registry project on Kubernetes.
 
