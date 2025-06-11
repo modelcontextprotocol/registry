@@ -1,5 +1,6 @@
 registry:
   port: 8080
+  externalPort: 80
 
 # DB component is run on as a stateful-set
 db:
