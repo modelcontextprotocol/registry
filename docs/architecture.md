@@ -134,7 +134,7 @@ sequenceDiagram
     participant Dev as Developer
     participant CLI as CLI Tool
     participant API as Registry API
-    participant DB as MongoDB
+    participant DB as Database
     participant GH as GitHub
     participant DNS as DNS Provider
     
