@@ -187,7 +187,7 @@ sequenceDiagram
     participant CLI as CLI Tool
     participant API as Registry API
     participant DNS as DNS Provider
-    participant DB as MongoDB
+    participant DB as Database
     
     User->>CLI: mcp verify-domain example.com
     CLI->>API: POST /verify-domain
