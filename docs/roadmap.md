@@ -24,7 +24,7 @@ The initial version of the MCP Registry is actively being developed. The initial
 - [ ] Additional IdP support (beyond GitHub)
 - [ ] Download count tracking
 
-## Out of Scope (Never Planned)
+## Out of Scope (Not Planned)
 
 - **Source code hosting**: The registry will never host actual server code
 - **Quality rankings**: No built-in server quality assessments or rankings
