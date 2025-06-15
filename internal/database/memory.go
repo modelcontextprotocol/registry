@@ -183,6 +183,86 @@ func (db *MemoryDB) List(
 	return result, nextCursor, nil
 }
 
+// Search searches MCPRegistry entries by keyword query with case-insensitive matching
+func (db *MemoryDB) Search(ctx context.Context, query string, cursor string, limit int) ([]*model.Server, string, error) {
+	if ctx.Err() != nil {
+		return nil, "", ctx.Err()
+	}
+
+	if limit <= 0 {
+		limit = 30
+	}
+
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	// Convert query to lowercase for case-insensitive search
+	searchQuery := strings.ToLower(strings.TrimSpace(query))
+	if searchQuery == "" {
+		// If no search query, fall back to List
+		return db.List(ctx, nil, cursor, limit)
+	}
+
+	// Search through all entries
+	var matchedEntries []*model.Server
+	for _, entry := range db.entries {
+		serverCopy := entry.Server
+
+		// Search in name and description (case-insensitive)
+		if strings.Contains(strings.ToLower(serverCopy.Name), searchQuery) ||
+			strings.Contains(strings.ToLower(serverCopy.Description), searchQuery) {
+			matchedEntries = append(matchedEntries, &serverCopy)
+		}
+	}
+
+	// Sort by relevance (name matches first, then description matches)
+	sort.Slice(matchedEntries, func(i, j int) bool {
+		iNameMatch := strings.Contains(strings.ToLower(matchedEntries[i].Name), searchQuery)
+		jNameMatch := strings.Contains(strings.ToLower(matchedEntries[j].Name), searchQuery)
+
+		if iNameMatch && !jNameMatch {
+			return true
+		}
+		if !iNameMatch && jNameMatch {
+			return false
+		}
+
+		// If both or neither match in name, sort by ID for consistency
+		return matchedEntries[i].ID < matchedEntries[j].ID
+	})
+
+	// Apply cursor-based pagination
+	startIdx := 0
+	if cursor != "" {
+		for i, entry := range matchedEntries {
+			if entry.ID == cursor {
+				startIdx = i + 1
+				break
+			}
+		}
+	}
+
+	endIdx := startIdx + limit
+	if endIdx > len(matchedEntries) {
+		endIdx = len(matchedEntries)
+	}
+
+	var result []*model.Server
+	if startIdx < len(matchedEntries) {
+		result = matchedEntries[startIdx:endIdx]
+	} else {
+		result = []*model.Server{}
+	}
+
+	// Determine next cursor
+	nextCursor := ""
+	if endIdx < len(matchedEntries) {
+		nextCursor = matchedEntries[endIdx-1].ID
+	}
+
+	return result, nextCursor, nil
+}
+
 // GetByID retrieves a single ServerDetail by its ID
 func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerDetail, error) {
 	if ctx.Err() != nil {
