@@ -69,6 +69,29 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]model.Server, st
 	return result, nextCursor, nil
 }
 
+// Search searches registry entries by keyword query
+func (s *registryServiceImpl) Search(query string, cursor string, limit int) ([]model.Server, string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if limit <= 0 {
+		limit = 30
+	}
+
+	entries, nextCursor, err := s.db.Search(ctx, query, cursor, limit)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Convert from []*model.Server to []model.Server
+	result := make([]model.Server, len(entries))
+	for i, entry := range entries {
+		result[i] = *entry
+	}
+
+	return result, nextCursor, nil
+}
+
 // GetByID retrieves a specific server detail by its ID
 func (s *registryServiceImpl) GetByID(id string) (*model.ServerDetail, error) {
 	// Create a timeout context for the database operation
