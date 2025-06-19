@@ -61,7 +61,7 @@ func TestPublishHandler(t *testing.T) {
 	testCases := []struct {
 		name             string
 		method           string
-		requestBody      interface{}
+		requestBody      any
 		authHeader       string
 		setupMocks       func(*MockRegistryService, *MockAuthService)
 		expectedStatus   int
