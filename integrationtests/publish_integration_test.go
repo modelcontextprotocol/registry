@@ -131,9 +131,9 @@ func TestPublishIntegration(t *testing.T) {
 		// Verify the server was actually published by retrieving it
 		publishedServer, err := registryService.GetByID(response["id"])
 		require.NoError(t, err)
-		assert.Equal(t, publishReq.ServerDetail.Name, publishedServer.Name)
-		assert.Equal(t, publishReq.ServerDetail.Description, publishedServer.Description)
-		assert.Equal(t, publishReq.ServerDetail.VersionDetail.Version, publishedServer.VersionDetail.Version)
+		assert.Equal(t, publishReq.Name, publishedServer.Name)
+		assert.Equal(t, publishReq.Description, publishedServer.Description)
+		assert.Equal(t, publishReq.VersionDetail.Version, publishedServer.VersionDetail.Version)
 		assert.Len(t, publishedServer.Packages, 1)
 		assert.Len(t, publishedServer.Remotes, 1)
 	})
