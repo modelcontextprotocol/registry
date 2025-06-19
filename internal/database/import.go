@@ -33,7 +33,7 @@ func ReadSeedFile(path string) ([]model.ServerDetail, error) {
 	var servers []model.ServerDetail
 	if err := json.Unmarshal(fileContent, &servers); err != nil {
 		// Try parsing as a raw JSON array and then convert to our model
-		var rawData []map[string]interface{}
+		var rawData []map[string]any
 		if jsonErr := json.Unmarshal(fileContent, &rawData); jsonErr != nil {
 			return nil, fmt.Errorf("failed to parse JSON: %w (original error: %w)", jsonErr, err)
 		}
