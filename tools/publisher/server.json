@@ -1,42 +1,17 @@
 {
-  "name": "SafetySearch",
-  "author": "surabhya",
-  "repo": "https://github.com/surabhya/SafetySearch",
-  "entrypoint": "server.py",
-  "description": "A specialized MCP server that provides real-time access to FDA food safety data, specifically focused on food recalls, adverse events, and safety monitoring.",
-  "tags": ["food", "safety", "fda", "recall", "health"],
-  "tools": [
-    {
-      "name": "search_recalls_by_product_description",
-      "description": "Searches for food recalls with detailed analysis, safety insights, and comprehensive reporting."
-    },
-    {
-      "name": "search_recalls_by_product_type",
-      "description": "Searches for recalls by product type with detailed analysis, company trends, and safety recommendations."
-    },
-    {
-      "name": "search_recalls_by_specific_product",
-      "description": "Checks for recalls on specific products with detailed safety information and recommendations."
-    },
-    {
-      "name": "search_recalls_by_classification",
-      "description": "Searches for recalls by classification with detailed analysis and risk assessment."
-    },
-    {
-      "name": "search_recalls_by_code_info",
-      "description": "Searches for recalls by code info with detailed product tracking and safety alerts."
-    },
-    {
-      "name": "search_recalls_by_date",
-      "description": "Searches for recalls by date range with detailed timeline analysis and safety trends."
-    },
-    {
-      "name": "search_adverse_events_by_product",
-      "description": "Searches for adverse events with detailed case analysis and safety insights."
-    },
-    {
-      "name": "get_symptom_summary_for_product",
-      "description": "Gets detailed symptom analysis, case details, and safety insights for a specific food product."
+    "description": "A specialized MCP server that provides real-time access to FDA food safety data, specifically focused on food recalls, adverse events, and safety monitoring.",
+    "name": "io.github.surabhya/SafetySearch",
+    "packages": [
+        {
+            "registry_name": "github",
+            "name": "io.github.surabhya/SafetySearch",
+            "version": "main",
+            "package_arguments": [],
+            "environment_variables": []
+        }
+    ],
+    "repository": {
+        "url": "https://github.com/surabhya/SafetySearch",
+        "source": "github"
     }
-  ]
 }
