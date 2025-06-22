@@ -13,5 +13,8 @@
     "repository": {
         "url": "https://github.com/surabhya/SafetySearch",
         "source": "github"
+    },
+    "version_detail": {
+        "version": "0.0.1-1"
     }
 }
