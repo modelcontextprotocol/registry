@@ -112,7 +112,7 @@ The MVP delegates security to the underlying package registries. Future iteratio
 
 Recommended polling frequency:
 
-- `/servers` endpoint: once per day
+- `/servers` endpoint: once per hour
 - `/servers/:id` endpoint: once per version (results are immutable)
 - Design assumes CDN caching between registry and consumers
 
