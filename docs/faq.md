@@ -7,6 +7,7 @@ These questions come up often in discussions about the MCP Registry. If you have
 ### What is the MCP Registry?
 
 The MCP Registry is the official centralized metadata repository for publicly-accessible MCP servers. It provides:
+
 - A single place for server creators to publish metadata about their servers
 - A REST API for MCP clients and aggregators to discover available servers
 - Standardized installation and configuration information
@@ -19,6 +20,7 @@ No. The MCP Registry stores metadata about MCP servers and references to where t
 ### Who should use the MCP Registry directly?
 
 The registry is designed for programmatic consumption by:
+
 - MCP client applications (Claude Desktop, Cline, etc.)
 - Server aggregators (Smithery, PulseMCP, etc.)
 - NOT individual end-users (they should use MCP clients or aggregator UIs)
@@ -32,6 +34,7 @@ A UI is planned as a future milestone after the initial API launch, but is not p
 ### How do I publish my MCP server?
 
 Servers are published by submitting a `server.json` file through our CLI tool. The process requires:
+
 1. GitHub authentication
 2. A public GitHub repository (even for closed-source servers - just for the metadata)
 3. Your server package published to a supported registry (npm, PyPI, Docker Hub, etc.)
@@ -45,7 +48,7 @@ Servers are published by submitting a `server.json` file through our CLI tool. T
 
 ### Is open source required?
 
-Locally-run servers are required to be open source. Remote servers are not.
+No. While open source code is encouraged, it is not required for either locally or remotely run servers.
 
 ### What package registries are supported?
 
@@ -58,6 +61,7 @@ More can be added as the community desires; feel free to open an issue if you ar
 ### Can I publish multiple versions?
 
 Yes, versioning is supported:
+
 - Each version gets its own immutable metadata
 - Version bumps are required for updates
 - Old versions remain accessible for compatibility
@@ -76,18 +80,21 @@ A reverse-publication flow is planned to allow quick deletion of accidentally pu
 ### How do I know a server is from the claimed organization?
 
 DNS verification ensures namespace ownership. For example:
+
 - `com.microsoft/server` requires DNS verification of microsoft.com
 - `io.github.username/server` is tied to a GitHub account or GitHub organization
 
 ### What about typosquatting?
 
 The registry implements:
+
 - Automatic blocking of names within a certain edit distance of existing servers
 - Community reporting mechanisms
 
 ### Is there security scanning?
 
 The MVP delegates security to the underlying package registries. Future iterations may include:
+
 - Vulnerability scanning
 - Dependency analysis
 
@@ -104,6 +111,7 @@ The MVP delegates security to the underlying package registries. Future iteratio
 ### How often should I poll the registry?
 
 Recommended polling frequency:
+
 - `/servers` endpoint: once per day
 - `/servers/:id` endpoint: once per version (results are immutable)
 - Design assumes CDN caching between registry and consumers
@@ -115,6 +123,7 @@ Not in the initial MVP, but the architecture supports adding webhooks for update
 ### Can I run my own registry instance?
 
 While the API shapes and data formats are designed for reuse, the registry implementation itself is not designed for self-hosting. Organizations needing private registries should:
+
 - Implement the same API shape
 - Use the same `server.json` format
 - Potentially mirror/filter the official registry data
@@ -156,6 +165,7 @@ Categorization and curation are intentionally left to consumers (MCP clients and
 ### Will there be quality metrics?
 
 Quality assessment is explicitly out of scope for the official registry. This is delegated to:
+
 - MCP clients (for their specific use cases)
 - Third-party aggregators
 - Community reviews on external platforms
