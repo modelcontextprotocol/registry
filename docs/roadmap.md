@@ -42,4 +42,4 @@ These items are explicitly not planned:
 
 ## Contributing
 
-See [../CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the MCP Registry project.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for details on how to contribute to the MCP Registry project.
