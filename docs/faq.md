@@ -101,7 +101,7 @@ The MVP delegates security to the underlying package registries. Future iteratio
 ### How is spam prevented?
 
 - GitHub authentication requirement
-- Rate limiting (e.g., one new server per user per day)
+- Rate limiting (e.g., 10 new servers per user per day)
 - Character limits and regex validation on free-form fields
 - Potential AI-based spam detection
 - Community reporting and admin blacklisting capabilities
