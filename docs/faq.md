@@ -86,7 +86,7 @@ DNS verification ensures namespace ownership. For example:
 
 ### What about typosquatting?
 
-The registry implements:
+The registry implements (or is slated to soon implement):
 
 - Automatic blocking of names within a certain edit distance of existing servers
 - Community reporting mechanisms
