@@ -35,11 +35,6 @@ The initial version of the MCP Registry is actively being developed. The initial
 - **Server tagging**: The registry will not support server tagging
 - **Server rankings**: The registry will not rank servers by subjective measures of quality
 
-
-## Non-Goals / Out of Scope
-
-These items are explicitly not planned:
-
 ## Contributing
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for details on how to contribute to the MCP Registry project.
