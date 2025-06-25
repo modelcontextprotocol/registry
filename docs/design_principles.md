@@ -4,7 +4,7 @@ These are the core constraints that guide the design of the MCP Registry. They a
 
 ## 1. Single Source of Truth
 
-The registry serves as the authoritative metadata repository for publicly-available MCP servers, both locally-run (open source) and remote (open or closed source). Server creators publish once, and all consumers (MCP clients, aggregators, etc.) reference the same canonical data.
+The registry serves as the authoritative metadata repository for publicly-available MCP servers, both locally-run and remote, open source and closed source. Server creators publish once, and all consumers (MCP clients, aggregators, etc.) reference the same canonical data.
 
 ## 2. Minimal Operational Burden
 
