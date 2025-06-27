@@ -68,8 +68,21 @@ func ServersHandler(registry service.RegistryService) http.HandlerFunc {
 			}
 		}
 
-		// Use the GetAll method to get paginated results
-		registries, nextCursor, err := registry.List(cursor, limit)
+		// Check for search query
+		searchQuery := r.URL.Query().Get("search")
+
+		var registries []model.Server
+		var nextCursor string
+		var err error
+
+		if searchQuery != "" {
+			// Use search functionality
+			registries, nextCursor, err = registry.Search(searchQuery, cursor, limit)
+		} else {
+			// Use regular list functionality
+			registries, nextCursor, err = registry.List(cursor, limit)
+		}
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
