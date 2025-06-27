@@ -16,22 +16,93 @@ import (
 	"github.com/modelcontextprotocol/registry/tools/publisher/auth/github"
 )
 
+// Server structure types for JSON generation
+type Repository struct {
+	URL    string `json:"url"`
+	Source string `json:"source"`
+}
+
+type VersionDetail struct {
+	Version string `json:"version"`
+}
+
+type EnvironmentVariable struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type RuntimeArgument struct {
+	Description string `json:"description"`
+	IsRequired  bool   `json:"is_required"`
+	Format      string `json:"format"`
+	Value       string `json:"value"`
+	Default     string `json:"default"`
+	Type        string `json:"type"`
+	ValueHint   string `json:"value_hint"`
+}
+
+type Package struct {
+	RegistryName         string                `json:"registry_name"`
+	Name                 string                `json:"name"`
+	Version              string                `json:"version"`
+	RuntimeHint          string                `json:"runtime_hint,omitempty"`
+	RuntimeArguments     []RuntimeArgument     `json:"runtime_arguments,omitempty"`
+	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
+}
+
+type ServerJSON struct {
+	Name          string        `json:"name"`
+	Description   string        `json:"description"`
+	Repository    Repository    `json:"repository"`
+	VersionDetail VersionDetail `json:"version_detail"`
+	Packages      []Package     `json:"packages"`
+}
+
 func main() {
+	if len(os.Args) < 2 {
+		printUsage()
+		return
+	}
+
+	command := os.Args[1]
+	switch command {
+	case "publish":
+		publishCommand()
+	case "create":
+		createCommand()
+	default:
+		printUsage()
+	}
+}
+
+func printUsage() {
+	fmt.Println("MCP Registry Publisher Tool")
+	fmt.Println()
+	fmt.Println("Usage:")
+	fmt.Println("  mcp-publisher publish [flags]    Publish a server.json file to the registry")
+	fmt.Println("  mcp-publisher create [flags]     Create a new server.json file")
+	fmt.Println()
+	fmt.Println("Use 'mcp-publisher <command> --help' for more information about a command.")
+}
+
+func publishCommand() {
+	publishFlags := flag.NewFlagSet("publish", flag.ExitOnError)
+	
 	var registryURL string
 	var mcpFilePath string
 	var forceLogin bool
 	var authMethod string
 
 	// Command-line flags for configuration
-	flag.StringVar(&registryURL, "registry-url", "", "URL of the registry (required)")
-	flag.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file (required)")
-	flag.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
-	flag.StringVar(&authMethod, "auth-method", "github-oauth", "authentication method to use (default: github-oauth)")
+	publishFlags.StringVar(&registryURL, "registry-url", "", "URL of the registry (required)")
+	publishFlags.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file (required)")
+	publishFlags.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
+	publishFlags.StringVar(&authMethod, "auth-method", "github-oauth", "authentication method to use (default: github-oauth)")
 
-	flag.Parse()
+	publishFlags.Parse(os.Args[2:])
 
 	if registryURL == "" || mcpFilePath == "" {
-		flag.Usage()
+		publishFlags.Usage()
 		return
 	}
 
@@ -77,6 +148,95 @@ func main() {
 	}
 
 	log.Println("Successfully published to registry!")
+}
+
+func createCommand() {
+	createFlags := flag.NewFlagSet("create", flag.ExitOnError)
+	
+	// Basic server information flags
+	var name string
+	var description string
+	var version string
+	var repoURL string
+	var repoSource string
+	var output string
+	
+	// Package information flags
+	var registryName string
+	var packageName string
+	var packageVersion string
+	var runtimeHint string
+	var execute string
+	
+	// Repeatable flags
+	var envVars []string
+
+	createFlags.StringVar(&name, "name", "", "Server name (e.g., io.github.owner/repo-name) (required)")
+	createFlags.StringVar(&name, "n", "", "Server name (shorthand)")
+	createFlags.StringVar(&description, "description", "", "Server description (required)")
+	createFlags.StringVar(&description, "d", "", "Server description (shorthand)")
+	createFlags.StringVar(&version, "version", "1.0.0", "Server version")
+	createFlags.StringVar(&version, "v", "1.0.0", "Server version (shorthand)")
+	createFlags.StringVar(&repoURL, "repo-url", "", "Repository URL (required)")
+	createFlags.StringVar(&repoSource, "repo-source", "github", "Repository source")
+	createFlags.StringVar(&output, "output", "server.json", "Output file path")
+	createFlags.StringVar(&output, "o", "server.json", "Output file path (shorthand)")
+	
+	createFlags.StringVar(&registryName, "registry", "npm", "Package registry name")
+	createFlags.StringVar(&packageName, "package-name", "", "Package name (defaults to server name)")
+	createFlags.StringVar(&packageVersion, "package-version", "", "Package version (defaults to server version)")
+	createFlags.StringVar(&runtimeHint, "runtime-hint", "", "Runtime hint (e.g., docker)")
+	createFlags.StringVar(&execute, "execute", "", "Command to execute the server")
+	createFlags.StringVar(&execute, "e", "", "Command to execute the server (shorthand)")
+	
+	// Custom flag for environment variables
+	createFlags.Func("env-var", "Environment variable in format NAME:DESCRIPTION (can be repeated)", func(value string) error {
+		envVars = append(envVars, value)
+		return nil
+	})
+
+	createFlags.Parse(os.Args[2:])
+
+	// Validate required flags
+	if name == "" {
+		log.Fatal("Error: --name/-n is required")
+	}
+	if description == "" {
+		log.Fatal("Error: --description/-d is required")
+	}
+	if repoURL == "" {
+		log.Fatal("Error: --repo-url is required")
+	}
+
+	// Set defaults
+	if packageName == "" {
+		packageName = name
+	}
+	if packageVersion == "" {
+		packageVersion = version
+	}
+
+	// Create server structure
+	server := createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute, envVars)
+
+	// Convert to JSON
+	jsonData, err := json.MarshalIndent(server, "", "  ")
+	if err != nil {
+		log.Fatalf("Error marshaling JSON: %v", err)
+	}
+
+	// Write to file
+	err = os.WriteFile(output, jsonData, 0644)
+	if err != nil {
+		log.Fatalf("Error writing file: %v", err)
+	}
+
+	log.Printf("Successfully created %s", output)
+	log.Println("You may need to edit the file to:")
+	log.Println("  - Add or modify package arguments")
+	log.Println("  - Set environment variable requirements")
+	log.Println("  - Add remote server configurations")
+	log.Println("  - Adjust runtime arguments")
 }
 
 // publishToRegistry sends the MCP server details to the registry with authentication
@@ -130,4 +290,69 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 
 	log.Println(string(body))
 	return nil
+}
+
+func createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute string, envVars []string) ServerJSON {
+	// Parse environment variables
+	var environmentVariables []EnvironmentVariable
+	for _, envVar := range envVars {
+		parts := strings.SplitN(envVar, ":", 2)
+		if len(parts) == 2 {
+			environmentVariables = append(environmentVariables, EnvironmentVariable{
+				Name:        parts[0],
+				Description: parts[1],
+			})
+		} else {
+			// If no description provided, use a default
+			environmentVariables = append(environmentVariables, EnvironmentVariable{
+				Name:        parts[0],
+				Description: fmt.Sprintf("Environment variable for %s", parts[0]),
+			})
+		}
+	}
+
+	// Parse execute command to create runtime arguments
+	var runtimeArguments []RuntimeArgument
+	if execute != "" {
+		// Split the execute command into parts
+		parts := strings.Fields(execute)
+		if len(parts) > 1 {
+			// Add each argument as a runtime argument
+			for i, arg := range parts[1:] {
+				runtimeArguments = append(runtimeArguments, RuntimeArgument{
+					Description: fmt.Sprintf("Runtime argument %d", i+1),
+					IsRequired:  false,
+					Format:      "string",
+					Value:       arg,
+					Default:     arg,
+					Type:        "positional",
+					ValueHint:   arg,
+				})
+			}
+		}
+	}
+
+	// Create package
+	pkg := Package{
+		RegistryName:         registryName,
+		Name:                 packageName,
+		Version:              packageVersion,
+		RuntimeHint:          runtimeHint,
+		RuntimeArguments:     runtimeArguments,
+		EnvironmentVariables: environmentVariables,
+	}
+
+	// Create server structure
+	return ServerJSON{
+		Name:        name,
+		Description: description,
+		Repository: Repository{
+			URL:    repoURL,
+			Source: repoSource,
+		},
+		VersionDetail: VersionDetail{
+			Version: version,
+		},
+		Packages: []Package{pkg},
+	}
 }
