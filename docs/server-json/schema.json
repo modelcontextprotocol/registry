@@ -55,8 +55,7 @@
       "description": "Version information for this server",
       "required": [
         "version",
-        "release_date",
-        "is_latest"
+        "release_date"
       ],
       "properties": {
         "version": {
@@ -129,13 +128,14 @@
                     },
                     "value_hint": {
                       "type": "string",
-                      "description": "Identifier hint for the value"
+                      "description": "An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users."
                     },
                     "description": {
                       "type": "string"
                     },
                     "value": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "The default value for the input. If this is not set, the user may be prompted to provide a value.\n\nIdentifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged."
                     },
                     "default": {
                       "type": "string"
@@ -168,7 +168,8 @@
                       "type": "string"
                     },
                     "value": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "The default value for the input. If this is not set, the user may be prompted to provide a value.\n\nIdentifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged."
                     },
                     "is_required": {
                       "type": "boolean",
@@ -180,6 +181,7 @@
                     },
                     "variables": {
                       "type": "object",
+                      "description": "A map of variable names to their values. Keys in the input `value` that are wrapped in `{curly_braces}` will be replaced with the corresponding variable values.",
                       "additionalProperties": {
                         "type": "object",
                         "properties": {
@@ -188,12 +190,14 @@
                           },
                           "format": {
                             "type": "string",
+                            "description": "Specifies the input format. Supported values include `filepath`, which should be interpreted as a file on the user's filesystem.\n\nWhen the input is converted to a string, booleans should be represented by the strings \"true\" and \"false\", and numbers should be represented as decimal values.",
                             "enum": [
                               "string",
                               "number",
                               "boolean",
                               "filepath"
-                            ]
+                            ],
+                            "default": "string"
                           },
                           "is_required": {
                             "type": "boolean"

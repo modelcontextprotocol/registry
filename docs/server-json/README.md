@@ -5,7 +5,7 @@ There are a variety of use cases where a _static representation of an MCP server
 - Discoverability on a decentralized `.well-known` endpoint
 - As a response to an initialization call, so the client knows information about the MCP server to which it is connecting
 - As an input into crafting a [DXT file](https://www.anthropic.com/engineering/desktop-extensions)
-- Packaged in with the source code of an MCP server, so as to have a structured way context 
+- Packaged in with the source code of an MCP server, so as to have a structured way to identify a server given just its source code
 
 All of these scenarios (and more) would benefit from an agreed-upon, standardized format that makes it easy to port around and maintain a consistent experience for consumers and developers working with the data. At the end of the day, it's all the same data (or a subset of it). MCP server maintainers should have to manage one copy of this file, and all these use cases can serve that file (or a programmatic derivative/subset of it).
 
