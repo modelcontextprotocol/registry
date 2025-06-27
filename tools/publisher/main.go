@@ -47,6 +47,7 @@ type Package struct {
 	Version              string                `json:"version"`
 	RuntimeHint          string                `json:"runtime_hint,omitempty"`
 	RuntimeArguments     []RuntimeArgument     `json:"runtime_arguments,omitempty"`
+	PackageArguments     []RuntimeArgument     `json:"package_arguments,omitempty"`
 	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
 }
 
@@ -170,6 +171,7 @@ func createCommand() {
 	
 	// Repeatable flags
 	var envVars []string
+	var packageArgs []string
 
 	createFlags.StringVar(&name, "name", "", "Server name (e.g., io.github.owner/repo-name) (required)")
 	createFlags.StringVar(&name, "n", "", "Server name (shorthand)")
@@ -192,6 +194,12 @@ func createCommand() {
 	// Custom flag for environment variables
 	createFlags.Func("env-var", "Environment variable in format NAME:DESCRIPTION (can be repeated)", func(value string) error {
 		envVars = append(envVars, value)
+		return nil
+	})
+	
+	// Custom flag for package arguments
+	createFlags.Func("package-arg", "Package argument in format VALUE:DESCRIPTION (can be repeated)", func(value string) error {
+		packageArgs = append(packageArgs, value)
 		return nil
 	})
 
@@ -217,7 +225,7 @@ func createCommand() {
 	}
 
 	// Create server structure
-	server := createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute, envVars)
+	server := createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs)
 
 	// Convert to JSON
 	jsonData, err := json.MarshalIndent(server, "", "  ")
@@ -292,7 +300,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	return nil
 }
 
-func createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute string, envVars []string) ServerJSON {
+func createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string) ServerJSON {
 	// Parse environment variables
 	var environmentVariables []EnvironmentVariable
 	for _, envVar := range envVars {
@@ -311,16 +319,50 @@ func createServerStructure(name, description, version, repoURL, repoSource, regi
 		}
 	}
 
+	// Parse package arguments
+	var packageArguments []RuntimeArgument
+	for i, pkgArg := range packageArgs {
+		parts := strings.SplitN(pkgArg, ":", 2)
+		value := parts[0]
+		description := fmt.Sprintf("Package argument %d", i+1)
+		if len(parts) == 2 {
+			description = parts[1]
+		}
+		
+		packageArguments = append(packageArguments, RuntimeArgument{
+			Description: description,
+			IsRequired:  true, // Package arguments are typically required
+			Format:      "string",
+			Value:       value,
+			Default:     value,
+			Type:        "positional",
+			ValueHint:   value,
+		})
+	}
+
 	// Parse execute command to create runtime arguments
 	var runtimeArguments []RuntimeArgument
 	if execute != "" {
-		// Split the execute command into parts
-		parts := strings.Fields(execute)
+		// Split the execute command into parts, handling quoted strings
+		parts := smartSplit(execute)
 		if len(parts) > 1 {
-			// Add each argument as a runtime argument
+			// Skip the first part (command) and add each argument as a runtime argument
 			for i, arg := range parts[1:] {
+				description := fmt.Sprintf("Runtime argument %d", i+1)
+				
+				// Try to provide better descriptions based on common patterns
+				if strings.HasPrefix(arg, "--") {
+					description = fmt.Sprintf("Command line flag: %s", arg)
+				} else if strings.HasPrefix(arg, "-") && len(arg) == 2 {
+					description = fmt.Sprintf("Command line option: %s", arg)
+				} else if strings.Contains(arg, "=") {
+					description = fmt.Sprintf("Configuration parameter: %s", arg)
+				} else if i > 0 && strings.HasPrefix(parts[i], "-") {
+					description = fmt.Sprintf("Value for %s", parts[i])
+				}
+
 				runtimeArguments = append(runtimeArguments, RuntimeArgument{
-					Description: fmt.Sprintf("Runtime argument %d", i+1),
+					Description: description,
 					IsRequired:  false,
 					Format:      "string",
 					Value:       arg,
@@ -339,6 +381,7 @@ func createServerStructure(name, description, version, repoURL, repoSource, regi
 		Version:              packageVersion,
 		RuntimeHint:          runtimeHint,
 		RuntimeArguments:     runtimeArguments,
+		PackageArguments:     packageArguments,
 		EnvironmentVariables: environmentVariables,
 	}
 
@@ -355,4 +398,40 @@ func createServerStructure(name, description, version, repoURL, repoSource, regi
 		},
 		Packages: []Package{pkg},
 	}
+}
+
+// smartSplit splits a command string into parts, handling quoted strings and common shell patterns
+func smartSplit(command string) []string {
+	var parts []string
+	var current strings.Builder
+	var inQuotes bool
+	var quoteChar rune
+
+	for _, char := range command {
+		switch {
+		case char == '"' || char == '\'':
+			if !inQuotes {
+				inQuotes = true
+				quoteChar = char
+			} else if char == quoteChar {
+				inQuotes = false
+				quoteChar = 0
+			} else {
+				current.WriteRune(char)
+			}
+		case char == ' ' && !inQuotes:
+			if current.Len() > 0 {
+				parts = append(parts, current.String())
+				current.Reset()
+			}
+		default:
+			current.WriteRune(char)
+		}
+	}
+
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
+	}
+
+	return parts
 }
