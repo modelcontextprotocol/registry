@@ -1,0 +1,371 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MCP Server Detail",
+  "description": "Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.",
+  "type": "object",
+  "required": [
+    "name",
+    "description",
+    "version_detail"
+  ],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Server name/identifier",
+      "example": "io.modelcontextprotocol/filesystem"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the server's functionality",
+      "example": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+    },
+    "repository": {
+      "type": "object",
+      "description": "Canonical source repository information",
+      "required": [
+        "url",
+        "source",
+        "id"
+      ],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Repository URL",
+          "example": "https://github.com/modelcontextprotocol/servers"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "github",
+            "gitlab"
+          ],
+          "description": "Repository hosting service",
+          "example": "github"
+        },
+        "id": {
+          "type": "string",
+          "description": "Repository identifier unique and immutable in the corresponding source",
+          "example": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
+        }
+      }
+    },
+    "version_detail": {
+      "type": "object",
+      "description": "Version information for this server",
+      "required": [
+        "version",
+        "release_date",
+        "is_latest"
+      ],
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Server version (equivalent to Implementation.version in MCP spec)",
+          "example": "1.0.2"
+        },
+        "release_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this version was published to the registry",
+          "example": "2023-06-15T10:30:00Z"
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "description": "Available package distributions",
+      "items": {
+        "type": "object",
+        "required": [
+          "registry_name",
+          "name",
+          "version"
+        ],
+        "properties": {
+          "registry_name": {
+            "type": "string",
+            "enum": [
+              "npm",
+              "docker",
+              "pypi",
+              "homebrew"
+            ],
+            "description": "Package registry type",
+            "example": "npm"
+          },
+          "name": {
+            "type": "string",
+            "description": "Package name in the registry",
+            "example": "@modelcontextprotocol/server-filesystem"
+          },
+          "version": {
+            "type": "string",
+            "description": "Package version",
+            "example": "1.0.2"
+          },
+          "runtime_hint": {
+            "type": "string",
+            "description": "Hint for appropriate runtime (e.g., npx, uvx)",
+            "examples": [
+              "npx",
+              "uvx"
+            ]
+          },
+          "runtime_arguments": {
+            "type": "array",
+            "description": "Arguments for the runtime command (docker, npx, etc.)",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "value_hint"
+                  ],
+                  "properties": {
+                    "type": {
+                      "const": "positional"
+                    },
+                    "value_hint": {
+                      "type": "string",
+                      "description": "Identifier hint for the value"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "default": {
+                      "type": "string"
+                    },
+                    "is_required": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "is_repeated": {
+                      "type": "boolean",
+                      "default": false
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "name"
+                  ],
+                  "properties": {
+                    "type": {
+                      "const": "named"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Flag name including dashes"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "is_required": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "is_repeated": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "variables": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "description": {
+                            "type": "string"
+                          },
+                          "format": {
+                            "type": "string",
+                            "enum": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "filepath"
+                            ]
+                          },
+                          "is_required": {
+                            "type": "boolean"
+                          },
+                          "default": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "package_arguments": {
+            "type": "array",
+            "description": "Arguments for the package binary",
+            "items": {
+              "$ref": "#/$defs/argument"
+            }
+          },
+          "environment_variables": {
+            "type": "array",
+            "description": "Environment variables to set",
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Variable name"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "default": {
+                  "type": "string"
+                },
+                "is_required": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "is_secret": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "remotes": {
+      "type": "array",
+      "description": "Remote server endpoints",
+      "items": {
+        "type": "object",
+        "required": [
+          "transport_type",
+          "url"
+        ],
+        "properties": {
+          "transport_type": {
+            "type": "string",
+            "enum": [
+              "streamable",
+              "sse"
+            ],
+            "description": "Transport protocol type",
+            "example": "sse"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Remote server URL",
+            "example": "https://mcp-fs.example.com/sse"
+          },
+          "headers": {
+            "type": "array",
+            "description": "HTTP headers to include",
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "is_required": {
+                  "type": "boolean"
+                },
+                "is_secret": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "argument": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "value_hint"
+          ],
+          "properties": {
+            "type": {
+              "const": "positional"
+            },
+            "value_hint": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "default": {
+              "type": "string"
+            },
+            "is_required": {
+              "type": "boolean"
+            },
+            "is_repeated": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "name"
+          ],
+          "properties": {
+            "type": {
+              "const": "named"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            },
+            "is_required": {
+              "type": "boolean"
+            },
+            "is_repeated": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
