@@ -77,18 +77,18 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println("MCP Registry Publisher Tool")
-	fmt.Println()
-	fmt.Println("Usage:")
-	fmt.Println("  mcp-publisher publish [flags]    Publish a server.json file to the registry")
-	fmt.Println("  mcp-publisher create [flags]     Create a new server.json file")
-	fmt.Println()
-	fmt.Println("Use 'mcp-publisher <command> --help' for more information about a command.")
+	log.Println("MCP Registry Publisher Tool")
+	log.Println()
+	log.Println("Usage:")
+	log.Println("  mcp-publisher publish [flags]    Publish a server.json file to the registry")
+	log.Println("  mcp-publisher create [flags]     Create a new server.json file")
+	log.Println()
+	log.Println("Use 'mcp-publisher <command> --help' for more information about a command.")
 }
 
 func publishCommand() {
 	publishFlags := flag.NewFlagSet("publish", flag.ExitOnError)
-	
+
 	var registryURL string
 	var mcpFilePath string
 	var forceLogin bool
@@ -100,7 +100,9 @@ func publishCommand() {
 	publishFlags.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
 	publishFlags.StringVar(&authMethod, "auth-method", "github-oauth", "authentication method to use (default: github-oauth)")
 
-	publishFlags.Parse(os.Args[2:])
+	if err := publishFlags.Parse(os.Args[2:]); err != nil {
+		log.Fatalf("Error parsing flags: %v", err)
+	}
 
 	if registryURL == "" || mcpFilePath == "" {
 		publishFlags.Usage()
@@ -153,7 +155,7 @@ func publishCommand() {
 
 func createCommand() {
 	createFlags := flag.NewFlagSet("create", flag.ExitOnError)
-	
+
 	// Basic server information flags
 	var name string
 	var description string
@@ -161,14 +163,14 @@ func createCommand() {
 	var repoURL string
 	var repoSource string
 	var output string
-	
+
 	// Package information flags
 	var registryName string
 	var packageName string
 	var packageVersion string
 	var runtimeHint string
 	var execute string
-	
+
 	// Repeatable flags
 	var envVars []string
 	var packageArgs []string
@@ -183,27 +185,29 @@ func createCommand() {
 	createFlags.StringVar(&repoSource, "repo-source", "github", "Repository source")
 	createFlags.StringVar(&output, "output", "server.json", "Output file path")
 	createFlags.StringVar(&output, "o", "server.json", "Output file path (shorthand)")
-	
+
 	createFlags.StringVar(&registryName, "registry", "npm", "Package registry name")
 	createFlags.StringVar(&packageName, "package-name", "", "Package name (defaults to server name)")
 	createFlags.StringVar(&packageVersion, "package-version", "", "Package version (defaults to server version)")
 	createFlags.StringVar(&runtimeHint, "runtime-hint", "", "Runtime hint (e.g., docker)")
 	createFlags.StringVar(&execute, "execute", "", "Command to execute the server")
 	createFlags.StringVar(&execute, "e", "", "Command to execute the server (shorthand)")
-	
+
 	// Custom flag for environment variables
 	createFlags.Func("env-var", "Environment variable in format NAME:DESCRIPTION (can be repeated)", func(value string) error {
 		envVars = append(envVars, value)
 		return nil
 	})
-	
+
 	// Custom flag for package arguments
 	createFlags.Func("package-arg", "Package argument in format VALUE:DESCRIPTION (can be repeated)", func(value string) error {
 		packageArgs = append(packageArgs, value)
 		return nil
 	})
 
-	createFlags.Parse(os.Args[2:])
+	if err := createFlags.Parse(os.Args[2:]); err != nil {
+		log.Fatalf("Error parsing flags: %v", err)
+	}
 
 	// Validate required flags
 	if name == "" {
@@ -225,7 +229,8 @@ func createCommand() {
 	}
 
 	// Create server structure
-	server := createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs)
+	server := createServerStructure(name, description, version, repoURL, repoSource,
+		registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs)
 
 	// Convert to JSON
 	jsonData, err := json.MarshalIndent(server, "", "  ")
@@ -234,7 +239,7 @@ func createCommand() {
 	}
 
 	// Write to file
-	err = os.WriteFile(output, jsonData, 0644)
+	err = os.WriteFile(output, jsonData, 0600)
 	if err != nil {
 		log.Fatalf("Error writing file: %v", err)
 	}
@@ -300,7 +305,8 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	return nil
 }
 
-func createServerStructure(name, description, version, repoURL, repoSource, registryName, packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string) ServerJSON {
+func createServerStructure(name, description, version, repoURL, repoSource, registryName,
+	packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string) ServerJSON {
 	// Parse environment variables
 	var environmentVariables []EnvironmentVariable
 	for _, envVar := range envVars {
@@ -328,7 +334,7 @@ func createServerStructure(name, description, version, repoURL, repoSource, regi
 		if len(parts) == 2 {
 			description = parts[1]
 		}
-		
+
 		packageArguments = append(packageArguments, RuntimeArgument{
 			Description: description,
 			IsRequired:  true, // Package arguments are typically required
@@ -349,15 +355,16 @@ func createServerStructure(name, description, version, repoURL, repoSource, regi
 			// Skip the first part (command) and add each argument as a runtime argument
 			for i, arg := range parts[1:] {
 				description := fmt.Sprintf("Runtime argument %d", i+1)
-				
+
 				// Try to provide better descriptions based on common patterns
-				if strings.HasPrefix(arg, "--") {
+				switch {
+				case strings.HasPrefix(arg, "--"):
 					description = fmt.Sprintf("Command line flag: %s", arg)
-				} else if strings.HasPrefix(arg, "-") && len(arg) == 2 {
+				case strings.HasPrefix(arg, "-") && len(arg) == 2:
 					description = fmt.Sprintf("Command line option: %s", arg)
-				} else if strings.Contains(arg, "=") {
+				case strings.Contains(arg, "="):
 					description = fmt.Sprintf("Configuration parameter: %s", arg)
-				} else if i > 0 && strings.HasPrefix(parts[i], "-") {
+				case i > 0 && strings.HasPrefix(parts[i], "-"):
 					description = fmt.Sprintf("Value for %s", parts[i])
 				}
 
@@ -410,13 +417,14 @@ func smartSplit(command string) []string {
 	for _, char := range command {
 		switch {
 		case char == '"' || char == '\'':
-			if !inQuotes {
+			switch {
+			case !inQuotes:
 				inQuotes = true
 				quoteChar = char
-			} else if char == quoteChar {
+			case char == quoteChar:
 				inQuotes = false
 				quoteChar = 0
-			} else {
+			default:
 				current.WriteRune(char)
 			}
 		case char == ' ' && !inQuotes:
