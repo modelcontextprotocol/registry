@@ -77,13 +77,13 @@ func main() {
 }
 
 func printUsage() {
-	log.Println("MCP Registry Publisher Tool")
-	log.Println()
-	log.Println("Usage:")
-	log.Println("  mcp-publisher publish [flags]    Publish a server.json file to the registry")
-	log.Println("  mcp-publisher create [flags]     Create a new server.json file")
-	log.Println()
-	log.Println("Use 'mcp-publisher <command> --help' for more information about a command.")
+	fmt.Fprint(os.Stdout, "MCP Registry Publisher Tool\n")
+	fmt.Fprint(os.Stdout, "\n")
+	fmt.Fprint(os.Stdout, "Usage:\n")
+	fmt.Fprint(os.Stdout, "  mcp-publisher publish [flags]    Publish a server.json file to the registry\n")
+	fmt.Fprint(os.Stdout, "  mcp-publisher create [flags]     Create a new server.json file\n")
+	fmt.Fprint(os.Stdout, "\n")
+	fmt.Fprint(os.Stdout, "Use 'mcp-publisher <command> --help' for more information about a command.\n")
 }
 
 func publishCommand() {
@@ -99,6 +99,19 @@ func publishCommand() {
 	publishFlags.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file (required)")
 	publishFlags.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
 	publishFlags.StringVar(&authMethod, "auth-method", "github-oauth", "authentication method to use (default: github-oauth)")
+
+	// Set custom usage function
+	publishFlags.Usage = func() {
+		fmt.Fprint(os.Stdout, "Usage: mcp-publisher publish [flags]\n")
+		fmt.Fprint(os.Stdout, "\n")
+		fmt.Fprint(os.Stdout, "Publish a server.json file to the registry\n")
+		fmt.Fprint(os.Stdout, "\n")
+		fmt.Fprint(os.Stdout, "Flags:\n")
+		fmt.Fprint(os.Stdout, "  --registry-url string    URL of the registry (required)\n")
+		fmt.Fprint(os.Stdout, "  --mcp-file string        path to the MCP file (required)\n")
+		fmt.Fprint(os.Stdout, "  --login                  force a new login even if a token exists\n")
+		fmt.Fprint(os.Stdout, "  --auth-method string     authentication method to use (default: github-oauth)\n")
+	}
 
 	if err := publishFlags.Parse(os.Args[2:]); err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
@@ -204,6 +217,28 @@ func createCommand() {
 		packageArgs = append(packageArgs, value)
 		return nil
 	})
+
+	// Set custom usage function
+	createFlags.Usage = func() {
+		fmt.Fprint(os.Stdout, "Usage: mcp-publisher create [flags]\n")
+		fmt.Fprint(os.Stdout, "\n")
+		fmt.Fprint(os.Stdout, "Create a new server.json file\n")
+		fmt.Fprint(os.Stdout, "\n")
+		fmt.Fprint(os.Stdout, "Flags:\n")
+		fmt.Fprint(os.Stdout, "  --name/-n string         Server name (e.g., io.github.owner/repo-name) (required)\n")
+		fmt.Fprint(os.Stdout, "  --description/-d string  Server description (required)\n")
+		fmt.Fprint(os.Stdout, "  --repo-url string        Repository URL (required)\n")
+		fmt.Fprint(os.Stdout, "  --version/-v string      Server version (default: 1.0.0)\n")
+		fmt.Fprint(os.Stdout, "  --execute/-e string      Command to execute the server\n")
+		fmt.Fprint(os.Stdout, "  --output/-o string       Output file path (default: server.json)\n")
+		fmt.Fprint(os.Stdout, "  --registry string        Package registry name (default: npm)\n")
+		fmt.Fprint(os.Stdout, "  --package-name string    Package name (defaults to server name)\n")
+		fmt.Fprint(os.Stdout, "  --package-version string Package version (defaults to server version)\n")
+		fmt.Fprint(os.Stdout, "  --runtime-hint string    Runtime hint (e.g., docker)\n")
+		fmt.Fprint(os.Stdout, "  --repo-source string     Repository source (default: github)\n")
+		fmt.Fprint(os.Stdout, "  --env-var string         Environment variable in format NAME:DESCRIPTION (can be repeated)\n")
+		fmt.Fprint(os.Stdout, "  --package-arg string     Package argument in format VALUE:DESCRIPTION (can be repeated)\n")
+	}
 
 	if err := createFlags.Parse(os.Args[2:]); err != nil {
 		log.Fatalf("Error parsing flags: %v", err)
