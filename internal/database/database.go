@@ -19,7 +19,7 @@ var (
 // Database defines the interface for database operations on MCPRegistry entries
 type Database interface {
 	// List retrieves all MCPRegistry entries with optional filtering
-	List(ctx context.Context, filter map[string]interface{}, cursor string, limit int) ([]*model.Server, string, error)
+	List(ctx context.Context, filter map[string]any, cursor string, limit int) ([]*model.Server, string, error)
 	// GetByID retrieves a single ServerDetail by it's ID
 	GetByID(ctx context.Context, id string) (*model.ServerDetail, error)
 	// Publish adds a new ServerDetail to the database

@@ -64,7 +64,7 @@ func StartAuthHandler(authService auth.Service) http.HandlerFunc {
 		// Return successful response
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]any{
 			"flow_info":    flowInfo,
 			"status_token": statusToken,
 			"expires_in":   300, // 5 minutes
@@ -98,7 +98,7 @@ func CheckAuthStatusHandler(authService auth.Service) http.HandlerFunc {
 				// Auth is still pending
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				if err := json.NewEncoder(w).Encode(map[string]interface{}{
+				if err := json.NewEncoder(w).Encode(map[string]any{
 					"status": "pending",
 				}); err != nil {
 					http.Error(w, "Failed to encode response", http.StatusInternalServerError)
@@ -115,7 +115,7 @@ func CheckAuthStatusHandler(authService auth.Service) http.HandlerFunc {
 		// Authentication completed successfully
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(map[string]interface{}{
+		if err := json.NewEncoder(w).Encode(map[string]any{
 			"status": "complete",
 			"token":  token,
 		}); err != nil {
