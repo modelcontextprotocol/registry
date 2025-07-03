@@ -5,11 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -154,6 +157,71 @@ func (db *MongoDB) List(
 	nextCursor := ""
 	if len(results) > 0 && limit > 0 && len(results) >= limit {
 		// Use the last item's ID as the next cursor
+		nextCursor = results[len(results)-1].ID
+	}
+
+	return results, nextCursor, nil
+}
+
+// Search searches MCPRegistry entries by keyword query using MongoDB regex
+func (db *MongoDB) Search(ctx context.Context, query string, cursor string, limit int) ([]*model.Server, string, error) {
+	if ctx.Err() != nil {
+		return nil, "", ctx.Err()
+	}
+
+	searchQuery := strings.TrimSpace(query)
+	if searchQuery == "" {
+		// If no search query, fall back to List
+		return db.List(ctx, nil, cursor, limit)
+	}
+
+	// Use MongoDB regex for case-insensitive search
+	regexPattern := primitive.Regex{
+		Pattern: regexp.QuoteMeta(searchQuery),
+		Options: "i", // case-insensitive
+	}
+
+	// Search in name and description fields
+	mongoFilter := bson.M{
+		"$or": []bson.M{
+			{"name": regexPattern},
+			{"description": regexPattern},
+		},
+	}
+
+	// Setup pagination options
+	findOptions := options.Find()
+
+	// Handle cursor pagination
+	if cursor != "" {
+		if _, err := uuid.Parse(cursor); err != nil {
+			return nil, "", fmt.Errorf("invalid cursor format: %w", err)
+		}
+		mongoFilter["id"] = bson.M{"$gt": cursor}
+	}
+
+	// Sort by relevance (name matches first) then by ID for consistency
+	findOptions.SetSort(bson.M{"id": 1})
+
+	if limit > 0 {
+		findOptions.SetLimit(int64(limit))
+	}
+
+	// Execute search
+	mongoCursor, err := db.collection.Find(ctx, mongoFilter, findOptions)
+	if err != nil {
+		return nil, "", err
+	}
+	defer mongoCursor.Close(ctx)
+
+	var results []*model.Server
+	if err = mongoCursor.All(ctx, &results); err != nil {
+		return nil, "", err
+	}
+
+	// Determine next cursor
+	nextCursor := ""
+	if len(results) > 0 && limit > 0 && len(results) >= limit {
 		nextCursor = results[len(results)-1].ID
 	}
 

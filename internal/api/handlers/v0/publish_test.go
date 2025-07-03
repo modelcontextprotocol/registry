@@ -25,6 +25,11 @@ func (m *MockRegistryService) List(cursor string, limit int) ([]model.Server, st
 	return args.Get(0).([]model.Server), args.String(1), args.Error(2)
 }
 
+func (m *MockRegistryService) Search(query string, cursor string, limit int) ([]model.Server, string, error) {
+	args := m.Mock.Called(query, cursor, limit)
+	return args.Get(0).([]model.Server), args.String(1), args.Error(2)
+}
+
 func (m *MockRegistryService) GetByID(id string) (*model.ServerDetail, error) {
 	args := m.Mock.Called(id)
 	return args.Get(0).(*model.ServerDetail), args.Error(1)

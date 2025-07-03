@@ -13,6 +13,7 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 ## Features
 
 - RESTful API for managing MCP registry entries (list, get, create, update, delete)
+- **Keyword search** across server names and descriptions with case-insensitive matching
 - Health check endpoint for service monitoring
 - Support for various environment configurations
 - Graceful shutdown handling
@@ -104,11 +105,12 @@ Returns the health status of the service:
 GET /v0/servers
 ```
 
-Lists MCP registry server entries with pagination support.
+Lists MCP registry server entries with pagination support. Supports keyword search across server names and descriptions.
 
 Query parameters:
 - `limit`: Maximum number of entries to return (default: 30, max: 100)
 - `cursor`: Pagination cursor for retrieving next set of results
+- `search`: Search keyword to filter servers by name and description (case-insensitive)
 
 Response example:
 ```json
@@ -128,6 +130,23 @@ Response example:
     "count": 30
   }
 }
+```
+
+##### Search Examples
+
+Search for servers containing "redis":
+```
+GET /v0/servers?search=redis
+```
+
+Search with pagination:
+```
+GET /v0/servers?search=database&limit=10&cursor=123e4567-e89b-12d3-a456-426614174000
+```
+
+Case-insensitive search for "API":
+```
+GET /v0/servers?search=API
 ```
 
 #### Get Server Details
