@@ -77,7 +77,12 @@ test_health() {
   else
     echo "Response:"
     echo "$http_response" | jq '.' 2>/dev/null || echo "$http_response"
-    echo "Health check failed"
+    # Check for db_error in the response
+    if echo "$http_response" | jq -e '.status == "db_error"' >/dev/null 2>&1; then
+      echo "Health check failed: Database connection is unhealthy!"
+    else
+      echo "Health check failed"
+    fi
     echo "-------------------------------------"
     return 1
   fi
