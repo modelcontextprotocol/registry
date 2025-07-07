@@ -4,3 +4,4 @@ build/*
 .mcpregistry*
 **/bin
 cmd/registry/registry
+publisher
