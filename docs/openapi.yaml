@@ -171,7 +171,7 @@ components:
       properties:
         registry_name:
           type: string
-          enum: [npm, docker, pypi, homebrew]
+          enum: [npm, docker, pypi, homebrew, nuget]
           example: "npm"
         name:
           type: string
@@ -182,7 +182,7 @@ components:
         runtime_hint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtime_arguments` are present.
-          examples: [npx, uvx]
+          examples: [npx, uvx, dnx]
         runtime_arguments:
           type: array
           description: A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.
