@@ -219,7 +219,7 @@ components:
         value:
           type: string
           description: |
-            The default value for the input. If this is not set, the user may be prompted to provide a value.
+            The default value for the input. If this is not set, the user may be prompted to provide a value. If a value is set, it will not be configurable and the user will not be able to change it.
 
             Identifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged.
         is_secret:
