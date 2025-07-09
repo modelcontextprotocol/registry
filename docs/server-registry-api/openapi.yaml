@@ -11,18 +11,16 @@ info:
     identifier: MIT
 
 paths:
-  /v0/servers:
+  /servers:
     get:
       summary: List MCP servers
       description: Returns a list of all registered MCP servers
       parameters:
         - name: limit
           in: query
-          description: Number of results per page (maximum 5000)
+          description: Number of results per page
           schema:
             type: integer
-            default: 5000
-            maximum: 5000
             minimum: 1
         - name: offset
           in: query
@@ -38,7 +36,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
-  /v0/servers/{id}:
+  /servers/{id}:
     get:
       summary: Get MCP server details
       description: Returns detailed information about a specific MCP server
@@ -87,7 +85,6 @@ components:
           example: "https://github.com/modelcontextprotocol/servers"
         source:
           type: string
-          enum: [github, gitlab] # TODO: Add all supported sources as a whitelist
           example: "github"
         id:
           type: string
@@ -121,22 +118,11 @@ components:
       type: object
       required:
         - version
-        - release_date
-        - is_latest
       properties:
         version:
           type: string
           example: "1.0.2"
           description: Equivalent of Implementation.version in MCP specification.
-        release_date:
-          type: string
-          format: date-time
-          example: "2023-06-15T10:30:00Z"
-          description: Datetime that the MCP server version was published to the registry.
-        is_latest:
-          type: boolean
-          example: true
-          description: Whether the MCP server version is the latest version available in the registry.
 
     ServerList:
       type: object
