@@ -1,23 +1,14 @@
 openapi: 3.1.0
 jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
+$id: https://modelcontextprotocol.io/schemas/draft/2025-07-09/server-registry-openapi
 info:
   title: MCP Server Registry API
-  summary: API for discovering and accessing MCP servers metadata
+  summary: API for discovering and accessing MCP server metadata
   description: |
-    REST API that centralizes metadata about publicly available MCP servers by allowing server creators to submit
-    and maintain metadata about their servers in a standardized format. This API enables MCP client
-    applications and "server aggregator" type consumers to discover and install MCP servers.
-  version: 0.0.1
-  contact:
-    name: MCP Community Working Group
+    Specification for a theoretical REST API that serves up metadata about MCP servers.
   license:
     name: MIT
     identifier: MIT
-servers:
-  # TODO: Still think a unique name would be better; maybe we open a public discussion on the topic and let people submit ideas?
-  - url: https://registry.modelcontextprotocol.io
-    description: MCP Server Registry
-# TODO: Webhooks here would be interesting, but out of scope for MVP
 
 paths:
   /v0/servers:
@@ -174,7 +165,6 @@ components:
       properties:
         registry_name:
           type: string
-          enum: [npm, docker, pypi, homebrew, nuget]
           description: Package registry type
           example: "npm"
         name:
