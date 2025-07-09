@@ -1,27 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "MCP Server Detail",
-  "description": "Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.",
-  "type": "object",
-  "required": [
-    "name",
-    "description",
-    "version_detail"
-  ],
-  "properties": {
-    "name": {
-      "type": "string",
-      "description": "Server name/identifier",
-      "example": "io.modelcontextprotocol/filesystem"
-    },
-    "description": {
-      "type": "string",
-      "description": "Human-readable description of the server's functionality",
-      "example": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-    },
-    "repository": {
+  "$ref": "#/$defs/ServerDetail",
+  "$defs": {
+    "Repository": {
       "type": "object",
-      "description": "Canonical source repository information",
       "required": [
         "url",
         "source",
@@ -31,7 +14,6 @@
         "url": {
           "type": "string",
           "format": "uri",
-          "description": "Repository URL",
           "example": "https://github.com/modelcontextprotocol/servers"
         },
         "source": {
@@ -40,197 +22,185 @@
             "github",
             "gitlab"
           ],
-          "description": "Repository hosting service",
           "example": "github"
         },
         "id": {
           "type": "string",
-          "description": "Repository identifier unique and immutable in the corresponding source",
           "example": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
         }
       }
     },
-    "version_detail": {
+    "VersionDetail": {
       "type": "object",
-      "description": "Version information for this server",
       "required": [
-        "version",
-        "release_date"
+        "version"
       ],
       "properties": {
         "version": {
           "type": "string",
-          "description": "Server version (equivalent to Implementation.version in MCP spec)",
-          "example": "1.0.2"
-        },
-        "release_date": {
-          "type": "string",
-          "format": "date-time",
-          "description": "When this version was published to the registry",
-          "example": "2023-06-15T10:30:00Z"
+          "example": "1.0.2",
+          "description": "Equivalent of Implementation.version in MCP specification."
         }
       }
     },
-    "packages": {
-      "type": "array",
-      "description": "Available package distributions",
-      "items": {
-        "type": "object",
-        "required": [
-          "registry_name",
-          "name",
-          "version"
-        ],
-        "properties": {
-          "registry_name": {
-            "type": "string",
-            "enum": [
-              "npm",
-              "docker",
-              "pypi",
-              "homebrew",
-              "nuget"
-            ],
-            "description": "Package registry type",
-            "example": "npm"
-          },
-          "name": {
-            "type": "string",
-            "description": "Package name in the registry",
-            "example": "@modelcontextprotocol/server-filesystem"
-          },
-          "version": {
-            "type": "string",
-            "description": "Package version",
-            "example": "1.0.2"
-          },
-          "runtime_hint": {
-            "type": "string",
-            "description": "Hint for appropriate runtime (e.g., npx, uvx, dnx)",
-            "examples": [
-              "npx",
-              "uvx",
-              "dnx"
-            ]
-          },
-          "runtime_arguments": {
-            "type": "array",
-            "description": "Arguments for the runtime command (docker, npx, etc.)",
-            "items": {
-              "$ref": "#/$defs/argument"
-            }
-          },
-          "package_arguments": {
-            "type": "array",
-            "description": "Arguments for the package binary",
-            "items": {
-              "$ref": "#/$defs/argument"
-            }
-          },
-          "environment_variables": {
-            "type": "array",
-            "description": "Environment variables to set",
-            "items": {
-              "$ref": "#/$defs/key_value_input"
-            }
-          }
-        }
-      }
-    },
-    "remotes": {
-      "type": "array",
-      "description": "Remote server endpoints",
-      "items": {
-        "type": "object",
-        "required": [
-          "transport_type",
-          "url"
-        ],
-        "properties": {
-          "transport_type": {
-            "type": "string",
-            "enum": [
-              "streamable",
-              "sse"
-            ],
-            "description": "Transport protocol type",
-            "example": "sse"
-          },
-          "url": {
-            "type": "string",
-            "format": "uri",
-            "description": "Remote server URL",
-            "example": "https://mcp-fs.example.com/sse"
-          },
-          "headers": {
-            "type": "array",
-            "description": "HTTP headers to include",
-            "items": {
-              "$ref": "#/$defs/key_value_input"
-            }
-          }
-        }
-      }
-    }
-  },
-  "$defs": {
-    "variable_map": {
-      "type": "object",
-      "description": "A map of variable names to their values. Keys in the input `value` that are wrapped in `{curly_braces}` will be replaced with the corresponding variable values.",
-      "additionalProperties": {
-        "type": "object",
-        "properties": {
-          "description": {
-            "type": "string"
-          },
-          "format": {
-            "type": "string",
-            "description": "Specifies the input format. Supported values include `filepath`, which should be interpreted as a file on the user's filesystem.\n\nWhen the input is converted to a string, booleans should be represented by the strings \"true\" and \"false\", and numbers should be represented as decimal values.",
-            "enum": [
-              "string",
-              "number",
-              "boolean",
-              "filepath"
-            ],
-            "default": "string"
-          },
-          "is_required": {
-            "type": "boolean"
-          },
-          "default": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "key_value_input": {
+    "Server": {
       "type": "object",
       "required": [
-        "name"
+        "name",
+        "description",
+        "version_detail"
       ],
       "properties": {
         "name": {
           "type": "string",
-          "description": "Variable name"
+          "description": "Server name/identifier",
+          "example": "io.modelcontextprotocol/filesystem"
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Human-readable description of the server's functionality",
+          "example": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
         },
-        "default": {
+        "repository": {
+          "$ref": "#/$defs/Repository"
+        },
+        "version_detail": {
+          "$ref": "#/$defs/VersionDetail"
+        }
+      }
+    },
+    "Package": {
+      "type": "object",
+      "required": [
+        "registry_name",
+        "name",
+        "version"
+      ],
+      "properties": {
+        "registry_name": {
+          "type": "string",
+          "enum": [
+            "npm",
+            "docker",
+            "pypi",
+            "homebrew",
+            "nuget"
+          ],
+          "description": "Package registry type",
+          "example": "npm"
+        },
+        "name": {
+          "type": "string",
+          "description": "Package name in the registry",
+          "example": "io.modelcontextprotocol/filesystem"
+        },
+        "version": {
+          "type": "string",
+          "description": "Package version",
+          "example": "1.0.2"
+        },
+        "runtime_hint": {
+          "type": "string",
+          "description": "A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtime_arguments` are present.",
+          "examples": [
+            "npx",
+            "uvx",
+            "dnx"
+          ]
+        },
+        "runtime_arguments": {
+          "type": "array",
+          "description": "A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.",
+          "items": {
+            "$ref": "#/$defs/Argument"
+          }
+        },
+        "package_arguments": {
+          "type": "array",
+          "description": "A list of arguments to be passed to the package's binary.",
+          "items": {
+            "$ref": "#/$defs/Argument"
+          }
+        },
+        "environment_variables": {
+          "type": "array",
+          "description": "A mapping of environment variables to be set when running the package.",
+          "items": {
+            "$ref": "#/$defs/KeyValueInput"
+          }
+        }
+      }
+    },
+    "Input": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "A description of the input, which clients can use to provide context to the user.",
           "type": "string"
         },
         "is_required": {
           "type": "boolean",
           "default": false
         },
+        "format": {
+          "type": "string",
+          "description": "Specifies the input format. Supported values include `filepath`, which should be interpreted as a file on the user's filesystem.\n\nWhen the input is converted to a string, booleans should be represented by the strings \"true\" and \"false\", and numbers should be represented as decimal values.",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "filepath"
+          ],
+          "default": "string"
+        },
+        "value": {
+          "type": "string",
+          "description": "The default value for the input. If this is not set, the user may be prompted to provide a value. If a value is set, it should not be configurable by end users.\n\nIdentifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged.\n"
+        },
         "is_secret": {
           "type": "boolean",
+          "description": "Indicates whether the input is a secret value (e.g., password, token). If true, clients should handle the value securely.",
           "default": false
+        },
+        "default": {
+          "type": "string",
+          "description": "The default value for the input."
+        },
+        "choices": {
+          "type": "array",
+          "description": "A list of possible values for the input. If provided, the user must select one of these values.",
+          "items": {
+            "type": "string"
+          },
+          "example": []
         }
       }
     },
-    "argument": {
-      "oneOf": [
+    "InputWithVariables": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Input"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "variables": {
+              "type": "object",
+              "description": "A map of variable names to their values. Keys in the input `value` that are wrapped in `{curly_braces}` will be replaced with the corresponding variable values.",
+              "additionalProperties": {
+                "$ref": "#/$defs/Input"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PositionalArgument": {
+      "description": "A positional input is a value inserted verbatim into the command line.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/InputWithVariables"
+        },
         {
           "type": "object",
           "required": [
@@ -239,34 +209,31 @@
           ],
           "properties": {
             "type": {
-              "const": "positional"
+              "type": "string",
+              "enum": [
+                "positional"
+              ],
+              "example": "positional"
             },
             "value_hint": {
               "type": "string",
-              "description": "An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users."
-            },
-            "description": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string",
-              "description": "The default value for the input. If this is not set, the user may be prompted to provide a value.\n\nIdentifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged."
-            },
-            "default": {
-              "type": "string"
-            },
-            "is_required": {
-              "type": "boolean",
-              "default": false
+              "description": "An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users.",
+              "example": "file_path"
             },
             "is_repeated": {
               "type": "boolean",
+              "description": "Whether the argument can be repeated multiple times in the command line.",
               "default": false
-            },
-            "variables": {
-              "$ref": "#/$defs/variable_map"
             }
           }
+        }
+      ]
+    },
+    "NamedArgument": {
+      "description": "A command-line `--flag={value}`.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/InputWithVariables"
         },
         {
           "type": "object",
@@ -276,29 +243,107 @@
           ],
           "properties": {
             "type": {
-              "const": "named"
+              "type": "string",
+              "enum": [
+                "named"
+              ],
+              "example": "named"
             },
             "name": {
               "type": "string",
-              "description": "Flag name including dashes"
-            },
-            "description": {
-              "type": "string"
-            },
-            "value": {
-              "type": "string",
-              "description": "The default value for the input. If this is not set, the user may be prompted to provide a value.\n\nIdentifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged."
-            },
-            "is_required": {
-              "type": "boolean",
-              "default": false
+              "description": "The flag name, including any leading dashes.",
+              "example": "--port"
             },
             "is_repeated": {
               "type": "boolean",
+              "description": "Whether the argument can be repeated multiple times.",
               "default": false
+            }
+          }
+        }
+      ]
+    },
+    "KeyValueInput": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/InputWithVariables"
+        },
+        {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the header or environment variable.",
+              "example": "SOME_VARIABLE"
+            }
+          }
+        }
+      ]
+    },
+    "Argument": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PositionalArgument"
+        },
+        {
+          "$ref": "#/$defs/NamedArgument"
+        }
+      ]
+    },
+    "Remote": {
+      "type": "object",
+      "required": [
+        "transport_type",
+        "url"
+      ],
+      "properties": {
+        "transport_type": {
+          "type": "string",
+          "enum": [
+            "streamable",
+            "sse"
+          ],
+          "description": "Transport protocol type",
+          "example": "sse"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Remote server URL",
+          "example": "https://mcp-fs.example.com/sse"
+        },
+        "headers": {
+          "type": "array",
+          "description": "HTTP headers to include",
+          "items": {
+            "$ref": "#/$defs/KeyValueInput"
+          }
+        }
+      }
+    },
+    "ServerDetail": {
+      "description": "Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Server"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "packages": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Package"
+              }
             },
-            "variables": {
-              "$ref": "#/$defs/variable_map"
+            "remotes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Remote"
+              }
             }
           }
         }

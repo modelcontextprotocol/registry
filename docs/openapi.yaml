@@ -1,4 +1,5 @@
 openapi: 3.1.0
+jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
 info:
   title: MCP Server Registry API
   summary: API for discovering and accessing MCP servers metadata
@@ -82,7 +83,6 @@ paths:
                     example: "Server not found"
 components:
   schemas:
-    jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
     Repository:
       type: object
       required:
@@ -116,33 +116,36 @@ components:
           example: "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1"
         name:
           type: string
-          example: "@modelcontextprotocol/servers/src/filesystem"
+          description: Human-readable description of the server's functionality
+          example: "io.modelcontextprotocol/filesystem"
         description:
           type: string
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
         repository:
           $ref: '#/components/schemas/Repository'
         version_detail:
-          type: object
-          required:
-            - version
-            - release_date
-            - is_latest
-          properties:
-            version:
-              type: string
-              example: "1.0.2"
-              description: Equivalent of Implementation.version in MCP specification.
-            release_date:
-              type: string
-              format: date-time
-              example: "2023-06-15T10:30:00Z"
-              description: Datetime that the MCP server version was published to the registry.
-            is_latest:
-              type: boolean
-              example: true
-              description: Whether the MCP server version is the latest version available in the registry.
-      $schema: "https://json-schema.org/draft/2020-12/schema"
+          $ref: '#/components/schemas/VersionDetail'
+
+    VersionDetail:
+      type: object
+      required:
+        - version
+        - release_date
+        - is_latest
+      properties:
+        version:
+          type: string
+          example: "1.0.2"
+          description: Equivalent of Implementation.version in MCP specification.
+        release_date:
+          type: string
+          format: date-time
+          example: "2023-06-15T10:30:00Z"
+          description: Datetime that the MCP server version was published to the registry.
+        is_latest:
+          type: boolean
+          example: true
+          description: Whether the MCP server version is the latest version available in the registry.
 
     ServerList:
       type: object
@@ -172,12 +175,15 @@ components:
         registry_name:
           type: string
           enum: [npm, docker, pypi, homebrew, nuget]
+          description: Package registry type
           example: "npm"
         name:
           type: string
+          description: Package name in the registry
           example: "io.modelcontextprotocol/filesystem"
         version:
           type: string
+          description: Package version
           example: "1.0.2"
         runtime_hint:
           type: string
@@ -317,17 +323,21 @@ components:
         transport_type:
           type: string
           enum: [streamable, sse]
+          description: Transport protocol type
           example: "sse"
         url:
           type: string
           format: uri
+          description: Remote server URL
           example: "https://mcp-fs.example.com/sse"
         headers:
           type: array
+          description: HTTP headers to include
           items:
             $ref: '#/components/schemas/KeyValueInput'
 
     ServerDetail:
+      description: Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.
       allOf:
         - $ref: '#/components/schemas/Server'
         - type: object
