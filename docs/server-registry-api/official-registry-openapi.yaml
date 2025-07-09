@@ -40,21 +40,3 @@ components:
           properties:
             registry_name:
               enum: [npm, docker, pypi, nuget]
-    
-    VersionDetail:
-      allOf:
-        - $ref: 'https://modelcontextprotocol.io/schemas/draft/2025-07-09/server-registry-openapi#/components/schemas/VersionDetail'
-        - type: object
-          required:
-            - release_date
-            - is_latest
-          properties:
-            release_date:
-              type: string
-              format: date-time
-              example: "2023-06-15T10:30:00Z"
-              description: Datetime that the MCP server version was published to the registry.
-            is_latest:
-              type: boolean
-              example: true
-              description: Whether the MCP server version is the latest version available in the registry.
