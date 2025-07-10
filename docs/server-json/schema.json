@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
   "title": "MCP Server Detail",
   "$ref": "#/$defs/ServerDetail",
   "$defs": {
@@ -18,10 +19,7 @@
         },
         "source": {
           "type": "string",
-          "enum": [
-            "github",
-            "gitlab"
-          ],
+          "description": "Repository hosting service",
           "example": "github"
         },
         "id": {
@@ -32,6 +30,7 @@
     },
     "VersionDetail": {
       "type": "object",
+      "description": "Version information for this server. Defined as an object to allow for downstream extensibility (e.g. release_date)",
       "required": [
         "version"
       ],
@@ -79,13 +78,6 @@
       "properties": {
         "registry_name": {
           "type": "string",
-          "enum": [
-            "npm",
-            "docker",
-            "pypi",
-            "homebrew",
-            "nuget"
-          ],
           "description": "Package registry type",
           "example": "npm"
         },

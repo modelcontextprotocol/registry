@@ -14,3 +14,4 @@ Please note: this is different from the file commonly referred to as `mcp.json`,
 References:
 - [schema.json](./schema.json) - The official JSON schema specification for this representation
 - [examples.md](./examples.md) - Example manifestations of the JSON schema
+- [registry-schema.json](./registry-schema.json) - A more constrained version of `schema.json` that the official registry supports
