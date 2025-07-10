@@ -38,6 +38,3 @@ require (
 	golang.org/x/tools v0.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// temporary replace directive to use local version of the module so we can share in different orgs
-replace github.com/modelcontextprotocol/registry => ./

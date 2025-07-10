@@ -22,6 +22,7 @@ import (
 func main() {
 	// Parse command line flags
 	showVersion := flag.Bool("version", false, "Display version information")
+	seedFilePath := flag.String("seed-file-path", "", "Path to seed file for importing initial data")
 	flag.Parse()
 
 	// Show version information if requested
@@ -42,6 +43,11 @@ func main() {
 
 	// Initialize configuration
 	cfg := config.NewConfig()
+
+	// Override seed file path if provided via command line flag
+	if *seedFilePath != "" {
+		cfg.SeedFilePath = *seedFilePath
+	}
 
 	// Initialize services based on environment
 	switch cfg.DatabaseType {
@@ -79,9 +85,9 @@ func main() {
 		return
 	}
 
-	// Import seed data if requested (works for both memory and MongoDB)
-	if cfg.SeedImport {
-		log.Println("Importing data...")
+	// Import seed data if seed file path is provided (works for both memory and MongoDB)
+	if cfg.SeedFilePath != "" {
+		log.Printf("Importing data from %s...", cfg.SeedFilePath)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 

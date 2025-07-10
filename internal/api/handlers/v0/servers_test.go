@@ -257,7 +257,7 @@ func TestServersHandler(t *testing.T) {
 			}
 
 			// Verify mock expectations
-			mockRegistry.AssertExpectations(t)
+			mockRegistry.AssertExpectations(t) //nolint:typecheck // testify mock embedding issue
 		})
 	}
 }
@@ -321,7 +321,7 @@ func TestServersHandlerIntegration(t *testing.T) {
 	assert.Empty(t, paginatedResp.Metadata.NextCursor)
 
 	// Verify mock expectations
-	mockRegistry.AssertExpectations(t)
+	mockRegistry.AssertExpectations(t) //nolint:typecheck // testify mock embedding issue
 }
 
 // TestServersDetailHandlerIntegration tests the servers detail handler with actual HTTP requests
@@ -387,5 +387,5 @@ func TestServersDetailHandlerIntegration(t *testing.T) {
 	assert.Equal(t, *serverDetail, serverDetailResp)
 
 	// Verify mock expectations
-	mockRegistry.AssertExpectations(t)
+	mockRegistry.AssertExpectations(t) //nolint:typecheck // testify mock embedding issue
 }

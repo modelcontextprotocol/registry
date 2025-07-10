@@ -14,7 +14,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/santhosh-tekuri/jsonschema/v5"
+	jsonschema "github.com/santhosh-tekuri/jsonschema/v5"
 )
 
 const (
