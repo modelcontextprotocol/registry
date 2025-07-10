@@ -12,9 +12,9 @@ This object has the following properties, all of which are **required**:
 | `url`    | Website for the source repository                       | https://github.com/modelcontextprotocol/registry |
 | `id`     | Stable identifier referring to the repository           | `927890076`                                      |
 
-Consumers of the `server.json` metadata can use the `source` property to understand which specific source forge is used for hosting the MCP server's code. This is intended to be a string enum (well known list of values, defined by the MCP Registry deployment).
+Consumers of the `server.json` metadata can use the `source` property to understand which specific source forge is used for hosting the MCP server's code. This is intended to be a string enum (a well-known list of values, defined by the MCP Registry deployment).
 
-The `url` can be used to browse the source code. Some source forges, such as GitHub, support `git clone <url>` on the URL, which also works for web browsing. This is coincidental for the purposes of the Official MCP Registry, and the URL need only be accessible in a web browser.
+The `url` can be used to browse the source code. Some source forges, such as GitHub, support `git clone <url>` on the URL, which also works for web browsing. This is coincidental for the purposes of the Official MCP Registry, and the URL only needs to be accessible in a web browser.
 
 The `id` value is owned and determined by the source forge, such as GitHub. This value is meant to be stable across repository renames and, if applicable on the source forge, can be used to detect repository resurrection attacks. If a repository is renamed, the `id` value should remain constant. If the repository is deleted and then recreated later, the `id` value should change.
 
@@ -33,7 +33,7 @@ An MCP server registry should validate that the `id` matches the given `url`, pe
 
 The `repository` metadata is optional (as in the general MCP Registry protocol).
 
-The Official MCP Registry has some policies related to the `repository` object that are stricter than what the general MCP Registry protocol allows.
+The Official MCP Registry has some policies related to the `repository` object that are stricter than those the general MCP Registry protocol allows.
 
 See the [`registry-schema.json`](registry-schema.json) for the allowed `source` values.
 
