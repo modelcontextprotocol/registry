@@ -27,7 +27,7 @@ const (
 
 func main() {
 	log.SetFlags(0) // Remove timestamp from logs
-	
+
 	var rootCmd = &cobra.Command{
 		Use:   "validate-examples",
 		Short: "Validate examples in examples.md",

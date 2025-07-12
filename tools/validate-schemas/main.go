@@ -19,7 +19,7 @@ import (
 
 func main() {
 	log.SetFlags(0) // Remove timestamp from logs
-	
+
 	var rootCmd = &cobra.Command{
 		Use:   "validate-schemas",
 		Short: "Validate JSON schema files",
