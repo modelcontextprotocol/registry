@@ -219,7 +219,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "repository": {
     "url": "https://github.com/joelverhagen/Knapcode.SampleMcpServer",
     "source": "github",
-    "id": "def456gh-ijkl-7890-mnop-qrstuvwxyz13"
+    "id": "example-nuget-id-0000-1111-222222222222"
   },
   "version_detail": {
     "version": "0.3.0-beta"
