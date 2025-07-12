@@ -15,3 +15,25 @@ References:
 - [schema.json](./schema.json) - The official JSON schema specification for this representation
 - [examples.md](./examples.md) - Example manifestations of the JSON schema
 - [registry-schema.json](./registry-schema.json) - A more constrained version of `schema.json` that the official registry supports
+
+## Validation Tools
+
+Two validation tools are provided in the repository's `tools/` directory:
+- **validate-schemas** - Validates that `schema.json` and `registry-schema.json` are valid JSON Schema documents
+- **validate-examples** - Validates that all JSON examples in `examples.md` conform to both schemas
+
+### Usage
+
+From the repository root:
+
+#### Validate JSON Schemas
+
+```bash
+./tools/validate-schemas.sh
+```
+
+#### Validate Examples
+
+```bash
+./tools/validate-examples.sh
+```
