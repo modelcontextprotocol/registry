@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Pre-commit hook for MCP Registry
+# Runs linting and formatting checks before allowing commits
+
+set -e
+
+echo "Running pre-commit checks..."
+
+# Check if golangci-lint is installed
+if ! command -v golangci-lint &> /dev/null; then
+    echo "❌ golangci-lint is not installed!"
+    echo "See README.md Prerequisites section for installation instructions."
+    exit 1
+fi
+
+# Run golangci-lint
+echo "Running golangci-lint..."
+if ! golangci-lint run --timeout=5m; then
+    echo "❌ Linting failed! Please fix the issues above."
+    exit 1
+fi
+
+# Check formatting
+echo "Checking Go formatting..."
+UNFORMATTED=$(gofmt -s -l .)
+if [ -n "$UNFORMATTED" ]; then
+    echo "❌ The following files need formatting:"
+    echo "$UNFORMATTED"
+    echo ""
+    echo "Run 'gofmt -s -w .' to fix formatting issues."
+    exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"

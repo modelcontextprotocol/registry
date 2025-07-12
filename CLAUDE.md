@@ -5,6 +5,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Overview
 MCP Registry is a community-driven registry service for Model Context Protocol (MCP) servers. It provides a centralized repository for discovering and managing MCP implementations.
 
+## Development Setup
+
+### Prerequisites
+- **Go 1.23.x** - The project requires this specific version (check with `go version`)
+  - Consider using a Go version manager like `g` or `gvm` if you work on multiple projects
+- **golangci-lint v1.61.0** - Install with:
+  ```bash
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
+  ```
+
+### Git Hooks (Optional)
+To run linting automatically before commits:
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Common Development Commands
 
 ### Build
@@ -46,15 +62,17 @@ export BEARER_TOKEN=your_github_token_here
 
 ### Lint
 ```bash
-# Install golangci-lint if needed
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
-
-# Run linting
+# Run linting (same as CI)
 golangci-lint run --timeout=5m
 
 # Check formatting
 gofmt -s -l .
+
+# Fix formatting issues
+gofmt -s -w .
 ```
+
+**Note**: The project uses golangci-lint v1.61.0 with 62 enabled linters. Always run linting locally before pushing to avoid CI failures.
 
 ## Architecture Overview
 
