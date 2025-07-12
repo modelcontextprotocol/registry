@@ -247,7 +247,6 @@ components:
         - type: object
           required:
             - type
-            - value_hint
           properties:
             type:
               type: string
@@ -261,6 +260,11 @@ components:
               type: boolean
               description: Whether the argument can be repeated multiple times in the command line.
               default: false
+          anyOf:
+            - required:
+                - value
+            - required:
+                - value_hint
 
     NamedArgument:
       description: A command-line `--flag={value}`.

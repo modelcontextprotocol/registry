@@ -196,8 +196,7 @@
         {
           "type": "object",
           "required": [
-            "type",
-            "value_hint"
+            "type"
           ],
           "properties": {
             "type": {
@@ -217,7 +216,19 @@
               "description": "Whether the argument can be repeated multiple times in the command line.",
               "default": false
             }
-          }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "value_hint"
+              ]
+            },
+            {
+              "required": [
+                "value"
+              ]
+            }
+          ]
         }
       ]
     },
