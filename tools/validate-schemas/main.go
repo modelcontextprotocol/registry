@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,6 +18,8 @@ import (
 )
 
 func main() {
+	log.SetFlags(0) // Remove timestamp from logs
+	
 	var rootCmd = &cobra.Command{
 		Use:   "validate-schemas",
 		Short: "Validate JSON schema files",
@@ -25,14 +28,13 @@ func main() {
 	}
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("Error: %v", err)
 	}
 }
 
-func runValidation(cmd *cobra.Command, args []string) error {
+func runValidation(_ *cobra.Command, _ []string) error {
 	basePath := filepath.Join("docs", "server-json")
-	
+
 	schemas := []struct {
 		name string
 		path string
@@ -47,15 +49,15 @@ func runValidation(cmd *cobra.Command, args []string) error {
 
 	allValid := true
 	validatedCount := 0
-	
+
 	for _, schemaFile := range schemas {
-		fmt.Printf("Validating %s...\n", schemaFile.name)
-		
+		log.Printf("Validating %s...", schemaFile.name)
+
 		if err := validateSchema(compiler, schemaFile.path); err != nil {
-			fmt.Printf("  ❌ Invalid: %v\n", err)
+			log.Printf("  ❌ Invalid: %v", err)
 			allValid = false
 		} else {
-			fmt.Printf("  ✅ Valid JSON Schema\n")
+			log.Printf("  ✅ Valid JSON Schema")
 			validatedCount++
 		}
 	}
@@ -69,7 +71,7 @@ func runValidation(cmd *cobra.Command, args []string) error {
 			expectedSchemaCount, validatedCount)
 	}
 
-	fmt.Printf("\nSuccessfully validated all %d schemas!\n", validatedCount)
+	log.Printf("\nSuccessfully validated all %d schemas!", validatedCount)
 	return nil
 }
 
@@ -91,9 +93,11 @@ func validateSchema(compiler *jsonschema.Compiler, path string) error {
 		if err != nil {
 			return fmt.Errorf("failed to read base schema: %w", err)
 		}
-		
+
 		// Add the base schema to the compiler with the expected URL
-		compiler.AddResource("https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json", bytes.NewReader(baseData))
+		if err := compiler.AddResource("https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json", bytes.NewReader(baseData)); err != nil {
+			return fmt.Errorf("failed to add base schema resource: %w", err)
+		}
 	}
 
 	if _, err := compiler.Compile(path); err != nil {
