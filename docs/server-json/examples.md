@@ -12,8 +12,7 @@
     "id": "abc123de-f456-7890-ghij-klmnopqrstuv"
   },
   "version_detail": {
-    "version": "1.0.2",
-    "release_date": "2023-06-15T10:30:00Z"
+    "version": "1.0.2"
   },
   "packages": [
     {
@@ -33,6 +32,39 @@
 }
 ```
 
+## Constant (fixed) arguments needed to start the MCP server
+
+Suppose your MCP server application requires a `mcp start` CLI arguments to start in MCP server mode. Express these as positional arguments like this:
+
+```json
+{
+  "name": "Knapcode.SampleMcpServer",
+  "description": "Sample NuGet MCP server for a random number and random weather",
+  "version_detail": {
+    "version": "0.4.0-beta"
+  },
+  "packages": [
+    {
+      "registry_name": "nuget",
+      "name": "Knapcode.SampleMcpServer",
+      "version": "0.4.0-beta",
+      "package_arguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        },
+        {
+          "type": "positional",
+          "value": "start"
+        }
+      ]
+    }
+  ]
+}
+```
+
+This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcpServer@0.4.0-beta -- mcp start` instead of the default `dnx Knapcode.SampleMcpServer@0.4.0-beta` (when no `package_arguments` are provided).
+
 ## Filesystem Server with Multiple Packages
 
 ```json
@@ -45,8 +77,7 @@
     "id": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
   },
   "version_detail": {
-    "version": "1.0.2",
-    "release_date": "2023-06-15T10:30:00Z"
+    "version": "1.0.2"
   },
   "packages": [
     {
@@ -128,8 +159,7 @@
     "id": "xyz789ab-cdef-0123-4567-890ghijklmno"
   },
   "version_detail": {
-    "version": "2.0.0",
-    "release_date": "2024-01-20T14:30:00Z"
+    "version": "2.0.0"
   },
   "remotes": [
     {
@@ -152,8 +182,7 @@
     "id": "def456gh-ijkl-7890-mnop-qrstuvwxyz12"
   },
   "version_detail": {
-    "version": "0.5.0",
-    "release_date": "2024-02-10T09:15:00Z"
+    "version": "0.5.0"
   },
   "packages": [
     {
@@ -189,11 +218,11 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "description": "Sample NuGet MCP server for a random number and random weather",
   "repository": {
     "url": "https://github.com/joelverhagen/Knapcode.SampleMcpServer",
-    "source": "github"
+    "source": "github",
+    "id": "def456gh-ijkl-7890-mnop-qrstuvwxyz13"
   },
   "version_detail": {
-    "version": "0.3.0",
-    "release_date": "2025-07-02T18:54:28.00Z"
+    "version": "0.3.0-beta"
   },
   "packages": [
     {
@@ -226,8 +255,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "id": "ghi789jk-lmno-1234-pqrs-tuvwxyz56789"
   },
   "version_detail": {
-    "version": "3.1.0",
-    "release_date": "2024-03-05T16:45:00Z"
+    "version": "3.1.0"
   },
   "packages": [
     {
@@ -313,8 +341,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "id": "klm012no-pqrs-3456-tuvw-xyz789abcdef"
   },
   "version_detail": {
-    "version": "1.5.0",
-    "release_date": "2024-04-01T12:00:00Z"
+    "version": "1.5.0"
   },
   "packages": [
     {
