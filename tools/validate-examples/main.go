@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -28,19 +27,12 @@ const (
 func main() {
 	log.SetFlags(0) // Remove timestamp from logs
 
-	var rootCmd = &cobra.Command{
-		Use:   "validate-examples",
-		Short: "Validate examples in examples.md",
-		Long:  "Validates that all JSON examples in examples.md conform to both schema.json and registry-schema.json",
-		RunE:  runValidation,
-	}
-
-	if err := rootCmd.Execute(); err != nil {
+	if err := runValidation(); err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }
 
-func runValidation(_ *cobra.Command, _ []string) error {
+func runValidation() error {
 	basePath := filepath.Join("docs", "server-json")
 
 	examplesPath := filepath.Join(basePath, "examples.md")

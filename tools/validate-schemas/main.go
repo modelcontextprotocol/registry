@@ -14,25 +14,17 @@ import (
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
-	"github.com/spf13/cobra"
 )
 
 func main() {
 	log.SetFlags(0) // Remove timestamp from logs
 
-	var rootCmd = &cobra.Command{
-		Use:   "validate-schemas",
-		Short: "Validate JSON schema files",
-		Long:  "Validates that schema.json and registry-schema.json are valid JSON Schema documents",
-		RunE:  runValidation,
-	}
-
-	if err := rootCmd.Execute(); err != nil {
+	if err := runValidation(); err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }
 
-func runValidation(_ *cobra.Command, _ []string) error {
+func runValidation() error {
 	basePath := filepath.Join("docs", "server-json")
 
 	schemas := []struct {
