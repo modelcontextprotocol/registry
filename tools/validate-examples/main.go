@@ -63,7 +63,6 @@ func runValidation() error {
 		return fmt.Errorf("failed to compile registry-schema.json: %w", err)
 	}
 
-	allValid := true
 	validatedCount := 0
 	for i, example := range examples {
 		log.Printf("Example %d:", i+1)
@@ -71,7 +70,6 @@ func runValidation() error {
 		var data any
 		if err := json.Unmarshal([]byte(example.content), &data); err != nil {
 			log.Printf("  ❌ Invalid JSON: %v", err)
-			allValid = false
 			continue
 		}
 
@@ -81,7 +79,6 @@ func runValidation() error {
 		if err := baseSchema.Validate(data); err != nil {
 			log.Printf("  Validating against schema.json: ❌")
 			log.Printf("    Error: %v", err)
-			allValid = false
 		} else {
 			log.Printf("  Validating against schema.json: ✅")
 			baseValid = true
@@ -90,7 +87,6 @@ func runValidation() error {
 		if err := registrySchema.Validate(data); err != nil {
 			log.Printf("  Validating against registry-schema.json: ❌")
 			log.Printf("    Error: %v", err)
-			allValid = false
 		} else {
 			log.Printf("  Validating against registry-schema.json: ✅")
 			registryValid = true
@@ -104,12 +100,8 @@ func runValidation() error {
 		log.Println()
 	}
 
-	if !allValid {
-		return fmt.Errorf("one or more examples failed validation")
-	}
-
 	if validatedCount != expectedExampleCount {
-		return fmt.Errorf("validation count mismatch: expected to validate %d examples but only %d passed both validations",
+		return fmt.Errorf("validation failed: expected %d examples to pass both validations but only %d did",
 			expectedExampleCount, validatedCount)
 	}
 

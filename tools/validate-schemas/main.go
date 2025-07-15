@@ -39,7 +39,6 @@ func runValidation() error {
 	compiler := jsonschema.NewCompiler()
 	compiler.Draft = jsonschema.Draft7
 
-	allValid := true
 	validatedCount := 0
 
 	for _, schemaFile := range schemas {
@@ -47,19 +46,14 @@ func runValidation() error {
 
 		if err := validateSchema(compiler, schemaFile.path); err != nil {
 			log.Printf("  ❌ Invalid: %v", err)
-			allValid = false
 		} else {
 			log.Printf("  ✅ Valid JSON Schema")
 			validatedCount++
 		}
 	}
 
-	if !allValid {
-		return fmt.Errorf("one or more schemas are invalid")
-	}
-
 	if validatedCount != expectedSchemaCount {
-		return fmt.Errorf("validation count mismatch: expected to validate %d schemas but only %d passed",
+		return fmt.Errorf("validation failed: expected to validate %d schemas but only %d passed",
 			expectedSchemaCount, validatedCount)
 	}
 
