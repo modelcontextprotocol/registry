@@ -126,24 +126,21 @@ func extractExamples(path string) ([]example, error) {
 	// Regex to match JSON code blocks in markdown
 	// Captures everything between ```json and ```
 	re := regexp.MustCompile("(?s)```json\n(.*?)\n```")
-	matches := re.FindAllStringSubmatch(content, -1)
+	matches := re.FindAllStringSubmatchIndex(content, -1)
 
 	var examples []example
 	for _, match := range matches {
-		if len(match) > 1 {
-			// Find line number by counting newlines before this match
-			index := strings.Index(content, match[0])
-			if index == -1 {
-				// This should never happen since we found the match, but be safe
-				continue
-			}
-			beforeMatch := content[:index]
-			lineNumber := strings.Count(beforeMatch, "\n") + 2 // +2 for ```json line and 1-based indexing
-
-			examples = append(examples, example{
-				content: match[1],
-				line:    lineNumber,
-			})
+		if len(match) < 4 {
+			// should never happen
+			return nil, fmt.Errorf("invalid match - expected at least 4 indices but got %d", len(match))
+		}
+		start, end := match[2], match[3]
+		// line numbers start at 1
+		line := 1 + strings.Count(content[:start], "\n")
+		examples = append(examples, example{
+			content: content[start:end],
+			line:    line,
+		})
 		}
 	}
 
