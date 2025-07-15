@@ -141,7 +141,6 @@ func extractExamples(path string) ([]example, error) {
 			content: content[start:end],
 			line:    line,
 		})
-		}
 	}
 
 	return examples, nil
