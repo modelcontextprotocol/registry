@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
@@ -121,32 +122,23 @@ func extractExamples(path string) ([]example, error) {
 	}
 
 	content := string(data)
-	lines := strings.Split(content, "\n")
+
+	// Regex to match JSON code blocks in markdown
+	// Captures everything between ```json and ```
+	re := regexp.MustCompile("(?s)```json\n(.*?)\n```")
+	matches := re.FindAllStringSubmatch(content, -1)
 
 	var examples []example
-	inCodeBlock := false
-	var currentExample strings.Builder
-	var startLine int
+	for _, match := range matches {
+		if len(match) > 1 {
+			// Find line number by counting newlines before this match
+			beforeMatch := content[:strings.Index(content, match[0])]
+			lineNumber := strings.Count(beforeMatch, "\n") + 2 // +2 for ```json line and 1-based indexing
 
-	for i, line := range lines {
-		switch {
-		case strings.HasPrefix(line, "```json"):
-			inCodeBlock = true
-			startLine = i + 1
-			currentExample.Reset()
-		case inCodeBlock && strings.HasPrefix(line, "```"):
-			inCodeBlock = false
-			if currentExample.Len() > 0 {
-				examples = append(examples, example{
-					content: currentExample.String(),
-					line:    startLine,
-				})
-			}
-		case inCodeBlock:
-			if currentExample.Len() > 0 {
-				currentExample.WriteString("\n")
-			}
-			currentExample.WriteString(line)
+			examples = append(examples, example{
+				content: match[1],
+				line:    lineNumber,
+			})
 		}
 	}
 
