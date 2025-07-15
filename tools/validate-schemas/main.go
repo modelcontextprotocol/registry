@@ -36,15 +36,12 @@ func runValidation() error {
 	}
 
 	expectedSchemaCount := len(schemas)
-	compiler := jsonschema.NewCompiler()
-	compiler.Draft = jsonschema.Draft7
-
 	validatedCount := 0
 
 	for _, schemaFile := range schemas {
 		log.Printf("Validating %s...", schemaFile.name)
 
-		if err := validateSchema(compiler, schemaFile.path); err != nil {
+		if err := validateSchema(schemaFile.path); err != nil {
 			log.Printf("  ❌ Invalid: %v", err)
 		} else {
 			log.Printf("  ✅ Valid JSON Schema")
@@ -61,7 +58,7 @@ func runValidation() error {
 	return nil
 }
 
-func validateSchema(compiler *jsonschema.Compiler, path string) error {
+func validateSchema(path string) error {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
@@ -71,6 +68,10 @@ func validateSchema(compiler *jsonschema.Compiler, path string) error {
 	if err := json.Unmarshal(data, &schemaData); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
+
+	// Create compiler for this validation
+	compiler := jsonschema.NewCompiler()
+	compiler.Draft = jsonschema.Draft7
 
 	// For registry-schema.json, we need to register the base schema it references
 	if strings.Contains(path, "registry-schema.json") {
