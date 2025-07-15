@@ -75,7 +75,7 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 // List retrieves MCPRegistry entries with optional filtering and pagination
 func (db *MongoDB) List(
 	ctx context.Context,
-	filter map[string]interface{},
+	filter map[string]any,
 	cursor string,
 	limit int,
 ) ([]*model.Server, string, error) {

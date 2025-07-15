@@ -290,7 +290,7 @@ func createCommand() {
 // publishToRegistry sends the MCP server details to the registry with authentication
 func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	// Parse the MCP JSON data
-	var mcpDetails map[string]interface{}
+	var mcpDetails map[string]any
 	err := json.Unmarshal(mcpData, &mcpDetails)
 	if err != nil {
 		return fmt.Errorf("error parsing server.json file: %w", err)

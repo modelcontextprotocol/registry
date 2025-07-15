@@ -76,7 +76,7 @@ func runValidation(_ *cobra.Command, _ []string) error {
 	for i, example := range examples {
 		log.Printf("Example %d:", i+1)
 
-		var data interface{}
+		var data any
 		if err := json.Unmarshal([]byte(example.content), &data); err != nil {
 			log.Printf("  ❌ Invalid JSON: %v", err)
 			allValid = false

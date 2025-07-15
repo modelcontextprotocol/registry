@@ -90,7 +90,7 @@ func compareSemanticVersions(version1, version2 string) int {
 //gocognit:ignore
 func (db *MemoryDB) List(
 	ctx context.Context,
-	filter map[string]interface{},
+	filter map[string]any,
 	cursor string,
 	limit int,
 ) ([]*model.Server, string, error) {

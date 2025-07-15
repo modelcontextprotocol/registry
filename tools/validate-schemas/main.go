@@ -81,7 +81,7 @@ func validateSchema(compiler *jsonschema.Compiler, path string) error {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
-	var schemaData interface{}
+	var schemaData any
 	if err := json.Unmarshal(data, &schemaData); err != nil {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
