@@ -69,7 +69,6 @@ func validateSchema(path string) error {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
 
-	// Create compiler for this validation
 	compiler := jsonschema.NewCompiler()
 	compiler.Draft = jsonschema.Draft7
 

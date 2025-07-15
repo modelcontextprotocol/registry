@@ -132,7 +132,12 @@ func extractExamples(path string) ([]example, error) {
 	for _, match := range matches {
 		if len(match) > 1 {
 			// Find line number by counting newlines before this match
-			beforeMatch := content[:strings.Index(content, match[0])]
+			index := strings.Index(content, match[0])
+			if index == -1 {
+				// This should never happen since we found the match, but be safe
+				continue
+			}
+			beforeMatch := content[:index]
 			lineNumber := strings.Count(beforeMatch, "\n") + 2 // +2 for ```json line and 1-based indexing
 
 			examples = append(examples, example{
