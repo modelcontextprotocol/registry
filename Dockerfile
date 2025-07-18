@@ -1,7 +1,8 @@
 FROM golang:1.23-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN go build -o /build/registry ./cmd/registry
+ARG GO_BUILD_TAGS
+RUN go build ${GO_BUILD_TAGS:+-tags="$GO_BUILD_TAGS"} -o /build/registry ./cmd/registry
 
 FROM alpine:latest
 WORKDIR /app
