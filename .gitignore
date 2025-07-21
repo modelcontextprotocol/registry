@@ -9,3 +9,5 @@ validate-examples
 validate-schemas
 
 registry
+
+data/seed.json
