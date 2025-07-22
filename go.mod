@@ -5,6 +5,7 @@ go 1.23.0
 require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/google/uuid v1.6.0
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/http-swagger v1.3.4

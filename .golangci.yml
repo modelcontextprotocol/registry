@@ -71,6 +71,11 @@ linters:
     - whitespace
 
 linters-settings:
+  revive:
+    rules:
+      - name: use-any
+        disabled: false
+        severity: error
   cyclop:
     max-complexity: 50
   funlen:
