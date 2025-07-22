@@ -12,9 +12,10 @@ spec:
       labels:
         app: registry
     spec:
+      affinity: {{- toYaml .Values.registry.affinity | nindent 8 }}
       containers:
         - name: registry
-          image: {{ required "Missing required value: registry.image" .Values.registry.image }}
+          image: "{{ required "Missing required value: registry.image" .Values.registry.image }}:{{ .Values.registry.tag | default .Chart.AppVersion }}"
           ports:
             - containerPort: {{ .Values.registry.port }}
           env:
@@ -22,3 +23,19 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ required "Missing required value: registry.github_secret_name" .Values.registry.github_secret_name }}
+          resources:
+            requests:
+              cpu: {{ .Values.registry.resources.requests.cpu }}
+              memory: {{ .Values.registry.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.registry.resources.limits.cpu }}
+              memory: {{ .Values.registry.resources.limits.memory }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL

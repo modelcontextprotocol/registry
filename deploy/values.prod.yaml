@@ -1,0 +1,24 @@
+registry:
+  db_port: 27017
+  env:
+    - name: MCP_REGISTRY_DATABASE_URL
+      value: mongodb://mcp-db:27017
+    - name: MCP_REGISTRY_ENVIRONMENT
+      value: "prod"
+  resources:
+    requests:
+      cpu:  "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+db:
+  mongo:
+    resources:
+      requests:
+        cpu:  "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"

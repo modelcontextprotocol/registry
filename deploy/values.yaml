@@ -1,12 +1,44 @@
 registry:
+  image:
+  tag:
   port: 8080
   externalPort: 80
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: registry
+          topologyKey: "kubernetes.io/hostname"
+  resources:
+    requests:
+      cpu:  "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
 
 # DB component is run on as a stateful-set
 db:
-  storage_class_name: managed-csi
+  storage_class_name:       # Ex: storage_class_name: managed-csi
   storage_request_size: 5Gi
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: mcp-db
+          topologyKey: "kubernetes.io/hostname"
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 50
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: mcp-db
+            topologyKey: "topology.kubernetes.io/zone"
   mongo:
+    image:
+    tag:
     port_name: mongo
     port: 27017
     env:
@@ -14,3 +46,10 @@ db:
       value: "1000"
     - name: PGID
       value: "1000"
+    resources:
+      requests:
+        cpu:  "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
