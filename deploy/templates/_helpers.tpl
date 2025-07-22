@@ -8,6 +8,9 @@ kind: StatefulSet
 metadata:
   name: db-stateful-set
 spec:
+  replicas: {{ .Values.db.replicaCount }}
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: mcp-db
@@ -25,6 +28,13 @@ spec:
       containers:
       - name: db-server
         image: "{{ required "Missing required value: db.mongo.image" .Values.db.mongo.image }}:{{ .Values.db.mongo.tag | default .Chart.AppVersion }}"
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.db.mongo.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 2
+          failureThreshold: 3
         ports:
         - containerPort: {{ .Values.db.mongo.port }}
           name: {{ .Values.db.mongo.port_name }}

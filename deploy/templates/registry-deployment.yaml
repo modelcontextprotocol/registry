@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: registry
 spec:
-  replicas: 1
+  replicas: {{ .Values.registry.replicaCount }}
   selector:
     matchLabels:
       app: registry
@@ -18,6 +18,22 @@ spec:
           image: "{{ required "Missing required value: registry.image" .Values.registry.image }}:{{ .Values.registry.tag | default .Chart.AppVersion }}"
           ports:
             - containerPort: {{ .Values.registry.port }}
+          readinessProbe:
+            httpGet:
+              path: /v0/health
+              port: {{ .Values.registry.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            failureThreshold: 3
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /v0/health
+              port: {{ .Values.registry.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
+            timeoutSeconds: 2
           env:
           {{- toYaml .Values.registry.env | nindent 12 }}
           envFrom:

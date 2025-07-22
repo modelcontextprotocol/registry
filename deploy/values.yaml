@@ -1,4 +1,5 @@
 registry:
+  replicaCount: 1
   image:
   tag:
   port: 8080
@@ -20,6 +21,7 @@ registry:
 
 # DB component is run on as a stateful-set
 db:
+  replicaCount: 1
   storage_class_name:       # Ex: storage_class_name: managed-csi
   storage_request_size: 5Gi
   affinity:
