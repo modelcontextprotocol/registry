@@ -9,20 +9,23 @@ To deploy this application, you'll need the following:
 
 ## `deploy.sh` script
 
-This script can be used to "install" the application w/ the cluster in your current context.
+This script can be used to "install" the mcp-registry application w/ the cluster in your current context.
+
+The mcp registry will be available immediately after the deployment completes.
 
 > 
-> Tip: To get see the cluster run `kubectl config current-context`
+> Tip: To see the current cluster run `kubectl config current-context`
 > 
 
 An example of running the full command:
 
 ```bash
 cd ./deploy
-./deploy --namespace my-mcp-registry \
+./deploy.sh --namespace my-mcp-registry \
     --github-secret-name mcp-github-org \
-    --registry-image example.io/mcp-registry \
-    --db-image example.io/mongo
+    --registry-image example.io/registry \
+    --db-image docker.io/library/mongo \
+    --db-image-tag 7.0.22
 ```
 
 `--namespace`
@@ -56,6 +59,8 @@ There are various ways to create this secret, but I found the most convenient wa
 `--registry-image`
 This should be the host/repo image reference of the mcp-registry application built from the Dockerfile at the root of this repository, ex: example.io/registry
 
+Note: In order for K8's to deploy the registry container, it must have access to the registry image. This means the Dockerfile in this repo must be built and hosted in a registry accessible to the cluster.
+
 `--registry-image-tag`
 Image tag of the registry image to use. By default the value in .Chart.AppVersion will be used.
 
@@ -79,10 +84,11 @@ To upgrade a deployment, provide the name of the deployment w/ the `--upgrade` f
 Ex:
 ```sh
 cd ./deploy
-./deploy --namespace my-mcp-registry \
+./deploy.sh --namespace my-mcp-registry \
     --github-secret-name mcp-github-org \
-    --registry-image example.io/mcp-registry \
-    --db-image example.io/mongo \
+    --registry-image example.io/registry \
+    --db-image docker.io/library/mongo \
+    --db-image-tag 7.0.22 \
     --upgrade chart-12345
 ```
 
