@@ -222,13 +222,13 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "id": "example-nuget-id-0000-1111-222222222222"
   },
   "version_detail": {
-    "version": "0.3.0-beta"
+    "version": "0.5.0"
   },
   "packages": [
     {
       "registry_name": "nuget",
       "name": "Knapcode.SampleMcpServer",
-      "version": "0.3.0-beta",
+      "version": "0.5.0",
       "runtime_hint": "dnx",
       "environment_variables": [
         {
