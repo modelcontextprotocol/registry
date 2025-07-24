@@ -50,7 +50,7 @@ go run cmd/registry/main.go
 go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
 
 # Integration tests
-./integrationtests/run_tests.sh
+./tests/integration/run.sh
 
 # Test API endpoints
 ./scripts/test_endpoints.sh

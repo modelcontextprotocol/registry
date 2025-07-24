@@ -117,10 +117,6 @@ issues:
     - path: docs/
       linters:
         - lll
-    # Ignore magic numbers in test files
-    - path: integrationtests/
-      linters:
-        - mnd
     # Allow local replacement directives in go.mod
     - path: go\.mod
       linters:

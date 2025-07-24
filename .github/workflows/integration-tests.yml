@@ -48,27 +48,5 @@ jobs:
     - name: Run integration tests
       run: |
         # Run integration tests using the existing script
-        chmod +x ./integrationtests/run_tests.sh
-        ./integrationtests/run_tests.sh
-        
-    - name: Run integration tests with coverage
-      run: |
-        # Also run integration tests with Go test for coverage
-        go test -v -race -coverprofile=integration-coverage.out -covermode=atomic ./integrationtests/...
-        
-    - name: Generate integration test coverage report
-      run: go tool cover -html=integration-coverage.out -o integration-coverage.html
-      
-    - name: Upload integration coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./integration-coverage.out
-        flags: integrationtests
-        name: codecov-integration
-        fail_ci_if_error: false
-        
-    - name: Upload integration coverage artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: integration-coverage-report
-        path: integration-coverage.html
+        chmod +x ./tests/integration/run.sh
+        ./tests/integration/run.sh
