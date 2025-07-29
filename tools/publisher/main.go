@@ -263,6 +263,16 @@ func createCommand() error {
 		packageVersion = version
 	}
 
+	// Set runtime hint based on registry name if not explicitly provided
+	if runtimeHint == "" {
+		switch registryName {
+		case "docker":
+			runtimeHint = "docker"
+		case "npm":
+			runtimeHint = "npx"
+		}
+	}
+
 	// Create server structure
 	server := createServerStructure(name, description, version, repoURL, repoSource,
 		registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs)
