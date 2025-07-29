@@ -6,15 +6,16 @@ import (
 
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
 
 // New creates a new router with all API versions registered
-func New(cfg *config.Config, registry service.RegistryService, authService auth.Service) *http.ServeMux {
+func New(cfg *config.Config, registry service.RegistryService, authService auth.Service, db database.Database) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Register routes for all API versions
-	RegisterV0Routes(mux, cfg, registry, authService)
+	RegisterV0Routes(mux, cfg, registry, authService, db)
 
 	return mux
 }

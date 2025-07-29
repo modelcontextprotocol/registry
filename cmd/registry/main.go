@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/api"
+	"github.com/modelcontextprotocol/registry/internal/appinfo"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
@@ -41,6 +42,7 @@ func main() {
 	)
 
 	// Initialize configuration
+	appinfo.Initialize()
 	cfg := config.NewConfig()
 
 	// Initialize services based on environment
@@ -96,7 +98,7 @@ func main() {
 	authService := auth.NewAuthService(cfg)
 
 	// Initialize HTTP server
-	server := api.NewServer(cfg, registryService, authService)
+	server := api.NewServer(cfg, registryService, authService, db)
 
 	// Start server in a goroutine so it doesn't block signal handling
 	go func() {

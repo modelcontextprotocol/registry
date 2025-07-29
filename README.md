@@ -125,7 +125,19 @@ GET /v0/health
 Returns the health status of the service:
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "github_client_id": "client_id_here",
+  "database": {
+    "status": "connected",
+    "type": "mongodb",
+    "collection_count": 1
+  },
+  "uptime": "2h30m15s",
+  "version": "v0.1.0",
+  "memory": {
+    "alloc": "2.1 MB",
+    "sys": "8.5 MB"
+  }
 }
 ```
 

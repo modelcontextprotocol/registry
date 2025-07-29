@@ -292,6 +292,7 @@ func (db *MongoDB) Close() error {
 // Connection returns information about the database connection
 func (db *MongoDB) Connection() *ConnectionInfo {
 	isConnected := false
+	collectionCount := 0
 	// Check if the client is connected
 	if db.client != nil {
 		// A quick ping with 1 second timeout to verify connection
@@ -299,11 +300,20 @@ func (db *MongoDB) Connection() *ConnectionInfo {
 		defer cancel()
 		err := db.client.Ping(ctx, nil)
 		isConnected = (err == nil)
+
+		if isConnected {
+			names, err := db.client.ListDatabaseNames(context.Background(), bson.M{})
+			if err != nil {
+				log.Printf("Error listing database names: %v", err)
+			}
+			collectionCount = len(names)
+		}
 	}
 
 	return &ConnectionInfo{
-		Type:        ConnectionTypeMongoDB,
-		IsConnected: isConnected,
-		Raw:         db.client,
+		Type:            ConnectionTypeMongoDB,
+		IsConnected:     isConnected,
+		CollectionCount: collectionCount,
+		Raw:             db.client,
 	}
 }

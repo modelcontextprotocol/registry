@@ -26,6 +26,8 @@ type Database interface {
 	Publish(ctx context.Context, serverDetail *model.ServerDetail) error
 	// ImportSeed imports initial data from a seed file
 	ImportSeed(ctx context.Context, seedFilePath string) error
+	// Connection returns information about the database connection
+	Connection() *ConnectionInfo
 	// Close closes the database connection
 	Close() error
 }
@@ -46,6 +48,8 @@ type ConnectionInfo struct {
 	Type ConnectionType
 	// IsConnected indicates whether the database is currently connected
 	IsConnected bool
+	// CollectionCount indicates the number of collections in the database
+	CollectionCount int
 	// Raw provides access to the underlying connection object, which will vary by implementation
 	// For MongoDB, this will be *mongo.Client
 	// For MemoryDB, this will be map[string]*model.MCPRegistry

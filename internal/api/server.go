@@ -9,6 +9,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
 
@@ -22,9 +23,9 @@ type Server struct {
 }
 
 // NewServer creates a new HTTP server
-func NewServer(cfg *config.Config, registryService service.RegistryService, authService auth.Service) *Server {
+func NewServer(cfg *config.Config, registryService service.RegistryService, authService auth.Service, db database.Database) *Server {
 	// Create router with all API versions registered
-	mux := router.New(cfg, registryService, authService)
+	mux := router.New(cfg, registryService, authService, db)
 
 	server := &Server{
 		config:      cfg,

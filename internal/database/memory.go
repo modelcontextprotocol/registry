@@ -300,9 +300,15 @@ func (db *MemoryDB) Close() error {
 
 // Connection returns information about the database connection
 func (db *MemoryDB) Connection() *ConnectionInfo {
+	// Use read lock to protect concurrent access to the map
+	db.mu.RLock()
+	collectionCount := len(db.entries)
+	db.mu.RUnlock()
+
 	return &ConnectionInfo{
-		Type:        ConnectionTypeMemory,
-		IsConnected: true, // Memory DB is always connected
-		Raw:         db.entries,
+		Type:            ConnectionTypeMemory,
+		IsConnected:     true, // Memory DB is always connected
+		CollectionCount: collectionCount,
+		Raw:             db.entries,
 	}
 }

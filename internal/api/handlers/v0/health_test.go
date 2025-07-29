@@ -9,22 +9,62 @@ import (
 
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 )
+
+// Mock database for testing
+// Supports passing dbType
+type mockDatabase struct {
+	dbType string
+}
+
+// Implement List method to satisfy database.Database interface
+func (m *mockDatabase) List(ctx context.Context, filter map[string]any, cursor string, limit int) ([]*model.Server, string, error) {
+	return []*model.Server{}, "", nil
+}
+
+func (m *mockDatabase) Connection() *database.ConnectionInfo {
+	return &database.ConnectionInfo{
+		IsConnected:     true,
+		Type:            database.ConnectionType(m.dbType),
+		CollectionCount: 0,
+	}
+}
+
+func (m *mockDatabase) GetByID(ctx context.Context, id string) (*model.ServerDetail, error) {
+	return nil, database.ErrNotFound
+}
+
+// Implement Publish method to satisfy database.Database interface
+func (m *mockDatabase) Publish(ctx context.Context, serverDetail *model.ServerDetail) error {
+	return nil
+}
+
+func (m *mockDatabase) ImportSeed(ctx context.Context, seedFilePath string) error {
+	return nil
+}
+
+func (m *mockDatabase) Close() error {
+	return nil
+}
 
 func TestHealthHandler(t *testing.T) {
 	// Test cases
 	testCases := []struct {
 		name           string
 		config         *config.Config
+		dbType         string
 		expectedStatus int
 		expectedBody   v0.HealthResponse
 	}{
 		{
-			name: "returns health status with github client id",
+			name: "returns health status with github client id (memory)",
 			config: &config.Config{
 				GithubClientID: "test-github-client-id",
 			},
+			dbType:         "memory",
 			expectedStatus: http.StatusOK,
 			expectedBody: v0.HealthResponse{
 				Status:         "ok",
@@ -32,10 +72,35 @@ func TestHealthHandler(t *testing.T) {
 			},
 		},
 		{
-			name: "works with empty github client id",
+			name: "returns health status with github client id (mongo)",
+			config: &config.Config{
+				GithubClientID: "test-github-client-id",
+			},
+			dbType:         "mongo",
+			expectedStatus: http.StatusOK,
+			expectedBody: v0.HealthResponse{
+				Status:         "ok",
+				GitHubClientID: "test-github-client-id",
+			},
+		},
+		{
+			name: "works with empty github client id (memory)",
 			config: &config.Config{
 				GithubClientID: "",
 			},
+			dbType:         "memory",
+			expectedStatus: http.StatusOK,
+			expectedBody: v0.HealthResponse{
+				Status:         "ok",
+				GitHubClientID: "",
+			},
+		},
+		{
+			name: "works with empty github client id (mongo)",
+			config: &config.Config{
+				GithubClientID: "",
+			},
+			dbType:         "mongo",
 			expectedStatus: http.StatusOK,
 			expectedBody: v0.HealthResponse{
 				Status:         "ok",
@@ -46,8 +111,8 @@ func TestHealthHandler(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Create handler with the test config
-			handler := v0.HealthHandler(tc.config)
+			// Create handler with the test config and mock database
+			handler := v0.HealthHandler(tc.config, &mockDatabase{dbType: tc.dbType})
 
 			// Create request
 			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/health", nil)
@@ -73,19 +138,20 @@ func TestHealthHandler(t *testing.T) {
 			assert.NoError(t, err)
 
 			// Check the response body
-			assert.Equal(t, tc.expectedBody, resp)
+			assert.Equal(t, tc.expectedBody.Status, resp.Status)
+			assert.Equal(t, tc.expectedBody.GitHubClientID, resp.GitHubClientID)
 		})
 	}
 }
 
-// TestHealthHandlerIntegration tests the handler with actual HTTP requests
+// Integration test using memory database type
 func TestHealthHandlerIntegration(t *testing.T) {
 	// Create test server
 	cfg := &config.Config{
 		GithubClientID: "integration-test-client-id",
 	}
 
-	server := httptest.NewServer(v0.HealthHandler(cfg))
+	server := httptest.NewServer(v0.HealthHandler(cfg, &mockDatabase{dbType: "memory"}))
 	defer server.Close()
 
 	// Send request to the test server
@@ -118,5 +184,6 @@ func TestHealthHandlerIntegration(t *testing.T) {
 		Status:         "ok",
 		GitHubClientID: "integration-test-client-id",
 	}
-	assert.Equal(t, expectedResp, healthResp)
+	assert.Equal(t, expectedResp.Status, healthResp.Status)
+	assert.Equal(t, expectedResp.GitHubClientID, healthResp.GitHubClientID)
 }
