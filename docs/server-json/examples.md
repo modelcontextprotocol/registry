@@ -6,6 +6,7 @@
 {
   "name": "io.modelcontextprotocol/brave-search",
   "description": "MCP server for Brave Search API integration",
+  "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -71,6 +72,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 {
   "name": "io.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
+  "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -382,6 +384,39 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     {
       "transport_type": "streamable",
       "url": "https://hybrid-mcp.example.com/stream"
+    }
+  ]
+}
+```
+
+## Deprecated Server Example
+
+```json
+{
+  "name": "io.legacy/old-weather-server",
+  "description": "Legacy weather server - DEPRECATED: Use weather-v2 instead for new projects",
+  "status": "deprecated",
+  "repository": {
+    "url": "https://github.com/example/old-weather",
+    "source": "github",
+    "id": "legacy-abc123-def456-789012-345678-901234567890"
+  },
+  "version_detail": {
+    "version": "0.9.5"
+  },
+  "packages": [
+    {
+      "registry_name": "npm",
+      "name": "@legacy/old-weather-server",
+      "version": "0.9.5",
+      "environment_variables": [
+        {
+          "name": "WEATHER_API_KEY",
+          "description": "Weather API key",
+          "is_required": true,
+          "is_secret": true
+        }
+      ]
     }
   ]
 }

@@ -60,6 +60,12 @@
           "description": "Human-readable description of the server's functionality",
           "example": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
         },
+        "status": {
+          "type": "string",
+          "enum": ["active", "deprecated"],
+          "default": "active",
+          "description": "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage."
+        },
         "repository": {
           "$ref": "#/$defs/Repository"
         },
