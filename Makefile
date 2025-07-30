@@ -1,4 +1,4 @@
-.PHONY: help build test lint lint-fix validate validate-schemas validate-examples integration-test check dev clean docker publisher coverage
+.PHONY: help build test lint lint-fix validate validate-schemas validate-examples integration-test check dev-local dev-compose clean docker publisher coverage
 
 # Default target
 help: ## Show this help message
@@ -48,10 +48,10 @@ lint-fix: ## Run linter with auto-fix (includes formatting)
 check: lint validate test ## Run all checks (lint, validate, test)
 
 pre-commit: check integration-test ## Run all pre-commit checks
-	@echo "✅ All pre-commit checks passed!"
+	@echo "All pre-commit checks passed!"
 
 # Development targets
-dev: ## Start development environment with Docker Compose
+dev-compose: ## Start development environment with Docker Compose
 	docker compose up
 
 dev-local: ## Run registry locally (requires MongoDB)

@@ -39,8 +39,11 @@ For development:
 The easiest way to get the registry running is to use `docker compose`. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
 
 ```bash
+# Build the Docker image
+make docker
+
 # Run the registry and MongoDB with docker compose
-docker compose up --build
+make dev-compose
 ```
 
 This will start the MCP Registry service and MongoDB with Docker, exposing it on port 8080.
@@ -51,7 +54,7 @@ If you prefer to run the service locally without Docker, you can build and run i
 
 ```bash
 # Build a registry executable
-go build ./cmd/registry
+make build
 ```
 This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
 
@@ -59,19 +62,60 @@ By default, the service will run on `http://localhost:8080`.
 
 ## Development
 
+### Available Make Targets
+
+To see all available make targets:
+
+```bash
+make help
+```
+
+Key development commands:
+
+```bash
+# Build targets
+make build          # Build the registry application
+make publisher      # Build the publisher tool
+make docker         # Build Docker image
+
+# Development
+make dev-compose   # Start development environment with Docker Compose
+make dev-local     # Run registry locally (requires MongoDB)
+
+# Testing
+make test          # Run unit tests with coverage
+make integration-test  # Run integration tests
+make test-endpoints    # Test API endpoints (requires running server)
+make test-publish     # Test publish endpoint (requires BEARER_TOKEN)
+
+# Code quality
+make lint          # Run linter (same as CI)
+make lint-fix      # Run linter with auto-fix
+
+# Validation
+make validate-schemas   # Validate JSON schemas
+make validate-examples  # Validate examples against schemas
+make validate          # Run all validation checks
+
+# Combined workflows
+make check         # Run all checks (lint, validate, test)
+make pre-commit    # Run all pre-commit checks (includes integration tests)
+
+# Utilities
+make coverage      # Generate test coverage report
+make clean         # Clean build artifacts and coverage files
+```
+
 ### Linting
 
 The project uses golangci-lint with extensive checks. Always run linting before pushing:
 
 ```bash
 # Run all linters (same as CI)
-golangci-lint run --timeout=5m
+make lint
 
-# Check formatting
-gofmt -s -l .
-
-# Fix formatting
-gofmt -s -w .
+# Run linter with auto-fix
+make lint-fix
 ```
 
 ### Git Hooks (Optional)
@@ -333,17 +377,65 @@ The service can be configured using environment variables:
 
 ## Testing
 
-Run the test script to validate API endpoints:
+### Unit Tests
 
 ```bash
-./scripts/test_endpoints.sh
+# Run unit tests with coverage
+make test
+
+# Generate coverage report
+make coverage
 ```
 
-You can specify specific endpoints to test:
+### Integration Tests
+
+```bash
+# Run integration tests
+make integration-test
+```
+
+### API Endpoint Testing
+
+```bash
+# Test API endpoints (requires running server)
+make test-endpoints
+```
+
+You can also run the script directly with specific endpoints:
 
 ```bash
 ./scripts/test_endpoints.sh --endpoint health
 ./scripts/test_endpoints.sh --endpoint servers
+```
+
+### Publish Endpoint Testing
+
+```bash
+# Test publish endpoint (requires BEARER_TOKEN env var)
+make test-publish
+```
+
+### Validation
+
+```bash
+# Validate JSON schemas
+make validate-schemas
+
+# Validate examples against schemas
+make validate-examples
+
+# Run all validation checks
+make validate
+```
+
+### Comprehensive Testing
+
+```bash
+# Run all checks (lint, validate, test)
+make check
+
+# Run all pre-commit checks (includes integration tests)
+make pre-commit
 ```
 
 ## License
