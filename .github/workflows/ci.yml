@@ -27,16 +27,24 @@ jobs:
       run: |
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.3.1
         
-    - name: Run golangci-lint
-      run: golangci-lint run --timeout=5m
+    - name: Run lint (includes formatting)
+      run: make lint
+
+  # Schema and Example Validation
+  validate:
+    name: Validate Schemas and Examples
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
       
-    - name: Check Go formatting
-      run: |
-        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-          echo "The following files are not properly formatted:"
-          gofmt -s -l .
-          exit 1
-        fi
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Validate schemas and examples
+      run: make validate
 
   # Build check
   build:
@@ -65,8 +73,7 @@ jobs:
       run: go mod download
       
     - name: Build application
-      run: |
-        go build -v ./cmd/...
+      run: make build
         
     - name: Check for vulnerabilities
       run: |
@@ -77,7 +84,7 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
-    needs: [lint, build]
+    needs: [lint, validate, build]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -101,8 +108,7 @@ jobs:
       run: go mod download
       
     - name: Run unit tests
-      run: |
-        go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
+      run: make test
         
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
@@ -116,7 +122,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [lint, build]
+    needs: [lint, validate, build]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -140,9 +146,7 @@ jobs:
       run: go mod download
       
     - name: Run integration tests
-      run: |
-        chmod +x ./tests/integration/run.sh
-        ./tests/integration/run.sh
+      run: make integration-test
 
   # Overall status check
   test-summary:

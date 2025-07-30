@@ -83,6 +83,11 @@ linters:
         - return
     nestif:
       min-complexity: 8
+    revive:
+      rules:
+        - name: use-any
+          severity: error
+          disabled: false
   exclusions:
     generated: lax
     presets:
