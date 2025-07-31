@@ -13,52 +13,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/tools/publisher/auth"
 )
-
-// Server structure types for JSON generation
-type Repository struct {
-	URL    string `json:"url"`
-	Source string `json:"source"`
-}
-
-type VersionDetail struct {
-	Version string `json:"version"`
-}
-
-type EnvironmentVariable struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-type RuntimeArgument struct {
-	Description string `json:"description"`
-	IsRequired  bool   `json:"is_required"`
-	Format      string `json:"format"`
-	Value       string `json:"value"`
-	Default     string `json:"default"`
-	Type        string `json:"type"`
-	ValueHint   string `json:"value_hint"`
-}
-
-type Package struct {
-	RegistryName         string                `json:"registry_name"`
-	Name                 string                `json:"name"`
-	Version              string                `json:"version"`
-	RuntimeHint          string                `json:"runtime_hint,omitempty"`
-	RuntimeArguments     []RuntimeArgument     `json:"runtime_arguments,omitempty"`
-	PackageArguments     []RuntimeArgument     `json:"package_arguments,omitempty"`
-	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
-}
-
-type ServerJSON struct {
-	Name          string        `json:"name"`
-	Description   string        `json:"description"`
-	Status        string        `json:"status,omitempty"`
-	Repository    Repository    `json:"repository"`
-	VersionDetail VersionDetail `json:"version_detail"`
-	Packages      []Package     `json:"packages"`
-}
 
 func main() {
 	if len(os.Args) < 2 {
@@ -370,31 +327,30 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	return nil
 }
 
-func createServerStructure(
-	name, description, version, repoURL, repoSource, registryName,
-	packageName, packageVersion, runtimeHint, execute string,
-	envVars []string, packageArgs []string, status string,
-) ServerJSON {
+func createServerStructure(name, description, version, repoURL, repoSource, registryName,
+	packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string, status string) model.ServerDetail {
 	// Parse environment variables
-	var environmentVariables []EnvironmentVariable
+	var environmentVariables []model.KeyValueInput
 	for _, envVar := range envVars {
 		parts := strings.SplitN(envVar, ":", 2)
+		envVarName := parts[0]
+		envVarDesc := fmt.Sprintf("Environment variable for %s", parts[0])
 		if len(parts) == 2 {
-			environmentVariables = append(environmentVariables, EnvironmentVariable{
-				Name:        parts[0],
-				Description: parts[1],
-			})
-		} else {
-			// If no description provided, use a default
-			environmentVariables = append(environmentVariables, EnvironmentVariable{
-				Name:        parts[0],
-				Description: fmt.Sprintf("Environment variable for %s", parts[0]),
-			})
+			envVarDesc = parts[1]
 		}
+
+		environmentVariables = append(environmentVariables, model.KeyValueInput{
+			Name: envVarName,
+			InputWithVariables: model.InputWithVariables{
+				Input: model.Input{
+					Description: envVarDesc,
+				},
+			},
+		})
 	}
 
 	// Parse package arguments
-	var packageArguments []RuntimeArgument
+	var packageArguments []model.Argument
 	for i, pkgArg := range packageArgs {
 		parts := strings.SplitN(pkgArg, ":", 2)
 		value := parts[0]
@@ -403,19 +359,23 @@ func createServerStructure(
 			description = parts[1]
 		}
 
-		packageArguments = append(packageArguments, RuntimeArgument{
-			Description: description,
-			IsRequired:  true, // Package arguments are typically required
-			Format:      "string",
-			Value:       value,
-			Default:     value,
-			Type:        "positional",
-			ValueHint:   value,
+		packageArguments = append(packageArguments, model.Argument{
+			InputWithVariables: model.InputWithVariables{
+				Input: model.Input{
+					Description: description,
+					IsRequired:  true, // Package arguments are typically required
+					Format:      model.FormatString,
+					Value:       value,
+					Default:     value,
+				},
+			},
+			Type:      model.ArgumentTypePositional,
+			ValueHint: value,
 		})
 	}
 
 	// Parse execute command to create runtime arguments
-	var runtimeArguments []RuntimeArgument
+	var runtimeArguments []model.Argument
 	if execute != "" {
 		// Split the execute command into parts, handling quoted strings
 		parts := smartSplit(execute)
@@ -436,43 +396,53 @@ func createServerStructure(
 					description = fmt.Sprintf("Value for %s", parts[i])
 				}
 
-				runtimeArguments = append(runtimeArguments, RuntimeArgument{
-					Description: description,
-					IsRequired:  false,
-					Format:      "string",
-					Value:       arg,
-					Default:     arg,
-					Type:        "positional",
-					ValueHint:   arg,
+				runtimeArguments = append(runtimeArguments, model.Argument{
+					InputWithVariables: model.InputWithVariables{
+						Input: model.Input{
+							Description: description,
+							IsRequired:  false,
+							Format:      model.FormatString,
+							Value:       arg,
+							Default:     arg,
+						},
+					},
+					Type:      model.ArgumentTypePositional,
+					ValueHint: arg,
 				})
 			}
 		}
 	}
 
 	// Create package
-	pkg := Package{
+	pkg := model.Package{
 		RegistryName:         registryName,
 		Name:                 packageName,
 		Version:              packageVersion,
-		RuntimeHint:          runtimeHint,
+		RunTimeHint:          runtimeHint,
 		RuntimeArguments:     runtimeArguments,
 		PackageArguments:     packageArguments,
 		EnvironmentVariables: environmentVariables,
 	}
 
-	// Create server structure
-	return ServerJSON{
-		Name:        name,
-		Description: description,
-		Status:      status,
-		Repository: Repository{
-			URL:    repoURL,
-			Source: repoSource,
+	// Create server structure using model types
+	// Note: We only populate the fields we need for publishing
+	return model.ServerDetail{
+		Server: model.Server{
+			Name:        name,
+			Description: description,
+			Status:      model.ServerStatus(status),
+			Repository: model.Repository{
+				URL:    repoURL,
+				Source: repoSource,
+				// Should we allow setting the ID here, or it will be generated by the registry?
+			},
+			VersionDetail: model.VersionDetail{
+				Version: version,
+				// ReleaseDate and IsLatest will be set by the registry
+			},
 		},
-		VersionDetail: VersionDetail{
-			Version: version,
-		},
-		Packages: []Package{pkg},
+		Packages: []model.Package{pkg},
+		// Remotes can be empty for basic server definitions
 	}
 }
 
