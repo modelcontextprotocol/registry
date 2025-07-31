@@ -14,9 +14,9 @@ const (
 type ServerStatus string
 
 const (
-	// ServerStatusActive represents an active server recommended for use
+	// ServerStatusActive represents an actively maintained server (as asserted by the publisher)
 	ServerStatusActive ServerStatus = "active"
-	// ServerStatusDeprecated represents a server no longer recommended for new usage
+	// ServerStatusDeprecated represents a server that is no longer actively maintained
 	ServerStatusDeprecated ServerStatus = "deprecated"
 )
 
