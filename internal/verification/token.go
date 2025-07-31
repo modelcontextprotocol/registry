@@ -36,7 +36,7 @@ const TokenLength = 16
 //	    return fmt.Errorf("failed to generate verification token: %w", err)
 //	}
 //	// Use token in DNS: mcp-verify=<token>
-//	// Or HTTP: /.well-known/mcp-challenge/<token>
+//	// Or HTTP: /.well-known/mcp-verify
 func GenerateVerificationToken() (string, error) {
 	// Allocate byte slice for random data
 	randomBytes := make([]byte, TokenLength)
