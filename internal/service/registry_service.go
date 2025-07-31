@@ -6,6 +6,7 @@ import (
 
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/internal/verification"
 )
 
 // registryServiceImpl implements the RegistryService interface using our Database
@@ -100,4 +101,56 @@ func (s *registryServiceImpl) Publish(serverDetail *model.ServerDetail) error {
 	}
 
 	return nil
+}
+
+// GenerateVerificationToken creates a new verification token for a server
+func (s *registryServiceImpl) GenerateVerificationToken(serverID string) (*model.VerificationToken, error) {
+	// Create a timeout context for the database operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	for {
+		// Generate a verification token
+		token, err := verification.GenerateVerificationToken()
+		if err != nil {
+			return nil, err
+		}
+
+		// Check if the token is unique across all servers
+		isUnique, err := s.db.IsVerificationTokenUnique(ctx, token)
+		if err != nil {
+			return nil, err
+		}
+
+		if isUnique {
+			// Token is unique, create and store it
+			verificationToken := &model.VerificationToken{
+				Token:     token,
+				CreatedAt: time.Now(),
+			}
+
+			// Store the token in the database
+			err = s.db.StoreVerificationToken(ctx, serverID, verificationToken)
+			if err != nil {
+				return nil, err
+			}
+
+			return verificationToken, nil
+		}
+	}
+}
+
+// GetVerificationToken retrieves a verification token for a server
+func (s *registryServiceImpl) GetVerificationToken(serverID string) (*model.VerificationToken, error) {
+	// Create a timeout context for the database operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Get the token from the database
+	token, err := s.db.GetVerificationToken(ctx, serverID)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }

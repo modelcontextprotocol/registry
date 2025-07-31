@@ -339,3 +339,17 @@ func (db *MemoryDB) GetVerificationToken(ctx context.Context, serverID string) (
 
 	return metadata.VerificationToken, nil
 }
+
+// IsVerificationTokenUnique checks if a token is unique across all servers
+func (db *MemoryDB) IsVerificationTokenUnique(ctx context.Context, token string) (bool, error) {
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	for _, metadata := range db.metadata {
+		if metadata.VerificationToken != nil && metadata.VerificationToken.Token == token {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}

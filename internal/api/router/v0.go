@@ -20,6 +20,8 @@ func RegisterV0Routes(
 	mux.HandleFunc("/v0/servers/{id}", v0.ServersDetailHandler(registry))
 	mux.HandleFunc("/v0/ping", v0.PingHandler(cfg))
 	mux.HandleFunc("/v0/publish", v0.PublishHandler(registry, authService))
+	mux.HandleFunc("/v0/verification/generate", v0.GenerateVerificationTokenHandler(registry, authService))
+	mux.HandleFunc("/v0/verification/{server_id}", v0.GetVerificationTokenHandler(registry, authService))
 
 	// Register Swagger UI routes
 	mux.HandleFunc("/v0/swagger/", v0.SwaggerHandler())

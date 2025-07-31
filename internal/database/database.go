@@ -28,6 +28,8 @@ type Database interface {
 	StoreVerificationToken(ctx context.Context, serverID string, token *model.VerificationToken) error
 	// GetVerificationToken retrieves a verification token by server ID
 	GetVerificationToken(ctx context.Context, serverID string) (*model.VerificationToken, error)
+	// IsVerificationTokenUnique checks if a token is unique across all servers
+	IsVerificationTokenUnique(ctx context.Context, token string) (bool, error)
 	// ImportSeed imports initial data from a seed file
 	ImportSeed(ctx context.Context, seedFilePath string) error
 	// Close closes the database connection

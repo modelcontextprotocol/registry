@@ -37,6 +37,16 @@ func (m *MockRegistryService) Publish(serverDetail *model.ServerDetail) error {
 	return args.Error(0)
 }
 
+func (m *MockRegistryService) GenerateVerificationToken(serverID string) (*model.VerificationToken, error) {
+	args := m.Mock.Called(serverID)
+	return args.Get(0).(*model.VerificationToken), args.Error(1)
+}
+
+func (m *MockRegistryService) GetVerificationToken(serverID string) (*model.VerificationToken, error) {
+	args := m.Mock.Called(serverID)
+	return args.Get(0).(*model.VerificationToken), args.Error(1)
+}
+
 // MockAuthService is a mock implementation of the auth.Service interface
 type MockAuthService struct {
 	mock.Mock

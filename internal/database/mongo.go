@@ -378,3 +378,17 @@ func (db *MongoDB) GetVerificationToken(ctx context.Context, serverID string) (*
 
 	return metadata.VerificationToken, nil
 }
+
+// IsVerificationTokenUnique checks if a token is unique across all servers
+func (db *MongoDB) IsVerificationTokenUnique(ctx context.Context, token string) (bool, error) {
+	filter := bson.M{
+		"verification_token.token": token,
+	}
+
+	count, err := db.metadataCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		return false, fmt.Errorf("failed to check token uniqueness: %w", err)
+	}
+
+	return count == 0, nil
+}

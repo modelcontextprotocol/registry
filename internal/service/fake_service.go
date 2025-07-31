@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/internal/verification"
 )
 
 // fakeRegistryService implements RegistryService interface with an in-memory database
@@ -121,6 +122,61 @@ func (s *fakeRegistryService) Publish(serverDetail *model.ServerDetail) error {
 
 	// Use the database's Publish method to add the server detail
 	return s.db.Publish(ctx, serverDetail)
+}
+
+// GenerateVerificationToken creates a new verification token for a server
+func (s *fakeRegistryService) GenerateVerificationToken(serverID string) (*model.VerificationToken, error) {
+	// Create a timeout context for the database operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	for {
+		// Generate a verification token
+		token, err := verification.GenerateVerificationToken()
+		if err != nil {
+			return nil, err
+		}
+
+		// Check if the token is unique across all servers
+		isUnique, err := s.db.IsVerificationTokenUnique(ctx, token)
+		if err != nil {
+			return nil, err
+		}
+
+		if isUnique {
+			// Token is unique, create and store it
+			verificationToken := &model.VerificationToken{
+				Token:     token,
+				CreatedAt: time.Now(),
+			}
+
+			// Store the token in the database
+			err = s.db.StoreVerificationToken(ctx, serverID, verificationToken)
+			if err != nil {
+				return nil, err
+			}
+
+			return verificationToken, nil
+		}
+
+		// Token collision detected, generate a new token and try again
+		// With 128-bit cryptographically secure tokens, collisions are extremely rare
+	}
+}
+
+// GetVerificationToken retrieves a verification token for a server
+func (s *fakeRegistryService) GetVerificationToken(serverID string) (*model.VerificationToken, error) {
+	// Create a timeout context for the database operation
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Get the token from the database
+	token, err := s.db.GetVerificationToken(ctx, serverID)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }
 
 // Close closes the in-memory database connection
