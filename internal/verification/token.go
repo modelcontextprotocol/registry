@@ -17,7 +17,7 @@ const TokenLength = 16
 //
 // This function is designed for use in both DNS TXT record verification
 // (mcp-verify=<token>) and HTTP-01 web challenge verification
-// (https://domain/.well-known/mcp-challenge/<token>).
+// (https://domain/.well-known/mcp-verify).
 //
 // Security considerations:
 // - Uses crypto/rand for cryptographically secure random number generation
