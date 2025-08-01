@@ -10,6 +10,16 @@ const (
 	AuthMethodNone AuthMethod = "none"
 )
 
+// ServerStatus represents the lifecycle status of a server
+type ServerStatus string
+
+const (
+	// ServerStatusActive represents an actively maintained server (as asserted by the publisher)
+	ServerStatusActive ServerStatus = "active"
+	// ServerStatusDeprecated represents a server that is no longer actively maintained
+	ServerStatusDeprecated ServerStatus = "deprecated"
+)
+
 // Authentication holds information about the authentication method and credentials
 type Authentication struct {
 	Method  AuthMethod `json:"method,omitempty"`
@@ -114,6 +124,7 @@ type Server struct {
 	ID            string        `json:"id" bson:"id"`
 	Name          string        `json:"name" bson:"name"`
 	Description   string        `json:"description" bson:"description"`
+	Status        ServerStatus  `json:"status,omitempty" bson:"status,omitempty"`
 	Repository    Repository    `json:"repository" bson:"repository"`
 	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
 }
