@@ -401,13 +401,17 @@ func (db *MongoDB) GetVerificationTokens(ctx context.Context, domain string) (*m
 	return domainVerification.VerificationTokens, nil
 }
 
-// IsVerificationTokenUnique checks if a token is unique across all servers
+// IsVerificationTokenUnique checks if a token is unique across all domains
 func (db *MongoDB) IsVerificationTokenUnique(ctx context.Context, token string) (bool, error) {
+	// Check if the token exists in either verified_token or pending_tokens
 	filter := bson.M{
-		"verification_token.token": token,
+		"$or": []bson.M{
+			{"verification_tokens.verified_token.token": token},
+			{"verification_tokens.pending_tokens.token": token},
+		},
 	}
 
-	count, err := db.metadataCollection.CountDocuments(ctx, filter)
+	count, err := db.verificationCollection.CountDocuments(ctx, filter)
 	if err != nil {
 		return false, fmt.Errorf("failed to check token uniqueness: %w", err)
 	}

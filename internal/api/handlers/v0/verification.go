@@ -4,29 +4,63 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 
-	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
-	"golang.org/x/net/html"
 )
 
-// TokenGenerateRequest represents the request body for token generation
-type TokenGenerateRequest struct {
-	ServerID string `json:"server_id"`
+// normalizeDomain extracts and cleans the domain from a URL or domain string
+// It removes protocols, paths, and query parameters, returning just the hostname
+func normalizeDomain(domain string) (string, error) {
+	domain = strings.TrimSpace(domain)
+	if domain == "" {
+		return "", errors.New("domain cannot be empty")
+	}
+
+	// Try parsing as URL first (handles cases with protocol)
+	if u, err := url.Parse(domain); err == nil && u.Host != "" {
+		return strings.ToLower(u.Host), nil
+	}
+
+	// If no protocol, try adding one and parsing again
+	if !strings.Contains(domain, "://") {
+		if u, err := url.Parse("https://" + domain); err == nil && u.Host != "" {
+			return strings.ToLower(u.Host), nil
+		}
+	}
+
+	// If we get here, the input is not a valid domain/URL
+	return "", errors.New("invalid domain format")
 }
 
-// TokenResponse represents the response for token operations
-type TokenResponse struct {
-	Token     string `json:"token"`
-	CreatedAt string `json:"created_at"`
-	ServerID  string `json:"server_id"`
+// DomainClaimRequest represents the request body for domain claiming
+type DomainClaimRequest struct {
+	Domain string `json:"domain"`
 }
 
-// GenerateVerificationTokenHandler handles requests to generate verification tokens
-func GenerateVerificationTokenHandler(registry service.RegistryService, authService auth.Service) http.HandlerFunc {
+// DomainStatusRequest represents the request body for domain status checking
+type DomainStatusRequest struct {
+	Domain string `json:"domain"`
+}
+
+// DomainClaimResponse represents the response for domain claim operations
+type DomainClaimResponse struct {
+	Domain           string `json:"domain"`            // Original domain from request
+	NormalizedDomain string `json:"normalized_domain"` // Cleaned domain (TLD + subdomains)
+	Token            string `json:"token"`
+	CreatedAt        string `json:"created_at"`
+}
+
+// DomainStatusResponse represents the response for domain verification status
+type DomainStatusResponse struct {
+	Domain string `json:"domain"`
+	Status string `json:"status"` // "verified" or "unverified"
+}
+
+// ClaimDomainHandler handles requests to claim a domain for verification
+func ClaimDomainHandler(registry service.RegistryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Only allow POST method
 		if r.Method != http.MethodPost {
@@ -35,7 +69,7 @@ func GenerateVerificationTokenHandler(registry service.RegistryService, authServ
 		}
 
 		// Parse request body
-		var req TokenGenerateRequest
+		var req DomainClaimRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, "Invalid request payload: "+err.Error(), http.StatusBadRequest)
@@ -44,80 +78,31 @@ func GenerateVerificationTokenHandler(registry service.RegistryService, authServ
 		defer r.Body.Close()
 
 		// Validate required fields
-		if req.ServerID == "" {
-			http.Error(w, "server_id is required", http.StatusBadRequest)
+		if req.Domain == "" {
+			http.Error(w, "domain is required", http.StatusBadRequest)
 			return
 		}
 
-		// Check if the server exists
-		_, err = registry.GetByID(req.ServerID)
+		// Normalize the domain (remove protocol, path, etc.)
+		normalizedDomain, err := normalizeDomain(req.Domain)
 		if err != nil {
-			if errors.Is(err, database.ErrNotFound) {
-				http.Error(w, "Server not found", http.StatusNotFound)
-				return
-			}
-			http.Error(w, "Failed to verify server existence: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		// Get auth token from Authorization header
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-			return
-		}
-
-		// Handle bearer token format
-		token := authHeader
-		if len(authHeader) > 7 && strings.ToUpper(authHeader[:7]) == "BEARER " {
-			token = authHeader[7:]
-		}
-
-		// Determine authentication method based on server ID prefix
-		var authMethod model.AuthMethod
-		switch {
-		case strings.HasPrefix(req.ServerID, "io.github"):
-			authMethod = model.AuthMethodGitHub
-		default:
-			authMethod = model.AuthMethodNone
-		}
-
-		serverName := html.EscapeString(req.ServerID)
-
-		// Setup authentication info
-		a := model.Authentication{
-			Method:  authMethod,
-			Token:   token,
-			RepoRef: serverName,
-		}
-
-		valid, err := authService.ValidateAuth(r.Context(), a)
+		// Generate the verification token for the normalized domain
+		verificationToken, err := registry.ClaimDomain(normalizedDomain)
 		if err != nil {
-			if errors.Is(err, auth.ErrAuthRequired) {
-				http.Error(w, "Authentication is required for token generation", http.StatusUnauthorized)
-				return
-			}
-			http.Error(w, "Authentication failed: "+err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		if !valid {
-			http.Error(w, "Invalid authentication credentials", http.StatusUnauthorized)
-			return
-		}
-
-		// Generate the verification token
-		verificationToken, err := registry.GenerateVerificationToken(req.ServerID)
-		if err != nil {
-			http.Error(w, "Failed to generate verification token: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Failed to claim domain: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		// Prepare response
-		response := TokenResponse{
-			Token:     verificationToken.Token,
-			CreatedAt: verificationToken.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-			ServerID:  req.ServerID,
+		response := DomainClaimResponse{
+			Domain:           req.Domain,
+			NormalizedDomain: normalizedDomain,
+			Token:            verificationToken.Token,
+			CreatedAt:        verificationToken.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -129,97 +114,58 @@ func GenerateVerificationTokenHandler(registry service.RegistryService, authServ
 	}
 }
 
-// GetVerificationTokenHandler handles requests to retrieve verification tokens
-func GetVerificationTokenHandler(registry service.RegistryService, authService auth.Service) http.HandlerFunc {
+// GetDomainStatusHandler handles requests to get domain verification status
+func GetDomainStatusHandler(registry service.RegistryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Only allow GET method
-		if r.Method != http.MethodGet {
+		// Only allow POST method
+		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		// Extract server ID from URL path
-		path := strings.TrimPrefix(r.URL.Path, "/v0/verification/")
-		serverID := strings.Split(path, "/")[0]
+		// Parse request body
+		var req DomainStatusRequest
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, "Invalid request payload: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
 
-		if serverID == "" {
-			http.Error(w, "server_id is required", http.StatusBadRequest)
+		// Validate required fields
+		if req.Domain == "" {
+			http.Error(w, "domain is required", http.StatusBadRequest)
 			return
 		}
 
-		// Check if the server exists
-		_, err := registry.GetByID(serverID)
+		// Normalize the domain (remove protocol, path, etc.)
+		normalizedDomain, err := normalizeDomain(req.Domain)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// Get the domain verification status using normalized domain
+		verificationTokens, err := registry.GetDomainVerificationStatus(normalizedDomain)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
-				http.Error(w, "Server not found", http.StatusNotFound)
+				http.Error(w, "Domain not found", http.StatusNotFound)
 				return
 			}
-			http.Error(w, "Failed to verify server existence: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Failed to retrieve domain status: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		// Get auth token from Authorization header
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-			return
+		// Determine status
+		status := "unverified"
+		if verificationTokens.VerifiedToken != nil {
+			status = "verified"
 		}
 
-		// Handle bearer token format
-		token := authHeader
-		if len(authHeader) > 7 && strings.ToUpper(authHeader[:7]) == "BEARER " {
-			token = authHeader[7:]
-		}
-
-		// Determine authentication method based on server ID prefix
-		var authMethod model.AuthMethod
-		switch {
-		case strings.HasPrefix(serverID, "io.github"):
-			authMethod = model.AuthMethodGitHub
-		default:
-			authMethod = model.AuthMethodNone
-		}
-
-		serverName := html.EscapeString(serverID)
-
-		// Setup authentication info
-		a := model.Authentication{
-			Method:  authMethod,
-			Token:   token,
-			RepoRef: serverName,
-		}
-
-		valid, err := authService.ValidateAuth(r.Context(), a)
-		if err != nil {
-			if errors.Is(err, auth.ErrAuthRequired) {
-				http.Error(w, "Authentication is required for token retrieval", http.StatusUnauthorized)
-				return
-			}
-			http.Error(w, "Authentication failed: "+err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		if !valid {
-			http.Error(w, "Invalid authentication credentials", http.StatusUnauthorized)
-			return
-		}
-
-		// Get the verification token
-		verificationToken, err := registry.GetVerificationToken(serverID)
-		if err != nil {
-			if errors.Is(err, database.ErrNotFound) {
-				http.Error(w, "Verification token not found", http.StatusNotFound)
-				return
-			}
-			http.Error(w, "Failed to retrieve verification token: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Prepare response
-		response := TokenResponse{
-			Token:     verificationToken.Token,
-			CreatedAt: verificationToken.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-			ServerID:  serverID,
+		// Prepare response with normalized domain
+		response := DomainStatusResponse{
+			Domain: normalizedDomain,
+			Status: status,
 		}
 
 		w.Header().Set("Content-Type", "application/json")

@@ -103,8 +103,8 @@ func (s *registryServiceImpl) Publish(serverDetail *model.ServerDetail) error {
 	return nil
 }
 
-// GenerateVerificationToken creates a new verification token for a server
-func (s *registryServiceImpl) GenerateVerificationToken(serverID string) (*model.VerificationToken, error) {
+// ClaimDomain generates a verification token for a domain and stores it as pending
+func (s *registryServiceImpl) ClaimDomain(domain string) (*model.VerificationToken, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -116,7 +116,7 @@ func (s *registryServiceImpl) GenerateVerificationToken(serverID string) (*model
 			return nil, err
 		}
 
-		// Check if the token is unique across all servers
+		// Check if the token is unique across all domains
 		isUnique, err := s.db.IsVerificationTokenUnique(ctx, token)
 		if err != nil {
 			return nil, err
@@ -129,8 +129,8 @@ func (s *registryServiceImpl) GenerateVerificationToken(serverID string) (*model
 				CreatedAt: time.Now(),
 			}
 
-			// Store the token in the database
-			err = s.db.StoreVerificationToken(ctx, serverID, verificationToken)
+			// Store the token in the database as pending for the domain
+			err = s.db.StoreVerificationToken(ctx, domain, verificationToken)
 			if err != nil {
 				return nil, err
 			}
@@ -140,17 +140,17 @@ func (s *registryServiceImpl) GenerateVerificationToken(serverID string) (*model
 	}
 }
 
-// GetVerificationToken retrieves a verification token for a server
-func (s *registryServiceImpl) GetVerificationToken(serverID string) (*model.VerificationToken, error) {
+// GetDomainVerificationStatus retrieves the verification status for a domain
+func (s *registryServiceImpl) GetDomainVerificationStatus(domain string) (*model.VerificationTokens, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Get the token from the database
-	token, err := s.db.GetVerificationToken(ctx, serverID)
+	// Get the verification tokens from the database
+	tokens, err := s.db.GetVerificationTokens(ctx, domain)
 	if err != nil {
 		return nil, err
 	}
 
-	return token, nil
+	return tokens, nil
 }

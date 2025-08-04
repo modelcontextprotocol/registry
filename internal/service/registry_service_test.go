@@ -11,22 +11,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGenerateVerificationToken_Uniqueness(t *testing.T) {
+func TestClaimDomain_Uniqueness(t *testing.T) {
 	// Create an in-memory database for testing
 	memDB := database.NewMemoryDB(make(map[string]*model.Server))
 	service := NewRegistryServiceWithDB(memDB)
 
-	serverID1 := "io.github.test/server1"
-	serverID2 := "io.github.test/server2"
+	domain1 := "example.com"
+	domain2 := "test.org"
 
 	// Generate first token
-	token1, err := service.GenerateVerificationToken(serverID1)
+	token1, err := service.ClaimDomain(domain1)
 	require.NoError(t, err)
 	require.NotNil(t, token1)
 	assert.NotEmpty(t, token1.Token)
 
 	// Generate second token
-	token2, err := service.GenerateVerificationToken(serverID2)
+	token2, err := service.ClaimDomain(domain2)
 	require.NoError(t, err)
 	require.NotNil(t, token2)
 	assert.NotEmpty(t, token2.Token)
@@ -35,13 +35,15 @@ func TestGenerateVerificationToken_Uniqueness(t *testing.T) {
 	assert.NotEqual(t, token1.Token, token2.Token, "Generated tokens should be unique")
 
 	// Verify tokens are stored correctly
-	retrievedToken1, err := service.GetVerificationToken(serverID1)
+	retrievedTokens1, err := service.GetDomainVerificationStatus(domain1)
 	require.NoError(t, err)
-	assert.Equal(t, token1.Token, retrievedToken1.Token)
+	require.Len(t, retrievedTokens1.PendingTokens, 1)
+	assert.Equal(t, token1.Token, retrievedTokens1.PendingTokens[0].Token)
 
-	retrievedToken2, err := service.GetVerificationToken(serverID2)
+	retrievedTokens2, err := service.GetDomainVerificationStatus(domain2)
 	require.NoError(t, err)
-	assert.Equal(t, token2.Token, retrievedToken2.Token)
+	require.Len(t, retrievedTokens2.PendingTokens, 1)
+	assert.Equal(t, token2.Token, retrievedTokens2.PendingTokens[0].Token)
 }
 
 func TestIsVerificationTokenUnique(t *testing.T) {
@@ -59,7 +61,7 @@ func TestIsVerificationTokenUnique(t *testing.T) {
 		Token:     "test-token-123",
 		CreatedAt: time.Now(),
 	}
-	err = memDB.StoreVerificationToken(ctx, "server1", token)
+	err = memDB.StoreVerificationToken(ctx, "example.com", token)
 	require.NoError(t, err)
 
 	// Same token should no longer be unique
@@ -71,4 +73,28 @@ func TestIsVerificationTokenUnique(t *testing.T) {
 	isUnique, err = memDB.IsVerificationTokenUnique(ctx, "different-token-456")
 	require.NoError(t, err)
 	assert.True(t, isUnique)
+}
+
+func TestGetDomainVerificationStatus(t *testing.T) {
+	// Create an in-memory database for testing
+	memDB := database.NewMemoryDB(make(map[string]*model.Server))
+	service := NewRegistryServiceWithDB(memDB)
+
+	domain := "example.com"
+
+	// Test when domain doesn't exist
+	_, err := service.GetDomainVerificationStatus(domain)
+	require.Error(t, err)
+	assert.Equal(t, database.ErrNotFound, err)
+
+	// Claim the domain (adds a pending token)
+	token, err := service.ClaimDomain(domain)
+	require.NoError(t, err)
+
+	// Now status should be unverified with a pending token
+	status, err := service.GetDomainVerificationStatus(domain)
+	require.NoError(t, err)
+	assert.Nil(t, status.VerifiedToken)
+	assert.Len(t, status.PendingTokens, 1)
+	assert.Equal(t, token.Token, status.PendingTokens[0].Token)
 }

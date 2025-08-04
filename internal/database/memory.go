@@ -356,14 +356,28 @@ func (db *MemoryDB) GetVerificationTokens(ctx context.Context, domain string) (*
 	return domainVerification.VerificationTokens, nil
 }
 
-// IsVerificationTokenUnique checks if a token is unique across all servers
+// IsVerificationTokenUnique checks if a token is unique across all domains
 func (db *MemoryDB) IsVerificationTokenUnique(ctx context.Context, token string) (bool, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	for _, metadata := range db.metadata {
-		if metadata.VerificationToken != nil && metadata.VerificationToken.Token == token {
+	// Check all domain verifications for token uniqueness
+	for _, domainVerification := range db.domainVerifications {
+		if domainVerification.VerificationTokens == nil {
+			continue
+		}
+
+		// Check verified token
+		if domainVerification.VerificationTokens.VerifiedToken != nil &&
+			domainVerification.VerificationTokens.VerifiedToken.Token == token {
 			return false, nil
+		}
+
+		// Check pending tokens
+		for _, pendingToken := range domainVerification.VerificationTokens.PendingTokens {
+			if pendingToken.Token == token {
+				return false, nil
+			}
 		}
 	}
 
