@@ -12,7 +12,6 @@ const (
 	errMsgGenTokenIteration = "GenerateVerificationToken() error = %v, iteration %d"
 	errMsgGenToken          = "GenerateVerificationToken() error = %v"
 	errMsgGenTokenNormal    = "GenerateVerificationToken() should succeed in normal conditions: %v"
-	errMsgGenTokenWithInfo  = "GenerateTokenWithInfo() error = %v"
 	dnsRecordPrefix         = "mcp-verify="
 )
 
@@ -26,11 +25,6 @@ func TestGenerateVerificationToken(t *testing.T) {
 	// Test token is not empty
 	if token == "" {
 		t.Error("GenerateVerificationToken() returned empty token")
-	}
-
-	// Test token format is valid
-	if !verification.ValidateTokenFormat(token) {
-		t.Errorf("GenerateVerificationToken() returned invalid token format: %s", token)
 	}
 
 	// Test token length (should be 22 characters for base64url encoding of 16 bytes)
@@ -120,124 +114,6 @@ func TestGenerateVerificationTokenErrorHandling(t *testing.T) {
 	// The error handling is tested by the fact that our function
 	// properly declares error returns and wraps rand.Read errors
 	// This is validated by the successful compilation and the above test
-}
-
-func TestValidateTokenFormat(t *testing.T) {
-	tests := []struct {
-		name  string
-		token string
-		want  bool
-	}{
-		{
-			name:  "Valid token",
-			token: "ABCDEFGHIJKLMNOPQRSTuv", // 22 chars, valid base64url
-			want:  true,
-		},
-		{
-			name:  "Valid token with numbers",
-			token: "ABC123def456GHI789KLMN", // 22 chars with numbers
-			want:  true,
-		},
-		{
-			name:  "Valid token with URL-safe chars",
-			token: "ABC_DEF-GHI123jklmnopq", // 22 chars with - and _
-			want:  true,
-		},
-		{
-			name:  "Empty token",
-			token: "",
-			want:  false,
-		},
-		{
-			name:  "Too short",
-			token: "ABC123", // Only 6 chars
-			want:  false,
-		},
-		{
-			name:  "Too long",
-			token: "ABCDEFGHIJKLMNOPQRSTuvw", // 23 chars
-			want:  false,
-		},
-		{
-			name:  "Invalid character +",
-			token: "ABCDEFGHIJKLMNOPQRST+v", // Contains +
-			want:  false,
-		},
-		{
-			name:  "Invalid character /",
-			token: "ABCDEFGHIJKLMNOPQRST/v", // Contains /
-			want:  false,
-		},
-		{
-			name:  "Invalid character =",
-			token: "ABCDEFGHIJKLMNOPQRST=v", // Contains =
-			want:  false,
-		},
-		{
-			name:  "Invalid character space",
-			token: "ABCDEFGHIJKLMNOPQRST v", // Contains space
-			want:  false,
-		},
-		{
-			name:  "Invalid character special",
-			token: "ABCDEFGHIJKLMNOPQRST@v", // Contains @
-			want:  false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := verification.ValidateTokenFormat(tt.token)
-			if got != tt.want {
-				t.Errorf("ValidateTokenFormat(%q) = %v, want %v", tt.token, got, tt.want)
-			}
-		})
-	}
-}
-
-func TestValidateTokenFormatWithGeneratedTokens(t *testing.T) {
-	// Test that all generated tokens pass validation
-	for i := 0; i < 100; i++ {
-		token, err := verification.GenerateVerificationToken()
-		if err != nil {
-			t.Fatalf(errMsgGenTokenIteration, err, i)
-		}
-
-		if !verification.ValidateTokenFormat(token) {
-			t.Errorf("Generated token failed validation: %s", token)
-		}
-	}
-}
-
-func TestGenerateTokenWithInfo(t *testing.T) {
-	tokenInfo, err := verification.GenerateTokenWithInfo()
-	if err != nil {
-		t.Fatalf("GenerateTokenWithInfo() error = %v", err)
-	}
-
-	// Test basic token validation
-	if !verification.ValidateTokenFormat(tokenInfo.Token) {
-		t.Errorf("GenerateTokenWithInfo() returned invalid token: %s", tokenInfo.Token)
-	}
-
-	// Test metadata fields
-	if tokenInfo.Length != verification.TokenLength {
-		t.Errorf("TokenInfo.Length = %d, want %d", tokenInfo.Length, verification.TokenLength)
-	}
-
-	if tokenInfo.Encoding != "base64url" {
-		t.Errorf("TokenInfo.Encoding = %s, want base64url", tokenInfo.Encoding)
-	}
-
-	expectedDNSRecord := dnsRecordPrefix + tokenInfo.Token
-	if tokenInfo.DNSRecord != expectedDNSRecord {
-		t.Errorf("TokenInfo.DNSRecord = %s, want %s", tokenInfo.DNSRecord, expectedDNSRecord)
-	}
-
-	expectedHTTPPath := "/.well-known/mcp-challenge/" + tokenInfo.Token
-	if tokenInfo.HTTPPath != expectedHTTPPath {
-		t.Errorf("TokenInfo.HTTPPath = %s, want %s", tokenInfo.HTTPPath, expectedHTTPPath)
-	}
 }
 
 func TestTokenConstants(t *testing.T) {
@@ -339,36 +215,6 @@ func TestDNSTXTRecordRFCCompliance(t *testing.T) {
 	}
 }
 
-func TestDNSTXTRecordTokenValidation(t *testing.T) {
-	// Test that tokens in DNS records are valid according to our format
-	for i := 0; i < 50; i++ {
-		token, err := verification.GenerateVerificationToken()
-		if err != nil {
-			t.Fatalf(errMsgGenTokenIteration, err, i)
-		}
-
-		dnsRecord := dnsRecordPrefix + token
-
-		// Extract token from DNS record
-		if !strings.HasPrefix(dnsRecord, dnsRecordPrefix) {
-			t.Errorf("DNS record missing expected prefix: %s", dnsRecord)
-			continue
-		}
-
-		extractedToken := strings.TrimPrefix(dnsRecord, dnsRecordPrefix)
-
-		// Validate extracted token format
-		if !verification.ValidateTokenFormat(extractedToken) {
-			t.Errorf("Extracted token from DNS record failed validation: %s", extractedToken)
-		}
-
-		// Ensure token matches what we generated
-		if extractedToken != token {
-			t.Errorf("Extracted token %s does not match generated token %s", extractedToken, token)
-		}
-	}
-}
-
 func TestDNSTXTRecordSpecialCharacters(t *testing.T) {
 	// Test that DNS records handle RFC-compliant special characters correctly
 	token, err := verification.GenerateVerificationToken()
@@ -438,28 +284,6 @@ func BenchmarkGenerateVerificationToken(b *testing.B) {
 		_, err := verification.GenerateVerificationToken()
 		if err != nil {
 			b.Fatalf(errMsgGenToken, err)
-		}
-	}
-}
-
-func BenchmarkValidateTokenFormat(b *testing.B) {
-	// Generate a token once for benchmarking validation
-	token, err := verification.GenerateVerificationToken()
-	if err != nil {
-		b.Fatalf(errMsgGenToken, err)
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		verification.ValidateTokenFormat(token)
-	}
-}
-
-func BenchmarkGenerateTokenWithInfo(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_, err := verification.GenerateTokenWithInfo()
-		if err != nil {
-			b.Fatalf(errMsgGenTokenWithInfo, err)
 		}
 	}
 }

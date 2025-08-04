@@ -16,19 +16,14 @@ import (
 
 // MongoDB is an implementation of the Database interface using MongoDB
 type MongoDB struct {
-	client             *mongo.Client
-	database           *mongo.Database
-	serverCollection   *mongo.Collection
-	metadataCollection *mongo.Collection
+	client                 *mongo.Client
+	database               *mongo.Database
+	serverCollection       *mongo.Collection
+	verificationCollection *mongo.Collection
 }
 
 // NewMongoDB creates a new instance of the MongoDB database
-func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName, metadataCollectionName string) (*MongoDB, error) {
-	// Set default metadata collection name if not provided
-	if metadataCollectionName == "" {
-		metadataCollectionName = collectionName + "_metadata"
-	}
-
+func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName, verificationCollectionName string) (*MongoDB, error) {
 	// Set client options and connect to MongoDB
 	clientOptions := options.Client().ApplyURI(connectionURI)
 	client, err := mongo.Connect(ctx, clientOptions)
@@ -44,7 +39,7 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 	// Get database and collection
 	database := client.Database(databaseName)
 	serverCollection := database.Collection(collectionName)
-	metadataCollection := database.Collection(metadataCollectionName)
+	verificationCollection := database.Collection(verificationCollectionName)
 
 	// Create indexes for better query performance
 	models := []mongo.IndexModel{
@@ -72,29 +67,29 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 		log.Printf("Indexes already exists, skipping.")
 	}
 
-	// Create indexes for metadata collection
-	tokenIndexes := []mongo.IndexModel{
+	// Create indexes for verification collection
+	verificationIndexes := []mongo.IndexModel{
 		{
-			Keys:    bson.D{bson.E{Key: "server_id", Value: 1}},
+			Keys:    bson.D{bson.E{Key: "domain", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	}
 
-	_, err = metadataCollection.Indexes().CreateMany(ctx, tokenIndexes)
+	_, err = verificationCollection.Indexes().CreateMany(ctx, verificationIndexes)
 	if err != nil {
 		// Mongo will error if the index already exists, we can ignore this and continue.
 		var commandError mongo.CommandError
 		if errors.As(err, &commandError) && commandError.Code != 86 {
 			return nil, err
 		}
-		log.Printf("Metadata collection indexes already exist, skipping.")
+		log.Printf("Verification collection indexes already exist, skipping.")
 	}
 
 	return &MongoDB{
-		client:             client,
-		database:           database,
-		serverCollection:   serverCollection,
-		metadataCollection: metadataCollection,
+		client:                 client,
+		database:               database,
+		serverCollection:       serverCollection,
+		verificationCollection: verificationCollection,
 	}, nil
 }
 
@@ -334,49 +329,76 @@ func (db *MongoDB) Connection() *ConnectionInfo {
 	}
 }
 
-// StoreVerificationToken stores a verification token for a server
-func (db *MongoDB) StoreVerificationToken(ctx context.Context, serverID string, token *model.VerificationToken) error {
-	metadata := &model.Metadata{
-		ServerID:          serverID,
-		VerificationToken: token,
-	}
+// StoreVerificationToken stores a verification token for a domain (adds to pending tokens)
+func (db *MongoDB) StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error {
+	// Try to get existing verification data first
+	filter := bson.M{"domain": domain}
 
-	_, err := db.metadataCollection.InsertOne(ctx, metadata)
+	var existingVerification model.DomainVerification
+	err := db.verificationCollection.FindOne(ctx, filter).Decode(&existingVerification)
+
+	var verificationTokens *model.VerificationTokens
+
 	if err != nil {
-		// Check if it's a duplicate key error
-		var writeErr mongo.WriteException
-		if errors.As(err, &writeErr) {
-			for _, writeError := range writeErr.WriteErrors {
-				if writeError.Code == 11000 { // Duplicate key error
-					return ErrAlreadyExists
-				}
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			// No existing record - create new verification tokens structure
+			verificationTokens = &model.VerificationTokens{
+				VerifiedToken: nil,
+				PendingTokens: []model.VerificationToken{*token},
+			}
+		} else {
+			// Real error occurred
+			return fmt.Errorf("failed to check existing verification tokens: %w", err)
+		}
+	} else {
+		// Document exists - check if it has verification tokens
+		if existingVerification.VerificationTokens != nil {
+			// Add to existing pending tokens
+			verificationTokens = existingVerification.VerificationTokens
+			verificationTokens.PendingTokens = append(verificationTokens.PendingTokens, *token)
+		} else {
+			// Document exists but has no verification tokens - create new structure
+			verificationTokens = &model.VerificationTokens{
+				VerifiedToken: nil,
+				PendingTokens: []model.VerificationToken{*token},
 			}
 		}
+	}
+
+	// Prepare the domain verification
+	domainVerification := &model.DomainVerification{
+		Domain:             domain,
+		VerificationTokens: verificationTokens,
+	}
+
+	// Use upsert to either insert or update
+	opts := options.Replace().SetUpsert(true)
+	_, err = db.verificationCollection.ReplaceOne(ctx, filter, domainVerification, opts)
+	if err != nil {
 		return fmt.Errorf("failed to store verification token: %w", err)
 	}
-	return nil
-}
 
-// GetVerificationToken retrieves a verification token by server ID
-func (db *MongoDB) GetVerificationToken(ctx context.Context, serverID string) (*model.VerificationToken, error) {
+	return nil
+} // GetVerificationTokens retrieves verification tokens by domain
+func (db *MongoDB) GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error) {
 	filter := bson.M{
-		"server_id": serverID,
+		"domain": domain,
 	}
 
-	var metadata model.Metadata
-	err := db.metadataCollection.FindOne(ctx, filter).Decode(&metadata)
+	var domainVerification model.DomainVerification
+	err := db.verificationCollection.FindOne(ctx, filter).Decode(&domainVerification)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, ErrNotFound
 		}
-		return nil, fmt.Errorf("failed to get verification token: %w", err)
+		return nil, fmt.Errorf("failed to get verification tokens: %w", err)
 	}
 
-	if metadata.VerificationToken == nil {
-		return nil, fmt.Errorf("verification token data is missing from metadata")
+	if domainVerification.VerificationTokens == nil {
+		return nil, fmt.Errorf("verification tokens data is missing from domain verification")
 	}
 
-	return metadata.VerificationToken, nil
+	return domainVerification.VerificationTokens, nil
 }
 
 // IsVerificationTokenUnique checks if a token is unique across all servers

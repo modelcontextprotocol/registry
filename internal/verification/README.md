@@ -7,7 +7,7 @@ This package provides cryptographically secure token generation for domain owner
 The verification package generates 128-bit cryptographically secure random tokens used for proving domain ownership through two verification methods:
 
 1. **DNS TXT Record Verification**: Add `mcp-verify=<token>` to your domain's DNS
-2. **HTTP-01 Web Challenge**: Serve the token at `https://domain/.well-known/mcp-challenge/<token>`
+2. **HTTP-01 Web Challenge**: Serve the token at `https://domain/.well-known/mcp-verify`
 
 ## Functions
 
@@ -29,42 +29,6 @@ if err != nil {
 - Base64url encoding (URL-safe and DNS-safe)
 - No padding characters
 - 22-character output length
-
-### ValidateTokenFormat(token string)
-
-Validates that a token string matches the expected format for verification tokens.
-
-```go
-isValid := verification.ValidateTokenFormat("TBeVXe_X4npM6p8vpzStnA")
-// Returns: true
-```
-
-**Validation Rules:**
-- Exactly 22 characters long
-- Contains only base64url characters: `A-Z`, `a-z`, `0-9`, `-`, `_`
-- No padding or special characters
-
-### GenerateTokenWithInfo()
-
-Generates a token with additional metadata about how to use it.
-
-```go
-tokenInfo, err := verification.GenerateTokenWithInfo()
-if err != nil {
-    return fmt.Errorf("failed to generate token info: %w", err)
-}
-
-fmt.Printf("Token: %s\n", tokenInfo.Token)
-fmt.Printf("DNS Record: %s\n", tokenInfo.DNSRecord)
-fmt.Printf("HTTP Path: %s\n", tokenInfo.HTTPPath)
-```
-
-**Output:**
-```
-Token: TBeVXe_X4npM6p8vpzStnA
-DNS Record: mcp-verify=TBeVXe_X4npM6p8vpzStnA
-HTTP Path: /.well-known/mcp-challenge/TBeVXe_X4npM6p8vpzStnA
-```
 
 ## Security Considerations
 
@@ -98,14 +62,14 @@ import (
 )
 
 func setupDNSVerification(domain string) error {
-    tokenInfo, err := verification.GenerateTokenWithInfo()
+    token, err := verification.GenerateVerificationToken()
     if err != nil {
         return err
     }
     
     fmt.Printf("Add this TXT record to %s:\n", domain)
-    fmt.Printf("Record: %s\n", tokenInfo.DNSRecord)
-    fmt.Printf("Value: %s\n", tokenInfo.Token)
+    fmt.Printf("Record: mcp-verify=%s\n", token)
+    fmt.Printf("Value: %s\n", token)
     
     return nil
 }
@@ -114,29 +78,24 @@ func setupDNSVerification(domain string) error {
 ### HTTP-01 Challenge Setup
 ```go
 func setupHTTPChallenge(domain string) error {
-    tokenInfo, err := verification.GenerateTokenWithInfo()
+    token, err := verification.GenerateVerificationToken()
     if err != nil {
         return err
     }
     
-    fmt.Printf("Serve the token at: https://%s%s\n", domain, tokenInfo.HTTPPath)
-    fmt.Printf("Content: %s\n", tokenInfo.Token)
+    fmt.Printf("Serve the token at: https://%s/.well-known/mcp-challenge/%s\n", domain, token)
+    fmt.Printf("Content: %s\n", token)
     
     return nil
 }
 ```
 
-### Token Validation
+### Token String Comparison
 ```go
-func validateUserToken(userToken string) bool {
-    if !verification.ValidateTokenFormat(userToken) {
-        return false
-    }
-    
-    // Additional validation logic here
-    // (e.g., check against stored tokens, expiration, etc.)
-    
-    return true
+func validateUserToken(userToken, expectedToken string) bool {
+    // For verification, simply compare the token strings
+    // No format validation needed - just string comparison
+    return userToken == expectedToken
 }
 ```
 
@@ -146,10 +105,9 @@ func validateUserToken(userToken string) bool {
 
 ## Error Handling
 
-The functions return errors in the following cases:
+The function returns errors in the following case:
 
 - `GenerateVerificationToken()`: When the system's entropy source is unavailable
-- `GenerateTokenWithInfo()`: When token generation fails
 
 Always check for errors and handle them appropriately:
 
@@ -168,8 +126,6 @@ Benchmark results on Apple M4 Max:
 
 ```
 BenchmarkGenerateVerificationToken-16    5726528    196.1 ns/op
-BenchmarkValidateTokenFormat-16          98329761   12.31 ns/op
-BenchmarkGenerateTokenWithInfo-16        4017357    290.5 ns/op
 ```
 
 Note: These benchmark results are provided as examples and were obtained on an Apple M4 Max system. Performance may vary significantly on different hardware configurations.
@@ -181,7 +137,6 @@ The package includes comprehensive tests covering:
 
 - Token generation and uniqueness
 - Entropy validation (exactly 128 bits)
-- Format validation
 - URL and DNS safety
 - Error handling
 - Performance benchmarks

@@ -135,8 +135,27 @@ type VerificationToken struct {
 	LastVerifiedAt *time.Time `json:"last_verified_at,omitempty" bson:"last_verified_at,omitempty"`
 }
 
-// Metadata represents a metadata entry for a server
-type Metadata struct {
-	ServerID          string             `json:"server_id" bson:"server_id"`
-	VerificationToken *VerificationToken `json:"verification_token,omitempty" bson:"verification_token,omitempty"`
+// VerificationTokens represents the collection of verification tokens for a domain
+type VerificationTokens struct {
+	VerifiedToken *VerificationToken  `json:"verified_token,omitempty" bson:"verified_token,omitempty"`
+	PendingTokens []VerificationToken `json:"pending_tokens,omitempty" bson:"pending_tokens,omitempty"`
+}
+
+// DomainVerification represents verification data for a specific domain
+type DomainVerification struct {
+	Domain             string              `json:"domain" bson:"domain"`
+	VerificationTokens *VerificationTokens `json:"verification_tokens,omitempty" bson:"verification_tokens,omitempty"`
+}
+
+// DomainVerificationRequest represents a request to generate a verification token for a domain
+type DomainVerificationRequest struct {
+	Domain string `json:"domain"`
+}
+
+// DomainVerificationResponse represents the response for domain verification operations
+type DomainVerificationResponse struct {
+	Domain    string `json:"domain"`
+	Token     string `json:"token"`
+	CreatedAt string `json:"created_at"`
+	DNSRecord string `json:"dns_record"`
 }

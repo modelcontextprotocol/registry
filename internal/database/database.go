@@ -24,13 +24,13 @@ type Database interface {
 	GetByID(ctx context.Context, id string) (*model.ServerDetail, error)
 	// Publish adds a new ServerDetail to the database
 	Publish(ctx context.Context, serverDetail *model.ServerDetail) error
-	// StoreVerificationToken stores a verification token for a server
-	StoreVerificationToken(ctx context.Context, serverID string, token *model.VerificationToken) error
-	// GetVerificationToken retrieves a verification token by server ID
-	GetVerificationToken(ctx context.Context, serverID string) (*model.VerificationToken, error)
-	// IsVerificationTokenUnique checks if a token is unique across all servers
-	IsVerificationTokenUnique(ctx context.Context, token string) (bool, error)
-	// ImportSeed imports initial data from a seed file
+	// StoreVerificationToken stores a verification token for a domain (adds to pending tokens)
+	StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error
+	// GetVerificationTokens retrieves all verification tokens by domain
+	GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error)
+    // IsVerificationTokenUnique checks if a token is unique across all servers
+    IsVerificationTokenUnique(ctx context.Context, token string) (bool, error)
+    // ImportSeed imports initial data from a seed file
 	ImportSeed(ctx context.Context, seedFilePath string) error
 	// Close closes the database connection
 	Close() error
