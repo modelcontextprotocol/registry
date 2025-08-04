@@ -7,12 +7,16 @@ info:
 servers:
   - url: /
     description: Default server
+  - url: http://localhost:8080
+    description: Local development server
   
 tags:
   - name: health
     description: Health checking operations
   - name: servers
     description: Server registry operations
+  - name: domains
+    description: Domain verification operations
 
 paths:
   /v0/health:
@@ -200,6 +204,94 @@ paths:
         '405':
           description: Method not allowed
 
+  /v0/domains/claim:
+    post:
+      tags:
+        - domains
+      summary: Claim a domain for verification
+      description: Generate a verification token for a domain to enable domain-based server publishing
+      operationId: claimDomain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainClaimRequest'
+      responses:
+        '201':
+          description: Domain claimed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainClaimResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: domain is required
+        '405':
+          description: Method not allowed
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to claim domain
+
+  /v0/domains/status:
+    post:
+      tags:
+        - domains
+      summary: Get domain verification status
+      description: Check the verification status of a domain
+      operationId: getDomainStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DomainStatusRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainStatusResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: domain is required
+        '404':
+          description: Domain not found
+        '405':
+          description: Method not allowed
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to retrieve domain status
+
 components:
   securitySchemes:
     bearerAuth:
@@ -243,3 +335,230 @@ components:
         count:
           type: integer
           example: 30
+
+    ServerDetail:
+      allOf:
+        - $ref: '#/components/schemas/Server'
+        - type: object
+          properties:
+            packages:
+              type: array
+              items:
+                $ref: '#/components/schemas/Package'
+            remotes:
+              type: array
+              items:
+                $ref: '#/components/schemas/Remote'
+
+    Package:
+      type: object
+      properties:
+        registry_name:
+          type: string
+          example: "npm"
+        name:
+          type: string
+          example: "@example/mcp-server"
+        version:
+          type: string
+          example: "1.0.0"
+        runtime_hint:
+          type: string
+          example: "node"
+        runtime_arguments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Argument'
+        package_arguments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Argument'
+        environment_variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValueInput'
+
+    Remote:
+      type: object
+      required:
+        - transport_type
+        - url
+      properties:
+        transport_type:
+          type: string
+          example: "sse"
+        url:
+          type: string
+          format: uri
+          example: "https://example.com/mcp"
+        headers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Input'
+
+    Argument:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: ["positional", "named"]
+        name:
+          type: string
+          example: "config-file"
+        description:
+          type: string
+          example: "Path to configuration file"
+        is_required:
+          type: boolean
+          example: false
+        format:
+          type: string
+          enum: ["string", "number", "boolean", "file_path"]
+        value:
+          type: string
+          example: "./config.json"
+        is_secret:
+          type: boolean
+          example: false
+        default:
+          type: string
+          example: "default.json"
+        choices:
+          type: array
+          items:
+            type: string
+        template:
+          type: string
+        is_repeated:
+          type: boolean
+          example: false
+        value_hint:
+          type: string
+          example: "Path to file"
+        variables:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Input'
+
+    KeyValueInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "API_KEY"
+        description:
+          type: string
+          example: "API key for authentication"
+        is_required:
+          type: boolean
+          example: true
+        format:
+          type: string
+          enum: ["string", "number", "boolean", "file_path"]
+        value:
+          type: string
+          example: "your-api-key"
+        is_secret:
+          type: boolean
+          example: true
+        default:
+          type: string
+        choices:
+          type: array
+          items:
+            type: string
+        template:
+          type: string
+        variables:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Input'
+
+    Input:
+      type: object
+      properties:
+        description:
+          type: string
+          example: "Input description"
+        is_required:
+          type: boolean
+          example: false
+        format:
+          type: string
+          enum: ["string", "number", "boolean", "file_path"]
+        value:
+          type: string
+          example: "input value"
+        is_secret:
+          type: boolean
+          example: false
+        default:
+          type: string
+        choices:
+          type: array
+          items:
+            type: string
+        template:
+          type: string
+        properties:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Input'
+
+    DomainClaimRequest:
+      type: object
+      required:
+        - domain
+      properties:
+        domain:
+          type: string
+          description: Domain to claim for verification (can include protocol and path, will be normalized)
+          example: "https://example.com"
+
+    DomainClaimResponse:
+      type: object
+      properties:
+        domain:
+          type: string
+          description: Original domain from request
+          example: "https://example.com"
+        normalized_domain:
+          type: string
+          description: Cleaned domain (hostname only)
+          example: "example.com"
+        token:
+          type: string
+          description: Verification token to be used for domain verification
+          example: "mcp-verification-abc123def456"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the token was created
+          example: "2025-08-04T12:34:56Z"
+
+    DomainStatusRequest:
+      type: object
+      required:
+        - domain
+      properties:
+        domain:
+          type: string
+          description: Domain to check verification status for
+          example: "example.com"
+
+    DomainStatusResponse:
+      type: object
+      properties:
+        domain:
+          type: string
+          description: Normalized domain name
+          example: "example.com"
+        status:
+          type: string
+          enum: ["verified", "unverified"]
+          description: Verification status of the domain
+          example: "verified"
