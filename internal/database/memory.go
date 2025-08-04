@@ -339,7 +339,9 @@ func (db *MemoryDB) StoreVerificationToken(ctx context.Context, domain string, t
 
 	db.domainVerifications[domain] = domainVerification
 	return nil
-} // GetVerificationTokens retrieves verification tokens by domain
+}
+
+// GetVerificationTokens retrieves verification tokens by domain
 func (db *MemoryDB) GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
