@@ -130,7 +130,8 @@ func (s *fakeRegistryService) ClaimDomain(domain string) (*model.VerificationTok
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	for {
+	const maxAttempts = 10
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		// Generate a verification token
 		token, err := verification.GenerateVerificationToken()
 		if err != nil {
@@ -159,6 +160,9 @@ func (s *fakeRegistryService) ClaimDomain(domain string) (*model.VerificationTok
 			return verificationToken, nil
 		}
 	}
+
+	// If we've exhausted all attempts, return an error
+	return nil, database.ErrMaxAttemptsExceeded
 }
 
 // GetDomainVerificationStatus retrieves the verification status for a domain

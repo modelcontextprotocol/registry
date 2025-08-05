@@ -98,3 +98,54 @@ func TestGetDomainVerificationStatus(t *testing.T) {
 	assert.Len(t, status.PendingTokens, 1)
 	assert.Equal(t, token.Token, status.PendingTokens[0].Token)
 }
+
+func TestClaimDomain_MaxAttempts(t *testing.T) {
+	// Create a mock database that always returns false for IsVerificationTokenUnique
+	// to simulate the scenario where we can't find a unique token
+	memDB := &mockDBAlwaysNonUnique{}
+	service := NewRegistryServiceWithDB(memDB)
+
+	domain := "example.com"
+
+	// Attempt to claim domain should fail after max attempts
+	token, err := service.ClaimDomain(domain)
+	require.Error(t, err)
+	assert.Nil(t, token)
+	assert.Equal(t, database.ErrMaxAttemptsExceeded, err)
+}
+
+// mockDBAlwaysNonUnique is a mock database that always returns false for IsVerificationTokenUnique
+type mockDBAlwaysNonUnique struct{}
+
+func (m *mockDBAlwaysNonUnique) List(ctx context.Context, filter map[string]any, cursor string, limit int) ([]*model.Server, string, error) {
+	return nil, "", nil
+}
+
+func (m *mockDBAlwaysNonUnique) GetByID(ctx context.Context, id string) (*model.ServerDetail, error) {
+	return nil, database.ErrNotFound
+}
+
+func (m *mockDBAlwaysNonUnique) Publish(ctx context.Context, serverDetail *model.ServerDetail) error {
+	return nil
+}
+
+func (m *mockDBAlwaysNonUnique) StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error {
+	return nil
+}
+
+func (m *mockDBAlwaysNonUnique) GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error) {
+	return nil, database.ErrNotFound
+}
+
+func (m *mockDBAlwaysNonUnique) IsVerificationTokenUnique(ctx context.Context, token string) (bool, error) {
+	// Always return false to simulate the case where no unique token can be found
+	return false, nil
+}
+
+func (m *mockDBAlwaysNonUnique) ImportSeed(ctx context.Context, seedFilePath string) error {
+	return nil
+}
+
+func (m *mockDBAlwaysNonUnique) Close() error {
+	return nil
+}

@@ -9,11 +9,12 @@ import (
 
 // Common database errors
 var (
-	ErrNotFound       = errors.New("record not found")
-	ErrAlreadyExists  = errors.New("record already exists")
-	ErrInvalidInput   = errors.New("invalid input")
-	ErrDatabase       = errors.New("database error")
-	ErrInvalidVersion = errors.New("invalid version: cannot publish older version after newer version")
+	ErrNotFound            = errors.New("record not found")
+	ErrAlreadyExists       = errors.New("record already exists")
+	ErrInvalidInput        = errors.New("invalid input")
+	ErrDatabase            = errors.New("database error")
+	ErrInvalidVersion      = errors.New("invalid version: cannot publish older version after newer version")
+	ErrMaxAttemptsExceeded = errors.New("maximum attempts exceeded for token generation")
 )
 
 // Database defines the interface for database operations on MCPRegistry entries
@@ -28,9 +29,9 @@ type Database interface {
 	StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error
 	// GetVerificationTokens retrieves all verification tokens by domain
 	GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error)
-    // IsVerificationTokenUnique checks if a token is unique across all servers
-    IsVerificationTokenUnique(ctx context.Context, token string) (bool, error)
-    // ImportSeed imports initial data from a seed file
+	// IsVerificationTokenUnique checks if a token is unique across all servers
+	IsVerificationTokenUnique(ctx context.Context, token string) (bool, error)
+	// ImportSeed imports initial data from a seed file
 	ImportSeed(ctx context.Context, seedFilePath string) error
 	// Close closes the database connection
 	Close() error
