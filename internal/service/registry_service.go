@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
@@ -117,27 +118,25 @@ func (s *registryServiceImpl) ClaimDomain(domain string) (*model.VerificationTok
 			return nil, err
 		}
 
-		// Check if the token is unique across all domains
-		isUnique, err := s.db.IsVerificationTokenUnique(ctx, token)
+		// Create the verification token object
+		verificationToken := &model.VerificationToken{
+			Token:     token,
+			CreatedAt: time.Now(),
+		}
+
+		// Try to store the token atomically
+		err = s.db.StoreVerificationToken(ctx, domain, verificationToken)
 		if err != nil {
+			if errors.Is(err, database.ErrTokenAlreadyExists) {
+				// Token collision, try again with a new token
+				continue
+			}
+			// Other error, return it
 			return nil, err
 		}
 
-		if isUnique {
-			// Token is unique, create and store it
-			verificationToken := &model.VerificationToken{
-				Token:     token,
-				CreatedAt: time.Now(),
-			}
-
-			// Store the token in the database as pending for the domain
-			err = s.db.StoreVerificationToken(ctx, domain, verificationToken)
-			if err != nil {
-				return nil, err
-			}
-
-			return verificationToken, nil
-		}
+		// Success! Token was stored atomically
+		return verificationToken, nil
 	}
 
 	// If we've exhausted all attempts, return an error

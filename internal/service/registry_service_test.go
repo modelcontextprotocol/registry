@@ -130,7 +130,8 @@ func (m *mockDBAlwaysNonUnique) Publish(ctx context.Context, serverDetail *model
 }
 
 func (m *mockDBAlwaysNonUnique) StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error {
-	return nil
+	// Always return ErrTokenAlreadyExists to simulate that tokens are never unique
+	return database.ErrTokenAlreadyExists
 }
 
 func (m *mockDBAlwaysNonUnique) GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error) {

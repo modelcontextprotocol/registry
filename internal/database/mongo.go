@@ -329,53 +329,50 @@ func (db *MongoDB) Connection() *ConnectionInfo {
 	}
 }
 
-// StoreVerificationToken stores a verification token for a domain (adds to pending tokens)
+// StoreVerificationToken atomically stores a verification token for a domain if the token is unique
 func (db *MongoDB) StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error {
-	// Try to get existing verification data first
-	filter := bson.M{"domain": domain}
+	// First, check if the token already exists across all domains
+	tokenExistsFilter := bson.M{
+		"$or": []bson.M{
+			{"verification_tokens.verified_token.token": token.Token},
+			{"verification_tokens.pending_tokens.token": token.Token},
+		},
+	}
 
-	var existingVerification model.DomainVerification
-	err := db.verificationCollection.FindOne(ctx, filter).Decode(&existingVerification)
-
-	var verificationTokens *model.VerificationTokens
-
+	count, err := db.verificationCollection.CountDocuments(ctx, tokenExistsFilter)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			// No existing record - create new verification tokens structure
-			verificationTokens = &model.VerificationTokens{
-				VerifiedToken: nil,
-				PendingTokens: []model.VerificationToken{*token},
-			}
-		} else {
-			// Real error occurred
-			return fmt.Errorf("failed to check existing verification tokens: %w", err)
-		}
-	} else {
-		// Document exists - check if it has verification tokens
-		if existingVerification.VerificationTokens != nil {
-			// Add to existing pending tokens
-			verificationTokens = existingVerification.VerificationTokens
-			verificationTokens.PendingTokens = append(verificationTokens.PendingTokens, *token)
-		} else {
-			// Document exists but has no verification tokens - create new structure
-			verificationTokens = &model.VerificationTokens{
-				VerifiedToken: nil,
-				PendingTokens: []model.VerificationToken{*token},
-			}
-		}
+		return fmt.Errorf("failed to check token uniqueness: %w", err)
 	}
 
-	// Prepare the domain verification
-	domainVerification := &model.DomainVerification{
-		Domain:             domain,
-		VerificationTokens: verificationTokens,
+	if count > 0 {
+		return ErrTokenAlreadyExists
 	}
 
-	// Use upsert to either insert or update
-	opts := options.Replace().SetUpsert(true)
-	_, err = db.verificationCollection.ReplaceOne(ctx, filter, domainVerification, opts)
+	// Token is unique, now add it to the domain's pending tokens
+	domainFilter := bson.M{
+		"domain": domain,
+		// Double-check the token doesn't exist in this domain's tokens during the update
+		"verification_tokens.pending_tokens.token": bson.M{"$ne": token.Token},
+	}
+
+	update := bson.M{
+		"$setOnInsert": bson.M{
+			"domain": domain,
+		},
+		"$addToSet": bson.M{
+			"verification_tokens.pending_tokens": token,
+		},
+	}
+
+	opts := options.Update().SetUpsert(true)
+	result, err := db.verificationCollection.UpdateOne(ctx, domainFilter, update, opts)
 	if err != nil {
 		return fmt.Errorf("failed to store verification token: %w", err)
+	}
+
+	// If no documents were modified and it wasn't an upsert, the token might have been added concurrently
+	if result.ModifiedCount == 0 && result.UpsertedCount == 0 {
+		return ErrTokenAlreadyExists
 	}
 
 	return nil

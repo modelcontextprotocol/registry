@@ -309,12 +309,32 @@ func (db *MemoryDB) Connection() *ConnectionInfo {
 	}
 }
 
-// StoreVerificationToken stores a verification token for a domain (adds to pending tokens)
+// StoreVerificationToken atomically stores a verification token for a domain if the token is unique
 func (db *MemoryDB) StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error {
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	// Get existing domain verification
+	// Check if the token is unique across all domains
+	for _, domainVerification := range db.domainVerifications {
+		if domainVerification.VerificationTokens == nil {
+			continue
+		}
+
+		// Check verified token
+		if domainVerification.VerificationTokens.VerifiedToken != nil &&
+			domainVerification.VerificationTokens.VerifiedToken.Token == token.Token {
+			return ErrTokenAlreadyExists
+		}
+
+		// Check pending tokens
+		for _, pendingToken := range domainVerification.VerificationTokens.PendingTokens {
+			if pendingToken.Token == token.Token {
+				return ErrTokenAlreadyExists
+			}
+		}
+	}
+
+	// Token is unique, store it
 	existingVerification, exists := db.domainVerifications[domain]
 
 	var verificationTokens *model.VerificationTokens

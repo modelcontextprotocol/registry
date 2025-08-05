@@ -15,6 +15,7 @@ var (
 	ErrDatabase            = errors.New("database error")
 	ErrInvalidVersion      = errors.New("invalid version: cannot publish older version after newer version")
 	ErrMaxAttemptsExceeded = errors.New("maximum attempts exceeded for token generation")
+	ErrTokenAlreadyExists  = errors.New("verification token already exists")
 )
 
 // Database defines the interface for database operations on MCPRegistry entries
@@ -25,7 +26,7 @@ type Database interface {
 	GetByID(ctx context.Context, id string) (*model.ServerDetail, error)
 	// Publish adds a new ServerDetail to the database
 	Publish(ctx context.Context, serverDetail *model.ServerDetail) error
-	// StoreVerificationToken stores a verification token for a domain (adds to pending tokens)
+	// StoreVerificationToken atomically stores a verification token for a domain if the token is unique
 	StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error
 	// GetVerificationTokens retrieves all verification tokens by domain
 	GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error)
