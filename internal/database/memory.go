@@ -326,7 +326,6 @@ func (db *MemoryDB) StoreVerificationToken(ctx context.Context, domain string, t
 	} else {
 		// No existing record or no verification tokens - create new structure
 		verificationTokens = &model.VerificationTokens{
-			VerifiedToken: nil,
 			PendingTokens: []model.VerificationToken{*token},
 		}
 	}
