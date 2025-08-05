@@ -326,7 +326,6 @@ func (db *MemoryDB) StoreVerificationToken(ctx context.Context, domain string, t
 	} else {
 		// No existing record or no verification tokens - create new structure
 		verificationTokens = &model.VerificationTokens{
-			VerifiedToken: nil,
 			PendingTokens: []model.VerificationToken{*token},
 		}
 	}
@@ -339,7 +338,9 @@ func (db *MemoryDB) StoreVerificationToken(ctx context.Context, domain string, t
 
 	db.domainVerifications[domain] = domainVerification
 	return nil
-} // GetVerificationTokens retrieves verification tokens by domain
+}
+
+// GetVerificationTokens retrieves verification tokens by domain
 func (db *MemoryDB) GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error) {
 	db.mu.RLock()
 	defer db.mu.RUnlock()

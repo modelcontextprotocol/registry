@@ -379,7 +379,9 @@ func (db *MongoDB) StoreVerificationToken(ctx context.Context, domain string, to
 	}
 
 	return nil
-} // GetVerificationTokens retrieves verification tokens by domain
+}
+
+// GetVerificationTokens retrieves verification tokens by domain
 func (db *MongoDB) GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error) {
 	filter := bson.M{
 		"domain": domain,
