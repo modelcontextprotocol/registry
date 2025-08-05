@@ -1,6 +1,7 @@
 {
     "description": "<your description here>",
     "name": "io.github.<owner>/<server-name>",
+    "status": "active",
     "packages": [
         {
             "registry_name": "npm",

@@ -22,7 +22,7 @@ const (
 	// IMPORTANT: Only change this count if you have intentionally added or removed examples
 	// from the examples.md file. This check prevents accidental formatting changes from
 	// causing examples to be skipped during validation.
-	expectedExampleCount = 8
+	expectedExampleCount = 9
 )
 
 func main() {
