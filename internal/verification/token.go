@@ -4,12 +4,25 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"strings"
 )
 
 // TokenLength defines the number of bytes for the verification token.
 // 128 bits = 16 bytes provides cryptographically secure randomness
 // suitable for domain ownership verification.
 const TokenLength = 16
+
+// TokenInfo contains a verification token and formatted strings for different verification methods
+type TokenInfo struct {
+	// Token is the raw verification token
+	Token string `json:"token"`
+
+	// DNSRecord is the formatted DNS TXT record value
+	DNSRecord string `json:"dns_record"`
+
+	// HTTPPath is the formatted HTTP challenge path
+	HTTPPath string `json:"http_path"`
+}
 
 // GenerateVerificationToken generates a cryptographically secure 128-bit (16 bytes)
 // random token for domain ownership verification. The token is encoded using base64url
@@ -54,4 +67,79 @@ func GenerateVerificationToken() (string, error) {
 	token := base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(randomBytes)
 
 	return token, nil
+}
+
+// GenerateTokenWithInfo generates a verification token with additional metadata
+// about how to use it for different verification methods.
+//
+// This function generates a token and returns it along with pre-formatted
+// strings for DNS TXT records and HTTP challenge paths, making it easier
+// for callers to implement verification workflows.
+//
+// Returns:
+// - TokenInfo struct containing the token and formatted verification strings
+// - An error if token generation fails
+//
+// Example usage:
+//
+//	tokenInfo, err := GenerateTokenWithInfo()
+//	if err != nil {
+//	    return fmt.Errorf("failed to generate token info: %w", err)
+//	}
+//
+//	fmt.Printf("Add this DNS record: %s\n", tokenInfo.DNSRecord)
+//	fmt.Printf("Or serve content at: %s\n", tokenInfo.HTTPPath)
+func GenerateTokenWithInfo() (*TokenInfo, error) {
+	token, err := GenerateVerificationToken()
+	if err != nil {
+		return nil, err
+	}
+
+	return &TokenInfo{
+		Token:     token,
+		DNSRecord: fmt.Sprintf("mcp-verify=%s", token),
+		HTTPPath:  fmt.Sprintf("/.well-known/mcp-challenge/%s", token),
+	}, nil
+}
+
+// ValidateTokenFormat validates that a token string follows the expected format
+// for MCP verification tokens (base64url encoding, no padding, 22 characters).
+//
+// This function verifies that:
+// - Token is exactly 22 characters long (base64url encoding of 16 bytes)
+// - Token contains only valid base64url characters (A-Z, a-z, 0-9, -, _)
+// - Token contains no padding characters (=)
+//
+// Parameters:
+// - token: The token string to validate
+//
+// Returns:
+// - true if the token format is valid, false otherwise
+func ValidateTokenFormat(token string) bool {
+	// Check length (22 characters for base64url encoding of 16 bytes)
+	if len(token) != 22 {
+		return false
+	}
+
+	// Check for padding (shouldn't be present in base64url)
+	if strings.Contains(token, "=") {
+		return false
+	}
+
+	// Check that all characters are valid base64url characters
+	for _, char := range token {
+		if !isValidBase64URLChar(char) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// isValidBase64URLChar checks if a character is valid for base64url encoding
+func isValidBase64URLChar(char rune) bool {
+	return (char >= 'A' && char <= 'Z') ||
+		(char >= 'a' && char <= 'z') ||
+		(char >= '0' && char <= '9') ||
+		char == '-' || char == '_'
 }
