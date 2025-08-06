@@ -48,10 +48,7 @@ func compareSemanticVersions(version1, version2 string) int {
 	parts2 := strings.Split(version2, ".")
 
 	// Pad with zeros if needed
-	maxLen := len(parts1)
-	if len(parts2) > maxLen {
-		maxLen = len(parts2)
-	}
+	maxLen := max(len(parts2), len(parts1))
 
 	for len(parts1) < maxLen {
 		parts1 = append(parts1, "0")
@@ -162,10 +159,7 @@ func (db *MemoryDB) List(
 	})
 
 	// Apply pagination
-	endIdx := startIdx + limit
-	if endIdx > len(filteredEntries) {
-		endIdx = len(filteredEntries)
-	}
+	endIdx := min(startIdx+limit, len(filteredEntries))
 
 	var result []*model.Server
 	if startIdx < len(filteredEntries) {

@@ -4,7 +4,15 @@ A community driven registry service for Model Context Protocol (MCP) servers.
 
 ## Development Status
 
-This project is being built in the open and is currently in the early stages of development. Please see the [overview discussion](https://github.com/modelcontextprotocol/registry/discussions/11) for the project scope and goals. If you would like to contribute, please check out the [contributing guidelines](CONTRIBUTING.md).
+This project is being built in the open and is currently in the early stages of development. Please see the [overview discussion](https://github.com/modelcontextprotocol/registry/discussions/11) for the project scope and goals.
+
+### Contributing
+
+Use [Discussions](https://github.com/modelcontextprotocol/registry/discussions) to propose and discuss product and/or technical **requirements**.
+
+Use [Issues](https://github.com/modelcontextprotocol/registry/issues) to track **well-scoped technical work** that the community agrees should be done at some point.
+
+Open [Pull Requests](https://github.com/modelcontextprotocol/registry/pulls) when you want to **contribute work towards an Issue**, or you feel confident that your contribution is desireable and small enough to forego community discussion at the requirements and planning levels.
 
 ## Overview
 
@@ -29,38 +37,90 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 - Docker (optional, but recommended for development)
 
 For development:
-- golangci-lint v1.61.0 - Install with:
+- golangci-lint v2.3.1 - Install with:
   ```bash
-  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.3.1
   ```
 
 ## Running
 
-The easiest way to get the registry running is to use `docker compose`. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
+The easiest way to get the registry running is uses docker compose. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
 
 ```bash
-# Build the Docker image
-docker build -t registry .
-
 # Run the registry and MongoDB with docker compose
-docker compose up
+make dev-compose
 ```
 
-This will start the MCP Registry service and MongoDB with Docker, exposing it on port 8080.
+This will start the MCP Registry service and MongoDB with Docker, running at [`localhost:8080`](http://localhost:8080).
 
 ## Building
 
-If you prefer to run the service locally without Docker, you can build and run it directly using Go.
+If you prefer to run the service locally without Docker, you can build and run it directly:
 
 ```bash
 # Build a registry executable
-go build ./cmd/registry
+make build
 ```
 This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
 
-By default, the service will run on `http://localhost:8080`.
+To run the service locally:
+```bash
+# Run registry locally (requires MongoDB)
+make dev-local
+```
+
+By default, the service will run on [`localhost:8080`](http://localhost:8080).
+
+To build the CLI tool for publishing MCP servers to the registry:
+
+```bash
+# Build the publisher tool
+make publisher
+```
 
 ## Development
+
+### Available Make Targets
+
+To see all available make targets:
+
+```bash
+make help
+```
+
+Key development commands:
+
+```bash
+# Development
+make dev-compose   # Start development environment with Docker Compose
+make dev-local     # Run registry locally (requires MongoDB)
+
+# Build targets
+make build          # Build the registry application
+make publisher      # Build the publisher tool
+
+# Testing
+make test-unit        # Run unit tests with coverage report
+make test-integration # Run integration tests
+make test-endpoints   # Test API endpoints (requires running server)
+make test-publish     # Test publish endpoint (requires BEARER_TOKEN)
+make test-all         # Run all tests
+
+# Code quality
+make lint          # Run linter (same as CI)
+make lint-fix      # Run linter with auto-fix
+
+# Validation
+make validate-schemas   # Validate JSON schemas
+make validate-examples  # Validate examples against schemas
+make validate          # Run all validation checks
+
+# Combined workflows
+make check         # Run all checks (lint, validate, unit tests)
+
+# Utilities
+make clean         # Clean build artifacts and coverage files
+```
 
 ### Linting
 
@@ -68,13 +128,10 @@ The project uses golangci-lint with extensive checks. Always run linting before 
 
 ```bash
 # Run all linters (same as CI)
-golangci-lint run --timeout=5m
+make lint
 
-# Check formatting
-gofmt -s -l .
-
-# Fix formatting
-gofmt -s -w .
+# Run linter with auto-fix
+make lint-fix
 ```
 
 ### Git Hooks (Optional)
@@ -87,34 +144,61 @@ git config core.hooksPath .githooks
 
 This will prevent commits that fail linting or have formatting issues.
 
-## Project Structure
+### Project Structure
 
 ```
 ├── api/           # OpenApi specification
 ├── cmd/           # Application entry points
 ├── config/        # Configuration files
 ├── internal/      # Private application code
-│   ├── api/       # HTTP server and request handlers
+│   ├── api/       # HTTP server and request handlers (routing)
+│   ├── auth/      # GitHub OAuth integration
 │   ├── config/    # Configuration management
-│   ├── model/     # Data models
-│   └── service/   # Business logic
+│   ├── database/  # Data persistence abstraction (MongoDB and in-memory)
+│   ├── model/     # Data models and domain structures
+│   └── service/   # Business logic implementation
 ├── pkg/           # Public libraries
 ├── scripts/       # Utility scripts
 └── tools/         # Command line tools
     └── publisher/ # Tool to publish MCP servers to the registry
 ```
 
-## API Documentation
+### Architecture Overview
 
-The API is documented using Swagger/OpenAPI. You can access the interactive Swagger UI at:
+### Request Flow
+1. HTTP requests enter through router (`internal/api/router/`)
+2. Handlers in `internal/api/handlers/v0/` validate and process requests
+3. Service layer executes business logic
+4. Database interface handles persistence
+5. JSON responses returned to clients
 
-```
-/v0/swagger/index.html
-```
+### Key Interfaces
+- **Database Interface** (`internal/database/database.go`) - Abstracts data persistence with MongoDB and memory implementations
+- **RegistryService** (`internal/service/service.go`) - Business logic abstraction over database
+- **Auth Service** (`internal/auth/auth.go`) - GitHub OAuth token validation
 
-This provides a complete reference of all endpoints with request/response schemas and allows you to test the API directly from your browser.
+### Authentication Flow
+Publishing requires GitHub OAuth validation:
+1. Extract bearer token from Authorization header
+2. Validate token with GitHub API
+3. Verify repository ownership matches token owner
+4. Check organization membership if applicable
+
+### Design Patterns
+- **Factory Pattern** for service creation with dependency injection
+- **Repository Pattern** for database abstraction
+- **Context Pattern** for timeout management (5-second DB operations)
+- **Cursor-based Pagination** using UUIDs for stateless pagination
 
 ## API Endpoints
+
+### API Documentation
+
+```
+GET /v0/swagger/index.html
+```
+
+The API is documented using Swagger/OpenAPI. This page provides a complete reference of all endpoints with request/response schemas and allows you to test the API directly from your browser.
 
 ### Health Check
 
@@ -333,26 +417,6 @@ The service can be configured using environment variables:
 | `MCP_REGISTRY_SEED_IMPORT`           | Import `seed.json` on first run | `true` |
 | `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
 
-
-## Testing
-
-Run the test script to validate API endpoints:
-
-```bash
-./scripts/test_endpoints.sh
-```
-
-You can specify specific endpoints to test:
-
-```bash
-./scripts/test_endpoints.sh --endpoint health
-./scripts/test_endpoints.sh --endpoint servers
-```
-
 ## License
 
 See the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-See the [CONTRIBUTING](CONTRIBUTING.md) file for details.
