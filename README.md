@@ -36,12 +36,9 @@ For development:
 
 ## Running
 
-The easiest way to get the registry running is to use `docker compose`. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
+The easiest way to get the registry running is uses docker compose. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
 
 ```bash
-# Build the Docker image
-make docker
-
 # Run the registry and MongoDB with docker compose
 make dev-compose
 ```
@@ -76,17 +73,17 @@ Key development commands:
 # Build targets
 make build          # Build the registry application
 make publisher      # Build the publisher tool
-make docker         # Build Docker image
 
 # Development
 make dev-compose   # Start development environment with Docker Compose
 make dev-local     # Run registry locally (requires MongoDB)
 
 # Testing
-make test          # Run unit tests with coverage
-make integration-test  # Run integration tests
-make test-endpoints    # Test API endpoints (requires running server)
+make test-unit        # Run unit tests with coverage report
+make test-integration # Run integration tests
+make test-endpoints   # Test API endpoints (requires running server)
 make test-publish     # Test publish endpoint (requires BEARER_TOKEN)
+make test-all         # Run all tests
 
 # Code quality
 make lint          # Run linter (same as CI)
@@ -98,11 +95,9 @@ make validate-examples  # Validate examples against schemas
 make validate          # Run all validation checks
 
 # Combined workflows
-make check         # Run all checks (lint, validate, test)
-make pre-commit    # Run all pre-commit checks (includes integration tests)
+make check         # Run all checks (lint, validate, unit tests)
 
 # Utilities
-make coverage      # Generate test coverage report
 make clean         # Clean build artifacts and coverage files
 ```
 
@@ -433,9 +428,6 @@ make validate
 ```bash
 # Run all checks (lint, validate, test)
 make check
-
-# Run all pre-commit checks (includes integration tests)
-make pre-commit
 ```
 
 ## License

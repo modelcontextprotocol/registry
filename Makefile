@@ -1,4 +1,4 @@
-.PHONY: help build test lint lint-fix validate validate-schemas validate-examples integration-test check dev-local dev-compose clean docker publisher coverage
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check pre-commit ci dev-local dev-compose clean publisher
 
 # Default target
 help: ## Show this help message
@@ -12,14 +12,17 @@ build: ## Build the registry application
 publisher: ## Build the publisher tool
 	cd tools/publisher && ./build.sh
 
-docker: ## Build Docker image
-	docker build -t registry .
-
 # Test targets
-test: ## Run unit tests
+test-unit: ## Run unit tests with coverage
 	go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
 
-integration-test: ## Run integration tests
+test: ## Run unit tests (use 'make test-all' to run all tests)
+	@echo "⚠️  Running unit tests only. Use 'make test-all' to run both unit and integration tests."
+	@$(MAKE) test-unit
+
+test-integration: ## Run integration tests
 	./tests/integration/run.sh
 
 test-endpoints: ## Test API endpoints (requires running server)
@@ -27,6 +30,8 @@ test-endpoints: ## Test API endpoints (requires running server)
 
 test-publish: ## Test publish endpoint (requires BEARER_TOKEN env var)
 	./scripts/test_publish.sh
+
+test-all: test-unit test-integration ## Run all tests (unit and integration)
 
 # Validation targets
 validate-schemas: ## Validate JSON schemas
@@ -37,7 +42,7 @@ validate-examples: ## Validate examples against schemas
 
 validate: validate-schemas validate-examples ## Run all validation checks
 
-# Code quality targets
+# Lint targets
 lint: ## Run linter (includes formatting)
 	golangci-lint run --timeout=5m
 
@@ -45,14 +50,12 @@ lint-fix: ## Run linter with auto-fix (includes formatting)
 	golangci-lint run --fix --timeout=5m
 
 # Combined targets
-check: lint validate test ## Run all checks (lint, validate, test)
-
-pre-commit: check integration-test ## Run all pre-commit checks
-	@echo "All pre-commit checks passed!"
+check: lint validate test-all ## Run all checks (lint, validate, unit tests)
+	@echo "All checks passed!"
 
 # Development targets
-dev-compose: ## Start development environment with Docker Compose
-	docker compose up
+dev-compose: ## Start development environment with Docker Compose (builds image automatically)
+	docker compose up --build
 
 dev-local: ## Run registry locally (requires MongoDB)
 	go run cmd/registry/main.go
@@ -60,11 +63,8 @@ dev-local: ## Run registry locally (requires MongoDB)
 # Cleanup
 clean: ## Clean build artifacts and coverage files
 	rm -f registry
-	rm -f coverage.out
+	rm -f coverage.out coverage.html
 	cd tools/publisher && rm -f publisher
 
-# Coverage
-coverage: ## Generate test coverage report
-	go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
 
 .DEFAULT_GOAL := help
