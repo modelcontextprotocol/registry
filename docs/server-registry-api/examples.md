@@ -17,6 +17,7 @@ GET /v0/servers?limit=5000&offset=0
       "id": "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1",
       "name": "io.modelcontextprotocol/filesystem",
       "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
+      "status": "active",
       "repository": {
         "url": "https://github.com/modelcontextprotocol/servers",
         "source": "github",
@@ -49,6 +50,7 @@ GET /v0/servers/a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1?version=0.0.3
   "id": "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1",
   "name": "io.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
+  "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -143,6 +145,7 @@ API Response:
   "id": "brave-search-12345",
   "name": "io.modelcontextprotocol/brave-search",
   "description": "MCP server for Brave Search API integration",
+  "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -195,6 +198,7 @@ API Response:
   "id": "filesystem-67890",
   "name": "io.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations",
+  "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -268,6 +272,7 @@ API Response:
   "id": "remote-fs-54321",
   "name": "Remote Brave Search Server",
   "description": "Cloud-hosted MCP Brave Search server",
+  "status": "active",
   "repository": {
     "url": "https://github.com/example/remote-fs",
     "source": "github",

@@ -31,6 +31,7 @@ graph TB
         NPM[npm Registry]
         PYPI[PyPI Registry]
         DOCKER[Docker Hub]
+        NUGET[NuGet Gallery]
         DNS[DNS Services]
         GH[GitHub OAuth]
     end
@@ -46,6 +47,7 @@ graph TB
     API -.-> |Verify| DNS
     API -.-> |Reference| NPM
     API -.-> |Reference| PYPI
+    API -.-> |Reference| NUGET
     API -.-> |Reference| DOCKER
 ```
 

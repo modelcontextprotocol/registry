@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -54,6 +55,7 @@ type Package struct {
 type ServerJSON struct {
 	Name          string        `json:"name"`
 	Description   string        `json:"description"`
+	Status        string        `json:"status,omitempty"`
 	Repository    Repository    `json:"repository"`
 	VersionDetail VersionDetail `json:"version_detail"`
 	Packages      []Package     `json:"packages"`
@@ -65,14 +67,17 @@ func main() {
 		return
 	}
 
-	command := os.Args[1]
-	switch command {
+	var err error
+	switch os.Args[1] {
 	case "publish":
-		publishCommand()
+		err = publishCommand()
 	case "create":
-		createCommand()
+		err = createCommand()
 	default:
 		printUsage()
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -86,7 +91,7 @@ func printUsage() {
 	fmt.Fprint(os.Stdout, "Use 'mcp-publisher <command> --help' for more information about a command.\n")
 }
 
-func publishCommand() {
+func publishCommand() error {
 	publishFlags := flag.NewFlagSet("publish", flag.ExitOnError)
 
 	var registryURL string
@@ -119,14 +124,13 @@ func publishCommand() {
 
 	if registryURL == "" || mcpFilePath == "" {
 		publishFlags.Usage()
-		return
+		return errors.New("registry-url and mcp-file are required")
 	}
 
 	// Read MCP file
 	mcpData, err := os.ReadFile(mcpFilePath)
 	if err != nil {
-		log.Printf("Error reading MCP file: %s\n", err.Error())
-		return
+		return fmt.Errorf("error reading MCP file: %w", err)
 	}
 
 	var authProvider auth.Provider // Determine the authentication method
@@ -135,8 +139,7 @@ func publishCommand() {
 		log.Println("Using GitHub OAuth for authentication")
 		authProvider = github.NewOAuthProvider(forceLogin, registryURL)
 	default:
-		log.Printf("Unsupported authentication method: %s\n", authMethod)
-		return
+		return fmt.Errorf("unsupported authentication method: %s", authMethod)
 	}
 
 	// Check if login is needed and perform authentication
@@ -144,29 +147,27 @@ func publishCommand() {
 	if authProvider.NeedsLogin() {
 		err := authProvider.Login(ctx)
 		if err != nil {
-			log.Printf("Failed to authenticate with %s: %s\n", authProvider.Name(), err.Error())
-			return
+			return fmt.Errorf("failed to authenticate with %s: %w", authProvider.Name(), err)
 		}
 	}
 
 	// Get the token
 	token, err := authProvider.GetToken(ctx)
 	if err != nil {
-		log.Printf("Error getting token from %s: %s\n", authProvider.Name(), err.Error())
-		return
+		return fmt.Errorf("error getting token from %s: %w", authProvider.Name(), err)
 	}
 
 	// Publish to registry
 	err = publishToRegistry(registryURL, mcpData, token)
 	if err != nil {
-		log.Printf("Failed to publish to registry: %s\n", err.Error())
-		return
+		return fmt.Errorf("failed to publish to registry: %w", err)
 	}
 
 	log.Println("Successfully published to registry!")
+	return nil
 }
 
-func createCommand() {
+func createCommand() error {
 	createFlags := flag.NewFlagSet("create", flag.ExitOnError)
 
 	// Basic server information flags
@@ -176,6 +177,7 @@ func createCommand() {
 	var repoURL string
 	var repoSource string
 	var output string
+	var status string
 
 	// Package information flags
 	var registryName string
@@ -198,6 +200,7 @@ func createCommand() {
 	createFlags.StringVar(&repoSource, "repo-source", "github", "Repository source")
 	createFlags.StringVar(&output, "output", "server.json", "Output file path")
 	createFlags.StringVar(&output, "o", "server.json", "Output file path (shorthand)")
+	createFlags.StringVar(&status, "status", "active", "Server status (active or deprecated)")
 
 	createFlags.StringVar(&registryName, "registry", "npm", "Package registry name")
 	createFlags.StringVar(&packageName, "package-name", "", "Package name (defaults to server name)")
@@ -229,6 +232,7 @@ func createCommand() {
 		fmt.Fprint(os.Stdout, "  --description/-d string  Server description (required)\n")
 		fmt.Fprint(os.Stdout, "  --repo-url string        Repository URL (required)\n")
 		fmt.Fprint(os.Stdout, "  --version/-v string      Server version (default: 1.0.0)\n")
+		fmt.Fprint(os.Stdout, "  --status string          Server status (active or deprecated) (default: active)\n")
 		fmt.Fprint(os.Stdout, "  --execute/-e string      Command to execute the server\n")
 		fmt.Fprint(os.Stdout, "  --output/-o string       Output file path (default: server.json)\n")
 		fmt.Fprint(os.Stdout, "  --registry string        Package registry name (default: npm)\n")
@@ -246,13 +250,18 @@ func createCommand() {
 
 	// Validate required flags
 	if name == "" {
-		log.Fatal("Error: --name/-n is required")
+		return errors.New("--name/-n is required")
 	}
 	if description == "" {
-		log.Fatal("Error: --description/-d is required")
+		return errors.New("--description/-d is required")
 	}
 	if repoURL == "" {
-		log.Fatal("Error: --repo-url is required")
+		return errors.New("--repo-url is required")
+	}
+
+	// Validate status field
+	if status != "active" && status != "deprecated" {
+		return errors.New("--status must be either 'active' or 'deprecated'")
 	}
 
 	// Set defaults
@@ -263,20 +272,30 @@ func createCommand() {
 		packageVersion = version
 	}
 
+	// Set runtime hint based on registry name if not explicitly provided
+	if runtimeHint == "" {
+		switch registryName {
+		case "docker":
+			runtimeHint = "docker"
+		case "npm":
+			runtimeHint = "npx"
+		}
+	}
+
 	// Create server structure
 	server := createServerStructure(name, description, version, repoURL, repoSource,
-		registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs)
+		registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs, status)
 
 	// Convert to JSON
 	jsonData, err := json.MarshalIndent(server, "", "  ")
 	if err != nil {
-		log.Fatalf("Error marshaling JSON: %v", err)
+		return fmt.Errorf("error marshaling JSON: %w", err)
 	}
 
 	// Write to file
 	err = os.WriteFile(output, jsonData, 0600)
 	if err != nil {
-		log.Fatalf("Error writing file: %v", err)
+		return fmt.Errorf("error writing file: %w", err)
 	}
 
 	log.Printf("Successfully created %s", output)
@@ -285,12 +304,13 @@ func createCommand() {
 	log.Println("  - Set environment variable requirements")
 	log.Println("  - Add remote server configurations")
 	log.Println("  - Adjust runtime arguments")
+	return nil
 }
 
 // publishToRegistry sends the MCP server details to the registry with authentication
 func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	// Parse the MCP JSON data
-	var mcpDetails map[string]interface{}
+	var mcpDetails map[string]any
 	err := json.Unmarshal(mcpData, &mcpDetails)
 	if err != nil {
 		return fmt.Errorf("error parsing server.json file: %w", err)
@@ -341,7 +361,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 }
 
 func createServerStructure(name, description, version, repoURL, repoSource, registryName,
-	packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string) ServerJSON {
+	packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string, status string) ServerJSON {
 	// Parse environment variables
 	var environmentVariables []EnvironmentVariable
 	for _, envVar := range envVars {
@@ -431,6 +451,7 @@ func createServerStructure(name, description, version, repoURL, repoSource, regi
 	return ServerJSON{
 		Name:        name,
 		Description: description,
+		Status:      status,
 		Repository: Repository{
 			URL:    repoURL,
 			Source: repoSource,

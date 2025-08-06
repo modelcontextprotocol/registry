@@ -17,3 +17,7 @@
 [`api_examples.md`](./api_examples.md) - Examples of what data will actually look like coming from the official registry API
 
 [`architecture.md`](./architecture.md) - Technical architecture, deployment strategies, and data flows
+
+[`server.json` README](./server-json/README.md) - description of the `server.json` purpose and schema
+
+[`new_package_registry.md`](./new_package_registry.md) - steps to add a new package registry for local server packages

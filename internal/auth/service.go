@@ -1,3 +1,5 @@
+//go:build !noauth
+
 package auth
 
 import (

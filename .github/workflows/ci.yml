@@ -141,20 +141,8 @@ jobs:
       
     - name: Run integration tests
       run: |
-        chmod +x ./integrationtests/run_tests.sh
-        ./integrationtests/run_tests.sh
-        
-    - name: Run integration tests with coverage
-      run: |
-        go test -v -race -coverprofile=integration-coverage.out -covermode=atomic ./integrationtests/...
-        
-    - name: Upload integration coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./integration-coverage.out
-        flags: integrationtests
-        name: codecov-integration
-        fail_ci_if_error: false
+        chmod +x ./tests/integration/run.sh
+        ./tests/integration/run.sh
 
   # Overall status check
   test-summary:

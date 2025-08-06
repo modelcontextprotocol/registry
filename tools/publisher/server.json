@@ -1,6 +1,7 @@
 {
     "description": "<your description here>",
     "name": "io.github.<owner>/<server-name>",
+    "status": "active",
     "packages": [
         {
             "registry_name": "npm",
@@ -24,7 +25,7 @@
                 }
             ]
         },{
-            "registry_name": "docker>",
+            "registry_name": "docker",
             "name": "io.github.<owner>/<server-name>-cli",
             "version": "0.123.223",
             "runtime_hint": "docker",
