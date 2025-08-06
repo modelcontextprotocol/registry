@@ -73,6 +73,15 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 			Keys:    bson.D{bson.E{Key: "domain", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
+		// Create a sparse unique index on verification tokens to ensure global token uniqueness
+		{
+			Keys:    bson.D{bson.E{Key: "verification_tokens.verified_token.token", Value: 1}},
+			Options: options.Index().SetUnique(true).SetSparse(true),
+		},
+		{
+			Keys:    bson.D{bson.E{Key: "verification_tokens.pending_tokens.token", Value: 1}},
+			Options: options.Index().SetUnique(true).SetSparse(true),
+		},
 	}
 
 	_, err = verificationCollection.Indexes().CreateMany(ctx, verificationIndexes)
@@ -331,29 +340,7 @@ func (db *MongoDB) Connection() *ConnectionInfo {
 
 // StoreVerificationToken atomically stores a verification token for a domain if the token is unique
 func (db *MongoDB) StoreVerificationToken(ctx context.Context, domain string, token *model.VerificationToken) error {
-	// First, check if the token already exists across all domains
-	tokenExistsFilter := bson.M{
-		"$or": []bson.M{
-			{"verification_tokens.verified_token.token": token.Token},
-			{"verification_tokens.pending_tokens.token": token.Token},
-		},
-	}
-
-	count, err := db.verificationCollection.CountDocuments(ctx, tokenExistsFilter)
-	if err != nil {
-		return fmt.Errorf("failed to check token uniqueness: %w", err)
-	}
-
-	if count > 0 {
-		return ErrTokenAlreadyExists
-	}
-
-	// Token is unique, now add it to the domain's pending tokens
-	domainFilter := bson.M{
-		"domain": domain,
-		// Double-check the token doesn't exist in this domain's tokens during the update
-		"verification_tokens.pending_tokens.token": bson.M{"$ne": token.Token},
-	}
+	domainFilter := bson.M{"domain": domain}
 
 	update := bson.M{
 		"$setOnInsert": bson.M{
@@ -365,14 +352,13 @@ func (db *MongoDB) StoreVerificationToken(ctx context.Context, domain string, to
 	}
 
 	opts := options.Update().SetUpsert(true)
-	result, err := db.verificationCollection.UpdateOne(ctx, domainFilter, update, opts)
+	_, err := db.verificationCollection.UpdateOne(ctx, domainFilter, update, opts)
 	if err != nil {
+		// Check if this is a duplicate key error due to token uniqueness constraint
+		if mongo.IsDuplicateKeyError(err) {
+			return ErrTokenAlreadyExists
+		}
 		return fmt.Errorf("failed to store verification token: %w", err)
-	}
-
-	// If no documents were modified and it wasn't an upsert, the token might have been added concurrently
-	if result.ModifiedCount == 0 && result.UpsertedCount == 0 {
-		return ErrTokenAlreadyExists
 	}
 
 	return nil
