@@ -1,19 +1,11 @@
 # GolangCI-Lint configuration
 # See: https://golangci-lint.run/usage/configuration/
 
+version: "2"
 run:
-  timeout: 5m
   modules-download-mode: readonly
-
 linters:
   enable:
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - typecheck
-    - unused
     - asasalint
     - asciicheck
     - bidichk
@@ -28,14 +20,11 @@ linters:
     - exhaustive
     - forbidigo
     - funlen
-    - gci
     - gocognit
     - goconst
     - gocritic
     - gocyclo
     - godox
-    - gofmt
-    - goimports
     - gomoddirectives
     - gomodguard
     - goprintffuncname
@@ -59,8 +48,7 @@ linters:
     - revive
     - rowserrcheck
     - sqlclosecheck
-    - stylecheck
-    - tenv
+    - staticcheck
     - testpackage
     - thelper
     - tparallel
@@ -69,55 +57,69 @@ linters:
     - usestdlibvars
     - wastedassign
     - whitespace
-
-linters-settings:
-  revive:
+  settings:
+    cyclop:
+      max-complexity: 50
+    funlen:
+      lines: 150
+      statements: 150
+    gocognit:
+      min-complexity: 50
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocyclo:
+      min-complexity: 25
+    lll:
+      line-length: 150
+    misspell:
+      locale: US
+    mnd:
+      checks:
+        - argument
+        - case
+        - condition
+        - operation
+        - return
+    nestif:
+      min-complexity: 8
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: use-any
-        disabled: false
-        severity: error
-  cyclop:
-    max-complexity: 50
-  funlen:
-    lines: 150
-    statements: 150
-  gocognit:
-    min-complexity: 50
-  gocyclo:
-    min-complexity: 25
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-  mnd:
-    checks:
-      - argument
-      - case
-      - condition
-      - operation
-      - return
-  lll:
-    line-length: 150
-  misspell:
-    locale: US
-  nestif:
-    min-complexity: 8
-
-issues:
-  exclude-rules:
-    # Exclude some linters from running on tests files.
-    - path: _test\.go
-      linters:
-        - mnd
-        - funlen
-        - gocyclo
-        - errcheck
-        - dupl
-        - gosec
-    # Ignore long lines in generated code
-    - path: docs/
-      linters:
-        - lll
-    # Allow local replacement directives in go.mod
-    - path: go\.mod
-      linters:
-        - gomoddirectives
+      - linters:
+          - dupl
+          - errcheck
+          - funlen
+          - gocyclo
+          - gosec
+          - mnd
+        path: _test\.go
+      - linters:
+          - lll
+        path: docs/
+      - linters:
+          - mnd
+        path: integrationtests/
+      - linters:
+          - gomoddirectives
+        path: go\.mod
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

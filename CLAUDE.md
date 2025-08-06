@@ -10,9 +10,9 @@ MCP Registry is a community-driven registry service for Model Context Protocol (
 ### Prerequisites
 - **Go 1.23.x** - The project requires this specific version (check with `go version`)
   - Consider using a Go version manager like `g` or `gvm` if you work on multiple projects
-- **golangci-lint v1.61.0** - Install with:
+- **golangci-lint v2.3.1** - Install with:
   ```bash
-  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.3.1
   ```
 
 ### Git Hooks (Optional)
@@ -72,7 +72,7 @@ gofmt -s -l .
 gofmt -s -w .
 ```
 
-**Note**: The project uses golangci-lint v1.61.0 with 62 enabled linters. Always run linting locally before pushing to avoid CI failures.
+**Note**: The project uses golangci-lint v2.3.1 with 62 enabled linters. Always run linting locally before pushing to avoid CI failures.
 
 ## Architecture Overview
 
