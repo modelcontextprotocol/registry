@@ -17,7 +17,7 @@ func DeployMongoDB(ctx *pulumi.Context, cluster *providers.ProviderInfo, environ
 	_, err := corev1.NewPersistentVolumeClaim(ctx, "mongodb-pvc", &corev1.PersistentVolumeClaimArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mongodb-pvc"),
-			Namespace: pulumi.String(environment),
+			Namespace: pulumi.String("default"),
 			Labels: pulumi.StringMap{
 				"app":         pulumi.String("mongodb"),
 				"environment": pulumi.String(environment),
@@ -42,7 +42,7 @@ func DeployMongoDB(ctx *pulumi.Context, cluster *providers.ProviderInfo, environ
 	_, err = v1.NewDeployment(ctx, "mongodb", &v1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mongodb"),
-			Namespace: pulumi.String(environment),
+			Namespace: pulumi.String("default"),
 			Labels: pulumi.StringMap{
 				"app":         pulumi.String("mongodb"),
 				"environment": pulumi.String(environment),
@@ -113,7 +113,7 @@ func DeployMongoDB(ctx *pulumi.Context, cluster *providers.ProviderInfo, environ
 	_, err = corev1.NewService(ctx, "mongodb", &corev1.ServiceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mongodb"),
-			Namespace: pulumi.String(environment),
+			Namespace: pulumi.String("default"),
 			Labels: pulumi.StringMap{
 				"app":         pulumi.String("mongodb"),
 				"environment": pulumi.String(environment),

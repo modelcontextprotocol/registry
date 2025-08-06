@@ -2,14 +2,6 @@
 
 This directory contains Pulumi infrastructure code to deploy the MCP Registry service to a Kubernetes cluster. It supports multiple Kubernetes providers: Azure Kubernetes Service (AKS) and local (using existing kubeconfig).
 
-## Prerequisites
-
-- Go 1.23.x
-- Pulumi CLI installed
-- kubectl configured
-- For AKS: Azure CLI installed and authenticated
-- For local: Access to a Kubernetes cluster via kubeconfig
-
 ## Structure
 
 - `main.go` - Entry point for the Pulumi program
@@ -77,12 +69,8 @@ Pre-requisites:
     pulumi config set mcp-registry:githubClientId <your-github-client-id>
     pulumi config set --secret mcp-registry:githubClientSecret <your-github-client-secret>
     ```
-4. Deploy: `go build && pulumi up`
-5. Access the MCP Registry:
-```bash
-# Port forward for local access
-kubectl port-forward -n local svc/mcp-registry 8080:8080
-```
+4. Deploy: `go build && PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes`
+5. Access the repository via the ingress load balancer. You can find its external IP with `kubectl get svc nginx-ingress-ingress-nginx-controller -n ingress-nginx` (with minikube, if it's 'pending' you might need `minikube tunnel`). Then run `curl -H "Host: mcp-registry-local.example.com" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
 ### Production Deployment (AKS)
 

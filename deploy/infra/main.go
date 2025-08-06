@@ -49,14 +49,13 @@ func main() {
 		}
 
 		// Deploy to Kubernetes
-		registryEndpoint, err := k8s.DeployAll(ctx, cluster, environment)
+		_, err = k8s.DeployAll(ctx, cluster, environment)
 		if err != nil {
 			return err
 		}
 
 		// Export outputs
 		ctx.Export("clusterName", cluster.Name)
-		ctx.Export("registryEndpoint", registryEndpoint)
 
 		return nil
 	})

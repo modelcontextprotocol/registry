@@ -96,8 +96,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	}
 
 	return &providers.ProviderInfo{
-		Name:       cluster.Name,
-		Kubeconfig: creds,
-		Provider:   k8sProvider,
+		Name:     cluster.Name,
+		Provider: k8sProvider,
 	}, nil
 }

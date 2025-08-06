@@ -12,58 +12,35 @@ import (
 )
 
 // DeployMCPRegistry deploys the MCP Registry to the Kubernetes cluster
-func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) error {
+func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*corev1.Service, error) {
 	conf := config.New(ctx, "mcp-registry")
 	githubClientId := conf.Require("githubClientId")
 	githubClientSecret := conf.RequireSecret("githubClientSecret")
 
-	// Create ConfigMap with non-sensitive configuration
-	_, err := corev1.NewConfigMap(ctx, "mcp-registry-config", &corev1.ConfigMapArgs{
-		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String("mcp-registry-config"),
-			Namespace: pulumi.String(environment),
-			Labels: pulumi.StringMap{
-				"app":         pulumi.String("mcp-registry"),
-				"environment": pulumi.String(environment),
-			},
-		},
-		Data: pulumi.StringMap{
-			"DATABASE_URL": pulumi.Sprintf("mongodb://mongodb.%s.svc.cluster.local:27017", environment),
-			"PORT":         pulumi.String("8080"),
-			"NODE_ENV":     pulumi.String("production"),
-			"LOG_LEVEL":    pulumi.String("info"),
-			"CORS_ORIGINS": pulumi.String("*"),
-		},
-	}, pulumi.Provider(cluster.Provider))
-	if err != nil {
-		return err
-	}
-
 	// Create Secret with sensitive configuration
-	_, err = corev1.NewSecret(ctx, "mcp-registry-secrets", &corev1.SecretArgs{
+	secret, err := corev1.NewSecret(ctx, "mcp-registry-secrets", &corev1.SecretArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mcp-registry-secrets"),
-			Namespace: pulumi.String(environment),
+			Namespace: pulumi.String("default"),
 			Labels: pulumi.StringMap{
 				"app":         pulumi.String("mcp-registry"),
 				"environment": pulumi.String(environment),
 			},
 		},
 		StringData: pulumi.StringMap{
-			"GITHUB_CLIENT_ID":     pulumi.String(githubClientId),
 			"GITHUB_CLIENT_SECRET": githubClientSecret,
 		},
 		Type: pulumi.String("Opaque"),
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create Deployment
-	deployment, err := v1.NewDeployment(ctx, "mcp-registry", &v1.DeploymentArgs{
+	_, err = v1.NewDeployment(ctx, "mcp-registry", &v1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mcp-registry"),
-			Namespace: pulumi.String(environment),
+			Namespace: pulumi.String("default"),
 			Labels: pulumi.StringMap{
 				"app":         pulumi.String("mcp-registry"),
 				"environment": pulumi.String(environment),
@@ -95,15 +72,38 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									Name:          pulumi.String("http"),
 								},
 							},
-							EnvFrom: corev1.EnvFromSourceArray{
-								&corev1.EnvFromSourceArgs{
-									ConfigMapRef: &corev1.ConfigMapEnvSourceArgs{
-										Name: pulumi.String("mcp-registry-config"),
-									},
+							Env: corev1.EnvVarArray{
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("DATABASE_URL"),
+									Value: pulumi.String("mongodb://mongodb.default.svc.cluster.local:27017"),
 								},
-								&corev1.EnvFromSourceArgs{
-									SecretRef: &corev1.SecretEnvSourceArgs{
-										Name: pulumi.String("mcp-registry-secrets"),
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("PORT"),
+									Value: pulumi.String("8080"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("NODE_ENV"),
+									Value: pulumi.String("production"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("LOG_LEVEL"),
+									Value: pulumi.String("info"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("CORS_ORIGINS"),
+									Value: pulumi.String("*"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("GITHUB_CLIENT_ID"),
+									Value: pulumi.String(githubClientId),
+								},
+								&corev1.EnvVarArgs{
+									Name: pulumi.String("GITHUB_CLIENT_SECRET"),
+									ValueFrom: &corev1.EnvVarSourceArgs{
+										SecretKeyRef: &corev1.SecretKeySelectorArgs{
+											Name: secret.Metadata.Name(),
+											Key:  pulumi.String("GITHUB_CLIENT_SECRET"),
+										},
 									},
 								},
 							},
@@ -131,14 +131,14 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create Service
 	service, err := corev1.NewService(ctx, "mcp-registry", &corev1.ServiceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mcp-registry"),
-			Namespace: pulumi.String(environment),
+			Namespace: pulumi.String("default"),
 			Labels: pulumi.StringMap{
 				"app":         pulumi.String("mcp-registry"),
 				"environment": pulumi.String(environment),
@@ -160,14 +160,14 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create Ingress
-	_, err = networkingv1.NewIngress(ctx, "mcp-registry", &networkingv1.IngressArgs{
+	ingress, err := networkingv1.NewIngress(ctx, "mcp-registry", &networkingv1.IngressArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mcp-registry"),
-			Namespace: pulumi.String(environment),
+			Namespace: pulumi.String("default"),
 			Labels: pulumi.StringMap{
 				"app":         pulumi.String("mcp-registry"),
 				"environment": pulumi.String(environment),
@@ -199,7 +199,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									Service: &networkingv1.IngressServiceBackendArgs{
 										Name: service.Metadata.Name().Elem(),
 										Port: &networkingv1.ServiceBackendPortArgs{
-											Number: pulumi.Int(8080),
+											Number: pulumi.Int(80),
 										},
 									},
 								},
@@ -211,11 +211,10 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Output deployment status
-	ctx.Export("registryDeployment", deployment.Metadata.Name())
+	ctx.Export("ingressHost", ingress.Spec.Rules().Index(pulumi.Int(0)).Host())
 
-	return nil
+	return service, nil
 }

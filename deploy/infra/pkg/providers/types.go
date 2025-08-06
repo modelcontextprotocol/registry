@@ -7,9 +7,8 @@ import (
 
 // ProviderInfo represents the information returned by a cluster provider
 type ProviderInfo struct {
-	Name       pulumi.StringOutput
-	Kubeconfig pulumi.StringOutput
-	Provider   *kubernetes.Provider
+	Name     pulumi.StringOutput
+	Provider *kubernetes.Provider
 }
 
 // ClusterProvider defines the interface that all cluster providers must implement
