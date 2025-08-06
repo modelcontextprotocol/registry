@@ -84,7 +84,7 @@ func TestGetDomainVerificationStatus(t *testing.T) {
 
 	domain := "example.com"
 
-	// Test when domain doesn't exist
+	// Test when domain does not exist
 	_, err := service.GetDomainVerificationStatus(domain)
 	require.Error(t, err)
 	assert.Equal(t, database.ErrNotFound, err)
