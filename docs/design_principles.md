@@ -9,7 +9,7 @@ The registry serves as the authoritative metadata repository for publicly-availa
 ## 2. Minimal Operational Burden
 
 - Design for low maintenance and operational overhead
-- Delegate complexity to existing services where possible (GitHub for auth, npm/PyPI for packages)
+- Delegate complexity to existing services where possible (GitHub for auth, npm/PyPI/NuGet for packages)
 - Avoid features that require constant human intervention or moderation
 - Build for reasonable downtime tolerance (24h acceptable) by having consumers cache data for their end-users
 
@@ -21,7 +21,7 @@ The registry serves as the authoritative metadata repository for publicly-availa
 
 ## 4. Meets Industry Security Standards
 
-- Leverage existing package registries (npm, PyPI, Docker Hub, etc.) for source code distribution, obviating the need to reinvent source code security
+- Leverage existing package registries (npm, PyPI, NuGet, Docker Hub, etc.) for source code distribution, obviating the need to reinvent source code security
 - Use mechanisms like DNS verification, OAuth to provide base layer of authentication and trust
 - Implement rate limiting, field validation, and blacklisting to prevent abuse
 

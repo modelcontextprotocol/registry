@@ -5,3 +5,6 @@ build/*
 **/bin
 cmd/registry/registry
 .DS_Store
+validate-examples
+validate-schemas
+.idea/

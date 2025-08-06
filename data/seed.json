@@ -96,7 +96,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "agentql-mcp",
         "version": "1.0.0",
         "environment_variables": [
@@ -301,7 +301,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "alibaba-cloud-ops-mcp-server",
         "version": "0.8.6",
         "environment_variables": [
@@ -402,7 +402,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "apache/iotdb",
         "version": ""
       }
@@ -464,7 +464,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "apimatic-validator---mcp",
         "version": "1.0.0",
         "environment_variables": [
@@ -492,7 +492,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "arize-phoenix",
         "version": ""
       }
@@ -514,31 +514,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@datastax/astra-db-mcp",
         "version": "1.2.0"
-      }
-    ]
-  },
-  {
-    "id": "c4888f33-5e27-449c-ba93-edf383b91686",
-    "name": "io.github.atlanhq/agent-toolkit",
-    "description": "Atlan AI Agent Toolkit",
-    "repository": {
-      "url": "https://github.com/atlanhq/agent-toolkit",
-      "source": "github",
-      "id": "959799376"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:57:24Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "atlanhq/agent-toolkit",
-        "version": ""
       }
     ]
   },
@@ -575,97 +553,6 @@
             "name": "TWITTER_BEARER_TOKEN"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "",
-    "name": "",
-    "description": "",
-    "repository": {
-      "url": "",
-      "source": "",
-      "id": ""
-    },
-    "version_detail": {
-      "version": "",
-      "release_date": "",
-      "is_latest": false
-    }
-  },
-  {
-    "id": "ac19206d-f465-4c38-b62f-23635837b239",
-    "name": "io.github.axiomhq/mcp-server-axiom",
-    "description": "Axiom Model Context Protocol Server",
-    "repository": {
-      "url": "https://github.com/axiomhq/mcp-server-axiom",
-      "source": "github",
-      "id": "899010918"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:57:32Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "axiomhq/mcp-server-axiom",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "Specifies a configuration file",
-            "is_required": true,
-            "format": "string",
-            "value": "--config /path/to/your/config.txt",
-            "default": "--config /path/to/your/config.txt",
-            "type": "named",
-            "name": "--config /path/to/your/config.txt",
-            "value_hint": "/path/to/your/config.txt"
-          }
-        ],
-        "environment_variables": [
-          {
-            "description": "xaat-your-token",
-            "name": "AXIOM_TOKEN"
-          },
-          {
-            "description": "https://api.axiom.co",
-            "name": "AXIOM_URL"
-          },
-          {
-            "description": "your-org-id",
-            "name": "AXIOM_ORG_ID"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "a5f21d1d-1267-4a62-9deb-1bb961dc5b13",
-    "name": "io.github.azure/azure-mcp",
-    "description": "The Azure MCP Server, bringing the power of Azure to your agents.",
-    "repository": {
-      "url": "https://github.com/Azure/azure-mcp",
-      "source": "github",
-      "id": "967503541"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:57:35Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "Azure/azure-mcp",
-        "version": ""
-      }
-    ],
-    "remotes": [
-      {
-        "transport_type": "sse",
-        "url": "http://localhost:5008/sse"
       }
     ]
   },
@@ -713,7 +600,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "bicscan-mcp",
         "version": "0.1.0",
         "package_arguments": [
@@ -762,7 +649,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "bitrise-mcp",
         "version": "0.1.0",
         "package_arguments": [
@@ -838,50 +725,6 @@
     ]
   },
   {
-    "id": "84dcab53-bfa3-4375-b69e-d519eb00af0f",
-    "name": "io.github.browserbase/mcp-server-browserbase",
-    "description": "Allow LLMs to control a browser with Browserbase and Stagehand",
-    "repository": {
-      "url": "https://github.com/browserbase/mcp-server-browserbase",
-      "source": "github",
-      "id": "899184149"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:57:48Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "browserbase/mcp-server-browserbase",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "59a97c76-20ff-48a2-8c1d-89cc66b57697",
-    "name": "io.github.chargebee/agentkit",
-    "description": "Seamlessly integrate AI agents with Chargebee using AgentKit for smarter billing and subscription workflows.",
-    "repository": {
-      "url": "https://github.com/chargebee/agentkit",
-      "source": "github",
-      "id": "946416125"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:57:50Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "@chargebee/agentkit-repo",
-        "version": "0.0.0"
-      }
-    ]
-  },
-  {
     "id": "97de67c4-a78f-4ea7-9233-4da9fe6752cf",
     "name": "io.github.chroma-core/chroma-mcp",
     "description": "A Model Context Protocol (MCP) server implementation that provides database capabilities for Chroma",
@@ -897,26 +740,11 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "chroma-mcp",
         "version": "0.2.2"
       }
     ]
-  },
-  {
-    "id": "",
-    "name": "",
-    "description": "",
-    "repository": {
-      "url": "",
-      "source": "",
-      "id": ""
-    },
-    "version_detail": {
-      "version": "",
-      "release_date": "",
-      "is_latest": false
-    }
   },
   {
     "id": "a48ff624-6d95-4b8e-a0ed-498c4d838411",
@@ -1080,7 +908,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@codacy/codacy-mcp",
         "version": "0.0.1",
         "environment_variables": [
@@ -1112,7 +940,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "codelogic-mcp-server",
         "version": "1.0.2"
       }
@@ -1134,7 +962,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "test-opik-mcp",
         "version": "0.0.1",
         "package_arguments": [
@@ -1193,28 +1021,6 @@
             "name": "OPIK_WORKSPACE_NAME"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "c8be6fef-88d0-41e0-9906-8670233d81f8",
-    "name": "io.github.comet-ml/opik",
-    "description": "Debug, evaluate, and monitor your LLM applications, RAG systems, and agentic workflows with comprehensive tracing, automated evaluations, and production-ready dashboards.",
-    "repository": {
-      "url": "https://github.com/comet-ml/opik",
-      "source": "github",
-      "id": "638951438"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:58:15Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "comet-ml/opik",
-        "version": ""
       }
     ]
   },
@@ -1362,7 +1168,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "devhub-cms-mcp",
         "version": "0.3.0"
       }
@@ -1384,7 +1190,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@dynatrace-oss/dynatrace-mcp-server",
         "version": "0.1.2"
       }
@@ -1406,7 +1212,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "e2b-mcp-root",
         "version": ""
       }
@@ -1551,7 +1357,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@elastic/mcp-server-elasticsearch",
         "version": "0.1.1",
         "package_arguments": [
@@ -1594,7 +1400,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-esignatures",
         "version": "0.1.0"
       }
@@ -1656,7 +1462,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "fewsats-mcp",
         "version": "0.1.4",
         "environment_variables": [
@@ -1747,7 +1553,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server",
         "version": "0.1.0",
         "package_arguments": [
@@ -1779,7 +1585,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "firecrawl-mcp",
         "version": "1.9.0"
       }
@@ -1801,83 +1607,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "todos",
         "version": "0.1.0"
-      }
-    ]
-  },
-  {
-    "id": "f4b01928-545f-4f65-a9b4-2bcc4f4a7204",
-    "name": "io.github.gibsonai/mcp",
-    "description": "GibsonAI's MCP server",
-    "repository": {
-      "url": "https://github.com/GibsonAI/mcp",
-      "source": "github",
-      "id": "967696769"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:59:01Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "GibsonAI/mcp",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "gibson",
-            "is_required": true,
-            "format": "string",
-            "value": "gibson",
-            "default": "gibson",
-            "type": "positional",
-            "value_hint": "gibson"
-          },
-          {
-            "description": "mcp",
-            "is_required": true,
-            "format": "string",
-            "value": "mcp",
-            "default": "mcp",
-            "type": "positional",
-            "value_hint": "mcp"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "88f1bf70-a3ea-4bf4-933e-25ae6ea3003c",
-    "name": "io.github.oschina/mcp-gitee",
-    "description": "mcp-gitee is a Model Context Protocol (MCP) server implementation for Gitee. It provides a set of tools that interact with Gitee's API, allowing AI assistants to manage repository, issues, pull requests, etc.",
-    "repository": {
-      "url": "https://github.com/oschina/mcp-gitee",
-      "source": "github",
-      "id": "947190076"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:59:03Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "oschina/mcp-gitee",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "https://gitee.com/api/v5",
-            "name": "GITEE_API_BASE"
-          },
-          {
-            "description": "<your personal access token>",
-            "name": "GITEE_ACCESS_TOKEN"
-          }
-        ]
       }
     ]
   },
@@ -2007,7 +1739,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@gotohuman/mcp-server",
         "version": "0.1.2",
         "environment_variables": [
@@ -2186,28 +1918,6 @@
     ]
   },
   {
-    "id": "68d8d603-4f42-4ee3-b49d-ef890fb745c0",
-    "name": "io.github.greptimeteam/greptimedb",
-    "description": "Open-source, cloud-native, unified observability database for metrics, logs and traces, supporting SQL/PromQL/Streaming. Available on GreptimeCloud.",
-    "repository": {
-      "url": "https://github.com/GreptimeTeam/greptimedb",
-      "source": "github",
-      "id": "480217156"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:59:27Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "GreptimeTeam/greptimedb",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "cb1a844b-0145-433b-9a6f-f8ef19b2b3f4",
     "name": "io.github.heroku/heroku-mcp-server",
     "description": "Heroku Platform MCP Server using the Heroku CLI",
@@ -2223,7 +1933,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@heroku/mcp-server",
         "version": "1.0.4"
       }
@@ -2245,7 +1955,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "hologres-mcp-server",
         "version": "0.1.9",
         "environment_variables": [
@@ -2270,28 +1980,6 @@
             "name": "HOLOGRES_DATABASE"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "19aa503d-7b8e-42d8-a1e5-3bc918d36382",
-    "name": "io.github.honeycombio/honeycomb-mcp",
-    "description": "Allows Honeycomb Enterprise customers to use AI to query and analyze their data, alerts, dashboards, and more; and cross-reference production behavior with the codebase.",
-    "repository": {
-      "url": "https://github.com/honeycombio/honeycomb-mcp",
-      "source": "github",
-      "id": "906807010"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:59:34Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "@honeycombio/honeycomb-mcp",
-        "version": "0.0.1"
       }
     ]
   },
@@ -2324,50 +2012,6 @@
     ]
   },
   {
-    "id": "16dc9c56-47bb-4604-9f37-221dd07510ed",
-    "name": "io.github.ibm/wxflows",
-    "description": "Examples and tutorials for building AI applications with watsonx.ai Flows Engine",
-    "repository": {
-      "url": "https://github.com/IBM/wxflows",
-      "source": "github",
-      "id": "822793282"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:59:38Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "IBM/wxflows",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "8df45968-12aa-4c35-ae54-62973243334a",
-    "name": "io.github.jamsocket/forevervm",
-    "description": "Securely run AI-generated code in stateful sandboxes that run forever.",
-    "repository": {
-      "url": "https://github.com/jamsocket/forevervm",
-      "source": "github",
-      "id": "918657398"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:59:39Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "jamsocket/forevervm",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "afd9f984-ea69-4a8c-86ac-fdb58f3ab37c",
     "name": "io.github.elie222/inbox-zero",
     "description": "The world's best AI personal assistant for email. Open source app to help you reach inbox zero fast.",
@@ -2383,7 +2027,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "inbox-zero",
         "version": ""
       }
@@ -2503,7 +2147,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@jetbrains/mcp-proxy",
         "version": "1.8.0",
         "environment_variables": [
@@ -2632,28 +2276,6 @@
     ]
   },
   {
-    "id": "0bc33e11-876e-4b0f-9c72-75c126d89978",
-    "name": "io.github.klavis-ai/klavis",
-    "description": "Klavis AI (YC X25):  Open Source MCP integration for AI applications",
-    "repository": {
-      "url": "https://github.com/Klavis-AI/klavis",
-      "source": "github",
-      "id": "965974441"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T18:59:59Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "Klavis-AI/klavis",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "5026f1b0-0426-4ea2-8ec2-fab1fabb0a7e",
     "name": "io.github.translated/lara-mcp",
     "description": "",
@@ -2741,7 +2363,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "logfire-mcp",
         "version": "",
         "package_arguments": [
@@ -2785,7 +2407,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-langfuse",
         "version": "0.0.1",
         "environment_variables": [
@@ -2821,37 +2443,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "@lingo.dev",
         "version": ""
-      }
-    ]
-  },
-  {
-    "id": "c0151c41-3d77-43a9-b887-dd9fd035b9aa",
-    "name": "io.github.mailgun/mailgun-mcp-server",
-    "description": "Implementation of Model Context Protocol server for Mailgun APIs",
-    "repository": {
-      "url": "https://github.com/mailgun/mailgun-mcp-server",
-      "source": "github",
-      "id": "950200227"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:00:14Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "mailgun/mailgun-mcp-server",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "YOUR-mailgun-api-key",
-            "name": "MAILGUN_API_KEY"
-          }
-        ]
       }
     ]
   },
@@ -2892,28 +2486,6 @@
     ]
   },
   {
-    "id": "09f19715-3a0c-4900-932b-1ff0035aff11",
-    "name": "io.github.googleapis/genai-toolbox",
-    "description": "MCP Toolbox for Databases is an open source MCP server for databases.",
-    "repository": {
-      "url": "https://github.com/googleapis/genai-toolbox",
-      "source": "github",
-      "id": "812044182"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:00:18Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "googleapis/genai-toolbox",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "11d467e3-6001-4e60-ba90-494ad9eb7ad2",
     "name": "io.github.meilisearch/meilisearch-mcp",
     "description": "A Model Context Protocol (MCP) server for interacting with Meilisearch through LLM interfaces.",
@@ -2929,7 +2501,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "meilisearch-mcp",
         "version": "0.4.0"
       }
@@ -2951,41 +2523,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-memgraph",
         "version": "0.1.0"
-      }
-    ]
-  },
-  {
-    "id": "95047d21-596b-4c32-b206-2ebd171733aa",
-    "name": "io.github.metoro-io/metoro-mcp-server",
-    "description": "Metoro MCP Server",
-    "repository": {
-      "url": "https://github.com/metoro-io/metoro-mcp-server",
-      "source": "github",
-      "id": "900333594"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:00:25Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "metoro-io/metoro-mcp-server",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcklkIjoiOThlZDU1M2QtYzY4ZC00MDRhLWFhZjItNDM2ODllNWJiMGUzIiwiZW1haWwiOiJ0ZXN0QGNocmlzYmF0dGFyYmVlLmNvbSIsImV4cCI6MTgyMTI0NzIzN30.7G6alDpcZh_OThYj293Jce5rjeOBqAhOlANR_Fl5auw",
-            "name": "METORO_AUTH_TOKEN"
-          },
-          {
-            "description": "https://demo.us-east.metoro.io",
-            "name": "METORO_API_URL"
-          }
-        ]
       }
     ]
   },
@@ -3005,7 +2545,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-milvus",
         "version": "0.1.1",
         "package_arguments": [
@@ -3234,28 +2774,6 @@
     ]
   },
   {
-    "id": "ee33c4cb-5bdf-45c0-88a8-ba2d237189f9",
-    "name": "io.github.neo4j-contrib/mcp-neo4j",
-    "description": "Model Context Protocol with Neo4j",
-    "repository": {
-      "url": "https://github.com/neo4j-contrib/mcp-neo4j",
-      "source": "github",
-      "id": "897992568"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:00:42Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "neo4j-contrib/mcp-neo4j",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "9a6bd437-fe20-4f40-b776-5507f2871441",
     "name": "io.github.neondatabase/mcp-server-neon",
     "description": "MCP server for interacting with Neon Management API and databases",
@@ -3271,7 +2789,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@neondatabase/mcp-server-neon",
         "version": "0.4.0",
         "package_arguments": [
@@ -3313,7 +2831,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-oceanbase",
         "version": "0.1.0"
       }
@@ -3342,34 +2860,6 @@
           {
             "description": "YOUR_API_KEY_HERE",
             "name": "OCTAGON_API_KEY"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "27560049-5f82-4445-8969-d527da4d8936",
-    "name": "io.github.opslevel/opslevel-mcp",
-    "description": "Model Context Protocol (MCP) server for OpsLevel",
-    "repository": {
-      "url": "https://github.com/OpsLevel/opslevel-mcp",
-      "source": "github",
-      "id": "968273511"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:00:51Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "OpsLevel/opslevel-mcp",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "XXXXXX",
-            "name": "OPSLEVEL_API_TOKEN"
           }
         ]
       }
@@ -3444,7 +2934,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@paddle/paddle-mcp",
         "version": "0.1.2",
         "package_arguments": [
@@ -3515,7 +3005,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@pinecone-database/mcp",
         "version": "0.1.14"
       }
@@ -3735,364 +3225,6 @@
     ]
   },
   {
-    "id": "8e5b8c2e-6751-4567-b367-4e24e5c7fb8c",
-    "name": "io.github.snyk/snyk-ls",
-    "description": "Language Server used by IDEs as Snyk Backend for Frontends",
-    "repository": {
-      "url": "https://github.com/snyk/snyk-ls",
-      "source": "github",
-      "id": "431904794"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:01:29Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "snyk/snyk-ls",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "Enables Snyk Open Source - defaults to true",
-            "is_required": true,
-            "format": "string",
-            "value": "--activateSnykOpenSource true",
-            "default": "--activateSnykOpenSource true",
-            "type": "named",
-            "name": "--activateSnykOpenSource true",
-            "value_hint": "true"
-          },
-          {
-            "description": "Enables Snyk Code, if enabled for your organization - defaults to false, deprecated in favor of specific Snyk Code analysis types",
-            "is_required": true,
-            "format": "string",
-            "value": "--activateSnykCode false",
-            "default": "--activateSnykCode false",
-            "type": "named",
-            "name": "--activateSnykCode false",
-            "value_hint": "false"
-          },
-          {
-            "description": "Enables Infrastructure as Code - defaults to true",
-            "is_required": true,
-            "format": "string",
-            "value": "--activateSnykIac true",
-            "default": "--activateSnykIac true",
-            "type": "named",
-            "name": "--activateSnykIac true",
-            "value_hint": "true"
-          },
-          {
-            "description": "Allows custom CAs (Certification Authorities)",
-            "is_required": true,
-            "format": "string",
-            "value": "--insecure false",
-            "default": "--insecure false",
-            "type": "named",
-            "name": "--insecure false",
-            "value_hint": "false"
-          },
-          {
-            "description": "Snyk API Endpoint required for non-default multi-tenant and single-tenant setups",
-            "is_required": true,
-            "format": "string",
-            "value": "--endpoint https://api.eu.snyk.io",
-            "default": "--endpoint https://api.eu.snyk.io",
-            "type": "named",
-            "name": "--endpoint https://api.eu.snyk.io",
-            "value_hint": "https://api.eu.snyk.io"
-          },
-          {
-            "description": "The name of your organization, e.g. the output of: curl -H \"Authorization: token $(snyk config get api)\"  https://api.snyk.io/v1/cli-config/settings/sast | jq .org",
-            "is_required": true,
-            "format": "string",
-            "value": "--organization a string",
-            "default": "--organization a string",
-            "type": "named",
-            "name": "--organization a string",
-            "value_hint": "a string"
-          },
-          {
-            "description": "Adds to the system path used by the CLI",
-            "is_required": true,
-            "format": "string",
-            "value": "--path /usr/local/bin",
-            "default": "--path /usr/local/bin",
-            "type": "named",
-            "name": "--path /usr/local/bin",
-            "value_hint": "/usr/local/bin"
-          },
-          {
-            "description": "The path where the CLI can be found, or where it should be downloaded to",
-            "is_required": true,
-            "format": "string",
-            "value": "--cliPath /a/patch/snyk-cli",
-            "default": "--cliPath /a/patch/snyk-cli",
-            "type": "named",
-            "name": "--cliPath /a/patch/snyk-cli",
-            "value_hint": "/a/patch/snyk-cli"
-          },
-          {
-            "description": "The Snyk token, e.g.: snyk config get api or a token from authentication flow",
-            "is_required": true,
-            "format": "string",
-            "value": "--token secret-token",
-            "default": "--token secret-token",
-            "type": "named",
-            "name": "--token secret-token",
-            "value_hint": "secret-token"
-          },
-          {
-            "description": "The name of the IDE or editor the LS is running in",
-            "is_required": true,
-            "format": "string",
-            "value": "--integrationName ECLIPSE",
-            "default": "--integrationName ECLIPSE",
-            "type": "named",
-            "name": "--integrationName ECLIPSE",
-            "value_hint": "ECLIPSE"
-          },
-          {
-            "description": "The version of the IDE or editor the LS is running in",
-            "is_required": true,
-            "format": "string",
-            "value": "--integrationVersion 1.0.0",
-            "default": "--integrationVersion 1.0.0",
-            "type": "named",
-            "name": "--integrationVersion 1.0.0",
-            "value_hint": "1.0.0"
-          },
-          {
-            "description": "Whether LS will automatically authenticate on scan start (default: true)",
-            "is_required": true,
-            "format": "string",
-            "value": "--automaticAuthentication true",
-            "default": "--automaticAuthentication true",
-            "type": "named",
-            "name": "--automaticAuthentication true",
-            "value_hint": "true"
-          },
-          {
-            "description": "A unique ID from the running the LS, used for telemetry",
-            "is_required": true,
-            "format": "string",
-            "value": "--deviceId a UUID",
-            "default": "--deviceId a UUID",
-            "type": "named",
-            "name": "--deviceId a UUID",
-            "value_hint": "a UUID"
-          },
-          {
-            "description": "Optional filter to be applied for the determined issues (if omitted: no filtering)",
-            "format": "string",
-            "value": "--filterSeverity critical:true,high:true,medium:true,low:true",
-            "default": "--filterSeverity critical:true,high:true,medium:true,low:true",
-            "type": "named",
-            "name": "--filterSeverity critical:true,high:true,medium:true,low:true",
-            "value_hint": "critical:true,high:true,medium:true,low:true"
-          },
-          {
-            "description": "Optional filter to be applied for the determined issues (if omitted: no filtering)",
-            "format": "string",
-            "value": "--issueViewOptions openIssues:true,ignoredIssues:false",
-            "default": "--issueViewOptions openIssues:true,ignoredIssues:false",
-            "type": "named",
-            "name": "--issueViewOptions openIssues:true,ignoredIssues:false",
-            "value_hint": "openIssues:true,ignoredIssues:false"
-          },
-          {
-            "description": "Whether to report errors to Snyk - defaults to true",
-            "is_required": true,
-            "format": "string",
-            "value": "--sendErrorReports true",
-            "default": "--sendErrorReports true",
-            "type": "named",
-            "name": "--sendErrorReports true",
-            "value_hint": "true"
-          },
-          {
-            "description": "Whether CLI/LS binaries will be downloaded & updated automatically",
-            "is_required": true,
-            "format": "string",
-            "value": "--manageBinariesAutomatically true",
-            "default": "--manageBinariesAutomatically true",
-            "type": "named",
-            "name": "--manageBinariesAutomatically true",
-            "value_hint": "true"
-          },
-          {
-            "description": "Whether LS will prompt to trust a folder (default: true)",
-            "is_required": true,
-            "format": "string",
-            "value": "--enableTrustedFoldersFeature true",
-            "default": "--enableTrustedFoldersFeature true",
-            "type": "named",
-            "name": "--enableTrustedFoldersFeature true",
-            "value_hint": "true"
-          },
-          {
-            "description": "Enables Snyk Code Security reporting",
-            "is_required": true,
-            "format": "string",
-            "value": "--activateSnykCodeSecurity false",
-            "default": "--activateSnykCodeSecurity false",
-            "type": "named",
-            "name": "--activateSnykCodeSecurity false",
-            "value_hint": "false"
-          },
-          {
-            "description": "Enable Snyk Code Quality issue reporting (Beta, only in IDEs and LS)",
-            "is_required": true,
-            "format": "string",
-            "value": "--activateSnykCodeQuality false",
-            "default": "--activateSnykCodeQuality false",
-            "type": "named",
-            "name": "--activateSnykCodeQuality false",
-            "value_hint": "false"
-          },
-          {
-            "description": "Specifies the mode for scans: \"auto\" for background scans or \"manual\" for scans on command",
-            "is_required": true,
-            "format": "string",
-            "value": "--scanningMode auto",
-            "default": "--scanningMode auto",
-            "type": "named",
-            "name": "--scanningMode auto",
-            "value_hint": "auto"
-          },
-          {
-            "description": "Specifies the authentication method to use: \"token\" for Snyk API token or \"oauth\" for Snyk OAuth flow. Default is token.",
-            "is_required": true,
-            "format": "string",
-            "value": "--authenticationMethod oauth",
-            "default": "--authenticationMethod oauth",
-            "type": "named",
-            "name": "--authenticationMethod oauth",
-            "value_hint": "oauth"
-          },
-          {
-            "description": "Specifies the Snyk Code API endpoint to use. Default is https://deeproxy.snyk.io",
-            "is_required": true,
-            "format": "string",
-            "value": "--snykCodeApi https://deeproxy.snyk.io",
-            "default": "--snykCodeApi https://deeproxy.snyk.io",
-            "type": "named",
-            "name": "--snykCodeApi https://deeproxy.snyk.io",
-            "value_hint": "https://deeproxy.snyk.io"
-          },
-          {
-            "description": "show snyk learns code actions",
-            "is_required": true,
-            "format": "string",
-            "value": "--enableSnykLearnCodeActions true",
-            "default": "--enableSnykLearnCodeActions true",
-            "type": "named",
-            "name": "--enableSnykLearnCodeActions true",
-            "value_hint": "true"
-          },
-          {
-            "description": "show quickfixes for supported OSS package manager issues",
-            "is_required": true,
-            "format": "string",
-            "value": "--enableSnykOSSQuickFixCodeActions true",
-            "default": "--enableSnykOSSQuickFixCodeActions true",
-            "type": "named",
-            "name": "--enableSnykOSSQuickFixCodeActions true",
-            "value_hint": "true"
-          },
-          {
-            "description": "show code actions to open issue descriptions",
-            "is_required": true,
-            "format": "string",
-            "value": "--enableSnykOpenBrowserActions false",
-            "default": "--enableSnykOpenBrowserActions false",
-            "type": "named",
-            "name": "--enableSnykOpenBrowserActions false",
-            "value_hint": "false"
-          },
-          {
-            "description": "only display issues that are not new and thus not on the base branch",
-            "is_required": true,
-            "format": "string",
-            "value": "--enableDeltaFindings false",
-            "default": "--enableDeltaFindings false",
-            "type": "named",
-            "name": "--enableDeltaFindings false",
-            "value_hint": "false"
-          },
-          {
-            "description": "the protocol version a client needs",
-            "is_required": true,
-            "format": "string",
-            "value": "--requiredProtocolVersion 14",
-            "default": "--requiredProtocolVersion 14",
-            "type": "named",
-            "name": "--requiredProtocolVersion 14",
-            "value_hint": "14"
-          },
-          {
-            "description": "0-3 with 0 the lowest verbosity. 0: off, 1: only description, 2: description & details 3: complete (default)",
-            "is_required": true,
-            "format": "string",
-            "value": "--hoverVerbosity 1",
-            "default": "--hoverVerbosity 1",
-            "type": "named",
-            "name": "--hoverVerbosity 1",
-            "value_hint": "1"
-          },
-          {
-            "description": "plain = plain, markdown = md (default) or html = HTML",
-            "is_required": true,
-            "format": "string",
-            "value": "--outputFormat md",
-            "default": "--outputFormat md",
-            "type": "named",
-            "name": "--outputFormat md",
-            "value_hint": "md"
-          },
-          {
-            "description": "Any extra params for Open Source scans using the Snyk CLI, separated by spaces",
-            "format": "string",
-            "value": "--additionalParams --all-projects",
-            "default": "--additionalParams --all-projects",
-            "type": "named",
-            "name": "--additionalParams --all-projects",
-            "value_hint": "--all-projects"
-          },
-          {
-            "description": "Additional environment variables, separated by semicolons",
-            "format": "string",
-            "value": "--additionalEnv MAVEN_OPTS=-Djava.awt.headless=true;FOO=BAR",
-            "default": "--additionalEnv MAVEN_OPTS=-Djava.awt.headless=true;FOO=BAR",
-            "type": "named",
-            "name": "--additionalEnv MAVEN_OPTS=-Djava.awt.headless=true;FOO=BAR",
-            "value_hint": "MAVEN_OPTS=-Djava.awt.headless=true;FOO=BAR"
-          },
-          {
-            "description": "An array of folder that should be trusted",
-            "format": "string",
-            "value": "--trustedFolders /a/trusted/path,/another/trusted/path",
-            "default": "--trustedFolders /a/trusted/path,/another/trusted/path",
-            "type": "named",
-            "name": "--trustedFolders /a/trusted/path,/another/trusted/path",
-            "value_hint": "/a/trusted/path,/another/trusted/path"
-          },
-          {
-            "description": "an array of folder configurations, defining the desired base branch of a workspaceFolder",
-            "format": "string",
-            "value": "--folderConfigs baseBranch:main,folderPath:a/b/c,additionalParameters:--file=pom.xml",
-            "default": "--folderConfigs baseBranch:main,folderPath:a/b/c,additionalParameters:--file=pom.xml",
-            "type": "named",
-            "name": "--folderConfigs baseBranch:main,folderPath:a/b/c,additionalParameters:--file=pom.xml",
-            "value_hint": "baseBranch:main,folderPath:a/b/c,additionalParameters:--file=pom.xml"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "823afe6f-4494-4fc1-a2ab-2ca989e59d21",
     "name": "io.github.qdrant/mcp-server-qdrant",
     "description": "An official Qdrant Model Context Protocol (MCP) server implementation",
@@ -4288,7 +3420,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@raygun.io/mcp-server-raygun",
         "version": "0.1.0",
         "environment_variables": [
@@ -4406,7 +3538,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "screenshotone-mcp-server",
         "version": "1.0.0",
         "package_arguments": [
@@ -4445,7 +3577,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "semgrep-mcp",
         "version": "0.2.0"
       }
@@ -4467,7 +3599,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "singlestore_mcp_server",
         "version": "",
         "package_arguments": [
@@ -4490,43 +3622,6 @@
             "value_hint": "<SINGLESTORE_API_KEY>"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "",
-    "name": "",
-    "description": "",
-    "repository": {
-      "url": "",
-      "source": "",
-      "id": ""
-    },
-    "version_detail": {
-      "version": "",
-      "release_date": "",
-      "is_latest": false
-    }
-  },
-  {
-    "id": "5200c733-db46-48ba-a870-c1de02cf3e07",
-    "name": "io.github.stripe/agent-toolkit",
-    "description": "Python and TypeScript library for integrating the Stripe API into agentic workflows",
-    "repository": {
-      "url": "https://github.com/stripe/agent-toolkit",
-      "source": "github",
-      "id": "886826524"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:02:00Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "stripe/agent-toolkit",
-        "version": ""
       }
     ]
   },
@@ -4559,28 +3654,6 @@
     ]
   },
   {
-    "id": "f5349be9-5e04-4e93-bf2f-2dae8db4a9e9",
-    "name": "io.github.thirdweb-dev/ai",
-    "description": "",
-    "repository": {
-      "url": "https://github.com/thirdweb-dev/ai",
-      "source": "github",
-      "id": "947697435"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:02:05Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "thirdweb-dev/ai",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "9dd7f908-4c1b-4ba3-a33f-86be881cc8b6",
     "name": "io.github.msgbyte/tianji",
     "description": "Tianji: Insight into everything, Website Analytics + Uptime Monitor + Server Status. not only another GA alternatives",
@@ -4596,7 +3669,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "tianji",
         "version": "1.20.9"
       }
@@ -4618,31 +3691,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-tinybird",
         "version": "1.0.2"
-      }
-    ]
-  },
-  {
-    "id": "9941c18c-f247-4b88-a6ff-7b001f806acf",
-    "name": "io.github.unifai-network/unifai-mcp-server",
-    "description": "",
-    "repository": {
-      "url": "https://github.com/unifai-network/unifai-mcp-server",
-      "source": "github",
-      "id": "946711580"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:02:11Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "unifai-network/unifai-mcp-server",
-        "version": ""
       }
     ]
   },
@@ -4705,7 +3756,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@vectorize-io/vectorize-mcp-server",
         "version": "0.4.3",
         "package_arguments": [
@@ -4749,7 +3800,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "verodat-mcp-server",
         "version": "1.0.0",
         "package_arguments": [
@@ -4792,7 +3843,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "veyrax-mcp",
         "version": "1.0.0"
       }
@@ -4814,7 +3865,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@xeroapi/xero-mcp-server",
         "version": "0.0.12",
         "package_arguments": [
@@ -4938,7 +3989,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "ableton-mcp",
         "version": "1.0.0"
       }
@@ -5025,7 +4076,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "algorand-mcp",
         "version": "2.7.7"
       }
@@ -5132,7 +4183,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@felores/airtable-mcp-server",
         "version": "0.3.0",
         "package_arguments": [
@@ -5171,7 +4222,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "alphavantage",
         "version": "0.3.10"
       }
@@ -5193,48 +4244,11 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-amadeus",
         "version": "0.1.0"
       }
     ]
-  },
-  {
-    "id": "1cc26407-7ab5-44dd-b5a2-99efd6fcb757",
-    "name": "io.github.scorzeth/anki-mcp-server",
-    "description": "An MCP server for Anki",
-    "repository": {
-      "url": "https://github.com/scorzeth/anki-mcp-server",
-      "source": "github",
-      "id": "901609361"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:02:53Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "@scorzeth/anki-mcp-server",
-        "version": "1.0.0"
-      }
-    ]
-  },
-  {
-    "id": "",
-    "name": "",
-    "description": "",
-    "repository": {
-      "url": "",
-      "source": "",
-      "id": ""
-    },
-    "version_detail": {
-      "version": "",
-      "release_date": "",
-      "is_latest": false
-    }
   },
   {
     "id": "fee5894b-e255-408d-9cd2-e6ee29d78d78",
@@ -5407,7 +4421,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "aranet4-mcp-server",
         "version": "0.1.0",
         "package_arguments": [
@@ -5450,7 +4464,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "arango-server",
         "version": "0.4.4",
         "environment_variables": [
@@ -5490,7 +4504,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "choturoboserver",
         "version": "0.1.0"
       }
@@ -5512,7 +4526,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-atlassian",
         "version": "0.10.6"
       }
@@ -5540,7 +4554,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "attestable-mcp-server",
         "version": "0.1.0"
       }
@@ -5562,7 +4576,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-aws",
         "version": "0.1.0"
       }
@@ -5584,7 +4598,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@lishenxydlgzs/aws-athena-mcp",
         "version": "1.0.0",
         "package_arguments": [
@@ -5768,7 +4782,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "s3-mcp-server",
         "version": "0.1.0"
       }
@@ -5915,7 +4929,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-azure-devops",
         "version": "0.6.0"
       }
@@ -5997,7 +5011,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "basic-memory",
         "version": "0.12.3",
         "package_arguments": [
@@ -6029,7 +5043,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-bigquery",
         "version": "0.2.0"
       }
@@ -6051,7 +5065,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@ergut/mcp-bigquery-server",
         "version": "1.0.3",
         "package_arguments": [
@@ -6105,7 +5119,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp_server_bing",
         "version": "0.1.0",
         "environment_variables": [
@@ -6133,7 +5147,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "bitable-mcp",
         "version": "0.2.1",
         "package_arguments": [
@@ -6177,7 +5191,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "blender-mcp",
         "version": "1.1.3",
         "package_arguments": [
@@ -6217,7 +5231,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@agree-able/room-mcp",
         "version": "1.0.3"
       }
@@ -6239,7 +5253,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "browser-use-mcp-server",
         "version": "",
         "package_arguments": [
@@ -6307,7 +5321,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "bnbchain-mcp",
         "version": "1.0.12"
       }
@@ -6329,7 +5343,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-calculator",
         "version": "0.2.0"
       }
@@ -6393,7 +5407,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "aiql-desktop",
         "version": "1.0.0",
         "package_arguments": [
@@ -6426,7 +5440,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-chatsum",
         "version": "0.1.0",
         "environment_variables": [
@@ -6623,7 +5637,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@felores/cloudinary-mcp-server",
         "version": "1.1.3",
         "package_arguments": [
@@ -6655,49 +5669,6 @@
     ]
   },
   {
-    "id": "ae6e66c8-bfef-42dd-b1c5-c69f35bfab36",
-    "name": "io.github.stippi/code-assistant",
-    "description": "An LLM-powered, autonomous coding assistant. Also offers an MCP mode.",
-    "repository": {
-      "url": "https://github.com/stippi/code-assistant",
-      "source": "github",
-      "id": "882757178"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:04:35Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "stippi/code-assistant",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "second positional argument passed to the command",
-            "is_required": true,
-            "format": "string",
-            "value": "server",
-            "default": "server",
-            "type": "positional",
-            "value_hint": "server"
-          }
-        ],
-        "environment_variables": [
-          {
-            "description": "pplx-...",
-            "name": "PERPLEXITY_API_KEY"
-          },
-          {
-            "description": "/bin/zsh",
-            "name": "SHELL"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "0cdfed38-6495-42a3-a837-3788f35aadd3",
     "name": "io.github.bazinga012/mcp_code_executor",
     "description": "The MCP Code Executor is an MCP server that allows LLMs to execute Python code within a specified Conda environment.",
@@ -6713,7 +5684,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "code_execution_server",
         "version": "0.2.0",
         "package_arguments": [
@@ -6727,28 +5698,6 @@
             "value_hint": "/path/to/code/storage/my_script_abc123.py"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "7e1d97cc-ef73-480a-a9f3-c9d94c05a481",
-    "name": "io.github.automata-labs-team/code-sandbox-mcp",
-    "description": "An MCP server to create secure code sandbox environment for executing code within Docker containers. This MCP server provides AI applications with a safe and isolated environment for running code while maintaining security through containerization.",
-    "repository": {
-      "url": "https://github.com/Automata-Labs-team/code-sandbox-mcp",
-      "source": "github",
-      "id": "922445184"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:04:40Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "Automata-Labs-team/code-sandbox-mcp",
-        "version": ""
       }
     ]
   },
@@ -6768,7 +5717,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "consul-mcp",
         "version": "1.0.0"
       }
@@ -6790,7 +5739,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "cognee",
         "version": "0.1.40"
       }
@@ -6812,7 +5761,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "coin-api-mcp",
         "version": "0.1.0",
         "package_arguments": [
@@ -6852,7 +5801,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@shinzolabs/coinmarketcap-mcp",
         "version": "1.3.7"
       }
@@ -6976,28 +5925,6 @@
     ]
   },
   {
-    "id": "8d24741f-2cdf-481a-932b-06517c8f9aeb",
-    "name": "io.github.spgoodman/createveai-nexus-server",
-    "description": "Createve.AI Nexus Server: MCP and API bridge for ComfyUI-node compatible LLM and agent use",
-    "repository": {
-      "url": "https://github.com/spgoodman/createveai-nexus-server",
-      "source": "github",
-      "id": "945610929"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:04:57Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "spgoodman/createveai-nexus-server",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "45ee52ba-1e4c-48a5-9eef-de7a234997db",
     "name": "io.github.kukapay/crypto-feargreed-mcp",
     "description": "Providing real-time and historical Crypto Fear & Greed Index data",
@@ -7013,7 +5940,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "crypto-feargreed-mcp",
         "version": "0.1.0"
       }
@@ -7035,7 +5962,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "crypto-indicators-mcp",
         "version": "1.0.1",
         "package_arguments": [
@@ -7102,7 +6029,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "cryptopanic-mcp-server",
         "version": "0.1.0"
       }
@@ -7124,7 +6051,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "dappier-mcp",
         "version": "0.3.2",
         "environment_variables": [
@@ -7133,28 +6060,6 @@
             "name": "DAPPIER_API_KEY"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "5061131f-b74a-4997-a349-99e7789b0eb3",
-    "name": "io.github.jordineil/mcp-databricks-server",
-    "description": "MCP Server for Databricks",
-    "repository": {
-      "url": "https://github.com/JordiNeil/mcp-databricks-server",
-      "source": "github",
-      "id": "952279762"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:05:10Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "JordiNeil/mcp-databricks-server",
-        "version": ""
       }
     ]
   },
@@ -7248,7 +6153,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-ds",
         "version": "0.1.6"
       }
@@ -7309,21 +6214,6 @@
     ]
   },
   {
-    "id": "",
-    "name": "",
-    "description": "",
-    "repository": {
-      "url": "",
-      "source": "",
-      "id": ""
-    },
-    "version_detail": {
-      "version": "",
-      "release_date": "",
-      "is_latest": false
-    }
-  },
-  {
     "id": "ec2849c6-e8ed-46b1-8e57-646fd2e8be93",
     "name": "io.github.snagasuri/deebo-prototype",
     "description": "Autonomous debugging agent MCP server",
@@ -7339,7 +6229,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "deebo-prototype",
         "version": "1.0.0",
         "package_arguments": [
@@ -7430,7 +6320,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-deep-research",
         "version": "0.1.1"
       }
@@ -7480,7 +6370,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "deepseek_r1",
         "version": "1.0.0",
         "environment_variables": [
@@ -7508,7 +6398,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "deepseek-thinker-mcp",
         "version": "1.0.2",
         "environment_variables": [
@@ -7540,7 +6430,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "descope-mcp-server",
         "version": "1.0.0",
         "environment_variables": [
@@ -7572,7 +6462,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "devrev-mcp",
         "version": "0.1.1"
       }
@@ -7699,7 +6589,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "discord-mcp-server",
         "version": "1.0.0"
       }
@@ -7796,7 +6686,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-docker",
         "version": "0.2.0"
       }
@@ -7818,7 +6708,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-dblp",
         "version": "1.1.0"
       }
@@ -7862,7 +6752,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "dune-analytics-mcp",
         "version": "0.1.0"
       }
@@ -7884,7 +6774,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "edgeone-pages-mcp",
         "version": "0.0.9"
       }
@@ -7906,26 +6796,11 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "edwin-sdk",
         "version": "0.8.29"
       }
     ]
-  },
-  {
-    "id": "",
-    "name": "",
-    "description": "",
-    "repository": {
-      "url": "",
-      "source": "",
-      "id": ""
-    },
-    "version_detail": {
-      "version": "",
-      "release_date": "",
-      "is_latest": false
-    }
   },
   {
     "id": "1d89482a-a7de-4d3b-a7cb-1b7be49939ec",
@@ -8016,7 +6891,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-email",
         "version": "0.1.0"
       }
@@ -8038,7 +6913,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "eunomia-mcp-server",
         "version": "0.0.2"
       }
@@ -8060,7 +6935,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@mcpdotdirect/evm-mcp-server",
         "version": "1.1.3"
       }
@@ -8137,7 +7012,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "excel-mcp-server",
         "version": "0.1.1",
         "environment_variables": [
@@ -8171,7 +7046,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "fpl-mcp",
         "version": "0.1.4"
       }
@@ -8193,7 +7068,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "fastn",
         "version": "0.1.0",
         "package_arguments": [
@@ -8225,7 +7100,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "fred-mcp-server",
         "version": "0.2.3",
         "environment_variables": [
@@ -8234,28 +7109,6 @@
             "name": "FRED_API_KEY"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "1f0ecfb3-f362-459d-b217-f146079c3c3b",
-    "name": "io.github.clafollett/fdic-bank-find-mcp-server",
-    "description": "MCP Server to wrap the FDIC Bank Find API",
-    "repository": {
-      "url": "https://github.com/clafollett/fdic-bank-find-mcp-server",
-      "source": "github",
-      "id": "971755349"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:06:43Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "clafollett/fdic-bank-find-mcp-server",
-        "version": ""
       }
     ]
   },
@@ -8275,7 +7128,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "fetch",
         "version": "1.0.0"
       }
@@ -8297,7 +7150,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "figma-developer-mcp",
         "version": "0.2.2",
         "package_arguments": [
@@ -8340,7 +7193,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@gannonh/firebase-mcp",
         "version": "1.4.9"
       }
@@ -8362,7 +7215,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "firecrawl-mcp",
         "version": "1.9.0"
       }
@@ -8384,7 +7237,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "flightradar24-mcp-server",
         "version": "1.0.0",
         "environment_variables": [
@@ -8416,7 +7269,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "freqtrade-mcp",
         "version": "0.1.0"
       }
@@ -8459,28 +7312,6 @@
     ]
   },
   {
-    "id": "6026be39-cc97-4ace-b557-a97aeddbbd60",
-    "name": "io.github.geropl/git-mcp-go",
-    "description": "Git MCP based on mcp-go",
-    "repository": {
-      "url": "https://github.com/geropl/git-mcp-go",
-      "source": "github",
-      "id": "940039420"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:07:01Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "geropl/git-mcp-go",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "fa6d267b-a797-42b7-9510-5abc3c518f3e",
     "name": "io.github.ko1ynnky/github-actions-mcp-server",
     "description": "GitHub Actions Model Context Protocol Server",
@@ -8496,7 +7327,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "github-actions-mcp",
         "version": "0.1.0",
         "package_arguments": [
@@ -8552,28 +7383,6 @@
     ]
   },
   {
-    "id": "39d0e161-edcd-4ad5-bdc6-9c3d29908ed4",
-    "name": "io.github.longyi1207/glean-mcp-server",
-    "description": "",
-    "repository": {
-      "url": "https://github.com/longyi1207/glean-mcp-server",
-      "source": "github",
-      "id": "913663339"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:07:09Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "@modelcontextprotocol/glean",
-        "version": "0.6.2"
-      }
-    ]
-  },
-  {
     "id": "36ad8cdb-408e-4110-827b-8d6a0a0f94bb",
     "name": "io.github.gongrzhe/gmail-mcp-server",
     "description": "A Model Context Protocol (MCP) server for Gmail integration in Claude Desktop with auto authentication support. This server enables AI assistants to manage Gmail through natural language interactions.",
@@ -8589,7 +7398,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@gongrzhe/server-gmail-autoauth-mcp",
         "version": "1.1.9"
       }
@@ -8611,7 +7420,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-headless-gmail",
         "version": "0.1.0",
         "package_arguments": [
@@ -8680,7 +7489,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "goalstory-mcp",
         "version": "0.4.3"
       }
@@ -8702,7 +7511,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "goat-repo",
         "version": "0.1.0"
       }
@@ -8724,7 +7533,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "godot-mcp",
         "version": "0.1.0",
         "environment_variables": [
@@ -8794,7 +7603,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-goodnews",
         "version": "0.1.0",
         "package_arguments": [
@@ -8847,7 +7656,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "googlecalendar",
         "version": "1.0.0"
       }
@@ -8869,7 +7678,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "google-calendar-mcp",
         "version": "1.1.0"
       }
@@ -8891,7 +7700,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@adenot/mcp-google-search",
         "version": "0.2.0"
       }
@@ -8956,7 +7765,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "backend",
         "version": "",
         "package_arguments": [
@@ -8970,28 +7779,6 @@
             "value_hint": "Budget Q2"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "5486801a-8243-44ae-8d59-2e9a02c13a8e",
-    "name": "io.github.zcaceres/gtasks-mcp",
-    "description": "A Google Tasks Model Context Protocol Server for Claude",
-    "repository": {
-      "url": "https://github.com/zcaceres/gtasks-mcp",
-      "source": "github",
-      "id": "904953715"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:07:42Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "@modelcontextprotocol/server-gtasks",
-        "version": "0.0.1"
       }
     ]
   },
@@ -9011,7 +7798,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-vertexai-search",
         "version": "0.1.0"
       }
@@ -9098,7 +7885,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mesh-mcp-server",
         "version": "0.1.0"
       }
@@ -9180,7 +7967,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "homeassistant-mcp",
         "version": "0.1.0"
       }
@@ -9520,7 +8307,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "ifly-workflow-mcp-server",
         "version": "1.0.0",
         "package_arguments": [
@@ -9569,7 +8356,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@gongrzhe/image-gen-server",
         "version": "1.0.1",
         "environment_variables": [
@@ -9601,7 +8388,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "influxdb-mcp-server",
         "version": "0.1.1",
         "environment_variables": [
@@ -9637,7 +8424,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@inoyu/mcp-unomi-server",
         "version": "0.1.0"
       }
@@ -9659,7 +8446,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-for-intercom",
         "version": "1.0.0",
         "environment_variables": [
@@ -9687,7 +8474,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-simulator-ios-idb",
         "version": "1.0.1"
       }
@@ -9738,28 +8525,6 @@
     ]
   },
   {
-    "id": "24044cb1-3333-400d-966b-3394d9f39261",
-    "name": "io.github.quarkiverse/quarkus-mcp-servers",
-    "description": "Model Context Protocol Servers in Quarkus",
-    "repository": {
-      "url": "https://github.com/quarkiverse/quarkus-mcp-servers",
-      "source": "github",
-      "id": "920668324"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:08:36Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "quarkiverse/quarkus-mcp-servers",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "d0f30dc9-bc11-43f8-9b61-034e2bec78d5",
     "name": "io.github.qainsights/jmeter-mcp-server",
     "description": "✨ JMeter Meets AI Workflows: Introducing the JMeter MCP Server! 🤯 ",
@@ -9775,7 +8540,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "jmeter-mcp-server",
         "version": "0.1.0",
         "package_arguments": [
@@ -9807,7 +8572,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@gongrzhe/server-json-mcp",
         "version": "1.0.3"
       }
@@ -9829,7 +8594,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "jupiter-mcp",
         "version": "1.0.1",
         "package_arguments": [
@@ -9851,34 +8616,6 @@
           {
             "description": "your private key",
             "name": "PRIVATE_KEY"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "87c3876b-995b-4838-901b-062cdfb884c7",
-    "name": "io.github.razvanmacovei/k8s-multicluster-mcp",
-    "description": "An MCP (Model Context Protocol) server application for Kubernetes operations, providing a standardized API to interact with multiple Kubernetes clusters simultaneously using multiple kubeconfig files.",
-    "repository": {
-      "url": "https://github.com/razvanmacovei/k8s-multicluster-mcp",
-      "source": "github",
-      "id": "979253683"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:08:46Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "razvanmacovei/k8s-multicluster-mcp",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "/path/to/your/kubeconfigs",
-            "name": "KUBECONFIG_DIR"
           }
         ]
       }
@@ -9922,7 +8659,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "keycloak-model-context-protocol",
         "version": "0.0.2",
         "package_arguments": [
@@ -10034,54 +8771,6 @@
     ]
   },
   {
-    "id": "554f9f4e-2cd3-4a48-90e4-3c0351603f26",
-    "name": "io.github.macrat/mcp-server-kintone",
-    "description": "MCP server for kintone",
-    "repository": {
-      "url": "https://github.com/macrat/mcp-server-kintone",
-      "source": "github",
-      "id": "905159302"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:08:57Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "macrat/mcp-server-kintone",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "https://<domain>.cybozu.com",
-            "name": "KINTONE_BASE_URL"
-          },
-          {
-            "description": "<your username>",
-            "name": "KINTONE_USERNAME"
-          },
-          {
-            "description": "<your password>",
-            "name": "KINTONE_PASSWORD"
-          },
-          {
-            "description": "<your api token>, <another api token>, ...",
-            "name": "KINTONE_API_TOKEN"
-          },
-          {
-            "description": "1, 2, 3, ...",
-            "name": "KINTONE_ALLOW_APPS"
-          },
-          {
-            "description": "4, 5, ...",
-            "name": "KINTONE_DENY_APPS"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "86a12728-3ab9-4a69-a447-bcb67957a5f7",
     "name": "io.github.kong/mcp-konnect",
     "description": "A Model Context Protocol (MCP) server for interacting with Kong Konnect APIs, allowing AI assistants to query and analyze Kong Gateway configurations, traffic, and analytics.",
@@ -10097,7 +8786,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "kong-konnect-mcp",
         "version": "1.0.0",
         "environment_variables": [
@@ -10129,31 +8818,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-kubernetes",
         "version": "1.6.2"
-      }
-    ]
-  },
-  {
-    "id": "4a097d31-ea39-43aa-9af5-6f19a7676901",
-    "name": "io.github.manusa/kubernetes-mcp-server",
-    "description": "Model Context Protocol (MCP) server for Kubernetes and OpenShift",
-    "repository": {
-      "url": "https://github.com/manusa/kubernetes-mcp-server",
-      "source": "github",
-      "id": "930678258"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:09:03Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "manusa/kubernetes-mcp-server",
-        "version": ""
       }
     ]
   },
@@ -10173,7 +8840,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "doc-qa-server",
         "version": "0.1.0",
         "environment_variables": [
@@ -10201,7 +8868,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-lark",
         "version": ""
       }
@@ -10255,7 +8922,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "lsp-mcp-server",
         "version": "0.2.0",
         "package_arguments": [
@@ -10324,68 +8991,6 @@
           {
             "description": "your_linear_api_key_here",
             "name": "LINEAR_API_KEY"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "0c8e4aae-53ed-4acf-87d9-19d44ac4afd1",
-    "name": "io.github.geropl/linear-mcp-go",
-    "description": "linear MCP server based on mcp-go",
-    "repository": {
-      "url": "https://github.com/geropl/linear-mcp-go",
-      "source": "github",
-      "id": "940084523"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:09:19Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "geropl/linear-mcp-go",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "3791bb07-364f-431c-acf4-331007c52571",
-    "name": "io.github.amornpan/py-mcp-line",
-    "description": "python mcp LINE",
-    "repository": {
-      "url": "https://github.com/amornpan/py-mcp-line",
-      "source": "github",
-      "id": "940071130"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:09:21Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "amornpan/py-mcp-line",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "your_channel_secret",
-            "name": "LINE_CHANNEL_SECRET"
-          },
-          {
-            "description": "your_access_token",
-            "name": "LINE_ACCESS_TOKEN"
-          },
-          {
-            "description": "8000",
-            "name": "SERVER_PORT"
-          },
-          {
-            "description": "data/messages.json",
-            "name": "MESSAGES_FILE"
           }
         ]
       }
@@ -10466,28 +9071,6 @@
     ]
   },
   {
-    "id": "1fa71606-a2ca-47f1-b249-91031917ca41",
-    "name": "io.github.stass/lldb-mcp",
-    "description": "LLDB MCP server",
-    "repository": {
-      "url": "https://github.com/stass/lldb-mcp",
-      "source": "github",
-      "id": "955087112"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:09:27Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "stass/lldb-mcp",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "b9f04c6e-0d22-4f17-af83-ccde8b03e4e8",
     "name": "io.github.cyberchitta/llm-context.py",
     "description": "Share code with LLMs via Model Context Protocol or clipboard. Rule-based customization enables easy switching between different tasks (like code review and documentation). Includes smart code outlining.",
@@ -10503,7 +9086,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "llm-context",
         "version": "0.3.2",
         "package_arguments": [
@@ -10516,38 +9099,6 @@
             "type": "named",
             "name": "--from llm-context",
             "value_hint": "llm-context"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "5446ebef-4e06-494b-a50f-3b02ff493274",
-    "name": "io.github.vivekkumarneu/mcp-lucene-server",
-    "description": "MCP Lucene Server",
-    "repository": {
-      "url": "https://github.com/VivekKumarNeu/MCP-Lucene-Server",
-      "source": "github",
-      "id": "969059271"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:09:32Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "VivekKumarNeu/MCP-Lucene-Server",
-        "version": "",
-        "package_arguments": [
-          {
-            "is_required": true,
-            "format": "string",
-            "value": "doc2",
-            "default": "doc2",
-            "type": "positional",
-            "value_hint": "doc2"
           }
         ]
       }
@@ -10569,31 +9120,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mac-messages-mcp",
         "version": "0.6.6"
-      }
-    ]
-  },
-  {
-    "id": "b8bb0138-d147-4982-85b0-dedbd2e004a5",
-    "name": "io.github.mytechnotalent/malwarebazaar_mcp",
-    "description": "An AI-driven MCP server that autonomously interfaces with Malware Bazaar, delivering real-time threat intel and sample metadata for authorized cybersecurity research workflows.",
-    "repository": {
-      "url": "https://github.com/mytechnotalent/MalwareBazaar_MCP",
-      "source": "github",
-      "id": "965127478"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:09:35Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "mytechnotalent/MalwareBazaar_MCP",
-        "version": ""
       }
     ]
   },
@@ -10613,7 +9142,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-mariadb",
         "version": "0.1.2",
         "package_arguments": [
@@ -10663,28 +9192,6 @@
     ]
   },
   {
-    "id": "a7cfde04-fae7-4b2c-bcef-c752525a057e",
-    "name": "io.github.maton-ai/agent-toolkit",
-    "description": "",
-    "repository": {
-      "url": "https://github.com/maton-ai/agent-toolkit",
-      "source": "github",
-      "id": "950334178"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:09:41Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "maton-ai/agent-toolkit",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "e4578522-e426-44f4-818c-68784f2a3038",
     "name": "io.github.liuyoshio/mcp-compass",
     "description": "MCP Discovery & Recommendation Service - Find the right MCP server for your needs",
@@ -10700,7 +9207,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@liuyoshio/mcp-compass",
         "version": "1.0.7"
       }
@@ -10722,7 +9229,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "mcp-create",
         "version": "1.0.0"
       }
@@ -10861,7 +9368,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-proxy",
         "version": "0.6.0"
       }
@@ -10917,7 +9424,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-salesforce",
         "version": "1.0.0"
       }
@@ -10939,7 +9446,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mem0-mcp",
         "version": "0.1.0"
       }
@@ -11018,7 +9525,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "metatrader-mcp-server",
         "version": "0.2.8",
         "package_arguments": [
@@ -11072,7 +9579,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-metricool",
         "version": "1.1.0",
         "environment_variables": [
@@ -11154,83 +9661,6 @@
     ]
   },
   {
-    "id": "0c9a70a7-7523-42b7-a951-b4c4b8077710",
-    "name": "io.github.amornpan/py-mcp-mssql",
-    "description": "py-mcp-mssql",
-    "repository": {
-      "url": "https://github.com/amornpan/py-mcp-mssql",
-      "source": "github",
-      "id": "922607489"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:10:17Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "amornpan/py-mcp-mssql",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "script to run",
-            "is_required": true,
-            "format": "string",
-            "value": "server.py",
-            "default": "server.py",
-            "type": "positional",
-            "value_hint": "server.py"
-          }
-        ],
-        "environment_variables": [
-          {
-            "description": "your_server",
-            "name": "MSSQL_SERVER"
-          },
-          {
-            "description": "your_database",
-            "name": "MSSQL_DATABASE"
-          },
-          {
-            "description": "your_username",
-            "name": "MSSQL_USER"
-          },
-          {
-            "description": "your_password",
-            "name": "MSSQL_PASSWORD"
-          },
-          {
-            "description": "{ODBC Driver 17 for SQL Server}",
-            "name": "MSSQL_DRIVER"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "aaf985be-8d3d-41db-b69f-437cd09d85c6",
-    "name": "io.github.daobataotie/mssql-mcp",
-    "description": "mssql mcp server",
-    "repository": {
-      "url": "https://github.com/daobataotie/mssql-mcp",
-      "source": "github",
-      "id": "947666059"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:10:19Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "daobataotie/mssql-mcp",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "4365781f-28ff-4865-aa7d-909678f6dbb4",
     "name": "io.github.zcaceres/mcp-markdownify-server",
     "description": "A Model Context Protocol server for converting almost anything to Markdown",
@@ -11246,7 +9676,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "ocr",
         "version": "0.1.0"
       }
@@ -11281,28 +9711,6 @@
     ]
   },
   {
-    "id": "9cc3a712-dd68-494f-a2a3-63bfc54ce837",
-    "name": "io.github.openmf/mcp-mifosx",
-    "description": "Model Context Protocol - MCP for Mifos X",
-    "repository": {
-      "url": "https://github.com/openMF/mcp-mifosx",
-      "source": "github",
-      "id": "955487988"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:10:25Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "openMF/mcp-mifosx",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "5ebda83c-f2b3-4b14-ba72-13d940fa940a",
     "name": "io.github.jeff-nasseri/mikrotik-mcp",
     "description": "MCP server for Mikrotik",
@@ -11318,7 +9726,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-mikrotik",
         "version": "0.1.6",
         "package_arguments": [
@@ -11410,28 +9818,6 @@
     ]
   },
   {
-    "id": "a0774c2f-cd94-44d6-b441-d606f20c2087",
-    "name": "io.github.dmayboroda/minima",
-    "description": "On-premises conversational RAG with configurable containers",
-    "repository": {
-      "url": "https://github.com/dmayboroda/minima",
-      "source": "github",
-      "id": "882486617"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:10:33Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "dmayboroda/minima",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "6fefc93f-3f03-47b0-9f42-21d5a5841490",
     "name": "io.github.mobile-next/mobile-mcp",
     "description": "Model Context Protocol Server for Mobile Automation and Scraping (iOS, Android, Emulators, Simulators and Physical Devices)",
@@ -11502,7 +9888,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "mongodb-lens",
         "version": "9.1.4"
       }
@@ -11524,31 +9910,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-monday",
         "version": "0.2.9"
-      }
-    ]
-  },
-  {
-    "id": "3f0811e0-35b7-4e9b-a610-d8aa0b71400d",
-    "name": "io.github.morningstar/morningstar-mcp-server",
-    "description": "",
-    "repository": {
-      "url": "https://github.com/Morningstar/morningstar-mcp-server",
-      "source": "github",
-      "id": "956037631"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:10:44Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "Morningstar/morningstar-mcp-server",
-        "version": ""
       }
     ]
   },
@@ -11568,7 +9932,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "multicluster-mcp-server",
         "version": "0.1.3"
       }
@@ -11590,7 +9954,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "multi-model-advisor",
         "version": "1.0.0"
       }
@@ -11612,7 +9976,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@benborla29/mcp-server-mysql",
         "version": "2.0.0",
         "package_arguments": [
@@ -11667,7 +10031,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mysql_mcp_server",
         "version": "0.2.2",
         "package_arguments": [
@@ -11732,7 +10096,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "n8n-mcp-server",
         "version": "0.1.0",
         "package_arguments": [
@@ -11775,7 +10139,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@programcomputer/nasa-mcp-server",
         "version": "1.0.12",
         "package_arguments": [
@@ -11859,7 +10223,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "nasdaq-data-link-mcp-os",
         "version": "0.1.3",
         "package_arguments": [
@@ -11921,7 +10285,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-naver",
         "version": "0.1.5"
       }
@@ -11943,7 +10307,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-nba",
         "version": "0.1.0"
       }
@@ -11965,7 +10329,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "ns-mcp-server",
         "version": "0.1.6",
         "package_arguments": [
@@ -12143,7 +10507,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@suekou/mcp-notion-server",
         "version": "1.2.4",
         "package_arguments": [
@@ -12186,7 +10550,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "notionmcp",
         "version": "1.0.0",
         "environment_variables": [
@@ -12214,7 +10578,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "ntfy-mcp-server",
         "version": "1.0.0",
         "package_arguments": [
@@ -12253,7 +10617,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "ntfy-me-mcp",
         "version": "1.3.3",
         "environment_variables": [
@@ -12262,28 +10626,6 @@
             "name": "NTFY_TOPIC"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "9fdf29e9-6059-4a99-a5ae-4c0eda7627eb",
-    "name": "io.github.oatpp/oatpp-mcp",
-    "description": "Anthropic’s Model Context Protocol implementation for Oat++",
-    "repository": {
-      "url": "https://github.com/oatpp/oatpp-mcp",
-      "source": "github",
-      "id": "900529643"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:11:31Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "oatpp/oatpp-mcp",
-        "version": ""
       }
     ]
   },
@@ -12336,7 +10678,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "obsidian-mcp",
         "version": "1.0.6",
         "package_arguments": [
@@ -12432,7 +10774,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "office-powerpoint-mcp-server",
         "version": "1.0.0",
         "package_arguments": [
@@ -12475,7 +10817,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "office-word-mcp-server",
         "version": "1.1.3",
         "package_arguments": [
@@ -12507,7 +10849,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "okta-mcp-server",
         "version": "1.0.0",
         "environment_variables": [
@@ -12520,28 +10862,6 @@
             "name": "OKTA_API_TOKEN"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "a2e44c59-4a60-47a6-8588-22b90cebe345",
-    "name": "io.github.rajvirtual/mcp-servers",
-    "description": "A Model Context Protocol (MCP) server that provides AI assistants with access to Microsoft OneNote. This server enables AI models to read from and write to OneNote notebooks, sections, and pages.",
-    "repository": {
-      "url": "https://github.com/rajvirtual/MCP-Servers",
-      "source": "github",
-      "id": "947565134"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:11:48Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "rajvirtual/MCP-Servers",
-        "version": ""
       }
     ]
   },
@@ -12561,7 +10881,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "openai-websearch-mcp",
         "version": "0.4.0",
         "package_arguments": [
@@ -12601,7 +10921,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "openapi-mcp-server",
         "version": "2.0.3"
       }
@@ -12737,7 +11057,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "opencti-server",
         "version": "0.1.0",
         "package_arguments": [
@@ -12780,7 +11100,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "opendota-mcp-server",
         "version": "0.1.1",
         "package_arguments": [
@@ -12839,57 +11159,6 @@
     ]
   },
   {
-    "id": "54a7e4fa-a7d1-476f-bd25-2f417766c3b5",
-    "name": "io.github.mschneider82/mcp-openweather",
-    "description": "mcp server for openweather free api",
-    "repository": {
-      "url": "https://github.com/mschneider82/mcp-openweather",
-      "source": "github",
-      "id": "982749772"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:12:11Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "mschneider82/mcp-openweather",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "The city for which weather is requested",
-            "is_required": true,
-            "format": "string",
-            "value": "Berlin",
-            "default": "Berlin",
-            "type": "positional",
-            "value_hint": "Berlin"
-          },
-          {
-            "description": "Units to display temperature (c|f|k)",
-            "format": "string",
-            "value": "units c",
-            "default": "units c",
-            "type": "named",
-            "name": "units c",
-            "value_hint": "c"
-          },
-          {
-            "description": "Language code for the response (en|de|fr|...)",
-            "format": "string",
-            "value": "lang en",
-            "default": "lang en",
-            "type": "named",
-            "name": "lang en",
-            "value_hint": "en"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "0d8b287c-6023-4809-a5ba-963c5612efa2",
     "name": "io.github.open-strategy-partners/osp_marketing_tools",
     "description": "A Model Context Protocol (MCP) server that empowers LLMs to use some of Open Srategy Partners' core writing and product marketing techniques.",
@@ -12905,7 +11174,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "osp-marketing-tools",
         "version": "0.1.0",
         "package_arguments": [
@@ -12939,7 +11208,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-outline",
         "version": "0.2.2"
       }
@@ -13010,7 +11279,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-pandoc",
         "version": "0.3.3"
       }
@@ -13032,7 +11301,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-paradex",
         "version": "0.1.0",
         "package_arguments": [
@@ -13080,28 +11349,6 @@
     ]
   },
   {
-    "id": "b2c02765-621b-403e-8859-53afb9866451",
-    "name": "io.github.hao-cyber/phone-mcp",
-    "description": "A phone control plugin for MCP that allows you to control your Android phone through ADB commands to connect any human",
-    "repository": {
-      "url": "https://github.com/hao-cyber/phone-mcp",
-      "source": "github",
-      "id": "963381978"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:12:27Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "hao-cyber/phone-mcp",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "dd586d17-4a7e-4658-92df-8cf6b58bff4d",
     "name": "io.github.hungryrobot1/mcp-pif",
     "description": "A MCP implementation of the personal intelligence framework (PIF)",
@@ -13117,7 +11364,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-pif",
         "version": "1.0.0"
       }
@@ -13139,7 +11386,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-pinecone",
         "version": "0.1.8",
         "package_arguments": [
@@ -13183,7 +11430,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@felores/placid-mcp-server",
         "version": "1.7.0"
       }
@@ -13205,7 +11452,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "plane-mcp-server",
         "version": "0.1.0"
       }
@@ -13249,7 +11496,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "mcp-postman",
         "version": "1.0.2"
       }
@@ -13271,7 +11518,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-prefect",
         "version": "0.1.1"
       }
@@ -13409,7 +11656,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "pubchem_mcp_server",
         "version": "0.1.5"
       }
@@ -13510,7 +11757,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "puppeteer-vision-mcp-server",
         "version": "0.1.0"
       }
@@ -13650,7 +11897,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "qwen_max",
         "version": "1.0.0",
         "environment_variables": [
@@ -13771,7 +12018,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@apify/mcp-server-rag-web-browser",
         "version": "0.1.3"
       }
@@ -13793,7 +12040,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "raindrop-io-mcp-server",
         "version": "1.0.0",
         "package_arguments": [
@@ -13832,7 +12079,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "reaper-mcp-server",
         "version": "0.1.0"
       }
@@ -13896,7 +12143,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-redis",
         "version": "0.1.0"
       }
@@ -13918,7 +12165,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-server-rememberizer",
         "version": "0.1.5",
         "environment_variables": [
@@ -13946,7 +12193,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "mcp-replicate",
         "version": "0.1.1",
         "environment_variables": [
@@ -13974,7 +12221,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-rquest",
         "version": "0.1.13"
       }
@@ -13996,7 +12243,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "mcp-server-rijksmuseum",
         "version": "1.0.4",
         "environment_variables": [
@@ -14024,88 +12271,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "riot",
         "version": "0.1.0"
-      }
-    ]
-  },
-  {
-    "id": "938ee893-25dd-424a-88b4-7ebce53bcb22",
-    "name": "io.github.salesforce-mcp/salesforce-mcp",
-    "description": "Salesforce MCP",
-    "repository": {
-      "url": "https://github.com/salesforce-mcp/salesforce-mcp",
-      "source": "github",
-      "id": "973629838"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:13:37Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "salesforce-mcp/salesforce-mcp",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "Argument for source identifier",
-            "is_required": true,
-            "format": "string",
-            "value": "--from salesforce-mcp",
-            "default": "--from salesforce-mcp",
-            "type": "named",
-            "name": "--from salesforce-mcp",
-            "value_hint": "salesforce-mcp"
-          },
-          {
-            "description": "Target package or operation",
-            "is_required": true,
-            "format": "string",
-            "value": "salesforce",
-            "default": "salesforce",
-            "type": "positional",
-            "value_hint": "salesforce"
-          }
-        ],
-        "environment_variables": [
-          {
-            "description": "YOUR_SALESFORCE_USERNAME",
-            "name": "USERNAME"
-          },
-          {
-            "description": "YOUR_SALESFORCE_PASSWORD",
-            "name": "PASSWORD"
-          },
-          {
-            "description": "YOUR_SALESFORCE_SECURITY_TOKEN",
-            "name": "SECURITY_TOKEN"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "id": "583f254e-410c-4dd4-a96c-8f362475436e",
-    "name": "io.github.rust-mcp-stack/rust-mcp-filesystem",
-    "description": "Blazing-fast, asynchronous MCP server for seamless filesystem operations.",
-    "repository": {
-      "url": "https://github.com/rust-mcp-stack/rust-mcp-filesystem",
-      "source": "github",
-      "id": "968849582"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:13:39Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "rust-mcp-stack/rust-mcp-filesystem",
-        "version": ""
       }
     ]
   },
@@ -14125,7 +12293,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-salesforce-connector",
         "version": "0.1.3"
       }
@@ -14147,7 +12315,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-scholarly",
         "version": "0.1.0"
       }
@@ -14169,7 +12337,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "scrapling-fetch-mcp",
         "version": "0.1.6"
       }
@@ -14251,7 +12419,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "sec-edgar-mcp",
         "version": "0.1.1"
       }
@@ -14375,55 +12543,6 @@
     ]
   },
   {
-    "id": "1e8b16b3-9182-43a9-b4c5-07fdf8032c89",
-    "name": "io.github.korotovsky/slack-mcp-server",
-    "description": "The most powerful MCP Slack Server with Stdio and SSE transports, Proxy support and no permission requirements on Slack Workspace! ",
-    "repository": {
-      "url": "https://github.com/korotovsky/slack-mcp-server",
-      "source": "github",
-      "id": "965085580"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:14:00Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "korotovsky/slack-mcp-server",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "The url endpoint to connect to",
-            "is_required": true,
-            "format": "string",
-            "value": "https://x.y.z.q:3001/sse",
-            "default": "https://x.y.z.q:3001/sse",
-            "type": "positional",
-            "value_hint": "https://x.y.z.q:3001/sse"
-          },
-          {
-            "description": "Add HTTP headers to the request",
-            "is_required": true,
-            "format": "string",
-            "value": "--header Authorization: Bearer ${SLACK_MCP_SSE_API_KEY}",
-            "default": "--header Authorization: Bearer ${SLACK_MCP_SSE_API_KEY}",
-            "type": "named",
-            "name": "--header Authorization: Bearer ${SLACK_MCP_SSE_API_KEY}",
-            "value_hint": "Authorization: Bearer ${SLACK_MCP_SSE_API_KEY}"
-          }
-        ],
-        "environment_variables": [
-          {
-            "description": "my-$$e-$ecret",
-            "name": "SLACK_MCP_SSE_API_KEY"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "61942e80-99c9-4856-90c8-5a11ac76ade5",
     "name": "io.github.isaacwasserman/mcp-snowflake-server",
     "description": "",
@@ -14439,7 +12558,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp_snowflake_server",
         "version": "0.4.0",
         "package_arguments": [
@@ -14492,7 +12611,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-solver",
         "version": "3.2.0"
       }
@@ -14514,7 +12633,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-soccer-data",
         "version": "0.1.0"
       }
@@ -14536,7 +12655,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "solana-agent-kit",
         "version": "2.0.3"
       }
@@ -14600,28 +12719,6 @@
     ]
   },
   {
-    "id": "8a0bb0a3-74c3-41c1-9b9f-2974dd1576fe",
-    "name": "io.github.boston343/starwind-ui-mcp",
-    "description": "Local MCP server implementation for Starwind UI that you can use with Cursor, Windsurf, and other AI tools",
-    "repository": {
-      "url": "https://github.com/starwind-ui/starwind-ui-mcp",
-      "source": "github",
-      "id": "948419950"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:14:15Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "@starwind-ui/mcp",
-        "version": "0.1.0"
-      }
-    ]
-  },
-  {
     "id": "09a2ecf8-1774-490e-8542-2b25a6445a58",
     "name": "io.github.r-huijts/strava-mcp",
     "description": "A Model Context Protocol (MCP) server that connects to Strava API, providing tools to access Strava data through LLMs",
@@ -14637,7 +12734,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "strava-mcp-server",
         "version": "1.0.0"
       }
@@ -14659,7 +12756,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-stripe",
         "version": "0.1.0",
         "package_arguments": [
@@ -14751,7 +12848,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "cursor-talk-to-figma-mcp",
         "version": "0.2.1"
       }
@@ -14773,7 +12870,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-tmdb",
         "version": "1.0.0",
         "environment_variables": [
@@ -14801,7 +12898,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp_tavily",
         "version": "0.1.8",
         "package_arguments": [
@@ -14826,53 +12923,6 @@
     ]
   },
   {
-    "id": "",
-    "name": "",
-    "description": "",
-    "repository": {
-      "url": "",
-      "source": "",
-      "id": ""
-    },
-    "version_detail": {
-      "version": "",
-      "release_date": "",
-      "is_latest": false
-    }
-  },
-  {
-    "id": "0cd13ce0-2f67-414a-afb1-4e11dd3e4cba",
-    "name": "io.github.chaindead/telegram-mcp",
-    "description": "Telegram MCP for managing dialogs, messages, drafts, read statuses, and more.",
-    "repository": {
-      "url": "https://github.com/chaindead/telegram-mcp",
-      "source": "github",
-      "id": "958652024"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:14:34Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "chaindead/telegram-mcp",
-        "version": "",
-        "environment_variables": [
-          {
-            "description": "<your-app-id>",
-            "name": "TG_APP_ID"
-          },
-          {
-            "description": "<your-api-hash>",
-            "name": "TG_API_HASH"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "cb9e2dc2-e335-4271-8e8d-5aff43cd389b",
     "name": "io.github.arturborycki/mcp-teradata",
     "description": "MCP Server for Teradata database",
@@ -14888,7 +12938,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "teradata-mcp",
         "version": "0.1.0"
       }
@@ -14910,7 +12960,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "terminal-controller",
         "version": "0.1.8",
         "package_arguments": [
@@ -15200,7 +13250,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "token-minter-mcp",
         "version": "1.0.1",
         "package_arguments": [
@@ -15243,7 +13293,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "token-revoke-mcp",
         "version": "1.0.0",
         "environment_variables": [
@@ -15339,7 +13389,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@gongrzhe/server-travelplanner-mcp",
         "version": "0.1.2",
         "environment_variables": [
@@ -15405,7 +13455,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "uniswap-trader-mcp",
         "version": "1.0.1",
         "package_arguments": [
@@ -15520,7 +13570,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "com.gamelovers.mcp-unity",
         "version": "1.0.2"
       }
@@ -15542,7 +13592,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "com.quaza.unitymcp",
         "version": "0.0.1",
         "environment_variables": [
@@ -15570,7 +13620,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-vegalite",
         "version": "0.0.1"
       }
@@ -15722,7 +13772,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@mfukushim/map-traveler-mcp",
         "version": "0.0.77",
         "environment_variables": [
@@ -15762,7 +13812,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-server-tos",
         "version": "0.1.0",
         "package_arguments": [
@@ -15858,7 +13908,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "webflow-mcp-server",
         "version": "1.0.0",
         "package_arguments": [
@@ -15910,49 +13960,6 @@
     ]
   },
   {
-    "id": "0d2cbcc1-4b34-4b2b-af66-595d8fb5e78a",
-    "name": "io.github.lharries/whatsapp-mcp",
-    "description": "WhatsApp MCP server",
-    "repository": {
-      "url": "https://github.com/lharries/whatsapp-mcp",
-      "source": "github",
-      "id": "957053334"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:15:45Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "lharries/whatsapp-mcp",
-        "version": "",
-        "package_arguments": [
-          {
-            "description": "Directory to run in",
-            "is_required": true,
-            "format": "string",
-            "value": "--directory {{PATH_TO_SRC}}/whatsapp-mcp/whatsapp-mcp-server",
-            "default": "--directory {{PATH_TO_SRC}}/whatsapp-mcp/whatsapp-mcp-server",
-            "type": "named",
-            "name": "--directory {{PATH_TO_SRC}}/whatsapp-mcp/whatsapp-mcp-server",
-            "value_hint": "{{PATH_TO_SRC}}/whatsapp-mcp/whatsapp-mcp-server"
-          },
-          {
-            "description": "Main Python file",
-            "is_required": true,
-            "format": "string",
-            "value": "main.py",
-            "default": "main.py",
-            "type": "positional",
-            "value_hint": "main.py"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "id": "5f5a497c-673d-4988-b86b-c3bcaaf1a317",
     "name": "io.github.bharathvaj-ganesan/whois-mcp",
     "description": "MCP Server for whois lookups.",
@@ -15990,31 +13997,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcp-wikidata",
         "version": "0.1.0"
-      }
-    ]
-  },
-  {
-    "id": "598ea4ee-6e94-49b7-abce-c53b6b2b22f7",
-    "name": "io.github.wildfly-extras/wildfly-mcp",
-    "description": "WildFly MCP server and other tooling to integrate WildFly in AI space",
-    "repository": {
-      "url": "https://github.com/wildfly-extras/wildfly-mcp",
-      "source": "github",
-      "id": "919946635"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:15:51Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "wildfly-extras/wildfly-mcp",
-        "version": ""
       }
     ]
   },
@@ -16034,7 +14019,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@simonb97/server-win-cli",
         "version": "0.2.0"
       }
@@ -16189,7 +14174,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcpxcodebuild",
         "version": "0.10.0"
       }
@@ -16247,7 +14232,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "xiyan_mcp_server",
         "version": "0.1.5"
       }
@@ -16308,7 +14293,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "ynabmcpserver",
         "version": "0.0.0"
       }
@@ -16394,7 +14379,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp_weather_server",
         "version": "0.2.1"
       }
@@ -16416,7 +14401,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "easy-mcp",
         "version": "1.0.1"
       }
@@ -16438,7 +14423,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "fastapi-mcp",
         "version": "0.3.3"
       }
@@ -16484,72 +14469,6 @@
     ]
   },
   {
-    "id": "499f5fa7-c91e-4dac-bf51-9f075eaa2769",
-    "name": "io.github.strowk/foxy-contexts",
-    "description": "Foxy contexts is a library for building context servers supporting Model Context Protocol",
-    "repository": {
-      "url": "https://github.com/strowk/foxy-contexts",
-      "source": "github",
-      "id": "896729097"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:27Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "strowk/foxy-contexts",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "121af804-12e1-4ac3-add1-3f8e2da4a8fe",
-    "name": "io.github.alibaba/higress",
-    "description": "🤖 AI Gateway | AI Native API Gateway",
-    "repository": {
-      "url": "https://github.com/alibaba/higress",
-      "source": "github",
-      "id": "558188628"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:29Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "alibaba/higress",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "b846b02f-1f0e-4c62-a3e9-e62cf3ccbf1a",
-    "name": "io.github.quarkiverse/quarkus-mcp-server",
-    "description": "This extension enables developers to implement the MCP server features easily.",
-    "repository": {
-      "url": "https://github.com/quarkiverse/quarkus-mcp-server",
-      "source": "github",
-      "id": "901850977"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:31Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "quarkiverse/quarkus-mcp-server",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "816a9400-2e2b-4697-8fbb-2a22fd81de74",
     "name": "io.github.mcpdotdirect/template-mcp-server",
     "description": "Template to quickly set up your own MCP server ",
@@ -16565,7 +14484,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@mcpdotdirect/create-mcp-server",
         "version": "2.0.1",
         "package_arguments": [
@@ -16623,94 +14542,6 @@
     ]
   },
   {
-    "id": "a9d37e55-2034-40aa-8956-4c05c52b40c7",
-    "name": "io.github.badkk/awesome-crypto-mcp-servers",
-    "description": "A collection of crypto MCP servers.",
-    "repository": {
-      "url": "https://github.com/badkk/awesome-crypto-mcp-servers",
-      "source": "github",
-      "id": "911501074"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:38Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "badkk/awesome-crypto-mcp-servers",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "0007544a-3948-4934-866b-b4a96fe53b55",
-    "name": "io.github.appcypher/awesome-mcp-servers",
-    "description": "Awesome MCP Servers - A curated list of Model Context Protocol servers",
-    "repository": {
-      "url": "https://github.com/appcypher/awesome-mcp-servers",
-      "source": "github",
-      "id": "895801050"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:40Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "appcypher/awesome-mcp-servers",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "fedddd78-b4fc-4bf9-96a2-021779348acf",
-    "name": "io.github.punkpeye/awesome-mcp-servers",
-    "description": "A collection of MCP servers.",
-    "repository": {
-      "url": "https://github.com/punkpeye/awesome-mcp-servers",
-      "source": "github",
-      "id": "896335270"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:42Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "punkpeye/awesome-mcp-servers",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "9926bddd-9633-4a76-a5b6-bb3be30b2ed4",
-    "name": "io.github.wong2/awesome-mcp-servers",
-    "description": "A curated list of Model Context Protocol (MCP) servers",
-    "repository": {
-      "url": "https://github.com/wong2/awesome-mcp-servers",
-      "source": "github",
-      "id": "895553015"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:44Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "wong2/awesome-mcp-servers",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "2a679bdd-d106-4510-99ea-b4802070d30f",
     "name": "io.github.jaw9c/awesome-remote-mcp-servers",
     "description": "A curated, opinionated list of high-quality remote Model Context Protocol (MCP) servers. ",
@@ -16740,28 +14571,6 @@
             "value_hint": "<REMOTE_MCP_SERVER_URL>"
           }
         ]
-      }
-    ]
-  },
-  {
-    "id": "de52e791-0131-40d1-be41-ba7b14f3c134",
-    "name": "io.github.ai-agent-hub/mcp-marketplace",
-    "description": "OpenSource MCP Marketplace and Html Plugin to Integrate with your AI Application",
-    "repository": {
-      "url": "https://github.com/AI-Agent-Hub/mcp-marketplace",
-      "source": "github",
-      "id": "978816723"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:48Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "AI-Agent-Hub/mcp-marketplace",
-        "version": ""
       }
     ]
   },
@@ -16804,50 +14613,6 @@
     ]
   },
   {
-    "id": "72d60875-916c-4555-8651-a10f013c7c30",
-    "name": "io.github.mcpx-dev/mcp-badges",
-    "description": "Get your projects MCP (Model Context Protocol)  badges",
-    "repository": {
-      "url": "https://github.com/mcpx-dev/mcp-badges",
-      "source": "github",
-      "id": "911113162"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:52Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "mcpx-dev/mcp-badges",
-        "version": ""
-      }
-    ]
-  },
-  {
-    "id": "41203071-aa7d-49f7-83a9-3f3c8429d178",
-    "name": "io.github.apappascs/mcp-servers-hub",
-    "description": "Discover the most comprehensive and up-to-date collection of MCP servers in the market. This repository serves as a centralized hub, offering an extensive catalog of open-source and proprietary MCP servers, complete with features, documentation links, and contributors.",
-    "repository": {
-      "url": "https://github.com/apappascs/mcp-servers-hub",
-      "source": "github",
-      "id": "907417434"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:54Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "apappascs/mcp-servers-hub",
-        "version": ""
-      }
-    ]
-  },
-  {
     "id": "29cf2977-4a42-44f0-8e62-f92ca8391412",
     "name": "io.github.wong2/mcp-cli",
     "description": "A CLI inspector for the Model Context Protocol",
@@ -16863,31 +14628,9 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "npm",
         "name": "@wong2/mcp-cli",
         "version": "1.10.0"
-      }
-    ]
-  },
-  {
-    "id": "04b4489b-db48-4aaa-98f6-036bcf5fd483",
-    "name": "io.github.eqtylab/mcp-guardian",
-    "description": "Manage / Proxy / Secure your MCP Servers",
-    "repository": {
-      "url": "https://github.com/eqtylab/mcp-guardian",
-      "source": "github",
-      "id": "926222936"
-    },
-    "version_detail": {
-      "version": "0.0.1-seed",
-      "release_date": "2025-05-16T19:16:58Z",
-      "is_latest": true
-    },
-    "packages": [
-      {
-        "registry_name": "unknown",
-        "name": "eqtylab/mcp-guardian",
-        "version": ""
       }
     ]
   },
@@ -16907,7 +14650,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcpm",
         "version": ""
       }
@@ -16929,7 +14672,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "pypi",
         "name": "mcp-manager",
         "version": "0.1.9"
       }
@@ -16951,7 +14694,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "mcphub-desktop",
         "version": "0.2.1"
       }
@@ -16973,7 +14716,7 @@
     },
     "packages": [
       {
-        "registry_name": "unknown",
+        "registry_name": "docker",
         "name": "navfast",
         "version": "0.1.0"
       }

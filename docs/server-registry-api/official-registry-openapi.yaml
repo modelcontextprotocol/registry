@@ -1,0 +1,42 @@
+openapi: 3.1.0
+jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
+info:
+  title: Official MCP Registry API
+  summary: Official API for discovering and accessing MCP servers metadata with registry constraints
+  description: |
+    Extends the base MCP Server Registry API with additional constraints for the official registry and adding additional functionality.
+    The Official Registry allows server creators to publish and maintain metadata about their servers in a standardized format.
+    The read side of the API enables MCP client applications and "server aggregator" type consumers to discover and install MCP servers.
+  version: 0.0.1
+  contact:
+    name: MCP Community Working Group
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: https://registry.modelcontextprotocol.io/api/v0
+    description: Official MCP Registry
+
+paths:
+  /servers:
+    $ref: 'https://modelcontextprotocol.io/schemas/draft/2025-07-09/server-registry-openapi#/paths/~1servers'
+  /servers/{id}:
+    $ref: 'https://modelcontextprotocol.io/schemas/draft/2025-07-09/server-registry-openapi#/paths/~1servers~1{id}'
+
+components:
+  schemas:
+    Repository:
+      allOf:
+        - $ref: 'https://modelcontextprotocol.io/schemas/draft/2025-07-09/server-registry-openapi#/components/schemas/Repository'
+        - type: object
+          properties:
+            source:
+              enum: [github]
+    
+    Package:
+      allOf:
+        - $ref: 'https://modelcontextprotocol.io/schemas/draft/2025-07-09/server-registry-openapi#/components/schemas/Package'
+        - type: object
+          properties:
+            registry_name:
+              enum: [npm, docker, pypi, nuget]

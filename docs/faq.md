@@ -13,9 +13,17 @@ The MCP Registry is the official centralized metadata repository for publicly-ac
 - Standardized installation and configuration information
 - Namespace management through DNS verification
 
+### What is the difference between "Official MCP Registry", "MCP Registry", "MCP registry", "MCP Registry API", etc?
+
+There are four underlying concepts:
+- "MCP Server Registry API" (or "MCP Registry API"): The OpenAPI specification defined in [openapi.yaml](./server-registry-api/openapi.yaml). This is a reusable API specification that anyone building any sort of "MCP server registry" should consider adopting / aligning with.
+- "Official MCP Registry" (or "MCP Registry"): The application that lives at `https://registry.modelcontextprotocol.io`. This registry currently only catalogs MCP servers, but may be extended in the future to also catalog MCP client/host apps and frameworks.
+- "Official MCP Registry API": The REST API that lives at `https://registry.modelcontextprotocol.io/api`, with an OpenAPI specification defined at [official-registry-openapi.yaml](./server-registry-api/official-registry-openapi.yaml)
+- "MCP server registry" (or "MCP registry"): A third party, likely commercial, implementation of the MCP Server Registry API or derivative specification.
+
 ### Is the MCP Registry a package registry?
 
-No. The MCP Registry stores metadata about MCP servers and references to where they're hosted (npm, PyPI, Docker Hub, etc.), but does not host the actual source code or packages.
+No. The MCP Registry stores metadata about MCP servers and references to where they're hosted (npm, PyPI, NuGet, Docker Hub, etc.), but does not host the actual source code or packages.
 
 ### Who should use the MCP Registry directly?
 
@@ -37,7 +45,7 @@ Servers are published by submitting a `server.json` file through our CLI tool. T
 
 1. GitHub authentication
 2. A public GitHub repository (even for closed-source servers - just for the metadata)
-3. Your server package published to a supported registry (npm, PyPI, Docker Hub, etc.)
+3. Your server package published to a supported registry (npm, PyPI, NuGet, Docker Hub, etc.)
 4. Optional: DNS verification for custom namespacing
 
 ### What namespaces are available?
@@ -54,6 +62,7 @@ No. While open source code is encouraged, it is not required for either locally 
 
 - npm (Node.js packages)
 - PyPI (Python packages)
+- NuGet.org (.NET packages)
 - GitHub Container Registry (GHCR)
 
 More can be added as the community desires; feel free to open an issue if you are interested in building support for another registry.

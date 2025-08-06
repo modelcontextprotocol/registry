@@ -24,20 +24,23 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 
 ### Prerequisites
 
-- Go 1.18 or later
+- Go 1.23.x (required - check with `go version`)
 - MongoDB
 - Docker (optional, but recommended for development)
+
+For development:
+- golangci-lint v1.61.0 - Install with:
+  ```bash
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.61.0
+  ```
 
 ## Running
 
 The easiest way to get the registry running is to use `docker compose`. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
 
 ```bash
-# Build the Docker image
-docker build -t registry .
-
 # Run the registry and MongoDB with docker compose
-docker compose up
+docker compose up --build
 ```
 
 This will start the MCP Registry service and MongoDB with Docker, exposing it on port 8080.
@@ -53,6 +56,33 @@ go build ./cmd/registry
 This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
 
 By default, the service will run on `http://localhost:8080`.
+
+## Development
+
+### Linting
+
+The project uses golangci-lint with extensive checks. Always run linting before pushing:
+
+```bash
+# Run all linters (same as CI)
+golangci-lint run --timeout=5m
+
+# Check formatting
+gofmt -s -l .
+
+# Fix formatting
+gofmt -s -w .
+```
+
+### Git Hooks (Optional)
+
+To automatically run linting before commits:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+This will prevent commits that fail linting or have formatting issues.
 
 ## Project Structure
 

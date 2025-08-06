@@ -50,7 +50,7 @@ func NewMongoDB(ctx context.Context, connectionURI, databaseName, collectionName
 		},
 		// add an index for the combination of name and version
 		{
-			Keys:    bson.D{bson.E{Key: "name", Value: 1}, bson.E{Key: "versiondetail.version", Value: 1}},
+			Keys:    bson.D{bson.E{Key: "name", Value: 1}, bson.E{Key: "version_detail.version", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	}
@@ -223,7 +223,7 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 		_, err = db.collection.UpdateOne(
 			ctx,
 			bson.M{"id": existingEntry.ID},
-			bson.M{"$set": bson.M{"versiondetail.islatest": false}})
+			bson.M{"$set": bson.M{"version_detail.islatest": false}})
 		if err != nil {
 			return fmt.Errorf("error updating existing entry: %w", err)
 		}
