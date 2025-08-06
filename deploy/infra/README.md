@@ -2,47 +2,6 @@
 
 This directory contains Pulumi infrastructure code to deploy the MCP Registry service to a Kubernetes cluster. It supports multiple Kubernetes providers: Azure Kubernetes Service (AKS) and local (using existing kubeconfig).
 
-## Structure
-
-- `main.go` - Entry point for the Pulumi program
-- `cluster.go` - Kubernetes cluster setup with support for AKS and local
-- `registry.go` - MCP Registry application deployment
-- `mongodb.go` - MongoDB deployment for Kubernetes
-- `Pulumi.yaml` - Pulumi project configuration
-- `Pulumi.dev.yaml` - Development environment configuration (local by default)
-- `Pulumi.prod.yaml` - Production environment configuration (AKS by default)
-
-## Supported Providers
-
-| Provider | Description | Use Case |
-|----------|-------------|----------|
-| `local` | Local Kubernetes (default) | Development with existing cluster |
-| `aks` | Azure Kubernetes Service | Production deployment |
-
-## Configuration
-
-Required configuration:
-
-| Parameter | Description | Required |
-|-----------|-------------|----------|
-| `environment` | Deployment environment (dev/prod) | Yes |
-| `provider` | Kubernetes provider (local/aks) | No (default: local) |
-| `githubClientId` | GitHub OAuth Client ID | Yes |
-| `githubClientSecret` | GitHub OAuth Client Secret | Yes |
-
-Optional configuration:
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `kubeconfigPath` | Path to kubeconfig (for local providers) | ~/.kube/config |
-| `azureLocation` | Azure region (for AKS) | East US |
-
-Hardcoded defaults:
-- MongoDB: Deployed as part of the stack with persistent storage
-- Registry Image: `registry:latest` (local build)
-- Replicas: 3 for dev, 5 for prod
-- Ingress: NGINX with TLS (LoadBalancer for AKS, NodePort for local)
-
 ## Quick Start
 
 ### Local Development
@@ -74,6 +33,8 @@ Pre-requisites:
 
 ### Production Deployment (AKS)
 
+WIP!
+
 1. Select the production stack:
 ```bash
 cd deploy/infra
@@ -96,83 +57,66 @@ pulumi config set --secret mcp-registry:githubClientSecret <your-github-client-s
 pulumi up
 ```
 
-## Components Deployed
+## Structure
 
-### Kubernetes Resources
-- Namespace for the environment
-- NGINX Ingress Controller (LoadBalancer for AKS, NodePort for local)
-- cert-manager for TLS certificates
-
-### MongoDB
-- Single instance MongoDB deployment
-- PersistentVolumeClaim for data storage (10Gi)
-- ClusterIP service
-
-### MCP Registry
-- ConfigMap with non-sensitive configuration
-- Secret with sensitive configuration
-- Deployment (3 replicas for dev, 5 for prod)
-- ClusterIP Service
-- Ingress with TLS
-
-### AKS Specific (when provider=aks)
-- Azure Resource Group
-- AKS Cluster with system-assigned managed identity
-- Node pool with 3 nodes (dev) or 5 nodes (prod)
-- Azure CNI networking
-
-## Monitoring
-
-The deployment includes health checks:
-- Liveness probe: `/v0/health`
-- Readiness probe: `/v0/health`
-
-## Building the Docker Image
-
-Before deployment, build the MCP Registry Docker image:
-
-```bash
-# From the registry root directory
-docker build -t registry:latest .
 ```
+├── main.go              # Pulumi program entry point
+├── Pulumi.yaml          # Project configuration
+├── Pulumi.local.yaml    # Local stack configuration
+├── Pulumi.prod.yaml     # Production stack configuration
+├── Makefile             # Build and deployment targets
+├── go.mod               # Go module dependencies
+├── go.sum               # Go module checksums
+└── pkg/                 # Infrastructure packages
+    ├── k8s/             # Kubernetes deployment components
+    │   ├── cert_manager.go    # SSL certificate management
+    │   ├── deploy.go          # Deployment orchestration
+    │   ├── ingress.go         # Ingress controller setup
+    │   ├── mongodb.go         # MongoDB deployment
+    │   └── registry.go        # MCP Registry deployment
+    └── providers/       # Kubernetes cluster providers
+        ├── types.go           # Provider interface definitions
+        ├── aks/               # Azure Kubernetes Service provider
+        └── local/             # Local kubeconfig provider
+```
+
+### Architecture Overview
+
+#### Deployment Flow
+1. Pulumi program starts in `main.go`
+2. Configuration is loaded from Pulumi config files
+3. Provider factory creates appropriate cluster provider (AKS or local)
+4. Cluster provider sets up Kubernetes access
+5. `k8s.DeployAll()` orchestrates complete deployment:
+   - Certificate manager for SSL/TLS
+   - Ingress controller for external access
+   - MongoDB for data persistence
+   - MCP Registry application
+
+## Configuration
+
+| Parameter | Description | Required |
+|-----------|-------------|----------|
+| `environment` | Deployment environment (dev/prod) | Yes |
+| `provider` | Kubernetes provider (local/aks) | No (default: local) |
+| `githubClientId` | GitHub OAuth Client ID | Yes |
+| `githubClientSecret` | GitHub OAuth Client Secret | Yes |
 
 ## Troubleshooting
 
-### Check Deployment Status
+### Check Status
+
 ```bash
-kubectl get pods -n <environment>
-kubectl get svc -n <environment>
+kubectl get pods
+kubectl get deployment
+kubectl get svc
+kubectl get ingress
+kubectl get svc -n ingress-nginx
 ```
 
 ### View Logs
+
 ```bash
-# MCP Registry logs
-kubectl logs -n <environment> -l app=mcp-registry
-
-# MongoDB logs
-kubectl logs -n <environment> -l app=mongodb
+kubectl logs -l app=mcp-registry
+kubectl logs -l app=mongodb
 ```
-
-### MongoDB Connection
-The MCP Registry connects to MongoDB using the Kubernetes service DNS:
-- Development: `mongodb://mongodb.dev.svc.cluster.local:27017`
-- Production: `mongodb://mongodb.prod.svc.cluster.local:27017`
-
-### Local Provider Issues
-- Ensure your kubeconfig is correctly configured
-- Verify the cluster is running: `kubectl cluster-info`
-- Check if you have the correct context: `kubectl config current-context`
-
-### AKS Provider Issues
-- Ensure Azure CLI is authenticated: `az login`
-- Check subscription: `az account show`
-- Verify AKS credentials: `az aks get-credentials --resource-group <rg> --name <cluster>`
-
-## Cleanup
-
-To destroy the infrastructure:
-```bash
-pulumi destroy
-```
-
-For AKS, this will also delete the Azure Resource Group and all contained resources.

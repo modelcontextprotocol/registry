@@ -7,7 +7,6 @@ import (
 	"github.com/pulumi/pulumi-azure-native-sdk/resources"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
-	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
@@ -17,15 +16,9 @@ type Provider struct{}
 
 // CreateCluster creates an Azure Kubernetes Service cluster
 func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*providers.ProviderInfo, error) {
-	conf := config.New(ctx, "mcp-registry")
-	location := conf.Get("azureLocation")
-	if location == "" {
-		location = "East US"
-	}
-
 	// Create resource group
 	resourceGroup, err := resources.NewResourceGroup(ctx, fmt.Sprintf("mcp-registry-%s-rg", environment), &resources.ResourceGroupArgs{
-		Location: pulumi.String(location),
+		Location: pulumi.String("East US"),
 		Tags: pulumi.StringMap{
 			"environment": pulumi.String(environment),
 			"managed-by":  pulumi.String("pulumi"),
