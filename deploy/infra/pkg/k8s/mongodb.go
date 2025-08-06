@@ -1,26 +1,25 @@
-package main
+package k8s
 
 import (
 	"fmt"
 
-	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
-// deployMongoDB deploys MongoDB to the Kubernetes cluster
-func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string) error {
-	appName := "mongodb"
-	namespace := environment
-
+// DeployMongoDB deploys MongoDB to the Kubernetes cluster
+func DeployMongoDB(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) error {
 	// Create PersistentVolumeClaim for MongoDB data
-	_, err := corev1.NewPersistentVolumeClaim(ctx, fmt.Sprintf("%s-pvc", appName), &corev1.PersistentVolumeClaimArgs{
+	_, err := corev1.NewPersistentVolumeClaim(ctx, "mongodb-pvc", &corev1.PersistentVolumeClaimArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(fmt.Sprintf("%s-data", appName)),
-			Namespace: pulumi.String(namespace),
+			Name:      pulumi.String("mongodb-pvc"),
+			Namespace: pulumi.String(environment),
 			Labels: pulumi.StringMap{
-				"app":         pulumi.String(appName),
+				"app":         pulumi.String("mongodb"),
 				"environment": pulumi.String(environment),
 			},
 		},
@@ -28,7 +27,7 @@ func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string
 			AccessModes: pulumi.StringArray{
 				pulumi.String("ReadWriteOnce"),
 			},
-			Resources: &corev1.ResourceRequirementsArgs{
+			Resources: &corev1.VolumeResourceRequirementsArgs{
 				Requests: pulumi.StringMap{
 					"storage": pulumi.String("10Gi"),
 				},
@@ -40,48 +39,36 @@ func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string
 	}
 
 	// Create MongoDB Deployment
-	_, err = appsv1.NewDeployment(ctx, fmt.Sprintf("%s-deployment", appName), &appsv1.DeploymentArgs{
+	_, err = v1.NewDeployment(ctx, "mongodb", &v1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(appName),
-			Namespace: pulumi.String(namespace),
+			Name:      pulumi.String("mongodb"),
+			Namespace: pulumi.String(environment),
 			Labels: pulumi.StringMap{
-				"app":         pulumi.String(appName),
+				"app":         pulumi.String("mongodb"),
 				"environment": pulumi.String(environment),
 			},
 		},
-		Spec: &appsv1.DeploymentSpecArgs{
-			Replicas: pulumi.Int(2),
+		Spec: &v1.DeploymentSpecArgs{
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
-					"app": pulumi.String(appName),
+					"app": pulumi.String("mongodb"),
 				},
 			},
 			Template: &corev1.PodTemplateSpecArgs{
 				Metadata: &metav1.ObjectMetaArgs{
 					Labels: pulumi.StringMap{
-						"app":         pulumi.String(appName),
-						"environment": pulumi.String(environment),
+						"app": pulumi.String("mongodb"),
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Name:  pulumi.String(appName),
-							Image: pulumi.String("mongo:latest"),
+							Name:  pulumi.String("mongodb"),
+							Image: pulumi.String("mongo:7.0"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
 									ContainerPort: pulumi.Int(27017),
 									Name:          pulumi.String("mongodb"),
-								},
-							},
-							Env: corev1.EnvVarArray{
-								&corev1.EnvVarArgs{
-									Name:  pulumi.String("PUID"),
-									Value: pulumi.String("1000"),
-								},
-								&corev1.EnvVarArgs{
-									Name:  pulumi.String("PGID"),
-									Value: pulumi.String("1000"),
 								},
 							},
 							VolumeMounts: corev1.VolumeMountArray{
@@ -90,15 +77,19 @@ func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string
 									MountPath: pulumi.String("/data/db"),
 								},
 							},
-							Resources: &corev1.ResourceRequirementsArgs{
-								Requests: pulumi.StringMap{
-									"cpu":    pulumi.String("500m"),
-									"memory": pulumi.String("512Mi"),
+							LivenessProbe: &corev1.ProbeArgs{
+								TcpSocket: &corev1.TCPSocketActionArgs{
+									Port: pulumi.Int(27017),
 								},
-								Limits: pulumi.StringMap{
-									"cpu":    pulumi.String("1000m"),
-									"memory": pulumi.String("1Gi"),
+								InitialDelaySeconds: pulumi.Int(30),
+								TimeoutSeconds:      pulumi.Int(5),
+							},
+							ReadinessProbe: &corev1.ProbeArgs{
+								TcpSocket: &corev1.TCPSocketActionArgs{
+									Port: pulumi.Int(27017),
 								},
+								InitialDelaySeconds: pulumi.Int(5),
+								TimeoutSeconds:      pulumi.Int(1),
 							},
 						},
 					},
@@ -106,7 +97,7 @@ func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string
 						&corev1.VolumeArgs{
 							Name: pulumi.String("mongodb-data"),
 							PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSourceArgs{
-								ClaimName: pulumi.String(fmt.Sprintf("%s-data", appName)),
+								ClaimName: pulumi.String("mongodb-pvc"),
 							},
 						},
 					},
@@ -119,18 +110,18 @@ func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string
 	}
 
 	// Create MongoDB Service
-	_, err = corev1.NewService(ctx, fmt.Sprintf("%s-service", appName), &corev1.ServiceArgs{
+	_, err = corev1.NewService(ctx, "mongodb", &corev1.ServiceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name:      pulumi.String(appName),
-			Namespace: pulumi.String(namespace),
+			Name:      pulumi.String("mongodb"),
+			Namespace: pulumi.String(environment),
 			Labels: pulumi.StringMap{
-				"app":         pulumi.String(appName),
+				"app":         pulumi.String("mongodb"),
 				"environment": pulumi.String(environment),
 			},
 		},
 		Spec: &corev1.ServiceSpecArgs{
 			Selector: pulumi.StringMap{
-				"app": pulumi.String(appName),
+				"app": pulumi.String("mongodb"),
 			},
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
@@ -143,7 +134,7 @@ func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create MongoDB service: %w", err)
 	}
 
 	return nil

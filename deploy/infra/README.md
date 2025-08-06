@@ -1,6 +1,6 @@
 # MCP Registry Kubernetes Deployment
 
-This directory contains Pulumi infrastructure code to deploy the MCP Registry service to a Kubernetes cluster. It supports multiple Kubernetes providers: Azure Kubernetes Service (AKS), OrbStack, and k3s.
+This directory contains Pulumi infrastructure code to deploy the MCP Registry service to a Kubernetes cluster. It supports multiple Kubernetes providers: Azure Kubernetes Service (AKS) and local (using existing kubeconfig).
 
 ## Prerequisites
 
@@ -8,12 +8,12 @@ This directory contains Pulumi infrastructure code to deploy the MCP Registry se
 - Pulumi CLI installed
 - kubectl configured
 - For AKS: Azure CLI installed and authenticated
-- For local: OrbStack or k3s installed
+- For local: Access to a Kubernetes cluster via kubeconfig
 
 ## Structure
 
 - `main.go` - Entry point for the Pulumi program
-- `cluster.go` - Kubernetes cluster setup with support for AKS, OrbStack, and k3s
+- `cluster.go` - Kubernetes cluster setup with support for AKS and local
 - `registry.go` - MCP Registry application deployment
 - `mongodb.go` - MongoDB deployment for Kubernetes
 - `Pulumi.yaml` - Pulumi project configuration
@@ -25,8 +25,6 @@ This directory contains Pulumi infrastructure code to deploy the MCP Registry se
 | Provider | Description | Use Case |
 |----------|-------------|----------|
 | `local` | Local Kubernetes (default) | Development with existing cluster |
-| `orbstack` | OrbStack Kubernetes | macOS local development |
-| `k3s` | Lightweight Kubernetes | Linux local development |
 | `aks` | Azure Kubernetes Service | Production deployment |
 
 ## Configuration
@@ -36,7 +34,7 @@ Required configuration:
 | Parameter | Description | Required |
 |-----------|-------------|----------|
 | `environment` | Deployment environment (dev/prod) | Yes |
-| `provider` | Kubernetes provider (local/orbstack/k3s/aks) | No (default: local) |
+| `provider` | Kubernetes provider (local/aks) | No (default: local) |
 | `githubClientId` | GitHub OAuth Client ID | Yes |
 | `githubClientSecret` | GitHub OAuth Client Secret | Yes |
 
@@ -55,34 +53,31 @@ Hardcoded defaults:
 
 ## Quick Start
 
-### Local Development (OrbStack/k3s)
+### Local Development
 
-1. Initialize the development stack:
-```bash
-cd deploy/infra
-pulumi stack init dev
-```
+Pre-requisites:
+- [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
+- One of the following providers to deploy to:
+  - A Kubernetes cluster via kubeconfig. You can run one locally with [minikube](https://minikube.sigs.k8s.io/docs/start/)
+  - A Microsoft Azure account.
 
-2. Set the provider (if not using default):
-```bash
-# For OrbStack
-pulumi config set mcp-registry:provider orbstack
+1. Set Pulumi's backend to local: `pulumi login --local`
+2. Select the development stack: `pulumi stack init local` (fine to leave `password` blank)
+3. Set your config:
+    ```bash
+    # General environment
+    pulumi config set mcp-registry:environment local
 
-# For k3s
-pulumi config set mcp-registry:provider k3s
-```
-
-3. Configure GitHub OAuth:
-```bash
-pulumi config set mcp-registry:githubClientId <your-github-client-id>
-pulumi config set --secret mcp-registry:githubClientSecret <your-github-client-secret>
-```
-
-4. Deploy:
-```bash
-pulumi up
-```
-
+    # To use your local kubeconfig (default)
+    pulumi config set mcp-registry:provider local
+    # Alternative: To use AKS
+    # pulumi config set mcp-registry:provider aks
+    
+    # GitHub OAuth
+    pulumi config set mcp-registry:githubClientId <your-github-client-id>
+    pulumi config set --secret mcp-registry:githubClientSecret <your-github-client-secret>
+    ```
+4. Deploy: `pulumi up`
 5. Access the MCP Registry:
 ```bash
 # Port forward for local access
@@ -91,10 +86,10 @@ kubectl port-forward -n dev svc/mcp-registry 8080:8080
 
 ### Production Deployment (AKS)
 
-1. Initialize the production stack:
+1. Select the production stack:
 ```bash
 cd deploy/infra
-pulumi stack init prod
+pulumi stack select prod
 ```
 
 2. Configure Azure location (optional):
