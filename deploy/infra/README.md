@@ -77,11 +77,11 @@ Pre-requisites:
     pulumi config set mcp-registry:githubClientId <your-github-client-id>
     pulumi config set --secret mcp-registry:githubClientSecret <your-github-client-secret>
     ```
-4. Deploy: `pulumi up`
+4. Deploy: `go build && pulumi up`
 5. Access the MCP Registry:
 ```bash
 # Port forward for local access
-kubectl port-forward -n dev svc/mcp-registry 8080:8080
+kubectl port-forward -n local svc/mcp-registry 8080:8080
 ```
 
 ### Production Deployment (AKS)

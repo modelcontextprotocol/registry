@@ -1,7 +1,7 @@
 package k8s
 
 import (
-	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
+	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/networking/v1"
@@ -17,12 +17,6 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	githubClientId := conf.Require("githubClientId")
 	githubClientSecret := conf.RequireSecret("githubClientSecret")
 
-	// Determine replica count based on environment
-	replicas := 3
-	if environment == "prod" {
-		replicas = 5
-	}
-
 	// Create ConfigMap with non-sensitive configuration
 	_, err := corev1.NewConfigMap(ctx, "mcp-registry-config", &corev1.ConfigMapArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -34,11 +28,11 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			},
 		},
 		Data: pulumi.StringMap{
-			"DATABASE_URL":  pulumi.Sprintf("mongodb://mongodb.%s.svc.cluster.local:27017", environment),
-			"PORT":          pulumi.String("8080"),
-			"NODE_ENV":      pulumi.String("production"),
-			"LOG_LEVEL":     pulumi.String("info"),
-			"CORS_ORIGINS":  pulumi.String("*"),
+			"DATABASE_URL": pulumi.Sprintf("mongodb://mongodb.%s.svc.cluster.local:27017", environment),
+			"PORT":         pulumi.String("8080"),
+			"NODE_ENV":     pulumi.String("production"),
+			"LOG_LEVEL":    pulumi.String("info"),
+			"CORS_ORIGINS": pulumi.String("*"),
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
@@ -55,8 +49,8 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				"environment": pulumi.String(environment),
 			},
 		},
-		Data: pulumi.StringMap{
-			"GITHUB_CLIENT_ID":     pulumi.ToSecret(githubClientId).(pulumi.StringOutput),
+		StringData: pulumi.StringMap{
+			"GITHUB_CLIENT_ID":     pulumi.String(githubClientId),
 			"GITHUB_CLIENT_SECRET": githubClientSecret,
 		},
 		Type: pulumi.String("Opaque"),
@@ -76,7 +70,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			},
 		},
 		Spec: &v1.DeploymentSpecArgs{
-			Replicas: pulumi.Int(replicas),
+			Replicas: pulumi.Int(2),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
 					"app": pulumi.String("mcp-registry"),
@@ -91,11 +85,13 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Name:  pulumi.String("mcp-registry"),
-							Image: pulumi.String("registry:latest"),
+							Name: pulumi.String("mcp-registry"),
+							// TODO: Replace with actual MCP registry image once on GHCR
+							Image: pulumi.String("nginx:alpine"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
-									ContainerPort: pulumi.Int(8080),
+									// TODO: Change to port 8080 once using registry image
+									ContainerPort: pulumi.Int(80),
 									Name:          pulumi.String("http"),
 								},
 							},
@@ -111,32 +107,23 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									},
 								},
 							},
-							LivenessProbe: &corev1.ProbeArgs{
-								HttpGet: &corev1.HTTPGetActionArgs{
-									Path: pulumi.String("/v0/health"),
-									Port: pulumi.Int(8080),
-								},
-								InitialDelaySeconds: pulumi.Int(30),
-								TimeoutSeconds:      pulumi.Int(5),
-							},
-							ReadinessProbe: &corev1.ProbeArgs{
-								HttpGet: &corev1.HTTPGetActionArgs{
-									Path: pulumi.String("/v0/health"),
-									Port: pulumi.Int(8080),
-								},
-								InitialDelaySeconds: pulumi.Int(5),
-								TimeoutSeconds:      pulumi.Int(3),
-							},
-							Resources: &corev1.ResourceRequirementsArgs{
-								Requests: pulumi.StringMap{
-									"memory": pulumi.String("256Mi"),
-									"cpu":    pulumi.String("250m"),
-								},
-								Limits: pulumi.StringMap{
-									"memory": pulumi.String("512Mi"),
-									"cpu":    pulumi.String("500m"),
-								},
-							},
+							// TODO: uncomment when using registry image
+							// LivenessProbe: &corev1.ProbeArgs{
+							// 	HttpGet: &corev1.HTTPGetActionArgs{
+							// 		Path: pulumi.String("/v0/health"),
+							// 		Port: pulumi.Int(8080),
+							// 	},
+							// 	InitialDelaySeconds: pulumi.Int(30),
+							// 	TimeoutSeconds:      pulumi.Int(5),
+							// },
+							// ReadinessProbe: &corev1.ProbeArgs{
+							// 	HttpGet: &corev1.HTTPGetActionArgs{
+							// 		Path: pulumi.String("/v0/health"),
+							// 		Port: pulumi.Int(8080),
+							// 	},
+							// 	InitialDelaySeconds: pulumi.Int(5),
+							// 	TimeoutSeconds:      pulumi.Int(3),
+							// },
 						},
 					},
 				},
@@ -163,8 +150,9 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			},
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					Port:       pulumi.Int(8080),
-					TargetPort: pulumi.Int(8080),
+					Port: pulumi.Int(80),
+					// TODO: Change to port 8080 once using registry image
+					TargetPort: pulumi.Int(80),
 					Name:       pulumi.String("http"),
 				},
 			},

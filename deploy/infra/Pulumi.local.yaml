@@ -1,7 +1,7 @@
-encryptionsalt: v1:/U+EZEOTkg4=:v1:1FsnL1dVn8+ZJhms:EIv82sKNuUj0DFqLTZeR7fPMTXjNIg==
 config:
   mcp-registry:environment: local
-  mcp-registry:githubClientId: "1"
   mcp-registry:provider: local
+  mcp-registry:githubClientId: test-client-id
   mcp-registry:githubClientSecret:
-    secure: v1:4lHYd2bTVCBO0Y2L:vmPKh3CHmcOvjRPNRZKUjv4=
+    secure: v1:gt5MBuW7QPiJymkh:1+I2eFChsrUH18cLELq9OAIN94MLH0SldbOuPp2C
+encryptionsalt: v1:ijIHaqhbXVA=:v1:7voX1Kv+Bunz33iN:fyVHMOhlGIymzJ+ILgUBy3ExTwUUnA==

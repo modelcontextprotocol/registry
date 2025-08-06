@@ -32,6 +32,25 @@ func SetupClusterInfrastructure(ctx *pulumi.Context, cluster *providers.Provider
 		return err
 	}
 
+	// Create namespaces for helm charts
+	_, err = v1.NewNamespace(ctx, "ingress-nginx", &v1.NamespaceArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name: pulumi.String("ingress-nginx"),
+		},
+	}, pulumi.Provider(cluster.Provider))
+	if err != nil {
+		return err
+	}
+
+	_, err = v1.NewNamespace(ctx, "cert-manager", &v1.NamespaceArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name: pulumi.String("cert-manager"),
+		},
+	}, pulumi.Provider(cluster.Provider))
+	if err != nil {
+		return err
+	}
+
 	// Install NGINX Ingress Controller
 	ingressType := "LoadBalancer"
 	if provider == "local" {
