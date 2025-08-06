@@ -20,9 +20,9 @@ func deployMCPRegistry(ctx *pulumi.Context, cluster *ClusterInfo, environment st
 	namespace := environment
 	
 	// Hardcoded defaults based on environment
-	replicas := 3
+	replicas := 2
 	if environment == "prod" {
-		replicas = 5
+		replicas = 2
 	}
 
 	// MongoDB connection - using the Kubernetes service DNS

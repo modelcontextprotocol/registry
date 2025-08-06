@@ -50,7 +50,7 @@ func deployMongoDB(ctx *pulumi.Context, cluster *ClusterInfo, environment string
 			},
 		},
 		Spec: &appsv1.DeploymentSpecArgs{
-			Replicas: pulumi.Int(1),
+			Replicas: pulumi.Int(2),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
 					"app": pulumi.String(appName),

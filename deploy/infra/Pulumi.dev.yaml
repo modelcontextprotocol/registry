@@ -1,3 +1,4 @@
 config:
   mcp-registry:environment: dev
-  mcp-registry:provider: local # Options: local, orbstack, k3s, aks
+  mcp-registry:provider: orbstack # Options: local, orbstack, k3s, aks
+encryptionsalt: v1:5sgy8cLkck0=:v1:Wg48aY5tnkZJqS03:7CAio/L1Xu6NOWnK5jE2xm5rvBi8ng==
