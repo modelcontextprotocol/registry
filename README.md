@@ -417,6 +417,24 @@ The service can be configured using environment variables:
 | `MCP_REGISTRY_SEED_IMPORT`           | Import `seed.json` on first run | `true` |
 | `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
 
+## Pre-built Docker Images
+
+Pre-built Docker images are automatically published to GitHub Container Registry on each release and main branch commit:
+
+```bash
+# Run latest from main branch
+docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:latest
+
+# Run specific commit build
+docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main-20250806-a1b2c3d
+```
+
+**Available image tags:**
+- `latest` - Latest commit from main branch
+- `main-<date>-<sha>` - Specific commit builds
+
+**Configuration:** The Docker images support all environment variables listed in the [Configuration](#configuration) section. For production deployments, you'll need to configure the database connection and other settings via environment variables.
+
 ## License
 
 See the [LICENSE](LICENSE) file for details.
