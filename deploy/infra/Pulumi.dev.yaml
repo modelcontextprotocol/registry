@@ -1,0 +1,3 @@
+config:
+  mcp-registry:environment: dev
+  mcp-registry:provider: local # Options: local, orbstack, k3s, aks

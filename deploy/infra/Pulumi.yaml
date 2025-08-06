@@ -1,0 +1,6 @@
+name: mcp-registry-infra
+runtime:
+  name: go
+  options:
+    binary: ./infra
+description: MCP Registry Kubernetes Infrastructure
