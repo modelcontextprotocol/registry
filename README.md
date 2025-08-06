@@ -4,7 +4,15 @@ A community driven registry service for Model Context Protocol (MCP) servers.
 
 ## Development Status
 
-This project is being built in the open and is currently in the early stages of development. Please see the [overview discussion](https://github.com/modelcontextprotocol/registry/discussions/11) for the project scope and goals. If you would like to contribute, please check out the [contributing guidelines](CONTRIBUTING.md).
+This project is being built in the open and is currently in the early stages of development. Please see the [overview discussion](https://github.com/modelcontextprotocol/registry/discussions/11) for the project scope and goals.
+
+### Contributing
+
+Use [Discussions](https://github.com/modelcontextprotocol/registry/discussions) to propose and discuss product and/or technical **requirements**.
+
+Use [Issues](https://github.com/modelcontextprotocol/registry/issues) to track **well-scoped technical work** that the community agrees should be done at some point.
+
+Open [Pull Requests](https://github.com/modelcontextprotocol/registry/pulls) when you want to **contribute work towards an Issue**, or you feel confident that your contribution is desireable and small enough to forego community discussion at the requirements and planning levels.
 
 ## Overview
 
@@ -55,7 +63,20 @@ go build ./cmd/registry
 ```
 This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
 
+You can also run the service directly:
+```bash
+# Direct execution
+go run cmd/registry/main.go
+```
+
 By default, the service will run on `http://localhost:8080`.
+
+There is also a CLI tool to publish MCP servers to the registry. You can build it with:
+
+```bash
+# Build the publisher tool
+cd tools/publisher && ./build.sh
+```
 
 ## Development
 
@@ -84,34 +105,61 @@ git config core.hooksPath .githooks
 
 This will prevent commits that fail linting or have formatting issues.
 
-## Project Structure
+### Project Structure
 
 ```
 ├── api/           # OpenApi specification
 ├── cmd/           # Application entry points
 ├── config/        # Configuration files
 ├── internal/      # Private application code
-│   ├── api/       # HTTP server and request handlers
+│   ├── api/       # HTTP server and request handlers (routing)
+│   ├── auth/      # GitHub OAuth integration
 │   ├── config/    # Configuration management
-│   ├── model/     # Data models
-│   └── service/   # Business logic
+│   ├── database/  # Data persistence abstraction (MongoDB and in-memory)
+│   ├── model/     # Data models and domain structures
+│   └── service/   # Business logic implementation
 ├── pkg/           # Public libraries
 ├── scripts/       # Utility scripts
 └── tools/         # Command line tools
     └── publisher/ # Tool to publish MCP servers to the registry
 ```
 
-## API Documentation
+### Architecture Overview
 
-The API is documented using Swagger/OpenAPI. You can access the interactive Swagger UI at:
+### Request Flow
+1. HTTP requests enter through router (`internal/api/router/`)
+2. Handlers in `internal/api/handlers/v0/` validate and process requests
+3. Service layer executes business logic
+4. Database interface handles persistence
+5. JSON responses returned to clients
 
-```
-/v0/swagger/index.html
-```
+### Key Interfaces
+- **Database Interface** (`internal/database/database.go`) - Abstracts data persistence with MongoDB and memory implementations
+- **RegistryService** (`internal/service/service.go`) - Business logic abstraction over database
+- **Auth Service** (`internal/auth/auth.go`) - GitHub OAuth token validation
 
-This provides a complete reference of all endpoints with request/response schemas and allows you to test the API directly from your browser.
+### Authentication Flow
+Publishing requires GitHub OAuth validation:
+1. Extract bearer token from Authorization header
+2. Validate token with GitHub API
+3. Verify repository ownership matches token owner
+4. Check organization membership if applicable
+
+### Design Patterns
+- **Factory Pattern** for service creation with dependency injection
+- **Repository Pattern** for database abstraction
+- **Context Pattern** for timeout management (5-second DB operations)
+- **Cursor-based Pagination** using UUIDs for stateless pagination
 
 ## API Endpoints
+
+### API Documentation
+
+```
+GET /v0/swagger/index.html
+```
+
+The API is documented using Swagger/OpenAPI. This page provides a complete reference of all endpoints with request/response schemas and allows you to test the API directly from your browser.
 
 ### Health Check
 
@@ -333,6 +381,22 @@ The service can be configured using environment variables:
 
 ## Testing
 
+### Unit Tests
+
+```bash
+# Run unit tests
+go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
+```
+
+### Integration Tests
+
+```bash
+# Run integration tests
+./tests/integration/run.sh
+```
+
+### API Endpoint Tests
+
 Run the test script to validate API endpoints:
 
 ```bash
@@ -346,10 +410,14 @@ You can specify specific endpoints to test:
 ./scripts/test_endpoints.sh --endpoint servers
 ```
 
+### Publish Endpoint Test
+
+```bash
+# Test publish endpoint (requires GitHub token)
+export BEARER_TOKEN=your_github_token_here
+./scripts/test_publish.sh
+```
+
 ## License
 
 See the [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-See the [CONTRIBUTING](CONTRIBUTING.md) file for details.
