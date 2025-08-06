@@ -39,11 +39,8 @@ For development:
 The easiest way to get the registry running is to use `docker compose`. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
 
 ```bash
-# Build the Docker image
-docker build -t registry .
-
 # Run the registry and MongoDB with docker compose
-docker compose up
+docker compose up --build
 ```
 
 This will start the MCP Registry service and MongoDB with Docker, exposing it on port 8080.

@@ -55,6 +55,7 @@ type Package struct {
 type ServerJSON struct {
 	Name          string        `json:"name"`
 	Description   string        `json:"description"`
+	Status        string        `json:"status,omitempty"`
 	Repository    Repository    `json:"repository"`
 	VersionDetail VersionDetail `json:"version_detail"`
 	Packages      []Package     `json:"packages"`
@@ -176,6 +177,7 @@ func createCommand() error {
 	var repoURL string
 	var repoSource string
 	var output string
+	var status string
 
 	// Package information flags
 	var registryName string
@@ -198,6 +200,7 @@ func createCommand() error {
 	createFlags.StringVar(&repoSource, "repo-source", "github", "Repository source")
 	createFlags.StringVar(&output, "output", "server.json", "Output file path")
 	createFlags.StringVar(&output, "o", "server.json", "Output file path (shorthand)")
+	createFlags.StringVar(&status, "status", "active", "Server status (active or deprecated)")
 
 	createFlags.StringVar(&registryName, "registry", "npm", "Package registry name")
 	createFlags.StringVar(&packageName, "package-name", "", "Package name (defaults to server name)")
@@ -229,6 +232,7 @@ func createCommand() error {
 		fmt.Fprint(os.Stdout, "  --description/-d string  Server description (required)\n")
 		fmt.Fprint(os.Stdout, "  --repo-url string        Repository URL (required)\n")
 		fmt.Fprint(os.Stdout, "  --version/-v string      Server version (default: 1.0.0)\n")
+		fmt.Fprint(os.Stdout, "  --status string          Server status (active or deprecated) (default: active)\n")
 		fmt.Fprint(os.Stdout, "  --execute/-e string      Command to execute the server\n")
 		fmt.Fprint(os.Stdout, "  --output/-o string       Output file path (default: server.json)\n")
 		fmt.Fprint(os.Stdout, "  --registry string        Package registry name (default: npm)\n")
@@ -255,6 +259,11 @@ func createCommand() error {
 		return errors.New("--repo-url is required")
 	}
 
+	// Validate status field
+	if status != "active" && status != "deprecated" {
+		return errors.New("--status must be either 'active' or 'deprecated'")
+	}
+
 	// Set defaults
 	if packageName == "" {
 		packageName = name
@@ -275,7 +284,7 @@ func createCommand() error {
 
 	// Create server structure
 	server := createServerStructure(name, description, version, repoURL, repoSource,
-		registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs)
+		registryName, packageName, packageVersion, runtimeHint, execute, envVars, packageArgs, status)
 
 	// Convert to JSON
 	jsonData, err := json.MarshalIndent(server, "", "  ")
@@ -352,7 +361,7 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 }
 
 func createServerStructure(name, description, version, repoURL, repoSource, registryName,
-	packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string) ServerJSON {
+	packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string, status string) ServerJSON {
 	// Parse environment variables
 	var environmentVariables []EnvironmentVariable
 	for _, envVar := range envVars {
@@ -442,6 +451,7 @@ func createServerStructure(name, description, version, repoURL, repoSource, regi
 	return ServerJSON{
 		Name:        name,
 		Description: description,
+		Status:      status,
 		Repository: Repository{
 			URL:    repoURL,
 			Source: repoSource,

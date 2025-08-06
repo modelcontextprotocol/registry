@@ -109,6 +109,12 @@ components:
         description:
           type: string
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+        status:
+          type: string
+          enum: [active, deprecated]
+          default: active
+          description: "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage."
+          example: "active"
         repository:
           $ref: '#/components/schemas/Repository'
         version_detail:
