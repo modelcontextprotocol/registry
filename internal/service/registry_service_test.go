@@ -46,33 +46,35 @@ func TestClaimDomain_Uniqueness(t *testing.T) {
 	assert.Equal(t, token2.Token, retrievedTokens2.PendingTokens[0].Token)
 }
 
-func TestIsVerificationTokenUnique(t *testing.T) {
+func TestClaimDomain_TokenUniqueness(t *testing.T) {
 	// Create an in-memory database for testing
 	memDB := database.NewMemoryDB(make(map[string]*model.Server))
 	ctx := context.Background()
 
-	// Initially, any token should be unique
-	isUnique, err := memDB.IsVerificationTokenUnique(ctx, "test-token-123")
-	require.NoError(t, err)
-	assert.True(t, isUnique)
-
-	// Store a token
-	token := &model.VerificationToken{
-		Token:     "test-token-123",
+	// Store a token directly in the database to simulate an existing token
+	existingToken := &model.VerificationToken{
+		Token:     "existing-token-123",
 		CreatedAt: time.Now(),
 	}
-	err = memDB.StoreVerificationToken(ctx, "example.com", token)
+	err := memDB.StoreVerificationToken(ctx, "example.com", existingToken)
 	require.NoError(t, err)
 
-	// Same token should no longer be unique
-	isUnique, err = memDB.IsVerificationTokenUnique(ctx, "test-token-123")
-	require.NoError(t, err)
-	assert.False(t, isUnique)
+	// Try to store the same token again - should fail with ErrTokenAlreadyExists
+	duplicateToken := &model.VerificationToken{
+		Token:     "existing-token-123",
+		CreatedAt: time.Now(),
+	}
+	err = memDB.StoreVerificationToken(ctx, "another-domain.com", duplicateToken)
+	require.Error(t, err)
+	assert.Equal(t, database.ErrTokenAlreadyExists, err)
 
-	// Different token should still be unique
-	isUnique, err = memDB.IsVerificationTokenUnique(ctx, "different-token-456")
+	// Store a different token - should succeed
+	uniqueToken := &model.VerificationToken{
+		Token:     "unique-token-456",
+		CreatedAt: time.Now(),
+	}
+	err = memDB.StoreVerificationToken(ctx, "another-domain.com", uniqueToken)
 	require.NoError(t, err)
-	assert.True(t, isUnique)
 }
 
 func TestGetDomainVerificationStatus(t *testing.T) {
@@ -100,7 +102,7 @@ func TestGetDomainVerificationStatus(t *testing.T) {
 }
 
 func TestClaimDomain_MaxAttempts(t *testing.T) {
-	// Create a mock database that always returns false for IsVerificationTokenUnique
+	// Create a mock database that always returns ErrTokenAlreadyExists for StoreVerificationToken
 	// to simulate the scenario where we can't find a unique token
 	memDB := &mockDBAlwaysNonUnique{}
 	service := NewRegistryServiceWithDB(memDB)
@@ -114,7 +116,7 @@ func TestClaimDomain_MaxAttempts(t *testing.T) {
 	assert.Equal(t, database.ErrMaxAttemptsExceeded, err)
 }
 
-// mockDBAlwaysNonUnique is a mock database that always returns false for IsVerificationTokenUnique
+// mockDBAlwaysNonUnique is a mock database that always returns ErrTokenAlreadyExists for StoreVerificationToken
 type mockDBAlwaysNonUnique struct{}
 
 func (m *mockDBAlwaysNonUnique) List(ctx context.Context, filter map[string]any, cursor string, limit int) ([]*model.Server, string, error) {
@@ -136,11 +138,6 @@ func (m *mockDBAlwaysNonUnique) StoreVerificationToken(ctx context.Context, doma
 
 func (m *mockDBAlwaysNonUnique) GetVerificationTokens(ctx context.Context, domain string) (*model.VerificationTokens, error) {
 	return nil, database.ErrNotFound
-}
-
-func (m *mockDBAlwaysNonUnique) IsVerificationTokenUnique(ctx context.Context, token string) (bool, error) {
-	// Always return false to simulate the case where no unique token can be found
-	return false, nil
 }
 
 func (m *mockDBAlwaysNonUnique) ImportSeed(ctx context.Context, seedFilePath string) error {

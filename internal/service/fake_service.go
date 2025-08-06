@@ -138,27 +138,27 @@ func (s *fakeRegistryService) ClaimDomain(domain string) (*model.VerificationTok
 			return nil, err
 		}
 
-		// Check if the token is unique across all domains
-		isUnique, err := s.db.IsVerificationTokenUnique(ctx, token)
-		if err != nil {
-			return nil, err
+		// Create the verification token
+		verificationToken := &model.VerificationToken{
+			Token:     token,
+			CreatedAt: time.Now(),
 		}
 
-		if isUnique {
-			// Token is unique, create and store it
-			verificationToken := &model.VerificationToken{
-				Token:     token,
-				CreatedAt: time.Now(),
-			}
-
-			// Store the token in the database as pending for the domain
-			err = s.db.StoreVerificationToken(ctx, domain, verificationToken)
-			if err != nil {
-				return nil, err
-			}
-
+		// Try to store the token in the database as pending for the domain
+		// The unique index will ensure token uniqueness
+		err = s.db.StoreVerificationToken(ctx, domain, verificationToken)
+		if err == nil {
+			// Successfully stored, return the token
 			return verificationToken, nil
 		}
+
+		// If it's a token already exists error, retry with a new token
+		if err == database.ErrTokenAlreadyExists {
+			continue
+		}
+
+		// For any other error, return it
+		return nil, err
 	}
 
 	// If we've exhausted all attempts, return an error
