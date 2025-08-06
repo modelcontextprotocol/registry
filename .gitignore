@@ -8,3 +8,5 @@ cmd/registry/registry
 validate-examples
 validate-schemas
 .idea/
+coverage.out
+coverage.html
