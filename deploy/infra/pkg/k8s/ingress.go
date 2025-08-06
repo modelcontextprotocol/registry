@@ -59,8 +59,26 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		return err
 	}
 
-	// TODO: this doesn't work
-	ctx.Export("ingressIp", nginxIngress.GetResource("v1/Service", "nginx-ingress-ingress-nginx-controller", "ingress-nginx"))
+	// Get the ingress controller service and export its external IP
+	ingressService, err := v1.GetService(ctx, "nginx-ingress-controller", pulumi.ID("ingress-nginx/nginx-ingress-ingress-nginx-controller"), &v1.ServiceState{}, pulumi.Provider(cluster.Provider), pulumi.DependsOn([]pulumi.Resource{nginxIngress}))
+	if err != nil {
+		return err
+	}
+
+	// Export all external IPs
+	ingressIps := ingressService.Status.LoadBalancer().Ingress().ApplyT(func(ingresses []v1.LoadBalancerIngress) []string {
+		var ips []string
+		for _, ingress := range ingresses {
+			if ip := ingress.Ip; ip != nil && *ip != "" {
+				ips = append(ips, *ip)
+			}
+		}
+		if ips == nil {
+			ips = []string{}
+		}
+		return ips
+	})
+	ctx.Export("ingressIps", pulumi.ToOutput(ingressIps))
 
 	return nil
 }
