@@ -23,17 +23,17 @@ type MockRegistryService struct {
 }
 
 func (m *MockRegistryService) List(cursor string, limit int) ([]model.Server, string, error) {
-	args := m.Mock.Called(cursor, limit)
+	args := m.Called(cursor, limit)
 	return args.Get(0).([]model.Server), args.String(1), args.Error(2)
 }
 
 func (m *MockRegistryService) GetByID(id string) (*model.ServerDetail, error) {
-	args := m.Mock.Called(id)
+	args := m.Called(id)
 	return args.Get(0).(*model.ServerDetail), args.Error(1)
 }
 
 func (m *MockRegistryService) Publish(serverDetail *model.ServerDetail) error {
-	args := m.Mock.Called(serverDetail)
+	args := m.Called(serverDetail)
 	return args.Error(0)
 }
 
@@ -45,17 +45,17 @@ type MockAuthService struct {
 func (m *MockAuthService) StartAuthFlow(
 	ctx context.Context, method model.AuthMethod, repoRef string,
 ) (map[string]string, string, error) {
-	args := m.Mock.Called(ctx, method, repoRef)
+	args := m.Called(ctx, method, repoRef)
 	return args.Get(0).(map[string]string), args.String(1), args.Error(2)
 }
 
 func (m *MockAuthService) CheckAuthStatus(ctx context.Context, statusToken string) (string, error) {
-	args := m.Mock.Called(ctx, statusToken)
+	args := m.Called(ctx, statusToken)
 	return args.String(0), args.Error(1)
 }
 
 func (m *MockAuthService) ValidateAuth(ctx context.Context, authentication model.Authentication) (bool, error) {
-	args := m.Mock.Called(ctx, authentication)
+	args := m.Called(ctx, authentication)
 	return args.Bool(0), args.Error(1)
 }
 
@@ -416,8 +416,8 @@ func TestPublishHandler(t *testing.T) {
 			}
 
 			// Assert that all expectations were met
-			mockRegistry.Mock.AssertExpectations(t)
-			mockAuthService.Mock.AssertExpectations(t)
+			mockRegistry.AssertExpectations(t)
+			mockAuthService.AssertExpectations(t)
 		})
 	}
 }
@@ -487,7 +487,7 @@ func TestPublishHandlerBearerTokenParsing(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			assert.Equal(t, http.StatusCreated, rr.Code)
-			mockAuthService.Mock.AssertExpectations(t)
+			mockAuthService.AssertExpectations(t)
 		})
 	}
 }
@@ -552,7 +552,7 @@ func TestPublishHandlerAuthMethodSelection(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			assert.Equal(t, http.StatusCreated, rr.Code)
-			mockAuthService.Mock.AssertExpectations(t)
+			mockAuthService.AssertExpectations(t)
 		})
 	}
 }
@@ -639,9 +639,9 @@ func TestPublishIntegration(t *testing.T) {
 		// Verify the server was actually published by retrieving it
 		publishedServer, err := registryService.GetByID(response["id"])
 		require.NoError(t, err)
-		assert.Equal(t, publishReq.ServerDetail.Name, publishedServer.Name)
-		assert.Equal(t, publishReq.ServerDetail.Description, publishedServer.Description)
-		assert.Equal(t, publishReq.ServerDetail.VersionDetail.Version, publishedServer.VersionDetail.Version)
+		assert.Equal(t, publishReq.Name, publishedServer.Name)
+		assert.Equal(t, publishReq.Description, publishedServer.Description)
+		assert.Equal(t, publishReq.VersionDetail.Version, publishedServer.VersionDetail.Version)
 		assert.Len(t, publishedServer.Packages, 1)
 		assert.Len(t, publishedServer.Remotes, 1)
 	})

@@ -4,6 +4,7 @@ build/*
 .mcpregistry*
 **/bin
 cmd/registry/registry
-publisher
+.DS_Store
 validate-examples
 validate-schemas
+.idea/
