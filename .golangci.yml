@@ -71,6 +71,11 @@ linters:
     - whitespace
 
 linters-settings:
+  revive:
+    rules:
+      - name: use-any
+        disabled: false
+        severity: error
   cyclop:
     max-complexity: 50
   funlen:
@@ -112,10 +117,6 @@ issues:
     - path: docs/
       linters:
         - lll
-    # Ignore magic numbers in test files
-    - path: integrationtests/
-      linters:
-        - mnd
     # Allow local replacement directives in go.mod
     - path: go\.mod
       linters:

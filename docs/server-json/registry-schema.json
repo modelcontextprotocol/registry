@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/registry-server.json",
+  "title": "MCP Server Detail - Registry Schema",
+  "description": "Registry-specific constraints for MCP server representation. Extends the base schema with additional validation rules.",
+  "$ref": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
+  "properties": {
+    "repository": {
+      "properties": {
+        "source": {
+          "enum": [
+            "github"
+          ]
+        }
+      }
+    },
+    "packages": {
+      "items": {
+        "properties": {
+          "registry_name": {
+            "enum": [
+              "npm",
+              "pypi",
+              "docker",
+              "nuget"
+            ]
+          },
+          "runtime_hint": {
+            "enum": [
+              "npx",
+              "uvx",
+              "docker",
+              "dnx"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+services:
+  registry:
+    environment:
+      - MCP_REGISTRY_SEED_IMPORT=false
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/v0/servers"]
+      interval: 1s
+      retries: 60
+      timeout: 1s
+  mongodb:
+    volumes: !reset []
+    tmpfs:
+      - /data/db:size=50m
