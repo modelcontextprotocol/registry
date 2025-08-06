@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check pre-commit ci dev-local dev-compose clean publisher
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-local dev-compose clean publisher
 
 # Default target
 help: ## Show this help message
