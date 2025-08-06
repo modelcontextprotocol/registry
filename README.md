@@ -51,11 +51,11 @@ The easiest way to get the registry running is uses docker compose. This will se
 make dev-compose
 ```
 
-This will start the MCP Registry service and MongoDB with Docker, exposing it on port 8080.
+This will start the MCP Registry service and MongoDB with Docker, running at [`localhost:8080`](http://localhost:8080).
 
 ## Building
 
-If you prefer to run the service locally without Docker, you can build and run it directly using Go.
+If you prefer to run the service locally without Docker, you can build and run it directly:
 
 ```bash
 # Build a registry executable
@@ -63,19 +63,19 @@ make build
 ```
 This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
 
-You can also run the service directly:
+To run the service locally:
 ```bash
-# Direct execution
-go run cmd/registry/main.go
+# Run registry locally (requires MongoDB)
+make dev-local
 ```
 
-By default, the service will run on `http://localhost:8080`.
+By default, the service will run on [`localhost:8080`](http://localhost:8080).
 
-There is also a CLI tool to publish MCP servers to the registry. You can build it with:
+To build the CLI tool for publishing MCP servers to the registry:
 
 ```bash
 # Build the publisher tool
-cd tools/publisher && ./build.sh
+make publisher
 ```
 
 ## Development
@@ -91,13 +91,13 @@ make help
 Key development commands:
 
 ```bash
-# Build targets
-make build          # Build the registry application
-make publisher      # Build the publisher tool
-
 # Development
 make dev-compose   # Start development environment with Docker Compose
 make dev-local     # Run registry locally (requires MongoDB)
+
+# Build targets
+make build          # Build the registry application
+make publisher      # Build the publisher tool
 
 # Testing
 make test-unit        # Run unit tests with coverage report
@@ -416,67 +416,6 @@ The service can be configured using environment variables:
 | `MCP_REGISTRY_SEED_FILE_PATH`        | Path to import seed file | `data/seed.json` |
 | `MCP_REGISTRY_SEED_IMPORT`           | Import `seed.json` on first run | `true` |
 | `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
-
-
-## Testing
-
-### Unit Tests
-
-```bash
-# Run unit tests with coverage
-make test
-
-# Generate coverage report
-make coverage
-```
-
-### Integration Tests
-
-```bash
-# Run integration tests
-make integration-test
-```
-
-### API Endpoint Testing
-
-```bash
-# Test API endpoints (requires running server)
-make test-endpoints
-```
-
-You can also run the script directly with specific endpoints:
-
-```bash
-./scripts/test_endpoints.sh --endpoint health
-./scripts/test_endpoints.sh --endpoint servers
-```
-
-### Publish Endpoint Testing
-
-```bash
-# Test publish endpoint (requires BEARER_TOKEN env var)
-make test-publish
-```
-
-### Validation
-
-```bash
-# Validate JSON schemas
-make validate-schemas
-
-# Validate examples against schemas
-make validate-examples
-
-# Run all validation checks
-make validate
-```
-
-### Comprehensive Testing
-
-```bash
-# Run all checks (lint, validate, test)
-make check
-```
 
 ## License
 
