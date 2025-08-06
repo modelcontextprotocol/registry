@@ -90,7 +90,7 @@ func ClaimDomainHandler(registry service.RegistryService) http.HandlerFunc {
 			return
 		}
 
-		// Generate the verification token for the normalized domain
+		// Generate and store the verification token for the normalized domain
 		verificationToken, err := registry.ClaimDomain(normalizedDomain)
 		if err != nil {
 			http.Error(w, "Failed to claim domain: "+err.Error(), http.StatusInternalServerError)
