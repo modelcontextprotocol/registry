@@ -45,12 +45,19 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 			"controller": pulumi.Map{
 				"service": pulumi.Map{
 					"type": pulumi.String(ingressType),
+					// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
+					"annotations": pulumi.Map{
+						"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path": pulumi.String("/healthz"),
+					},
 				},
 				"config": pulumi.Map{
 					// Disable strict path validation, to work around a bug in ingress-nginx
 					// https://cert-manager.io/docs/releases/release-notes/release-notes-1.18/#acme-http01-challenge-paths-now-use-pathtype-exact-in-ingress-routes
 					// https://github.com/kubernetes/ingress-nginx/issues/11176
 					"strict-validate-path-type": pulumi.String("false"),
+
+					// Use forwarded headers for proper client IP handling
+					"use-forwarded-headers": pulumi.String("true"),
 				},
 			},
 		},
