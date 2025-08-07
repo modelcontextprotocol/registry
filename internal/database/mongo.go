@@ -235,7 +235,7 @@ func (db *MongoDB) Publish(ctx context.Context, serverDetail *model.ServerDetail
 // ImportSeed imports initial data from a seed file into MongoDB
 func (db *MongoDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	// Read the seed file
-	servers, err := ReadSeedFile(seedFilePath)
+	servers, err := ReadSeedFile(ctx, seedFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read seed file: %w", err)
 	}

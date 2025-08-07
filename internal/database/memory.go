@@ -252,7 +252,7 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	}
 
 	// Read the seed file
-	seedData, err := ReadSeedFile(seedFilePath)
+	seedData, err := ReadSeedFile(ctx, seedFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read seed file: %w", err)
 	}

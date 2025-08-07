@@ -13,17 +13,17 @@ type MockRegistryService struct {
 }
 
 func (m *MockRegistryService) List(cursor string, limit int) ([]model.Server, string, error) {
-	args := m.Called(cursor, limit) //nolint:typecheck // testify mock embedding issue
+	args := m.Called(cursor, limit)
 	return args.Get(0).([]model.Server), args.String(1), args.Error(2)
 }
 
 func (m *MockRegistryService) GetByID(id string) (*model.ServerDetail, error) {
-	args := m.Called(id) //nolint:typecheck // testify mock embedding issue
+	args := m.Called(id)
 	return args.Get(0).(*model.ServerDetail), args.Error(1)
 }
 
 func (m *MockRegistryService) Publish(serverDetail *model.ServerDetail) error {
-	args := m.Called(serverDetail) //nolint:typecheck // testify mock embedding issue
+	args := m.Called(serverDetail)
 	return args.Error(0)
 }
 
@@ -35,16 +35,16 @@ type MockAuthService struct {
 func (m *MockAuthService) StartAuthFlow(
 	ctx context.Context, method model.AuthMethod, repoRef string,
 ) (map[string]string, string, error) {
-	args := m.Called(ctx, method, repoRef) //nolint:typecheck // testify mock embedding issue
+	args := m.Called(ctx, method, repoRef)
 	return args.Get(0).(map[string]string), args.String(1), args.Error(2)
 }
 
 func (m *MockAuthService) CheckAuthStatus(ctx context.Context, statusToken string) (string, error) {
-	args := m.Called(ctx, statusToken) //nolint:typecheck // testify mock embedding issue
+	args := m.Called(ctx, statusToken)
 	return args.String(0), args.Error(1)
 }
 
 func (m *MockAuthService) ValidateAuth(ctx context.Context, authentication model.Authentication) (bool, error) {
-	args := m.Called(ctx, authentication) //nolint:typecheck // testify mock embedding issue
+	args := m.Called(ctx, authentication)
 	return args.Bool(0), args.Error(1)
 }

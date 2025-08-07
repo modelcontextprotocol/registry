@@ -16,11 +16,11 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
-// ReadSeedFile reads and parses seed data from either:
+// ReadSeedFile reads seed data from various sources:
 // 1. Local file paths (*.json files)
 // 2. Direct HTTP URLs to seed.json files
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
-func ReadSeedFile(path string) ([]model.ServerDetail, error) {
+func ReadSeedFile(ctx context.Context, path string) ([]model.ServerDetail, error) {
 	log.Printf("Reading seed data from %s", path)
 
 	// Set default seed file path if not provided
@@ -37,14 +37,14 @@ func ReadSeedFile(path string) ([]model.ServerDetail, error) {
 		// Determine if this is a direct seed file URL or a registry root URL
 		if strings.HasSuffix(path, ".json") || strings.Contains(path, "seed.json") {
 			// Direct seed file URL - read directly
-			fileContent, err := readFromHTTP(path)
+			fileContent, err := readFromHTTP(ctx, path)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read from HTTP URL: %w", err)
 			}
 			return parseSeedJSON(fileContent)
 		}
 		// Registry root URL - paginate through /v0/servers endpoint
-		return readFromRegistry(path)
+		return readFromRegistryWithContext(ctx, path)
 	}
 	// Read from local file
 	fileContent, err := os.ReadFile(path)
@@ -55,12 +55,12 @@ func ReadSeedFile(path string) ([]model.ServerDetail, error) {
 }
 
 // readFromHTTP reads content from an HTTP URL with timeout
-func readFromHTTP(url string) ([]byte, error) {
+func readFromHTTP(ctx context.Context, url string) ([]byte, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -113,8 +113,8 @@ type Metadata struct {
 	Total      int    `json:"total,omitempty"`
 }
 
-// readFromRegistry reads all servers from a registry by paginating through /v0/servers endpoint
-func readFromRegistry(registryURL string) ([]model.ServerDetail, error) {
+// readFromRegistryWithContext reads all servers from a registry by paginating through /v0/servers endpoint
+func readFromRegistryWithContext(ctx context.Context, registryURL string) ([]model.ServerDetail, error) {
 	log.Printf("Reading from registry: %s", registryURL)
 
 	// Ensure the URL doesn't have a trailing slash
@@ -167,7 +167,11 @@ func readFromRegistry(registryURL string) ([]model.ServerDetail, error) {
 		}
 
 		// Fetch the page
-		resp, err := client.Get(serverURL)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, serverURL, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create request for %s: %w", serverURL, err)
+		}
+		resp, err := client.Do(req)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch servers from %s: %w", serverURL, err)
 		}
@@ -196,7 +200,7 @@ func readFromRegistry(registryURL string) ([]model.ServerDetail, error) {
 			// Build URL for server detail
 			detailURL := registryURL + "/v0/servers/" + server.ID
 
-			detailReq, err := http.NewRequestWithContext(context.Background(), http.MethodGet, detailURL, nil)
+			detailReq, err := http.NewRequestWithContext(ctx, http.MethodGet, detailURL, nil)
 			if err != nil {
 				log.Printf("Warning: failed to create request for server %s: %v", server.ID, err)
 				// Fall back to basic server information

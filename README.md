@@ -34,7 +34,7 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 
 ### Prerequisites
 
-- Go 1.23.x (required - check with `go version`)
+- Go 1.24.x (required - check with `go version`)
 - MongoDB
 - Docker (optional, but recommended for development)
 

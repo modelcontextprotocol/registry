@@ -374,8 +374,8 @@ func TestPublishHandler(t *testing.T) {
 			}
 
 			// Assert that all expectations were met
-			mockRegistry.AssertExpectations(t) //nolint:typecheck // testify mock embedding issue
-			mockAuthService.AssertExpectations(t) //nolint:typecheck // testify mock embedding issue
+			mockRegistry.AssertExpectations(t)
+			mockAuthService.AssertExpectations(t)
 		})
 	}
 }
@@ -437,7 +437,12 @@ func TestPublishHandlerBearerTokenParsing(t *testing.T) {
 			requestBody, err := json.Marshal(serverDetail)
 			assert.NoError(t, err)
 
-			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(
+				context.Background(),
+				http.MethodPost,
+				"/publish",
+				bytes.NewBuffer(requestBody),
+			)
 			assert.NoError(t, err)
 			req.Header.Set("Authorization", tc.authHeader)
 
@@ -445,7 +450,7 @@ func TestPublishHandlerBearerTokenParsing(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			assert.Equal(t, http.StatusCreated, rr.Code)
-			mockAuthService.AssertExpectations(t) //nolint:typecheck // testify mock embedding issue
+			mockAuthService.AssertExpectations(t)
 		})
 	}
 }
@@ -502,7 +507,12 @@ func TestPublishHandlerAuthMethodSelection(t *testing.T) {
 			requestBody, err := json.Marshal(serverDetail)
 			assert.NoError(t, err)
 
-			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(
+				context.Background(),
+				http.MethodPost,
+				"/publish",
+				bytes.NewBuffer(requestBody),
+			)
 			assert.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer test_token")
 
@@ -510,7 +520,7 @@ func TestPublishHandlerAuthMethodSelection(t *testing.T) {
 			handler.ServeHTTP(rr, req)
 
 			assert.Equal(t, http.StatusCreated, rr.Code)
-			mockAuthService.AssertExpectations(t) //nolint:typecheck // testify mock embedding issue
+			mockAuthService.AssertExpectations(t)
 		})
 	}
 }

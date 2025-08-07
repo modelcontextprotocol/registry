@@ -103,7 +103,8 @@ func publishCommand() error {
 	publishFlags.StringVar(&registryURL, "registry-url", "", "URL of the registry (required)")
 	publishFlags.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file (required)")
 	publishFlags.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
-	publishFlags.StringVar(&authMethod, "auth-method", "github-oauth", "authentication method to use (default: github-oauth)")
+	publishFlags.StringVar(&authMethod, "auth-method", "github-oauth",
+		"authentication method to use (default: github-oauth)")
 
 	// Set custom usage function
 	publishFlags.Usage = func() {
@@ -210,16 +211,20 @@ func createCommand() error {
 	createFlags.StringVar(&execute, "e", "", "Command to execute the server (shorthand)")
 
 	// Custom flag for environment variables
-	createFlags.Func("env-var", "Environment variable in format NAME:DESCRIPTION (can be repeated)", func(value string) error {
-		envVars = append(envVars, value)
-		return nil
-	})
+	createFlags.Func("env-var",
+		"Environment variable in format NAME:DESCRIPTION (can be repeated)",
+		func(value string) error {
+			envVars = append(envVars, value)
+			return nil
+		})
 
 	// Custom flag for package arguments
-	createFlags.Func("package-arg", "Package argument in format VALUE:DESCRIPTION (can be repeated)", func(value string) error {
-		packageArgs = append(packageArgs, value)
-		return nil
-	})
+	createFlags.Func("package-arg",
+		"Package argument in format VALUE:DESCRIPTION (can be repeated)",
+		func(value string) error {
+			packageArgs = append(packageArgs, value)
+			return nil
+		})
 
 	// Set custom usage function
 	createFlags.Usage = func() {
@@ -240,7 +245,8 @@ func createCommand() error {
 		fmt.Fprint(os.Stdout, "  --package-version string Package version (defaults to server version)\n")
 		fmt.Fprint(os.Stdout, "  --runtime-hint string    Runtime hint (e.g., docker)\n")
 		fmt.Fprint(os.Stdout, "  --repo-source string     Repository source (default: github)\n")
-		fmt.Fprint(os.Stdout, "  --env-var string         Environment variable in format NAME:DESCRIPTION (can be repeated)\n")
+		fmt.Fprint(os.Stdout, "  --env-var string         Environment variable in format "+
+			"NAME:DESCRIPTION (can be repeated)\n")
 		fmt.Fprint(os.Stdout, "  --package-arg string     Package argument in format VALUE:DESCRIPTION (can be repeated)\n")
 	}
 
@@ -360,8 +366,11 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 	return nil
 }
 
-func createServerStructure(name, description, version, repoURL, repoSource, registryName,
-	packageName, packageVersion, runtimeHint, execute string, envVars []string, packageArgs []string, status string) ServerJSON {
+func createServerStructure(
+	name, description, version, repoURL, repoSource, registryName,
+	packageName, packageVersion, runtimeHint, execute string,
+	envVars []string, packageArgs []string, status string,
+) ServerJSON {
 	// Parse environment variables
 	var environmentVariables []EnvironmentVariable
 	for _, envVar := range envVars {

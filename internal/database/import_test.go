@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -52,7 +53,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 	defer os.Remove(tempFile)
 
 	// Test reading the file
-	result, err := database.ReadSeedFile(tempFile)
+	result, err := database.ReadSeedFile(context.Background(), tempFile)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, "test-server-1", result[0].Name)
@@ -79,7 +80,7 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	defer server.Close()
 
 	// Test reading from HTTP URL ending in .json
-	result, err := database.ReadSeedFile(server.URL + "/seed.json")
+	result, err := database.ReadSeedFile(context.Background(), server.URL+"/seed.json")
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
 	assert.Equal(t, "test-server-1", result[0].Name)
@@ -155,19 +156,23 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	// Handle individual server detail endpoints
 	mux.HandleFunc("/v0/servers/server-1", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(serverDetail1)
+		if err := json.NewEncoder(w).Encode(serverDetail1); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 
 	mux.HandleFunc("/v0/servers/server-2", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(serverDetail2)
+		if err := json.NewEncoder(w).Encode(serverDetail2); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	})
 
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	// Test reading from registry root URL (this should trigger pagination)
-	result, err := database.ReadSeedFile(server.URL)
+	result, err := database.ReadSeedFile(context.Background(), server.URL)
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 

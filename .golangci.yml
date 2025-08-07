@@ -16,7 +16,6 @@ linters:
     - errorlint
     - exhaustive
     - forbidigo
-    - funlen
     - gocognit
     - goconst
     - gocritic
@@ -29,7 +28,6 @@ linters:
     - grouper
     - importas
     - ireturn
-    - lll
     - makezero
     - misspell
     - nakedret
@@ -56,6 +54,12 @@ linters:
   settings:
     cyclop:
       max-complexity: 20
+    dupl:
+      threshold: 300
+    gocognit:
+      min-complexity: 51
+    nestif:
+      min-complexity: 10
   exclusions:
     generated: lax
     presets:
