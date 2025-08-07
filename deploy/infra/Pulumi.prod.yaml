@@ -1,3 +1,6 @@
 config:
   mcp-registry:environment: prod
-  mcp-registry:provider: aks # Options: local, aks
+  mcp-registry:provider: aks
+  mcp-registry:githubClientId: test-client-id
+  mcp-registry:githubClientSecret: some-secret-here
+encryptionsalt: v1:oDjcEdLMFwM=:v1:FdgMU4r7kVWUbaUt:1aTSUxrNy+JNW51KRXzoMACuAXruUg==

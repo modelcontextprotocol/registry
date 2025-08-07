@@ -1,12 +1,14 @@
 package aks
 
 import (
+	"encoding/base64"
 	"fmt"
 
 	"github.com/pulumi/pulumi-azure-native-sdk/containerservice"
 	"github.com/pulumi/pulumi-azure-native-sdk/resources"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
@@ -16,40 +18,37 @@ type Provider struct{}
 
 // CreateCluster creates an Azure Kubernetes Service cluster
 func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*providers.ProviderInfo, error) {
-	// Create resource group
-	resourceGroup, err := resources.NewResourceGroup(ctx, fmt.Sprintf("mcp-registry-%s-rg", environment), &resources.ResourceGroupArgs{
-		Location: pulumi.String("East US"),
-		Tags: pulumi.StringMap{
-			"environment": pulumi.String(environment),
-			"managed-by":  pulumi.String("pulumi"),
-		},
+	// Get resource group name from config or use default
+	conf := config.New(ctx, "mcp-registry")
+	resourceGroupName := conf.Get("resourceGroupName")
+	if resourceGroupName == "" {
+		resourceGroupName = "official-mcp-registry-prod"
+	}
+
+	// Get existing resource group
+	resourceGroup, err := resources.LookupResourceGroup(ctx, &resources.LookupResourceGroupArgs{
+		ResourceGroupName: resourceGroupName,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find resource group '%s': %w", resourceGroupName, err)
 	}
 
 	// Create AKS cluster
 	clusterName := fmt.Sprintf("mcp-registry-%s", environment)
 
-	// Determine node count based on environment
-	nodeCount := 3
-	if environment == "prod" {
-		nodeCount = 5
-	}
-
 	cluster, err := containerservice.NewManagedCluster(ctx, clusterName, &containerservice.ManagedClusterArgs{
-		ResourceGroupName: resourceGroup.Name,
-		Location:          resourceGroup.Location,
+		ResourceGroupName: pulumi.String(resourceGroup.Name),
+		Location:          pulumi.String(resourceGroup.Location),
 		DnsPrefix:         pulumi.String(clusterName),
-		KubernetesVersion: pulumi.String("1.30.2"),
+		KubernetesVersion: pulumi.String("1.33.2"),
 		Identity: &containerservice.ManagedClusterIdentityArgs{
 			Type: containerservice.ResourceIdentityTypeSystemAssigned,
 		},
 		AgentPoolProfiles: containerservice.ManagedClusterAgentPoolProfileArray{
 			&containerservice.ManagedClusterAgentPoolProfileArgs{
 				Name:   pulumi.String("nodepool1"),
-				Count:  pulumi.Int(nodeCount),
-				VmSize: pulumi.String("Standard_DS2_v2"),
+				Count:  pulumi.Int(2),
+				VmSize: pulumi.String("Standard_B2s"),
 				OsType: pulumi.String("Linux"),
 				Mode:   pulumi.String("System"),
 			},
@@ -65,7 +64,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	}
 
 	// Get AKS credentials
-	creds := pulumi.All(cluster.Name, resourceGroup.Name).ApplyT(
+	creds := pulumi.All(cluster.Name, pulumi.String(resourceGroup.Name)).ApplyT(
 		func(args []any) (string, error) {
 			clusterName := args[0].(string)
 			rgName := args[1].(string)
@@ -76,7 +75,12 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 			if err != nil {
 				return "", err
 			}
-			return credentials.Kubeconfigs[0].Value, nil
+			// Decode base64 kubeconfig
+			kubeconfigData, err := base64.StdEncoding.DecodeString(credentials.Kubeconfigs[0].Value)
+			if err != nil {
+				return "", fmt.Errorf("failed to decode kubeconfig: %w", err)
+			}
+			return string(kubeconfigData), nil
 		},
 	).(pulumi.StringOutput)
 

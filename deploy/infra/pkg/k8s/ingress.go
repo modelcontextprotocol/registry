@@ -59,26 +59,37 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		return err
 	}
 
-	// Get the ingress controller service and export its external IP
-	ingressService, err := v1.GetService(ctx, "nginx-ingress-controller", pulumi.ID("ingress-nginx/nginx-ingress-ingress-nginx-controller"), &v1.ServiceState{}, pulumi.Provider(cluster.Provider), pulumi.DependsOn([]pulumi.Resource{nginxIngress}))
-	if err != nil {
-		return err
-	}
+	// Use the helm chart to get service information after deployment
+	ingressIps := nginxIngress.Resources.ApplyT(func(resources interface{}) interface{} {
+		if ctx.DryRun() {
+			return []string{} // Return empty array on error during preview
+		}
 
-	// Export all external IPs
-	ingressIps := ingressService.Status.LoadBalancer().Ingress().ApplyT(func(ingresses []v1.LoadBalancerIngress) []string {
-		var ips []string
-		for _, ingress := range ingresses {
-			if ip := ingress.Ip; ip != nil && *ip != "" {
-				ips = append(ips, *ip)
+		// Look up the service after the chart is ready
+		svc, err := v1.GetService(
+			ctx,
+			"nginx-ingress-controller-lookup",
+			pulumi.ID("ingress-nginx/nginx-ingress-ingress-nginx-controller"),
+			&v1.ServiceState{},
+			pulumi.Provider(cluster.Provider),
+			pulumi.DependsOn([]pulumi.Resource{nginxIngress}),
+		)
+		if err != nil {
+			return []string{} // Return empty array on error during preview
+		}
+
+		// Return the LoadBalancer ingress IPs
+		return svc.Status.LoadBalancer().Ingress().ApplyT(func(ingresses []v1.LoadBalancerIngress) []string {
+			var ips []string
+			for _, ingress := range ingresses {
+				if ip := ingress.Ip; ip != nil && *ip != "" {
+					ips = append(ips, *ip)
+				}
 			}
-		}
-		if ips == nil {
-			ips = []string{}
-		}
-		return ips
+			return ips
+		})
 	})
-	ctx.Export("ingressIps", pulumi.ToOutput(ingressIps))
+	ctx.Export("ingressIps", ingressIps)
 
 	return nil
 }
