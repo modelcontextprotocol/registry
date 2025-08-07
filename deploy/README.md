@@ -46,7 +46,7 @@ Pre-requisites:
 6. Create a container: `az storage container create --name pulumi-state --account-name officialmcpregistryprod`
 7. Set Pulumi's backend to Azure: `pulumi login 'azblob://pulumi-state?storage_account=officialmcpregistryprod'`
 8. Init the production stack: `pulumi stack init prod`
-  - TODO: This has a password, that maybe needs to be shared with select contributors?
+  - TODO: This has a password that maybe needs to be shared with select contributors?
 9. Deploy: `go build && PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes`
 10. Access the repository via the ingress load balancer. You can find its external IP with `kubectl get svc nginx-ingress-ingress-nginx-controller -n ingress-nginx` or view it in the Pulumi outputs. Then run `curl -H "Host: mcp-registry-prod.example.com" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
