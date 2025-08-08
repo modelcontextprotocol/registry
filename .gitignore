@@ -1,9 +1,9 @@
-build/*
+build/
+bin/
+
 .db
 .env
 .mcpregistry*
-**/bin
-cmd/registry/registry
 .DS_Store
 validate-examples
 validate-schemas

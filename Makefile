@@ -7,7 +7,7 @@ help: ## Show this help message
 
 # Build targets
 build: ## Build the registry application
-	go build ./cmd/registry
+	go build -o bin/registry ./cmd/registry
 
 publisher: ## Build the publisher tool
 	cd tools/publisher && ./build.sh
@@ -62,7 +62,7 @@ dev-local: ## Run registry locally (requires MongoDB)
 
 # Cleanup
 clean: ## Clean build artifacts and coverage files
-	rm -f registry
+	rm -f bin/registry
 	rm -f coverage.out coverage.html
 	cd tools/publisher && rm -f publisher
 
