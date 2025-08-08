@@ -198,9 +198,7 @@ Publishing requires GitHub OAuth validation:
 GET /v0/swagger/index.html
 ```
 
-The API is documented using Swagger/OpenAPI. This page provides a complete reference of all endpoints with request/response schemas and allows you to test the API directly from your browser.
-
-For detailed examples of API usage, see the [API Examples documentation](docs/server-registry-api/examples.md).
+The API is documented using Swagger/OpenAPI. This page provides a complete reference of all endpoints with request/response schemas and examples, and allows you to test the API directly from your browser.
 
 ## Configuration
 
