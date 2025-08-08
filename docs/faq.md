@@ -18,7 +18,7 @@ The MCP Registry is the official centralized metadata repository for publicly-ac
 There are four underlying concepts:
 - "MCP Server Registry API" (or "MCP Registry API"): The OpenAPI specification defined in [openapi.yaml](./server-registry-api/openapi.yaml). This is a reusable API specification that anyone building any sort of "MCP server registry" should consider adopting / aligning with.
 - "Official MCP Registry" (or "MCP Registry"): The application that lives at `https://registry.modelcontextprotocol.io`. This registry currently only catalogs MCP servers, but may be extended in the future to also catalog MCP client/host apps and frameworks.
-- "Official MCP Registry API": The REST API that lives at `https://registry.modelcontextprotocol.io/api`, with an OpenAPI specification defined at [official-registry-openapi.yaml](./server-registry-api/official-registry-openapi.yaml)
+- "Official MCP Registry API": The REST API that lives at `https://registry.modelcontextprotocol.io/api`, with an OpenAPI specification defined at [swagger.yaml](../internal/docs/swagger.yaml)
 - "MCP server registry" (or "MCP registry"): A third party, likely commercial, implementation of the MCP Server Registry API or derivative specification.
 
 ### Is the MCP Registry a package registry?

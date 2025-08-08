@@ -16,19 +16,18 @@ paths:
       summary: List MCP servers
       description: Returns a list of all registered MCP servers
       parameters:
+        - name: cursor
+          in: query
+          description: Pagination cursor for retrieving next set of results
+          required: false
+          schema:
+            type: string
         - name: limit
           in: query
-          description: Number of results per page
+          description: Maximum number of items to return
+          required: false
           schema:
             type: integer
-            minimum: 1
-        - name: offset
-          in: query
-          description: Number of results to skip for pagination
-          schema:
-            type: integer
-            default: 0
-            minimum: 0
       responses:
         '200':
           description: A list of MCP servers
@@ -93,7 +92,6 @@ components:
     Server:
       type: object
       required:
-        - id
         - name
         - description
         - version_detail
@@ -101,13 +99,14 @@ components:
         id:
           type: string
           format: uuid
-          example: "a5e8a7f0-d4e4-4a1d-b12f-2896a23fd4f1"
+          example: "123e4567-e89b-12d3-a456-426614174000"
         name:
           type: string
-          description: Human-readable description of the server's functionality
-          example: "io.modelcontextprotocol/filesystem"
+          description: "Reverse DNS name of the MCP server"
+          example: "io.github.modelcontextprotocol/filesystem"
         description:
           type: string
+          description: "Human-readable description of the server's functionality"
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
         status:
           type: string
@@ -119,6 +118,12 @@ components:
           $ref: '#/components/schemas/Repository'
         version_detail:
           $ref: '#/components/schemas/VersionDetail'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
 
     VersionDetail:
       type: object
@@ -145,19 +150,21 @@ components:
       type: object
       required:
         - servers
-        - total_count
       properties:
         servers:
           type: array
           items:
             $ref: '#/components/schemas/Server'
-        next:
-          type: string
-          format: uri
-          example: "https://registry.modelcontextprotocol.io/servers?offset=50"
-        total_count:
-          type: integer
-          example: 1
+        metadata:
+          type: object
+          properties:
+            next_cursor:
+              type: string
+              description: Cursor for next page of results
+            count:
+              type: integer
+              description: Number of items in current page
+              example: 30
 
     Package:
       type: object
@@ -319,7 +326,6 @@ components:
       properties:
         transport_type:
           type: string
-          enum: [streamable, sse]
           description: Transport protocol type
           example: "sse"
         url:
@@ -331,7 +337,7 @@ components:
           type: array
           description: HTTP headers to include
           items:
-            $ref: '#/components/schemas/KeyValueInput'
+            $ref: '#/components/schemas/Input'
 
     ServerDetail:
       description: Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.
