@@ -62,7 +62,7 @@ dev-local: ## Run registry locally (requires MongoDB)
 
 # Cleanup
 clean: ## Clean build artifacts and coverage files
-	rm -f bin/registry
+	rm -rf bin
 	rm -f coverage.out coverage.html
 	cd tools/publisher && rm -f publisher
 
