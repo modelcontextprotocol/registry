@@ -415,7 +415,7 @@ The service can be configured using environment variables:
 | `MCP_REGISTRY_GITHUB_CLIENT_ID`      | GitHub App Client ID |  |
 | `MCP_REGISTRY_GITHUB_CLIENT_SECRET`  | GitHub App Client Secret |  |
 | `MCP_REGISTRY_LOG_LEVEL`             | Log level | `info` |
-| `MCP_REGISTRY_SEED_FILE_PATH`        | Path or URL to import seed file (supports local files and HTTP URLs) | `data/seed.json` |
+| `MCP_REGISTRY_SEED_FROM`             | Path or URL to import seed data (supports local files and HTTP URLs) | `data/seed.json` |
 | `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
 
 ## Pre-built Docker Images
@@ -442,20 +442,12 @@ Registry instances can import data from:
 
 **Local files:**
 ```bash
-# Via environment variable
-MCP_REGISTRY_SEED_FILE_PATH=data/seed.json ./registry
-
-# Via command line flag
-./registry --seed-file-path=data/seed.json
+MCP_REGISTRY_SEED_FROM=data/seed.json ./registry
 ```
 
 **HTTP endpoints:**
 ```bash
-# Via environment variable
-MCP_REGISTRY_SEED_FILE_PATH=http://other-registry:8080 ./registry
-
-# Via command line flag
-./registry --seed-file-path=http://other-registry:8080
+MCP_REGISTRY_SEED_FROM=http://other-registry:8080 ./registry
 ```
 
 ## Testing
