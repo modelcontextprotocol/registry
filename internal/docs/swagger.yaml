@@ -598,6 +598,7 @@ components:
       properties:
         transport_type:
           type: string
+          enum: [streamable, sse]
           description: Transport protocol type
           example: "sse"
         url:
@@ -609,4 +610,4 @@ components:
           type: array
           description: HTTP headers to include
           items:
-            $ref: '#/components/schemas/Input'
+            $ref: '#/components/schemas/KeyValueInput'
