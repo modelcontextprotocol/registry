@@ -23,12 +23,6 @@ jobs:
       with:
         go-version: ${{ env.GO_VERSION }}
 
-    - name: Cleanup Go module cache
-      run: sudo rm -rf ~/go/pkg/mod
-
-    - name: Cleanup cache
-      run: sudo rm -rf ~/.cache
-
     - name: Cache Go modules
       uses: actions/cache@v4
       with:
@@ -47,7 +41,7 @@ jobs:
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.3.1
 
     - name: Run lint
-      run: echo "$(golangci-lint --version) " && make lint
+      run: make lint
 
     - name: Validate schemas and examples
       run: make validate

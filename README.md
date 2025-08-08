@@ -27,8 +27,8 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 - MongoDB and in-memory database support
 - Comprehensive API documentation
 - Pagination support for listing registry entries
-- **Seed data export/import composability with HTTP support**
-- **Registry instance data sharing via HTTP endpoints**
+- Seed data export/import composability with HTTP support
+- Registry instance data sharing via HTTP endpoints
 
 ## Getting Started
 
@@ -61,19 +61,10 @@ The registry supports composability through seed data import/export, allowing re
 
 ```bash
 # Start first registry with seed data
-MCP_REGISTRY_SEED_FILE_PATH=data/seed_2025_05_16.json ./registry
+MCP_REGISTRY_SEED_FILE_PATH=data/seed.json ./registry
 
 # Start second registry importing from first via HTTP
 ./registry --seed-file-path=http://localhost:8080/v0/seed.json
-```
-
-You can also use environment variables:
-```bash
-# Import from local file
-MCP_REGISTRY_SEED_FILE_PATH=data/seed_2025_05_16.json ./registry
-
-# Import from remote registry
-MCP_REGISTRY_SEED_FILE_PATH=http://other-registry:8080/v0/seed.json ./registry
 ```
 
 ## Building
@@ -100,20 +91,6 @@ To build the CLI tool for publishing MCP servers to the registry:
 # Build the publisher tool
 make publisher
 ```
-
-### Command Line Options
-
-The registry supports command line flags for configuration:
-
-```bash
-# Specify seed file path via command line flag
-./registry --seed-file-path=data/seed_2025_05_16.json
-
-# Import from HTTP endpoint
-./registry --seed-file-path=http://localhost:8080/v0/seed.json
-```
-
-Command line flags take precedence over environment variables.
 
 ## Development
 
@@ -582,9 +559,6 @@ curl http://localhost:8080/v0/servers | jq '.servers | length'
 curl http://localhost:8081/v0/servers | jq '.servers | length'
 ```
 
-This enables true composability where registry instances can be distributed and synchronized, with new instances importing data from existing ones via HTTP.
-
-
 ## Testing
 
 Run the test script to validate API endpoints:
@@ -600,8 +574,6 @@ You can specify specific endpoints to test:
 ./scripts/test_endpoints.sh --endpoint servers
 ```
 
->>>>>>> cf595b5 (Fix linting errors and update README with seed data composability features)
->>>>>>> 3b4643f (feat: allow registries to bootstrap server list from another registry)
 ## License
 
 See the [LICENSE](LICENSE) file for details.
