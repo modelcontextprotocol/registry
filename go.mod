@@ -1,6 +1,6 @@
 module github.com/modelcontextprotocol/registry
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/caarlos0/env/v11 v11.3.1
@@ -90,6 +90,3 @@ require (
 	lukechampine.com/frand v1.4.2 // indirect
 	sourcegraph.com/sourcegraph/appdash v0.0.0-20190731080439-ebfcffb1b5c0 // indirect
 )
-
-// temporary replace directive to use local version of the module so we can share in different orgs
-replace github.com/modelcontextprotocol/registry => ./

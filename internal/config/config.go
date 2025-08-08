@@ -19,8 +19,7 @@ type Config struct {
 	DatabaseName       string       `env:"DATABASE_NAME" envDefault:"mcp-registry"`
 	CollectionName     string       `env:"COLLECTION_NAME" envDefault:"servers_v2"`
 	LogLevel           string       `env:"LOG_LEVEL" envDefault:"info"`
-	SeedFilePath       string       `env:"SEED_FILE_PATH" envDefault:"data/seed.json"`
-	SeedImport         bool         `env:"SEED_IMPORT" envDefault:"true"`
+	SeedFrom           string       `env:"SEED_FROM" envDefault:""`
 	Version            string       `env:"VERSION" envDefault:"dev"`
 	GithubClientID     string       `env:"GITHUB_CLIENT_ID" envDefault:""`
 	GithubClientSecret string       `env:"GITHUB_CLIENT_SECRET" envDefault:""`

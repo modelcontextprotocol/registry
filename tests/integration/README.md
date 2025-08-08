@@ -23,7 +23,7 @@ This directory contains an end-to-end test for publishing to the registry.
 ### Prerequisites
 
 - Docker and Docker Compose
-- Go 1.23
+- Go 1.24
 - Make sure you're in the repository root directory
 
 ### Run the Tests

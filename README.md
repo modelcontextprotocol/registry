@@ -27,12 +27,14 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 - MongoDB and in-memory database support
 - Comprehensive API documentation
 - Pagination support for listing registry entries
+- Seed data export/import composability with HTTP support
+- Registry instance data sharing via HTTP endpoints
 
 ## Getting Started
 
 ### Prerequisites
 
-- Go 1.23.x (required - check with `go version`)
+- Go 1.24.x (required - check with `go version`)
 - MongoDB
 - Docker (optional, but recommended for development)
 
@@ -413,9 +415,55 @@ The service can be configured using environment variables:
 | `MCP_REGISTRY_GITHUB_CLIENT_ID`      | GitHub App Client ID |  |
 | `MCP_REGISTRY_GITHUB_CLIENT_SECRET`  | GitHub App Client Secret |  |
 | `MCP_REGISTRY_LOG_LEVEL`             | Log level | `info` |
-| `MCP_REGISTRY_SEED_FILE_PATH`        | Path to import seed file | `data/seed.json` |
-| `MCP_REGISTRY_SEED_IMPORT`           | Import `seed.json` on first run | `true` |
+| `MCP_REGISTRY_SEED_FROM`             | Path or URL to import seed data (supports local files and HTTP URLs) | `data/seed.json` |
 | `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
+
+## Pre-built Docker Images
+
+Pre-built Docker images are automatically published to GitHub Container Registry on each release and main branch commit:
+
+```bash
+# Run latest from main branch
+docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:latest
+
+# Run specific commit build
+docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main-20250806-a1b2c3d
+```
+
+**Available image tags:**
+- `latest` - Latest commit from main branch
+- `main-<date>-<sha>` - Specific commit builds
+
+**Configuration:** The Docker images support all environment variables listed in the [Configuration](#configuration) section. For production deployments, you'll need to configure the database connection and other settings via environment variables.
+
+### Import Seed Data
+
+Registry instances can import data from:
+
+**Local files:**
+```bash
+MCP_REGISTRY_SEED_FROM=data/seed.json ./registry
+```
+
+**HTTP endpoints:**
+```bash
+MCP_REGISTRY_SEED_FROM=http://other-registry:8080 ./registry
+```
+
+## Testing
+
+Run the test script to validate API endpoints:
+
+```bash
+./scripts/test_endpoints.sh
+```
+
+You can specify specific endpoints to test:
+
+```bash
+./scripts/test_endpoints.sh --endpoint health
+./scripts/test_endpoints.sh --endpoint servers
+```
 
 ## License
 

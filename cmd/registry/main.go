@@ -79,14 +79,14 @@ func main() {
 		return
 	}
 
-	// Import seed data if requested (works for both memory and MongoDB)
-	if cfg.SeedImport {
-		log.Println("Importing data...")
+	// Import seed data if seed source is provided (works for both memory and MongoDB)
+	if cfg.SeedFrom != "" {
+		log.Printf("Importing data from %s...", cfg.SeedFrom)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
-		if err := db.ImportSeed(ctx, cfg.SeedFilePath); err != nil {
-			log.Printf("Failed to import seed file: %v", err)
+		if err := db.ImportSeed(ctx, cfg.SeedFrom); err != nil {
+			log.Printf("Failed to import seed data: %v", err)
 		} else {
 			log.Println("Data import completed successfully")
 		}

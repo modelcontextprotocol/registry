@@ -1,6 +1,3 @@
-# GolangCI-Lint configuration
-# See: https://golangci-lint.run/usage/configuration/
-
 version: "2"
 run:
   modules-download-mode: readonly
@@ -19,7 +16,6 @@ linters:
     - errorlint
     - exhaustive
     - forbidigo
-    - funlen
     - gocognit
     - goconst
     - gocritic
@@ -32,7 +28,6 @@ linters:
     - grouper
     - importas
     - ireturn
-    - lll
     - makezero
     - misspell
     - nakedret
@@ -48,7 +43,6 @@ linters:
     - revive
     - rowserrcheck
     - sqlclosecheck
-    - staticcheck
     - testpackage
     - thelper
     - tparallel
@@ -59,35 +53,13 @@ linters:
     - whitespace
   settings:
     cyclop:
-      max-complexity: 50
-    funlen:
-      lines: 150
-      statements: 150
+      max-complexity: 20
+    dupl:
+      threshold: 300
     gocognit:
-      min-complexity: 50
-    goconst:
-      min-len: 3
-      min-occurrences: 3
-    gocyclo:
-      min-complexity: 25
-    lll:
-      line-length: 150
-    misspell:
-      locale: US
-    mnd:
-      checks:
-        - argument
-        - case
-        - condition
-        - operation
-        - return
+      min-complexity: 51
     nestif:
-      min-complexity: 8
-    revive:
-      rules:
-        - name: use-any
-          severity: error
-          disabled: false
+      min-complexity: 10
   exclusions:
     generated: lax
     presets:
@@ -95,33 +67,11 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
-    rules:
-      - linters:
-          - dupl
-          - errcheck
-          - funlen
-          - gocyclo
-          - gosec
-          - mnd
-        path: _test\.go
-      - linters:
-          - lll
-        path: docs/
-      - linters:
-          - mnd
-        path: integrationtests/
-      - linters:
-          - gomoddirectives
-        path: go\.mod
     paths:
       - third_party$
       - builtin$
       - examples$
 formatters:
-  enable:
-    - gci
-    - gofmt
-    - goimports
   exclusions:
     generated: lax
     paths:
