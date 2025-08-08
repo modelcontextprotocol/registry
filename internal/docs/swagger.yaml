@@ -248,18 +248,20 @@ paths:
                     example: Failed to claim domain
 
   /v0/domains/status:
-    post:
+    get:
       tags:
         - domains
       summary: Get domain verification status
       description: Check the verification status of a domain
       operationId: getDomainStatus
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DomainStatusRequest'
+      parameters:
+        - name: domain
+          in: query
+          required: true
+          description: The domain to check verification status for
+          schema:
+            type: string
+            example: example.com
       responses:
         '200':
           description: Successful operation
@@ -276,7 +278,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: domain is required
+                    example: domain query parameter is required
         '404':
           description: Domain not found
         '405':

@@ -117,29 +117,21 @@ func ClaimDomainHandler(registry service.RegistryService) http.HandlerFunc {
 // GetDomainStatusHandler handles requests to get domain verification status
 func GetDomainStatusHandler(registry service.RegistryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Only allow POST method
-		if r.Method != http.MethodPost {
+		// Only allow GET method
+		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		// Parse request body
-		var req DomainStatusRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, "Invalid request payload: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close()
-
-		// Validate required fields
-		if req.Domain == "" {
-			http.Error(w, "domain is required", http.StatusBadRequest)
+		// Get domain from query parameter
+		domain := r.URL.Query().Get("domain")
+		if domain == "" {
+			http.Error(w, "domain query parameter is required", http.StatusBadRequest)
 			return
 		}
 
 		// Normalize the domain (remove protocol, path, etc.)
-		normalizedDomain, err := normalizeDomain(req.Domain)
+		normalizedDomain, err := normalizeDomain(domain)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return

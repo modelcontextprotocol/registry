@@ -130,17 +130,15 @@ func TestGetDomainStatusHandler(t *testing.T) {
 	tests := []struct {
 		name           string
 		method         string
-		requestBody    interface{}
+		queryParam     string
 		setupMocks     func(*MockRegistryServiceForDomainVerification)
 		expectedStatus int
 		checkResponse  func(t *testing.T, response *v0.DomainStatusResponse)
 	}{
 		{
-			name:   "domain with verified token",
-			method: http.MethodPost,
-			requestBody: v0.DomainStatusRequest{
-				Domain: "verified.com",
-			},
+			name:       "domain with verified token",
+			method:     http.MethodGet,
+			queryParam: "domain=verified.com",
 			setupMocks: func(registry *MockRegistryServiceForDomainVerification) {
 				verifiedAt := time.Now()
 				registry.On("GetDomainVerificationStatus", "verified.com").Return(&model.VerificationTokens{
@@ -159,11 +157,9 @@ func TestGetDomainStatusHandler(t *testing.T) {
 			},
 		},
 		{
-			name:   "domain with pending tokens only",
-			method: http.MethodPost,
-			requestBody: v0.DomainStatusRequest{
-				Domain: "pending.com",
-			},
+			name:       "domain with pending tokens only",
+			method:     http.MethodGet,
+			queryParam: "domain=pending.com",
 			setupMocks: func(registry *MockRegistryServiceForDomainVerification) {
 				registry.On("GetDomainVerificationStatus", "pending.com").Return(&model.VerificationTokens{
 					VerifiedToken: nil,
@@ -187,16 +183,14 @@ func TestGetDomainStatusHandler(t *testing.T) {
 		},
 		{
 			name:           "method not allowed",
-			method:         http.MethodGet,
-			requestBody:    nil,
+			method:         http.MethodPost,
+			queryParam:     "",
 			expectedStatus: http.StatusMethodNotAllowed,
 		},
 		{
-			name:   "missing domain",
-			method: http.MethodPost,
-			requestBody: v0.DomainStatusRequest{
-				Domain: "",
-			},
+			name:           "missing domain parameter",
+			method:         http.MethodGet,
+			queryParam:     "",
 			expectedStatus: http.StatusBadRequest,
 		},
 	}
@@ -211,14 +205,12 @@ func TestGetDomainStatusHandler(t *testing.T) {
 
 			handler := v0.GetDomainStatusHandler(mockRegistry)
 
-			var reqBody []byte
-			if tt.requestBody != nil {
-				var err error
-				reqBody, err = json.Marshal(tt.requestBody)
-				require.NoError(t, err)
+			url := "/v0/domains/status"
+			if tt.queryParam != "" {
+				url = url + "?" + tt.queryParam
 			}
 
-			req := httptest.NewRequest(tt.method, "/v0/domains/status", bytes.NewReader(reqBody))
+			req := httptest.NewRequest(tt.method, url, nil)
 
 			w := httptest.NewRecorder()
 			handler(w, req)
