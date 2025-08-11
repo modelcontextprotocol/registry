@@ -58,7 +58,7 @@ dev-compose: ## Start development environment with Docker Compose (builds image 
 	docker compose up --build
 
 dev-local: ## Run registry locally (requires MongoDB)
-	go run cmd/registry/main.go
+	go run ./cmd/registry
 
 # Cleanup
 clean: ## Clean build artifacts and coverage files
