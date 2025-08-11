@@ -182,14 +182,14 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			Tls: networkingv1.IngressTLSArray{
 				&networkingv1.IngressTLSArgs{
 					Hosts: pulumi.StringArray{
-						pulumi.Sprintf("mcp-registry-%s.example.com", environment),
+						pulumi.Sprintf("registry.%s.modelcontextprotocol.io", environment),
 					},
 					SecretName: pulumi.Sprintf("mcp-registry-%s-tls", environment),
 				},
 			},
 			Rules: networkingv1.IngressRuleArray{
 				&networkingv1.IngressRuleArgs{
-					Host: pulumi.Sprintf("mcp-registry-%s.example.com", environment),
+					Host: pulumi.Sprintf("registry-%s.modelcontextprotocol.io", environment),
 					Http: &networkingv1.HTTPIngressRuleValueArgs{
 						Paths: networkingv1.HTTPIngressPathArray{
 							&networkingv1.HTTPIngressPathArgs{

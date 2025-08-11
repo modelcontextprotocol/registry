@@ -45,8 +45,8 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 			"controller": pulumi.Map{
 				"service": pulumi.Map{
 					"type": pulumi.String(ingressType),
-					// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
 					"annotations": pulumi.Map{
+						// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
 						"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path": pulumi.String("/healthz"),
 					},
 				},

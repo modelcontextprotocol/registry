@@ -1,0 +1,8 @@
+config:
+  mcp-registry:environment: staging
+  mcp-registry:provider: gcp
+  mcp-registry:gcpProjectId: mcp-registry-staging
+  mcp-registry:githubClientId: your-github-client-id
+  mcp-registry:githubClientSecret:
+    secure: v1:BpUPXf7aQcG8qHF9:YJxKbhWi5ZQSTdNGrdhzzCGz7sWXKhmNe+yrTls2cKC3/w==
+encryptionsalt: v1:EKBwmTmss1c=:v1:JLd4a7cM0X8Jroh+:z9/q6RSCEFTDzMV6X6h5Tpbw0tnpkA==
