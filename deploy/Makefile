@@ -18,10 +18,10 @@ local-up: build ## Deploy local infrastructure
 
 # Staging stack commands
 staging-preview: build ## Preview staging infrastructure changes
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi preview --stack staging
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi preview --stack gcpStaging
 
 staging-up: build ## Deploy staging infrastructure
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi up --yes --stack staging
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi up --yes --stack gcpStaging
 
 # Production stack commands
 prod-preview: build ## Preview production infrastructure changes
