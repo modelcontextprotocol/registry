@@ -27,7 +27,7 @@ jobs:
       - name: Setup Pulumi
         uses: pulumi/actions@v6
         with:
-          version: ${{ env.PULUMI_VERSION }}
+          pulumi-version: ${{ env.PULUMI_VERSION }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -63,7 +63,7 @@ jobs:
       - name: Setup Pulumi
         uses: pulumi/actions@v6
         with:
-          version: ${{ env.PULUMI_VERSION }}
+          pulumi-version: ${{ env.PULUMI_VERSION }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
