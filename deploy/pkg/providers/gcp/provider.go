@@ -76,6 +76,13 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 
 		// Remove default node pool after cluster creation
 		RemoveDefaultNodePool: pulumi.Bool(true),
+
+		AddonsConfig: &container.ClusterAddonsConfigArgs{
+			// Disable as we use ingress-nginx
+			HttpLoadBalancing: &container.ClusterAddonsConfigHttpLoadBalancingArgs{
+				Disabled: pulumi.Bool(true),
+			},
+		},
 	}
 
 	// Add provider if we have explicit credentials
@@ -99,7 +106,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		// Node pool configuration
 		NodeCount: pulumi.Int(2),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
-			MachineType: pulumi.String("e2-micro"),
+			MachineType: pulumi.String("e2-small"),
 			DiskSizeGb:  pulumi.Int(20),
 			DiskType:    pulumi.String("pd-standard"),
 		},
@@ -124,15 +131,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 
 	// Create Kubernetes provider using the cluster directly
 	k8sProvider, err := kubernetes.NewProvider(ctx, "k8s-provider", &kubernetes.ProviderArgs{
-		EnableServerSideApply: pulumi.Bool(true),
-		Cluster:               cluster.Name,
-		Context:               cluster.Name,
-		Kubeconfig: pulumi.All(cluster.Endpoint, cluster.MasterAuth, cluster.Name, pulumi.String(projectID), pulumi.String(region)).ApplyT(func(args []any) (string, error) {
+		Kubeconfig: pulumi.All(cluster.Endpoint, cluster.MasterAuth).ApplyT(func(args []any) (string, error) {
 			endpoint := args[0].(string)
 			masterAuth := args[1].(container.ClusterMasterAuth)
-			clusterName := args[2].(string)
-			projID := args[3].(string)
-			reg := args[4].(string)
+			context := fmt.Sprintf("%s_%s_%s", projectID, zone, clusterName)
 
 			// Extract CA certificate
 			caCert := ""
@@ -141,7 +143,6 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 			}
 
 			// Create kubeconfig using gke-gcloud-auth-plugin
-			context := fmt.Sprintf("%s_%s_%s", projID, reg, clusterName)
 			kubeconfigYAML := fmt.Sprintf(`apiVersion: v1
 clusters:
 - cluster:
@@ -169,7 +170,7 @@ users:
 
 			return kubeconfigYAML, nil
 		}).(pulumi.StringOutput),
-	}, pulumi.DependsOn([]pulumi.Resource{nodePool}))
+	}, pulumi.DependsOn([]pulumi.Resource{cluster, nodePool}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kubernetes provider: %w", err)
 	}
