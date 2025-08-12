@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - adam/github-action-gcp
 
 env:
   PULUMI_VERSION: "3.188.0"
