@@ -1,8 +1,10 @@
 package k8s
 
 import (
-	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apiextensions"
 	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
@@ -34,6 +36,37 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 			"ingressShim": pulumi.Map{
 				"defaultIssuerName": pulumi.String("letsencrypt-prod"),
 				"defaultIssuerKind": pulumi.String("ClusterIssuer"),
+			},
+		},
+	}, pulumi.Provider(cluster.Provider))
+	if err != nil {
+		return err
+	}
+
+	_, err = apiextensions.NewCustomResource(ctx, "letsencrypt-prod", &apiextensions.CustomResourceArgs{
+		ApiVersion: pulumi.String("cert-manager.io/v1"),
+		Kind:       pulumi.String("ClusterIssuer"),
+		Metadata: &metav1.ObjectMetaArgs{
+			Name: pulumi.String("letsencrypt-prod"),
+		},
+		OtherFields: kubernetes.UntypedArgs{
+			"spec": pulumi.Map{
+				"acme": pulumi.Map{
+					"server": pulumi.String("https://acme-v02.api.letsencrypt.org/directory"),
+					"email":  pulumi.String("admin@modelcontextprotocol.io"),
+					"privateKeySecretRef": pulumi.Map{
+						"name": pulumi.String("letsencrypt-prod-key"),
+					},
+					"solvers": pulumi.Array{
+						pulumi.Map{
+							"http01": pulumi.Map{
+								"ingress": pulumi.Map{
+									"ingressClassName": pulumi.String("nginx"),
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}, pulumi.Provider(cluster.Provider))

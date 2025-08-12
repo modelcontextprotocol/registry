@@ -1,47 +1,31 @@
-.PHONY: help init preview deploy destroy clean dev-init prod-init dev-deploy prod-deploy
+.PHONY: help build local-preview local-up staging-preview staging-up prod-preview prod-up
 
+# Default target
 help: ## Show this help message
-	@echo "Usage: make [target]"
-	@echo ""
-	@echo "Targets:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
-init: ## Initialize Pulumi stack
-	pulumi stack init
+# Build the Go binary
+build: ## Build the Pulumi Go program
+	go build
 
-preview: ## Preview infrastructure changes
-	pulumi preview
+# Local stack commands
+local-preview: build ## Preview local infrastructure changes
+	PULUMI_CONFIG_PASSPHRASE="" pulumi preview --stack local
 
-deploy: ## Deploy infrastructure
-	pulumi up --yes
+local-up: build ## Deploy local infrastructure
+	PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes --stack local
 
-destroy: ## Destroy infrastructure
-	pulumi destroy --yes
+# Staging stack commands
+staging-preview: build ## Preview staging infrastructure changes
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi preview --stack gcpStaging
 
-clean: ## Clean up temporary files
-	rm -rf .pulumi/
-	rm -f Pulumi.*.yaml.bak
+staging-up: build ## Deploy staging infrastructure
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi up --yes --stack gcpStaging
 
-dev-init: ## Initialize development stack
-	pulumi stack init dev
-	pulumi stack select dev
+# Production stack commands
+prod-preview: build ## Preview production infrastructure changes
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi preview --stack gcpProd
 
-prod-init: ## Initialize production stack
-	pulumi stack init prod
-	pulumi stack select prod
-
-dev-deploy: ## Deploy to development environment
-	pulumi stack select dev
-	pulumi up --yes
-
-prod-deploy: ## Deploy to production environment
-	pulumi stack select prod
-	pulumi up --yes
-
-dev-destroy: ## Destroy development environment
-	pulumi stack select dev
-	pulumi destroy --yes
-
-prod-destroy: ## Destroy production environment
-	pulumi stack select prod
-	pulumi destroy --yes
+prod-up: build ## Deploy production infrastructure
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --yes --stack gcpProd
