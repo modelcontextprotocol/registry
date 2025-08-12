@@ -38,6 +38,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: mcp-registry-staging
+          install_components: gke-gcloud-auth-plugin
 
       - name: Deploy to Staging
         working-directory: ./deploy
@@ -74,6 +75,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: mcp-registry-prod
+          install_components: gke-gcloud-auth-plugin
 
       - name: Deploy to Production
         working-directory: ./deploy
