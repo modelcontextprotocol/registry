@@ -1,8 +1,10 @@
 package gcp
 
 import (
+	"encoding/base64"
 	"fmt"
 
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -17,27 +19,55 @@ type Provider struct{}
 // CreateCluster creates a Google Kubernetes Engine cluster
 func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*providers.ProviderInfo, error) {
 	// Get configuration
-	conf := config.New(ctx, "mcp-registry")
+	gcpConf := config.New(ctx, "gcp")
 
 	// Get project ID from config or use default
-	projectID := conf.Get("gcpProjectId")
+	projectID := gcpConf.Get("project")
 	if projectID == "" {
-		return nil, fmt.Errorf("GCP project ID not configured. Set mcp-registry:gcpProjectId")
+		return nil, fmt.Errorf("GCP project ID not configured. Set gcp:project")
 	}
 
 	// Get region from config or use default
-	region := conf.Get("gcpRegion")
+	region := gcpConf.Get("region")
 	if region == "" {
 		region = "us-central1"
+	}
+
+	// Get credentials from config (base64 encoded service account JSON)
+	credentials := gcpConf.Get("credentials")
+	if credentials != "" {
+		// Decode the base64 credentials
+		decodedCreds, err := base64.StdEncoding.DecodeString(credentials)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode GCP credentials: %w", err)
+		}
+		credentials = string(decodedCreds)
+	}
+
+	// Create a GCP provider with explicit credentials if provided
+	var gcpProvider *gcp.Provider
+	var err error
+	if credentials != "" {
+		gcpProvider, err = gcp.NewProvider(ctx, "gcp-explicit", &gcp.ProviderArgs{
+			Project:     pulumi.String(projectID),
+			Region:      pulumi.String(region),
+			Credentials: pulumi.String(credentials),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create GCP provider: %w", err)
+		}
 	}
 
 	// Create GKE cluster
 	clusterName := fmt.Sprintf("mcp-registry-%s", environment)
 
+	// Use a specific zone instead of region for zonal cluster
+	zone := fmt.Sprintf("%s-b", region)
+
 	// Configure the GKE cluster
-	cluster, err := container.NewCluster(ctx, clusterName, &container.ClusterArgs{
+	clusterArgs := &container.ClusterArgs{
 		Name:        pulumi.String(clusterName),
-		Location:    pulumi.String(region),
+		Location:    pulumi.String(zone),
 		Project:     pulumi.String(projectID),
 		Description: pulumi.String(fmt.Sprintf("MCP Registry %s GKE Cluster", environment)),
 
@@ -46,23 +76,31 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 
 		// Remove default node pool after cluster creation
 		RemoveDefaultNodePool: pulumi.Bool(true),
-	})
+	}
+
+	// Add provider if we have explicit credentials
+	clusterOpts := []pulumi.ResourceOption{}
+	if gcpProvider != nil {
+		clusterOpts = append(clusterOpts, pulumi.Provider(gcpProvider))
+	}
+
+	cluster, err := container.NewCluster(ctx, clusterName, clusterArgs, clusterOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GKE cluster: %w", err)
 	}
 
 	// Create a managed node pool for the cluster
 	nodePoolName := fmt.Sprintf("%s-nodepool", clusterName)
-	_, err = container.NewNodePool(ctx, nodePoolName, &container.NodePoolArgs{
+	nodePoolArgs := &container.NodePoolArgs{
 		Cluster:  cluster.Name,
-		Location: pulumi.String(region),
+		Location: pulumi.String(zone),
 		Project:  pulumi.String(projectID),
 
 		// Node pool configuration
 		NodeCount: pulumi.Int(2),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
 			MachineType: pulumi.String("e2-micro"),
-			DiskSizeGb:  pulumi.Int(10),
+			DiskSizeGb:  pulumi.Int(20),
 			DiskType:    pulumi.String("pd-standard"),
 		},
 
@@ -71,23 +109,39 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 			AutoRepair:  pulumi.Bool(true),
 			AutoUpgrade: pulumi.Bool(true),
 		},
-	})
+	}
+
+	// Add provider if we have explicit credentials
+	nodePoolOpts := []pulumi.ResourceOption{}
+	if gcpProvider != nil {
+		nodePoolOpts = append(nodePoolOpts, pulumi.Provider(gcpProvider))
+	}
+
+	nodePool, err := container.NewNodePool(ctx, nodePoolName, nodePoolArgs, nodePoolOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create node pool: %w", err)
 	}
 
-	// Get cluster endpoint and auth information
-	clusterEndpoint := cluster.Endpoint
-	clusterMasterAuth := cluster.MasterAuth
-
-	// Create kubeconfig for the GKE cluster
-	kubeconfig := pulumi.All(clusterEndpoint, clusterMasterAuth.ClusterCaCertificate, cluster.Name).ApplyT(
-		func(args []any) (string, error) {
+	// Create Kubernetes provider using the cluster directly
+	k8sProvider, err := kubernetes.NewProvider(ctx, "k8s-provider", &kubernetes.ProviderArgs{
+		EnableServerSideApply: pulumi.Bool(true),
+		Cluster:               cluster.Name,
+		Context:               cluster.Name,
+		Kubeconfig: pulumi.All(cluster.Endpoint, cluster.MasterAuth, cluster.Name, pulumi.String(projectID), pulumi.String(region)).ApplyT(func(args []any) (string, error) {
 			endpoint := args[0].(string)
-			caCert := args[1].(string)
+			masterAuth := args[1].(container.ClusterMasterAuth)
 			clusterName := args[2].(string)
+			projID := args[3].(string)
+			reg := args[4].(string)
 
-			// Create kubeconfig YAML
+			// Extract CA certificate
+			caCert := ""
+			if masterAuth.ClusterCaCertificate != nil {
+				caCert = *masterAuth.ClusterCaCertificate
+			}
+
+			// Create kubeconfig using gke-gcloud-auth-plugin
+			context := fmt.Sprintf("%s_%s_%s", projID, reg, clusterName)
 			kubeconfigYAML := fmt.Sprintf(`apiVersion: v1
 clusters:
 - cluster:
@@ -107,35 +161,21 @@ users:
   user:
     exec:
       apiVersion: client.authentication.k8s.io/v1beta1
-      args:
-      - gke
-      - get-credentials
-      - %s
-      - --region
-      - %s
-      - --project
-      - %s
-      command: gcloud
-      env: null
-      installHint: Install gcloud CLI and run 'gcloud auth login'
-      interactiveMode: IfAvailable
+      command: gke-gcloud-auth-plugin
+      installHint: Install gke-gcloud-auth-plugin for use with kubectl by following
+        https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke
       provideClusterInfo: true
-`, caCert, endpoint, clusterName, clusterName, clusterName, clusterName, clusterName, clusterName, clusterName, region, projectID)
+`, caCert, endpoint, context, context, context, context, context, context)
 
 			return kubeconfigYAML, nil
-		},
-	).(pulumi.StringOutput)
-
-	// Create Kubernetes provider for GKE
-	k8sProvider, err := kubernetes.NewProvider(ctx, "k8s-provider", &kubernetes.ProviderArgs{
-		Kubeconfig: kubeconfig,
-	})
+		}).(pulumi.StringOutput),
+	}, pulumi.DependsOn([]pulumi.Resource{nodePool}))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kubernetes provider: %w", err)
 	}
 
 	return &providers.ProviderInfo{
-		Name:     cluster.Name,
+		Name:     nodePool.Cluster,
 		Provider: k8sProvider,
 	}, nil
 }

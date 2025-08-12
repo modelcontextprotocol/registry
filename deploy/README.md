@@ -36,19 +36,45 @@ Pre-requisites:
 Pre-requisites:
 - [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
 - A Google Cloud Platform (GCP) account
-- [Google Cloud SDK (gcloud)](https://cloud.google.com/sdk/docs/install) installed
+- A GCP Service Account with appropriate permissions
 
-1. Login to GCP: `gcloud auth application-default login`
-2. Create a project: `gcloud projects create mcp-registry-prod`
-3. Set the project: `gcloud config set project mcp-registry-prod`
-4. Enable required APIs: `gcloud services enable storage.googleapis.com && gcloud services enable container.googleapis.com`
+#### Setup with Service Account (Recommended)
+
+1. Create a project: `gcloud projects create mcp-registry-prod`
+2. Set the project: `gcloud config set project mcp-registry-prod`
+3. Enable required APIs: `gcloud services enable storage.googleapis.com && gcloud services enable container.googleapis.com`
+4. Create a service account with necessary permissions, and get the key:
+   ```bash
+   gcloud iam service-accounts create pulumi-svc
+   sleep 10
+   gcloud projects add-iam-policy-binding mcp-registry-prod \
+     --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" \
+     --role="roles/container.admin"
+   gcloud projects add-iam-policy-binding mcp-registry-prod \
+     --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" \
+     --role="roles/compute.admin"
+   gcloud projects add-iam-policy-binding mcp-registry-prod \
+     --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" \
+     --role="roles/storage.admin"
+   gcloud iam service-accounts add-iam-policy-binding \
+     $(gcloud projects describe mcp-registry-prod --format="value(projectNumber)")-compute@developer.gserviceaccount.com \
+     --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" \
+     --role="roles/iam.serviceAccountUser"
+   gcloud iam service-accounts keys create sa-key.json \
+     --iam-account=pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com
+   ```
 5. Create a GCS bucket for Pulumi state: `gsutil mb gs://mcp-registry-prod-pulumi-state`
-5. Set Pulumi's backend to GCS: `pulumi login gs://mcp-registry-prod-pulumi-state`
-5. Get the passphrase file from @domdomegg
-  - TODO: avoid dependence on one person! Probably will shift all of this into CI.
-6. Init the GCP stack: `PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi stack init gcpProd`
-7. Deploy: `go build && PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --yes`
-8. Access the repository via the ingress load balancer. You can find its external IP with:
+6. Set Pulumi's backend to GCS: `pulumi login gs://mcp-registry-prod-pulumi-state`
+7. Get the passphrase file from @domdomegg
+   - TODO: avoid dependence on one person! Probably will shift all of this into CI.
+8. Init the GCP stack: `PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi stack init gcpProd`
+9. Set the GCP credentials in Pulumi config:
+    ```bash
+    # Base64 encode the service account key and set it
+    pulumi config set --secret gcp:credentials "$(base64 < sa-key.json)"
+    ```
+10. Deploy: `go build && PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --yes`
+11. Access the repository via the ingress load balancer. You can find its external IP with:
    ```bash
    kubectl get svc nginx-ingress-ingress-nginx-controller -n ingress-nginx
    ```
