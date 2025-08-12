@@ -43,7 +43,6 @@ jobs:
       - name: Deploy to Staging
         working-directory: ./deploy
         run: |
-          pulumi login gs://mcp-registry-staging-pulumi-state
           echo "${{ secrets.PULUMI_STAGING_PASSPHRASE }}" > passphrase.staging.txt
           make staging-up
 
@@ -80,6 +79,5 @@ jobs:
       - name: Deploy to Production
         working-directory: ./deploy
         run: |
-          pulumi login gs://mcp-registry-prod-pulumi-state
           echo "${{ secrets.PULUMI_PROD_PASSPHRASE }}" > passphrase.prod.txt
           make prod-up
