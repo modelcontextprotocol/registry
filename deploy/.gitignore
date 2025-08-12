@@ -26,3 +26,7 @@ Thumbs.db
 
 # Build artifacts
 infra
+
+# Secrets
+passphrase.prod.txt
+passphrase.staging.txt

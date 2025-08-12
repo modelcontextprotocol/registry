@@ -62,43 +62,25 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Name: pulumi.String("mcp-registry"),
-							// TODO: Replace with actual MCP registry image once on GHCR
-							Image: pulumi.String("nginx:alpine"),
+							Name:  pulumi.String("mcp-registry"),
+							Image: pulumi.String("ghcr.io/modelcontextprotocol/registry:latest"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
-									// TODO: Change to port 8080 once using registry image
-									ContainerPort: pulumi.Int(80),
+									ContainerPort: pulumi.Int(8080),
 									Name:          pulumi.String("http"),
 								},
 							},
 							Env: corev1.EnvVarArray{
 								&corev1.EnvVarArgs{
-									Name:  pulumi.String("DATABASE_URL"),
+									Name:  pulumi.String("MCP_REGISTRY_DATABASE_URL"),
 									Value: pulumi.String("mongodb://mongodb.default.svc.cluster.local:27017"),
 								},
 								&corev1.EnvVarArgs{
-									Name:  pulumi.String("PORT"),
-									Value: pulumi.String("8080"),
-								},
-								&corev1.EnvVarArgs{
-									Name:  pulumi.String("NODE_ENV"),
-									Value: pulumi.String("production"),
-								},
-								&corev1.EnvVarArgs{
-									Name:  pulumi.String("LOG_LEVEL"),
-									Value: pulumi.String("info"),
-								},
-								&corev1.EnvVarArgs{
-									Name:  pulumi.String("CORS_ORIGINS"),
-									Value: pulumi.String("*"),
-								},
-								&corev1.EnvVarArgs{
-									Name:  pulumi.String("GITHUB_CLIENT_ID"),
+									Name:  pulumi.String("MCP_REGISTRY_GITHUB_CLIENT_ID"),
 									Value: pulumi.String(githubClientId),
 								},
 								&corev1.EnvVarArgs{
-									Name: pulumi.String("GITHUB_CLIENT_SECRET"),
+									Name: pulumi.String("MCP_REGISTRY_GITHUB_CLIENT_SECRET"),
 									ValueFrom: &corev1.EnvVarSourceArgs{
 										SecretKeyRef: &corev1.SecretKeySelectorArgs{
 											Name: secret.Metadata.Name(),
@@ -107,23 +89,22 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									},
 								},
 							},
-							// TODO: uncomment when using registry image
-							// LivenessProbe: &corev1.ProbeArgs{
-							// 	HttpGet: &corev1.HTTPGetActionArgs{
-							// 		Path: pulumi.String("/v0/health"),
-							// 		Port: pulumi.Int(8080),
-							// 	},
-							// 	InitialDelaySeconds: pulumi.Int(30),
-							// 	TimeoutSeconds:      pulumi.Int(5),
-							// },
-							// ReadinessProbe: &corev1.ProbeArgs{
-							// 	HttpGet: &corev1.HTTPGetActionArgs{
-							// 		Path: pulumi.String("/v0/health"),
-							// 		Port: pulumi.Int(8080),
-							// 	},
-							// 	InitialDelaySeconds: pulumi.Int(5),
-							// 	TimeoutSeconds:      pulumi.Int(3),
-							// },
+							LivenessProbe: &corev1.ProbeArgs{
+								HttpGet: &corev1.HTTPGetActionArgs{
+									Path: pulumi.String("/v0/health"),
+									Port: pulumi.Int(8080),
+								},
+								InitialDelaySeconds: pulumi.Int(30),
+								TimeoutSeconds:      pulumi.Int(5),
+							},
+							ReadinessProbe: &corev1.ProbeArgs{
+								HttpGet: &corev1.HTTPGetActionArgs{
+									Path: pulumi.String("/v0/health"),
+									Port: pulumi.Int(8080),
+								},
+								InitialDelaySeconds: pulumi.Int(5),
+								TimeoutSeconds:      pulumi.Int(3),
+							},
 						},
 					},
 				},
@@ -150,9 +131,8 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			},
 			Ports: corev1.ServicePortArray{
 				&corev1.ServicePortArgs{
-					Port: pulumi.Int(80),
-					// TODO: Change to port 8080 once using registry image
-					TargetPort: pulumi.Int(80),
+					Port:       pulumi.Int(80),
+					TargetPort: pulumi.Int(8080),
 					Name:       pulumi.String("http"),
 				},
 			},
@@ -164,6 +144,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	}
 
 	// Create Ingress
+	domain := "%s.registry.modelcontextprotocol.io"
 	ingress, err := networkingv1.NewIngress(ctx, "mcp-registry", &networkingv1.IngressArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mcp-registry"),
@@ -173,23 +154,21 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				"environment": pulumi.String(environment),
 			},
 			Annotations: pulumi.StringMap{
-				"kubernetes.io/ingress.class":                pulumi.String("nginx"),
-				"cert-manager.io/cluster-issuer":             pulumi.String("letsencrypt-prod"),
-				"nginx.ingress.kubernetes.io/rewrite-target": pulumi.String("/"),
+				"kubernetes.io/ingress.class": pulumi.String("nginx"),
 			},
 		},
 		Spec: &networkingv1.IngressSpecArgs{
 			Tls: networkingv1.IngressTLSArray{
 				&networkingv1.IngressTLSArgs{
 					Hosts: pulumi.StringArray{
-						pulumi.Sprintf("mcp-registry-%s.example.com", environment),
+						pulumi.Sprintf(domain, environment),
 					},
 					SecretName: pulumi.Sprintf("mcp-registry-%s-tls", environment),
 				},
 			},
 			Rules: networkingv1.IngressRuleArray{
 				&networkingv1.IngressRuleArgs{
-					Host: pulumi.Sprintf("mcp-registry-%s.example.com", environment),
+					Host: pulumi.Sprintf(domain, environment),
 					Http: &networkingv1.HTTPIngressRuleValueArgs{
 						Paths: networkingv1.HTTPIngressPathArray{
 							&networkingv1.HTTPIngressPathArgs{

@@ -34,7 +34,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		ingressType = "NodePort"
 	}
 
-	nginxIngress, err := helm.NewChart(ctx, "nginx-ingress", helm.ChartArgs{
+	nginxIngress, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
 		Version: pulumi.String("4.13.0"),
 		FetchArgs: helm.FetchArgs{
@@ -45,8 +45,8 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 			"controller": pulumi.Map{
 				"service": pulumi.Map{
 					"type": pulumi.String(ingressType),
-					// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
 					"annotations": pulumi.Map{
+						// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
 						"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path": pulumi.String("/healthz"),
 					},
 				},
@@ -75,8 +75,8 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		// Look up the service after the chart is ready
 		svc, err := v1.GetService(
 			ctx,
-			"nginx-ingress-controller-lookup",
-			pulumi.ID("ingress-nginx/nginx-ingress-ingress-nginx-controller"),
+			"ingress-nginx-controller-lookup",
+			pulumi.ID("ingress-nginx/ingress-nginx-controller"),
 			&v1.ServiceState{},
 			pulumi.Provider(cluster.Provider),
 			pulumi.DependsOn([]pulumi.Resource{nginxIngress}),
