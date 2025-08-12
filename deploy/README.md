@@ -1,6 +1,6 @@
 # MCP Registry Kubernetes Deployment
 
-This directory contains Pulumi infrastructure code to deploy the MCP Registry service to a Kubernetes cluster. It supports multiple Kubernetes providers: Azure Kubernetes Service (AKS) and local (using existing kubeconfig).
+This directory contains Pulumi infrastructure code to deploy the MCP Registry service to a Kubernetes cluster. It supports deploying the infrastructure locally (using an existing kubeconfig, e.g. with minikube) or to Google Cloud Platform (GCP).
 
 ## Quick Start
 
