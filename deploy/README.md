@@ -19,14 +19,12 @@ Pre-requisites:
 
     # To use your local kubeconfig (default)
     pulumi config set mcp-registry:provider local
-    # Alternative: To use AKS
-    # pulumi config set mcp-registry:provider aks
     
     # GitHub OAuth
     pulumi config set mcp-registry:githubClientId <your-github-client-id>
     pulumi config set --secret mcp-registry:githubClientSecret <your-github-client-secret>
     ```
-4. Deploy: `go build && PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes`
+4. Deploy: `make local-up`
 5. Access the repository via the ingress load balancer. You can find its external IP with `kubectl get svc ingress-nginx-controller -n ingress-nginx` (with minikube, if it's 'pending' you might need `minikube tunnel`). Then run `curl -H "Host: local.registry.modelcontextprotocol.io" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
 ### Production Deployment (GCP)
@@ -61,7 +59,7 @@ Pre-requisites:
     # Base64 encode the service account key and set it
     pulumi config set --secret gcp:credentials "$(base64 < sa-key.json)"
     ```
-10. Deploy: `go build && PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --yes`
+10. Deploy: `make prod-up`
 11. Access the repository via the ingress load balancer. You can find its external IP with: `kubectl get svc ingress-nginx-controller -n ingress-nginx`.
    Then run `curl -H "Host: prod.registry.modelcontextprotocol.io" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
