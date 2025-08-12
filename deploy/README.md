@@ -29,7 +29,7 @@ Pre-requisites:
 
 ### Production Deployment (GCP)
 
-**Note:** This is how the production deployment will be set up once. But then the plan will be future updates are effectively a login + `pulumi up` from GitHub Actions.
+**Note:** The production deployment is automatically handled by GitHub Actions. All merges to the `main` branch trigger an automatic deployment to GCP via [the configured GitHub Actions workflow](../.github/workflows/deploy.yml). The steps below are preserved as a log of what we did, or if a manual override is needed.
 
 Pre-requisites:
 - [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
@@ -51,8 +51,7 @@ Pre-requisites:
    ```
 5. Create a GCS bucket for Pulumi state: `gsutil mb gs://mcp-registry-prod-pulumi-state`
 6. Set Pulumi's backend to GCS: `pulumi login gs://mcp-registry-prod-pulumi-state`
-7. Get the passphrase file `passphrase.prod.txt` from @domdomegg
-   - TODO: avoid dependence on one person! Probably will shift all of this into CI.
+7. Get the passphrase file `passphrase.prod.txt` from the registry maintainers
 8. Init the GCP stack: `PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi stack init gcpProd`
 9. Set the GCP credentials in Pulumi config:
     ```bash
