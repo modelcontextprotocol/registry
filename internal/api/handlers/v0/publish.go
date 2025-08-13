@@ -42,7 +42,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, aut
 		}
 
 		const bearerPrefix = "Bearer "
-		if len(authHeader) < len(bearerPrefix) || authHeader[:len(bearerPrefix)] != bearerPrefix {
+		if len(authHeader) < len(bearerPrefix) || !strings.EqualFold(authHeader[:len(bearerPrefix)], bearerPrefix) {
 			return nil, huma.Error401Unauthorized("Invalid Authorization header format. Expected 'Bearer <token>'")
 		}
 		token := authHeader[len(bearerPrefix):]
