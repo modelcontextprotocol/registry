@@ -57,17 +57,14 @@ const (
 	FormatFilePath Format = "file_path"
 )
 
-// UserInput represents a user input as defined in the spec
 type Input struct {
-	Description string           `json:"description,omitempty" bson:"description,omitempty"`
-	IsRequired  bool             `json:"is_required,omitempty" bson:"is_required,omitempty"`
-	Format      Format           `json:"format,omitempty" bson:"format,omitempty"`
-	Value       string           `json:"value,omitempty" bson:"value,omitempty"`
-	IsSecret    bool             `json:"is_secret,omitempty" bson:"is_secret,omitempty"`
-	Default     string           `json:"default,omitempty" bson:"default,omitempty"`
-	Choices     []string         `json:"choices,omitempty" bson:"choices,omitempty"`
-	Template    string           `json:"template,omitempty" bson:"template,omitempty"`
-	Properties  map[string]Input `json:"properties,omitempty" bson:"properties,omitempty"`
+	Description string   `json:"description,omitempty" bson:"description,omitempty"`
+	IsRequired  bool     `json:"is_required,omitempty" bson:"is_required,omitempty"`
+	Format      Format   `json:"format,omitempty" bson:"format,omitempty"`
+	Value       string   `json:"value,omitempty" bson:"value,omitempty"`
+	IsSecret    bool     `json:"is_secret,omitempty" bson:"is_secret,omitempty"`
+	Default     string   `json:"default,omitempty" bson:"default,omitempty"`
+	Choices     []string `json:"choices,omitempty" bson:"choices,omitempty"`
 }
 
 type InputWithVariables struct {
@@ -107,25 +104,25 @@ type Package struct {
 
 // Remote represents a remote connection endpoint
 type Remote struct {
-	TransportType string  `json:"transport_type" bson:"transport_type"`
-	URL           string  `json:"url" bson:"url"`
-	Headers       []Input `json:"headers,omitempty" bson:"headers,omitempty"`
+	TransportType string          `json:"transport_type" bson:"transport_type"`
+	URL           string          `json:"url" bson:"url"`
+	Headers       []KeyValueInput `json:"headers,omitempty" bson:"headers,omitempty"`
 }
 
 // VersionDetail represents the version details of a server
 type VersionDetail struct {
 	Version     string `json:"version" bson:"version"`
-	ReleaseDate string `json:"release_date" bson:"release_date"`
-	IsLatest    bool   `json:"is_latest" bson:"is_latest"`
+	ReleaseDate string `json:"release_date,omitempty" bson:"release_date"`
+	IsLatest    bool   `json:"is_latest,omitempty" bson:"is_latest"`
 }
 
 // Server represents a basic server information as defined in the spec
 type Server struct {
-	ID            string        `json:"id" bson:"id"`
+	ID            string        `json:"id,omitempty" bson:"id"`
 	Name          string        `json:"name" bson:"name"`
 	Description   string        `json:"description" bson:"description"`
 	Status        ServerStatus  `json:"status,omitempty" bson:"status,omitempty"`
-	Repository    Repository    `json:"repository" bson:"repository"`
+	Repository    Repository    `json:"repository,omitempty" bson:"repository"`
 	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
 }
 

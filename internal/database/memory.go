@@ -234,10 +234,13 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetai
 		return ErrInvalidInput
 	}
 
-	// Generate a new ID for the server detail
+	// Always generate a new UUID for the ID
 	serverDetail.ID = uuid.New().String()
 	serverDetail.VersionDetail.IsLatest = true // Assume the new version is the latest
-	serverDetail.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
+	// Only set ReleaseDate if it's not already provided
+	if serverDetail.VersionDetail.ReleaseDate == "" {
+		serverDetail.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
+	}
 	// Store a copy of the entire ServerDetail
 	serverDetailCopy := *serverDetail
 	db.entries[serverDetail.ID] = &serverDetailCopy

@@ -38,7 +38,7 @@ type ServerDetailInput struct {
 
 // ServerDetailOutput represents the server detail response
 type ServerDetailOutput struct {
-	Body model.Server
+	Body model.ServerDetail
 }
 
 // RegisterServersEndpoints registers all server-related endpoints
@@ -99,14 +99,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		}
 
 		resp := &ServerDetailOutput{}
-		resp.Body = model.Server{
-			ID:            serverDetail.ID,
-			Name:          serverDetail.Name,
-			Description:   serverDetail.Description,
-			Status:        serverDetail.Status,
-			Repository:    serverDetail.Repository,
-			VersionDetail: serverDetail.VersionDetail,
-		}
+		resp.Body = *serverDetail
 		return resp, nil
 	})
 }
