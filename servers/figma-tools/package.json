@@ -1,0 +1,28 @@
+{
+  "name": "figma-tools",
+  "description": "A Model Context Protocol (MCP) server for Figma integration",
+  "version": "1.0.0",
+  "author": "DRX-1877",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DRX-1877/figma-mcp-server"
+  },
+  "keywords": ["figma", "mcp", "design", "api", "model-context-protocol"],
+  "engines": {
+    "python": ">=3.10"
+  },
+  "dependencies": {
+    "figma-mcp-tools": "^1.0.0"
+  },
+  "scripts": {
+    "install": "pip install figma-mcp-tools",
+    "start": "figma-mcp-tools"
+  },
+  "mcp": {
+    "command": "figma-mcp-tools",
+    "env": {
+      "FIGMA_ACCESS_TOKEN": "your_token_here"
+    }
+  }
+}

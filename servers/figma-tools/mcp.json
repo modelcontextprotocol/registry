@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "figma-tools": {
+      "command": "figma-mcp-tools",
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
