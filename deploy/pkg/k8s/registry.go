@@ -162,7 +162,8 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				"environment": pulumi.String(environment),
 			},
 			Annotations: pulumi.StringMap{
-				"kubernetes.io/ingress.class": pulumi.String("nginx"),
+				"cert-manager.io/cluster-issuer": pulumi.String("letsencrypt-prod"),
+				"kubernetes.io/ingress.class":    pulumi.String("nginx"),
 			},
 		},
 		Spec: &networkingv1.IngressSpecArgs{
