@@ -17,12 +17,10 @@ type StartAuthInput struct {
 	}
 }
 
-// StartAuthOutput represents the auth flow start response
-type StartAuthOutput struct {
-	Body struct {
-		AuthFlowInfo map[string]string `json:"auth_flow_info" doc:"Authentication flow information"`
-		StatusToken  string            `json:"status_token" doc:"Token to check auth status"`
-	}
+// StartAuthBody represents the auth flow start response body
+type StartAuthBody struct {
+	AuthFlowInfo map[string]string `json:"auth_flow_info" doc:"Authentication flow information"`
+	StatusToken  string            `json:"status_token" doc:"Token to check auth status"`
 }
 
 // CheckAuthStatusInput represents the input for checking auth status
@@ -30,11 +28,9 @@ type CheckAuthStatusInput struct {
 	StatusToken string `path:"token" doc:"Status token from auth flow start"`
 }
 
-// CheckAuthStatusOutput represents the auth status response
-type CheckAuthStatusOutput struct {
-	Body struct {
-		Status string `json:"status" doc:"Authentication status" example:"pending"`
-	}
+// CheckAuthStatusBody represents the auth status response body
+type CheckAuthStatusBody struct {
+	Status string `json:"status" doc:"Authentication status" example:"pending"`
 }
 
 // RegisterAuthEndpoints registers all auth-related endpoints
@@ -47,7 +43,7 @@ func RegisterAuthEndpoints(api huma.API, authService auth.Service) {
 		Summary:     "Start authentication flow",
 		Description: "Start an authentication flow for publishing servers",
 		Tags:        []string{"auth"},
-	}, func(ctx context.Context, input *StartAuthInput) (*StartAuthOutput, error) {
+	}, func(ctx context.Context, input *StartAuthInput) (*Response[StartAuthBody], error) {
 		// Validate required fields
 		if input.Body.Method == "" {
 			return nil, huma.Error400BadRequest("Auth method is required")
@@ -73,10 +69,12 @@ func RegisterAuthEndpoints(api huma.API, authService auth.Service) {
 			return nil, huma.Error500InternalServerError("Failed to start auth flow", err)
 		}
 
-		resp := &StartAuthOutput{}
-		resp.Body.AuthFlowInfo = flowInfo
-		resp.Body.StatusToken = statusToken
-		return resp, nil
+		return &Response[StartAuthBody]{
+			Body: StartAuthBody{
+				AuthFlowInfo: flowInfo,
+				StatusToken:  statusToken,
+			},
+		}, nil
 	})
 
 	// Check auth status endpoint
@@ -87,15 +85,17 @@ func RegisterAuthEndpoints(api huma.API, authService auth.Service) {
 		Summary:     "Check authentication status",
 		Description: "Check the status of an ongoing authentication flow",
 		Tags:        []string{"auth"},
-	}, func(ctx context.Context, input *CheckAuthStatusInput) (*CheckAuthStatusOutput, error) {
+	}, func(ctx context.Context, input *CheckAuthStatusInput) (*Response[CheckAuthStatusBody], error) {
 		// Check the auth status
 		status, err := authService.CheckAuthStatus(ctx, input.StatusToken)
 		if err != nil {
 			return nil, huma.Error404NotFound("Auth flow not found or expired")
 		}
 
-		resp := &CheckAuthStatusOutput{}
-		resp.Body.Status = status
-		return resp, nil
+		return &Response[CheckAuthStatusBody]{
+			Body: CheckAuthStatusBody{
+				Status: status,
+			},
+		}, nil
 	})
 }

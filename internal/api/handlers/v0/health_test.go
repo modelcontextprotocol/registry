@@ -18,7 +18,7 @@ func TestHealthEndpoint(t *testing.T) {
 		name           string
 		config         *config.Config
 		expectedStatus int
-		expectedBody   map[string]interface{}
+		expectedBody   v0.HealthBody
 	}{
 		{
 			name: "returns health status with github client id",
@@ -26,9 +26,9 @@ func TestHealthEndpoint(t *testing.T) {
 				GithubClientID: "test-github-client-id",
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody: map[string]interface{}{
-				"status":           "ok",
-				"github_client_id": "test-github-client-id",
+			expectedBody: v0.HealthBody{
+				Status:         "ok",
+				GitHubClientID: "test-github-client-id",
 			},
 		},
 		{
@@ -37,8 +37,9 @@ func TestHealthEndpoint(t *testing.T) {
 				GithubClientID: "",
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody: map[string]interface{}{
-				"status": "ok",
+			expectedBody: v0.HealthBody{
+				Status:         "ok",
+				GitHubClientID: "",
 			},
 		},
 	}

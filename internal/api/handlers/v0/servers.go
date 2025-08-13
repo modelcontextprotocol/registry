@@ -23,12 +23,10 @@ type ListServersInput struct {
 	Limit  int    `query:"limit" doc:"Number of items per page" default:"30" minimum:"1" maximum:"100"`
 }
 
-// ListServersOutput represents the paginated server list response
-type ListServersOutput struct {
-	Body struct {
-		Servers  []model.Server `json:"servers" doc:"List of MCP servers"`
-		Metadata *Metadata      `json:"metadata,omitempty" doc:"Pagination metadata"`
-	}
+// ListServersBody represents the paginated server list response body
+type ListServersBody struct {
+	Servers  []model.Server `json:"servers" doc:"List of MCP servers"`
+	Metadata *Metadata      `json:"metadata,omitempty" doc:"Pagination metadata"`
 }
 
 // ServerDetailInput represents the input for getting server details
@@ -36,10 +34,6 @@ type ServerDetailInput struct {
 	ID string `path:"id" doc:"Server ID (UUID)" format:"uuid"`
 }
 
-// ServerDetailOutput represents the server detail response
-type ServerDetailOutput struct {
-	Body model.ServerDetail
-}
 
 // RegisterServersEndpoints registers all server-related endpoints
 func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
@@ -51,7 +45,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "List MCP servers",
 		Description: "Get a paginated list of MCP servers from the registry",
 		Tags:        []string{"servers"},
-	}, func(_ context.Context, input *ListServersInput) (*ListServersOutput, error) {
+	}, func(_ context.Context, input *ListServersInput) (*Response[ListServersBody], error) {
 		// Validate cursor if provided
 		if input.Cursor != "" {
 			_, err := uuid.Parse(input.Cursor)
@@ -66,18 +60,22 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get registry list", err)
 		}
 
-		resp := &ListServersOutput{}
-		resp.Body.Servers = servers
+		// Build response body
+		body := ListServersBody{
+			Servers: servers,
+		}
 		
 		// Add metadata if there's a next cursor
 		if nextCursor != "" {
-			resp.Body.Metadata = &Metadata{
+			body.Metadata = &Metadata{
 				NextCursor: nextCursor,
 				Count:      len(servers),
 			}
 		}
 
-		return resp, nil
+		return &Response[ListServersBody]{
+			Body: body,
+		}, nil
 	})
 
 	// Get server details endpoint
@@ -88,7 +86,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "Get MCP server details",
 		Description: "Get detailed information about a specific MCP server",
 		Tags:        []string{"servers"},
-	}, func(_ context.Context, input *ServerDetailInput) (*ServerDetailOutput, error) {
+	}, func(_ context.Context, input *ServerDetailInput) (*Response[model.ServerDetail], error) {
 		// Get the server details from the registry service
 		serverDetail, err := registry.GetByID(input.ID)
 		if err != nil {
@@ -98,8 +96,8 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
 		}
 
-		resp := &ServerDetailOutput{}
-		resp.Body = *serverDetail
-		return resp, nil
+		return &Response[model.ServerDetail]{
+			Body: *serverDetail,
+		}, nil
 	})
 }

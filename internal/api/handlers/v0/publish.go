@@ -17,10 +17,6 @@ type PublishServerInput struct {
 	Body          model.PublishRequest
 }
 
-// PublishServerOutput represents the response after publishing
-type PublishServerOutput struct {
-	Body model.Server
-}
 
 // RegisterPublishEndpoint registers the publish endpoint
 func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, authService auth.Service) {
@@ -34,7 +30,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, aut
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*PublishServerOutput, error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[model.Server], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -86,15 +82,15 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, aut
 		}
 
 		// Create response with the published server data
-		resp := &PublishServerOutput{}
-		resp.Body = model.Server{
-			ID:            serverDetail.ID,
-			Name:          serverDetail.Name,
-			Description:   serverDetail.Description,
-			Status:        serverDetail.Status,
-			Repository:    serverDetail.Repository,
-			VersionDetail: serverDetail.VersionDetail,
-		}
-		return resp, nil
+		return &Response[model.Server]{
+			Body: model.Server{
+				ID:            serverDetail.ID,
+				Name:          serverDetail.Name,
+				Description:   serverDetail.Description,
+				Status:        serverDetail.Status,
+				Repository:    serverDetail.Repository,
+				VersionDetail: serverDetail.VersionDetail,
+			},
+		}, nil
 	})
 }
