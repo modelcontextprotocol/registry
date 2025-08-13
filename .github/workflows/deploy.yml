@@ -1,0 +1,82 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PULUMI_VERSION: "3.188.0"
+  GO_VERSION: "1.24.6"
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@v6
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_STAGING_SERVICE_ACCOUNT_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: mcp-registry-staging
+          install_components: gke-gcloud-auth-plugin
+
+      - name: Deploy to Staging
+        working-directory: ./deploy
+        run: |
+          echo "${{ secrets.PULUMI_STAGING_PASSPHRASE }}" > passphrase.staging.txt
+          make staging-up
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    needs: deploy-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@v6
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: mcp-registry-prod
+          install_components: gke-gcloud-auth-plugin
+
+      - name: Deploy to Production
+        working-directory: ./deploy
+        run: |
+          echo "${{ secrets.PULUMI_PROD_PASSPHRASE }}" > passphrase.prod.txt
+          make prod-up
