@@ -68,10 +68,6 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 
 	// Use the helm chart to get service information after deployment
 	ingressIps := nginxIngress.Resources.ApplyT(func(resources interface{}) interface{} {
-		if ctx.DryRun() {
-			return []string{} // Return empty array on error during preview
-		}
-
 		// Look up the service after the chart is ready
 		svc, err := v1.GetService(
 			ctx,
