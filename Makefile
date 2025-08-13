@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-local dev-compose clean publisher
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-local dev-compose clean publisher swagger
 
 # Default target
 help: ## Show this help message
@@ -6,11 +6,14 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
 # Build targets
-build: ## Build the registry application
+build: swagger ## Build the registry application
 	go build -o bin/registry ./cmd/registry
 
 publisher: ## Build the publisher tool
 	cd tools/publisher && ./build.sh
+
+swagger: ## Generate Swagger documentation
+	$(shell go env GOPATH)/bin/swag init -g cmd/registry/main.go -o internal/docs --parseDependency --parseInternal
 
 # Test targets
 test-unit: ## Run unit tests with coverage

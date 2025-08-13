@@ -25,6 +25,19 @@ type Metadata struct {
 }
 
 // ServersHandler returns a handler for listing registry items
+//
+//	@Summary		List MCP servers
+//	@Description	Get a paginated list of MCP servers from the registry
+//	@Tags			servers
+//	@Accept			json
+//	@Produce		json
+//	@Param			cursor	query		string	false	"Pagination cursor (UUID)"
+//	@Param			limit	query		int		false	"Number of items per page (default: 30)"
+//	@Success		200		{object}	PaginatedResponse
+//	@Failure		400		{string}	string	"Invalid cursor parameter"
+//	@Failure		405		{string}	string	"Method not allowed"
+//	@Failure		500		{string}	string	"Failed to get registry list"
+//	@Router			/servers [get]
 func ServersHandler(registry service.RegistryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -93,6 +106,19 @@ func ServersHandler(registry service.RegistryService) http.HandlerFunc {
 }
 
 // ServersDetailHandler returns a handler for getting details of a specific server by ID
+//
+//	@Summary		Get MCP server details
+//	@Description	Get detailed information about a specific MCP server
+//	@Tags			servers
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		string	true	"Server ID (UUID)"
+//	@Success		200	{object}	model.Server
+//	@Failure		400	{string}	string	"Invalid server ID format"
+//	@Failure		404	{string}	string	"Server not found"
+//	@Failure		405	{string}	string	"Method not allowed"
+//	@Failure		500	{string}	string	"Failed to get server details"
+//	@Router			/servers/{id} [get]
 func ServersDetailHandler(registry service.RegistryService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

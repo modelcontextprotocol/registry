@@ -14,6 +14,14 @@ type HealthResponse struct {
 }
 
 // HealthHandler returns a handler for health check endpoint
+//
+//	@Summary		Health check
+//	@Description	Check the health status of the API
+//	@Tags			health
+//	@Produce		json
+//	@Success		200	{object}	HealthResponse
+//	@Failure		500	{string}	string	"Failed to encode response"
+//	@Router			/health [get]
 func HealthHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

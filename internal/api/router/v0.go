@@ -22,6 +22,5 @@ func RegisterV0Routes(
 	mux.HandleFunc("/v0/publish", v0.PublishHandler(registry, authService))
 
 	// Register Swagger UI routes
-	mux.HandleFunc("/v0/swagger/", v0.SwaggerHandler())
-	mux.HandleFunc("/v0/swagger/doc.json", v0.SwaggerJSONHandler())
+	mux.Handle("/v0/swagger/", v0.SwaggerHandler())
 }

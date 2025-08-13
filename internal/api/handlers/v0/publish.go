@@ -16,6 +16,22 @@ import (
 )
 
 // PublishHandler handles requests to publish new server details to the registry
+//
+//	@Summary		Publish MCP server
+//	@Description	Publish a new MCP server to the registry or update an existing one
+//	@Tags			publish
+//	@Accept			json
+//	@Produce		json
+//	@Param			Authorization	header		string				true	"Bearer token"
+//	@Param			server			body		model.PublishRequest	true	"Server details"
+//	@Success		200				{object}	model.Server
+//	@Failure		400				{string}	string	"Invalid request payload"
+//	@Failure		401				{string}	string	"Unauthorized"
+//	@Failure		403				{string}	string	"Forbidden"
+//	@Failure		405				{string}	string	"Method not allowed"
+//	@Failure		500				{string}	string	"Failed to publish server"
+//	@Security		Bearer
+//	@Router			/publish [post]
 func PublishHandler(registry service.RegistryService, authService auth.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Only allow POST method

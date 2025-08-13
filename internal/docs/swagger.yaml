@@ -1,534 +1,400 @@
-openapi: 3.0.0
+basePath: /v0
+definitions:
+  github_com_modelcontextprotocol_registry_internal_model.Argument:
+    properties:
+      choices:
+        items:
+          type: string
+        type: array
+      default:
+        type: string
+      description:
+        type: string
+      format:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Format'
+      is_repeated:
+        type: boolean
+      is_required:
+        type: boolean
+      is_secret:
+        type: boolean
+      name:
+        type: string
+      properties:
+        additionalProperties:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Input'
+        type: object
+      template:
+        type: string
+      type:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.ArgumentType'
+      value:
+        type: string
+      value_hint:
+        type: string
+      variables:
+        additionalProperties:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Input'
+        type: object
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.ArgumentType:
+    enum:
+    - positional
+    - named
+    type: string
+    x-enum-varnames:
+    - ArgumentTypePositional
+    - ArgumentTypeNamed
+  github_com_modelcontextprotocol_registry_internal_model.Format:
+    enum:
+    - string
+    - number
+    - boolean
+    - file_path
+    type: string
+    x-enum-varnames:
+    - FormatString
+    - FormatNumber
+    - FormatBoolean
+    - FormatFilePath
+  github_com_modelcontextprotocol_registry_internal_model.Input:
+    properties:
+      choices:
+        items:
+          type: string
+        type: array
+      default:
+        type: string
+      description:
+        type: string
+      format:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Format'
+      is_required:
+        type: boolean
+      is_secret:
+        type: boolean
+      properties:
+        additionalProperties:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Input'
+        type: object
+      template:
+        type: string
+      value:
+        type: string
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.KeyValueInput:
+    properties:
+      choices:
+        items:
+          type: string
+        type: array
+      default:
+        type: string
+      description:
+        type: string
+      format:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Format'
+      is_required:
+        type: boolean
+      is_secret:
+        type: boolean
+      name:
+        type: string
+      properties:
+        additionalProperties:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Input'
+        type: object
+      template:
+        type: string
+      value:
+        type: string
+      variables:
+        additionalProperties:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Input'
+        type: object
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.Package:
+    properties:
+      environment_variables:
+        items:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.KeyValueInput'
+        type: array
+      name:
+        type: string
+      package_arguments:
+        items:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Argument'
+        type: array
+      registry_name:
+        type: string
+      runtime_arguments:
+        items:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Argument'
+        type: array
+      runtime_hint:
+        type: string
+      version:
+        type: string
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.PublishRequest:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      packages:
+        items:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Package'
+        type: array
+      remotes:
+        items:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Remote'
+        type: array
+      repository:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Repository'
+      status:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.ServerStatus'
+      version_detail:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.VersionDetail'
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.Remote:
+    properties:
+      headers:
+        items:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Input'
+        type: array
+      transport_type:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.Repository:
+    properties:
+      id:
+        type: string
+      source:
+        type: string
+      url:
+        type: string
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.Server:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      repository:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Repository'
+      status:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.ServerStatus'
+      version_detail:
+        $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.VersionDetail'
+    type: object
+  github_com_modelcontextprotocol_registry_internal_model.ServerStatus:
+    enum:
+    - active
+    - deprecated
+    type: string
+    x-enum-varnames:
+    - ServerStatusActive
+    - ServerStatusDeprecated
+  github_com_modelcontextprotocol_registry_internal_model.VersionDetail:
+    properties:
+      is_latest:
+        type: boolean
+      release_date:
+        type: string
+      version:
+        type: string
+    type: object
+  internal_api_handlers_v0.HealthResponse:
+    properties:
+      github_client_id:
+        type: string
+      status:
+        type: string
+    type: object
+  internal_api_handlers_v0.Metadata:
+    properties:
+      count:
+        type: integer
+      next_cursor:
+        type: string
+      total:
+        type: integer
+    type: object
+  internal_api_handlers_v0.PaginatedResponse:
+    properties:
+      metadata:
+        $ref: '#/definitions/internal_api_handlers_v0.Metadata'
+      servers:
+        items:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Server'
+        type: array
+    type: object
+host: localhost:8080
 info:
-  title: Model Context Protocol Registry API
-  description: API for the Model Context Protocol Registry
-  version: "0.1.0"
-  
-servers:
-  - url: /
-    description: Default server
-
-tags:
-  - name: health
-    description: Health checking operations
-  - name: servers
-    description: Server registry operations
-
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: A community driven registry service for Model Context Protocol (MCP)
+    servers.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: MCP Registry API
+  version: "1.0"
 paths:
-  /v0/health:
+  /health:
     get:
-      tags:
-        - health
-      summary: Health check endpoint
-      description: Returns the health status of the API
-      operationId: healthCheck
+      description: Check the health status of the API
+      produces:
+      - application/json
       responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  github_client_id:
-                      type: string
-                      example: "your_github_client_id"
-  /v0/ping:
-    get:
-      tags:
-        - health
-      summary: API version check
-      description: Returns the API version and status
-      operationId: pingCheck
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  version:
-                    type: string
-                    example: "0.1.0"
-        '405':
-          description: Method not allowed
-          
-  /v0/servers:
-    get:
-      tags:
-        - servers
-      summary: List registered servers
-      description: Returns a paginated list of registered servers
-      operationId: listServers
-      parameters:
-        - name: cursor
-          in: query
-          description: Pagination cursor (UUID)
-          required: false
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api_handlers_v0.HealthResponse'
+        "500":
+          description: Failed to encode response
           schema:
             type: string
-            format: uuid
-        - name: limit
-          in: query
-          description: Maximum number of items to return (1-100, default 30)
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 30
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  servers:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Server'
-                  metadata:
-                    $ref: '#/components/schemas/PaginationMetadata'
-              example:
-                servers:
-                  - id: "123e4567-e89b-12d3-a456-426614174000"
-                    name: "io.github.modelcontextprotocol/filesystem"
-                    description: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-                    status: "active"
-                    repository:
-                      url: "https://github.com/modelcontextprotocol/servers"
-                      source: "github"
-                      id: "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
-                    version_detail:
-                      version: "1.0.2"
-                      release_date: "2023-06-15T10:30:00Z"
-                      is_latest: true
-                    created_at: "2025-05-17T17:34:22.912Z"
-                    updated_at: "2025-05-17T17:34:22.912Z"
-                metadata:
-                  next_cursor: "123e4567-e89b-12d3-a456-426614174000"
-                  count: 30
-        '400':
-          description: Invalid cursor or limit parameter
-        '405':
-          description: Method not allowed
-          
-  /v0/publish:
+      summary: Health check
+      tags:
+      - health
+  /publish:
     post:
-      tags:
-        - servers
-      summary: Publish a server to the registry
-      description: Adds a new server to the MCP registry with authentication
-      operationId: publishServer
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                server_detail:
-                  $ref: '#/components/schemas/ServerDetail'
-                repo_ref:
-                  type: string
-                  description: Repository reference used for authentication (defaults to server name if not provided)
-            example:
-              server_detail:
-                description: "<your description here>"
-                name: "io.github.<owner>/<server-name>"
-                packages:
-                  - registry_name: "npm"
-                    name: "@<owner>/<server-name>"
-                    version: "0.2.23"
-                    package_arguments:
-                      - description: "Specify services and permissions."
-                        is_required: true
-                        format: "string"
-                        value: "-s"
-                        default: "-s"
-                        type: "positional"
-                        value_hint: "-s"
-                    environment_variables:
-                      - description: "API Key to access the server"
-                        name: "API_KEY"
-                  - registry_name: "docker"
-                    name: "@<owner>/<server-name>-cli"
-                    version: "0.123.223"
-                    runtime_hint: "docker"
-                    runtime_arguments:
-                      - description: "Specify services and permissions."
-                        is_required: true
-                        format: "string"
-                        value: "--mount"
-                        default: "--mount"
-                        type: "positional"
-                        value_hint: "--mount"
-                    environment_variables:
-                      - description: "API Key to access the server"
-                        name: "API_KEY"
-                repository:
-                  url: "https://github.com/<owner>/<server-name>"
-                  source: "github"
-                version_detail:
-                  version: "0.0.1-<publisher_version>"
-              repo_ref: "optional-repository-reference"
-      responses:
-        '201':
-          description: Server published successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Server publication successful
-                  id:
-                    type: string
-                    example: 1234567890abcdef12345678
-        '400':
-          description: Invalid request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Name is required
-        '401':
-          description: Authentication failed
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Authentication is required for publishing
-        '405':
-          description: Method not allowed
-        '500':
-          description: Server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Failed to publish server details
-                    
-  /v0/servers/{id}:
-    get:
-      tags:
-        - servers
-      summary: Get server details
-      description: Returns details of a specific server by ID
-      operationId: getServerDetails
+      consumes:
+      - application/json
+      description: Publish a new MCP server to the registry or update an existing
+        one
       parameters:
-        - name: id
-          in: path
-          description: Server ID (UUID)
-          required: true
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Server details
+        in: body
+        name: server
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.PublishRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Server'
+        "400":
+          description: Invalid request payload
           schema:
             type: string
-            format: uuid
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServerDetail'
-              example:
-                id: "01129bff-3d65-4e3d-8e82-6f2f269f818c"
-                name: "io.github.gongrzhe/redis-mcp-server"
-                description: "A Redis MCP server implementation for interacting with Redis databases. This server enables LLMs to interact with Redis key-value stores through a set of standardized tools."
-                status: "active"
-                repository:
-                  url: "https://github.com/GongRzhe/REDIS-MCP-Server"
-                  source: "github"
-                  id: "907849235"
-                version_detail:
-                  version: "0.0.1-seed"
-                  release_date: "2025-05-16T19:13:21Z"
-                  is_latest: true
-                created_at: "2025-05-17T17:34:22.912Z"
-                updated_at: "2025-05-17T17:34:22.912Z"
-                packages:
-                  - registry_name: "docker"
-                    name: "@gongrzhe/server-redis-mcp"
-                    version: "1.0.0"
-                    package_arguments:
-                      - description: "Docker image to run"
-                        is_required: true
-                        format: "string"
-                        value: "mcp/redis"
-                        default: "mcp/redis"
-                        type: "positional"
-                        value_hint: "mcp/redis"
-                      - description: "Redis server connection string"
-                        is_required: true
-                        format: "string"
-                        value: "redis://host.docker.internal:6379"
-                        default: "redis://host.docker.internal:6379"
-                        type: "positional"
-                        value_hint: "host.docker.internal:6379"
-        '400':
-          description: Invalid ID format
-        '404':
-          description: Server not found
-        '405':
-          description: Method not allowed
-
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\""
-  
-  schemas:
-    Server:
-      type: object
-      required:
-        - name
-        - description
-        - version_detail
-      properties:
-        id:
-          type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        name:
-          type: string
-          description: "Server name/identifier"
-          example: "io.github.modelcontextprotocol/filesystem"
-        description:
-          type: string
-          description: "Human-readable description of the server's functionality"
-          example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-        status:
-          type: string
-          enum: [active, deprecated]
-          default: active
-          description: "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage."
-          example: "active"
-        repository:
-          $ref: '#/components/schemas/Repository'
-        version_detail:
-          $ref: '#/components/schemas/VersionDetail'
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-          
-    PaginationMetadata:
-      type: object
-      properties:
-        next_cursor:
-          type: string
-          format: uuid
-          example: "123e4567-e89b-12d3-a456-426614174000"
-        count:
-          type: integer
-          example: 30
-    
-    Repository:
-      type: object
-      required:
-        - url
-        - source
-        - id
-      properties:
-        url:
-          type: string
-          format: uri
-          example: "https://github.com/modelcontextprotocol/servers"
-        source:
-          type: string
-          example: "github"
-        id:
-          type: string
-          example: "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
-    
-    VersionDetail:
-      type: object
-      required:
-        - version
-        - release_date
-        - is_latest
-      properties:
-        version:
-          type: string
-          example: "1.0.2"
-          description: Equivalent of Implementation.version in MCP specification.
-        release_date:
-          type: string
-          format: date-time
-          example: "2023-06-15T10:30:00Z"
-          description: Datetime that the MCP server version was published to the registry.
-        is_latest:
-          type: boolean
-          example: true
-          description: Whether the MCP server version is the latest version available in the registry.
-    
-    ServerDetail:
-      description: Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.
-      allOf:
-        - $ref: '#/components/schemas/Server'
-        - type: object
-          properties:
-            packages:
-              type: array
-              items:
-                $ref: '#/components/schemas/Package'
-            remotes:
-              type: array
-              items:
-                $ref: '#/components/schemas/Remote'
-
-    Package:
-      type: object
-      required:
-        - registry_name
-        - name
-        - version
-      properties:
-        registry_name:
-          type: string
-          description: Package registry type
-          example: "npm"
-        name:
-          type: string
-          description: Package name in the registry
-          example: "io.modelcontextprotocol/filesystem"
-        version:
-          type: string
-          description: Package version
-          example: "1.0.2"
-        runtime_hint:
-          type: string
-          description: A hint to help clients determine the appropriate runtime for the package
-          example: "docker"
-        runtime_arguments:
-          type: array
-          description: A list of arguments to be passed to the package's runtime command
-          items:
-            $ref: '#/components/schemas/Argument'
-        package_arguments:
-          type: array
-          description: A list of arguments to be passed to the package's binary
-          items:
-            $ref: '#/components/schemas/Argument'
-        environment_variables:
-          type: array
-          description: Environment variables to be set when running the package
-          items:
-            $ref: '#/components/schemas/KeyValueInput'
-    
-    Input:
-      type: object
-      properties:
-        description:
-          description: A description of the input
-          type: string
-        is_required:
-          type: boolean
-          default: false
-        format:
-          type: string
-          enum: [string, number, boolean, filepath]
-          default: string
-        value:
-          type: string
-        is_secret:
-          type: boolean
-          default: false
-        default:
-          type: string
-        choices:
-          type: array
-          items:
+        "401":
+          description: Unauthorized
+          schema:
             type: string
-    
-    InputWithVariables:
-      allOf:
-        - $ref: '#/components/schemas/Input'
-        - type: object
-          properties:
-            variables:
-              type: object
-              additionalProperties:
-                $ref: '#/components/schemas/Input'
-    
-    KeyValueInput:
-      allOf:
-        - $ref: '#/components/schemas/InputWithVariables'
-        - type: object
-          required:
-            - name
-          properties:
-            name:
-              type: string
-              description: Name of the header or environment variable
-              example: "API_KEY"
-    
-    Argument:
-      allOf:
-        - $ref: '#/components/schemas/InputWithVariables'
-        - type: object
-          required:
-            - type
-          properties:
-            type:
-              type: string
-              enum: [positional, named]
-              example: "positional"
-            name:
-              type: string
-              description: The flag name (for named arguments)
-              example: "--port"
-            is_repeated:
-              type: boolean
-              default: false
-            value_hint:
-              type: string
-              example: "file_path"
-    
-    Remote:
-      type: object
-      required:
-        - transport_type
-        - url
-      properties:
-        transport_type:
-          type: string
-          enum: [streamable, sse]
-          description: Transport protocol type
-          example: "sse"
-        url:
-          type: string
-          format: uri
-          description: Remote server URL
-          example: "https://mcp-fs.example.com/sse"
-        headers:
-          type: array
-          description: HTTP headers to include
-          items:
-            $ref: '#/components/schemas/KeyValueInput'
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Failed to publish server
+          schema:
+            type: string
+      security:
+      - Bearer: []
+      summary: Publish MCP server
+      tags:
+      - publish
+  /servers:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of MCP servers from the registry
+      parameters:
+      - description: Pagination cursor (UUID)
+        in: query
+        name: cursor
+        type: string
+      - description: 'Number of items per page (default: 30)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api_handlers_v0.PaginatedResponse'
+        "400":
+          description: Invalid cursor parameter
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Failed to get registry list
+          schema:
+            type: string
+      summary: List MCP servers
+      tags:
+      - servers
+  /servers/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific MCP server
+      parameters:
+      - description: Server ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_modelcontextprotocol_registry_internal_model.Server'
+        "400":
+          description: Invalid server ID format
+          schema:
+            type: string
+        "404":
+          description: Server not found
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Failed to get server details
+          schema:
+            type: string
+      summary: Get MCP server details
+      tags:
+      - servers
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and GitHub token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
