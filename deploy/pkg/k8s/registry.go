@@ -203,7 +203,13 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		return nil, err
 	}
 
-	ctx.Export("ingressHost", ingress.Spec.Rules().Index(pulumi.Int(0)).Host())
+	ctx.Export("ingressHosts", ingress.Spec.Rules().ApplyT(func(rules []networkingv1.IngressRule) []string {
+		hosts := make([]string, 0, len(rules))
+		for _, rule := range rules {
+			hosts = append(hosts, *rule.Host)
+		}
+		return hosts
+	}))
 
 	return service, nil
 }
