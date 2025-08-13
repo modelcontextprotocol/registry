@@ -197,7 +197,7 @@ Publishing requires GitHub OAuth validation:
 ### API Documentation
 
 ```
-GET /v0/swagger/index.html
+GET /docs
 ```
 
 The API is documented using Swagger/OpenAPI. This page provides a complete reference of all endpoints with request/response schemas and examples, and allows you to test the API directly from your browser.

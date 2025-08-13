@@ -1,29 +1,31 @@
-// Package v0 contains API handlers for version 0 of the API
 package v0
 
 import (
-	"encoding/json"
+	"context"
 	"net/http"
 
-	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/danielgtaylor/huma/v2"
 )
 
-// PingHandler returns a handler for the ping endpoint that returns build version
-func PingHandler(cfg *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		response := map[string]string{
-			"status":  "ok",
-			"version": cfg.Version,
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(response); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		}
+// PingOutput represents the ping response
+type PingOutput struct {
+	Body struct {
+		Pong bool `json:"pong" example:"true" doc:"Ping response"`
 	}
+}
+
+// RegisterPingEndpoint registers the ping endpoint
+func RegisterPingEndpoint(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "ping",
+		Method:      http.MethodGet,
+		Path:        "/v0/ping",
+		Summary:     "Ping",
+		Description: "Simple ping endpoint",
+		Tags:        []string{"ping"},
+	}, func(_ context.Context, _ *struct{}) (*PingOutput, error) {
+		resp := &PingOutput{}
+		resp.Body.Pong = true
+		return resp, nil
+	})
 }

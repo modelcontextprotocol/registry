@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
@@ -17,20 +18,21 @@ type Server struct {
 	config      *config.Config
 	registry    service.RegistryService
 	authService auth.Service
-	router      *http.ServeMux
+	humaAPI     huma.API
 	server      *http.Server
 }
 
 // NewServer creates a new HTTP server
 func NewServer(cfg *config.Config, registryService service.RegistryService, authService auth.Service) *Server {
-	// Create router with all API versions registered
-	mux := router.New(cfg, registryService, authService)
+	// Create HTTP mux and Huma API
+	mux := http.NewServeMux()
+	api := router.NewHumaAPI(cfg, registryService, authService, mux)
 
 	server := &Server{
 		config:      cfg,
 		registry:    registryService,
 		authService: authService,
-		router:      mux,
+		humaAPI:     api,
 		server: &http.Server{
 			Addr:              cfg.ServerAddress,
 			Handler:           mux,

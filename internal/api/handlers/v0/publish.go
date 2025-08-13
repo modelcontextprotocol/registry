@@ -1,149 +1,104 @@
-// Package v0 contains API handlers for version 0 of the API
 package v0
 
 import (
-	"encoding/json"
-	"errors"
-	"io"
+	"context"
 	"net/http"
 	"strings"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/modelcontextprotocol/registry/internal/auth"
-	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
-	"golang.org/x/net/html"
 )
 
-// PublishHandler handles requests to publish new server details to the registry
-//
-//	@Summary		Publish MCP server
-//	@Description	Publish a new MCP server to the registry or update an existing one
-//	@Tags			publish
-//	@Accept			json
-//	@Produce		json
-//	@Param			Authorization	header		string				true	"Bearer token"
-//	@Param			server			body		model.PublishRequest	true	"Server details"
-//	@Success		200				{object}	model.Server
-//	@Failure		400				{string}	string	"Invalid request payload"
-//	@Failure		401				{string}	string	"Unauthorized"
-//	@Failure		403				{string}	string	"Forbidden"
-//	@Failure		405				{string}	string	"Method not allowed"
-//	@Failure		500				{string}	string	"Failed to publish server"
-//	@Security		Bearer
-//	@Router			/publish [post]
-func PublishHandler(registry service.RegistryService, authService auth.Service) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Only allow POST method
-		if r.Method != http.MethodPost {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
+// PublishServerInput represents the input for publishing a server
+type PublishServerInput struct {
+	Authorization string `header:"Authorization" doc:"GitHub OAuth token" required:"true"`
+	Body          model.PublishRequest
+}
 
-		// Read the request body
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Error reading request body", http.StatusBadRequest)
-			return
-		}
-		defer r.Body.Close()
+// PublishServerOutput represents the response after publishing
+type PublishServerOutput struct {
+	Body model.Server
+}
 
-		// Parse request body into PublishRequest struct
-		var publishReq model.PublishRequest
-		err = json.Unmarshal(body, &publishReq)
-		if err != nil {
-			http.Error(w, "Invalid request payload: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		// Get server details from the request
-		var serverDetail model.ServerDetail
-
-		err = json.Unmarshal(body, &serverDetail)
-		if err != nil {
-			http.Error(w, "Invalid server detail payload: "+err.Error(), http.StatusBadRequest)
-			return
-		}
-		// Validate required fields
-		if serverDetail.Name == "" {
-			http.Error(w, "Name is required", http.StatusBadRequest)
-			return
-		}
-
-		// Version is required
-		if serverDetail.VersionDetail.Version == "" {
-			http.Error(w, "Version is required", http.StatusBadRequest)
-			return
-		}
-
-		// Get auth token from Authorization header
-		authHeader := r.Header.Get("Authorization")
+// RegisterPublishEndpoint registers the publish endpoint
+func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, authService auth.Service) {
+	huma.Register(api, huma.Operation{
+		OperationID: "publish-server",
+		Method:      http.MethodPost,
+		Path:        "/v0/publish",
+		Summary:     "Publish MCP server",
+		Description: "Publish a new MCP server to the registry or update an existing one",
+		Tags:        []string{"publish"},
+		Security: []map[string][]string{
+			{"bearer": {}},
+		},
+	}, func(ctx context.Context, input *PublishServerInput) (*PublishServerOutput, error) {
+		// Extract bearer token
+		authHeader := input.Authorization
 		if authHeader == "" {
-			http.Error(w, "Authorization header is required", http.StatusUnauthorized)
-			return
+			return nil, huma.Error401Unauthorized("Authorization header is required")
 		}
 
-		// Handle bearer token format (e.g., "Bearer xyz123")
-		token := authHeader
-		if len(authHeader) > 7 && strings.ToUpper(authHeader[:7]) == "BEARER " {
-			token = authHeader[7:]
+		const bearerPrefix = "Bearer "
+		if len(authHeader) < len(bearerPrefix) || authHeader[:len(bearerPrefix)] != bearerPrefix {
+			return nil, huma.Error401Unauthorized("Invalid Authorization header format. Expected 'Bearer <token>'")
+		}
+		token := authHeader[len(bearerPrefix):]
+
+		// Convert PublishRequest body to ServerDetail
+		serverDetail := input.Body.ServerDetail
+
+		// Huma handles validation automatically based on struct tags
+		// But we can add custom validation if needed
+		if serverDetail.Name == "" {
+			return nil, huma.Error400BadRequest("Name is required")
+		}
+		if serverDetail.VersionDetail.Version == "" {
+			return nil, huma.Error400BadRequest("Version is required")
 		}
 
 		// Determine authentication method based on server name prefix
 		var authMethod model.AuthMethod
-		switch {
-		case strings.HasPrefix(serverDetail.Name, "io.github"):
+		if strings.HasPrefix(serverDetail.Name, "io.github") {
 			authMethod = model.AuthMethodGitHub
-		// Additional cases can be added here for other prefixes
-		default:
-			// Keep the default auth method as AuthMethodNone
+		} else {
 			authMethod = model.AuthMethodNone
 		}
-
-		serverName := html.EscapeString(serverDetail.Name)
 
 		// Setup authentication info
 		a := model.Authentication{
 			Method:  authMethod,
 			Token:   token,
-			RepoRef: serverName,
+			RepoRef: serverDetail.Name,
 		}
 
-		valid, err := authService.ValidateAuth(r.Context(), a)
+		// Validate authentication
+		valid, err := authService.ValidateAuth(ctx, a)
 		if err != nil {
-			if errors.Is(err, auth.ErrAuthRequired) {
-				http.Error(w, "Authentication is required for publishing", http.StatusUnauthorized)
-				return
-			}
-			http.Error(w, "Authentication failed: "+err.Error(), http.StatusUnauthorized)
-			return
+			return nil, huma.Error401Unauthorized("Authentication failed", err)
 		}
-
 		if !valid {
-			http.Error(w, "Invalid authentication credentials", http.StatusUnauthorized)
-			return
+			return nil, huma.Error401Unauthorized("Invalid authentication credentials")
 		}
 
-		// Call the publish method on the registry service
+		// Publish the server details
 		err = registry.Publish(&serverDetail)
 		if err != nil {
-			// Check for specific error types and return appropriate HTTP status codes
-			if errors.Is(err, database.ErrInvalidVersion) || errors.Is(err, database.ErrAlreadyExists) {
-				http.Error(w, "Failed to publish server details: "+err.Error(), http.StatusBadRequest)
-				return
-			}
-			http.Error(w, "Failed to publish server details: "+err.Error(), http.StatusInternalServerError)
-			return
+			return nil, huma.Error500InternalServerError("Failed to publish server", err)
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		if err := json.NewEncoder(w).Encode(map[string]string{
-			"message": "Server publication successful",
-			"id":      serverDetail.ID,
-		}); err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-			return
+		// Create response with the published server data
+		resp := &PublishServerOutput{}
+		resp.Body = model.Server{
+			ID:            serverDetail.ID,
+			Name:          serverDetail.Name,
+			Description:   serverDetail.Description,
+			Status:        serverDetail.Status,
+			Repository:    serverDetail.Repository,
+			VersionDetail: serverDetail.VersionDetail,
 		}
-	}
+		return resp, nil
+	})
 }

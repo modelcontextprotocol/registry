@@ -8,7 +8,6 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /build/registry .
 COPY --from=builder /app/data/seed.json /app/data/seed.json
-COPY --from=builder /app/internal/docs/swagger.yaml /app/internal/docs/swagger.yaml
 
 # Create a non-privileged user that the app will run under.
 # See https://docs.docker.com/go/dockerfile-user-best-practices/
