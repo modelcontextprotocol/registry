@@ -98,15 +98,15 @@ func TestPublishIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, response.ID, "Server ID should be generated")
-		assert.Equal(t, publishReq.ServerDetail.Name, response.Name)
-		assert.Equal(t, publishReq.ServerDetail.Description, response.Description)
+		assert.Equal(t, publishReq.Name, response.Name)
+		assert.Equal(t, publishReq.Description, response.Description)
 
 		// Verify the server was actually published by retrieving it
 		publishedServer, err := registryService.GetByID(response.ID)
 		require.NoError(t, err)
-		assert.Equal(t, publishReq.ServerDetail.Name, publishedServer.Name)
-		assert.Equal(t, publishReq.ServerDetail.Description, publishedServer.Description)
-		assert.Equal(t, publishReq.ServerDetail.VersionDetail.Version, publishedServer.VersionDetail.Version)
+		assert.Equal(t, publishReq.Name, publishedServer.Name)
+		assert.Equal(t, publishReq.Description, publishedServer.Description)
+		assert.Equal(t, publishReq.VersionDetail.Version, publishedServer.VersionDetail.Version)
 		assert.Len(t, publishedServer.Packages, 1)
 		assert.Len(t, publishedServer.Remotes, 1)
 	})
@@ -326,8 +326,8 @@ func TestPublishIntegration(t *testing.T) {
 		// Verify that only the first server was actually stored
 		retrievedServer, err := registryService.GetByID(firstServerID)
 		require.NoError(t, err)
-		assert.Equal(t, firstServerDetail.ServerDetail.Name, retrievedServer.Name)
-		assert.Equal(t, firstServerDetail.ServerDetail.Description, retrievedServer.Description)
+		assert.Equal(t, firstServerDetail.Name, retrievedServer.Name)
+		assert.Equal(t, firstServerDetail.Description, retrievedServer.Description)
 	})
 
 	t.Run("publish succeeds with same name but different version", func(t *testing.T) {
@@ -551,15 +551,15 @@ func TestPublishIntegrationEndToEnd(t *testing.T) {
 		// Step 4: Verify the server can be retrieved by ID
 		retrievedServer, err := registryService.GetByID(serverID)
 		require.NoError(t, err)
-		assert.Equal(t, publishReq.ServerDetail.Name, retrievedServer.Name)
-		assert.Equal(t, publishReq.ServerDetail.Description, retrievedServer.Description)
+		assert.Equal(t, publishReq.Name, retrievedServer.Name)
+		assert.Equal(t, publishReq.Description, retrievedServer.Description)
 
 		// Step 5: Verify the server appears in the list
 		found := false
 		for _, server := range updatedServers {
 			if server.ID == serverID {
 				found = true
-				assert.Equal(t, publishReq.ServerDetail.Name, server.Name)
+				assert.Equal(t, publishReq.Name, server.Name)
 				break
 			}
 		}

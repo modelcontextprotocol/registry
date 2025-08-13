@@ -138,7 +138,7 @@ func TestPublishEndpoint(t *testing.T) {
 			name:           "missing authorization header",
 			requestBody:    model.PublishRequest{},
 			authHeader:     "",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusUnprocessableEntity,
 			expectedError:  "required header parameter is missing",
 		},
@@ -146,7 +146,7 @@ func TestPublishEndpoint(t *testing.T) {
 			name:           "invalid authorization header format",
 			requestBody:    model.PublishRequest{},
 			authHeader:     "InvalidFormat",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Invalid Authorization header format",
 		},
@@ -167,7 +167,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			authHeader:     "Bearer token",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Name is required",
 		},
@@ -188,7 +188,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			authHeader:     "Bearer token",
-			setupMocks:     func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Version is required",
 		},
@@ -209,7 +209,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			authHeader: "Bearer token",
-			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
+			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
 				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, auth.ErrAuthRequired)
 			},
 			expectedStatus: http.StatusUnauthorized,
@@ -232,7 +232,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			authHeader: "Bearer invalid_token",
-			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
+			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
 				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, nil)
 			},
 			expectedStatus: http.StatusUnauthorized,
@@ -266,7 +266,7 @@ func TestPublishEndpoint(t *testing.T) {
 			name: "method not allowed",
 			requestBody: nil,
 			authHeader: "",
-			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {},
+			setupMocks: func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusMethodNotAllowed,
 			expectedError: "Method Not Allowed",
 		},
@@ -366,7 +366,7 @@ func TestPublishEndpoint(t *testing.T) {
 			if tc.name == "method not allowed" {
 				method = http.MethodGet
 			}
-			req, err := http.NewRequest(method, "/v0/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(context.Background(), method, "/v0/publish", bytes.NewBuffer(requestBody))
 			assert.NoError(t, err)
 			if method == http.MethodPost {
 				req.Header.Set("Content-Type", "application/json")
@@ -454,7 +454,7 @@ func TestPublishEndpointBearerTokenParsing(t *testing.T) {
 			requestBody, err := json.Marshal(serverDetail)
 			assert.NoError(t, err)
 
-			req, err := http.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/v0/publish", bytes.NewBuffer(requestBody))
 			assert.NoError(t, err)
 			req.Header.Set("Authorization", tc.authHeader)
 			req.Header.Set("Content-Type", "application/json")
@@ -524,7 +524,7 @@ func TestPublishEndpointAuthMethodSelection(t *testing.T) {
 			requestBody, err := json.Marshal(serverDetail)
 			assert.NoError(t, err)
 
-			req, err := http.NewRequest(http.MethodPost, "/v0/publish", bytes.NewBuffer(requestBody))
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/v0/publish", bytes.NewBuffer(requestBody))
 			assert.NoError(t, err)
 			req.Header.Set("Authorization", "Bearer test_token")
 			req.Header.Set("Content-Type", "application/json")
