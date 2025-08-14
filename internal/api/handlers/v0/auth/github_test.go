@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/ed25519"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -45,8 +46,9 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 	defer githubServer.Close()
 
 	// Create test handler with mock config
+	_, testPrivateKey, _ := ed25519.GenerateKey(nil)
 	cfg := &config.Config{
-		JWTSecretKey: "test-secret-key-for-testing-only",
+		JWTSecretKey: string(testPrivateKey),
 	}
 	handler := NewGitHubHandler(cfg)
 

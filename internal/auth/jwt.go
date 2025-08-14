@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/ed25519"
 	"fmt"
 	"strings"
 	"time"
@@ -41,20 +42,24 @@ type TokenResponse struct {
 
 // JWTManager handles JWT token operations
 type JWTManager struct {
-	secretKey     []byte
+	privateKey    ed25519.PrivateKey
+	publicKey     ed25519.PublicKey
 	tokenDuration time.Duration
 }
 
 func NewJWTManager(cfg *config.Config) *JWTManager {
-	// Use a configurable secret key, fallback to a default for development
-	// In production, this should come from configuration
-	secretKey := []byte("registry-jwt-secret-key-change-in-production")
-	if cfg.JWTSecretKey != "" {
-		secretKey = []byte(cfg.JWTSecretKey)
+	// Require a valid Ed25519 private key (64 bytes)
+	if len(cfg.JWTSecretKey) != ed25519.PrivateKeySize {
+		panic(fmt.Sprintf("JWTSecretKey must be exactly %d bytes for Ed25519, got %d bytes", ed25519.PrivateKeySize, len(cfg.JWTSecretKey)))
 	}
+	
+	// Use the raw bytes directly as the Ed25519 private key
+	privateKey := ed25519.PrivateKey([]byte(cfg.JWTSecretKey))
+	publicKey := privateKey.Public().(ed25519.PublicKey)
 
 	return &JWTManager{
-		secretKey:     secretKey,
+		privateKey:    privateKey,
+		publicKey:     publicKey,
 		tokenDuration: 5 * time.Minute, // 5-minute tokens as per requirements
 	}
 }
@@ -77,8 +82,8 @@ func (j *JWTManager) GenerateTokenResponse(ctx context.Context, claims JWTClaims
 	// Create token with claims
 	token := jwt.NewWithClaims(&jwt.SigningMethodEd25519{}, claims)
 
-	// Sign token
-	tokenString, err := token.SignedString(j.secretKey)
+	// Sign token with Ed25519 private key
+	tokenString, err := token.SignedString(j.privateKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign token: %w", err)
 	}
@@ -98,7 +103,8 @@ func (j *JWTManager) ValidateToken(ctx context.Context, tokenString string) (*JW
 		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v, expected Ed25519", token.Header["alg"])
 		}
-		return j.secretKey, nil
+		// Return the public key for verification
+		return j.publicKey, nil
 	})
 
 	// Validate token
