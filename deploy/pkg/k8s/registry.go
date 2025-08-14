@@ -62,8 +62,9 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				Spec: &corev1.PodSpecArgs{
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
-							Name:  pulumi.String("mcp-registry"),
-							Image: pulumi.String("ghcr.io/modelcontextprotocol/registry:latest"),
+							Name:            pulumi.String("mcp-registry"),
+							Image:           pulumi.String("ghcr.io/modelcontextprotocol/registry:latest"),
+							ImagePullPolicy: pulumi.String("Always"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
 									ContainerPort: pulumi.Int(8080),
@@ -144,7 +145,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	}
 
 	// Create Ingress
-	domain := "%s.registry.modelcontextprotocol.io"
+	hosts := []string{
+		environment + ".registry.modelcontextprotocol.io",
+	}
+
+	// Add root domain for prod environment
+	if environment == "prod" {
+		hosts = append(hosts, "registry.modelcontextprotocol.io")
+	}
+
 	ingress, err := networkingv1.NewIngress(ctx, "mcp-registry", &networkingv1.IngressArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("mcp-registry"),
@@ -154,46 +163,55 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				"environment": pulumi.String(environment),
 			},
 			Annotations: pulumi.StringMap{
-				"kubernetes.io/ingress.class": pulumi.String("nginx"),
+				"cert-manager.io/cluster-issuer": pulumi.String("letsencrypt-prod"),
+				"kubernetes.io/ingress.class":    pulumi.String("nginx"),
 			},
 		},
 		Spec: &networkingv1.IngressSpecArgs{
 			Tls: networkingv1.IngressTLSArray{
 				&networkingv1.IngressTLSArgs{
-					Hosts: pulumi.StringArray{
-						pulumi.Sprintf(domain, environment),
-					},
+					Hosts:      pulumi.ToStringArray(hosts),
 					SecretName: pulumi.Sprintf("mcp-registry-%s-tls", environment),
 				},
 			},
-			Rules: networkingv1.IngressRuleArray{
-				&networkingv1.IngressRuleArgs{
-					Host: pulumi.Sprintf(domain, environment),
-					Http: &networkingv1.HTTPIngressRuleValueArgs{
-						Paths: networkingv1.HTTPIngressPathArray{
-							&networkingv1.HTTPIngressPathArgs{
-								Path:     pulumi.String("/"),
-								PathType: pulumi.String("Prefix"),
-								Backend: &networkingv1.IngressBackendArgs{
-									Service: &networkingv1.IngressServiceBackendArgs{
-										Name: service.Metadata.Name().Elem(),
-										Port: &networkingv1.ServiceBackendPortArgs{
-											Number: pulumi.Int(80),
+			Rules: pulumi.ToStringArray(hosts).ToStringArrayOutput().ApplyT(func(hosts []string) networkingv1.IngressRuleArray {
+				rules := make(networkingv1.IngressRuleArray, 0, len(hosts))
+				for _, host := range hosts {
+					rules = append(rules, &networkingv1.IngressRuleArgs{
+						Host: pulumi.String(host),
+						Http: &networkingv1.HTTPIngressRuleValueArgs{
+							Paths: networkingv1.HTTPIngressPathArray{
+								&networkingv1.HTTPIngressPathArgs{
+									Path:     pulumi.String("/"),
+									PathType: pulumi.String("Prefix"),
+									Backend: &networkingv1.IngressBackendArgs{
+										Service: &networkingv1.IngressServiceBackendArgs{
+											Name: service.Metadata.Name().Elem(),
+											Port: &networkingv1.ServiceBackendPortArgs{
+												Number: pulumi.Int(80),
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				},
-			},
+					})
+				}
+				return rules
+			}).(networkingv1.IngressRuleArrayOutput),
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx.Export("ingressHost", ingress.Spec.Rules().Index(pulumi.Int(0)).Host())
+	ctx.Export("ingressHosts", ingress.Spec.Rules().ApplyT(func(rules []networkingv1.IngressRule) []string {
+		hosts := make([]string, 0, len(rules))
+		for _, rule := range rules {
+			hosts = append(hosts, *rule.Host)
+		}
+		return hosts
+	}))
 
 	return service, nil
 }
