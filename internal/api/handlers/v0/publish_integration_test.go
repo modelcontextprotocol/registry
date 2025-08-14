@@ -10,6 +10,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,8 @@ func TestPublishIntegration(t *testing.T) {
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 	
 	// Register the endpoint
-	v0.RegisterPublishEndpoint(api, registryService, authService)
+	cfg := &config.Config{}
+	v0.RegisterPublishEndpoint(api, registryService, cfg)
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
 		publishReq := model.PublishRequest{
@@ -500,7 +502,8 @@ func TestPublishIntegrationEndToEnd(t *testing.T) {
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 	
 	// Register the endpoint
-	v0.RegisterPublishEndpoint(api, registryService, authService)
+	cfg := &config.Config{}
+	v0.RegisterPublishEndpoint(api, registryService, cfg)
 
 	t.Run("end-to-end publish and retrieve flow", func(t *testing.T) {
 		// Step 1: Get initial count of servers
@@ -577,7 +580,8 @@ func TestPublishIntegrationWithComplexPackages(t *testing.T) {
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 	
 	// Register the endpoint
-	v0.RegisterPublishEndpoint(api, registryService, authService)
+	cfg := &config.Config{}
+	v0.RegisterPublishEndpoint(api, registryService, cfg)
 
 	t.Run("publish with complex package configuration", func(t *testing.T) {
 		publishReq := model.PublishRequest{

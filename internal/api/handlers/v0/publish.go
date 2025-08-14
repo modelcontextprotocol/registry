@@ -18,12 +18,11 @@ type PublishServerInput struct {
 	Body          model.PublishRequest
 }
 
-
 // RegisterPublishEndpoint registers the publish endpoint
 func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg *config.Config) {
 	// Create JWT manager for token validation
 	jwtManager := auth.NewJWTManager(cfg)
-	
+
 	huma.Register(api, huma.Operation{
 		OperationID: "publish-server",
 		Method:      http.MethodPost,
@@ -43,37 +42,18 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 		token := authHeader[len(bearerPrefix):]
 
-		// Convert PublishRequest body to ServerDetail
-		serverDetail := input.Body.ServerDetail
-
-		// Huma handles validation automatically based on struct tags
-		// But we can add custom validation if needed
-		if serverDetail.Name == "" {
-			return nil, huma.Error400BadRequest("Name is required")
-		}
-		if serverDetail.VersionDetail.Version == "" {
-			return nil, huma.Error400BadRequest("Version is required")
-		}
-
 		// Validate Registry JWT token
 		claims, err := jwtManager.ValidateToken(ctx, token)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
 		}
 
-		// Verify that the token's repository matches the server being published
-		// Allow publishing if token has the exact repository or if it's a parent organization
-		tokenRepo := claims.Repository
-		serverName := serverDetail.Name
-		
-		// Check if token repository matches or is a parent of the server name
-		if tokenRepo != "" && !strings.HasPrefix(serverName, tokenRepo) {
-			return nil, huma.Error403Forbidden("Token repository does not match server name")
-		}
+		// Convert PublishRequest body to ServerDetail
+		serverDetail := input.Body.ServerDetail
 
-		// Additional validation based on auth method
-		if strings.HasPrefix(serverName, "io.github") && claims.AuthMethod != model.AuthMethodGitHub {
-			return nil, huma.Error403Forbidden("GitHub authentication required for GitHub-based servers")
+		// Verify that the token's repository matches the server being published
+		if !jwtManager.HasPermission(serverDetail.Name, "publish", claims.Permissions) {
+			return nil, huma.Error403Forbidden("You do not have permission to publish this server")
 		}
 
 		// Publish the server details

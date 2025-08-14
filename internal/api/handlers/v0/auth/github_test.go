@@ -63,11 +63,11 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		// Note: In a real implementation, we would need to make the GitHub API URLs
 		// configurable to point to our mock server. For now, this test shows
 		// the expected structure and would work with proper URL injection.
-		
+
 		// ctx := context.Background()
 		// Test would call the exchange method
 		// response, err := handler.ExchangeToken(ctx, "valid-github-token")
-		
+
 		// For now, just verify the handler was created
 		if handler == nil {
 			t.Fatal("handler should not be nil")
@@ -132,7 +132,7 @@ func TestGitHubHandler_buildPermissions(t *testing.T) {
 			userResource := "io.github." + tt.username + "/*"
 			found := false
 			for _, perm := range permissions {
-				if perm.Resource == userResource {
+				if perm.ResourcePattern == userResource {
 					found = true
 					break
 				}

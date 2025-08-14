@@ -4,9 +4,9 @@ package model
 type AuthMethod string
 
 const (
-	// AuthMethodGitHub represents GitHub OAuth authentication
+	// GitHub OAuth authentication
 	AuthMethodGitHub AuthMethod = "github"
-	// AuthMethodNone represents no authentication
+	// No authentication - should only be used for local development and testing
 	AuthMethodNone AuthMethod = "none"
 )
 
@@ -20,17 +20,9 @@ const (
 	ServerStatusDeprecated ServerStatus = "deprecated"
 )
 
-// Authentication holds information about the authentication method and credentials
-type Authentication struct {
-	Method  AuthMethod `json:"method,omitempty"`
-	Token   string     `json:"token,omitempty"`
-	RepoRef string     `json:"repo_ref,omitempty"`
-}
-
 // PublishRequest represents a request to publish a server to the registry
 type PublishRequest struct {
-	ServerDetail    `json:",inline"`
-	AuthStatusToken string `json:"-"` // Used internally for device flows
+	ServerDetail `json:",inline"`
 }
 
 // Repository represents a source code repository as defined in the spec

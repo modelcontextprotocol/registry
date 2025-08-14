@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -112,7 +114,6 @@ func TestPublishEndpoint(t *testing.T) {
 				claims := &auth.JWTClaims{
 					Repository: "io.github.example/test-server",
 					AuthMethod: model.AuthMethodGitHub,
-					GitHubUser: "example",
 				}
 				authSvc.On("ValidateRegistryToken", mock.Anything, "github_token_123").Return(claims, nil)
 				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
@@ -227,7 +228,7 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer token",
 			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateRegistryToken", mock.Anything, mock.Anything).Return(nil, auth.ErrInvalidToken)
+				authSvc.On("ValidateRegistryToken", mock.Anything, mock.Anything).Return(nil, errors.New("invalid or expired token"))
 			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Invalid or expired Registry JWT token",
@@ -250,7 +251,7 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer invalid_token",
 			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateRegistryToken", mock.Anything, mock.Anything).Return(nil, auth.ErrInvalidToken)
+				authSvc.On("ValidateRegistryToken", mock.Anything, mock.Anything).Return(nil, errors.New("invalid or expired token"))
 			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Invalid or expired Registry JWT token",
@@ -318,7 +319,6 @@ func TestPublishEndpoint(t *testing.T) {
 				claims := &auth.JWTClaims{
 					Repository: "io.github.malicious/<script>alert('XSS')</script>test-server",
 					AuthMethod: model.AuthMethodGitHub,
-					GitHubUser: "malicious",
 				}
 				authSvc.On("ValidateRegistryToken", mock.Anything, "github_token_123").Return(claims, nil)
 				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
@@ -373,7 +373,8 @@ func TestPublishEndpoint(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint
-			v0.RegisterPublishEndpoint(api, mockRegistry, mockAuthService)
+			cfg := &config.Config{}
+			v0.RegisterPublishEndpoint(api, mockRegistry, cfg)
 
 			// Prepare request body
 			var requestBody []byte
@@ -456,7 +457,8 @@ func TestPublishEndpointBearerTokenParsing(t *testing.T) {
 
 			mux := http.NewServeMux()
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-			v0.RegisterPublishEndpoint(api, mockRegistry, mockAuthService)
+			cfg := &config.Config{}
+			v0.RegisterPublishEndpoint(api, mockRegistry, cfg)
 
 			serverDetail := model.PublishRequest{
 				ServerDetail: model.ServerDetail{
@@ -526,7 +528,8 @@ func TestPublishEndpointAuthMethodSelection(t *testing.T) {
 
 			mux := http.NewServeMux()
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-			v0.RegisterPublishEndpoint(api, mockRegistry, mockAuthService)
+			cfg := &config.Config{}
+			v0.RegisterPublishEndpoint(api, mockRegistry, cfg)
 
 			serverDetail := model.PublishRequest{
 				ServerDetail: model.ServerDetail{

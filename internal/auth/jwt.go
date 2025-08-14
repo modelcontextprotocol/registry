@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,19 +21,22 @@ const (
 )
 
 type Permission struct {
-	Action   PermissionAction `json:"action"`   // The action type (publish or edit)
-	Resource string           `json:"resource"` // e.g., "io.github.username/*"
+	Action          PermissionAction `json:"action"`   // The action type (publish or edit)
+	ResourcePattern string           `json:"resource"` // e.g., "io.github.username/*"
 }
 
 // JWTClaims represents the claims for the Registry JWT token
 type JWTClaims struct {
 	jwt.RegisteredClaims
-	// Repository reference (e.g., "io.github.username/repo")
-	Repository string `json:"repository,omitempty"`
 	// Authentication method used to obtain this token
 	AuthMethod        model.AuthMethod `json:"auth_method"`
 	AuthMethodSubject string           `json:"auth_method_sub"`
 	Permissions       []Permission     `json:"permissions"`
+}
+
+type TokenResponse struct {
+	RegistryToken string `json:"registry_token"`
+	ExpiresAt     int    `json:"expires_at"`
 }
 
 // JWTManager handles JWT token operations
@@ -114,7 +118,24 @@ func (j *JWTManager) ValidateToken(ctx context.Context, tokenString string) (*JW
 	return claims, nil
 }
 
-type TokenResponse struct {
-	RegistryToken string `json:"registry_token"`
-	ExpiresAt     int    `json:"expires_at"`
+func (j *JWTManager) HasPermission(resource string, action PermissionAction, permissions []Permission) bool {
+	for _, perm := range permissions {
+		if perm.Action == action && isResourceMatch(resource, perm.ResourcePattern) {
+			return true
+		}
+	}
+	return false
+}
+
+// * should match anything
+// something* should match something.com etc.
+// io.github.domdomegg/* should match io.github.domdomegg/myrepo
+func isResourceMatch(resource, pattern string) bool {
+	if pattern == "*" {
+		return true
+	}
+	if strings.HasSuffix(pattern, "*") {
+		return strings.HasPrefix(resource, strings.TrimSuffix(pattern, "*"))
+	}
+	return resource == pattern
 }
