@@ -61,14 +61,13 @@ func TestPublishEndpoint(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name            string
-		requestBody     interface{}
-		tokenClaims     *auth.JWTClaims
-		useInvalidToken bool
-		authHeader      string
-		setupMocks      func(*MockRegistryService)
-		expectedStatus  int
-		expectedError   string
+		name           string
+		requestBody    interface{}
+		tokenClaims    *auth.JWTClaims
+		authHeader     string
+		setupMocks     func(*MockRegistryService)
+		expectedStatus int
+		expectedError  string
 	}{
 		{
 			name: "successful publish with GitHub auth",
@@ -164,10 +163,10 @@ func TestPublishEndpoint(t *testing.T) {
 					},
 				},
 			},
-			useInvalidToken: true,
-			setupMocks:      func(_ *MockRegistryService) {},
-			expectedStatus:  http.StatusUnauthorized,
-			expectedError:   "Invalid or expired Registry JWT token",
+			authHeader:     "Bearer invalidToken",
+			setupMocks:     func(_ *MockRegistryService) {},
+			expectedStatus: http.StatusUnauthorized,
+			expectedError:  "Invalid or expired Registry JWT token",
 		},
 		{
 			name: "permission denied",
@@ -250,8 +249,6 @@ func TestPublishEndpoint(t *testing.T) {
 			// Set auth header
 			if tc.authHeader != "" {
 				req.Header.Set("Authorization", tc.authHeader)
-			} else if tc.useInvalidToken {
-				req.Header.Set("Authorization", "Bearer invalid-token")
 			} else if tc.tokenClaims != nil {
 				// Generate a valid JWT token
 				token, err := generateTestJWTToken(testConfig, *tc.tokenClaims)

@@ -90,12 +90,12 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response v0.Response[model.Server]
+		var response model.Server
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.ServerDetail.Name, response.Body.Name)
-		assert.Equal(t, publishReq.ServerDetail.VersionDetail.Version, response.Body.VersionDetail.Version)
+		assert.Equal(t, publishReq.Name, response.Name)
+		assert.Equal(t, publishReq.VersionDetail.Version, response.VersionDetail.Version)
 	})
 
 	t.Run("successful publish without auth (no prefix)", func(t *testing.T) {
@@ -138,11 +138,11 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response v0.Response[model.Server]
+		var response model.Server
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.ServerDetail.Name, response.Body.Name)
+		assert.Equal(t, publishReq.Name, response.Name)
 	})
 
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {

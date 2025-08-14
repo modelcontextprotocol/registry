@@ -9,9 +9,8 @@ import (
 func RegisterAuthEndpoints(api huma.API, cfg *config.Config) {
 	// Register GitHub authentication endpoint
 	RegisterGitHubEndpoint(api, cfg)
-	
+
 	// Future auth providers can be registered here:
 	// RegisterGitLabEndpoint(api, cfg)
 	// RegisterOIDCEndpoint(api, cfg)
-	// RegisterAPIKeyEndpoint(api, cfg)
 }

@@ -52,7 +52,7 @@ func NewJWTManager(cfg *config.Config) *JWTManager {
 	if len(cfg.JWTSecretKey) != ed25519.PrivateKeySize {
 		panic(fmt.Sprintf("JWTSecretKey must be exactly %d bytes for Ed25519, got %d bytes", ed25519.PrivateKeySize, len(cfg.JWTSecretKey)))
 	}
-	
+
 	// Use the raw bytes directly as the Ed25519 private key
 	privateKey := ed25519.PrivateKey([]byte(cfg.JWTSecretKey))
 	publicKey := privateKey.Public().(ed25519.PublicKey)
@@ -65,7 +65,7 @@ func NewJWTManager(cfg *config.Config) *JWTManager {
 }
 
 // GenerateToken generates a new Registry JWT token
-func (j *JWTManager) GenerateTokenResponse(ctx context.Context, claims JWTClaims) (*TokenResponse, error) {
+func (j *JWTManager) GenerateTokenResponse(_ context.Context, claims JWTClaims) (*TokenResponse, error) {
 	if claims.IssuedAt == nil {
 		claims.IssuedAt = jwt.NewNumericDate(time.Now())
 	}
@@ -95,7 +95,7 @@ func (j *JWTManager) GenerateTokenResponse(ctx context.Context, claims JWTClaims
 }
 
 // ValidateToken validates a Registry JWT token and returns the claims
-func (j *JWTManager) ValidateToken(ctx context.Context, tokenString string) (*JWTClaims, error) {
+func (j *JWTManager) ValidateToken(_ context.Context, tokenString string) (*JWTClaims, error) {
 	// Parse token
 	// This also validates expiry
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
