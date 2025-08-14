@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -35,10 +37,11 @@ func TestPublishIntegration(t *testing.T) {
 	// Setup fake service
 	registryService := service.NewFakeRegistryService()
 
-	// Create test config with a valid Ed25519 private key
-	_, testPrivateKey, _ := ed25519.GenerateKey(nil)
+	// Create test config with a valid Ed25519 seed
+	testSeed := make([]byte, ed25519.SeedSize)
+	rand.Read(testSeed)
 	testConfig := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	// Create a new ServeMux and Huma API

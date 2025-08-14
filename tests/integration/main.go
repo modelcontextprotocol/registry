@@ -16,8 +16,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 const registryURL = "http://localhost:8080"
@@ -100,17 +98,17 @@ func publish(examples []example) error {
 	for _, example := range examples {
 		log.Printf("Publishing example starting on line %d", example.line)
 
-		expected := model.ServerDetail{}
+		expected := map[string]any{}
 		if err := json.Unmarshal(example.content, &expected); err != nil {
 			log.Println("  ⛔ Example isn't valid JSON:", err)
 			continue
 		}
 
 		// Remove any existing namespace prefix and add anonymous prefix
-		if !strings.HasPrefix(expected.Name, "io.modelcontextprotocol.anonymous/") {
-			parts := strings.SplitN(expected.Name, "/", 2)
+		if !strings.HasPrefix(expected["name"].(string), "io.modelcontextprotocol.anonymous/") {
+			parts := strings.SplitN(expected["name"].(string), "/", 2)
 			serverName := parts[len(parts)-1]
-			expected.Name = "io.modelcontextprotocol.anonymous/" + serverName
+			expected["name"] = "io.modelcontextprotocol.anonymous/" + serverName
 		}
 		example.content, _ = json.Marshal(expected)
 
@@ -166,7 +164,7 @@ func publish(examples []example) error {
 			return fmt.Errorf("  ⛔ failed to unmarshal registry response: %w", err)
 		}
 		if err := compare(expected, actual); err != nil {
-			return fmt.Errorf(`  ⛔ example "%s": %w`, expected.Name, err)
+			return fmt.Errorf(`  ⛔ example "%s": %w`, expected["name"], err)
 		}
 		log.Print("  ✅ registry response matches example\n\n")
 		published++

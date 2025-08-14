@@ -3,6 +3,8 @@ package auth_test
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"testing"
 	"time"
 
@@ -15,12 +17,13 @@ import (
 )
 
 func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
-	// Generate a proper Ed25519 key pair for testing
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	// Generate a proper Ed25519 seed for testing
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	jwtManager := auth.NewJWTManager(cfg)
@@ -112,12 +115,13 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 	})
 
 	t.Run("invalid token signature should fail", func(t *testing.T) {
-		// Create a different key pair
-		_, differentPrivateKey, err := ed25519.GenerateKey(nil)
+		// Create a different seed
+		differentSeed := make([]byte, ed25519.SeedSize)
+		_, err := rand.Read(differentSeed)
 		require.NoError(t, err)
 
 		differentCfg := &config.Config{
-			JWTPrivateKey: string(differentPrivateKey),
+			JWTPrivateKey: hex.EncodeToString(differentSeed),
 		}
 		differentJWTManager := auth.NewJWTManager(differentCfg)
 
@@ -178,12 +182,13 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 }
 
 func TestJWTManager_HasPermission(t *testing.T) {
-	// Generate a proper Ed25519 key pair for testing
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	// Generate a proper Ed25519 seed for testing
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	jwtManager := auth.NewJWTManager(cfg)

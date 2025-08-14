@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/ed25519"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -48,13 +49,18 @@ type JWTManager struct {
 }
 
 func NewJWTManager(cfg *config.Config) *JWTManager {
-	// Require a valid Ed25519 private key (64 bytes)
-	if len(cfg.JWTPrivateKey) != ed25519.PrivateKeySize {
-		panic(fmt.Sprintf("JWTPrivateKey must be exactly %d bytes for Ed25519, got %d bytes", ed25519.PrivateKeySize, len(cfg.JWTPrivateKey)))
+	seed, err := hex.DecodeString(cfg.JWTPrivateKey)
+	if err != nil {
+		panic(fmt.Sprintf("JWTPrivateKey must be a valid hex-encoded string: %v", err))
 	}
 
-	// Use the raw bytes directly as the Ed25519 private key
-	privateKey := ed25519.PrivateKey([]byte(cfg.JWTPrivateKey))
+	// Require a valid Ed25519 seed (32 bytes)
+	if len(seed) != ed25519.SeedSize {
+		panic(fmt.Sprintf("JWTPrivateKey seed must be exactly %d bytes for Ed25519, got %d bytes", ed25519.SeedSize, len(seed)))
+	}
+
+	// Generate the full Ed25519 key pair from the seed
+	privateKey := ed25519.NewKeyFromSeed(seed)
 	publicKey := privateKey.Public().(ed25519.PublicKey)
 
 	return &JWTManager{

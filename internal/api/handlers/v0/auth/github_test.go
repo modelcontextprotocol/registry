@@ -3,6 +3,8 @@ package auth_test
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -26,11 +28,12 @@ const (
 
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
 	// Create test handler with mock config
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	t.Run("successful token exchange with user only", func(t *testing.T) {
@@ -316,11 +319,12 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 }
 
 func TestJWTTokenValidation(t *testing.T) {
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	jwtManager := auth.NewJWTManager(cfg)
@@ -395,11 +399,12 @@ func TestJWTTokenValidation(t *testing.T) {
 }
 
 func TestPermissionResourceMatching(t *testing.T) {
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	jwtManager := auth.NewJWTManager(cfg)
@@ -465,11 +470,12 @@ func TestPermissionResourceMatching(t *testing.T) {
 
 func TestValidGitHubNames(t *testing.T) {
 	// Create a minimal handler to test name validation
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	validNameTests := []struct {
@@ -558,11 +564,12 @@ func TestValidGitHubNames(t *testing.T) {
 }
 
 func TestGitHubHandler_Creation(t *testing.T) {
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	handler := v0auth.NewGitHubHandler(cfg)
@@ -571,11 +578,12 @@ func TestGitHubHandler_Creation(t *testing.T) {
 
 func TestConcurrentTokenExchange(t *testing.T) {
 	// Test that the handler is thread-safe
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	// Create mock GitHub API server

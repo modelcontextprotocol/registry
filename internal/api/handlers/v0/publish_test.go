@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -55,9 +57,10 @@ func generateTestJWTToken(cfg *config.Config, claims auth.JWTClaims) (string, er
 }
 
 func TestPublishEndpoint(t *testing.T) {
-	_, testPrivateKey, _ := ed25519.GenerateKey(nil)
+	testSeed := make([]byte, ed25519.SeedSize)
+	rand.Read(testSeed)
 	testConfig := &config.Config{
-		JWTPrivateKey: string(testPrivateKey),
+		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
 
 	testCases := []struct {

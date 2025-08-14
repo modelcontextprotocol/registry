@@ -3,6 +3,8 @@ package auth_test
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"testing"
 
 	v0auth "github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
@@ -14,12 +16,13 @@ import (
 )
 
 func TestNoneHandler_GetAnonymousToken(t *testing.T) {
-	// Generate a proper Ed25519 key pair for testing
-	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	// Generate a proper Ed25519 seed for testing
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 
 	cfg := &config.Config{
-		JWTPrivateKey:       string(testPrivateKey),
+		JWTPrivateKey:       hex.EncodeToString(testSeed),
 		EnableAnonymousAuth: true,
 	}
 
