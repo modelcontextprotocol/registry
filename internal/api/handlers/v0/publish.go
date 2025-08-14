@@ -11,6 +11,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	"github.com/modelcontextprotocol/registry/internal/validators"
 )
 
 // PublishServerInput represents the input for publishing a server
@@ -62,6 +63,12 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 
 		// Get server details from request body
 		serverDetail := publishRequest.Server
+
+		// Validate the server detail
+		validator := validators.NewObjectValidator()
+		if err := validator.Validate(&serverDetail); err != nil {
+			return nil, huma.Error400BadRequest(err.Error())
+		}
 
 		// Verify that the token's repository matches the server being published
 		if !jwtManager.HasPermission(serverDetail.Name, auth.PermissionActionPublish, claims.Permissions) {

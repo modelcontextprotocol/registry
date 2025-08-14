@@ -52,12 +52,16 @@
         "name": {
           "type": "string",
           "description": "Server name/identifier",
-          "example": "io.modelcontextprotocol/filesystem"
+          "example": "io.modelcontextprotocol/filesystem",
+          "minLength": 1,
+          "maxLength": 200
         },
         "description": {
           "type": "string",
           "description": "Human-readable description of the server's functionality",
-          "example": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+          "example": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
+          "minLength": 1,
+          "maxLength": 100
         },
         "status": {
           "type": "string",
@@ -94,7 +98,8 @@
         "version": {
           "type": "string",
           "description": "Package version",
-          "example": "1.0.2"
+          "example": "1.0.2",
+          "minLength": 1
         },
         "runtime_hint": {
           "type": "string",

@@ -32,14 +32,12 @@ const (
 	ServerStatusDeprecated ServerStatus = "deprecated"
 )
 
-
 // Repository represents a source code repository as defined in the spec
 type Repository struct {
 	URL    string `json:"url" bson:"url"`
 	Source string `json:"source" bson:"source"`
 	ID     string `json:"id,omitempty" bson:"id,omitempty"`
 }
-
 
 // create an enum for Format
 type Format string
@@ -99,7 +97,7 @@ type Package struct {
 // Remote represents a remote connection endpoint
 type Remote struct {
 	TransportType string          `json:"transport_type" bson:"transport_type"`
-	URL           string          `json:"url" bson:"url"`
+	URL           string          `json:"url" format:"uri" bson:"url"`
 	Headers       []KeyValueInput `json:"headers,omitempty" bson:"headers,omitempty"`
 }
 
@@ -108,12 +106,11 @@ type VersionDetail struct {
 	Version string `json:"version" bson:"version"`
 }
 
-
-// ServerDetail represents complete server information as defined in the MCP spec (pure, no registry metadata)  
+// ServerDetail represents complete server information as defined in the MCP spec (pure, no registry metadata)
 type ServerDetail struct {
-	Name          string        `json:"name" bson:"name"`
-	Description   string        `json:"description" bson:"description"`
-	Status        ServerStatus  `json:"status,omitempty" bson:"status,omitempty"`
+	Name          string        `json:"name" minLength:"1" maxLength:"200" bson:"name"`
+	Description   string        `json:"description" minLength:"1" maxLength:"200" bson:"description"`
+	Status        ServerStatus  `json:"status,omitempty" minLength:"1" bson:"status,omitempty"`
 	Repository    Repository    `json:"repository,omitempty" bson:"repository"`
 	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
 	Packages      []Package     `json:"packages,omitempty" bson:"packages,omitempty"`
@@ -131,8 +128,8 @@ type RegistryMetadata struct {
 
 // ServerRecord represents the complete storage model that separates server.json from registry metadata
 type ServerRecord struct {
-	ServerJSON          ServerDetail           `json:"server" bson:"server"`                     // Pure MCP server.json
-	RegistryMetadata    RegistryMetadata       `json:"registry_metadata" bson:"registry_metadata"`    // Registry-generated data
+	ServerJSON          ServerDetail           `json:"server" bson:"server"`                             // Pure MCP server.json
+	RegistryMetadata    RegistryMetadata       `json:"registry_metadata" bson:"registry_metadata"`       // Registry-generated data
 	PublisherExtensions map[string]interface{} `json:"publisher_extensions" bson:"publisher_extensions"` // x-publisher extensions
 }
 
@@ -252,14 +249,14 @@ func (sr *ServerRecord) ToServerResponse() ServerResponse {
 	response := ServerResponse{
 		Server: sr.ServerJSON,
 	}
-	
+
 	// Add registry metadata extension
 	response.XIOModelContextProtocolRegistry = sr.RegistryMetadata.CreateRegistryExtensions()["x-io.modelcontextprotocol.registry"]
-	
+
 	// Add publisher extensions directly
 	if len(sr.PublisherExtensions) > 0 {
 		response.XPublisher = sr.PublisherExtensions
 	}
-	
+
 	return response
 }
