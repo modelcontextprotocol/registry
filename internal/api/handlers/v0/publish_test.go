@@ -20,6 +20,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // MockRegistryService is a mock implementation of the RegistryService interface
@@ -58,7 +59,8 @@ func generateTestJWTToken(cfg *config.Config, claims auth.JWTClaims) (string, er
 
 func TestPublishEndpoint(t *testing.T) {
 	testSeed := make([]byte, ed25519.SeedSize)
-	rand.Read(testSeed)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
 	testConfig := &config.Config{
 		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}

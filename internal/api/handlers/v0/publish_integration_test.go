@@ -39,7 +39,8 @@ func TestPublishIntegration(t *testing.T) {
 
 	// Create test config with a valid Ed25519 seed
 	testSeed := make([]byte, ed25519.SeedSize)
-	rand.Read(testSeed)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
 	testConfig := &config.Config{
 		JWTPrivateKey: hex.EncodeToString(testSeed),
 	}
