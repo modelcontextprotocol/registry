@@ -12,7 +12,6 @@ This directory contains an end-to-end test for publishing to the registry.
 ## Test Flow
 
 1. **Build**: Build `publisher` and `registry`
-   - build `registry` with the `noauth` tag so that it accepts fake tokens
 2. **Start Services**: Launch registry and MongoDB using Docker Compose with test configuration
 3. **Publish Examples**: Extract JSON examples from documentation and run `publisher` to publish each one
 4. **Validate Responses**: GET each published server from the registry and compare it to the example JSON

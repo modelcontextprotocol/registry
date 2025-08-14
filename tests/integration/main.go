@@ -16,6 +16,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 const registryURL = "http://localhost:8080"
@@ -27,6 +29,44 @@ func main() {
 	if err := run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getAnonymousToken() (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, registryURL+"/v0/auth/none", nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to get anonymous token: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("auth endpoint returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	var tokenResponse struct {
+		RegistryToken string `json:"registry_token"`
+		ExpiresAt     int    `json:"expires_at"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
+		return "", fmt.Errorf("failed to decode token response: %w", err)
+	}
+
+	if tokenResponse.RegistryToken == "" {
+		return "", fmt.Errorf("received empty token from auth endpoint")
+	}
+
+	log.Printf("Got anonymous token (expires at %d)", tokenResponse.ExpiresAt)
+	return tokenResponse.RegistryToken, nil
 }
 
 func run() error {
@@ -41,10 +81,14 @@ func run() error {
 
 	log.Printf("Found %d examples in %q\n", len(examples), examplesPath)
 
-	// publisher will send this fake token to the registry, which will accept it
-	// because the registry was built with noauth enabled (see tests/integration/run.sh)
-	if err := os.WriteFile(".mcpregistry_token", []byte("fake"), 0600); err != nil {
-		log.Fatalf("failed to write fake token: %v", err)
+	// Get anonymous token from the none endpoint
+	token, err := getAnonymousToken()
+	if err != nil {
+		log.Fatalf("failed to get anonymous token: %v", err)
+	}
+
+	if err := os.WriteFile(".mcpregistry_token", []byte(token), 0600); err != nil {
+		log.Fatalf("failed to write token: %v", err)
 	}
 	defer os.Remove(".mcpregistry_token")
 
@@ -56,11 +100,19 @@ func publish(examples []example) error {
 	for _, example := range examples {
 		log.Printf("Publishing example starting on line %d", example.line)
 
-		expected := map[string]any{}
+		expected := model.ServerDetail{}
 		if err := json.Unmarshal(example.content, &expected); err != nil {
 			log.Println("  ⛔ Example isn't valid JSON:", err)
 			continue
 		}
+
+		// Remove any existing namespace prefix and add anonymous prefix
+		if !strings.HasPrefix(expected.Name, "io.modelcontextprotocol.anonymous/") {
+			parts := strings.SplitN(expected.Name, "/", 2)
+			serverName := parts[len(parts)-1]
+			expected.Name = "io.modelcontextprotocol.anonymous/" + serverName
+		}
+		example.content, _ = json.Marshal(expected)
 
 		p := filepath.Join("bin", fmt.Sprintf("example-line-%d.json", example.line))
 		if err := os.WriteFile(p, example.content, 0600); err != nil {
@@ -113,11 +165,8 @@ func publish(examples []example) error {
 		if err := json.Unmarshal(content, &actual); err != nil {
 			return fmt.Errorf("  ⛔ failed to unmarshal registry response: %w", err)
 		}
-		for k, v := range expected {
-			v2 := actual[k]
-			if err := compare(v, v2); err != nil {
-				return fmt.Errorf(`  ⛔ field "%s": %w`, k, err)
-			}
+		if err := compare(expected, actual); err != nil {
+			return fmt.Errorf(`  ⛔ example "%s": %w`, expected.Name, err)
 		}
 		log.Print("  ✅ registry response matches example\n\n")
 		published++

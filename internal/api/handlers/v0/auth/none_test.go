@@ -1,0 +1,48 @@
+package auth_test
+
+import (
+	"context"
+	"crypto/ed25519"
+	"testing"
+
+	v0auth "github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
+	"github.com/modelcontextprotocol/registry/internal/auth"
+	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestNoneHandler_GetAnonymousToken(t *testing.T) {
+	// Generate a proper Ed25519 key pair for testing
+	_, testPrivateKey, err := ed25519.GenerateKey(nil)
+	require.NoError(t, err)
+
+	cfg := &config.Config{
+		JWTPrivateKey:       string(testPrivateKey),
+		EnableAnonymousAuth: true,
+	}
+
+	handler := v0auth.NewNoneHandler(cfg)
+	ctx := context.Background()
+
+	// Test getting anonymous token
+	tokenResponse, err := handler.GetAnonymousToken(ctx)
+	require.NoError(t, err)
+	assert.NotEmpty(t, tokenResponse.RegistryToken)
+	assert.Greater(t, tokenResponse.ExpiresAt, 0)
+
+	// Validate the token claims
+	jwtManager := auth.NewJWTManager(cfg)
+	claims, err := jwtManager.ValidateToken(ctx, tokenResponse.RegistryToken)
+	require.NoError(t, err)
+
+	// Check auth method
+	assert.Equal(t, model.AuthMethodNone, claims.AuthMethod)
+	assert.Equal(t, "anonymous", claims.AuthMethodSubject)
+
+	// Check permissions
+	require.Len(t, claims.Permissions, 1)
+	assert.Equal(t, auth.PermissionActionPublish, claims.Permissions[0].Action)
+	assert.Equal(t, "io.modelcontextprotocol.anonymous/*", claims.Permissions[0].ResourcePattern)
+}

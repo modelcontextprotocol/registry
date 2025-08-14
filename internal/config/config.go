@@ -24,6 +24,7 @@ type Config struct {
 	GithubClientID     string       `env:"GITHUB_CLIENT_ID" envDefault:""`
 	GithubClientSecret string       `env:"GITHUB_CLIENT_SECRET" envDefault:""`
 	JWTPrivateKey      string       `env:"JWT_PRIVATE_KEY" envDefault:""`
+	EnableAnonymousAuth bool        `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 }
 
 // NewConfig creates a new configuration with default values

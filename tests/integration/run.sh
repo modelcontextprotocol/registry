@@ -11,7 +11,7 @@ cleanup() {
 
 go build -o ./bin/publisher ./tools/publisher
 
-docker build -t registry --build-arg GO_BUILD_TAGS=noauth .
+docker build -t registry .
 
 trap cleanup EXIT
 

@@ -98,14 +98,13 @@ func (j *JWTManager) GenerateTokenResponse(_ context.Context, claims JWTClaims) 
 func (j *JWTManager) ValidateToken(_ context.Context, tokenString string) (*JWTClaims, error) {
 	// Parse token
 	// This also validates expiry
-	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-		// Validate signing method
-		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v, expected Ed25519", token.Header["alg"])
-		}
-		// Return the public key for verification
-		return j.publicKey, nil
-	})
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&JWTClaims{},
+		func(_ *jwt.Token) (interface{}, error) { return j.publicKey, nil },
+		jwt.WithValidMethods([]string{"EdDSA"}),
+		jwt.WithExpirationRequired(),
+	)
 
 	// Validate token
 	if err != nil {
@@ -133,9 +132,6 @@ func (j *JWTManager) HasPermission(resource string, action PermissionAction, per
 	return false
 }
 
-// * should match anything
-// something* should match something.com etc.
-// io.github.domdomegg/* should match io.github.domdomegg/myrepo
 func isResourceMatch(resource, pattern string) bool {
 	if pattern == "*" {
 		return true
