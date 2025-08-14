@@ -38,7 +38,7 @@ func TestPublishIntegration(t *testing.T) {
 	// Create test config with a valid Ed25519 private key
 	_, testPrivateKey, _ := ed25519.GenerateKey(nil)
 	testConfig := &config.Config{
-		JWTSecretKey: string(testPrivateKey),
+		JWTPrivateKey: string(testPrivateKey),
 	}
 
 	// Create a new ServeMux and Huma API

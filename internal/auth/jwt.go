@@ -49,12 +49,12 @@ type JWTManager struct {
 
 func NewJWTManager(cfg *config.Config) *JWTManager {
 	// Require a valid Ed25519 private key (64 bytes)
-	if len(cfg.JWTSecretKey) != ed25519.PrivateKeySize {
-		panic(fmt.Sprintf("JWTSecretKey must be exactly %d bytes for Ed25519, got %d bytes", ed25519.PrivateKeySize, len(cfg.JWTSecretKey)))
+	if len(cfg.JWTPrivateKey) != ed25519.PrivateKeySize {
+		panic(fmt.Sprintf("JWTPrivateKey must be exactly %d bytes for Ed25519, got %d bytes", ed25519.PrivateKeySize, len(cfg.JWTPrivateKey)))
 	}
 
 	// Use the raw bytes directly as the Ed25519 private key
-	privateKey := ed25519.PrivateKey([]byte(cfg.JWTSecretKey))
+	privateKey := ed25519.PrivateKey([]byte(cfg.JWTPrivateKey))
 	publicKey := privateKey.Public().(ed25519.PublicKey)
 
 	return &JWTManager{

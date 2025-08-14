@@ -57,7 +57,7 @@ func generateTestJWTToken(cfg *config.Config, claims auth.JWTClaims) (string, er
 func TestPublishEndpoint(t *testing.T) {
 	_, testPrivateKey, _ := ed25519.GenerateKey(nil)
 	testConfig := &config.Config{
-		JWTSecretKey: string(testPrivateKey),
+		JWTPrivateKey: string(testPrivateKey),
 	}
 
 	testCases := []struct {

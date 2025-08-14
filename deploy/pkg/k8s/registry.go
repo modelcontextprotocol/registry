@@ -89,6 +89,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 										},
 									},
 								},
+								&corev1.EnvVarArgs{
+									Name: pulumi.String("MCP_REGISTRY_JWT_PRIVATE_KEY"),
+									ValueFrom: &corev1.EnvVarSourceArgs{
+										SecretKeyRef: &corev1.SecretKeySelectorArgs{
+											Name: secret.Metadata.Name(),
+											Key:  pulumi.String("JWT_PRIVATE_KEY"),
+										},
+									},
+								},
 							},
 							LivenessProbe: &corev1.ProbeArgs{
 								HttpGet: &corev1.HTTPGetActionArgs{

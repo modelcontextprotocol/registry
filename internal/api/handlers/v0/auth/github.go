@@ -25,6 +25,7 @@ type GitHubTokenExchangeInput struct {
 type GitHubHandler struct {
 	config     *config.Config
 	jwtManager *auth.JWTManager
+	baseURL    string // Configurable for testing
 }
 
 // NewGitHubHandler creates a new GitHub handler
@@ -32,7 +33,13 @@ func NewGitHubHandler(cfg *config.Config) *GitHubHandler {
 	return &GitHubHandler{
 		config:     cfg,
 		jwtManager: auth.NewJWTManager(cfg),
+		baseURL:    "https://api.github.com",
 	}
+}
+
+// SetBaseURL sets the base URL for GitHub API (used for testing)
+func (h *GitHubHandler) SetBaseURL(url string) {
+	h.baseURL = url
 }
 
 // RegisterGitHubEndpoint registers the GitHub authentication endpoint
@@ -103,7 +110,7 @@ type GitHubUserOrOrg struct {
 
 // getGitHubUser gets the authenticated user's information
 func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHubUserOrOrg, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.baseURL+"/user", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -111,8 +118,7 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
@@ -133,7 +139,7 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 
 // getGitHubUserOrgs gets the authenticated user's organizations
 func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, token string) ([]GitHubUserOrOrg, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.github.com/user/orgs", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.baseURL+"/user/orgs", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -141,8 +147,7 @@ func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, token string) ([]
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user organizations: %w", err)
 	}
