@@ -4,17 +4,17 @@ package router
 import (
 	"github.com/danielgtaylor/huma/v2"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
-	"github.com/modelcontextprotocol/registry/internal/auth"
+	v0auth "github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
 
 func RegisterV0Routes(
-	api huma.API, cfg *config.Config, registry service.RegistryService, authService auth.Service,
+	api huma.API, cfg *config.Config, registry service.RegistryService,
 ) {
 	v0.RegisterHealthEndpoint(api, cfg)
 	v0.RegisterPingEndpoint(api)
 	v0.RegisterServersEndpoints(api, registry)
-	// v0.RegisterAuthEndpoints(api, authService)
-	v0.RegisterPublishEndpoint(api, registry, authService)
+	v0auth.RegisterAuthEndpoints(api, cfg)
+	v0.RegisterPublishEndpoint(api, registry, cfg)
 }

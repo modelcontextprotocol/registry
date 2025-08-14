@@ -6,7 +6,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
@@ -14,7 +13,7 @@ import (
 // NewHumaAPI creates a new Huma API with all routes registered
 //
 //nolint:ireturn // huma.API is the expected interface type for Huma APIs
-func NewHumaAPI(cfg *config.Config, registry service.RegistryService, authService auth.Service, mux *http.ServeMux) huma.API {
+func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.ServeMux) huma.API {
 	// Create Huma API configuration
 	humaConfig := huma.DefaultConfig("MCP Registry API", "1.0.0")
 	humaConfig.Info.Description = "A community driven registry service for Model Context Protocol (MCP) servers."
@@ -25,7 +24,7 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, authServic
 	api := humago.New(mux, humaConfig)
 
 	// Register routes for all API versions
-	RegisterV0Routes(api, cfg, registry, authService)
+	RegisterV0Routes(api, cfg, registry)
 
 	// Add redirect from / to /docs
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

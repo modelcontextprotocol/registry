@@ -7,19 +7,23 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/modelcontextprotocol/registry/internal/auth"
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
 
 // PublishServerInput represents the input for publishing a server
 type PublishServerInput struct {
-	Authorization string `header:"Authorization" doc:"GitHub OAuth token" required:"true"`
+	Authorization string `header:"Authorization" doc:"Registry JWT token (obtained from /v0/auth/token/github)" required:"true"`
 	Body          model.PublishRequest
 }
 
 
 // RegisterPublishEndpoint registers the publish endpoint
-func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, authService auth.Service) {
+func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg *config.Config) {
+	// Create JWT manager for token validation
+	jwtManager := auth.NewJWTManager(cfg)
+	
 	huma.Register(api, huma.Operation{
 		OperationID: "publish-server",
 		Method:      http.MethodPost,
@@ -51,28 +55,25 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, aut
 			return nil, huma.Error400BadRequest("Version is required")
 		}
 
-		// Determine authentication method based on server name prefix
-		var authMethod model.AuthMethod
-		if strings.HasPrefix(serverDetail.Name, "io.github") {
-			authMethod = model.AuthMethodGitHub
-		} else {
-			authMethod = model.AuthMethodNone
-		}
-
-		// Setup authentication info
-		a := model.Authentication{
-			Method:  authMethod,
-			Token:   token,
-			RepoRef: serverDetail.Name,
-		}
-
-		// Validate authentication
-		valid, err := authService.ValidateAuth(ctx, a)
+		// Validate Registry JWT token
+		claims, err := jwtManager.ValidateToken(ctx, token)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("Authentication failed", err)
+			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
 		}
-		if !valid {
-			return nil, huma.Error401Unauthorized("Invalid authentication credentials")
+
+		// Verify that the token's repository matches the server being published
+		// Allow publishing if token has the exact repository or if it's a parent organization
+		tokenRepo := claims.Repository
+		serverName := serverDetail.Name
+		
+		// Check if token repository matches or is a parent of the server name
+		if tokenRepo != "" && !strings.HasPrefix(serverName, tokenRepo) {
+			return nil, huma.Error403Forbidden("Token repository does not match server name")
+		}
+
+		// Additional validation based on auth method
+		if strings.HasPrefix(serverName, "io.github") && claims.AuthMethod != model.AuthMethodGitHub {
+			return nil, huma.Error403Forbidden("GitHub authentication required for GitHub-based servers")
 		}
 
 		// Publish the server details

@@ -23,6 +23,7 @@ type Config struct {
 	Version            string       `env:"VERSION" envDefault:"dev"`
 	GithubClientID     string       `env:"GITHUB_CLIENT_ID" envDefault:""`
 	GithubClientSecret string       `env:"GITHUB_CLIENT_SECRET" envDefault:""`
+	JWTSecretKey       string       `env:"JWT_SECRET_KEY" envDefault:""`
 }
 
 // NewConfig creates a new configuration with default values

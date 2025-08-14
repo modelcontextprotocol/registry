@@ -8,7 +8,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
-	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
@@ -17,21 +16,19 @@ import (
 type Server struct {
 	config      *config.Config
 	registry    service.RegistryService
-	authService auth.Service
 	humaAPI     huma.API
 	server      *http.Server
 }
 
 // NewServer creates a new HTTP server
-func NewServer(cfg *config.Config, registryService service.RegistryService, authService auth.Service) *Server {
+func NewServer(cfg *config.Config, registryService service.RegistryService) *Server {
 	// Create HTTP mux and Huma API
 	mux := http.NewServeMux()
-	api := router.NewHumaAPI(cfg, registryService, authService, mux)
+	api := router.NewHumaAPI(cfg, registryService, mux)
 
 	server := &Server{
 		config:      cfg,
 		registry:    registryService,
-		authService: authService,
 		humaAPI:     api,
 		server: &http.Server{
 			Addr:              cfg.ServerAddress,

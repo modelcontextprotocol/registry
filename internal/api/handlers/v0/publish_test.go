@@ -60,6 +60,22 @@ func (m *MockAuthService) ValidateAuth(ctx context.Context, authentication model
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *MockAuthService) ExchangeGitHubToken(ctx context.Context, githubToken string, repository string) (*auth.TokenResponse, error) {
+	args := m.Called(ctx, githubToken, repository)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*auth.TokenResponse), args.Error(1)
+}
+
+func (m *MockAuthService) ValidateRegistryToken(ctx context.Context, token string) (*auth.JWTClaims, error) {
+	args := m.Called(ctx, token)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*auth.JWTClaims), args.Error(1)
+}
+
 func TestPublishEndpoint(t *testing.T) {
 	testCases := []struct {
 		name             string
@@ -93,11 +109,12 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer github_token_123",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, model.Authentication{
-					Method:  model.AuthMethodGitHub,
-					Token:   "github_token_123",
-					RepoRef: "io.github.example/test-server",
-				}).Return(true, nil)
+				claims := &auth.JWTClaims{
+					Repository: "io.github.example/test-server",
+					AuthMethod: model.AuthMethodGitHub,
+					GitHubUser: "example",
+				}
+				authSvc.On("ValidateRegistryToken", mock.Anything, "github_token_123").Return(claims, nil)
 				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -125,11 +142,11 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer some_token",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, model.Authentication{
-					Method:  model.AuthMethodNone,
-					Token:   "some_token",
-					RepoRef: "example/test-server",
-				}).Return(true, nil)
+				claims := &auth.JWTClaims{
+					Repository: "example/test-server",
+					AuthMethod: model.AuthMethodNone,
+				}
+				authSvc.On("ValidateRegistryToken", mock.Anything, "some_token").Return(claims, nil)
 				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -210,10 +227,10 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer token",
 			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, auth.ErrAuthRequired)
+				authSvc.On("ValidateRegistryToken", mock.Anything, mock.Anything).Return(nil, auth.ErrInvalidToken)
 			},
 			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Authentication failed",
+			expectedError:  "Invalid or expired Registry JWT token",
 		},
 		{
 			name: "authentication failed",
@@ -233,10 +250,10 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer invalid_token",
 			setupMocks: func(_ *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(false, nil)
+				authSvc.On("ValidateRegistryToken", mock.Anything, mock.Anything).Return(nil, auth.ErrInvalidToken)
 			},
 			expectedStatus: http.StatusUnauthorized,
-			expectedError:  "Invalid authentication credentials",
+			expectedError:  "Invalid or expired Registry JWT token",
 		},
 		{
 			name: "registry service error",
@@ -256,19 +273,23 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer token",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, mock.Anything).Return(true, nil)
+				claims := &auth.JWTClaims{
+					Repository: "test-server",
+					AuthMethod: model.AuthMethodNone,
+				}
+				authSvc.On("ValidateRegistryToken", mock.Anything, mock.Anything).Return(claims, nil)
 				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(assert.AnError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "Failed to publish server",
 		},
 		{
-			name: "method not allowed",
-			requestBody: nil,
-			authHeader: "",
-			setupMocks: func(_ *MockRegistryService, _ *MockAuthService) {},
+			name:           "method not allowed",
+			requestBody:    nil,
+			authHeader:     "",
+			setupMocks:     func(_ *MockRegistryService, _ *MockAuthService) {},
 			expectedStatus: http.StatusMethodNotAllowed,
-			expectedError: "Method Not Allowed",
+			expectedError:  "Method Not Allowed",
 		},
 		{
 			name: "HTML injection attack in name field",
@@ -294,11 +315,12 @@ func TestPublishEndpoint(t *testing.T) {
 			authHeader: "Bearer github_token_123",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
 				// The implementation should escape HTML
-				authSvc.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
-					return auth.Method == model.AuthMethodGitHub &&
-						auth.Token == "github_token_123" &&
-						auth.RepoRef == "io.github.malicious/<script>alert('XSS')</script>test-server"
-				})).Return(true, nil)
+				claims := &auth.JWTClaims{
+					Repository: "io.github.malicious/<script>alert('XSS')</script>test-server",
+					AuthMethod: model.AuthMethodGitHub,
+					GitHubUser: "malicious",
+				}
+				authSvc.On("ValidateRegistryToken", mock.Anything, "github_token_123").Return(claims, nil)
 				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 			},
 			expectedStatus: http.StatusOK,
@@ -326,11 +348,11 @@ func TestPublishEndpoint(t *testing.T) {
 			},
 			authHeader: "Bearer some_token",
 			setupMocks: func(registry *MockRegistryService, authSvc *MockAuthService) {
-				authSvc.On("ValidateAuth", mock.Anything, mock.MatchedBy(func(auth model.Authentication) bool {
-					return auth.Method == model.AuthMethodNone &&
-						auth.Token == "some_token" &&
-						auth.RepoRef == "malicious.com/<script>alert('XSS')</script>test-server"
-				})).Return(true, nil)
+				claims := &auth.JWTClaims{
+					Repository: "malicious.com/<script>alert('XSS')</script>test-server",
+					AuthMethod: model.AuthMethodNone,
+				}
+				authSvc.On("ValidateRegistryToken", mock.Anything, "some_token").Return(claims, nil)
 				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
 			},
 			expectedStatus: http.StatusOK,
