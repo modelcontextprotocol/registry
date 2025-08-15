@@ -55,7 +55,7 @@ jobs:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     environment: staging
-    needs: docker-build
+    needs: docker-push
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
