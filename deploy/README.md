@@ -10,22 +10,22 @@ Pre-requisites:
 - [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
 - Access to a Kubernetes cluster via kubeconfig. You can run a cluster locally with [minikube](https://minikube.sigs.k8s.io/docs/start/).
 
-1. Set Pulumi's backend to local: `pulumi login --local`
-2. Init the local stack: `pulumi stack init local` (fine to leave `password` blank)
-3. Set your config:
-    ```bash
-    # General environment
-    pulumi config set mcp-registry:environment local
+1. Ensure your kubeconfig is configured at the cluster you want to use. For minikube, run `minikube start && minikube tunnel`.
+2. Run `make local-up` to deploy the stack. Run this again if the first attempt fails.
+3. Access the repository via the ingress load balancer. You can find its external IP with `kubectl get svc ingress-nginx-controller -n ingress-nginx`. Then run `curl -H "Host: local.registry.modelcontextprotocol.io" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
-    # To use your local kubeconfig (default)
-    pulumi config set mcp-registry:provider local
-    
-    # GitHub OAuth
-    pulumi config set mcp-registry:githubClientId <your-github-client-id>
-    pulumi config set --secret mcp-registry:githubClientSecret <your-github-client-secret>
-    ```
-4. Deploy: `make local-up`
-5. Access the repository via the ingress load balancer. You can find its external IP with `kubectl get svc ingress-nginx-controller -n ingress-nginx` (with minikube, if it's 'pending' you might need `minikube tunnel`). Then run `curl -H "Host: local.registry.modelcontextprotocol.io" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
+#### To change config
+
+The stack is configured out of the box for local development. But if you want to make changes, run commands like:
+
+```bash
+PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:environment local
+PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --secret <some-secret-value>
+```
+
+#### To delete the stack
+
+`make local-destroy` and deleting the cluster (with minikube: `minikube delete`) will reset you back to a clean state.
 
 ### Production Deployment (GCP)
 

@@ -14,7 +14,7 @@ import (
 // SetupCertManager sets up cert-manager for TLS certificates
 func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) error {
 	// Create namespace for cert-manager
-	_, err := v1.NewNamespace(ctx, "cert-manager", &v1.NamespaceArgs{
+	certManagerNamespace, err := v1.NewNamespace(ctx, "cert-manager", &v1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name: pulumi.String("cert-manager"),
 		},
@@ -24,13 +24,13 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 	}
 
 	// Install cert-manager for TLS certificates
-	_, err = helm.NewChart(ctx, "cert-manager", helm.ChartArgs{
+	certManager, err := helm.NewChart(ctx, "cert-manager", helm.ChartArgs{
 		Chart:   pulumi.String("cert-manager"),
 		Version: pulumi.String("v1.18.2"),
 		FetchArgs: helm.FetchArgs{
 			Repo: pulumi.String("https://charts.jetstack.io"),
 		},
-		Namespace: pulumi.String("cert-manager"),
+		Namespace: certManagerNamespace.Metadata.Name().Elem(),
 		Values: pulumi.Map{
 			"installCRDs": pulumi.Bool(true),
 			"ingressShim": pulumi.Map{
@@ -69,7 +69,7 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 				},
 			},
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn([]pulumi.Resource{certManager}))
 	if err != nil {
 		return err
 	}

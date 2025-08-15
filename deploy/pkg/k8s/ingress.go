@@ -1,6 +1,8 @@
 package k8s
 
 import (
+	"strings"
+
 	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -19,7 +21,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 	}
 
 	// Create namespace for ingress-nginx
-	_, err := v1.NewNamespace(ctx, "ingress-nginx", &v1.NamespaceArgs{
+	ingressNginxNamespace, err := v1.NewNamespace(ctx, "ingress-nginx", &v1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name: pulumi.String("ingress-nginx"),
 		},
@@ -29,22 +31,17 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 	}
 
 	// Install NGINX Ingress Controller
-	ingressType := "LoadBalancer"
-	if provider == "local" {
-		ingressType = "NodePort"
-	}
-
-	nginxIngress, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
+	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
 		Version: pulumi.String("4.13.0"),
 		FetchArgs: helm.FetchArgs{
 			Repo: pulumi.String("https://kubernetes.github.io/ingress-nginx"),
 		},
-		Namespace: pulumi.String("ingress-nginx"),
+		Namespace: ingressNginxNamespace.Metadata.Name().Elem(),
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
 				"service": pulumi.Map{
-					"type": pulumi.String(ingressType),
+					"type": pulumi.String("LoadBalancer"),
 					"annotations": pulumi.Map{
 						// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
 						"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path": pulumi.String("/healthz"),
@@ -66,31 +63,30 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		return err
 	}
 
-	// Use the helm chart to get service information after deployment
-	ingressIps := nginxIngress.Resources.ApplyT(func(resources interface{}) interface{} {
-		// Look up the service after the chart is ready
-		svc, err := v1.GetService(
-			ctx,
-			"ingress-nginx-controller-lookup",
-			pulumi.ID("ingress-nginx/ingress-nginx-controller"),
-			&v1.ServiceState{},
-			pulumi.Provider(cluster.Provider),
-			pulumi.DependsOn([]pulumi.Resource{nginxIngress}),
-		)
-		if err != nil {
-			return []string{} // Return empty array on error during preview
-		}
-
-		// Return the LoadBalancer ingress IPs
-		return svc.Status.LoadBalancer().Ingress().ApplyT(func(ingresses []v1.LoadBalancerIngress) []string {
-			var ips []string
-			for _, ingress := range ingresses {
-				if ip := ingress.Ip; ip != nil && *ip != "" {
-					ips = append(ips, *ip)
+	// Extract ingress IPs from the Helm chart's controller service
+	ingressIps := ingressNginx.Resources.ApplyT(func(resources interface{}) interface{} {
+		// Look for the ingress-nginx-controller service
+		resourceMap := resources.(map[string]pulumi.Resource)
+		for resourceName, resource := range resourceMap {
+			if strings.Contains(resourceName, "ingress-nginx-controller") &&
+				!strings.Contains(resourceName, "admission") &&
+				strings.Contains(resourceName, "Service") {
+				if svc, ok := resource.(*v1.Service); ok {
+					// Return the LoadBalancer ingress IPs
+					return svc.Status.LoadBalancer().Ingress().ApplyT(func(ingresses []v1.LoadBalancerIngress) []string {
+						var ips []string
+						for _, ingress := range ingresses {
+							if ip := ingress.Ip; ip != nil && *ip != "" {
+								ips = append(ips, *ip)
+							}
+						}
+						return ips
+					})
 				}
 			}
-			return ips
-		})
+		}
+		// Return empty array if no matching service found
+		return []string{}
 	})
 	ctx.Export("ingressIps", ingressIps)
 

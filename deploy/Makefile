@@ -12,12 +12,17 @@ build: ## Build the Pulumi Go program
 # Local stack commands
 local-login: ## Login to local Pulumi backend
 	pulumi login --local
+	PULUMI_CONFIG_PASSPHRASE="" pulumi stack select local --create
 
 local-preview: build local-login ## Preview local infrastructure changes
 	PULUMI_CONFIG_PASSPHRASE="" pulumi preview --stack local
 
 local-up: build local-login ## Deploy local infrastructure
 	PULUMI_CONFIG_PASSPHRASE="" pulumi up --yes --stack local
+
+local-destroy: local-login ## Destroy local infrastructure
+	pulumi stack rm local --force --yes --preserve-config
+	echo "Make sure to also delete your k8s cluster, e.g. minikube delete"
 
 # Staging stack commands
 staging-login: ## Login to staging Pulumi backend
