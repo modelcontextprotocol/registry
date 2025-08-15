@@ -116,6 +116,7 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
 	resp, err := http.DefaultClient.Do(req)
@@ -145,6 +146,7 @@ func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, token string) ([]
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
 	resp, err := http.DefaultClient.Do(req)
