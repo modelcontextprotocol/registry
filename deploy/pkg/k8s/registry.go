@@ -1,6 +1,9 @@
 package k8s
 
 import (
+	"os/exec"
+	"strings"
+
 	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -10,6 +13,17 @@ import (
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
+
+// getGitCommitHash returns the current git commit hash
+func getGitCommitHash() string {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		// Fallback to a default value if git command fails
+		return "unknown"
+	}
+	return strings.TrimSpace(string(output))
+}
 
 // DeployMCPRegistry deploys the MCP Registry to the Kubernetes cluster
 func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*corev1.Service, error) {
@@ -57,6 +71,10 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				Metadata: &metav1.ObjectMetaArgs{
 					Labels: pulumi.StringMap{
 						"app": pulumi.String("mcp-registry"),
+					},
+					Annotations: pulumi.StringMap{
+						// Use git commit hash to trigger pod restarts when deploying new infra versions
+						"registry.modelcontextprotocol.io/deployCommit": pulumi.String(getGitCommitHash()),
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
