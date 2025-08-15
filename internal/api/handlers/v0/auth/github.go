@@ -79,7 +79,7 @@ func (h *GitHubHandler) ExchangeToken(ctx context.Context, githubToken string) (
 	}
 
 	// Get user's organizations
-	orgs, err := h.getGitHubUserOrgs(ctx, githubToken)
+	orgs, err := h.getGitHubUserOrgs(ctx, user.Login, githubToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get GitHub organizations: %w", err)
 	}
@@ -138,9 +138,8 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 	return &user, nil
 }
 
-// getGitHubUserOrgs gets the authenticated user's organizations
-func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, token string) ([]GitHubUserOrOrg, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.baseURL+"/user/orgs", nil)
+func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, username string, token string) ([]GitHubUserOrOrg, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.baseURL+"/users/"+username+"/orgs", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

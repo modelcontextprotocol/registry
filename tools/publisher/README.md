@@ -42,7 +42,7 @@ The tool supports two main commands:
 - `-registry-url`: URL of the MCP registry (required)
 - `-mcp-file`: Path to the MCP configuration file (required)
 - `-login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
-- `-auth-method`: Authentication method to use (default: github-oauth)
+- `-auth-method`: Authentication method to use (default: github)
 
 ## Creating a server.json file
 
@@ -132,8 +132,9 @@ The tool has been simplified to use **GitHub OAuth device flow authentication ex
 1. **Automatic Setup**: The tool automatically retrieves the GitHub Client ID from the registry's health endpoint
 2. **First Run Authentication**: When first run (or with the `--login` flag), the tool initiates the GitHub device flow
 3. **User Authorization**: You'll be provided with a URL and a verification code to enter on GitHub
-4. **Token Storage**: After successful authentication, the tool saves the access token locally in `.mcpregistry_token` for future use
-5. **Secure Communication**: The token is sent in the HTTP Authorization header with the Bearer scheme for all registry API calls
+4. **Token Storage**: After successful authentication, the tool saves the access token locally in `.mcpregistry_github_token` for future use
+5. **Token Exchange**: The GitHub token is exchanged for a short-lived registry token, which is saved locally in `.mcpregistry_registry_token`.
+5. **Secure Communication**: The registry token is sent in the HTTP Authorization header with the Bearer scheme for all registry API calls
 
 **Note**: Authentication is performed via GitHub OAuth App, which you must authorize for the respective resources (e.g., organization access if publishing organization repositories).
 
@@ -141,46 +142,7 @@ The tool has been simplified to use **GitHub OAuth device flow authentication ex
 
 To publish an existing server.json file to the registry:
 
-1. Prepare your `server.json` file with your server details:
-
-```json
-{
-  "name": "io.github.yourusername/your-repository",
-  "description": "Your MCP server description",
-  "version_detail": {
-    "version": "1.0.0"
-  },
-  "packages": [
-    {
-      "registry_name": "npm",
-      "name": "your-npm-package",
-      "version": "1.0.0",
-      "package_arguments": [
-        {
-          "description": "Specify services and permissions",
-          "is_required": true,
-          "format": "string",
-          "value": "-s",
-          "default": "-s",
-          "type": "positional",
-          "value_hint": "-s"
-        }
-      ],
-      "environment_variables": [
-        {
-          "name": "API_KEY",
-          "description": "API Key to access the server"
-        }
-      ]
-    }
-  ],
-  "repository": {
-    "url": "https://github.com/yourusername/your-repository",
-    "source": "github"
-  }
-}
-```
-
+1. Prepare your `server.json` file with your server details. See an example in [server.json](./server.json)
 2. Run the publisher tool:
 
 ```bash
@@ -190,12 +152,3 @@ To publish an existing server.json file to the registry:
 3. Follow the authentication instructions in the terminal if prompted.
 
 4. Upon successful publication, you'll see a confirmation message.
-
-## Important Notes
-
-- **GitHub Authentication Only**: The tool exclusively uses GitHub OAuth device flow for authentication
-- **Automatic Client ID**: The GitHub Client ID is automatically retrieved from the registry's health endpoint
-- **Token Storage**: The authentication token is saved in `.mcpregistry_token` in the current directory
-- **Internet Required**: Active internet connection needed for GitHub authentication and registry communication
-- **Repository Access**: Ensure the repository and package mentioned in your `server.json` file exist and are accessible
-- **OAuth Permissions**: You may need to grant the OAuth app access to your GitHub organizations if publishing org repositories

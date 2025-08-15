@@ -79,7 +79,7 @@ The main application automatically selects the appropriate authentication provid
 // Create the appropriate auth provider based on configuration
 var authProvider auth.Provider
 switch authMethod {
-case "github-oauth":
+case "github":
     log.Println("Using GitHub OAuth for authentication")
     authProvider = github.NewOAuthProvider(forceLogin, registryURL)
 default:

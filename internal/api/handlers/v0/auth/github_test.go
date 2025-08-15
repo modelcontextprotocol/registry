@@ -23,7 +23,7 @@ import (
 
 const (
 	githubUserEndpoint = "/user"
-	githubOrgsEndpoint = "/user/orgs"
+	githubOrgsEndpoint = "/users/testuser/orgs"
 )
 
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
@@ -226,7 +226,7 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 				}
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user) //nolint:errcheck
-			case githubOrgsEndpoint:
+			case "/users/user with spaces/orgs":
 				orgs := []v0auth.GitHubUserOrOrg{}
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(orgs) //nolint:errcheck
@@ -259,7 +259,7 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 			switch r.URL.Path {
 			case githubUserEndpoint:
 				user := v0auth.GitHubUserOrOrg{
-					Login: "validuser",
+					Login: "testuser",
 					ID:    12345,
 				}
 				w.Header().Set("Content-Type", "application/json")
@@ -290,7 +290,7 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
 		require.NoError(t, err)
-		assert.Equal(t, "validuser", claims.AuthMethodSubject)
+		assert.Equal(t, "testuser", claims.AuthMethodSubject)
 		assert.Empty(t, claims.Permissions) // No permissions because one org has invalid name
 	})
 
@@ -538,7 +538,7 @@ func TestValidGitHubNames(t *testing.T) {
 					}
 					w.Header().Set("Content-Type", "application/json")
 					json.NewEncoder(w).Encode(user) //nolint:errcheck
-				case githubOrgsEndpoint:
+				case "/users/" + tc.username + "/orgs":
 					w.Header().Set("Content-Type", "application/json")
 					json.NewEncoder(w).Encode(tc.orgs) //nolint:errcheck
 				}
@@ -596,7 +596,7 @@ func TestConcurrentTokenExchange(t *testing.T) {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(user) //nolint:errcheck
-		case "/user/orgs":
+		case githubOrgsEndpoint:
 			orgs := []v0auth.GitHubUserOrOrg{}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(orgs) //nolint:errcheck

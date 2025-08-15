@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	tokenFilePath = ".mcpregistry_token" // #nosec:G101
+	gitHubTokenFilePath   = ".mcpregistry_github_token"   // #nosec:G101
+	registryTokenFilePath = ".mcpregistry_registry_token" // #nosec:G101
 	// GitHub OAuth URLs
 	GitHubDeviceCodeURL  = "https://github.com/login/device/code"        // #nosec:G101
 	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token" // #nosec:G101
@@ -34,6 +35,18 @@ type AccessTokenResponse struct {
 	TokenType   string `json:"token_type"`
 	Scope       string `json:"scope"`
 	Error       string `json:"error,omitempty"`
+}
+
+// RegistryTokenResponse represents the response from registry's token exchange endpoint
+type RegistryTokenResponse struct {
+	RegistryToken string `json:"registry_token"`
+	ExpiresAt     int64  `json:"expires_at"`
+}
+
+// StoredRegistryToken represents the registry token with expiration stored locally
+type StoredRegistryToken struct {
+	Token     string `json:"token"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
 // OAuthProvider implements the AuthProvider interface using GitHub's device flow
@@ -57,9 +70,33 @@ func NewOAuthProvider(forceLogin bool, registryURL string) *OAuthProvider {
 	}
 }
 
-// GetToken retrieves the GitHub access token
-func (g *OAuthProvider) GetToken(_ context.Context) (string, error) {
-	return readToken()
+// GetToken retrieves the registry JWT token (exchanges GitHub token if needed)
+func (g *OAuthProvider) GetToken(ctx context.Context) (string, error) {
+	// Check if we have a valid registry token
+	registryToken, err := readRegistryToken()
+	if err == nil && registryToken != "" {
+		return registryToken, nil
+	}
+
+	// If no valid registry token, exchange GitHub token for registry token
+	githubToken, err := readToken()
+	if err != nil {
+		return "", fmt.Errorf("failed to read GitHub token: %w", err)
+	}
+
+	// Exchange GitHub token for registry token
+	registryToken, expiresAt, err := g.exchangeTokenForRegistry(ctx, githubToken)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	// Store the registry token
+	err = saveRegistryToken(registryToken, expiresAt)
+	if err != nil {
+		return "", fmt.Errorf("failed to save registry token: %w", err)
+	}
+
+	return registryToken, nil
 }
 
 // NeedsLogin checks if a new login is required
@@ -68,8 +105,21 @@ func (g *OAuthProvider) NeedsLogin() bool {
 		return true
 	}
 
-	_, statErr := os.Stat(tokenFilePath)
-	return os.IsNotExist(statErr)
+	// Check if GitHub token exists
+	_, statErr := os.Stat(gitHubTokenFilePath)
+	if os.IsNotExist(statErr) {
+		return true
+	}
+
+	// Check if valid registry token exists
+	_, err := readRegistryToken()
+	if err != nil {
+		// No valid registry token, but we have GitHub token
+		// We don't need to login, just exchange tokens
+		return false
+	}
+
+	return false
 }
 
 // Login performs the GitHub device flow authentication
@@ -115,7 +165,7 @@ func (g *OAuthProvider) Login(ctx context.Context) error {
 
 // Name returns the name of this auth provider
 func (g *OAuthProvider) Name() string {
-	return "github-oauth"
+	return "github"
 }
 
 // requestDeviceCode initiates the device authorization flow
@@ -237,12 +287,12 @@ func (g *OAuthProvider) pollForToken(ctx context.Context, deviceCode string) (st
 
 // saveToken saves the GitHub access token to a local file
 func saveToken(token string) error {
-	return os.WriteFile(tokenFilePath, []byte(token), 0600)
+	return os.WriteFile(gitHubTokenFilePath, []byte(token), 0600)
 }
 
 // readToken reads the GitHub access token from a local file
 func readToken() (string, error) {
-	tokenData, err := os.ReadFile(tokenFilePath)
+	tokenData, err := os.ReadFile(gitHubTokenFilePath)
 	if err != nil {
 		return "", err
 	}
@@ -291,4 +341,92 @@ func getClientID(ctx context.Context, registryURL string) (string, error) {
 	githubClientID := healthResponse.GitHubClientID
 
 	return githubClientID, nil
+}
+
+// exchangeTokenForRegistry exchanges a GitHub token for a registry JWT token
+func (g *OAuthProvider) exchangeTokenForRegistry(ctx context.Context, githubToken string) (string, int64, error) {
+	if g.registryURL == "" {
+		return "", 0, fmt.Errorf("registry URL is required for token exchange")
+	}
+
+	// Prepare the request body
+	payload := map[string]string{
+		"github_token": githubToken,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// Make the token exchange request
+	exchangeURL := g.registryURL + "/v0/auth/github"
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, exchangeURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", 0, fmt.Errorf("token exchange failed with status %d: %s", resp.StatusCode, body)
+	}
+
+	var tokenResp RegistryTokenResponse
+	err = json.Unmarshal(body, &tokenResp)
+	if err != nil {
+		return "", 0, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return tokenResp.RegistryToken, tokenResp.ExpiresAt, nil
+}
+
+// saveRegistryToken saves the registry JWT token to a local file with expiration
+func saveRegistryToken(token string, expiresAt int64) error {
+	storedToken := StoredRegistryToken{
+		Token:     token,
+		ExpiresAt: expiresAt,
+	}
+
+	data, err := json.Marshal(storedToken)
+	if err != nil {
+		return fmt.Errorf("failed to marshal token: %w", err)
+	}
+
+	return os.WriteFile(registryTokenFilePath, data, 0600)
+}
+
+// readRegistryToken reads the registry JWT token from a local file
+func readRegistryToken() (string, error) {
+	data, err := os.ReadFile(registryTokenFilePath)
+	if err != nil {
+		return "", err
+	}
+
+	var storedToken StoredRegistryToken
+	err = json.Unmarshal(data, &storedToken)
+	if err != nil {
+		return "", fmt.Errorf("failed to unmarshal token: %w", err)
+	}
+
+	// Check if token has expired
+	if time.Now().Unix() >= storedToken.ExpiresAt {
+		// Token has expired, remove the file
+		os.Remove(registryTokenFilePath)
+		return "", fmt.Errorf("registry token has expired")
+	}
+
+	return storedToken.Token, nil
 }

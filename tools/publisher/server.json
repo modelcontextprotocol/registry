@@ -50,7 +50,8 @@
     ],
     "repository": {
         "url": "https://github.com/<owner>/<server-name>",
-        "source": "github"
+        "source": "github",
+        "id": "c8d4c3b6-7943-474d-8e14-b53ab876a56a"
     },
     "version_detail": {
         "version": "0.0.1-<publisher_version>"
