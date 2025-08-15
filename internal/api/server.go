@@ -14,10 +14,10 @@ import (
 
 // Server represents the HTTP server
 type Server struct {
-	config      *config.Config
-	registry    service.RegistryService
-	humaAPI     huma.API
-	server      *http.Server
+	config   *config.Config
+	registry service.RegistryService
+	humaAPI  huma.API
+	server   *http.Server
 }
 
 // NewServer creates a new HTTP server
@@ -27,9 +27,9 @@ func NewServer(cfg *config.Config, registryService service.RegistryService) *Ser
 	api := router.NewHumaAPI(cfg, registryService, mux)
 
 	server := &Server{
-		config:      cfg,
-		registry:    registryService,
-		humaAPI:     api,
+		config:   cfg,
+		registry: registryService,
+		humaAPI:  api,
 		server: &http.Server{
 			Addr:              cfg.ServerAddress,
 			Handler:           mux,

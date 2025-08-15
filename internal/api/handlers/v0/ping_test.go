@@ -15,7 +15,7 @@ func TestPingEndpoint(t *testing.T) {
 	// Create a new test API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	
+
 	// Register the ping endpoint
 	v0.RegisterPingEndpoint(api)
 

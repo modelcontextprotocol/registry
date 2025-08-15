@@ -34,7 +34,6 @@ type ServerDetailInput struct {
 	ID string `path:"id" doc:"Server ID (UUID)" format:"uuid"`
 }
 
-
 // RegisterServersEndpoints registers all server-related endpoints
 func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 	// List servers endpoint
@@ -64,7 +63,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		body := ListServersBody{
 			Servers: servers,
 		}
-		
+
 		// Add metadata if there's a next cursor
 		if nextCursor != "" {
 			body.Metadata = &Metadata{

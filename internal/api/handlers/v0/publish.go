@@ -52,7 +52,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		serverDetail := input.Body.ServerDetail
 
 		// Verify that the token's repository matches the server being published
-		if !jwtManager.HasPermission(serverDetail.Name, "publish", claims.Permissions) {
+		if !jwtManager.HasPermission(serverDetail.Name, auth.PermissionActionPublish, claims.Permissions) {
 			return nil, huma.Error403Forbidden("You do not have permission to publish this server")
 		}
 

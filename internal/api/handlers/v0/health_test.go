@@ -49,7 +49,7 @@ func TestHealthEndpoint(t *testing.T) {
 			// Create a new test API
 			mux := http.NewServeMux()
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-			
+
 			// Register the health endpoint
 			v0.RegisterHealthEndpoint(api, tc.config)
 
@@ -67,7 +67,7 @@ func TestHealthEndpoint(t *testing.T) {
 			// Since Huma adds a $schema field, we'll check individual fields
 			body := w.Body.String()
 			assert.Contains(t, body, `"status":"ok"`)
-			
+
 			if tc.config.GithubClientID != "" {
 				assert.Contains(t, body, `"github_client_id":"test-github-client-id"`)
 			} else {

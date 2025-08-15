@@ -146,11 +146,11 @@ func TestServersListEndpoint(t *testing.T) {
 			},
 		},
 		{
-			name:        "successful list with limit capping at 100",
-			queryParams: "?limit=150",
-			setupMocks: func(_ *MockRegistryService) {},
-			expectedStatus:  http.StatusUnprocessableEntity, // Huma rejects values > maximum
-			expectedError:   "validation failed",
+			name:           "successful list with limit capping at 100",
+			queryParams:    "?limit=150",
+			setupMocks:     func(_ *MockRegistryService) {},
+			expectedStatus: http.StatusUnprocessableEntity, // Huma rejects values > maximum
+			expectedError:  "validation failed",
 		},
 		{
 			name:           "invalid cursor parameter",
@@ -408,7 +408,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		}
-		
+
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -440,7 +440,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create request: %v", err)
 		}
-		
+
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
