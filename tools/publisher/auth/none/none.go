@@ -21,7 +21,7 @@ type TokenResponse struct {
 	ExpiresAt     int64  `json:"expires_at"`
 }
 
-func NewProvider(registryURL string) auth.Provider {
+func NewProvider(registryURL string) auth.Provider { //nolint:ireturn
 	return &Provider{
 		registryURL: registryURL,
 	}
@@ -68,7 +68,7 @@ func (p *Provider) NeedsLogin() bool {
 	return false
 }
 
-func (p *Provider) Login(ctx context.Context) error {
+func (p *Provider) Login(_ context.Context) error {
 	// No login needed for anonymous auth
 	return nil
 }
