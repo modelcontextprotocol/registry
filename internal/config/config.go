@@ -12,6 +12,7 @@ const (
 )
 
 // Config holds the application configuration
+// See .env.example for more documentation
 type Config struct {
 	ServerAddress       string       `env:"SERVER_ADDRESS" envDefault:":8080"`
 	DatabaseType        DatabaseType `env:"DATABASE_TYPE" envDefault:"mongodb"`

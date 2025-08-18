@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mongodb
+    # See .env.example for more documentation
     environment:
       - MCP_REGISTRY_DATABASE_URL=${MCP_REGISTRY_DATABASE_URL:-mongodb://mongodb:27017}
       - MCP_REGISTRY_ENVIRONMENT=${MCP_REGISTRY_ENVIRONMENT:-test}
