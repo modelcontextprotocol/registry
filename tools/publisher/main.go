@@ -139,6 +139,9 @@ func publishCommand() error {
 	case "github-at":
 		log.Println("Using GitHub Access Token for authentication")
 		authProvider = github.NewOAuthProvider(forceLogin, registryURL)
+	case "github-oidc":
+		log.Println("Using GitHub Actions OIDC for authentication")
+		authProvider = github.NewOIDCProvider(registryURL)
 	case "none":
 		log.Println("Using anonymous authentication")
 		authProvider = none.NewProvider(registryURL)

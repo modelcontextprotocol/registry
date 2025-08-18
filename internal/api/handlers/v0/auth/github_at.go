@@ -9,6 +9,7 @@ import (
 	"regexp"
 
 	"github.com/danielgtaylor/huma/v2"
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
@@ -51,20 +52,16 @@ func RegisterGitHubATEndpoint(api huma.API, cfg *config.Config) {
 		OperationID: "exchange-github-token",
 		Method:      http.MethodPost,
 		Path:        "/v0/auth/github-at",
-		Summary:     "Exchange GitHub token for Registry JWT",
-		Description: "Exchange a GitHub OAuth token for a short-lived Registry JWT token",
+		Summary:     "Exchange GitHub OAuth access token for Registry JWT",
+		Description: "Exchange a GitHub OAuth access token for a short-lived Registry JWT token",
 		Tags:        []string{"auth"},
-	}, func(ctx context.Context, input *GitHubTokenExchangeInput) (*struct {
-		Body auth.TokenResponse `json:"body"`
-	}, error) {
+	}, func(ctx context.Context, input *GitHubTokenExchangeInput) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.ExchangeToken(ctx, input.Body.GitHubToken)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("Token exchange failed", err)
 		}
 
-		return &struct {
-			Body auth.TokenResponse `json:"body"`
-		}{
+		return &v0.Response[auth.TokenResponse]{
 			Body: *response,
 		}, nil
 	})

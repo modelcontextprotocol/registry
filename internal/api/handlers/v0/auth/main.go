@@ -10,6 +10,8 @@ func RegisterAuthEndpoints(api huma.API, cfg *config.Config) {
 	// Register GitHub access token authentication endpoint
 	RegisterGitHubATEndpoint(api, cfg)
 
+	// Register GitHub OIDC authentication endpoint
+	RegisterGitHubOIDCEndpoint(api, cfg)
 
 	// Register anonymous authentication endpoint
 	RegisterNoneEndpoint(api, cfg)

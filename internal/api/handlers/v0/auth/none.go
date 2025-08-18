@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
@@ -41,17 +42,13 @@ func RegisterNoneEndpoint(api huma.API, cfg *config.Config) {
 		Summary:     "Get anonymous Registry JWT",
 		Description: "Get a short-lived Registry JWT token for publishing to io.modelcontextprotocol.anonymous/* namespace",
 		Tags:        []string{"auth"},
-	}, func(ctx context.Context, _ *struct{}) (*struct {
-		Body auth.TokenResponse `json:"body"`
-	}, error) {
+	}, func(ctx context.Context, _ *struct{}) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.GetAnonymousToken(ctx)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to generate token", err)
 		}
 
-		return &struct {
-			Body auth.TokenResponse `json:"body"`
-		}{
+		return &v0.Response[auth.TokenResponse]{
 			Body: *response,
 		}, nil
 	})
