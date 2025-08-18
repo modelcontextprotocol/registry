@@ -97,12 +97,16 @@ func publishCommand() error {
 	var mcpFilePath string
 	var forceLogin bool
 	var authMethod string
+	var dnsDomain string
+	var dnsPrivateKey string
 
 	// Command-line flags for configuration
 	publishFlags.StringVar(&registryURL, "registry-url", "", "URL of the registry (required)")
 	publishFlags.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file (required)")
 	publishFlags.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
 	publishFlags.StringVar(&authMethod, "auth-method", "github-at", "authentication method (default: github-at)")
+	publishFlags.StringVar(&dnsDomain, "dns-domain", "", "domain name for DNS authentication (required for dns auth method)")
+	publishFlags.StringVar(&dnsPrivateKey, "dns-private-key", "", "64-character hex seed for DNS authentication (required for dns auth method)")
 
 	// Set custom usage function
 	publishFlags.Usage = func() {
@@ -111,10 +115,12 @@ func publishCommand() error {
 		fmt.Fprint(os.Stdout, "Publish a server.json file to the registry\n")
 		fmt.Fprint(os.Stdout, "\n")
 		fmt.Fprint(os.Stdout, "Flags:\n")
-		fmt.Fprint(os.Stdout, "  --registry-url string    URL of the registry (required)\n")
-		fmt.Fprint(os.Stdout, "  --mcp-file string        path to the MCP file (required)\n")
-		fmt.Fprint(os.Stdout, "  --login                  force a new login even if a token exists\n")
-		fmt.Fprint(os.Stdout, "  --auth-method string     authentication method (default: github-at)\n")
+		fmt.Fprint(os.Stdout, "  --registry-url string       URL of the registry (required)\n")
+		fmt.Fprint(os.Stdout, "  --mcp-file string           path to the MCP file (required)\n")
+		fmt.Fprint(os.Stdout, "  --login                     force a new login even if a token exists\n")
+		fmt.Fprint(os.Stdout, "  --auth-method string        authentication method (default: github-at)\n")
+		fmt.Fprint(os.Stdout, "  --dns-domain string         domain name for DNS authentication\n")
+		fmt.Fprint(os.Stdout, "  --dns-private-key string    64-character hex seed for DNS authentication\n")
 	}
 
 	if err := publishFlags.Parse(os.Args[2:]); err != nil {
@@ -140,6 +146,9 @@ func publishCommand() error {
 	case "github-oidc":
 		log.Println("Using GitHub Actions OIDC for authentication")
 		authProvider = auth.NewGitHubOIDCProvider(registryURL)
+	case "dns":
+		log.Println("Using DNS-based authentication")
+		authProvider = auth.NewDNSProvider(registryURL, dnsDomain, dnsPrivateKey)
 	case "none":
 		log.Println("Using anonymous authentication")
 		authProvider = auth.NewNoneProvider(registryURL)

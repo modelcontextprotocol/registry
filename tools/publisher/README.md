@@ -48,7 +48,10 @@ The tool supports two main commands:
 - `--auth-method`: Authentication method to use (default: github-at)
   - `github-at`: Interactive GitHub OAuth device flow authentication
   - `github-oidc`: GitHub Actions OIDC authentication (for CI/CD)
+  - `dns`: DNS-based public/private key authentication
   - `none`: No authentication (for registry contributors testing locally)
+- `--dns-domain`: Domain name for DNS authentication (required for dns auth method)
+- `--dns-private-key`: 64-character hex seed for DNS authentication (required for dns auth method)
 
 ## Creating a server.json file
 
@@ -181,6 +184,31 @@ jobs:
             --mcp-file "./server.json" \
             --auth-method github-oidc
 ```
+
+### DNS Authentication (`dns`)
+
+For domain-based authentication using public/private key cryptography:
+
+1. **Generate Ed25519 keypair**: 
+   ```bash
+   openssl genpkey -algorithm Ed25519 -out /tmp/key.pem && \
+   echo "\n\nDNS record to add to your domain:" && \
+   echo "  Type: TXT" && \
+   echo "  Value: v=MCPv1; k=ed25519; p=$(openssl pkey -in /tmp/key.pem -pubout -outform DER | tail -c 32 | base64)" && \
+   echo "" && \
+   echo "Private key for --dns-private-key flag:" && \
+   echo "  $(openssl pkey -in /tmp/key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')\n" && \
+   rm /tmp/key.pem
+   ```
+2. **Add DNS TXT record**: Add a TXT record to your domain with format: `v=MCPv1; k=ed25519; p=<base64-public-key>`
+3. **Use CLI arguments**: Provide domain and private key via command line flags
+
+```bash
+./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> \
+  --auth-method dns --dns-domain example.com --dns-private-key abc123...
+```
+
+This grants publishing permissions for both `example.com/*` and `*.example.com/*` namespaces.
 
 ### No Authentication (`none`)
 
