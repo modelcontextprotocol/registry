@@ -88,9 +88,9 @@ func (d *DNSProvider) exchangeDNSTokenForRegistry(ctx context.Context, domain, t
 
 	// Prepare the request body
 	payload := map[string]string{
-		"domain":            domain,
-		"timestamp":         timestamp,
-		"signed_timestamp":  signedTimestamp,
+		"domain":           domain,
+		"timestamp":        timestamp,
+		"signed_timestamp": signedTimestamp,
 	}
 
 	jsonData, err := json.Marshal(payload)
