@@ -196,7 +196,9 @@ func (h *DNSAuthHandler) buildPermissions(domain string) []auth.Permission {
 			Action:          auth.PermissionActionPublish,
 			ResourcePattern: fmt.Sprintf("%s/*", reverseDomain),
 		},
-		// Grant permissions for all subdomains (e.g., com.example.*)
+		// DNS implies a hierarchy where subdomains are treated as part of the parent domain,
+		// therefore we grant permissions for all subdomains (e.g., com.example.*)
+		// This is in line with other DNS-based authentication methods e.g. ACME DNS-01 challenges
 		{
 			Action:          auth.PermissionActionPublish,
 			ResourcePattern: fmt.Sprintf("%s.*", reverseDomain),
