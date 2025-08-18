@@ -1,4 +1,4 @@
-package none
+package auth
 
 import (
 	"context"
@@ -7,11 +7,9 @@ import (
 	"io"
 	"net/http"
 	"strings"
-
-	"github.com/modelcontextprotocol/registry/tools/publisher/auth"
 )
 
-type Provider struct {
+type NoneProvider struct {
 	registryURL string
 	token       string
 }
@@ -21,13 +19,13 @@ type TokenResponse struct {
 	ExpiresAt     int64  `json:"expires_at"`
 }
 
-func NewProvider(registryURL string) auth.Provider { //nolint:ireturn
-	return &Provider{
+func NewNoneProvider(registryURL string) Provider { //nolint:ireturn
+	return &NoneProvider{
 		registryURL: registryURL,
 	}
 }
 
-func (p *Provider) GetToken(ctx context.Context) (string, error) {
+func (p *NoneProvider) GetToken(ctx context.Context) (string, error) {
 	if p.token != "" {
 		return p.token, nil
 	}
@@ -64,15 +62,15 @@ func (p *Provider) GetToken(ctx context.Context) (string, error) {
 	return p.token, nil
 }
 
-func (p *Provider) NeedsLogin() bool {
+func (p *NoneProvider) NeedsLogin() bool {
 	return false
 }
 
-func (p *Provider) Login(_ context.Context) error {
+func (p *NoneProvider) Login(_ context.Context) error {
 	// No login needed for anonymous auth
 	return nil
 }
 
-func (p *Provider) Name() string {
+func (p *NoneProvider) Name() string {
 	return "none"
 }

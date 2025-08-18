@@ -1,4 +1,4 @@
-package github
+package auth
 
 import (
 	"bytes"
@@ -49,8 +49,8 @@ type StoredRegistryToken struct {
 	ExpiresAt int64  `json:"expires_at"`
 }
 
-// OAuthProvider implements the AuthProvider interface using GitHub's device flow
-type OAuthProvider struct {
+// GitHubATProvider implements the Provider interface using GitHub's device flow
+type GitHubATProvider struct {
 	clientID    string
 	forceLogin  bool
 	registryURL string
@@ -62,16 +62,16 @@ type ServerHealthResponse struct {
 	GitHubClientID string `json:"github_client_id"`
 }
 
-// NewOAuthProvider creates a new GitHub OAuth provider
-func NewOAuthProvider(forceLogin bool, registryURL string) *OAuthProvider {
-	return &OAuthProvider{
+// NewGitHubATProvider creates a new GitHub OAuth provider
+func NewGitHubATProvider(forceLogin bool, registryURL string) Provider { //nolint:ireturn
+	return &GitHubATProvider{
 		forceLogin:  forceLogin,
 		registryURL: registryURL,
 	}
 }
 
 // GetToken retrieves the registry JWT token (exchanges GitHub token if needed)
-func (g *OAuthProvider) GetToken(ctx context.Context) (string, error) {
+func (g *GitHubATProvider) GetToken(ctx context.Context) (string, error) {
 	// Check if we have a valid registry token
 	registryToken, err := readRegistryToken()
 	if err == nil && registryToken != "" {
@@ -100,7 +100,7 @@ func (g *OAuthProvider) GetToken(ctx context.Context) (string, error) {
 }
 
 // NeedsLogin checks if a new login is required
-func (g *OAuthProvider) NeedsLogin() bool {
+func (g *GitHubATProvider) NeedsLogin() bool {
 	if g.forceLogin {
 		return true
 	}
@@ -123,7 +123,7 @@ func (g *OAuthProvider) NeedsLogin() bool {
 }
 
 // Login performs the GitHub device flow authentication
-func (g *OAuthProvider) Login(ctx context.Context) error {
+func (g *GitHubATProvider) Login(ctx context.Context) error {
 	// If clientID is not set, try to retrieve it from the server's health endpoint
 	if g.clientID == "" {
 		clientID, err := getClientID(ctx, g.registryURL)
@@ -164,12 +164,12 @@ func (g *OAuthProvider) Login(ctx context.Context) error {
 }
 
 // Name returns the name of this auth provider
-func (g *OAuthProvider) Name() string {
+func (g *GitHubATProvider) Name() string {
 	return "github"
 }
 
 // requestDeviceCode initiates the device authorization flow
-func (g *OAuthProvider) requestDeviceCode(ctx context.Context) (string, string, string, error) {
+func (g *GitHubATProvider) requestDeviceCode(ctx context.Context) (string, string, string, error) {
 	if g.clientID == "" {
 		return "", "", "", fmt.Errorf("GitHub Client ID is required for device flow login")
 	}
@@ -217,7 +217,7 @@ func (g *OAuthProvider) requestDeviceCode(ctx context.Context) (string, string, 
 }
 
 // pollForToken polls for access token after user completes authorization
-func (g *OAuthProvider) pollForToken(ctx context.Context, deviceCode string) (string, error) {
+func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) (string, error) {
 	if g.clientID == "" {
 		return "", fmt.Errorf("GitHub Client ID is required for device flow login")
 	}
@@ -344,7 +344,7 @@ func getClientID(ctx context.Context, registryURL string) (string, error) {
 }
 
 // exchangeTokenForRegistry exchanges a GitHub token for a registry JWT token
-func (g *OAuthProvider) exchangeTokenForRegistry(ctx context.Context, githubToken string) (string, int64, error) {
+func (g *GitHubATProvider) exchangeTokenForRegistry(ctx context.Context, githubToken string) (string, int64, error) {
 	if g.registryURL == "" {
 		return "", 0, fmt.Errorf("registry URL is required for token exchange")
 	}

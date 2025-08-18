@@ -14,8 +14,6 @@ import (
 	"strings"
 
 	"github.com/modelcontextprotocol/registry/tools/publisher/auth"
-	"github.com/modelcontextprotocol/registry/tools/publisher/auth/github"
-	"github.com/modelcontextprotocol/registry/tools/publisher/auth/none"
 )
 
 // Server structure types for JSON generation
@@ -138,13 +136,13 @@ func publishCommand() error {
 	switch authMethod {
 	case "github-at":
 		log.Println("Using GitHub Access Token for authentication")
-		authProvider = github.NewOAuthProvider(forceLogin, registryURL)
+		authProvider = auth.NewGitHubATProvider(forceLogin, registryURL)
 	case "github-oidc":
 		log.Println("Using GitHub Actions OIDC for authentication")
-		authProvider = github.NewOIDCProvider(registryURL)
+		authProvider = auth.NewGitHubOIDCProvider(registryURL)
 	case "none":
 		log.Println("Using anonymous authentication")
-		authProvider = none.NewProvider(registryURL)
+		authProvider = auth.NewNoneProvider(registryURL)
 	default:
 		return fmt.Errorf("unsupported authentication method: %s", authMethod)
 	}

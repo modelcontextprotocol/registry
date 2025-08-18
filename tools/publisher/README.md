@@ -23,11 +23,14 @@ The tool supports two main commands:
 ### Publishing a server
 
 ```bash
-# Basic usage
-./bin/mcp-publisher publish -registry-url <REGISTRY_URL> -mcp-file <PATH_TO_MCP_FILE>
+# Basic usage with GitHub OAuth (interactive authentication)
+./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE>
+
+# Use GitHub Actions OIDC (for CI/CD pipelines)
+./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --auth-method github-oidc
 
 # Force a new login even if a token exists
-./bin/mcp-publisher publish -registry-url <REGISTRY_URL> -mcp-file <PATH_TO_MCP_FILE> -login
+./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --login
 ```
 
 ### Creating a server.json file
@@ -39,10 +42,13 @@ The tool supports two main commands:
 
 ### Command-line Arguments
 
-- `-registry-url`: URL of the MCP registry (required)
-- `-mcp-file`: Path to the MCP configuration file (required)
-- `-login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
-- `-auth-method`: Authentication method to use (default: github)
+- `--registry-url`: URL of the MCP registry (required)
+- `--mcp-file`: Path to the MCP configuration file (required)
+- `--login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
+- `--auth-method`: Authentication method to use (default: github-at)
+  - `github-at`: Interactive GitHub OAuth device flow authentication
+  - `github-oidc`: GitHub Actions OIDC authentication (for CI/CD)
+  - `none`: No authentication (for registry contributors testing locally)
 
 ## Creating a server.json file
 
@@ -127,28 +133,59 @@ After creation, you may need to manually edit the file to:
 
 ## Authentication
 
-The tool has been simplified to use **GitHub OAuth device flow authentication exclusively**. Previous versions supported multiple authentication methods, but this version focuses solely on GitHub OAuth for better security and user experience.
+The tool supports multiple authentication methods to accommodate different use cases:
+
+### GitHub OAuth Device Flow (`github-at`) - Default
+
+For interactive use:
 
 1. **Automatic Setup**: The tool automatically retrieves the GitHub Client ID from the registry's health endpoint
 2. **First Run Authentication**: When first run (or with the `--login` flag), the tool initiates the GitHub device flow
 3. **User Authorization**: You'll be provided with a URL and a verification code to enter on GitHub
 4. **Token Storage**: After successful authentication, the tool saves the access token locally in `.mcpregistry_github_token` for future use
-5. **Token Exchange**: The GitHub token is exchanged for a short-lived registry token, which is saved locally in `.mcpregistry_registry_token`.
-5. **Secure Communication**: The registry token is sent in the HTTP Authorization header with the Bearer scheme for all registry API calls
-
-**Note**: Authentication is performed via GitHub OAuth App, which you must authorize for the respective resources (e.g., organization access if publishing organization repositories).
-
-## Publishing Example
-
-To publish an existing server.json file to the registry:
-
-1. Prepare your `server.json` file with your server details. See an example in [server.json](./server.json)
-2. Run the publisher tool:
+5. **Token Exchange**: The GitHub token is exchanged for a short-lived registry token, which is saved locally in `.mcpregistry_registry_token`
+6. **Secure Communication**: The registry token is sent in the HTTP Authorization header with the Bearer scheme for all registry API calls
 
 ```bash
-./bin/mcp-publisher publish --registry-url "https://mcp-registry.example.com" --mcp-file "./server.json"
+./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --auth-method github-at
 ```
 
-3. Follow the authentication instructions in the terminal if prompted.
+### GitHub Actions OIDC (`github-oidc`)
 
-4. Upon successful publication, you'll see a confirmation message.
+For CI/CD pipelines using GitHub Actions:
+
+1. **Prerequisites**: Your GitHub Actions workflow must have `id-token: write` permissions
+2. **Token Exchange**: The OIDC token is exchanged directly for a registry token via `/v0/auth/github-oidc`
+3. **No Storage**: No local token files are created; authentication is ephemeral per workflow run
+
+**Example GitHub Actions workflow:**
+
+```yaml
+name: Publish MCP Server
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC token generation
+      contents: read   # E.g. To read the server.json file from your Git repo
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish to MCP Registry
+        run: |
+          ./bin/mcp-publisher publish \
+            --registry-url "https://registry.modelcontextprotocol.org" \
+            --mcp-file "./server.json" \
+            --auth-method github-oidc
+```
+
+### No Authentication (`none`)
+
+Mainly for registry contributors, for testing locally:
+
+```bash
+./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --auth-method none
+```
