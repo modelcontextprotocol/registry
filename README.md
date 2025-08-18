@@ -204,20 +204,7 @@ The API is documented using Swagger/OpenAPI. This page provides a complete refer
 
 ## Configuration
 
-The service can be configured using environment variables:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MCP_REGISTRY_APP_VERSION`           | Application version | `dev` |
-| `MCP_REGISTRY_DATABASE_TYPE`         | Database type | `mongodb` |
-| `MCP_REGISTRY_COLLECTION_NAME`       | MongoDB collection name | `servers_v2` |
-| `MCP_REGISTRY_DATABASE_NAME`         | MongoDB database name | `mcp-registry` |
-| `MCP_REGISTRY_DATABASE_URL`          | MongoDB connection string | `mongodb://localhost:27017` |
-| `MCP_REGISTRY_GITHUB_CLIENT_ID`      | GitHub App Client ID |  |
-| `MCP_REGISTRY_GITHUB_CLIENT_SECRET`  | GitHub App Client Secret |  |
-| `MCP_REGISTRY_LOG_LEVEL`             | Log level | `info` |
-| `MCP_REGISTRY_SEED_FROM`             | Path or URL to import seed data (supports local files and HTTP URLs) | `data/seed.json` |
-| `MCP_REGISTRY_SERVER_ADDRESS`        | Listen address for the server | `:8080` |
+The service can be configured using environment variables. See [.env.example](./.env.example) for details.
 
 ## Pre-built Docker Images
 
