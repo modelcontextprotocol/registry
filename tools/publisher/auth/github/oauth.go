@@ -360,7 +360,7 @@ func (g *OAuthProvider) exchangeTokenForRegistry(ctx context.Context, githubToke
 	}
 
 	// Make the token exchange request
-	exchangeURL := g.registryURL + "/v0/auth/github"
+	exchangeURL := g.registryURL + "/v0/auth/github-at"
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, exchangeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to create request: %w", err)

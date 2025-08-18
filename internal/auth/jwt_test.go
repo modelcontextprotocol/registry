@@ -31,7 +31,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 
 	t.Run("generate and verify valid token", func(t *testing.T) {
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHub,
+			AuthMethod:        model.AuthMethodGitHubAT,
 			AuthMethodSubject: "testuser",
 			Permissions: []auth.Permission{
 				{
@@ -50,7 +50,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 		// Verify token
 		verifiedClaims, err := jwtManager.ValidateToken(ctx, tokenResponse.RegistryToken)
 		require.NoError(t, err)
-		assert.Equal(t, model.AuthMethodGitHub, verifiedClaims.AuthMethod)
+		assert.Equal(t, model.AuthMethodGitHubAT, verifiedClaims.AuthMethod)
 		assert.Equal(t, "testuser", verifiedClaims.AuthMethodSubject)
 		assert.Equal(t, "mcp-registry", verifiedClaims.Issuer)
 		assert.Len(t, verifiedClaims.Permissions, 1)
@@ -100,7 +100,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)), // Already expired
 			},
-			AuthMethod:        model.AuthMethodGitHub,
+			AuthMethod:        model.AuthMethodGitHubAT,
 			AuthMethodSubject: "testuser",
 		}
 
@@ -126,7 +126,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 		differentJWTManager := auth.NewJWTManager(differentCfg)
 
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHub,
+			AuthMethod:        model.AuthMethodGitHubAT,
 			AuthMethodSubject: "testuser",
 		}
 
@@ -149,7 +149,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 
 	t.Run("multiple permissions", func(t *testing.T) {
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHub,
+			AuthMethod:        model.AuthMethodGitHubAT,
 			AuthMethodSubject: "admin",
 			Permissions: []auth.Permission{
 				{

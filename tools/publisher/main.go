@@ -104,8 +104,7 @@ func publishCommand() error {
 	publishFlags.StringVar(&registryURL, "registry-url", "", "URL of the registry (required)")
 	publishFlags.StringVar(&mcpFilePath, "mcp-file", "", "path to the MCP file (required)")
 	publishFlags.BoolVar(&forceLogin, "login", false, "force a new login even if a token exists")
-	publishFlags.StringVar(&authMethod, "auth-method", "github",
-		"authentication method (github for authenticated, none for anonymous) (default: github)")
+	publishFlags.StringVar(&authMethod, "auth-method", "github-at", "authentication method (default: github-at)")
 
 	// Set custom usage function
 	publishFlags.Usage = func() {
@@ -117,7 +116,7 @@ func publishCommand() error {
 		fmt.Fprint(os.Stdout, "  --registry-url string    URL of the registry (required)\n")
 		fmt.Fprint(os.Stdout, "  --mcp-file string        path to the MCP file (required)\n")
 		fmt.Fprint(os.Stdout, "  --login                  force a new login even if a token exists\n")
-		fmt.Fprint(os.Stdout, "  --auth-method string     authentication method (github for authenticated, none for anonymous) (default: github)\n")
+		fmt.Fprint(os.Stdout, "  --auth-method string     authentication method (default: github-at)\n")
 	}
 
 	if err := publishFlags.Parse(os.Args[2:]); err != nil {
@@ -137,8 +136,8 @@ func publishCommand() error {
 
 	var authProvider auth.Provider // Determine the authentication method
 	switch authMethod {
-	case "github":
-		log.Println("Using GitHub OAuth for authentication")
+	case "github-at":
+		log.Println("Using GitHub Access Token for authentication")
 		authProvider = github.NewOAuthProvider(forceLogin, registryURL)
 	case "none":
 		log.Println("Using anonymous authentication")
