@@ -3,4 +3,5 @@ config:
   mcp-registry:provider: local
   mcp-registry:githubClientId: Iv23licy3GSiM9Km5jtd
   mcp-registry:githubClientSecret: 0e8db54879b02c29adef51795586f3c510a9341d
+  mcp-registry:jwtPrivateKey: bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c
 encryptionsalt: v1:ijIHaqhbXVA=:v1:7voX1Kv+Bunz33iN:fyVHMOhlGIymzJ+ILgUBy3ExTwUUnA==

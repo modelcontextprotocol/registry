@@ -11,7 +11,7 @@ Pre-requisites:
 - Access to a Kubernetes cluster via kubeconfig. You can run a cluster locally with [minikube](https://minikube.sigs.k8s.io/docs/start/).
 
 1. Ensure your kubeconfig is configured at the cluster you want to use. For minikube, run `minikube start && minikube tunnel`.
-2. Run `make local-up` to deploy the stack. Run this again if the first attempt fails.
+2. Run `make local-up` to deploy the stack.
 3. Access the repository via the ingress load balancer. You can find its external IP with `kubectl get svc ingress-nginx-controller -n ingress-nginx`. Then run `curl -H "Host: local.registry.modelcontextprotocol.io" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
 #### To change config
