@@ -7,16 +7,16 @@ import (
 type DatabaseType string
 
 const (
-	DatabaseTypeMongoDB DatabaseType = "mongodb"
-	DatabaseTypeMemory  DatabaseType = "memory"
+	DatabaseTypePostgreSQL DatabaseType = "postgresql"
+	DatabaseTypeMemory     DatabaseType = "memory"
 )
 
 // Config holds the application configuration
 // See .env.example for more documentation
 type Config struct {
 	ServerAddress       string       `env:"SERVER_ADDRESS" envDefault:":8080"`
-	DatabaseType        DatabaseType `env:"DATABASE_TYPE" envDefault:"mongodb"`
-	DatabaseURL         string       `env:"DATABASE_URL" envDefault:"mongodb://localhost:27017"`
+	DatabaseType        DatabaseType `env:"DATABASE_TYPE" envDefault:"postgresql"`
+	DatabaseURL         string       `env:"DATABASE_URL" envDefault:"postgres://localhost:5432/mcp-registry?sslmode=disable"`
 	DatabaseName        string       `env:"DATABASE_NAME" envDefault:"mcp-registry"`
 	CollectionName      string       `env:"COLLECTION_NAME" envDefault:"servers_v2"`
 	LogLevel            string       `env:"LOG_LEVEL" envDefault:"info"`

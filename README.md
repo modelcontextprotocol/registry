@@ -24,7 +24,7 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 - Health check endpoint for service monitoring
 - Support for various environment configurations
 - Graceful shutdown handling
-- MongoDB and in-memory database support
+- PostgreSQL and in-memory database support
 - Comprehensive API documentation
 - Pagination support for listing registry entries
 - Seed data export/import composability with HTTP support
@@ -35,7 +35,7 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 ### Prerequisites
 
 - Go 1.24.x (required - check with `go version`)
-- MongoDB
+- PostgreSQL
 - Docker (optional, but recommended for development)
 
 For development:
@@ -46,14 +46,13 @@ For development:
 
 ## Running
 
-The easiest way to get the registry running is uses docker compose. This will setup the MCP Registry service, import the seed data and run MongoDB in a local Docker environment.
+The easiest way to get the registry running is uses docker compose. This will setup the MCP Registry service, import the seed data and run PostgreSQL in a local Docker environment.
 
 ```bash
-# Run the registry and MongoDB with docker compose
 make dev-compose
 ```
 
-This will start the MCP Registry service and MongoDB with Docker, running at [`localhost:8080`](http://localhost:8080).
+This will start the MCP Registry service running at [`localhost:8080`](http://localhost:8080).
 
 ## Building
 
@@ -63,15 +62,15 @@ If you prefer to run the service locally without Docker, you can build and run i
 # Build a registry executable
 make build
 ```
-This will create the `registry` binary in the current directory. You'll need to have MongoDB running locally or with Docker.
+This will create the `registry` binary in the current directory.
 
 To run the service locally:
 ```bash
-# Run registry locally (requires MongoDB)
+# Run registry locally
 make dev-local
 ```
 
-By default, the service will run on [`localhost:8080`](http://localhost:8080).
+By default, the service will run on [`localhost:8080`](http://localhost:8080). You'll need to use the in-memory database or have PostgreSQL running.
 
 To build the CLI tool for publishing MCP servers to the registry:
 
@@ -95,11 +94,12 @@ Key development commands:
 ```bash
 # Development
 make dev-compose   # Start development environment with Docker Compose
-make dev-local     # Run registry locally (requires MongoDB)
+make dev-local     # Run registry locally
 
 # Build targets
 make build          # Build the registry application
 make publisher      # Build the publisher tool
+make migrate        # Build the database migration tool
 
 # Testing
 make test-unit        # Run unit tests with coverage report
@@ -156,7 +156,7 @@ This will prevent commits that fail linting or have formatting issues.
 │   ├── api/       # HTTP server and request handlers (routing)
 │   ├── auth/      # GitHub OAuth integration
 │   ├── config/    # Configuration management
-│   ├── database/  # Data persistence abstraction (MongoDB and in-memory)
+│   ├── database/  # Data persistence abstraction
 │   ├── model/     # Data models and domain structures
 │   └── service/   # Business logic implementation
 ├── pkg/           # Public libraries
@@ -175,9 +175,9 @@ This will prevent commits that fail linting or have formatting issues.
 5. JSON responses returned to clients
 
 ### Key Interfaces
-- **Database Interface** (`internal/database/database.go`) - Abstracts data persistence with MongoDB and memory implementations
+- **Database Interface** (`internal/database/database.go`) - Abstracts data persistence with PostgreSQL and in-memory implementations
 - **RegistryService** (`internal/service/service.go`) - Business logic abstraction over database
-- **Auth Service** (`internal/auth/auth.go`) - GitHub OAuth token validation
+- **Auth Service** (`internal/auth/jwt.go`) - Registry token creation and validation
 
 ### Authentication Flow
 Publishing requires GitHub OAuth validation:
