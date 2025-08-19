@@ -103,7 +103,7 @@ Pre-requisites:
     │   ├── cert_manager.go    # SSL certificate management
     │   ├── deploy.go          # Deployment orchestration
     │   ├── ingress.go         # Ingress controller setup
-    │   ├── mongodb.go         # MongoDB deployment
+    │   ├── postgres.go        # PostgreSQL database deployment
     │   └── registry.go        # MCP Registry deployment
     └── providers/       # Kubernetes cluster providers
         ├── types.go           # Provider interface definitions
@@ -122,7 +122,7 @@ Pre-requisites:
 5. `k8s.DeployAll()` orchestrates complete deployment:
    - Certificate manager for SSL/TLS
    - Ingress controller for external access
-   - MongoDB for data persistence
+   - Database for data persistence
    - MCP Registry application
 
 ## Configuration
@@ -152,5 +152,5 @@ kubectl get svc -n ingress-nginx
 
 ```bash
 kubectl logs -l app=mcp-registry
-kubectl logs -l app=mongodb
+kubectl logs -l app=postgres
 ```

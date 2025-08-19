@@ -56,19 +56,3 @@ CREATE TRIGGER update_servers_updated_at
     BEFORE UPDATE ON servers 
     FOR EACH ROW 
     EXECUTE FUNCTION update_updated_at_column();
-
--- View for listing servers (similar to current MongoDB List behavior)
-CREATE VIEW server_list AS
-SELECT 
-    id,
-    name,
-    description,
-    status,
-    repository,
-    jsonb_build_object(
-        'version', version,
-        'release_date', release_date,
-        'is_latest', is_latest
-    ) as version_detail
-FROM servers
-WHERE is_latest = true;

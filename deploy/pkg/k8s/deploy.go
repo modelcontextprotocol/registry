@@ -21,14 +21,14 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment
 		return nil, err
 	}
 
-	// Deploy MongoDB
-	err = DeployMongoDB(ctx, cluster, environment)
+	// Deploy PostgreSQL databases
+	pgCluster, err := DeployPostgresDatabases(ctx, cluster, environment)
 	if err != nil {
 		return nil, err
 	}
 
 	// Deploy MCP Registry
-	service, err = DeployMCPRegistry(ctx, cluster, environment)
+	service, err = DeployMCPRegistry(ctx, cluster, environment, pgCluster)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apiextensions"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/networking/v1"
@@ -26,7 +27,7 @@ func getGitCommitHash() string {
 }
 
 // DeployMCPRegistry deploys the MCP Registry to the Kubernetes cluster
-func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*corev1.Service, error) {
+func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, pgCluster *apiextensions.CustomResource) (*corev1.Service, error) {
 	conf := config.New(ctx, "mcp-registry")
 	githubClientId := conf.Require("githubClientId")
 
@@ -91,8 +92,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 							},
 							Env: corev1.EnvVarArray{
 								&corev1.EnvVarArgs{
-									Name:  pulumi.String("MCP_REGISTRY_DATABASE_URL"),
-									Value: pulumi.String("mongodb://mongodb.default.svc.cluster.local:27017"),
+									Name: pulumi.String("MCP_REGISTRY_DATABASE_URL"),
+									ValueFrom: &corev1.EnvVarSourceArgs{
+										SecretKeyRef: &corev1.SecretKeySelectorArgs{
+											Name: pgCluster.Metadata.Name().ApplyT(func(name string) string {
+												return name + "-app"
+											}).(pulumi.StringOutput),
+											Key: pulumi.String("uri"),
+										},
+									},
 								},
 								&corev1.EnvVarArgs{
 									Name:  pulumi.String("MCP_REGISTRY_GITHUB_CLIENT_ID"),
