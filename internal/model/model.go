@@ -10,6 +10,8 @@ const (
 	AuthMethodGitHubOIDC AuthMethod = "github-oidc"
 	// DNS-based public/private key authentication
 	AuthMethodDNS AuthMethod = "dns"
+	// HTTP-based public/private key authentication
+	AuthMethodHTTP AuthMethod = "http"
 	// No authentication - should only be used for local development and testing
 	AuthMethodNone AuthMethod = "none"
 )

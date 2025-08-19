@@ -99,6 +99,8 @@ func publishCommand() error {
 	var authMethod string
 	var dnsDomain string
 	var dnsPrivateKey string
+	var httpDomain string
+	var httpPrivateKey string
 
 	// Command-line flags for configuration
 	publishFlags.StringVar(&registryURL, "registry-url", "", "URL of the registry (required)")
@@ -107,6 +109,8 @@ func publishCommand() error {
 	publishFlags.StringVar(&authMethod, "auth-method", "github-at", "authentication method (default: github-at)")
 	publishFlags.StringVar(&dnsDomain, "dns-domain", "", "domain name for DNS authentication (required for dns auth method)")
 	publishFlags.StringVar(&dnsPrivateKey, "dns-private-key", "", "64-character hex seed for DNS authentication (required for dns auth method)")
+	publishFlags.StringVar(&httpDomain, "http-domain", "", "domain name for HTTP authentication (required for http auth method)")
+	publishFlags.StringVar(&httpPrivateKey, "http-private-key", "", "64-character hex seed for HTTP authentication (required for http auth method)")
 
 	// Set custom usage function
 	publishFlags.Usage = func() {
@@ -121,6 +125,8 @@ func publishCommand() error {
 		fmt.Fprint(os.Stdout, "  --auth-method string        authentication method (default: github-at)\n")
 		fmt.Fprint(os.Stdout, "  --dns-domain string         domain name for DNS authentication\n")
 		fmt.Fprint(os.Stdout, "  --dns-private-key string    64-character hex seed for DNS authentication\n")
+		fmt.Fprint(os.Stdout, "  --http-domain string        domain name for HTTP authentication\n")
+		fmt.Fprint(os.Stdout, "  --http-private-key string   64-character hex seed for HTTP authentication\n")
 	}
 
 	if err := publishFlags.Parse(os.Args[2:]); err != nil {
@@ -149,6 +155,9 @@ func publishCommand() error {
 	case "dns":
 		log.Println("Using DNS-based authentication")
 		authProvider = auth.NewDNSProvider(registryURL, dnsDomain, dnsPrivateKey)
+	case "http":
+		log.Println("Using HTTP-based authentication")
+		authProvider = auth.NewHTTPProvider(registryURL, httpDomain, httpPrivateKey)
 	case "none":
 		log.Println("Using anonymous authentication")
 		authProvider = auth.NewNoneProvider(registryURL)
