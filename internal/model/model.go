@@ -31,7 +31,7 @@ type PublishRequest struct {
 type Repository struct {
 	URL    string `json:"url" bson:"url"`
 	Source string `json:"source" bson:"source"`
-	ID     string `json:"id" bson:"id"`
+	ID     string `json:"id,omitempty" bson:"id,omitempty"`
 }
 
 // ServerList represents the response for listing servers as defined in the spec
