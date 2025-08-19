@@ -39,9 +39,9 @@ The MCP Registry service provides a centralized repository for MCP server entrie
 - Docker (optional, but recommended for development)
 
 For development:
-- golangci-lint v2.3.1 - Install with:
+- golangci-lint v2.4.0 - Install with:
   ```bash
-  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.3.1
+  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0
   ```
 
 ## Running
