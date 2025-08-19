@@ -74,6 +74,9 @@ func (f *DefaultHTTPKeyFetcher) FetchKey(ctx context.Context, domain string) (st
 		return "", fmt.Errorf("HTTP %d: failed to fetch key from %s", resp.StatusCode, url)
 	}
 
+	// Limit response size to prevent DoS attacks
+	resp.Body = http.MaxBytesReader(nil, resp.Body, 4096)
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
