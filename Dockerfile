@@ -1,6 +1,14 @@
 FROM golang:1.24-alpine AS builder
 WORKDIR /app
+
+# Copy go mod files first and download dependencies
+# This creates a separate layer that only invalidates when dependencies change
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the rest of the source code
 COPY . .
+
 ARG GO_BUILD_TAGS
 RUN go build ${GO_BUILD_TAGS:+-tags="$GO_BUILD_TAGS"} -o /build/registry ./cmd/registry
 
