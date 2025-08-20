@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // Common database errors

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // ReadSeedFile reads seed data from various sources:

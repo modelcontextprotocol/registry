@@ -14,7 +14,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 )
 

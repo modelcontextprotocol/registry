@@ -1,6 +1,6 @@
 package service
 
-import "github.com/modelcontextprotocol/registry/internal/model"
+import "github.com/modelcontextprotocol/registry/pkg/model"
 
 // RegistryService defines the interface for registry operations
 type RegistryService interface {

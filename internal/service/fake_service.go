@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // fakeRegistryService implements RegistryService interface with an in-memory database

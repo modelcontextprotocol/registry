@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/modelcontextprotocol/registry/tools/publisher/auth"
 )
 

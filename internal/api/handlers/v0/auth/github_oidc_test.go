@@ -11,7 +11,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 	internalauth "github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

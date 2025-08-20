@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // registryServiceImpl implements the RegistryService interface using our Database
