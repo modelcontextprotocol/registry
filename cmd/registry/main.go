@@ -16,6 +16,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	"github.com/modelcontextprotocol/registry/internal/telemetry"
 )
 
 func main() {
@@ -90,8 +91,20 @@ func main() {
 		}
 	}
 
+	shutdownTelemetry, metrics, err := telemetry.InitMetrics(cfg.Version)
+	if err != nil {
+		log.Printf("Failed to initialize metrics: %v", err)
+		return
+	}
+
+	defer func() {
+		if err := shutdownTelemetry(context.Background()); err != nil {
+			log.Printf("Failed to shutdown telemetry: %v", err)
+		}
+	}()
+
 	// Initialize HTTP server
-	server := api.NewServer(cfg, registryService)
+	server := api.NewServer(cfg, registryService, metrics)
 
 	// Start server in a goroutine so it doesn't block signal handling
 	go func() {

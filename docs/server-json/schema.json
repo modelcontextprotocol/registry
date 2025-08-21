@@ -8,8 +8,7 @@
       "type": "object",
       "required": [
         "url",
-        "source",
-        "id"
+        "source"
       ],
       "properties": {
         "url": {

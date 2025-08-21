@@ -9,8 +9,7 @@
   "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
-    "source": "github",
-    "id": "abc123de-f456-7890-ghij-klmnopqrstuv"
+    "source": "github"
   },
   "version_detail": {
     "version": "1.0.2"

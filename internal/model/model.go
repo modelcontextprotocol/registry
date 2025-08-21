@@ -8,6 +8,10 @@ const (
 	AuthMethodGitHubAT AuthMethod = "github-at"
 	// GitHub Actions OIDC authentication
 	AuthMethodGitHubOIDC AuthMethod = "github-oidc"
+	// DNS-based public/private key authentication
+	AuthMethodDNS AuthMethod = "dns"
+	// HTTP-based public/private key authentication
+	AuthMethodHTTP AuthMethod = "http"
 	// No authentication - should only be used for local development and testing
 	AuthMethodNone AuthMethod = "none"
 )
@@ -31,7 +35,7 @@ type PublishRequest struct {
 type Repository struct {
 	URL    string `json:"url" bson:"url"`
 	Source string `json:"source" bson:"source"`
-	ID     string `json:"id" bson:"id"`
+	ID     string `json:"id,omitempty" bson:"id,omitempty"`
 }
 
 // ServerList represents the response for listing servers as defined in the spec

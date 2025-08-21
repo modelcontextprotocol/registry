@@ -1,15 +1,18 @@
 package v0_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
+	"github.com/stretchr/testify/assert"
+
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/stretchr/testify/assert"
+	"github.com/modelcontextprotocol/registry/internal/telemetry"
 )
 
 func TestHealthEndpoint(t *testing.T) {
@@ -50,8 +53,10 @@ func TestHealthEndpoint(t *testing.T) {
 			mux := http.NewServeMux()
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
+			shutdownTelemetry, metrics, _ := telemetry.InitMetrics("test")
+
 			// Register the health endpoint
-			v0.RegisterHealthEndpoint(api, tc.config)
+			v0.RegisterHealthEndpoint(api, tc.config, metrics)
 
 			// Create a test request
 			req := httptest.NewRequest(http.MethodGet, "/v0/health", nil)
@@ -59,6 +64,9 @@ func TestHealthEndpoint(t *testing.T) {
 
 			// Serve the request
 			mux.ServeHTTP(w, req)
+
+			// shut down the metric provider
+			_ = shutdownTelemetry(context.Background())
 
 			// Check the status code
 			assert.Equal(t, tc.expectedStatus, w.Code)
