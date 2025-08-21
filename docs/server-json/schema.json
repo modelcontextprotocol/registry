@@ -36,8 +36,9 @@
       "properties": {
         "version": {
           "type": "string",
+          "maxLength": 255,
           "example": "1.0.2",
-          "description": "Equivalent of Implementation.version in MCP specification."
+          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably."
         }
       }
     },

@@ -34,6 +34,44 @@ func NewMemoryDB(e map[string]*model.Server) *MemoryDB {
 	}
 }
 
+// isSemanticVersion checks if a version string follows semantic versioning format
+func isSemanticVersion(version string) bool {
+	// Basic regex pattern for semantic versioning (simplified)
+	// Allows: major.minor.patch with optional prerelease (e.g., 1.0.0-alpha.1)
+	parts := strings.Split(version, "-")
+	if len(parts) > 2 {
+		return false
+	}
+
+	// Check main version part (major.minor.patch)
+	versionParts := strings.Split(parts[0], ".")
+	if len(versionParts) != 3 {
+		return false
+	}
+
+	for _, part := range versionParts {
+		if _, err := strconv.Atoi(part); err != nil {
+			return false
+		}
+	}
+
+	// If there's a prerelease part, it can contain alphanumeric characters and dots
+	if len(parts) == 2 {
+		prerelease := parts[1]
+		if prerelease == "" {
+			return false
+		}
+		// Basic validation for prerelease - allow letters, numbers, dots
+		for _, r := range prerelease {
+			if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '.' || r == '-') {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 // compareSemanticVersions compares two semantic version strings
 // Returns:
 //
@@ -41,36 +79,17 @@ func NewMemoryDB(e map[string]*model.Server) *MemoryDB {
 //	 0 if version1 == version2
 //	+1 if version1 > version2
 func compareSemanticVersions(version1, version2 string) int {
-	// Simple semantic version comparison
-	// Assumes format: major.minor.patch
+	// Parse version parts (main version and prerelease)
+	parts1 := strings.Split(version1, "-")
+	parts2 := strings.Split(version2, "-")
 
-	parts1 := strings.Split(version1, ".")
-	parts2 := strings.Split(version2, ".")
+	mainParts1 := strings.Split(parts1[0], ".")
+	mainParts2 := strings.Split(parts2[0], ".")
 
-	// Pad with zeros if needed
-	maxLen := max(len(parts2), len(parts1))
-
-	for len(parts1) < maxLen {
-		parts1 = append(parts1, "0")
-	}
-	for len(parts2) < maxLen {
-		parts2 = append(parts2, "0")
-	}
-
-	// Compare each part
-	for i := 0; i < maxLen; i++ {
-		num1, err1 := strconv.Atoi(parts1[i])
-		num2, err2 := strconv.Atoi(parts2[i])
-
-		// If parsing fails, fall back to string comparison
-		if err1 != nil || err2 != nil {
-			if parts1[i] < parts2[i] {
-				return -1
-			} else if parts1[i] > parts2[i] {
-				return 1
-			}
-			continue
-		}
+	// Compare major, minor, patch
+	for i := 0; i < 3; i++ {
+		num1, _ := strconv.Atoi(mainParts1[i])
+		num2, _ := strconv.Atoi(mainParts2[i])
 
 		if num1 < num2 {
 			return -1
@@ -79,7 +98,58 @@ func compareSemanticVersions(version1, version2 string) int {
 		}
 	}
 
+	// If main versions are equal, compare prerelease
+	hasPrerelease1 := len(parts1) > 1
+	hasPrerelease2 := len(parts2) > 1
+
+	// Version without prerelease is higher than with prerelease
+	if !hasPrerelease1 && hasPrerelease2 {
+		return 1
+	}
+	if hasPrerelease1 && !hasPrerelease2 {
+		return -1
+	}
+
+	// Both have prerelease, compare lexicographically
+	if hasPrerelease1 && hasPrerelease2 {
+		if parts1[1] < parts2[1] {
+			return -1
+		} else if parts1[1] > parts2[1] {
+			return 1
+		}
+	}
+
 	return 0
+}
+
+// compareVersions implements the versioning strategy agreed upon in the discussion:
+// 1. If both versions are valid semver, use semantic version comparison
+// 2. If neither are valid semver, use publication timestamp (return 0 to indicate equal for sorting)
+// 3. If one is semver and one is not, the semver version is always considered higher
+func compareVersions(version1, version2 string, timestamp1, timestamp2 time.Time) int {
+	isSemver1 := isSemanticVersion(version1)
+	isSemver2 := isSemanticVersion(version2)
+
+	if isSemver1 && isSemver2 {
+		// Both are semver - use semantic comparison
+		return compareSemanticVersions(version1, version2)
+	}
+
+	if !isSemver1 && !isSemver2 {
+		// Neither are semver - use timestamp comparison
+		if timestamp1.Before(timestamp2) {
+			return -1
+		} else if timestamp1.After(timestamp2) {
+			return 1
+		}
+		return 0
+	}
+
+	// One is semver, one is not - semver is always higher
+	if isSemver1 && !isSemver2 {
+		return 1
+	}
+	return -1
 }
 
 // List retrieves all MCPRegistry entries with optional filtering and pagination
@@ -209,25 +279,26 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetai
 		return ErrInvalidInput
 	}
 
-	// check that the name and the version are unique
-	// Also check version ordering - don't allow publishing older versions after newer ones
-	var latestVersion string
+	// Validate version string length (max 255 characters as per schema)
+	if len(serverDetail.VersionDetail.Version) > 255 {
+		return ErrInvalidInput
+	}
+
+	// Check that the name and version combination is unique
+	var existingEntries []*model.ServerDetail
 	for _, entry := range db.entries {
 		if entry.Name == serverDetail.Name {
 			if entry.VersionDetail.Version == serverDetail.VersionDetail.Version {
 				return ErrAlreadyExists
 			}
-
-			// Track the latest version for this package name
-			if latestVersion == "" || compareSemanticVersions(entry.VersionDetail.Version, latestVersion) > 0 {
-				latestVersion = entry.VersionDetail.Version
-			}
+			existingEntries = append(existingEntries, entry)
 		}
 	}
 
-	// If we found existing versions, check if the new version is older than the latest
-	if latestVersion != "" && compareSemanticVersions(serverDetail.VersionDetail.Version, latestVersion) < 0 {
-		return ErrInvalidVersion
+	// Parse the current time for timestamp-based comparisons
+	currentTime := time.Now()
+	if serverDetail.VersionDetail.ReleaseDate == "" {
+		serverDetail.VersionDetail.ReleaseDate = currentTime.Format(time.RFC3339)
 	}
 
 	if serverDetail.Repository.URL == "" {
@@ -236,11 +307,31 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetai
 
 	// Always generate a new UUID for the ID
 	serverDetail.ID = uuid.New().String()
-	serverDetail.VersionDetail.IsLatest = true // Assume the new version is the latest
-	// Only set ReleaseDate if it's not already provided
-	if serverDetail.VersionDetail.ReleaseDate == "" {
-		serverDetail.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
+
+	// Determine if this version should be marked as latest based on the versioning strategy
+	isLatest := true
+	if len(existingEntries) > 0 {
+		// Compare with existing versions to determine if this should be latest
+		for _, existing := range existingEntries {
+			existingTime, _ := time.Parse(time.RFC3339, existing.VersionDetail.ReleaseDate)
+			comparison := compareVersions(serverDetail.VersionDetail.Version, existing.VersionDetail.Version, currentTime, existingTime)
+			if comparison < 0 {
+				// New version is lower than existing version
+				isLatest = false
+				break
+			}
+		}
+
+		// If this version will be latest, mark all existing versions as not latest
+		if isLatest {
+			for _, existing := range existingEntries {
+				existing.VersionDetail.IsLatest = false
+			}
+		}
 	}
+
+	serverDetail.VersionDetail.IsLatest = isLatest
+
 	// Store a copy of the entire ServerDetail
 	serverDetailCopy := *serverDetail
 	db.entries[serverDetail.ID] = &serverDetailCopy

@@ -72,13 +72,23 @@ More can be added as the community desires; feel free to open an issue if you ar
 Yes, versioning is supported:
 
 - Each version gets its own immutable metadata
-- Version bumps are required for updates
+- Version strings must be unique for each server
 - Old versions remain accessible for compatibility
-- The registry tracks which version is "latest"
+- The registry tracks which version is "latest" based on semantic version ordering when possible
 
 ### How do I update my server metadata?
 
-Submit a new `server.json` with an incremented version number. Once published, version metadata is immutable (similar to npm).
+Submit a new `server.json` with a unique version string. Once published, version metadata is immutable (similar to npm).
+
+### What version format should I use?
+
+The registry accepts any version string up to 255 characters, but we recommend:
+
+- **SHOULD use semantic versioning** (e.g., "1.0.2", "2.1.0-alpha") for predictable ordering
+- **SHOULD align with package versions** to reduce confusion
+- **MAY use prerelease labels** (e.g., "1.0.0-1") for registry-specific versions
+
+The registry attempts to parse versions as semantic versions for proper ordering. Non-semantic versions are allowed but will be ordered by publication timestamp. See the [versioning guide](./versioning.md) for detailed guidance.
 
 ### Can I delete/unpublish my server?
 
