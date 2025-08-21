@@ -1,4 +1,3 @@
-//nolint:ireturn
 package auth
 
 type HTTPProvider struct {
@@ -6,7 +5,9 @@ type HTTPProvider struct {
 }
 
 // NewHTTPProvider creates a new HTTP-based auth provider
-func NewHTTPProvider(registryURL, domain, hexSeed string) Provider { //nolint:ireturn
+//
+//nolint:ireturn
+func NewHTTPProvider(registryURL, domain, hexSeed string) Provider {
 	return &HTTPProvider{
 		CryptoProvider: &CryptoProvider{
 			registryURL: registryURL,

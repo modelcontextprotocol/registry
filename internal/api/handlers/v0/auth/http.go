@@ -45,7 +45,7 @@ func NewDefaultHTTPKeyFetcher() *DefaultHTTPKeyFetcher {
 			Timeout: 10 * time.Second,
 			// Disable redirects for security purposes:
 			// Prevents people doing weird things like sending us to internal endpoints at different paths
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
 		},

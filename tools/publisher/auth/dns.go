@@ -1,4 +1,3 @@
-//nolint:ireturn
 package auth
 
 type DNSProvider struct {
@@ -6,7 +5,9 @@ type DNSProvider struct {
 }
 
 // NewDNSProvider creates a new DNS-based auth provider
-func NewDNSProvider(registryURL, domain, hexSeed string) Provider { //nolint:ireturn
+//
+//nolint:ireturn
+func NewDNSProvider(registryURL, domain, hexSeed string) Provider {
 	return &DNSProvider{
 		CryptoProvider: &CryptoProvider{
 			registryURL: registryURL,
