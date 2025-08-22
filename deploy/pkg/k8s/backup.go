@@ -14,7 +14,7 @@ import (
 )
 
 // DeployK8up installs the k8up backup operator and configures scheduled backups
-func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.StorageInfo) error {
+func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo) error {
 	if storage == nil {
 		ctx.Log.Info("No backup storage configured, skipping k8up deployment", nil)
 		return nil

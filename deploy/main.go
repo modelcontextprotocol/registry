@@ -48,8 +48,14 @@ func main() {
 			return err
 		}
 
+		// Create backup storage
+		storage, err := provider.CreateBackupStorage(ctx, cluster, environment)
+		if err != nil {
+			return err
+		}
+
 		// Deploy to Kubernetes
-		_, err = k8s.DeployAll(ctx, cluster, provider, environment)
+		_, err = k8s.DeployAll(ctx, cluster, storage, environment)
 		if err != nil {
 			return err
 		}

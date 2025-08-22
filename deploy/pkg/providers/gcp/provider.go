@@ -186,7 +186,7 @@ users:
 }
 
 // CreateBackupStorage creates GCS bucket with HMAC credentials for S3-compatible access
-func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*providers.StorageInfo, error) {
+func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*providers.BackupStorageInfo, error) {
 	gcpConf := config.New(ctx, "gcp")
 	projectID := gcpConf.Get("project")
 	if projectID == "" {
@@ -272,7 +272,7 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 		return nil, fmt.Errorf("failed to create backup credentials secret: %w", err)
 	}
 
-	return &providers.StorageInfo{
+	return &providers.BackupStorageInfo{
 		Endpoint:    "https://storage.googleapis.com",
 		BucketName:  bucketName,
 		Credentials: backupSecret,

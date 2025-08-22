@@ -47,7 +47,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 }
 
 // CreateBackupStorage creates MinIO for S3-compatible backup storage
-func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*providers.StorageInfo, error) {
+func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*providers.BackupStorageInfo, error) {
 	// Create MinIO namespace
 	minioNamespace, err := corev1.NewNamespace(ctx, "minio", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -265,7 +265,7 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 		return nil, fmt.Errorf("failed to create backup credentials secret: %w", err)
 	}
 
-	return &providers.StorageInfo{
+	return &providers.BackupStorageInfo{
 		Endpoint:    "http://minio.minio:9000",
 		BucketName:  "k8up-backups",
 		Credentials: backupSecret,

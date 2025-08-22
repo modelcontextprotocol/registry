@@ -8,7 +8,7 @@ import (
 )
 
 // DeployAll orchestrates the complete deployment of the MCP Registry to Kubernetes
-func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, provider providers.ClusterProvider, environment string) (service *corev1.Service, err error) {
+func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStorage *providers.BackupStorageInfo, environment string) (service *corev1.Service, err error) {
 	// Setup cert-manager
 	err = SetupCertManager(ctx, cluster)
 	if err != nil {
@@ -27,14 +27,8 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, provider pr
 		return nil, err
 	}
 
-	// Setup backup storage infrastructure
-	storage, err := provider.CreateBackupStorage(ctx, cluster, environment)
-	if err != nil {
-		return nil, err
-	}
-
 	// Deploy k8up backup operator
-	err = DeployK8up(ctx, cluster, environment, storage)
+	err = DeployK8up(ctx, cluster, environment, backupStorage)
 	if err != nil {
 		return nil, err
 	}
