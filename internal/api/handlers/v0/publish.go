@@ -33,7 +33,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*Response[model.Server], error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[model.ServerResponse], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -48,30 +48,23 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
 		}
 
-		// Convert PublishRequest body to ServerDetail
-		serverDetail := input.Body.ServerDetail
+		// Get server details from request body
+		serverDetail := input.Body.Server
 
 		// Verify that the token's repository matches the server being published
 		if !jwtManager.HasPermission(serverDetail.Name, auth.PermissionActionPublish, claims.Permissions) {
 			return nil, huma.Error403Forbidden("You do not have permission to publish this server")
 		}
 
-		// Publish the server details
-		err = registry.Publish(&serverDetail)
+		// Publish the server with extensions
+		publishedServer, err := registry.Publish(input.Body)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to publish server", err)
 		}
 
-		// Create response with the published server data
-		return &Response[model.Server]{
-			Body: model.Server{
-				ID:            serverDetail.ID,
-				Name:          serverDetail.Name,
-				Description:   serverDetail.Description,
-				Status:        serverDetail.Status,
-				Repository:    serverDetail.Repository,
-				VersionDetail: serverDetail.VersionDetail,
-			},
+		// Return the published server in extension wrapper format
+		return &Response[model.ServerResponse]{
+			Body: *publishedServer,
 		}, nil
 	})
 }
