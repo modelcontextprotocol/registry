@@ -84,6 +84,62 @@ func (s *registryServiceImpl) GetByID(id string) (*model.ServerDetail, error) {
 	return serverDetail, nil
 }
 
+// getVersionsByName retrieves all versions of a server by name
+func (s *registryServiceImpl) getVersionsByName(ctx context.Context, name string) ([]*model.ServerDetail, error) {
+	// Use the database's List method to find all servers with the same name
+	entries, _, err := s.db.List(ctx, map[string]any{"name": name}, "", 1000) // Large limit to get all versions
+	if err != nil {
+		return nil, err
+	}
+
+	var serverDetails []*model.ServerDetail
+	for _, entry := range entries {
+		serverDetail, err := s.db.GetByID(ctx, entry.ID)
+		if err != nil {
+			continue // Skip if we can't get the detail
+		}
+		serverDetails = append(serverDetails, serverDetail)
+	}
+
+	return serverDetails, nil
+}
+
+// determineIsLatest determines if a new version should be marked as latest based on the versioning strategy
+func (s *registryServiceImpl) determineIsLatest(newVersion string, newTimestamp time.Time, existingVersions []*model.ServerDetail) bool {
+	if len(existingVersions) == 0 {
+		return true
+	}
+
+	for _, existing := range existingVersions {
+		existingTime, _ := time.Parse(time.RFC3339, existing.VersionDetail.ReleaseDate)
+		comparison := CompareVersions(newVersion, existing.VersionDetail.Version, newTimestamp, existingTime)
+		if comparison < 0 {
+			// New version is lower than existing version
+			return false
+		}
+	}
+
+	return true
+}
+
+// markOtherVersionsAsNotLatest marks all other versions of the same server as not latest
+func (s *registryServiceImpl) markOtherVersionsAsNotLatest(ctx context.Context, serverName string) error {
+	existingVersions, err := s.getVersionsByName(ctx, serverName)
+	if err != nil {
+		return err
+	}
+
+	for _, existing := range existingVersions {
+		if existing.VersionDetail.IsLatest {
+			existing.VersionDetail.IsLatest = false
+			// We need to update this in the database, but the current interface doesn't support updates
+			// For now, this will be handled in the database layer during Publish
+		}
+	}
+
+	return nil
+}
+
 // Publish adds a new server detail to the registry
 func (s *registryServiceImpl) Publish(serverDetail *model.ServerDetail) error {
 	// Create a timeout context for the database operation
@@ -94,7 +150,23 @@ func (s *registryServiceImpl) Publish(serverDetail *model.ServerDetail) error {
 		return database.ErrInvalidInput
 	}
 
-	err := s.db.Publish(ctx, serverDetail)
+	// Get existing versions of this server to determine if this should be latest
+	existingVersions, err := s.getVersionsByName(ctx, serverDetail.Name)
+	if err != nil && err != database.ErrNotFound {
+		return err
+	}
+
+	// Parse the current time for timestamp-based comparisons
+	currentTime := time.Now()
+	if serverDetail.VersionDetail.ReleaseDate == "" {
+		serverDetail.VersionDetail.ReleaseDate = currentTime.Format(time.RFC3339)
+	}
+
+	// Determine if this version should be marked as latest
+	isLatest := s.determineIsLatest(serverDetail.VersionDetail.Version, currentTime, existingVersions)
+	serverDetail.VersionDetail.IsLatest = isLatest
+
+	err = s.db.Publish(ctx, serverDetail)
 	if err != nil {
 		return err
 	}
