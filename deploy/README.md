@@ -124,7 +124,7 @@ Pre-requisites:
    - Certificate manager for SSL/TLS
    - Ingress controller for external access
    - Database for data persistence
-   - Backup infrastructure for database (GCP only)
+   - Backup infrastructure for database
    - MCP Registry application
 
 ## Configuration
