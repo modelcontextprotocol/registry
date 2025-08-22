@@ -6,7 +6,6 @@ import (
 
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
-	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/serviceaccount"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
@@ -20,12 +19,51 @@ import (
 // Provider implements the ClusterProvider interface for Google Kubernetes Engine
 type Provider struct{}
 
+// createGCPProvider creates a GCP provider with explicit credentials if configured
+func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) {
+	gcpConf := config.New(ctx, "gcp")
+	
+	// Get project ID from config
+	projectID := gcpConf.Get("project")
+	if projectID == "" {
+		return nil, fmt.Errorf("GCP project ID not configured. Set gcp:project")
+	}
+	
+	// Get region from config or use default
+	region := gcpConf.Get("region")
+	if region == "" {
+		region = "us-central1"
+	}
+	
+	// Get credentials from config (base64 encoded service account JSON)
+	credentials := gcpConf.Get("credentials")
+	if credentials != "" {
+		// Decode the base64 credentials
+		decodedCreds, err := base64.StdEncoding.DecodeString(credentials)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode GCP credentials: %w", err)
+		}
+		credentials = string(decodedCreds)
+	}
+	
+	// Create a GCP provider with explicit credentials if provided
+	if credentials != "" {
+		return gcp.NewProvider(ctx, name, &gcp.ProviderArgs{
+			Project:     pulumi.String(projectID),
+			Region:      pulumi.String(region),
+			Credentials: pulumi.String(credentials),
+		})
+	}
+	
+	return nil, nil
+}
+
 // CreateCluster creates a Google Kubernetes Engine cluster
 func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*providers.ProviderInfo, error) {
 	// Get configuration
 	gcpConf := config.New(ctx, "gcp")
 
-	// Get project ID from config or use default
+	// Get project ID from config
 	projectID := gcpConf.Get("project")
 	if projectID == "" {
 		return nil, fmt.Errorf("GCP project ID not configured. Set gcp:project")
@@ -37,29 +75,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		region = "us-central1"
 	}
 
-	// Get credentials from config (base64 encoded service account JSON)
-	credentials := gcpConf.Get("credentials")
-	if credentials != "" {
-		// Decode the base64 credentials
-		decodedCreds, err := base64.StdEncoding.DecodeString(credentials)
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode GCP credentials: %w", err)
-		}
-		credentials = string(decodedCreds)
-	}
-
-	// Create a GCP provider with explicit credentials if provided
-	var gcpProvider *gcp.Provider
-	var err error
-	if credentials != "" {
-		gcpProvider, err = gcp.NewProvider(ctx, "gcp-explicit", &gcp.ProviderArgs{
-			Project:     pulumi.String(projectID),
-			Region:      pulumi.String(region),
-			Credentials: pulumi.String(credentials),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("failed to create GCP provider: %w", err)
-		}
+	// Create GCP provider with explicit credentials if configured
+	gcpProvider, err := createGCPProvider(ctx, "gcp-explicit")
+	if err != nil {
+		return nil, err
 	}
 
 	// Create GKE cluster
@@ -193,6 +212,18 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 		return nil, fmt.Errorf("GCP project ID not configured. Set gcp:project")
 	}
 
+	// Create GCP provider with explicit credentials if configured
+	gcpProvider, err := createGCPProvider(ctx, "gcp-explicit-backup")
+	if err != nil {
+		return nil, err
+	}
+
+	// Set resource options with provider if we have explicit credentials
+	resourceOpts := []pulumi.ResourceOption{}
+	if gcpProvider != nil {
+		resourceOpts = append(resourceOpts, pulumi.Provider(gcpProvider))
+	}
+
 	// Create GCS bucket for backups
 	bucketName := fmt.Sprintf("mcp-registry-%s-backups", environment)
 	bucket, err := storage.NewBucket(ctx, "backup-bucket", &storage.BucketArgs{
@@ -217,37 +248,30 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 			"environment": pulumi.String(environment),
 			"purpose":     pulumi.String("k8up-backups"),
 		},
-	})
+	}, resourceOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create backup bucket: %w", err)
 	}
 
-	// Create service account for backup access
-	serviceAccountName := fmt.Sprintf("k8up-backup-%s", environment)
-	serviceAccount, err := serviceaccount.NewAccount(ctx, "backup-service-account", &serviceaccount.AccountArgs{
-		AccountId:   pulumi.String(serviceAccountName),
-		DisplayName: pulumi.String(fmt.Sprintf("k8up Backup Service Account for %s", environment)),
-		Project:     pulumi.String(projectID),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create backup service account: %w", err)
-	}
+	// Use the existing Pulumi service account instead of creating a new one
+	// The service account email is pulumi-svc@<project>.iam.gserviceaccount.com
+	serviceAccountEmail := fmt.Sprintf("pulumi-svc@%s.iam.gserviceaccount.com", projectID)
 
 	// Grant the service account access to the bucket
 	_, err = storage.NewBucketIAMMember(ctx, "backup-bucket-iam", &storage.BucketIAMMemberArgs{
 		Bucket: bucket.Name,
 		Role:   pulumi.String("roles/storage.objectAdmin"),
-		Member: pulumi.Sprintf("serviceAccount:%s", serviceAccount.Email),
-	})
+		Member: pulumi.Sprintf("serviceAccount:%s", pulumi.String(serviceAccountEmail)),
+	}, resourceOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to grant bucket access: %w", err)
 	}
 
 	// Create HMAC key for S3-compatible access
 	hmacKey, err := storage.NewHmacKey(ctx, "backup-hmac-key", &storage.HmacKeyArgs{
-		ServiceAccountEmail: serviceAccount.Email,
+		ServiceAccountEmail: pulumi.String(serviceAccountEmail),
 		Project:             pulumi.String(projectID),
-	})
+	}, resourceOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HMAC key: %w", err)
 	}
