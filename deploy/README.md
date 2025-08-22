@@ -140,108 +140,45 @@ Pre-requisites:
 
 ## Database Backups
 
-### Backup Strategy
+The deployment uses [K8up](https://k8up.io/) (a Kubernetes backup operator) that uses [Restic](https://restic.net/) under the hood.
 
-The deployment includes automatic PostgreSQL database backups using CloudNative-PG's native backup capabilities:
+When running locally they are stored in a Minio bucket. In staging and production, backups are stored in a GCS bucket.
 
-#### Production (GCP)
-- **Schedule**: Daily backups at 2 AM UTC
-- **Retention**: 30 days for both backups and WAL archives
-- **Storage**: Google Cloud Storage bucket with versioning enabled
-- **Features**:
-  - Continuous WAL archiving for point-in-time recovery
-  - Compressed backups (gzip)
-  - Automatic cleanup of old backups
-  - Service account authentication with minimal permissions
+### Accessing Backup Files
 
 #### Local Development (MinIO)
-- **Schedule**: Every 30 minutes (for easier testing)
-- **Retention**: 7 days for backups, 3 days for WAL archives
-- **Storage**: MinIO (S3-compatible) running in the cluster
-- **Features**:
-  - Same CloudNative-PG backup mechanisms as production
-  - MinIO web console for backup inspection
-  - Immediate backup on deployment for testing
-  - Automatic bucket creation
-
-### Backup Management
-
-#### Check Backup Status
-```bash
-# List scheduled backups
-kubectl get scheduledbackups -n default
-
-# View backup details
-kubectl describe scheduledbackup registry-pg-backup -n default
-
-# List actual backups
-kubectl get backups -n default
-```
-
-#### Manual Backup
-```bash
-# Create an immediate backup
-kubectl apply -f - <<EOF
-apiVersion: postgresql.cnpg.io/v1
-kind: Backup
-metadata:
-  name: manual-backup-$(date +%Y%m%d-%H%M%S)
-  namespace: default
-spec:
-  cluster:
-    name: registry-pg
-  method: barmanObjectStore
-EOF
-```
-
-#### Local Testing with MinIO
-
-For local development, backups are stored in MinIO:
 
 ```bash
-# Access MinIO console (credentials: minioadmin/minioadmin)
+# Expose MinIO web console
 kubectl port-forward -n minio svc/minio 9001:9001
-# Open http://localhost:9001 in your browser
-
-# View backup files directly
-kubectl exec -n minio deploy/minio -- mc ls myminio/pg-backups/
-
-# Check backup logs
-kubectl logs -n default -l cnpg.io/cluster=registry-pg --tail=50
 ```
 
-#### Restore from Backup
+Then open [localhost:9001](http://localhost:9001), login with username `minioadmin` and password `minioadmin`, and navigate to the k8up-backups bucket.
 
-##### Production (GCP)
-1. Access the backup bucket in GCP Console
-2. Download the backup files using gsutil:
+##### Staging and Production (GCS)
+
+- [Staging](https://console.cloud.google.com/storage/browser/mcp-registry-staging-backups?project=mcp-registry-staging)
+- [Production](https://console.cloud.google.com/storage/browser/mcp-registry-prod-backups?project=mcp-registry-prod)
+
+#### Decrypting and Restoring Backups
+
+Backups are encrypted using Restic. To access the backup data:
+
+1. **Download the backup files from the bucket:**
    ```bash
-   gsutil -m cp -r gs://mcp-registry-prod-backups/postgres/<backup-name>/ ./backup-files/
+   # Local (MinIO) - ensure port-forward is active: kubectl port-forward -n minio svc/minio 9000:9000
+   AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin \
+     aws --endpoint-url http://localhost:9000 s3 sync s3://k8up-backups/ ./backup-files/
+   
+   # GCS (staging/production)
+   gsutil -m cp -r gs://mcp-registry-{staging|prod}-backups/* ./backup-files/
    ```
-
-##### Local (MinIO)
-1. List available backups:
+2. **[Install Restic](https://restic.readthedocs.io/en/latest/020_installation.html)**
+3. **Restore the backup:**
    ```bash
-   kubectl exec -n minio deploy/minio -- mc ls myminio/pg-backups/
+   RESTIC_PASSWORD=password restic -r ./backup-files restore latest --target ./restored-files
    ```
-2. Access files through MinIO console or kubectl exec
-
-##### Restore Process
-Create a new PostgreSQL cluster with restore configuration:
-```yaml
-apiVersion: postgresql.cnpg.io/v1
-kind: Cluster
-metadata:
-  name: registry-pg-restored
-spec:
-  bootstrap:
-    recovery:
-      source: registry-pg
-      recoveryTarget:
-        backupID: <backup-id>
-```
-
-For detailed recovery procedures, refer to the [CloudNative-PG documentation](https://cloudnative-pg.io/documentation/).
+   PostgreSQL data will be in `./restored-files/data/registry-pg-1/pgdata/`
 
 ## Troubleshooting
 
@@ -264,9 +201,6 @@ kubectl logs -l app=postgres
 
 ### Check Backup Status
 ```bash
-# Check CloudNative-PG operator logs
-kubectl logs -n cnpg-system -l app.kubernetes.io/name=cloudnative-pg
-
-# Check PostgreSQL cluster status
-kubectl get cluster registry-pg -n default -o jsonpath='{.status}'
+kubectl describe schedule.k8up.io 
+kubectl get backup
 ```

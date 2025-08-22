@@ -2,12 +2,14 @@ package local
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	appsv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	batchv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/batch/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
-	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
@@ -15,6 +17,17 @@ import (
 
 // Provider implements the ClusterProvider interface for local Kubernetes clusters
 type Provider struct{}
+
+// getClusterName attempts to get the current Kubernetes cluster name from kubectl config
+func getClusterName() string {
+	cmd := exec.Command("kubectl", "config", "current-context")
+	output, err := cmd.Output()
+	if err != nil {
+		// Fallback to default if we can't get the context
+		return "local"
+	}
+	return strings.TrimSpace(string(output))
+}
 
 // CreateCluster configures access to a local Kubernetes cluster via kubeconfig
 func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*providers.ProviderInfo, error) {
@@ -24,8 +37,11 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
+	// Get the actual cluster name from kubectl config
+	clusterName := getClusterName()
+
 	return &providers.ProviderInfo{
-		Name:     pulumi.String("local").ToStringOutput(),
+		Name:     pulumi.String(clusterName).ToStringOutput(),
 		Provider: k8sProvider,
 	}, nil
 }
@@ -248,12 +264,6 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 	if err != nil {
 		return nil, fmt.Errorf("failed to create backup credentials secret: %w", err)
 	}
-
-	// Export MinIO information
-	ctx.Export("backupStorage", pulumi.String("MinIO (S3-compatible)"))
-	ctx.Export("backupEndpoint", pulumi.String("http://minio.minio:9000"))
-	ctx.Export("backupBucket", pulumi.String("k8up-backups"))
-	ctx.Export("minioConsole", pulumi.String("kubectl port-forward -n minio svc/minio 9001:9001"))
 
 	return &providers.StorageInfo{
 		Endpoint:    "http://minio.minio:9000",

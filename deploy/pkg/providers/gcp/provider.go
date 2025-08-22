@@ -8,9 +8,9 @@ import (
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/serviceaccount"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
-	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
@@ -246,7 +246,7 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 	// Create HMAC key for S3-compatible access
 	hmacKey, err := storage.NewHmacKey(ctx, "backup-hmac-key", &storage.HmacKeyArgs{
 		ServiceAccountEmail: serviceAccount.Email,
-		Project:            pulumi.String(projectID),
+		Project:             pulumi.String(projectID),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HMAC key: %w", err)
@@ -271,11 +271,6 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 	if err != nil {
 		return nil, fmt.Errorf("failed to create backup credentials secret: %w", err)
 	}
-
-	// Export GCS information
-	ctx.Export("backupStorage", pulumi.String("Google Cloud Storage (S3-compatible)"))
-	ctx.Export("backupBucket", bucket.Name)
-	ctx.Export("backupEndpoint", pulumi.String("https://storage.googleapis.com"))
 
 	return &providers.StorageInfo{
 		Endpoint:    "https://storage.googleapis.com",
