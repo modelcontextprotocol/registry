@@ -222,9 +222,9 @@ func (sr *ServerRecord) ToServerResponse() ServerResponse {
 	// Add registry metadata extension
 	response.XIOModelContextProtocolRegistry = sr.RegistryMetadata.CreateRegistryExtensions()["x-io.modelcontextprotocol.registry"]
 	
-	// Add publisher extension if it exists
-	if publisherData, exists := sr.PublisherExtensions["x-publisher"]; exists {
-		response.XPublisher = publisherData
+	// Add publisher extensions directly
+	if len(sr.PublisherExtensions) > 0 {
+		response.XPublisher = sr.PublisherExtensions
 	}
 	
 	return response
