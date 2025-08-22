@@ -1,0 +1,77 @@
+[
+  {
+    "server": {
+      "name": "io.github.21st-dev/magic-mcp",
+      "description": "It's like v0 but in your Cursor/WindSurf/Cline. 21st dev Magic MCP server for working with your frontend like Magic",
+      "status": "active",
+      "repository": {
+        "url": "https://github.com/21st-dev/magic-mcp",
+        "source": "github",
+        "id": "935450522"
+      },
+      "version_detail": {
+        "version": "0.0.1-seed"
+      },
+      "packages": [
+        {
+          "registry_name": "npm",
+          "name": "@21st-dev/magic",
+          "version": "0.0.46",
+          "environment_variables": [
+            {
+              "description": "${input:apiKey}",
+              "name": "API_KEY"
+            }
+          ]
+        }
+      ]
+    },
+    "x-io.modelcontextprotocol.registry": {
+      "id": "4e9cf4cf-71f6-4aca-bae8-2d10a29ca2e0",
+      "is_latest": true,
+      "published_at": "0001-01-01T00:00:00Z",
+      "release_date": "2025-05-16T18:56:49Z",
+      "updated_at": "0001-01-01T00:00:00Z"
+    }
+  },
+  {
+    "server": {
+      "name": "io.github.adfin-engineering/mcp-server-adfin",
+      "description": "A Model Context Protocol Server for connecting with Adfin APIs",
+      "status": "active",
+      "repository": {
+        "url": "https://github.com/Adfin-Engineering/mcp-server-adfin",
+        "source": "github",
+        "id": "951338147"
+      },
+      "version_detail": {
+        "version": "0.0.1-seed"
+      },
+      "packages": [
+        {
+          "registry_name": "pypi",
+          "name": "adfinmcp",
+          "version": "0.1.0",
+          "package_arguments": [
+            {
+              "description": "Path to the configuration file",
+              "is_required": true,
+              "format": "string",
+              "value": "/config/adfin.json",
+              "default": "/config/adfin.json",
+              "type": "positional",
+              "value_hint": "/path/to/config.json"
+            }
+          ]
+        }
+      ]
+    },
+    "x-io.modelcontextprotocol.registry": {
+      "id": "d3669201-252f-403c-944b-c3ec0845782b",
+      "is_latest": true,
+      "published_at": "0001-01-01T00:00:00Z",
+      "release_date": "2025-05-16T18:56:52Z",
+      "updated_at": "0001-01-01T00:00:00Z"
+    }
+  }
+]

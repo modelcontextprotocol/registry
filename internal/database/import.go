@@ -15,8 +15,9 @@ import (
 
 // ReadSeedFile reads seed data from various sources:
 // 1. Local file paths (*.json files) - expects extension wrapper format
-// 2. Direct HTTP URLs to seed.json files - expects extension wrapper format
+// 2. Direct HTTP URLs to seed.json files - expects extension wrapper format  
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
+// Only the extension wrapper format is supported (array of ServerResponse objects)
 func ReadSeedFile(ctx context.Context, path string) ([]*model.ServerRecord, error) {
 	var data []byte
 	var err error
@@ -26,10 +27,9 @@ func ReadSeedFile(ctx context.Context, path string) ([]*model.ServerRecord, erro
 		if strings.HasSuffix(path, "/v0/servers") || strings.Contains(path, "/v0/servers") {
 			// This is a registry API endpoint - fetch paginated data
 			return fetchFromRegistryAPI(ctx, path)
-		} else {
-			// This is a direct file URL
-			data, err = fetchFromHTTP(ctx, path)
 		}
+		// This is a direct file URL
+		data, err = fetchFromHTTP(ctx, path)
 	} else {
 		// Handle local file paths
 		data, err = os.ReadFile(path)
@@ -39,10 +39,14 @@ func ReadSeedFile(ctx context.Context, path string) ([]*model.ServerRecord, erro
 		return nil, fmt.Errorf("failed to read seed data from %s: %w", path, err)
 	}
 
-	// Parse the seed data in extension wrapper format
+	// Parse extension wrapper format (only supported format)
 	var serverResponses []model.ServerResponse
 	if err := json.Unmarshal(data, &serverResponses); err != nil {
-		return nil, fmt.Errorf("failed to parse seed data: %w", err)
+		return nil, fmt.Errorf("failed to parse seed data as extension wrapper format: %w", err)
+	}
+
+	if len(serverResponses) == 0 {
+		return []*model.ServerRecord{}, nil
 	}
 
 	// Convert ServerResponse to ServerRecord

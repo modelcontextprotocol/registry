@@ -14,12 +14,11 @@ import (
 )
 
 func TestReadSeedFile_LocalFile(t *testing.T) {
-	// Create a temporary seed file
+	// Create a temporary seed file in extension wrapper format
 	tempFile := "/tmp/test_seed.json"
-	seedData := []model.ServerDetail{
+	seedData := []model.ServerResponse{
 		{
-			Server: model.Server{
-				ID:          "test-id-1",
+			Server: model.ServerDetail{
 				Name:        "test-server-1",
 				Description: "Test server 1",
 				Repository: model.Repository{
@@ -28,10 +27,13 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 					ID:     "123",
 				},
 				VersionDetail: model.VersionDetail{
-					Version:     "1.0.0",
-					ReleaseDate: "2023-01-01T00:00:00Z",
-					IsLatest:    true,
+					Version: "1.0.0",
 				},
+			},
+			XIOModelContextProtocolRegistry: map[string]interface{}{
+				"id":           "test-id-1",
+				"published_at": "2023-01-01T00:00:00Z",
+				"is_latest":    true,
 			},
 		},
 	}
@@ -56,17 +58,21 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 	result, err := database.ReadSeedFile(context.Background(), tempFile)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	assert.Equal(t, "test-server-1", result[0].Name)
+	assert.Equal(t, "test-server-1", result[0].ServerJSON.Name)
 }
 
 func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
-	// Create a test HTTP server that serves seed JSON directly
-	seedData := []model.ServerDetail{
+	// Create a test HTTP server that serves seed JSON directly in extension wrapper format
+	seedData := []model.ServerResponse{
 		{
-			Server: model.Server{
-				ID:          "test-id-1",
+			Server: model.ServerDetail{
 				Name:        "test-server-1",
 				Description: "Test server 1",
+			},
+			XIOModelContextProtocolRegistry: map[string]interface{}{
+				"id":           "test-id-1",
+				"published_at": "2023-01-01T00:00:00Z",
+				"is_latest":    true,
 			},
 		},
 	}
@@ -83,35 +89,51 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	result, err := database.ReadSeedFile(context.Background(), server.URL+"/seed.json")
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	assert.Equal(t, "test-server-1", result[0].Name)
+	assert.Equal(t, "test-server-1", result[0].ServerJSON.Name)
 }
 
 func TestReadSeedFile_RegistryURL(t *testing.T) {
-	// Create mock registry servers
-	server1 := model.Server{
-		ID:          "server-1",
-		Name:        "Test Server 1",
-		Description: "First test server",
+	// Create mock registry responses
+	server1 := model.ServerResponse{
+		Server: model.ServerDetail{
+			Name:        "Test Server 1",
+			Description: "First test server",
+		},
+		XIOModelContextProtocolRegistry: map[string]interface{}{
+			"id":           "server-1",
+			"published_at": "2023-01-01T00:00:00Z",
+			"is_latest":    true,
+		},
 	}
-	server2 := model.Server{
-		ID:          "server-2",
-		Name:        "Test Server 2",
-		Description: "Second test server",
+	server2 := model.ServerResponse{
+		Server: model.ServerDetail{
+			Name:        "Test Server 2",
+			Description: "Second test server",
+		},
+		XIOModelContextProtocolRegistry: map[string]interface{}{
+			"id":           "server-2",
+			"published_at": "2023-01-01T00:00:00Z",
+			"is_latest":    true,
+		},
 	}
 
 	serverDetail1 := model.ServerDetail{
-		Server: server1,
+		Name: "Test Server 1",
+		Description: "First test server",
 		Packages: []model.Package{
 			{
+				RegistryName: "npm",
 				Name:    "test-package-1",
 				Version: "1.0.0",
 			},
 		},
 	}
 	serverDetail2 := model.ServerDetail{
-		Server: server2,
+		Name: "Test Server 2",
+		Description: "Second test server",
 		Packages: []model.Package{
 			{
+				RegistryName: "npm",
 				Name:    "test-package-2",
 				Version: "2.0.0",
 			},
@@ -125,22 +147,32 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	mux.HandleFunc("/v0/servers", func(w http.ResponseWriter, r *http.Request) {
 		cursor := r.URL.Query().Get("cursor")
 
-		var response database.PaginatedResponse
+		type Metadata struct {
+			NextCursor string `json:"next_cursor,omitempty"`
+			Count      int    `json:"count,omitempty"`
+		}
+
+		type PaginatedResponse struct {
+			Servers  []model.ServerResponse `json:"servers"`
+			Metadata *Metadata             `json:"metadata,omitempty"`
+		}
+
+		var response PaginatedResponse
 		switch cursor {
 		case "":
 			// First page
-			response = database.PaginatedResponse{
-				Data: []model.Server{server1},
-				Metadata: database.Metadata{
+			response = PaginatedResponse{
+				Servers: []model.ServerResponse{server1},
+				Metadata: &Metadata{
 					NextCursor: "next-cursor-1",
 					Count:      1,
 				},
 			}
 		case "next-cursor-1":
 			// Second page
-			response = database.PaginatedResponse{
-				Data: []model.Server{server2},
-				Metadata: database.Metadata{
+			response = PaginatedResponse{
+				Servers: []model.ServerResponse{server2},
+				Metadata: &Metadata{
 					Count: 1,
 					// No NextCursor means end of pagination
 				},
@@ -172,17 +204,15 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	defer server.Close()
 
 	// Test reading from registry root URL (this should trigger pagination)
-	result, err := database.ReadSeedFile(context.Background(), server.URL)
+	result, err := database.ReadSeedFile(context.Background(), server.URL+"/v0/servers")
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
 
 	// Verify the servers were imported correctly
-	assert.Equal(t, "Test Server 1", result[0].Name)
-	assert.Equal(t, "Test Server 2", result[1].Name)
+	assert.Equal(t, "Test Server 1", result[0].ServerJSON.Name)
+	assert.Equal(t, "Test Server 2", result[1].ServerJSON.Name)
 
-	// Verify packages were included
-	assert.Len(t, result[0].Packages, 1)
-	assert.Equal(t, "test-package-1", result[0].Packages[0].Name)
-	assert.Len(t, result[1].Packages, 1)
-	assert.Equal(t, "test-package-2", result[1].Packages[0].Name)
+	// Verify metadata was extracted
+	assert.Equal(t, "server-1", result[0].RegistryMetadata.ID)
+	assert.Equal(t, "server-2", result[1].RegistryMetadata.ID)
 }

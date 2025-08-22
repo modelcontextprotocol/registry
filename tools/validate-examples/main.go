@@ -74,10 +74,18 @@ func runValidation() error {
 			continue
 		}
 
+		// Extract server portion if this is a PublishRequest format
+		serverData := data
+		if dataMap, ok := data.(map[string]any); ok {
+			if server, exists := dataMap["server"]; exists {
+				serverData = server
+			}
+		}
+
 		baseValid := false
 		registryValid := false
 
-		if err := baseSchema.Validate(data); err != nil {
+		if err := baseSchema.Validate(serverData); err != nil {
 			log.Printf("  Validating against schema.json: ❌")
 			log.Printf("    Error: %v", err)
 		} else {
@@ -85,7 +93,7 @@ func runValidation() error {
 			baseValid = true
 		}
 
-		if err := registrySchema.Validate(data); err != nil {
+		if err := registrySchema.Validate(serverData); err != nil {
 			log.Printf("  Validating against registry-schema.json: ❌")
 			log.Printf("    Error: %v", err)
 		} else {

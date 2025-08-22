@@ -182,11 +182,45 @@ func ValidatePublisherExtensions(req PublishRequest) error {
 	return nil
 }
 
+// ValidatePublishRequestExtensions validates that only allowed extension fields are present
+func ValidatePublishRequestExtensions(requestData []byte) error {
+	// Parse the raw JSON to check for unknown fields
+	var rawRequest map[string]interface{}
+	if err := json.Unmarshal(requestData, &rawRequest); err != nil {
+		return fmt.Errorf("failed to parse request JSON: %w", err)
+	}
+
+	// Define allowed top-level fields
+	allowedFields := map[string]bool{
+		"server":      true,
+		"x-publisher": true,
+	}
+
+	// Check for any disallowed fields
+	var invalidFields []string
+	for field := range rawRequest {
+		if !allowedFields[field] {
+			invalidFields = append(invalidFields, field)
+		}
+	}
+
+	if len(invalidFields) > 0 {
+		return fmt.Errorf("invalid extension fields: %v. Only 'server' and 'x-publisher' fields are allowed", invalidFields)
+	}
+
+	return nil
+}
+
 // ExtractPublisherExtensions extracts publisher extensions from a PublishRequest
 func ExtractPublisherExtensions(req PublishRequest) map[string]interface{} {
 	publisherExtensions := make(map[string]interface{})
 	if req.XPublisher != nil {
-		publisherExtensions["x-publisher"] = req.XPublisher
+		// Cast to map and copy fields directly, avoiding double nesting
+		if publisherMap, ok := req.XPublisher.(map[string]interface{}); ok {
+			for k, v := range publisherMap {
+				publisherExtensions[k] = v
+			}
+		}
 	}
 	return publisherExtensions
 }

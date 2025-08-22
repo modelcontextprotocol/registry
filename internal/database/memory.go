@@ -109,6 +109,7 @@ func (db *MemoryDB) List(
 
 	db.mu.RLock()
 	defer db.mu.RUnlock()
+	
 
 	// Convert all entries to a slice for pagination, filter by is_latest
 	var allEntries []*model.ServerRecord
@@ -292,6 +293,7 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 		// Use the registry metadata ID as the map key
 		db.entries[record.RegistryMetadata.ID] = record
 	}
+	
 
 	return nil
 }

@@ -28,22 +28,25 @@ type MockRegistryService struct {
 	mock.Mock
 }
 
-func (m *MockRegistryService) List(cursor string, limit int) ([]model.Server, string, error) {
+func (m *MockRegistryService) List(cursor string, limit int) ([]model.ServerResponse, string, error) {
 	args := m.Called(cursor, limit)
-	return args.Get(0).([]model.Server), args.String(1), args.Error(2)
+	return args.Get(0).([]model.ServerResponse), args.String(1), args.Error(2)
 }
 
-func (m *MockRegistryService) GetByID(id string) (*model.ServerDetail, error) {
+func (m *MockRegistryService) GetByID(id string) (*model.ServerResponse, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*model.ServerDetail), args.Error(1)
+	return args.Get(0).(*model.ServerResponse), args.Error(1)
 }
 
-func (m *MockRegistryService) Publish(serverDetail *model.ServerDetail) error {
-	args := m.Called(serverDetail)
-	return args.Error(0)
+func (m *MockRegistryService) Publish(request model.PublishRequest) (*model.ServerResponse, error) {
+	args := m.Called(request)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.ServerResponse), args.Error(1)
 }
 
 // Helper function to generate a valid JWT token for testing
@@ -77,21 +80,16 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "successful publish with GitHub auth",
 			requestBody: model.PublishRequest{
-				ServerDetail: model.ServerDetail{
-					Server: model.Server{
-						ID:          "test-id",
-						Name:        "io.github.example/test-server",
-						Description: "A test server",
-						Repository: model.Repository{
-							URL:    "https://github.com/example/test-server",
-							Source: "github",
-							ID:     "example/test-server",
-						},
-						VersionDetail: model.VersionDetail{
-							Version:     "1.0.0",
-							ReleaseDate: "2025-05-25T00:00:00Z",
-							IsLatest:    true,
-						},
+				Server: model.ServerDetail{
+					Name:        "io.github.example/test-server",
+					Description: "A test server",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/test-server",
+						Source: "github",
+						ID:     "example/test-server",
+					},
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
 					},
 				},
 			},
@@ -103,28 +101,23 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+				registry.On("Publish", mock.AnythingOfType("model.PublishRequest")).Return(&model.ServerResponse{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name: "successful publish with no auth (AuthMethodNone)",
 			requestBody: model.PublishRequest{
-				ServerDetail: model.ServerDetail{
-					Server: model.Server{
-						ID:          "test-id-2",
-						Name:        "example/test-server",
-						Description: "A test server without auth",
-						Repository: model.Repository{
-							URL:    "https://example.com/test-server",
-							Source: "example",
-							ID:     "example/test-server",
-						},
-						VersionDetail: model.VersionDetail{
-							Version:     "1.0.0",
-							ReleaseDate: "2025-05-25T00:00:00Z",
-							IsLatest:    true,
-						},
+				Server: model.ServerDetail{
+					Name:        "example/test-server",
+					Description: "A test server without auth",
+					Repository: model.Repository{
+						URL:    "https://example.com/test-server",
+						Source: "example",
+						ID:     "example/test-server",
+					},
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
 					},
 				},
 			},
@@ -135,7 +128,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(nil)
+				registry.On("Publish", mock.AnythingOfType("model.PublishRequest")).Return(&model.ServerResponse{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -158,13 +151,11 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "invalid token",
 			requestBody: model.PublishRequest{
-				ServerDetail: model.ServerDetail{
-					Server: model.Server{
-						Name:        "test-server",
-						Description: "A test server",
-						VersionDetail: model.VersionDetail{
-							Version: "1.0.0",
-						},
+				Server: model.ServerDetail{
+					Name:        "test-server",
+					Description: "A test server",
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
 					},
 				},
 			},
@@ -176,13 +167,11 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "permission denied",
 			requestBody: model.PublishRequest{
-				ServerDetail: model.ServerDetail{
-					Server: model.Server{
-						Name:        "io.github.other/test-server",
-						Description: "A test server",
-						VersionDetail: model.VersionDetail{
-							Version: "1.0.0",
-						},
+				Server: model.ServerDetail{
+					Name:        "io.github.other/test-server",
+					Description: "A test server",
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
 					},
 				},
 			},
@@ -199,13 +188,11 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "registry service error",
 			requestBody: model.PublishRequest{
-				ServerDetail: model.ServerDetail{
-					Server: model.Server{
-						Name:        "example/test-server",
-						Description: "A test server",
-						VersionDetail: model.VersionDetail{
-							Version: "1.0.0",
-						},
+				Server: model.ServerDetail{
+					Name:        "example/test-server",
+					Description: "A test server",
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
 					},
 				},
 			},
@@ -216,7 +203,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("*model.ServerDetail")).Return(errors.New("database error"))
+				registry.On("Publish", mock.AnythingOfType("model.PublishRequest")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "Failed to publish server",

@@ -2,6 +2,7 @@ package v0
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -15,7 +16,7 @@ import (
 // PublishServerInput represents the input for publishing a server
 type PublishServerInput struct {
 	Authorization string `header:"Authorization" doc:"Registry JWT token (obtained from /v0/auth/token/github)" required:"true"`
-	Body          model.PublishRequest
+	RawBody       []byte `body:"raw"`
 }
 
 // RegisterPublishEndpoint registers the publish endpoint
@@ -48,8 +49,19 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
 		}
 
+		// Validate that only allowed extension fields are present
+		if err := model.ValidatePublishRequestExtensions(input.RawBody); err != nil {
+			return nil, huma.Error400BadRequest("Invalid request format", err)
+		}
+
+		// Parse the validated request body
+		var publishRequest model.PublishRequest
+		if err := json.Unmarshal(input.RawBody, &publishRequest); err != nil {
+			return nil, huma.Error400BadRequest("Invalid JSON format", err)
+		}
+
 		// Get server details from request body
-		serverDetail := input.Body.Server
+		serverDetail := publishRequest.Server
 
 		// Verify that the token's repository matches the server being published
 		if !jwtManager.HasPermission(serverDetail.Name, auth.PermissionActionPublish, claims.Permissions) {
@@ -57,7 +69,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Publish the server with extensions
-		publishedServer, err := registry.Publish(input.Body)
+		publishedServer, err := registry.Publish(publishRequest)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to publish server", err)
 		}

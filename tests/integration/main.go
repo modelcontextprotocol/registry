@@ -20,7 +20,7 @@ import (
 
 const registryURL = "http://localhost:8080"
 
-var publishedIDRegex = regexp.MustCompile(`"id":\s*"([^"]+)"`)
+var publishedIDRegex = regexp.MustCompile(`"x-io\.modelcontextprotocol\.registry":\s*\{[^}]*"id":\s*"([^"]+)"`)
 
 func main() {
 	log.SetFlags(0)
@@ -104,11 +104,26 @@ func publish(examples []example) error {
 			continue
 		}
 
+		// Handle both old ServerDetail format and new PublishRequest format
+		var serverData map[string]any
+		if server, exists := expected["server"]; exists {
+			// New PublishRequest format
+			serverData = server.(map[string]any)
+		} else {
+			// Old ServerDetail format (backward compatibility)
+			serverData = expected
+		}
+
 		// Remove any existing namespace prefix and add anonymous prefix
-		if !strings.HasPrefix(expected["name"].(string), "io.modelcontextprotocol.anonymous/") {
-			parts := strings.SplitN(expected["name"].(string), "/", 2)
+		if !strings.HasPrefix(serverData["name"].(string), "io.modelcontextprotocol.anonymous/") {
+			parts := strings.SplitN(serverData["name"].(string), "/", 2)
 			serverName := parts[len(parts)-1]
-			expected["name"] = "io.modelcontextprotocol.anonymous/" + serverName
+			serverData["name"] = "io.modelcontextprotocol.anonymous/" + serverName
+		}
+
+		// Update the expected structure if it's PublishRequest format
+		if _, exists := expected["server"]; exists {
+			expected["server"] = serverData
 		}
 		example.content, _ = json.Marshal(expected)
 
@@ -163,8 +178,22 @@ func publish(examples []example) error {
 		if err := json.Unmarshal(content, &actual); err != nil {
 			return fmt.Errorf("  ⛔ failed to unmarshal registry response: %w", err)
 		}
-		if err := compare(expected, actual); err != nil {
-			return fmt.Errorf(`  ⛔ example "%s": %w`, expected["name"], err)
+		
+		// Both API response and expected are now in extension wrapper format
+		// Compare the server portions of both
+		actualServer, ok := actual["server"]
+		if !ok {
+			return fmt.Errorf("  ⛔ expected server field in registry response")
+		}
+		
+		// Extract expected server portion for comparison
+		expectedServer := expected
+		if server, exists := expected["server"]; exists {
+			expectedServer = server.(map[string]any)
+		}
+		
+		if err := compare(expectedServer, actualServer); err != nil {
+			return fmt.Errorf(`  ⛔ example "%s": %w`, expectedServer["name"], err)
 		}
 		log.Print("  ✅ registry response matches example\n\n")
 		published++

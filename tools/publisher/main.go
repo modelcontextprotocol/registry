@@ -344,8 +344,17 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 		return fmt.Errorf("error parsing server.json file: %w", err)
 	}
 
-	// Create the publish request payload (without authentication)
-	publishReq := mcpDetails
+	// Create the publish request payload
+	var publishReq map[string]any
+	if _, hasServerField := mcpDetails["server"]; hasServerField {
+		// Already in PublishRequest format with server field (and possibly x-publisher)
+		publishReq = mcpDetails
+	} else {
+		// Legacy ServerDetail format - wrap it in extension wrapper format
+		publishReq = map[string]any{
+			"server": mcpDetails,
+		}
+	}
 
 	// Convert the request to JSON
 	jsonData, err := json.Marshal(publishReq)

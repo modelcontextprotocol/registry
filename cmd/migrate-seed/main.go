@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/model"
 )
@@ -35,9 +37,9 @@ type OldVersionDetail struct {
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Println("Usage: migrate-seed <input-source> <output-file>")
-		fmt.Println("  input-source: file path or HTTP URL")
-		fmt.Println("  output-file: path for the migrated seed file")
+		log.Println("Usage: migrate-seed <input-source> <output-file>")
+		log.Println("  input-source: file path or HTTP URL")
+		log.Println("  output-file: path for the migrated seed file")
 		os.Exit(1)
 	}
 
@@ -86,7 +88,7 @@ func main() {
 		log.Fatalf("Failed to create output directory: %v", err)
 	}
 
-	if err := os.WriteFile(outputFile, migratedData, 0644); err != nil {
+	if err := os.WriteFile(outputFile, migratedData, 0600); err != nil {
 		log.Fatalf("Failed to write output file: %v", err)
 	}
 
@@ -95,7 +97,15 @@ func main() {
 
 func fetchFromHTTP(url string) ([]byte, error) {
 	log.Printf("Fetching data from HTTP: %s", url)
-	resp, err := http.Get(url)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch from HTTP: %w", err)
 	}

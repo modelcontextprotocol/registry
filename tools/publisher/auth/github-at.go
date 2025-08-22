@@ -63,7 +63,8 @@ type ServerHealthResponse struct {
 }
 
 // NewGitHubATProvider creates a new GitHub OAuth provider
-func NewGitHubATProvider(forceLogin bool, registryURL string) Provider { //nolint:ireturn
+//nolint:ireturn // Factory function returns interface by design
+func NewGitHubATProvider(forceLogin bool, registryURL string) Provider {
 	return &GitHubATProvider{
 		forceLogin:  forceLogin,
 		registryURL: registryURL,

@@ -136,31 +136,8 @@ func (db *PostgreSQL) List(
 		}
 
 		// Parse JSON fields
-		if len(repositoryJSON) > 0 {
-			if err := json.Unmarshal(repositoryJSON, &record.ServerJSON.Repository); err != nil {
-				return nil, "", fmt.Errorf("failed to unmarshal repository: %w", err)
-			}
-		}
-
-		if len(packagesJSON) > 0 {
-			if err := json.Unmarshal(packagesJSON, &record.ServerJSON.Packages); err != nil {
-				return nil, "", fmt.Errorf("failed to unmarshal packages: %w", err)
-			}
-		}
-
-		if len(remotesJSON) > 0 {
-			if err := json.Unmarshal(remotesJSON, &record.ServerJSON.Remotes); err != nil {
-				return nil, "", fmt.Errorf("failed to unmarshal remotes: %w", err)
-			}
-		}
-
-		// Parse publisher extensions
-		if len(publisherExtensionsJSON) > 0 {
-			if err := json.Unmarshal(publisherExtensionsJSON, &record.PublisherExtensions); err != nil {
-				return nil, "", fmt.Errorf("failed to unmarshal publisher extensions: %w", err)
-			}
-		} else {
-			record.PublisherExtensions = make(map[string]interface{})
+		if err := parseJSONFields(&record, repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON); err != nil {
+			return nil, "", err
 		}
 
 		// Set registry metadata timestamps
@@ -182,6 +159,37 @@ func (db *PostgreSQL) List(
 	}
 
 	return results, nextCursor, nil
+}
+
+// parseJSONFields parses JSON fields for a server record
+func parseJSONFields(record *model.ServerRecord, repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte) error {
+	if len(repositoryJSON) > 0 {
+		if err := json.Unmarshal(repositoryJSON, &record.ServerJSON.Repository); err != nil {
+			return fmt.Errorf("failed to unmarshal repository: %w", err)
+		}
+	}
+
+	if len(packagesJSON) > 0 {
+		if err := json.Unmarshal(packagesJSON, &record.ServerJSON.Packages); err != nil {
+			return fmt.Errorf("failed to unmarshal packages: %w", err)
+		}
+	}
+
+	if len(remotesJSON) > 0 {
+		if err := json.Unmarshal(remotesJSON, &record.ServerJSON.Remotes); err != nil {
+			return fmt.Errorf("failed to unmarshal remotes: %w", err)
+		}
+	}
+
+	if len(publisherExtensionsJSON) > 0 {
+		if err := json.Unmarshal(publisherExtensionsJSON, &record.PublisherExtensions); err != nil {
+			return fmt.Errorf("failed to unmarshal publisher extensions: %w", err)
+		}
+	} else {
+		record.PublisherExtensions = make(map[string]interface{})
+	}
+
+	return nil
 }
 
 // GetByID retrieves a single ServerRecord by its registry metadata ID
@@ -275,7 +283,7 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		if err := tx.Rollback(ctx); err != nil {
+		if err := tx.Rollback(ctx); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 			log.Printf("Failed to rollback transaction: %v", err)
 		}
 	}()
@@ -411,7 +419,11 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Printf("Failed to rollback transaction: %v", rollbackErr)
+		}
+	}()
 
 	// Import each server
 	for _, record := range seedData {

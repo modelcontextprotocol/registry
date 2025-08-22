@@ -19,9 +19,8 @@ import (
 )
 
 func mockServerEndpoint(registry *MockRegistryService, serverID string) {
-	serverDetail := &model.ServerDetail{
-		Server: model.Server{
-			ID:          serverID,
+	serverDetail := &model.ServerResponse{
+		Server: model.ServerDetail{
 			Name:        "test-server-detail",
 			Description: "Test server detail",
 			Repository: model.Repository{
@@ -30,10 +29,11 @@ func mockServerEndpoint(registry *MockRegistryService, serverID string) {
 				ID:     "example/test-server-detail",
 			},
 			VersionDetail: model.VersionDetail{
-				Version:     "2.0.0",
-				ReleaseDate: "2025-05-27T12:00:00Z",
-				IsLatest:    true,
+				Version: "2.0.0",
 			},
+		},
+		XIOModelContextProtocolRegistry: map[string]interface{}{
+			"id": serverID,
 		},
 	}
 	registry.Mock.On("GetByID", serverID).Return(serverDetail, nil)
