@@ -150,7 +150,7 @@ When running locally they are stored in a Minio bucket. In staging and productio
 
 ```bash
 # Expose MinIO web console
-kubectl port-forward -n minio svc/minio 9001:9001
+kubectl port-forward -n minio svc/minio 9000:9000 9001:9001
 ```
 
 Then open [localhost:9001](http://localhost:9001), login with username `minioadmin` and password `minioadmin`, and navigate to the k8up-backups bucket.
@@ -166,7 +166,7 @@ Backups are encrypted using Restic. To access the backup data:
 
 1. **Download the backup files from the bucket:**
    ```bash
-   # Local (MinIO) - ensure port-forward is active: kubectl port-forward -n minio svc/minio 9000:9000
+   # Local (MinIO) - ensure port-forward is active: kubectl port-forward -n minio svc/minio 9000:9000 9001:9001
    AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin \
      aws --endpoint-url http://localhost:9000 s3 sync s3://k8up-backups/ ./backup-files/
    
