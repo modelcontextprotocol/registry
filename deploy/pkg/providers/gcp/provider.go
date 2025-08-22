@@ -205,7 +205,7 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 					Type: pulumi.String("Delete"),
 				},
 				Condition: &storage.BucketLifecycleRuleConditionArgs{
-					Age: pulumi.Int(30), // Keep backups for 30 days
+					Age: pulumi.Int(60), // Keep backups for 60 days (K8up manages pruning at 28 days, GCS deletion is a safety net)
 				},
 			},
 		},
