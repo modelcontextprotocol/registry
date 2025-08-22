@@ -400,9 +400,137 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 
 // ImportSeed imports initial data from a seed file into PostgreSQL
 func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error {
-	// This will need to be updated to work with the new ServerRecord format
-	// For now, return an error indicating it needs implementation
-	return fmt.Errorf("ImportSeed not yet implemented for extension wrapper architecture")
+	// Read seed data using the shared ReadSeedFile function
+	seedData, err := ReadSeedFile(ctx, seedFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to read seed file: %w", err)
+	}
+
+	// Start a transaction for batch import
+	tx, err := db.conn.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Import each server
+	for _, record := range seedData {
+		// Convert record to the format expected by Publish
+		serverDetail := record.ServerJSON
+		publisherExtensions := record.PublisherExtensions
+
+		// Use the existing Publish logic but with specific ID from seed data
+		if err := db.publishWithTransaction(ctx, tx, serverDetail, publisherExtensions, &record.RegistryMetadata); err != nil {
+			return fmt.Errorf("failed to import server %s: %w", serverDetail.Name, err)
+		}
+	}
+
+	// Commit the transaction
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit seed import transaction: %w", err)
+	}
+
+	return nil
+}
+
+// publishWithTransaction handles publishing within an existing transaction, optionally with predefined metadata
+func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, existingMetadata *model.RegistryMetadata) error {
+	var serverID string
+	var extensionID string
+
+	if existingMetadata != nil && existingMetadata.ID != "" {
+		// Use predefined IDs from seed data
+		serverID = existingMetadata.ID
+		extensionID = existingMetadata.ID // In seed data, these are the same
+	} else {
+		// Generate new UUIDs for normal publishing
+		serverID = uuid.New().String()
+		extensionID = uuid.New().String()
+	}
+
+	// Marshal packages and remotes to JSONB
+	packagesJSON, err := json.Marshal(serverDetail.Packages)
+	if err != nil {
+		return fmt.Errorf("failed to marshal packages: %w", err)
+	}
+
+	remotesJSON, err := json.Marshal(serverDetail.Remotes)
+	if err != nil {
+		return fmt.Errorf("failed to marshal remotes: %w", err)
+	}
+
+	repositoryJSON, err := json.Marshal(serverDetail.Repository)
+	if err != nil {
+		return fmt.Errorf("failed to marshal repository: %w", err)
+	}
+
+	publisherExtensionsJSON, err := json.Marshal(publisherExtensions)
+	if err != nil {
+		return fmt.Errorf("failed to marshal publisher extensions: %w", err)
+	}
+
+	// Insert or update server record
+	serverQuery := `
+		INSERT INTO servers (id, name, description, status, repository, version, packages, remotes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+		ON CONFLICT (name, version) 
+		DO UPDATE SET
+			description = EXCLUDED.description,
+			status = EXCLUDED.status,
+			repository = EXCLUDED.repository,
+			packages = EXCLUDED.packages,
+			remotes = EXCLUDED.remotes,
+			updated_at = NOW()
+		RETURNING id`
+
+	var returnedServerID string
+	err = tx.QueryRow(ctx, serverQuery,
+		serverID,
+		serverDetail.Name,
+		serverDetail.Description,
+		string(serverDetail.Status),
+		repositoryJSON,
+		serverDetail.VersionDetail.Version,
+		packagesJSON,
+		remotesJSON,
+	).Scan(&returnedServerID)
+	if err != nil {
+		return fmt.Errorf("failed to insert/update server: %w", err)
+	}
+
+	// Insert or update server extensions
+	extensionQuery := `
+		INSERT INTO server_extensions (id, server_id, published_at, updated_at, is_latest, release_date, publisher_extensions)
+		VALUES ($1, $2, $3, NOW(), true, $4, $5)
+		ON CONFLICT (server_id)
+		DO UPDATE SET
+			updated_at = NOW(),
+			is_latest = true,
+			release_date = EXCLUDED.release_date,
+			publisher_extensions = EXCLUDED.publisher_extensions`
+
+	var publishedAt, releaseDate string
+	if existingMetadata != nil {
+		publishedAt = existingMetadata.PublishedAt.Format(time.RFC3339)
+		releaseDate = existingMetadata.ReleaseDate
+	} else {
+		now := time.Now().Format(time.RFC3339)
+		publishedAt = now
+		releaseDate = now
+	}
+
+	_, err = tx.Exec(ctx, extensionQuery,
+		extensionID,
+		returnedServerID,
+		publishedAt,
+		releaseDate,
+		publisherExtensionsJSON,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to insert/update server extensions: %w", err)
+	}
+
+	return nil
 }
 
 // Close closes the database connection

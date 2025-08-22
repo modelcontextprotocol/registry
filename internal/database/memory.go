@@ -277,8 +277,23 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	}
 	
 	// This will need to be updated to work with the new ServerRecord format
-	// For now, return an error indicating it needs implementation
-	return fmt.Errorf("ImportSeed not yet implemented for extension wrapper architecture")
+	// Read seed data using the shared ReadSeedFile function
+	seedData, err := ReadSeedFile(ctx, seedFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to read seed file: %w", err)
+	}
+
+	// Lock for concurrent access
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	// Import each server
+	for _, record := range seedData {
+		// Use the registry metadata ID as the map key
+		db.entries[record.RegistryMetadata.ID] = record
+	}
+
+	return nil
 }
 
 // Close closes the database connection
