@@ -100,6 +100,7 @@ Pre-requisites:
 ├── go.sum               # Go module checksums
 └── pkg/                 # Infrastructure packages
     ├── k8s/             # Kubernetes deployment components
+    │   ├── backup.go          # Database backup configuration
     │   ├── cert_manager.go    # SSL certificate management
     │   ├── deploy.go          # Deployment orchestration
     │   ├── ingress.go         # Ingress controller setup
@@ -123,6 +124,7 @@ Pre-requisites:
    - Certificate manager for SSL/TLS
    - Ingress controller for external access
    - Database for data persistence
+   - Backup infrastructure for database (GCP only)
    - MCP Registry application
 
 ## Configuration
@@ -135,6 +137,111 @@ Pre-requisites:
 | `githubClientSecret` | GitHub OAuth Client Secret | Yes |
 | `gcpProjectId` | GCP Project ID (required when provider=gcp) | No |
 | `gcpRegion` | GCP Region (default: us-central1) | No |
+
+## Database Backups
+
+### Backup Strategy
+
+The deployment includes automatic PostgreSQL database backups using CloudNative-PG's native backup capabilities:
+
+#### Production (GCP)
+- **Schedule**: Daily backups at 2 AM UTC
+- **Retention**: 30 days for both backups and WAL archives
+- **Storage**: Google Cloud Storage bucket with versioning enabled
+- **Features**:
+  - Continuous WAL archiving for point-in-time recovery
+  - Compressed backups (gzip)
+  - Automatic cleanup of old backups
+  - Service account authentication with minimal permissions
+
+#### Local Development (MinIO)
+- **Schedule**: Every 30 minutes (for easier testing)
+- **Retention**: 7 days for backups, 3 days for WAL archives
+- **Storage**: MinIO (S3-compatible) running in the cluster
+- **Features**:
+  - Same CloudNative-PG backup mechanisms as production
+  - MinIO web console for backup inspection
+  - Immediate backup on deployment for testing
+  - Automatic bucket creation
+
+### Backup Management
+
+#### Check Backup Status
+```bash
+# List scheduled backups
+kubectl get scheduledbackups -n default
+
+# View backup details
+kubectl describe scheduledbackup registry-pg-backup -n default
+
+# List actual backups
+kubectl get backups -n default
+```
+
+#### Manual Backup
+```bash
+# Create an immediate backup
+kubectl apply -f - <<EOF
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: manual-backup-$(date +%Y%m%d-%H%M%S)
+  namespace: default
+spec:
+  cluster:
+    name: registry-pg
+  method: barmanObjectStore
+EOF
+```
+
+#### Local Testing with MinIO
+
+For local development, backups are stored in MinIO:
+
+```bash
+# Access MinIO console (credentials: minioadmin/minioadmin)
+kubectl port-forward -n minio svc/minio 9001:9001
+# Open http://localhost:9001 in your browser
+
+# View backup files directly
+kubectl exec -n minio deploy/minio -- mc ls myminio/pg-backups/
+
+# Check backup logs
+kubectl logs -n default -l cnpg.io/cluster=registry-pg --tail=50
+```
+
+#### Restore from Backup
+
+##### Production (GCP)
+1. Access the backup bucket in GCP Console
+2. Download the backup files using gsutil:
+   ```bash
+   gsutil -m cp -r gs://mcp-registry-prod-backups/postgres/<backup-name>/ ./backup-files/
+   ```
+
+##### Local (MinIO)
+1. List available backups:
+   ```bash
+   kubectl exec -n minio deploy/minio -- mc ls myminio/pg-backups/
+   ```
+2. Access files through MinIO console or kubectl exec
+
+##### Restore Process
+Create a new PostgreSQL cluster with restore configuration:
+```yaml
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: registry-pg-restored
+spec:
+  bootstrap:
+    recovery:
+      source: registry-pg
+      recoveryTarget:
+        backupID: <backup-id>
+```
+
+For detailed recovery procedures, refer to the [CloudNative-PG documentation](https://cloudnative-pg.io/documentation/).
 
 ## Troubleshooting
 
@@ -153,4 +260,13 @@ kubectl get svc -n ingress-nginx
 ```bash
 kubectl logs -l app=mcp-registry
 kubectl logs -l app=postgres
+```
+
+### Check Backup Status
+```bash
+# Check CloudNative-PG operator logs
+kubectl logs -n cnpg-system -l app.kubernetes.io/name=cloudnative-pg
+
+# Check PostgreSQL cluster status
+kubectl get cluster registry-pg -n default -o jsonpath='{.status}'
 ```

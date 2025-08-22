@@ -8,7 +8,6 @@ import (
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
-	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers/aks"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers/gcp"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers/local"
 )
@@ -22,8 +21,6 @@ func createProvider(ctx *pulumi.Context) (providers.ClusterProvider, error) {
 	}
 
 	switch providerName {
-	case "aks":
-		return &aks.Provider{}, nil
 	case "gcp":
 		return &gcp.Provider{}, nil
 	case "local":
@@ -52,7 +49,7 @@ func main() {
 		}
 
 		// Deploy to Kubernetes
-		_, err = k8s.DeployAll(ctx, cluster, environment)
+		_, err = k8s.DeployAll(ctx, cluster, provider, environment)
 		if err != nil {
 			return err
 		}

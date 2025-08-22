@@ -6,6 +6,10 @@ import (
 
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/serviceaccount"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
+	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
+	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -178,5 +182,104 @@ users:
 	return &providers.ProviderInfo{
 		Name:     nodePool.Cluster,
 		Provider: k8sProvider,
+	}, nil
+}
+
+// CreateBackupStorage creates GCS bucket with HMAC credentials for S3-compatible access
+func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*providers.StorageInfo, error) {
+	gcpConf := config.New(ctx, "gcp")
+	projectID := gcpConf.Get("project")
+	if projectID == "" {
+		return nil, fmt.Errorf("GCP project ID not configured. Set gcp:project")
+	}
+
+	// Create GCS bucket for backups
+	bucketName := fmt.Sprintf("mcp-registry-%s-backups", environment)
+	bucket, err := storage.NewBucket(ctx, "backup-bucket", &storage.BucketArgs{
+		Name:         pulumi.String(bucketName),
+		Location:     pulumi.String("US"),
+		StorageClass: pulumi.String("STANDARD"),
+		LifecycleRules: storage.BucketLifecycleRuleArray{
+			&storage.BucketLifecycleRuleArgs{
+				Action: &storage.BucketLifecycleRuleActionArgs{
+					Type: pulumi.String("Delete"),
+				},
+				Condition: &storage.BucketLifecycleRuleConditionArgs{
+					Age: pulumi.Int(30), // Keep backups for 30 days
+				},
+			},
+		},
+		UniformBucketLevelAccess: pulumi.Bool(true),
+		Versioning: &storage.BucketVersioningArgs{
+			Enabled: pulumi.Bool(true),
+		},
+		Labels: pulumi.StringMap{
+			"environment": pulumi.String(environment),
+			"purpose":     pulumi.String("k8up-backups"),
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create backup bucket: %w", err)
+	}
+
+	// Create service account for backup access
+	serviceAccountName := fmt.Sprintf("k8up-backup-%s", environment)
+	serviceAccount, err := serviceaccount.NewAccount(ctx, "backup-service-account", &serviceaccount.AccountArgs{
+		AccountId:   pulumi.String(serviceAccountName),
+		DisplayName: pulumi.String(fmt.Sprintf("k8up Backup Service Account for %s", environment)),
+		Project:     pulumi.String(projectID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create backup service account: %w", err)
+	}
+
+	// Grant the service account access to the bucket
+	_, err = storage.NewBucketIAMMember(ctx, "backup-bucket-iam", &storage.BucketIAMMemberArgs{
+		Bucket: bucket.Name,
+		Role:   pulumi.String("roles/storage.objectAdmin"),
+		Member: pulumi.Sprintf("serviceAccount:%s", serviceAccount.Email),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to grant bucket access: %w", err)
+	}
+
+	// Create HMAC key for S3-compatible access
+	hmacKey, err := storage.NewHmacKey(ctx, "backup-hmac-key", &storage.HmacKeyArgs{
+		ServiceAccountEmail: serviceAccount.Email,
+		Project:            pulumi.String(projectID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HMAC key: %w", err)
+	}
+
+	// Create Kubernetes secret with S3-compatible credentials
+	backupSecret, err := corev1.NewSecret(ctx, "k8up-backup-credentials", &corev1.SecretArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String("k8up-backup-credentials"),
+			Namespace: pulumi.String("default"),
+			Labels: pulumi.StringMap{
+				"k8up.io/backup": pulumi.String("true"),
+				"environment":    pulumi.String(environment),
+			},
+		},
+		Type: pulumi.String("Opaque"),
+		StringData: pulumi.StringMap{
+			"AWS_ACCESS_KEY_ID":     hmacKey.AccessId,
+			"AWS_SECRET_ACCESS_KEY": hmacKey.Secret,
+		},
+	}, pulumi.Provider(cluster.Provider))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create backup credentials secret: %w", err)
+	}
+
+	// Export GCS information
+	ctx.Export("backupStorage", pulumi.String("Google Cloud Storage (S3-compatible)"))
+	ctx.Export("backupBucket", bucket.Name)
+	ctx.Export("backupEndpoint", pulumi.String("https://storage.googleapis.com"))
+
+	return &providers.StorageInfo{
+		Endpoint:    "https://storage.googleapis.com",
+		BucketName:  bucketName,
+		Credentials: backupSecret,
 	}, nil
 }
