@@ -14,6 +14,7 @@ import (
 
 // createTestLegacySeed creates a small test file with legacy format data
 func createTestLegacySeed(t *testing.T) string {
+	t.Helper()
 	testData := []OldServerFormat{
 		{
 			ID:          "4e9cf4cf-71f6-4aca-bae8-2d10a29ca2e0",
