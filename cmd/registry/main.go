@@ -48,38 +48,37 @@ func main() {
 	case config.DatabaseTypeMemory:
 		db = database.NewMemoryDB(map[string]*model.Server{})
 		registryService = service.NewRegistryServiceWithDB(db)
-	case config.DatabaseTypeMongoDB:
-		// Use MongoDB for real registry service in production/other environments
-		// Create a context with timeout for MongoDB connection
+	case config.DatabaseTypePostgreSQL:
+		// Use PostgreSQL for real registry service
+		// Create a context with timeout for PostgreSQL connection
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		// Connect to MongoDB
-		db, err = database.NewMongoDB(ctx, cfg.DatabaseURL, cfg.DatabaseName, cfg.CollectionName)
+		// Connect to PostgreSQL
+		db, err = database.NewPostgreSQL(ctx, cfg.DatabaseURL)
 		if err != nil {
-			log.Printf("Failed to connect to MongoDB: %v", err)
+			log.Printf("Failed to connect to PostgreSQL: %v", err)
 			return
 		}
 
-		// Create registry service with MongoDB
+		// Create registry service with PostgreSQL
 		registryService = service.NewRegistryServiceWithDB(db)
-		log.Printf("MongoDB database name: %s", cfg.DatabaseName)
-		log.Printf("MongoDB collection name: %s", cfg.CollectionName)
+		log.Printf("PostgreSQL database URL: %s", cfg.DatabaseURL)
 
-		// Store the MongoDB instance for later cleanup
+		// Store the PostgreSQL instance for later cleanup
 		defer func() {
 			if err := db.Close(); err != nil {
-				log.Printf("Error closing MongoDB connection: %v", err)
+				log.Printf("Error closing PostgreSQL connection: %v", err)
 			} else {
-				log.Println("MongoDB connection closed successfully")
+				log.Println("PostgreSQL connection closed successfully")
 			}
 		}()
 	default:
-		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypeMongoDB)
+		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypePostgreSQL)
 		return
 	}
 
-	// Import seed data if seed source is provided (works for both memory and MongoDB)
+	// Import seed data if seed source is provided
 	if cfg.SeedFrom != "" {
 		log.Printf("Importing data from %s...", cfg.SeedFrom)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)

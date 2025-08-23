@@ -16,19 +16,19 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment
 	}
 
 	// Setup ingress controller
-	err = SetupIngressController(ctx, cluster, environment)
+	ingressNginx, err := SetupIngressController(ctx, cluster, environment)
 	if err != nil {
 		return nil, err
 	}
 
-	// Deploy MongoDB
-	err = DeployMongoDB(ctx, cluster, environment)
+	// Deploy PostgreSQL databases
+	pgCluster, err := DeployPostgresDatabases(ctx, cluster, environment)
 	if err != nil {
 		return nil, err
 	}
 
 	// Deploy MCP Registry
-	service, err = DeployMCPRegistry(ctx, cluster, environment)
+	service, err = DeployMCPRegistry(ctx, cluster, environment, ingressNginx, pgCluster)
 	if err != nil {
 		return nil, err
 	}

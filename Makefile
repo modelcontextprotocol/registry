@@ -57,7 +57,7 @@ check: lint validate test-all ## Run all checks (lint, validate, unit tests)
 dev-compose: ## Start development environment with Docker Compose (builds image automatically)
 	docker compose up --build
 
-dev-local: ## Run registry locally (requires MongoDB)
+dev-local: ## Run registry locally
 	go run ./cmd/registry
 
 # Cleanup

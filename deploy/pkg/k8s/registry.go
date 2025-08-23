@@ -4,8 +4,10 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apiextensions"
 	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apps/v1"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/networking/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -26,7 +28,7 @@ func getGitCommitHash() string {
 }
 
 // DeployMCPRegistry deploys the MCP Registry to the Kubernetes cluster
-func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*corev1.Service, error) {
+func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart, pgCluster *apiextensions.CustomResource) (*corev1.Service, error) {
 	conf := config.New(ctx, "mcp-registry")
 	githubClientId := conf.Require("githubClientId")
 
@@ -91,8 +93,18 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 							},
 							Env: corev1.EnvVarArray{
 								&corev1.EnvVarArgs{
-									Name:  pulumi.String("MCP_REGISTRY_DATABASE_URL"),
-									Value: pulumi.String("mongodb://mongodb.default.svc.cluster.local:27017"),
+									Name: pulumi.String("MCP_REGISTRY_DATABASE_URL"),
+									ValueFrom: &corev1.EnvVarSourceArgs{
+										SecretKeyRef: &corev1.SecretKeySelectorArgs{
+											Name: pgCluster.Metadata.Name().ApplyT(func(name *string) string {
+												if name == nil {
+													return "registry-pg-app"
+												}
+												return *name + "-app"
+											}).(pulumi.StringOutput),
+											Key: pulumi.String("uri"),
+										},
+									},
 								},
 								&corev1.EnvVarArgs{
 									Name:  pulumi.String("MCP_REGISTRY_GITHUB_CLIENT_ID"),
@@ -227,7 +239,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				return rules
 			}).(networkingv1.IngressRuleArrayOutput),
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, pulumi.Provider(cluster.Provider), pulumi.DependsOnInputs(ingressNginx.Ready))
 	if err != nil {
 		return nil, err
 	}

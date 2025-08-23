@@ -13,7 +13,7 @@ import (
 )
 
 // SetupIngressController sets up the NGINX Ingress Controller
-func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) error {
+func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*helm.Chart, error) {
 	conf := config.New(ctx, "mcp-registry")
 	provider := conf.Get("provider")
 	if provider == "" {
@@ -27,7 +27,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Install NGINX Ingress Controller
@@ -60,7 +60,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Extract ingress IPs from the Helm chart's controller service
@@ -90,5 +90,5 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 	})
 	ctx.Export("ingressIps", ingressIps)
 
-	return nil
+	return ingressNginx, nil
 }

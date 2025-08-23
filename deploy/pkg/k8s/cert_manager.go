@@ -69,7 +69,7 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 				},
 			},
 		},
-	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn([]pulumi.Resource{certManager}))
+	}, pulumi.Provider(cluster.Provider), pulumi.DependsOnInputs(certManager.Ready))
 	if err != nil {
 		return err
 	}

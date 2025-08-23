@@ -36,8 +36,8 @@ type ConnectionType string
 const (
 	// ConnectionTypeMemory represents an in-memory database connection
 	ConnectionTypeMemory ConnectionType = "memory"
-	// ConnectionTypeMongoDB represents a MongoDB database connection
-	ConnectionTypeMongoDB ConnectionType = "mongodb"
+	// ConnectionTypePostgreSQL represents a PostgreSQL database connection
+	ConnectionTypePostgreSQL ConnectionType = "postgresql"
 )
 
 // ConnectionInfo provides information about the database connection
@@ -47,7 +47,7 @@ type ConnectionInfo struct {
 	// IsConnected indicates whether the database is currently connected
 	IsConnected bool
 	// Raw provides access to the underlying connection object, which will vary by implementation
-	// For MongoDB, this will be *mongo.Client
+	// For PostgreSQL, this will be *pgx.Conn
 	// For MemoryDB, this will be map[string]*model.MCPRegistry
 	Raw any
 }

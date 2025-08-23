@@ -14,7 +14,7 @@ graph TB
     
     subgraph "MCP Registry"
         API[REST API<br/>Go]
-        DB[(MongoDB or PostgreSQL)]
+        DB[(PostgreSQL)]
         CDN[CDN Cache]
     end
     
@@ -61,7 +61,7 @@ The main application server implemented in Go, providing:
 - GitHub OAuth integration (extensible to other providers)
 - DNS verification system (optional for custom namespaces)
 
-### Database (MongoDB or PostgreSQL)
+### Database (PostgreSQL)
 
 Primary data store for:
 - Versioned server metadata (server.json contents)
