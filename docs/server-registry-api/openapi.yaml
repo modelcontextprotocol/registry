@@ -147,7 +147,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Registry JWT token obtained from /v0/auth/token/github
+      description: Registry JWT token. Convention is that this can be obtained from a `/v0/auth/` endpoint.
   schemas:
     Repository:
       type: object
