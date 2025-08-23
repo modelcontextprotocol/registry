@@ -85,6 +85,7 @@ If version parsing as semantic version fails:
 Registry clients SHOULD:
 1. Attempt to interpret versions as semantic versions when possible
 2. Use the following ordering rules:
+   - If one version is marked as is_latest: it is later
    - If both versions are valid semver: use semver comparison
    - If neither are valid semver: use publish timestamp  
    - If one is semver and one is not: semver version is considered higher
