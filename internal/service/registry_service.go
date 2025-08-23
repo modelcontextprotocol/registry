@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
@@ -122,24 +123,6 @@ func (s *registryServiceImpl) determineIsLatest(newVersion string, newTimestamp 
 	return true
 }
 
-// markOtherVersionsAsNotLatest marks all other versions of the same server as not latest
-func (s *registryServiceImpl) markOtherVersionsAsNotLatest(ctx context.Context, serverName string) error {
-	existingVersions, err := s.getVersionsByName(ctx, serverName)
-	if err != nil {
-		return err
-	}
-
-	for _, existing := range existingVersions {
-		if existing.VersionDetail.IsLatest {
-			existing.VersionDetail.IsLatest = false
-			// We need to update this in the database, but the current interface doesn't support updates
-			// For now, this will be handled in the database layer during Publish
-		}
-	}
-
-	return nil
-}
-
 // Publish adds a new server detail to the registry
 func (s *registryServiceImpl) Publish(serverDetail *model.ServerDetail) error {
 	// Create a timeout context for the database operation
@@ -152,7 +135,7 @@ func (s *registryServiceImpl) Publish(serverDetail *model.ServerDetail) error {
 
 	// Get existing versions of this server to determine if this should be latest
 	existingVersions, err := s.getVersionsByName(ctx, serverDetail.Name)
-	if err != nil && err != database.ErrNotFound {
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		return err
 	}
 

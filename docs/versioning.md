@@ -71,10 +71,7 @@ If version parsing as semantic version fails:
 - The registry will always mark the version as latest (overriding any previous version)
 - Clients should fall back to using publish timestamp for ordering
 
-### Mixed Scenarios
-When comparing versions where one is semantic and one is not:
-- The semantic version is always considered higher
-- This ensures semantic versions take precedence in ordering
+**Important Note**: This behavior means that for servers with mixed semantic and non-semantic versions, the `is_latest` flag may not align with the total ordering. A non-semantic version published after semantic versions will be marked as latest, even if semantic versions are considered "higher" in the ordering.
 
 ## Implementation Details
 
@@ -95,7 +92,7 @@ Registry clients SHOULD:
 ## Examples
 
 ### Valid Semantic Versions
-```json
+```javascript
 "1.0.0"          // Basic semantic version
 "2.1.3-alpha"    // Prerelease version  
 "1.0.0-beta.1"   // Prerelease with numeric suffix
@@ -103,7 +100,7 @@ Registry clients SHOULD:
 ```
 
 ### Non-Semantic Versions (Allowed)
-```json
+```javascript
 "v1.0"           // Version with prefix
 "2021.03.15"     // Date-based versioning
 "snapshot"       // Development snapshots
@@ -114,7 +111,7 @@ Registry clients SHOULD:
 ```json
 {
   "version_detail": {
-    "version": "1.2.3-gke.1"
+    "version": "1.2.3-1"
   },
   "packages": [{
     "registry_name": "npm",
