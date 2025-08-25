@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
 )
@@ -118,7 +119,7 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 
 	// Create registry metadata with service-determined values
 	registryMetadata := model.RegistryMetadata{
-		ID:          "", // Will be set by database
+		ID:          uuid.New().String(),
 		PublishedAt: currentTime,
 		UpdatedAt:   currentTime,
 		IsLatest:    isLatest,

@@ -130,6 +130,7 @@ func (s *fakeRegistryService) Publish(req model.PublishRequest) (*model.ServerRe
 	// Create registry metadata for fake service (always marks as latest)
 	now := time.Now()
 	registryMetadata := model.RegistryMetadata{
+		ID:          uuid.New().String(),
 		PublishedAt: now,
 		UpdatedAt:   now,
 		IsLatest:    true,

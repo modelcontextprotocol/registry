@@ -310,11 +310,8 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		return nil, fmt.Errorf("failed to marshal publisher extensions: %w", err)
 	}
 
-	// Generate server ID and use registry metadata ID if not provided
+	// Generate server ID (separate from registry metadata ID)
 	serverID := uuid.New().String()
-	if registryMetadata.ID == "" {
-		registryMetadata.ID = uuid.New().String()
-	}
 
 
 	// Insert new server record

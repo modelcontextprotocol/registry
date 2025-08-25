@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
@@ -175,11 +174,6 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerDetail
 	// Validate repository URL
 	if serverDetail.Repository.URL == "" {
 		return nil, ErrInvalidInput
-	}
-
-	// Set the registry metadata ID if not provided
-	if registryMetadata.ID == "" {
-		registryMetadata.ID = uuid.New().String()
 	}
 
 	// Create server record
