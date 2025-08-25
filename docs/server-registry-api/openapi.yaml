@@ -104,6 +104,32 @@ paths:
                     build_info:
                       commit: "abc123def456"
                       timestamp: "2023-12-01T10:30:00Z"
+              example_org_server:
+                summary: Server with example.com organization extensions
+                value:
+                  server:
+                    name: "com.example/demo-server"
+                    description: "Example MCP server demonstrating publisher extensions."
+                    status: "active"
+                    repository:
+                      url: "https://github.com/example/mcp-demo"
+                      source: "github"
+                    version_detail:
+                      version: "1.0.0"
+                    packages:
+                      - registry_name: "npm"
+                        name: "@example/mcp-demo-server"
+                        version: "1.0.0"
+                  x-publisher:
+                    contact_email: "maintainer@example.com"
+                    build_metadata:
+                      commit: "abc123"
+                      timestamp: "2024-01-15T10:30:00Z"
+                    x-com.example:
+                      marketplace_icon: "https://example.com/icon.png"
+                      category: ["software_development"]
+                      documentation_url: "https://docs.example.org"
+                      verified_publisher: true
       responses:
         '200':
           description: Successfully published server
