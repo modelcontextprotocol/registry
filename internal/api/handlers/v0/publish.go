@@ -2,6 +2,7 @@ package v0
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -15,7 +16,7 @@ import (
 // PublishServerInput represents the input for publishing a server
 type PublishServerInput struct {
 	Authorization string `header:"Authorization" doc:"Registry JWT token (obtained from /v0/auth/token/github)" required:"true"`
-	Body          model.PublishRequest
+	RawBody       []byte `body:"raw"`
 }
 
 // RegisterPublishEndpoint registers the publish endpoint
@@ -33,7 +34,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*Response[model.Server], error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[model.ServerResponse], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -48,30 +49,34 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
 		}
 
-		// Convert PublishRequest body to ServerDetail
-		serverDetail := input.Body.ServerDetail
+		// Validate that only allowed extension fields are present
+		if err := model.ValidatePublishRequestExtensions(input.RawBody); err != nil {
+			return nil, huma.Error400BadRequest("Invalid request format", err)
+		}
+
+		// Parse the validated request body
+		var publishRequest model.PublishRequest
+		if err := json.Unmarshal(input.RawBody, &publishRequest); err != nil {
+			return nil, huma.Error400BadRequest("Invalid JSON format", err)
+		}
+
+		// Get server details from request body
+		serverDetail := publishRequest.Server
 
 		// Verify that the token's repository matches the server being published
 		if !jwtManager.HasPermission(serverDetail.Name, auth.PermissionActionPublish, claims.Permissions) {
 			return nil, huma.Error403Forbidden("You do not have permission to publish this server")
 		}
 
-		// Publish the server details
-		err = registry.Publish(&serverDetail)
+		// Publish the server with extensions
+		publishedServer, err := registry.Publish(publishRequest)
 		if err != nil {
 			return nil, huma.Error500InternalServerError("Failed to publish server", err)
 		}
 
-		// Create response with the published server data
-		return &Response[model.Server]{
-			Body: model.Server{
-				ID:            serverDetail.ID,
-				Name:          serverDetail.Name,
-				Description:   serverDetail.Description,
-				Status:        serverDetail.Status,
-				Repository:    serverDetail.Repository,
-				VersionDetail: serverDetail.VersionDetail,
-			},
+		// Return the published server in extension wrapper format
+		return &Response[model.ServerResponse]{
+			Body: *publishedServer,
 		}, nil
 	})
 }

@@ -5,11 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -17,255 +14,165 @@ import (
 )
 
 // ReadSeedFile reads seed data from various sources:
-// 1. Local file paths (*.json files)
-// 2. Direct HTTP URLs to seed.json files
+// 1. Local file paths (*.json files) - expects extension wrapper format
+// 2. Direct HTTP URLs to seed.json files - expects extension wrapper format  
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
-func ReadSeedFile(ctx context.Context, path string) ([]model.ServerDetail, error) {
-	log.Printf("Reading seed data from %s", path)
+// Only the extension wrapper format is supported (array of ServerResponse objects)
+func ReadSeedFile(ctx context.Context, path string) ([]*model.ServerRecord, error) {
+	var data []byte
+	var err error
 
-	// Set default seed file path if not provided
-	if path == "" {
-		// Try to find the seed.json in the data directory
-		path = filepath.Join("data", "seed.json")
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			return nil, fmt.Errorf("seed file not found at %s", path)
-		}
-	}
-
-	// Check if path is an HTTP URL
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		// Determine if this is a direct seed file URL or a registry root URL
-		if strings.HasSuffix(path, ".json") || strings.Contains(path, "seed.json") {
-			// Direct seed file URL - read directly
-			fileContent, err := readFromHTTP(ctx, path)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read from HTTP URL: %w", err)
-			}
-			return parseSeedJSON(fileContent)
+		// Handle HTTP URLs
+		if strings.HasSuffix(path, "/v0/servers") || strings.Contains(path, "/v0/servers") {
+			// This is a registry API endpoint - fetch paginated data
+			return fetchFromRegistryAPI(ctx, path)
 		}
-		// Registry root URL - paginate through /v0/servers endpoint
-		return readFromRegistryWithContext(ctx, path)
+		// This is a direct file URL
+		data, err = fetchFromHTTP(ctx, path)
+	} else {
+		// Handle local file paths
+		data, err = os.ReadFile(path)
 	}
-	// Read from local file
-	fileContent, err := os.ReadFile(path)
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
+		return nil, fmt.Errorf("failed to read seed data from %s: %w", path, err)
 	}
-	return parseSeedJSON(fileContent)
+
+	// Parse extension wrapper format (only supported format)
+	var serverResponses []model.ServerResponse
+	if err := json.Unmarshal(data, &serverResponses); err != nil {
+		return nil, fmt.Errorf("failed to parse seed data as extension wrapper format: %w", err)
+	}
+
+	if len(serverResponses) == 0 {
+		return []*model.ServerRecord{}, nil
+	}
+
+	// Convert ServerResponse to ServerRecord
+	var records []*model.ServerRecord
+	for _, response := range serverResponses {
+		record := convertServerResponseToRecord(response)
+		records = append(records, record)
+	}
+
+	return records, nil
 }
 
-// readFromHTTP reads content from an HTTP URL with timeout
-func readFromHTTP(ctx context.Context, url string) ([]byte, error) {
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
+func fetchFromHTTP(ctx context.Context, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
 
-	resp, err := client.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch URL: %w", err)
+		return nil, fmt.Errorf("failed to fetch from HTTP: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("HTTP request failed with status %d: %s", resp.StatusCode, resp.Status)
+		return nil, fmt.Errorf("HTTP request failed with status: %d", resp.StatusCode)
 	}
 
-	// Read the response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	return body, nil
+	return io.ReadAll(resp.Body)
 }
 
-// parseSeedJSON parses JSON content into ServerDetail objects
-func parseSeedJSON(fileContent []byte) ([]model.ServerDetail, error) {
-	var servers []model.ServerDetail
-	if err := json.Unmarshal(fileContent, &servers); err != nil {
-		// Try parsing as a raw JSON array and then convert to our model
-		var rawData []map[string]any
-		if jsonErr := json.Unmarshal(fileContent, &rawData); jsonErr != nil {
-			return nil, fmt.Errorf("failed to parse JSON: %w (original error: %w)", jsonErr, err)
-		}
-	}
-
-	log.Printf("Found %d server entries in seed data", len(servers))
-	return servers, nil
-}
-
-// PaginatedResponse represents the paginated response from /v0/servers endpoint
-// PaginatedResponse represents the structure of a paginated response from /v0/servers endpoint
-type PaginatedResponse struct {
-	Data     []model.Server `json:"servers"`
-	Metadata Metadata       `json:"metadata,omitempty"`
-}
-
-// Metadata contains pagination metadata
-type Metadata struct {
-	NextCursor string `json:"next_cursor,omitempty"`
-	Count      int    `json:"count,omitempty"`
-	Total      int    `json:"total,omitempty"`
-}
-
-// readFromRegistryWithContext reads all servers from a registry by paginating through /v0/servers endpoint
-func readFromRegistryWithContext(ctx context.Context, registryURL string) ([]model.ServerDetail, error) {
-	log.Printf("Reading from registry: %s", registryURL)
-
-	// Ensure the URL doesn't have a trailing slash
-	registryURL = strings.TrimSuffix(registryURL, "/")
-
-	var allServers []model.ServerDetail
+func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*model.ServerRecord, error) {
+	var allRecords []*model.ServerRecord
 	cursor := ""
-	pageCount := 0
-
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
 
 	for {
-		pageCount++
-
-		// Add delay between requests as requested (10 seconds by default)
-		// Can be overridden by SEED_IMPORT_DELAY environment variable for testing
-		if pageCount > 1 { // Don't delay before the first request
-			delay := 10 * time.Second
-			if delayStr := os.Getenv("SEED_IMPORT_DELAY"); delayStr != "" {
-				if parsedDelay, err := time.ParseDuration(delayStr); err == nil {
-					delay = parsedDelay
-				}
-			}
-			if delay > 0 {
-				log.Printf("Waiting %v before fetching page %d...", delay, pageCount)
-				time.Sleep(delay)
-			}
-		}
-
-		log.Printf("Fetching page %d from registry", pageCount)
-
-		// Build the URL for this page
-		serverURL := registryURL + "/v0/servers"
+		url := baseURL
 		if cursor != "" {
-			// Add cursor parameter for pagination
-			parsed, err := url.Parse(serverURL)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse registry URL: %w", err)
+			if strings.Contains(url, "?") {
+				url += "&cursor=" + cursor
+			} else {
+				url += "?cursor=" + cursor
 			}
-			query := parsed.Query()
-			query.Set("cursor", cursor)
-			query.Set("limit", "100") // Use maximum limit for efficiency
-			parsed.RawQuery = query.Encode()
-			serverURL = parsed.String()
-		} else {
-			// First page - use max limit
-			serverURL += "?limit=100"
 		}
 
-		// Fetch the page
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, serverURL, nil)
+		data, err := fetchFromHTTP(ctx, url)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create request for %s: %w", serverURL, err)
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch servers from %s: %w", serverURL, err)
+			return nil, fmt.Errorf("failed to fetch page from registry API: %w", err)
 		}
 
-		if resp.StatusCode != http.StatusOK {
-			resp.Body.Close()
-			return nil, fmt.Errorf("HTTP request to %s failed with status %d: %s", serverURL, resp.StatusCode, resp.Status)
+		var response struct {
+			Servers  []model.ServerResponse `json:"servers"`
+			Metadata *struct {
+				NextCursor string `json:"next_cursor,omitempty"`
+			} `json:"metadata,omitempty"`
 		}
 
-		// Read and parse the response
-		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if err != nil {
-			return nil, fmt.Errorf("failed to read response body from %s: %w", serverURL, err)
+		if err := json.Unmarshal(data, &response); err != nil {
+			return nil, fmt.Errorf("failed to parse registry API response: %w", err)
 		}
 
-		var pageResponse PaginatedResponse
-		if err := json.Unmarshal(body, &pageResponse); err != nil {
-			return nil, fmt.Errorf("failed to parse servers response from %s: %w", serverURL, err)
+		// Convert and add servers
+		for _, serverResponse := range response.Servers {
+			record := convertServerResponseToRecord(serverResponse)
+			allRecords = append(allRecords, record)
 		}
 
-		log.Printf("Retrieved %d servers from page %d", len(pageResponse.Data), pageCount)
-
-		// For each server in this page, get the detailed information
-		for _, server := range pageResponse.Data {
-			// Build URL for server detail
-			detailURL := registryURL + "/v0/servers/" + server.ID
-
-			detailReq, err := http.NewRequestWithContext(ctx, http.MethodGet, detailURL, nil)
-			if err != nil {
-				log.Printf("Warning: failed to create request for server %s: %v", server.ID, err)
-				// Fall back to basic server information
-				serverDetail := model.ServerDetail{
-					Server: server,
-				}
-				allServers = append(allServers, serverDetail)
-				continue
-			}
-
-			detailResp, err := client.Do(detailReq)
-			if err != nil {
-				log.Printf("Warning: failed to fetch details for server %s: %v", server.ID, err)
-				// Fall back to basic server information
-				serverDetail := model.ServerDetail{
-					Server: server,
-				}
-				allServers = append(allServers, serverDetail)
-				continue
-			}
-
-			if detailResp.StatusCode != http.StatusOK {
-				log.Printf("Warning: failed to fetch details for server %s (status %d)", server.ID, detailResp.StatusCode)
-				detailResp.Body.Close()
-				// Fall back to basic server information
-				serverDetail := model.ServerDetail{
-					Server: server,
-				}
-				allServers = append(allServers, serverDetail)
-				continue
-			}
-
-			detailBody, err := io.ReadAll(detailResp.Body)
-			detailResp.Body.Close()
-			if err != nil {
-				log.Printf("Warning: failed to read detail response for server %s: %v", server.ID, err)
-				// Fall back to basic server information
-				serverDetail := model.ServerDetail{
-					Server: server,
-				}
-				allServers = append(allServers, serverDetail)
-				continue
-			}
-
-			var serverDetail model.ServerDetail
-			if err := json.Unmarshal(detailBody, &serverDetail); err != nil {
-				log.Printf("Warning: failed to parse detail response for server %s: %v", server.ID, err)
-				// Fall back to basic server information
-				serverDetail = model.ServerDetail{
-					Server: server,
-				}
-			}
-
-			allServers = append(allServers, serverDetail)
-		}
-
-		// Check if there are more pages
-		if pageResponse.Metadata.NextCursor == "" {
-			log.Printf("Reached end of pagination after %d pages", pageCount)
+		// Check if there's a next page
+		if response.Metadata == nil || response.Metadata.NextCursor == "" {
 			break
 		}
-
-		cursor = pageResponse.Metadata.NextCursor
+		cursor = response.Metadata.NextCursor
 	}
 
-	log.Printf("Successfully retrieved %d servers from registry %s", len(allServers), registryURL)
-	return allServers, nil
+	return allRecords, nil
+}
+
+func convertServerResponseToRecord(response model.ServerResponse) *model.ServerRecord {
+	// Extract registry metadata from the extension
+	registryExt := response.XIOModelContextProtocolRegistry
+	
+	// Parse timestamps
+	publishedAt, _ := time.Parse(time.RFC3339, getStringFromInterface(registryExt, "published_at"))
+	updatedAt, _ := time.Parse(time.RFC3339, getStringFromInterface(registryExt, "updated_at"))
+
+	registryMetadata := model.RegistryMetadata{
+		ID:          getStringFromInterface(registryExt, "id"),
+		IsLatest:    getBoolFromInterface(registryExt, "is_latest"),
+		PublishedAt: publishedAt,
+		UpdatedAt:   updatedAt,
+		ReleaseDate: getStringFromInterface(registryExt, "release_date"),
+	}
+
+	// Publisher extensions
+	publisherExtensions := make(map[string]interface{})
+	if response.XPublisher != nil {
+		if publisherMap, ok := response.XPublisher.(map[string]interface{}); ok {
+			publisherExtensions = publisherMap
+		}
+	}
+
+	return &model.ServerRecord{
+		ServerJSON:          response.Server,
+		RegistryMetadata:    registryMetadata,
+		PublisherExtensions: publisherExtensions,
+	}
+}
+
+func getStringFromInterface(data interface{}, key string) string {
+	if dataMap, ok := data.(map[string]interface{}); ok {
+		if value, exists := dataMap[key]; exists {
+			if strValue, ok := value.(string); ok {
+				return strValue
+			}
+		}
+	}
+	return ""
+}
+
+func getBoolFromInterface(data interface{}, key string) bool {
+	if dataMap, ok := data.(map[string]interface{}); ok {
+		if value, exists := dataMap[key]; exists {
+			if boolValue, ok := value.(bool); ok {
+				return boolValue
+			}
+		}
+	}
+	return false
 }

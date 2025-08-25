@@ -5,8 +5,7 @@ type HTTPProvider struct {
 }
 
 // NewHTTPProvider creates a new HTTP-based auth provider
-//
-//nolint:ireturn
+//nolint:ireturn // Factory function returns interface by design
 func NewHTTPProvider(registryURL, domain, hexSeed string) Provider {
 	return &HTTPProvider{
 		CryptoProvider: &CryptoProvider{

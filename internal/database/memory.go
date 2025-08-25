@@ -3,8 +3,9 @@ package database
 import (
 	"context"
 	"fmt"
-	"log"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,34 +15,91 @@ import (
 
 // MemoryDB is an in-memory implementation of the Database interface
 type MemoryDB struct {
-	entries map[string]*model.ServerDetail
+	entries map[string]*model.ServerRecord // maps registry metadata ID to ServerRecord
 	mu      sync.RWMutex
 }
 
 // NewMemoryDB creates a new instance of the in-memory database
-func NewMemoryDB(e map[string]*model.Server) *MemoryDB {
-	// Convert Server entries to ServerDetail entries
-	serverDetails := make(map[string]*model.ServerDetail)
-	for k, v := range e {
-		serverDetails[k] = &model.ServerDetail{
-			Server: *v,
+func NewMemoryDB(e map[string]*model.ServerDetail) *MemoryDB {
+	// Convert ServerDetail entries to ServerRecord entries
+	serverRecords := make(map[string]*model.ServerRecord)
+	for registryID, serverDetail := range e {
+		// Create registry metadata
+		now := time.Now()
+		record := &model.ServerRecord{
+			ServerJSON: *serverDetail,
+			RegistryMetadata: model.RegistryMetadata{
+				ID:          registryID,
+				PublishedAt: now,
+				UpdatedAt:   now,
+				IsLatest:    true,
+				ReleaseDate: now.Format(time.RFC3339),
+			},
+			PublisherExtensions: make(map[string]interface{}),
 		}
+		serverRecords[registryID] = record
 	}
 	return &MemoryDB{
-		entries: serverDetails,
+		entries: serverRecords,
 	}
 }
 
-
-// List retrieves all MCPRegistry entries with optional filtering and pagination
+// compareSemanticVersions compares two semantic version strings
+// Returns:
 //
-//gocognit:ignore
+//	-1 if version1 < version2
+//	 0 if version1 == version2
+//	+1 if version1 > version2
+func compareSemanticVersions(version1, version2 string) int {
+	// Simple semantic version comparison
+	// Assumes format: major.minor.patch
+
+	parts1 := strings.Split(version1, ".")
+	parts2 := strings.Split(version2, ".")
+
+	// Pad with zeros if needed
+	maxLen := max(len(parts2), len(parts1))
+
+	for len(parts1) < maxLen {
+		parts1 = append(parts1, "0")
+	}
+	for len(parts2) < maxLen {
+		parts2 = append(parts2, "0")
+	}
+
+	// Compare each part
+	for i := 0; i < maxLen; i++ {
+		num1, err1 := strconv.Atoi(parts1[i])
+		num2, err2 := strconv.Atoi(parts2[i])
+
+		// If parsing fails, fall back to string comparison
+		if err1 != nil || err2 != nil {
+			if parts1[i] < parts2[i] {
+				return -1
+			} else if parts1[i] > parts2[i] {
+				return 1
+			}
+			continue
+		}
+
+		if num1 < num2 {
+			return -1
+		} else if num1 > num2 {
+			return 1
+		}
+	}
+
+	return 0
+}
+
+
+// List retrieves ServerRecord entries with optional filtering and pagination
 func (db *MemoryDB) List(
 	ctx context.Context,
 	filter map[string]any,
 	cursor string,
 	limit int,
-) ([]*model.Server, string, error) {
+) ([]*model.ServerRecord, string, error) {
 	if ctx.Err() != nil {
 		return nil, "", ctx.Err()
 	}
@@ -52,16 +110,18 @@ func (db *MemoryDB) List(
 
 	db.mu.RLock()
 	defer db.mu.RUnlock()
+	
 
-	// Convert all entries to a slice for pagination
-	var allEntries []*model.Server
+	// Convert all entries to a slice for pagination, filter by is_latest
+	var allEntries []*model.ServerRecord
 	for _, entry := range db.entries {
-		serverCopy := entry.Server
-		allEntries = append(allEntries, &serverCopy)
+		if entry.RegistryMetadata.IsLatest {
+			allEntries = append(allEntries, entry)
+		}
 	}
 
 	// Simple filtering implementation
-	var filteredEntries []*model.Server
+	var filteredEntries []*model.ServerRecord
 	for _, entry := range allEntries {
 		include := true
 
@@ -69,22 +129,17 @@ func (db *MemoryDB) List(
 		for key, value := range filter {
 			switch key {
 			case "name":
-				if entry.Name != value.(string) {
-					include = false
-				}
-			case "repoUrl":
-				if entry.Repository.URL != value.(string) {
-					include = false
-				}
-			case "serverDetail.id":
-				if entry.ID != value.(string) {
+				if entry.ServerJSON.Name != value.(string) {
 					include = false
 				}
 			case "version":
-				if entry.VersionDetail.Version != value.(string) {
+				if entry.ServerJSON.VersionDetail.Version != value.(string) {
 					include = false
 				}
-				// Add more filter options as needed
+			case "status":
+				if string(entry.ServerJSON.Status) != value.(string) {
+					include = false
+				}
 			}
 		}
 
@@ -93,43 +148,43 @@ func (db *MemoryDB) List(
 		}
 	}
 
-	// Find starting point for cursor-based pagination
+	// Sort filteredEntries by registry metadata ID for consistent pagination
+	sort.Slice(filteredEntries, func(i, j int) bool {
+		return filteredEntries[i].RegistryMetadata.ID < filteredEntries[j].RegistryMetadata.ID
+	})
+
+	// Find starting point for cursor-based pagination using registry metadata ID
 	startIdx := 0
 	if cursor != "" {
 		for i, entry := range filteredEntries {
-			if entry.ID == cursor {
+			if entry.RegistryMetadata.ID == cursor {
 				startIdx = i + 1 // Start after the cursor
 				break
 			}
 		}
 	}
 
-	// Sort filteredEntries by ID for consistent pagination
-	sort.Slice(filteredEntries, func(i, j int) bool {
-		return filteredEntries[i].ID < filteredEntries[j].ID
-	})
-
 	// Apply pagination
 	endIdx := min(startIdx+limit, len(filteredEntries))
 
-	var result []*model.Server
+	var result []*model.ServerRecord
 	if startIdx < len(filteredEntries) {
 		result = filteredEntries[startIdx:endIdx]
 	} else {
-		result = []*model.Server{}
+		result = []*model.ServerRecord{}
 	}
 
-	// Determine next cursor
+	// Determine next cursor using registry metadata ID
 	nextCursor := ""
 	if endIdx < len(filteredEntries) {
-		nextCursor = filteredEntries[endIdx-1].ID
+		nextCursor = filteredEntries[endIdx-1].RegistryMetadata.ID
 	}
 
 	return result, nextCursor, nil
 }
 
-// GetByID retrieves a single ServerDetail by its ID
-func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerDetail, error) {
+// GetByID retrieves a single ServerRecord by its registry metadata ID
+func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -137,64 +192,84 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerDetail
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
+	// Find entry by registry metadata ID
 	if entry, exists := db.entries[id]; exists {
-		// Return a copy of the ServerDetail
-		serverDetailCopy := *entry
-		return &serverDetailCopy, nil
+		// Return a copy of the ServerRecord
+		entryCopy := *entry
+		return &entryCopy, nil
 	}
 
 	return nil, ErrNotFound
 }
 
-// Publish adds a new ServerDetail to the database
-func (db *MemoryDB) Publish(ctx context.Context, serverDetail *model.ServerDetail) error {
+// Publish adds a new server to the database with separated server.json and extensions
+func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*model.ServerRecord, error) {
 	if ctx.Err() != nil {
-		return ctx.Err()
+		return nil, ctx.Err()
+	}
+	
+	// Extract name and version for validation
+	name := serverDetail.Name
+	if name == "" {
+		return nil, fmt.Errorf("name is required in server JSON")
+	}
+	
+	version := serverDetail.VersionDetail.Version
+	if version == "" {
+		return nil, fmt.Errorf("version is required in version_detail")
 	}
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	// check for name
-	if serverDetail.Name == "" {
-		return ErrInvalidInput
-	}
-
-	// Validate version string length (max 255 characters as per schema)
-	if len(serverDetail.VersionDetail.Version) > 255 {
-		return ErrInvalidInput
-	}
-
-	// Check that the name and version combination is unique
+	// Check for existing entry with same name and compare versions
+	var existingRecord *model.ServerRecord
 	for _, entry := range db.entries {
-		if entry.Name == serverDetail.Name {
-			if entry.VersionDetail.Version == serverDetail.VersionDetail.Version {
-				return ErrAlreadyExists
-			}
+		if entry.RegistryMetadata.IsLatest && entry.ServerJSON.Name == name {
+			existingRecord = entry
+			break
 		}
 	}
 
+	// Version comparison
+	if existingRecord != nil {
+		existingVersion := existingRecord.ServerJSON.VersionDetail.Version
+		if compareSemanticVersions(version, existingVersion) <= 0 {
+			return nil, fmt.Errorf("version must be greater than existing version %s", existingVersion)
+		}
+	}
+
+	// Validate repository URL
 	if serverDetail.Repository.URL == "" {
-		return ErrInvalidInput
+		return nil, ErrInvalidInput
 	}
 
-	// Always generate a new UUID for the ID
-	serverDetail.ID = uuid.New().String()
-
-	// If this version will be latest, mark all existing versions of the same server as not latest
-	if serverDetail.VersionDetail.IsLatest {
-		for _, entry := range db.entries {
-			if entry.Name == serverDetail.Name {
-				entry.VersionDetail.IsLatest = false
-			}
-		}
+	// Create new registry metadata
+	now := time.Now()
+	registryMetadata := model.RegistryMetadata{
+		ID:          uuid.New().String(),
+		PublishedAt: now,
+		UpdatedAt:   now,
+		IsLatest:    true,
+		ReleaseDate: now.Format(time.RFC3339),
 	}
 
-	// Store a copy of the entire ServerDetail
-	serverDetailCopy := *serverDetail
-	db.entries[serverDetail.ID] = &serverDetailCopy
+	// Create server record
+	record := &model.ServerRecord{
+		ServerJSON:          serverDetail,
+		RegistryMetadata:    registryMetadata,
+		PublisherExtensions: publisherExtensions,
+	}
 
-	return nil
+	// Mark existing record as not latest
+	if existingRecord != nil {
+		existingRecord.RegistryMetadata.IsLatest = false
+	}
+
+	// Store the record using registry metadata ID
+	db.entries[registryMetadata.ID] = record
+
+	return record, nil
 }
 
 // ImportSeed imports initial data from a seed file into memory database
@@ -202,39 +277,25 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-
-	// Read the seed file
+	
+	// This will need to be updated to work with the new ServerRecord format
+	// Read seed data using the shared ReadSeedFile function
 	seedData, err := ReadSeedFile(ctx, seedFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read seed file: %w", err)
 	}
 
-	log.Printf("Importing %d servers into memory database", len(seedData))
-
+	// Lock for concurrent access
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	for i, server := range seedData {
-		if server.ID == "" || server.Name == "" {
-			log.Printf("Skipping server %d: ID or Name is empty", i+1)
-			continue
-		}
-
-		// Set default version information if missing
-		if server.VersionDetail.Version == "" {
-			server.VersionDetail.Version = "0.0.1-seed"
-			server.VersionDetail.ReleaseDate = time.Now().Format(time.RFC3339)
-			server.VersionDetail.IsLatest = true
-		}
-
-		// Store a copy of the server detail
-		serverDetailCopy := server
-		db.entries[server.ID] = &serverDetailCopy
-
-		log.Printf("[%d/%d] Imported server: %s", i+1, len(seedData), server.Name)
+	// Import each server
+	for _, record := range seedData {
+		// Use the registry metadata ID as the map key
+		db.entries[record.RegistryMetadata.ID] = record
 	}
+	
 
-	log.Println("Memory database import completed successfully")
 	return nil
 }
 

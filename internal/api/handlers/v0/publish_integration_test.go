@@ -54,20 +54,17 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
 		publishReq := model.PublishRequest{
-			ServerDetail: model.ServerDetail{
-				Server: model.Server{
-					Name:        "io.github.testuser/test-mcp-server",
-					Description: "A test MCP server for integration testing",
-					Repository: model.Repository{
-						URL:    "https://github.com/testuser/test-mcp-server",
-						Source: "github",
-						ID:     "testuser/test-mcp-server",
-					},
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+			Server: model.ServerDetail{
+				Name:        "io.github.testuser/test-mcp-server",
+				Description: "A test MCP server for integration testing",
+				Repository: model.Repository{
+					URL:    "https://github.com/testuser/test-mcp-server",
+					Source: "github",
+					ID:     "testuser/test-mcp-server",
 				},
-				// Packages field removed as it depends on the actual model.Package structure
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
 			},
 		}
 
@@ -94,28 +91,26 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response model.Server
+		var response model.ServerResponse
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.Name, response.Name)
-		assert.Equal(t, publishReq.VersionDetail.Version, response.VersionDetail.Version)
+		assert.Equal(t, publishReq.Server.Name, response.Server.Name)
+		assert.Equal(t, publishReq.Server.VersionDetail.Version, response.Server.VersionDetail.Version)
 	})
 
 	t.Run("successful publish without auth (no prefix)", func(t *testing.T) {
 		publishReq := model.PublishRequest{
-			ServerDetail: model.ServerDetail{
-				Server: model.Server{
-					Name:        "test-mcp-server-no-auth",
-					Description: "A test MCP server without authentication",
-					Repository: model.Repository{
-						URL:    "https://example.com/test-mcp-server",
-						Source: "example",
-						ID:     "test-mcp-server",
-					},
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+			Server: model.ServerDetail{
+				Name:        "test-mcp-server-no-auth",
+				Description: "A test MCP server without authentication",
+				Repository: model.Repository{
+					URL:    "https://example.com/test-mcp-server",
+					Source: "example",
+					ID:     "test-mcp-server",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
 				},
 			},
 		}
@@ -142,19 +137,17 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response model.Server
+		var response model.ServerResponse
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.Name, response.Name)
+		assert.Equal(t, publishReq.Server.Name, response.Server.Name)
 	})
 
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {
 		publishReq := model.PublishRequest{
-			ServerDetail: model.ServerDetail{
-				Server: model.Server{
-					Name: "test-server",
-				},
+			Server: model.ServerDetail{
+				Name: "test-server",
 			},
 		}
 
@@ -174,10 +167,8 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish fails with invalid token", func(t *testing.T) {
 		publishReq := model.PublishRequest{
-			ServerDetail: model.ServerDetail{
-				Server: model.Server{
-					Name: "test-server",
-				},
+			Server: model.ServerDetail{
+				Name: "test-server",
 			},
 		}
 
@@ -197,13 +188,11 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish fails when permission denied", func(t *testing.T) {
 		publishReq := model.PublishRequest{
-			ServerDetail: model.ServerDetail{
-				Server: model.Server{
-					Name:        "io.github.other/test-server",
-					Description: "A test server",
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+			Server: model.ServerDetail{
+				Name:        "io.github.other/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
 				},
 			},
 		}
