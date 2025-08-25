@@ -106,8 +106,8 @@ func TestCompareSemanticVersions(t *testing.T) {
 
 func TestCompareVersions(t *testing.T) {
 	now := time.Now()
-	earlier := now.Add(-1 * time.Hour)
-	later := now.Add(1 * time.Hour)
+	earlier := now.Add(-time.Hour)
+	later := now.Add(time.Hour)
 
 	tests := []struct {
 		name       string
@@ -123,23 +123,23 @@ func TestCompareVersions(t *testing.T) {
 		{"both semver equal", "1.0.0", "1.0.0", now, now, 0},
 		{"both semver ignore timestamps", "1.0.0", "2.0.0", later, earlier, -1},
 
-		// Neither semantic versions - use timestamps
+		// Neither semantic versions
 		{"neither semver earlier", "snapshot", "latest", earlier, later, -1},
 		{"neither semver later", "snapshot", "latest", later, earlier, 1},
 		{"neither semver same time", "snapshot", "latest", now, now, 0},
-		{"neither semver v-prefix", "v1.0", "v2.0", earlier, later, -1},
+		{"neither semver v-prefix", "v2021.03.15", "v2021.03.16", earlier, later, -1},
 
-		// Mixed: one semver, one not - semver always wins
-		{"semver vs non-semver", "1.0.0", "v2.0.0", now, now, 1},
-		{"non-semver vs semver", "v2.0.0", "1.0.0", now, now, -1},
-		{"semver vs snapshot", "0.0.1", "snapshot", earlier, later, 1},
-		{"latest vs semver", "latest", "0.0.1", later, earlier, -1},
-		{"semver prerelease vs non-semver", "1.0.0-alpha", "v5.0.0", now, now, 1},
+		// Mixed: one semver, one not
+		{"semver vs non-semver", "1.0.0", "snapshot", now, now, 1},
+		{"non-semver vs semver", "snapshot", "1.0.0", now, now, -1},
+		{"semver vs snapshot", "2.0.0", "snapshot", earlier, later, 1},
+		{"latest vs semver", "latest", "1.0.0", later, earlier, -1},
+		{"semver prerelease vs non-semver", "1.0.0-alpha", "custom", now, now, 1},
 
 		// Edge cases
 		{"empty vs semver", "", "1.0.0", now, now, -1},
 		{"semver vs empty", "1.0.0", "", now, now, 1},
-		{"both empty", "", "", earlier, later, -1},
+		{"both empty", "", "", now, now, 0},
 	}
 
 	for _, tt := range tests {

@@ -92,7 +92,6 @@ func compareSemanticVersions(version1, version2 string) int {
 	return 0
 }
 
-
 // List retrieves ServerRecord entries with optional filtering and pagination
 func (db *MemoryDB) List(
 	ctx context.Context,

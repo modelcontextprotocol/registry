@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
@@ -79,6 +80,38 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	// Validate server name exists
 	if _, err := model.ParseServerName(req.Server); err != nil {
 		return nil, err
+	}
+
+	// Get the new version's details
+	newVersion := req.Server.VersionDetail.Version
+	newName := req.Server.Name
+	
+	// Check for existing versions of this server
+	existingServers, _, err := s.db.List(ctx, map[string]any{"name": newName}, "", 1000)
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		return nil, err
+	}
+	
+	// Find the current latest version if it exists
+	var latestExisting *model.ServerRecord
+	for _, server := range existingServers {
+		if server.RegistryMetadata.IsLatest {
+			latestExisting = server
+			break
+		}
+	}
+	
+	// Validate version ordering using the versioning strategy
+	if latestExisting != nil {
+		existingVersion := latestExisting.ServerJSON.VersionDetail.Version
+		existingTime, _ := time.Parse(time.RFC3339, latestExisting.RegistryMetadata.ReleaseDate)
+		currentTime := time.Now()
+		
+		// Compare versions using the proper versioning strategy
+		comparison := CompareVersions(newVersion, existingVersion, currentTime, existingTime)
+		if comparison <= 0 {
+			return nil, database.ErrInvalidVersion
+		}
 	}
 
 	// Extract publisher extensions from request

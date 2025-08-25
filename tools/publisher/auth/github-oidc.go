@@ -14,7 +14,9 @@ type GitHubOIDCProvider struct {
 	registryURL string
 }
 
-//nolint:ireturn // Factory function returns interface by design
+// NewGitHubOIDCProvider creates a new GitHub OIDC provider
+//
+//nolint:ireturn // Factory function intentionally returns interface for dependency injection
 func NewGitHubOIDCProvider(registryURL string) Provider {
 	return &GitHubOIDCProvider{
 		registryURL: registryURL,
