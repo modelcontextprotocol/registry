@@ -24,7 +24,8 @@ func TestIsSemanticVersion(t *testing.T) {
 		{"with prerelease number", "1.0.0-1", true},
 		{"with prerelease complex", "1.0.0-alpha.1", true},
 		{"with prerelease dots", "1.0.0-beta.2.3", true},
-		{"with hyphen in prerelease", "1.0.0-pre-release", false}, // Multiple hyphens not allowed in current implementation
+		{"date format", "2021.03.15", true},                    // Technically valid semver format (3 numeric parts)
+		{"date format with leading zeros", "2021.03.05", true}, // Also valid
 
 		// Invalid semantic versions
 		{"empty string", "", false},
@@ -32,8 +33,6 @@ func TestIsSemanticVersion(t *testing.T) {
 		{"two parts only", "1.0", false},
 		{"four parts", "1.0.0.0", false},
 		{"with v prefix", "v1.0.0", false},
-		{"date format", "2021.03.15", true}, // Technically valid semver format (3 numeric parts)
-		{"date format with leading zeros", "2021.03.05", true}, // Also valid
 		{"non-numeric major", "a.0.0", false},
 		{"non-numeric minor", "1.b.0", false},
 		{"non-numeric patch", "1.0.c", false},
@@ -42,6 +41,7 @@ func TestIsSemanticVersion(t *testing.T) {
 		{"special chars in prerelease", "1.0.0-alpha@1", false},
 		{"snapshot", "snapshot", false},
 		{"latest", "latest", false},
+		{"with hyphen in prerelease", "1.0.0-pre-release", false}, // Multiple hyphens not allowed in current implementation
 	}
 
 	for _, tt := range tests {
@@ -89,6 +89,17 @@ func TestCompareSemanticVersions(t *testing.T) {
 		{"prerelease numeric", "1.0.0-1", "1.0.0-2", -1},
 		{"prerelease complex", "1.0.0-alpha.1", "1.0.0-alpha.2", -1},
 		{"prerelease rc vs alpha", "1.0.0-rc", "1.0.0-alpha", 1},
+
+		// Semver spec prerelease precedence rules
+		{"prerelease alpha.10 vs alpha.2", "1.0.0-alpha.10", "1.0.0-alpha.2", 1},
+		{"prerelease alpha.2 vs alpha.10", "1.0.0-alpha.2", "1.0.0-alpha.10", -1},
+		{"prerelease beta.100 vs beta.9", "1.0.0-beta.100", "1.0.0-beta.9", 1},
+		{"numeric vs alphanumeric precedence", "1.0.0-1", "1.0.0-alpha", -1},
+		{"alphanumeric vs numeric precedence", "1.0.0-alpha", "1.0.0-1", 1},
+		{"shorter prerelease list precedence", "1.0.0-alpha", "1.0.0-alpha.1", -1},
+		{"longer prerelease list precedence", "1.0.0-alpha.1", "1.0.0-alpha", 1},
+		{"mixed numeric and alpha", "1.0.0-alpha.1.beta", "1.0.0-alpha.1.2", 1},
+		{"complex prerelease ordering", "1.0.0-rc.1", "1.0.0-rc.10", -1},
 
 		// Edge cases
 		{"zero versions", "0.0.0", "0.0.1", -1},
@@ -145,7 +156,7 @@ func TestCompareVersions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := service.CompareVersions(tt.version1, tt.version2, tt.timestamp1, tt.timestamp2); got != tt.want {
-				t.Errorf("CompareVersions(%q, %q, %v, %v) = %v, want %v", 
+				t.Errorf("CompareVersions(%q, %q, %v, %v) = %v, want %v",
 					tt.version1, tt.version2, tt.timestamp1, tt.timestamp2, got, tt.want)
 			}
 		})

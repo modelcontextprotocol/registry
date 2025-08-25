@@ -44,6 +44,65 @@ func IsSemanticVersion(version string) bool {
 	return true
 }
 
+// comparePrereleaseVersions compares two prerelease version strings according to semver spec
+// Returns:
+//
+//	-1 if prerelease1 < prerelease2
+//	 0 if prerelease1 == prerelease2
+//	+1 if prerelease1 > prerelease2
+func comparePrereleaseVersions(prerelease1, prerelease2 string) int {
+	// Split prerelease identifiers by dots
+	ids1 := strings.Split(prerelease1, ".")
+	ids2 := strings.Split(prerelease2, ".")
+
+	// Compare each identifier from left to right
+	minLen := len(ids1)
+	if len(ids2) < minLen {
+		minLen = len(ids2)
+	}
+
+	for i := 0; i < minLen; i++ {
+		id1 := ids1[i]
+		id2 := ids2[i]
+
+		// Check if both are numeric
+		num1, err1 := strconv.Atoi(id1)
+		num2, err2 := strconv.Atoi(id2)
+
+		switch {
+		case err1 == nil && err2 == nil:
+			// Both are numeric, compare as integers
+			if num1 < num2 {
+				return -1
+			} else if num1 > num2 {
+				return 1
+			}
+		case err1 == nil && err2 != nil:
+			// id1 is numeric, id2 is not - numeric has lower precedence
+			return -1
+		case err1 != nil && err2 == nil:
+			// id1 is not numeric, id2 is - numeric has lower precedence
+			return 1
+		default:
+			// Both are non-numeric, compare lexicographically
+			if id1 < id2 {
+				return -1
+			} else if id1 > id2 {
+				return 1
+			}
+		}
+	}
+
+	// If all compared identifiers are equal, shorter list has lower precedence
+	if len(ids1) < len(ids2) {
+		return -1
+	} else if len(ids1) > len(ids2) {
+		return 1
+	}
+
+	return 0
+}
+
 // CompareSemanticVersions compares two semantic version strings
 // Returns:
 //
@@ -82,13 +141,9 @@ func CompareSemanticVersions(version1, version2 string) int {
 		return -1
 	}
 
-	// Both have prerelease, compare lexicographically
+	// Both have prerelease, compare according to semver spec
 	if hasPrerelease1 && hasPrerelease2 {
-		if parts1[1] < parts2[1] {
-			return -1
-		} else if parts1[1] > parts2[1] {
-			return 1
-		}
+		return comparePrereleaseVersions(parts1[1], parts2[1])
 	}
 
 	return 0
