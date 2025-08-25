@@ -127,8 +127,8 @@ func (s *fakeRegistryService) Publish(req model.PublishRequest) (*model.ServerRe
 	// Extract publisher extensions from request
 	publisherExtensions := model.ExtractPublisherExtensions(req)
 
-	// Publish to database
-	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions)
+	// Publish to database (fake service always marks as latest)
+	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, true)
 	if err != nil {
 		return nil, err
 	}

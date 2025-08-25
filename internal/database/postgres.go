@@ -273,7 +273,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*model.ServerReco
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*model.ServerRecord, error) {
+func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, isLatest bool) (*model.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -288,23 +288,6 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		}
 	}()
 
-	// Check if there's an existing latest version for this server
-	var existingVersion string
-	checkQuery := `
-		SELECT s.version 
-		FROM servers s
-		JOIN server_extensions se ON s.id = se.server_id
-		WHERE s.name = $1 AND se.is_latest = true
-	`
-	err = tx.QueryRow(ctx, checkQuery, serverDetail.Name).Scan(&existingVersion)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return nil, fmt.Errorf("failed to check existing version: %w", err)
-	}
-
-	// Validate version ordering
-	if existingVersion != "" && serverDetail.VersionDetail.Version <= existingVersion {
-		return nil, ErrInvalidVersion
-	}
 
 	// Prepare JSON data for server table
 	repositoryJSON, err := json.Marshal(serverDetail.Repository)
@@ -332,21 +315,6 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 	registryID := uuid.New().String()
 	now := time.Now()
 
-	// Update existing latest version to not be latest
-	if existingVersion != "" {
-		updateQuery := `
-			UPDATE server_extensions 
-			SET is_latest = false 
-			WHERE server_id IN (
-				SELECT s.id FROM servers s WHERE s.name = $1 AND server_extensions.server_id = s.id
-			)
-			AND is_latest = true
-		`
-		_, err = tx.Exec(ctx, updateQuery, serverDetail.Name)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update existing latest version: %w", err)
-		}
-	}
 
 	// Insert new server record
 	insertServerQuery := `
@@ -377,7 +345,7 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		serverID,
 		now,
 		now,
-		true, // is_latest
+		isLatest,
 		now,  // release_date
 		publisherExtensionsJSON,
 	)
@@ -540,6 +508,30 @@ func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, ser
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert/update server extensions: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateLatestFlag updates the is_latest flag for a specific server record
+func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	query := `
+		UPDATE server_extensions 
+		SET is_latest = $1, updated_at = $2
+		WHERE id = $3
+	`
+	
+	result, err := db.conn.Exec(ctx, query, isLatest, time.Now(), id)
+	if err != nil {
+		return fmt.Errorf("failed to update latest flag: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
 	}
 
 	return nil

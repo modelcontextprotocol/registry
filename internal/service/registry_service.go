@@ -85,6 +85,7 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	// Get the new version's details
 	newVersion := req.Server.VersionDetail.Version
 	newName := req.Server.Name
+	currentTime := time.Now()
 	
 	// Check for existing versions of this server
 	existingServers, _, err := s.db.List(ctx, map[string]any{"name": newName}, "", 1000)
@@ -92,33 +93,39 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 		return nil, err
 	}
 	
-	// Find the current latest version if it exists
-	var latestExisting *model.ServerRecord
+	// Determine if this version should be marked as latest
+	isLatest := true
+	var existingLatestID string
+	
+	// Check all existing versions to determine if new version should be latest
 	for _, server := range existingServers {
 		if server.RegistryMetadata.IsLatest {
-			latestExisting = server
-			break
-		}
-	}
-	
-	// Validate version ordering using the versioning strategy
-	if latestExisting != nil {
-		existingVersion := latestExisting.ServerJSON.VersionDetail.Version
-		existingTime, _ := time.Parse(time.RFC3339, latestExisting.RegistryMetadata.ReleaseDate)
-		currentTime := time.Now()
-		
-		// Compare versions using the proper versioning strategy
-		comparison := CompareVersions(newVersion, existingVersion, currentTime, existingTime)
-		if comparison <= 0 {
-			return nil, database.ErrInvalidVersion
+			existingLatestID = server.RegistryMetadata.ID
+			existingVersion := server.ServerJSON.VersionDetail.Version
+			existingTime, _ := time.Parse(time.RFC3339, server.RegistryMetadata.ReleaseDate)
+			
+			// Compare versions using the proper versioning strategy
+			comparison := CompareVersions(newVersion, existingVersion, currentTime, existingTime)
+			if comparison <= 0 {
+				// New version is not greater than existing latest
+				isLatest = false
+			}
 		}
 	}
 
 	// Extract publisher extensions from request
 	publisherExtensions := model.ExtractPublisherExtensions(req)
 
-	// Publish to database
-	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions)
+	// If this will be the latest version, we need to update the existing latest
+	if isLatest && existingLatestID != "" {
+		// Update the existing latest to no longer be latest
+		if err := s.db.UpdateLatestFlag(ctx, existingLatestID, false); err != nil {
+			return nil, err
+		}
+	}
+
+	// Publish to database with the determined is_latest flag
+	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, isLatest)
 	if err != nil {
 		return nil, err
 	}
