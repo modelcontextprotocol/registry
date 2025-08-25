@@ -118,7 +118,7 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:  pulumi.String("minio"),
-							Image: pulumi.String("minio/minio:latest"),
+							Image: pulumi.String("minio/minio:RELEASE.2025-07-23T15-54-02Z"),
 							Args: pulumi.StringArray{
 								pulumi.String("server"),
 								pulumi.String("/data"),
@@ -220,7 +220,7 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:  pulumi.String("mc"),
-							Image: pulumi.String("minio/mc:latest"),
+							Image: pulumi.String("minio/mc:RELEASE.2025-07-19T03-52-40Z"),
 							Command: pulumi.StringArray{
 								pulumi.String("/bin/sh"),
 								pulumi.String("-c"),
