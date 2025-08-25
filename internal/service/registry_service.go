@@ -116,6 +116,15 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	// Extract publisher extensions from request
 	publisherExtensions := model.ExtractPublisherExtensions(req)
 
+	// Create registry metadata with service-determined values
+	registryMetadata := model.RegistryMetadata{
+		ID:          "", // Will be set by database
+		PublishedAt: currentTime,
+		UpdatedAt:   currentTime,
+		IsLatest:    isLatest,
+		ReleaseDate: currentTime.Format(time.RFC3339),
+	}
+
 	// If this will be the latest version, we need to update the existing latest
 	if isLatest && existingLatestID != "" {
 		// Update the existing latest to no longer be latest
@@ -124,8 +133,8 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 		}
 	}
 
-	// Publish to database with the determined is_latest flag
-	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, isLatest)
+	// Publish to database with the registry metadata
+	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, registryMetadata)
 	if err != nil {
 		return nil, err
 	}

@@ -273,7 +273,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*model.ServerReco
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, isLatest bool) (*model.ServerRecord, error) {
+func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata model.RegistryMetadata) (*model.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -310,10 +310,11 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		return nil, fmt.Errorf("failed to marshal publisher extensions: %w", err)
 	}
 
-	// Generate server ID and create registry metadata
+	// Generate server ID and use registry metadata ID if not provided
 	serverID := uuid.New().String()
-	registryID := uuid.New().String()
-	now := time.Now()
+	if registryMetadata.ID == "" {
+		registryMetadata.ID = uuid.New().String()
+	}
 
 
 	// Insert new server record
@@ -341,12 +342,12 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	_, err = tx.Exec(ctx, insertExtensionsQuery,
-		registryID,
+		registryMetadata.ID,
 		serverID,
-		now,
-		now,
-		isLatest,
-		now,  // release_date
+		registryMetadata.PublishedAt,
+		registryMetadata.UpdatedAt,
+		registryMetadata.IsLatest,
+		registryMetadata.PublishedAt,  // release_date
 		publisherExtensionsJSON,
 	)
 	if err != nil {
@@ -360,14 +361,8 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 
 	// Create and return the ServerRecord
 	record := &model.ServerRecord{
-		ServerJSON: serverDetail,
-		RegistryMetadata: model.RegistryMetadata{
-			ID:          registryID,
-			PublishedAt: now,
-			UpdatedAt:   now,
-			IsLatest:    true,
-			ReleaseDate: now.Format(time.RFC3339),
-		},
+		ServerJSON:          serverDetail,
+		RegistryMetadata:    registryMetadata,
 		PublisherExtensions: publisherExtensions,
 	}
 

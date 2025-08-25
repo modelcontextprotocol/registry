@@ -127,8 +127,17 @@ func (s *fakeRegistryService) Publish(req model.PublishRequest) (*model.ServerRe
 	// Extract publisher extensions from request
 	publisherExtensions := model.ExtractPublisherExtensions(req)
 
-	// Publish to database (fake service always marks as latest)
-	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, true)
+	// Create registry metadata for fake service (always marks as latest)
+	now := time.Now()
+	registryMetadata := model.RegistryMetadata{
+		PublishedAt: now,
+		UpdatedAt:   now,
+		IsLatest:    true,
+		ReleaseDate: now.Format(time.RFC3339),
+	}
+
+	// Publish to database
+	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, registryMetadata)
 	if err != nil {
 		return nil, err
 	}

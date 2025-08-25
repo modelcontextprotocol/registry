@@ -153,7 +153,7 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*model.ServerRecord
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, isLatest bool) (*model.ServerRecord, error) {
+func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata model.RegistryMetadata) (*model.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -177,14 +177,9 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerDetail
 		return nil, ErrInvalidInput
 	}
 
-	// Create new registry metadata
-	now := time.Now()
-	registryMetadata := model.RegistryMetadata{
-		ID:          uuid.New().String(),
-		PublishedAt: now,
-		UpdatedAt:   now,
-		IsLatest:    isLatest,
-		ReleaseDate: now.Format(time.RFC3339),
+	// Set the registry metadata ID if not provided
+	if registryMetadata.ID == "" {
+		registryMetadata.ID = uuid.New().String()
 	}
 
 	// Create server record

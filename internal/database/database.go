@@ -23,8 +23,8 @@ type Database interface {
 	// GetByID retrieves a single ServerRecord by its ID
 	GetByID(ctx context.Context, id string) (*model.ServerRecord, error)
 	// Publish adds a new server to the database with separated server.json and extensions
-	// The isLatest flag indicates if this version should be marked as the latest
-	Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, isLatest bool) (*model.ServerRecord, error)
+	// The registryMetadata contains metadata determined by the service layer (e.g., is_latest, timestamps)
+	Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata model.RegistryMetadata) (*model.ServerRecord, error)
 	// UpdateLatestFlag updates the is_latest flag for a specific server record
 	UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error
 	// ImportSeed imports initial data from a seed file
