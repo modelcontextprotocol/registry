@@ -310,8 +310,8 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		return nil, fmt.Errorf("failed to marshal publisher extensions: %w", err)
 	}
 
-	// Generate server ID (separate from registry metadata ID)
-	serverID := uuid.New().String()
+	// Use the same ID for both server and server_extensions records (1:1 relationship)
+	serverID := registryMetadata.ID
 
 
 	// Insert new server record
@@ -407,17 +407,15 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 
 // publishWithTransaction handles publishing within an existing transaction, optionally with predefined metadata
 func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, existingMetadata *model.RegistryMetadata) error {
-	var serverID string
-	var extensionID string
-
+	// Use the same ID for both server and server_extensions (1:1 relationship)
+	var id string
 	if existingMetadata != nil && existingMetadata.ID != "" {
-		// Use predefined IDs from seed data
-		serverID = existingMetadata.ID
-		extensionID = existingMetadata.ID // In seed data, these are the same
+		// Use predefined ID from seed data
+		id = existingMetadata.ID
 	} else {
-		// Generate new UUIDs for normal publishing
-		serverID = uuid.New().String()
-		extensionID = uuid.New().String()
+		// This shouldn't happen as service layer should always provide an ID
+		// But keeping as fallback for safety
+		id = uuid.New().String()
 	}
 
 	// Marshal packages and remotes to JSONB
@@ -457,7 +455,7 @@ func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, ser
 
 	var returnedServerID string
 	err = tx.QueryRow(ctx, serverQuery,
-		serverID,
+		id,
 		serverDetail.Name,
 		serverDetail.Description,
 		string(serverDetail.Status),
@@ -492,7 +490,7 @@ func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, ser
 	}
 
 	_, err = tx.Exec(ctx, extensionQuery,
-		extensionID,
+		id,
 		returnedServerID,
 		publishedAt,
 		releaseDate,
