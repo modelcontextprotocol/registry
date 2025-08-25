@@ -58,7 +58,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerDetail'
+                $ref: '#/components/schemas/ServerResponse'
         '404':
           description: Server not found
           content:
@@ -69,7 +69,85 @@ paths:
                   error:
                     type: string
                     example: "Server not found"
+  /publish:
+    post:
+      summary: Publish MCP server
+      description: Publish a new MCP server to the registry or update an existing one
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+            examples:
+              basic_server:
+                summary: Basic server with NPM package
+                value:
+                  server:
+                    name: "io.modelcontextprotocol/filesystem"
+                    description: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+                    status: "active"
+                    repository:
+                      url: "https://github.com/modelcontextprotocol/servers"
+                      source: "github"
+                    version_detail:
+                      version: "1.0.2"
+                    packages:
+                      - registry_name: "npm"
+                        name: "@modelcontextprotocol/server-filesystem"
+                        version: "1.0.2"
+                  x-publisher:
+                    tool: "publisher-cli"
+                    version: "1.2.3"
+                    build_info:
+                      commit: "abc123def456"
+                      timestamp: "2023-12-01T10:30:00Z"
+      responses:
+        '200':
+          description: Successfully published server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired Registry JWT token"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to publish this server"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to publish server"
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Registry JWT token. Convention is that this can be obtained from a `/v0/auth/` endpoint.
   schemas:
     Repository:
       type: object
@@ -154,7 +232,7 @@ components:
         servers:
           type: array
           items:
-            $ref: '#/components/schemas/Server'
+            $ref: '#/components/schemas/ServerResponse'
         metadata:
           type: object
           properties:
@@ -354,3 +432,82 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Remote'
+
+    ServerResponse:
+      description: API response format for MCP servers, including registry metadata and publisher extensions
+      type: object
+      required:
+        - server
+        - x-io.modelcontextprotocol.registry
+      properties:
+        server:
+          $ref: '#/components/schemas/ServerDetail'
+          description: The core MCP server specification
+        x-io.modelcontextprotocol.registry:
+          type: object
+          description: Registry-specific metadata managed by the MCP registry system
+          required:
+            - id
+            - published_at
+            - updated_at
+            - is_latest
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Unique registry identifier for this server entry
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            published_at:
+              type: string
+              format: date-time
+              description: Timestamp when the server was first published to the registry
+              example: "2023-12-01T10:30:00Z"
+            updated_at:
+              type: string
+              format: date-time
+              description: Timestamp when the server entry was last updated
+              example: "2023-12-01T11:00:00Z"
+            is_latest:
+              type: boolean
+              description: Whether this is the latest version of the server
+              example: true
+            release_date:
+              type: string
+              format: date-time
+              description: Release date of the server version
+              example: "2023-12-01T10:30:00Z"
+          additionalProperties: false
+        x-publisher:
+          type: object
+          description: Publisher-specific metadata and build information attached during publishing
+          additionalProperties: true
+          example:
+            tool: "publisher-cli"
+            version: "1.2.3"
+            build_info:
+              commit: "abc123def456"
+              timestamp: "2023-12-01T10:30:00Z"
+              pipeline_id: "build-789"
+      additionalProperties: false
+
+    PublishRequest:
+      description: Request format for publishing MCP servers to the registry
+      type: object
+      required:
+        - server
+      properties:
+        server:
+          $ref: '#/components/schemas/ServerDetail'
+          description: The MCP server specification to publish
+        x-publisher:
+          type: object
+          description: Publisher-specific metadata and build information
+          additionalProperties: true
+          example:
+            tool: "publisher-cli"
+            version: "1.2.3"
+            build_info:
+              commit: "abc123def456"
+              timestamp: "2023-12-01T10:30:00Z"
+              pipeline_id: "build-789"
+      additionalProperties: false

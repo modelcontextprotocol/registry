@@ -74,10 +74,26 @@ func runValidation() error {
 			continue
 		}
 
+		// Extract server portion if this is a PublishRequest format
+		serverData := data
+		publishRequestValid := true
+		if dataMap, ok := data.(map[string]any); ok {
+			if server, exists := dataMap["server"]; exists {
+				// This is a PublishRequest format - validate only expected properties exist
+				for key := range dataMap {
+					if key != "server" && key != "x-publisher" {
+						log.Printf("  Invalid PublishRequest property: ❌ %s (only 'server' and optional 'x-publisher' are allowed)", key)
+						publishRequestValid = false
+					}
+				}
+				serverData = server
+			}
+		}
+
 		baseValid := false
 		registryValid := false
 
-		if err := baseSchema.Validate(data); err != nil {
+		if err := baseSchema.Validate(serverData); err != nil {
 			log.Printf("  Validating against schema.json: ❌")
 			log.Printf("    Error: %v", err)
 		} else {
@@ -85,7 +101,7 @@ func runValidation() error {
 			baseValid = true
 		}
 
-		if err := registrySchema.Validate(data); err != nil {
+		if err := registrySchema.Validate(serverData); err != nil {
 			log.Printf("  Validating against registry-schema.json: ❌")
 			log.Printf("    Error: %v", err)
 		} else {
@@ -93,8 +109,8 @@ func runValidation() error {
 			registryValid = true
 		}
 
-		// Only count as validated if both schemas passed
-		if baseValid && registryValid {
+		// Only count as validated if all validations passed
+		if publishRequestValid && baseValid && registryValid {
 			validatedCount++
 		}
 
