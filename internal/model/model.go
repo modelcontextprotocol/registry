@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
@@ -302,27 +303,6 @@ func validateRemoteURLMatchesNamespace(remoteURL, namespace string) error {
 	return nil
 }
 
-// convertHostnameToReverseDNS converts a hostname to reverse-DNS format
-func convertHostnameToReverseDNS(hostname string) string {
-	// Skip localhost and local development URLs
-	if hostname == "localhost" || strings.HasSuffix(hostname, ".localhost") || hostname == "127.0.0.1" {
-		return ""
-	}
-
-	parts := strings.Split(hostname, ".")
-	if len(parts) < 2 {
-		// For single-part hostnames, return empty to skip validation
-		return ""
-	}
-
-	// Reverse the parts
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
-	}
-
-	return strings.Join(parts, ".")
-}
-
 // extractPublisherDomainFromNamespace converts reverse-DNS namespace to normal domain format
 // e.g., "com.example" -> "example.com"
 func extractPublisherDomainFromNamespace(namespace string) string {
@@ -339,9 +319,7 @@ func extractPublisherDomainFromNamespace(namespace string) string {
 	}
 
 	// Reverse the parts to convert from reverse-DNS to normal domain
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
-	}
+	slices.Reverse(parts)
 
 	return strings.Join(parts, ".")
 }

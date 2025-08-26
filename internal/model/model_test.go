@@ -98,17 +98,17 @@ func TestExtractPublisherExtensions_DoesNotDoubleNest(t *testing.T) {
 	request := PublishRequest{
 		Server: ServerDetail{Name: "test"},
 		XPublisher: map[string]interface{}{
-			"tool": "publisher-cli",
+			"tool":    "publisher-cli",
 			"version": "1.0.0",
 		},
 	}
 
 	result := ExtractPublisherExtensions(request)
-	
+
 	// Verify we get the data directly, not wrapped in another "x-publisher" key
 	assert.Equal(t, "publisher-cli", result["tool"])
 	assert.Equal(t, "1.0.0", result["version"])
-	
+
 	// Verify we don't have double nesting
 	assert.NotContains(t, result, "x-publisher")
 }
@@ -143,7 +143,7 @@ func TestRegistryMetadata_CreateRegistryExtensions(t *testing.T) {
 func TestServerResponse_JSONSerialization(t *testing.T) {
 	// Test that ServerResponse properly serializes to extension wrapper format
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
-	
+
 	response := ServerResponse{
 		Server: ServerDetail{
 			Name:        "test-server",
@@ -227,7 +227,7 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 	require.NotNil(t, request.XPublisher)
 	publisherMap := request.XPublisher.(map[string]interface{})
 	assert.Equal(t, "publisher-cli", publisherMap["tool"])
-	
+
 	metadata := publisherMap["metadata"].(map[string]interface{})
 	assert.Equal(t, "2023-12-01", metadata["build_date"])
 	assert.Equal(t, "abc123", metadata["commit"])
@@ -256,7 +256,7 @@ func TestServerResponse_EmptyExtensions(t *testing.T) {
 	// Should still have the structure, even with nil publisher extensions
 	assert.Contains(t, parsed, "server")
 	assert.Contains(t, parsed, "x-io.modelcontextprotocol.registry")
-	
+
 	// x-publisher should be null/nil in JSON when empty
 	publisherValue, exists := parsed["x-publisher"]
 	if exists {
@@ -266,10 +266,10 @@ func TestServerResponse_EmptyExtensions(t *testing.T) {
 
 func TestValidateRemoteNamespaceMatch(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		serverDetail ServerDetail
-		expectError bool
-		errorMsg    string
+		expectError  bool
+		errorMsg     string
 	}{
 		{
 			name: "valid match - example.com domain",
@@ -380,7 +380,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := ValidateRemoteNamespaceMatch(tt.serverDetail)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMsg)
@@ -391,63 +391,12 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 	}
 }
 
-func TestConvertHostnameToReverseDNS(t *testing.T) {
-	tests := []struct {
-		name     string
-		hostname string
-		expected string
-	}{
-		{
-			name:     "simple domain",
-			hostname: "example.com",
-			expected: "com.example",
-		},
-		{
-			name:     "subdomain",
-			hostname: "api.example.com",
-			expected: "com.example.api",
-		},
-		{
-			name:     "multiple subdomains",
-			hostname: "api.v1.example.com",
-			expected: "com.example.v1.api",
-		},
-		{
-			name:     "localhost",
-			hostname: "localhost",
-			expected: "",
-		},
-		{
-			name:     "localhost subdomain",
-			hostname: "test.localhost",
-			expected: "",
-		},
-		{
-			name:     "IP address",
-			hostname: "127.0.0.1",
-			expected: "",
-		},
-		{
-			name:     "single part hostname",
-			hostname: "server",
-			expected: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := convertHostnameToReverseDNS(tt.hostname)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestParseServerName(t *testing.T) {
 	tests := []struct {
-		name        string
+		name         string
 		serverDetail ServerDetail
-		expectError bool
-		errorMsg    string
+		expectError  bool
+		errorMsg     string
 	}{
 		{
 			name: "valid namespace/name format",
@@ -507,7 +456,7 @@ func TestParseServerName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, err := ParseServerName(tt.serverDetail)
-			
+
 			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMsg)
