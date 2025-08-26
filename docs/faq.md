@@ -75,6 +75,10 @@ Yes, versioning is supported:
 
 Submit a new `server.json` with an incremented version number. Once published, version metadata is immutable (similar to npm).
 
+### Can I add custom metadata when publishing?
+
+Yes, extensions under the `x-publisher` property are preserved when publishing to the registry. This allows you to include custom metadata specific to your publishing process.
+
 ### Can I delete/unpublish my server?
 
 At time of last update, this was open for discussion in [#104](https://github.com/modelcontextprotocol/registry/issues/104).
