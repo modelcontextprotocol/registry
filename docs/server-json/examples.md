@@ -50,7 +50,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
 ```json
 {
   "server": {
-    "name": "Knapcode.SampleMcpServer",
+    "name": "com.github.joelverhagen/knapcode-samplemcpserver",
     "description": "Sample NuGet MCP server for a random number and random weather",
     "version_detail": {
       "version": "0.4.0-beta"
@@ -91,7 +91,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 ```json
 {
   "server": {
-    "name": "io.modelcontextprotocol/filesystem",
+    "name": "com.github.modelcontextprotocol/filesystem",
     "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
     "status": "active",
     "repository": {
@@ -186,7 +186,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 ```json
 {
   "server": {
-    "name": "Remote Filesystem Server",
+    "name": "com.example/mcp-fs",
     "description": "Cloud-hosted MCP filesystem server",
     "repository": {
       "url": "https://github.com/example/remote-fs",
@@ -199,7 +199,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     "remotes": [
       {
         "transport_type": "sse",
-        "url": "https://mcp-fs.example.com/sse"
+        "url": "http://mcp-fs.example.com/sse"
       }
     ]
   },
@@ -221,7 +221,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 ```json
 {
   "server": {
-    "name": "weather-mcp-server",
+    "name": "com.github.example/weather-mcp",
     "description": "Python MCP server for weather data access",
     "repository": {
       "url": "https://github.com/example/weather-mcp",
@@ -273,7 +273,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 ```json
 {
   "server": {
-    "name": "Knapcode.SampleMcpServer",
+    "name": "com.github.joelverhagen/knapcode-samplemcpserver",
     "description": "Sample NuGet MCP server for a random number and random weather",
     "repository": {
       "url": "https://github.com/joelverhagen/Knapcode.SampleMcpServer",
@@ -319,10 +319,10 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 ```json
 {
   "server": {
-    "name": "mcp-database-manager",
+    "name": "com.github.example/database-manager",
     "description": "MCP server for database operations with support for multiple database types",
     "repository": {
-      "url": "https://github.com/example/mcp-database",
+      "url": "https://github.com/example/database-manager-mcp",
       "source": "github",
       "id": "ghi789jk-lmno-1234-pqrs-tuvwxyz56789"
     },
@@ -332,7 +332,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "packages": [
       {
         "registry_name": "docker",
-        "name": "mcp/database-manager",
+        "name": "example/database-manager-mcp",
         "version": "3.1.0",
         "runtime_arguments": [
           {
@@ -418,7 +418,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 ```json
 {
   "server": {
-    "name": "hybrid-mcp-server",
+    "name": "com.example/hybrid-mcp",
     "description": "MCP server available as both local package and remote service",
     "repository": {
       "url": "https://github.com/example/hybrid-mcp",
@@ -448,7 +448,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "remotes": [
       {
         "transport_type": "sse",
-        "url": "https://hybrid-mcp.example.com/sse",
+        "url": "https://mcp.example.com/sse",
         "headers": [
           {
             "name": "X-API-Key",
@@ -466,7 +466,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
       },
       {
         "transport_type": "streamable",
-        "url": "https://hybrid-mcp.example.com/stream"
+        "url": "https://mcp.example.com/http"
       }
     ]
   },
@@ -492,7 +492,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 ```json
 {
   "server": {
-    "name": "io.legacy/old-weather-server",
+    "name": "com.github.example/old-weather",
     "description": "Legacy weather server - DEPRECATED: Use weather-v2 instead for new projects",
     "status": "deprecated",
     "repository": {
