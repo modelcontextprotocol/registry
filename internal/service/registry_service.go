@@ -10,6 +10,8 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
+const maxServerVersionsPerServer = 10000
+
 // registryServiceImpl implements the RegistryService interface using our Database
 type registryServiceImpl struct {
 	db database.Database
@@ -87,24 +89,34 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	newVersion := req.Server.VersionDetail.Version
 	newName := req.Server.Name
 	currentTime := time.Now()
-	
+
 	// Check for existing versions of this server
-	existingServers, _, err := s.db.List(ctx, map[string]any{"name": newName}, "", 1000)
+	existingServers, _, err := s.db.List(ctx, map[string]any{"name": newName}, "", maxServerVersionsPerServer)
 	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		return nil, err
 	}
-	
+
+	if len(existingServers) == maxServerVersionsPerServer {
+		return nil, database.ErrMaxServersReached
+	}
+
 	// Determine if this version should be marked as latest
 	isLatest := true
 	var existingLatestID string
-	
-	// Check all existing versions to determine if new version should be latest
+
+	// Check all existing versions for duplicates and determine if new version should be latest
 	for _, server := range existingServers {
+		existingVersion := server.ServerJSON.VersionDetail.Version
+
+		// Early exit: check for duplicate version
+		if existingVersion == newVersion {
+			return nil, database.ErrInvalidVersion
+		}
+
 		if server.RegistryMetadata.IsLatest {
 			existingLatestID = server.RegistryMetadata.ID
-			existingVersion := server.ServerJSON.VersionDetail.Version
 			existingTime, _ := time.Parse(time.RFC3339, server.RegistryMetadata.ReleaseDate)
-			
+
 			// Compare versions using the proper versioning strategy
 			comparison := CompareVersions(newVersion, existingVersion, currentTime, existingTime)
 			if comparison <= 0 {

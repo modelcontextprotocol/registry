@@ -24,24 +24,23 @@ func TestIsSemanticVersion(t *testing.T) {
 		{"with prerelease number", "1.0.0-1", true},
 		{"with prerelease complex", "1.0.0-alpha.1", true},
 		{"with prerelease dots", "1.0.0-beta.2.3", true},
-		{"date format", "2021.03.15", true},                    // Technically valid semver format (3 numeric parts)
-		{"date format with leading zeros", "2021.03.05", true}, // Also valid
+		{"date format", "2021.11.15", true},
+		{"with hyphen in prerelease", "1.0.0-pre-release", true},
+		{"with v prefix", "v1.0.0", true},
 
 		// Invalid semantic versions
 		{"empty string", "", false},
 		{"single number", "1", false},
 		{"two parts only", "1.0", false},
 		{"four parts", "1.0.0.0", false},
-		{"with v prefix", "v1.0.0", false},
 		{"non-numeric major", "a.0.0", false},
 		{"non-numeric minor", "1.b.0", false},
 		{"non-numeric patch", "1.0.c", false},
 		{"empty prerelease", "1.0.0-", false},
-		{"multiple hyphens", "1.0.0-alpha-beta", false},
 		{"special chars in prerelease", "1.0.0-alpha@1", false},
 		{"snapshot", "snapshot", false},
 		{"latest", "latest", false},
-		{"with hyphen in prerelease", "1.0.0-pre-release", false}, // Multiple hyphens not allowed in current implementation
+		{"with leading zeros", "2021.03.05", false},
 	}
 
 	for _, tt := range tests {
@@ -108,8 +107,9 @@ func TestCompareSemanticVersions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := service.CompareSemanticVersions(tt.version1, tt.version2); got != tt.want {
-				t.Errorf("CompareSemanticVersions(%q, %q) = %v, want %v", tt.version1, tt.version2, got, tt.want)
+			now := time.Now()
+			if got := service.CompareVersions(tt.version1, tt.version2, now, now); got != tt.want {
+				t.Errorf("CompareVersions(%q, %q, %v, %v) = %v, want %v", tt.version1, tt.version2, now, now, got, tt.want)
 			}
 		})
 	}

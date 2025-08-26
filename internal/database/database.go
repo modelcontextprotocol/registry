@@ -9,11 +9,12 @@ import (
 
 // Common database errors
 var (
-	ErrNotFound       = errors.New("record not found")
-	ErrAlreadyExists  = errors.New("record already exists")
-	ErrInvalidInput   = errors.New("invalid input")
-	ErrDatabase       = errors.New("database error")
-	ErrInvalidVersion = errors.New("invalid version: cannot publish older version after newer version")
+	ErrNotFound          = errors.New("record not found")
+	ErrAlreadyExists     = errors.New("record already exists")
+	ErrInvalidInput      = errors.New("invalid input")
+	ErrDatabase          = errors.New("database error")
+	ErrInvalidVersion    = errors.New("invalid version: cannot publish older version after newer version")
+	ErrMaxServersReached = errors.New("maximum number of versions for this server reached (10000): please reach out at https://github.com/modelcontextprotocol/registry to explain your use case")
 )
 
 // Database defines the interface for database operations with extension wrapper architecture
