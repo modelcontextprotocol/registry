@@ -1,214 +1,86 @@
 # MCP Registry
 
-A community driven registry service for Model Context Protocol (MCP) servers.
+> [!WARNING]  
+> The registry is under [active development](#development-status). The registry API spec is unstable and the official MCP registry database may be wiped at any time.
+
+📖 **[API Documentation](https://staging.registry.modelcontextprotocol.io/docs)** | 📚 **[Technical Docs](./docs)**
+
+## What is the registry?
+
+The registry will provide MCP clients with a list of MCP servers. Like an app store for MCP servers. (In future it might do more, like also hosting a list of clients.)
+
+There are two parts to the registry project:
+1. 🟦 **The MCP registry spec**: An [API specification](./docs/server-registry-api/) that allows anyone to implement a registry.
+2. 🟥 **The Official MCP registry**: A hosted registry following the MCP registry spec at [`registry.modelcontextprotocol.io`](https://registry.modelcontextprotocol.io). This serves as the **authoritative repository** for publicly-available MCP servers. Server creators publish once, and all consumers (MCP clients, aggregators, marketplaces) reference the same canonical data. This is owned by the MCP open-source community, backed by major trusted contributors to the MCP ecosystem such as Anthropic, GitHub, PulseMCP and Microsoft.
+
+The registry is built around the [`server.json`](./docs/server-json/) format - a standardized way to describe MCP servers that works across discovery, initialization, and packaging scenarios.
+
+In time, we expect the ecosystem to look a bit like this:
+
+![](./docs/ecosystem-diagram.excalidraw.svg)
+
+Note that MCP registries are _metaregistries_. They host metadata about packages, but not the package code or binaries. Instead, they reference other package registries (like NPM, PyPi or Docker) for this.
+
+Additionally, we expect clients pull from _subregistries_. These subregistries add value to the registry ecosystem by providing curation, or extending it with additional metadata. The Official MCP registry expects a lot of API requests from ETL jobs from these subregistries.
 
 ## Development Status
 
-This project is being built in the open and is currently in the early stages of development. Please see the [overview discussion](https://github.com/modelcontextprotocol/registry/discussions/11) for the project scope and goals.
+**2025-08-26 update**: We're targeting a 'preview' go-live on 4th September. This may still be unstable and not provide durability guarantees, but is a step towards being more solidified. A general availability (GA) release will follow later.
 
-### Contributing
+Current key maintainers:
+- **Adam Jones** (Anthropic) [@domdomegg](https://github.com/domdomegg)  
+- **Tadas Antanavicius** (PulseMCP) [@tadasant](https://github.com/tadasant)
+- **Toby Padilla** (GitHub) [@toby](https://github.com/toby)
 
-Use [Discussions](https://github.com/modelcontextprotocol/registry/discussions) to propose and discuss product and/or technical **requirements**.
+## Contributing
 
-Use [Issues](https://github.com/modelcontextprotocol/registry/issues) to track **well-scoped technical work** that the community agrees should be done at some point.
+We use multiple channels for collaboration - see [modelcontextprotocol.io/community/communication](https://modelcontextprotocol.io/community/communication).
 
-Open [Pull Requests](https://github.com/modelcontextprotocol/registry/pulls) when you want to **contribute work towards an Issue**, or you feel confident that your contribution is desireable and small enough to forego community discussion at the requirements and planning levels.
+Often (but not always) ideas flow through this pipeline:
 
-## Overview
+- **[Discord](https://modelcontextprotocol.io/community/communication)** - Real-time community discussions
+- **[Discussions](https://github.com/modelcontextprotocol/registry/discussions)** - Propose and discuss product/technical requirements
+- **[Issues](https://github.com/modelcontextprotocol/registry/issues)** - Track well-scoped technical work  
+- **[Pull Requests](https://github.com/modelcontextprotocol/registry/pulls)** - Contribute work towards issues
 
-The MCP Registry service provides a centralized repository for MCP server entries. It allows discovery and management of various MCP implementations with their associated metadata, configurations, and capabilities.
+### Quick start:
 
-## Features
+#### Pre-requisites
 
-- RESTful API for managing MCP registry entries (list, get, create, update, delete)
-- Health check endpoint for service monitoring
-- Support for various environment configurations
-- Graceful shutdown handling
-- PostgreSQL and in-memory database support
-- Comprehensive API documentation
-- Pagination support for listing registry entries
-- Seed data export/import composability with HTTP support
-- Registry instance data sharing via HTTP endpoints
+- **Docker**
+- **Go 1.24.x** 
+- **golangci-lint v2.4.0**
 
-## Getting Started
-
-### Prerequisites
-
-- Go 1.24.x (required - check with `go version`)
-- PostgreSQL
-- Docker (optional, but recommended for development)
-
-For development:
-- golangci-lint v2.4.0 - Install with:
-  ```bash
-  curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0
-  ```
-
-## Running
-
-The easiest way to get the registry running is uses docker compose. This will setup the MCP Registry service, import the seed data and run PostgreSQL in a local Docker environment.
+#### Running the server
 
 ```bash
+# Start full development environment
 make dev-compose
 ```
 
-This will start the MCP Registry service running at [`localhost:8080`](http://localhost:8080).
+This starts the registry at [`localhost:8080`](http://localhost:8080) with PostgreSQL and seed data. It can be configured with environment variables in [docker-compose.yml](./docker-compose.yml) - see [.env.example](./.env.example) for a reference.
 
-## Building
+<details>
+<summary>Alternative: Local setup without Docker</summary>
 
-If you prefer to run the service locally without Docker, you can build and run it directly:
+**Prerequisites:**
+- PostgreSQL running locally
+- Go 1.24.x installed
 
 ```bash
-# Build a registry executable
+# Build and run locally
 make build
-```
-This will create the `registry` binary in the current directory.
-
-To run the service locally:
-```bash
-# Run registry locally
 make dev-local
 ```
 
-By default, the service will run on [`localhost:8080`](http://localhost:8080). You'll need to use the in-memory database or have PostgreSQL running.
+The service runs on [`localhost:8080`](http://localhost:8080) by default. This can be configured with environment variables in `.env` - see [.env.example](./.env.example) for a reference.
 
-To build the CLI tool for publishing MCP servers to the registry:
+</details>
 
-```bash
-# Build the publisher tool
-make publisher
-```
+<details>
+<summary>Alternative: Running a pre-built Docker image</summary>
 
-## Development
-
-### Available Make Targets
-
-To see all available make targets:
-
-```bash
-make help
-```
-
-Key development commands:
-
-```bash
-# Development
-make dev-compose   # Start development environment with Docker Compose
-make dev-local     # Run registry locally
-
-# Build targets
-make build          # Build the registry application
-make publisher      # Build the publisher tool
-make migrate        # Build the database migration tool
-
-# Testing
-make test-unit        # Run unit tests with coverage report
-make test-integration # Run integration tests
-make test-endpoints   # Test API endpoints (requires running server)
-make test-publish     # Test publish endpoint (requires BEARER_TOKEN)
-make test-all         # Run all tests
-
-# Code quality
-make lint          # Run linter (same as CI)
-make lint-fix      # Run linter with auto-fix
-
-# Validation
-make validate-schemas   # Validate JSON schemas
-make validate-examples  # Validate examples against schemas
-make validate          # Run all validation checks
-
-# Combined workflows
-make check         # Run all checks (lint, validate, unit tests)
-
-# Utilities
-make clean         # Clean build artifacts and coverage files
-```
-
-### Linting
-
-The project uses golangci-lint with extensive checks. Always run linting before pushing:
-
-```bash
-# Run all linters (same as CI)
-make lint
-
-# Run linter with auto-fix
-make lint-fix
-```
-
-### Git Hooks (Optional)
-
-To automatically run linting before commits:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-This will prevent commits that fail linting or have formatting issues.
-
-### Project Structure
-
-```
-├── api/           # OpenApi specification
-├── cmd/           # Application entry points
-├── config/        # Configuration files
-├── internal/      # Private application code
-│   ├── api/       # HTTP server and request handlers (routing)
-│   ├── auth/      # GitHub OAuth integration
-│   ├── config/    # Configuration management
-│   ├── database/  # Data persistence abstraction
-│   ├── model/     # Data models and domain structures
-│   └── service/   # Business logic implementation
-├── pkg/           # Public libraries
-├── scripts/       # Utility scripts
-└── tools/         # Command line tools
-    └── publisher/ # Tool to publish MCP servers to the registry
-```
-
-### Architecture Overview
-
-### Request Flow
-1. HTTP requests enter through router (`internal/api/router/`)
-2. Handlers in `internal/api/handlers/v0/` validate and process requests
-3. Service layer executes business logic
-4. Database interface handles persistence
-5. JSON responses returned to clients
-
-### Key Interfaces
-- **Database Interface** (`internal/database/database.go`) - Abstracts data persistence with PostgreSQL and in-memory implementations
-- **RegistryService** (`internal/service/service.go`) - Business logic abstraction over database
-- **Auth Service** (`internal/auth/jwt.go`) - Registry token creation and validation
-
-### Authentication Flow
-Publishing requires GitHub OAuth validation:
-1. Extract bearer token from Authorization header
-2. Validate token with GitHub API
-3. Verify repository ownership matches token owner
-4. Check organization membership if applicable
-
-### Design Patterns
-- **Factory Pattern** for service creation with dependency injection
-- **Repository Pattern** for database abstraction
-- **Context Pattern** for timeout management (5-second DB operations)
-- **Cursor-based Pagination** using UUIDs for stateless pagination
-
-## API Endpoints
-
-### API Documentation
-
-```
-GET /docs
-```
-
-The API is documented using Swagger/OpenAPI. This page provides a complete reference of all endpoints with request/response schemas and examples, and allows you to test the API directly from your browser.
-
-## Configuration
-
-The service can be configured using environment variables. See [.env.example](./.env.example) for details.
-
-## Pre-built Docker Images
-
-Pre-built Docker images are automatically published to GitHub Container Registry on each release and main branch commit:
+Pre-built Docker images are automatically published to GitHub Container Registry:
 
 ```bash
 # Run latest from main branch
@@ -218,41 +90,75 @@ docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:latest
 docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main-20250806-a1b2c3d
 ```
 
-**Available image tags:**
-- `latest` - Latest commit from main branch
-- `main-<date>-<sha>` - Specific commit builds
+**Available tags:** `latest`, `main-<date>-<sha>`
 
-**Configuration:** The Docker images support all environment variables listed in the [Configuration](#configuration) section. For production deployments, you'll need to configure the database connection and other settings via environment variables.
+</details>
 
-### Import Seed Data
+#### Publishing a server
 
-Registry instances can import data from:
-
-**Local files:**
-```bash
-MCP_REGISTRY_SEED_FROM=data/seed.json ./registry
-```
-
-**HTTP endpoints:**
-```bash
-MCP_REGISTRY_SEED_FROM=http://other-registry:8080 ./registry
-```
-
-## Testing
-
-Run the test script to validate API endpoints:
+To publish a server, we've built a simple CLI. You can use it with:
 
 ```bash
-./scripts/test_endpoints.sh
+# Build the latest CLI
+make publisher
+
+# Use it!
+./tools/publisher/bin/mcp-publisher --help
 ```
 
-You can specify specific endpoints to test:
+See [the publisher README](./tools/publisher/README.md) for more details.
+
+#### Other commands
 
 ```bash
-./scripts/test_endpoints.sh --endpoint health
-./scripts/test_endpoints.sh --endpoint servers
+# Run lint, unit tests and integration tests
+make check
 ```
 
-## License
+There are also a few more helpful commands for development. Run `make help` to learn more, or look in [Makefile](./Makefile).
 
-See the [LICENSE](LICENSE) file for details.
+<!--
+For Claude and other AI tools: Always prefer make targets over custom commands where possible.
+-->
+
+## Architecture
+
+### Project Structure
+
+```
+├── cmd/                     # Application entry points
+├── data/                    # Seed data
+├── deploy/                  # Deployment configuration (Pulumi)
+├── docs/                    # Technical documentation
+│   ├── server-json/         # server.json specification & examples
+│   └── server-registry-api/ # API specification
+├── internal/                # Private application code
+│   ├── api/                 # HTTP handlers and routing
+│   ├── auth/                # Authentication (GitHub OAuth, JWT)
+│   ├── config/              # Configuration management
+│   ├── database/            # Data persistence (PostgreSQL, in-memory)
+│   ├── model/               # Data models and domain structures
+│   ├── service/             # Business logic
+│   └── telemetry/           # Metrics and monitoring
+├── scripts/                 # Development and testing scripts
+├── tests/                   # Integration tests
+└── tools/                   # CLI tools
+    ├── publisher/           # Server publishing tool
+    └── validate-*.sh        # Schema validation tools
+```
+
+### Authentication
+
+Publishing supports multiple authentication methods:
+- **GitHub OAuth** - For publishing by logging into GitHub
+- **GitHub OIDC** - For publishing from GitHub Actions
+- **DNS verification** - For proving ownership of a domain and its subdomains
+- **HTTP verification** - For proving ownership of a domain
+
+The registry validates namespace ownership when publishing. E.g. to publish...:
+- `io.github.domdomegg/my-cool-mcp` you must login to GitHub as `domdomegg`, or be in a GitHub Action on domdomegg's repos
+- `me.adamjones/my-cool-mcp` you must prove ownership of `adamjones.me` via DNS or HTTP challenge
+
+## More documentation
+
+See the [docs](./docs) folder for more details if your question has not been answered here!

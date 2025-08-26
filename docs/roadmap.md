@@ -10,19 +10,14 @@ The initial version of the MCP Registry is actively being developed. The initial
 
 ## Phase 1: MVP/Go-Live (Current Focus)
 
-- [ ] Specification: OpenAPI definition for the official REST API
-- [ ] Specification: Extensible OpenAPI definition for marketplace/aggregator consumers to repurpose
-- [ ] REST API: Publish workflow
-- [ ] REST API: Read workflow
-- [ ] CLI: Publish tool
-- [ ] CLI/REST API: DNS verification system for namespacing
+See the [go-live blocker issues](https://github.com/modelcontextprotocol/registry/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22go-live%20blocker%22).
 
-## Backlog (Future Work)
+## Backlog (Future Work, may be moved to out of scope)
 
 - [ ] UI implementation
 - [ ] Store and surface other data besides servers (e.g. [clients](https://modelcontextprotocol.io/clients), resources)
-- [ ] Additional IdP support (beyond GitHub)
 - [ ] Download count tracking
+- [ ] Internationalization (i18n)
 
 ## Out of Scope (Not Planned)
 
@@ -32,9 +27,5 @@ The initial version of the MCP Registry is actively being developed. The initial
 - **Unified runtime**: Not solving how servers are executed
 - **Server hosting**: The registry does not provide hosting for servers
 - **Search engine**: The registry will not provide a commercial grade search engine for servers
-- **Server tagging**: The registry will not support server tagging
+- **Server tags or categories**: Not supported, to reduce moderation burden
 - **Server rankings**: The registry will not rank servers by subjective measures of quality
-
-## Contributing
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for details on how to contribute to the MCP Registry project.
