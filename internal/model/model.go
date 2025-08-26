@@ -111,6 +111,7 @@ type VersionDetail struct {
 
 // ServerDetail represents complete server information as defined in the MCP spec (pure, no registry metadata)
 type ServerDetail struct {
+	Schema        string        `json:"$schema,omitempty" bson:"$schema,omitempty"`
 	Name          string        `json:"name" bson:"name"`
 	Description   string        `json:"description" bson:"description"`
 	Status        ServerStatus  `json:"status,omitempty" bson:"status,omitempty"`

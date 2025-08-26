@@ -1,4 +1,4 @@
-// validate-schemas validates that schema.json and registry-schema.json
+// validate-schemas validates that server.schema.json and registry-schema.json
 // are valid JSON Schema documents.
 //
 // For more information, see docs/server-json/README.md
@@ -31,7 +31,7 @@ func runValidation() error {
 		name string
 		path string
 	}{
-		{"schema.json", filepath.Join(basePath, "schema.json")},
+		{"server.schema.json", filepath.Join(basePath, "server.schema.json")},
 		{"registry-schema.json", filepath.Join(basePath, "registry-schema.json")},
 	}
 
@@ -74,14 +74,14 @@ func validateSchema(path string) error {
 
 	// For registry-schema.json, we need to register the base schema it references
 	if strings.Contains(path, "registry-schema.json") {
-		basePath := filepath.Join(filepath.Dir(path), "schema.json")
+		basePath := filepath.Join(filepath.Dir(path), "server.schema.json")
 		baseData, err := os.ReadFile(basePath)
 		if err != nil {
 			return fmt.Errorf("failed to read base schema: %w", err)
 		}
 
 		// Add the base schema to the compiler with the expected URL
-		if err := compiler.AddResource("https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json", bytes.NewReader(baseData)); err != nil {
+		if err := compiler.AddResource("https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json", bytes.NewReader(baseData)); err != nil {
 			return fmt.Errorf("failed to add base schema resource: %w", err)
 		}
 	}

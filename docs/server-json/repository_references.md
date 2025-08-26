@@ -1,6 +1,6 @@
 # Repository References in server.json
 
-The [`server.json` schema](schema.json) MAY contain a `repository` property at the root of the JSON object. The `repository` object provides metadata about the MCP server's source code. This enables users and security experts to inspect the code of the MCP service, thereby improving the transparency of what the MCP server is doing at runtime.
+The [`server.json` schema](server.schema.json) MAY contain a `repository` property at the root of the JSON object. The `repository` object provides metadata about the MCP server's source code. This enables users and security experts to inspect the code of the MCP service, thereby improving the transparency of what the MCP server is doing at runtime.
 
 The inclusion of the `repository` object is RECOMMENDED for both local and remote MCP servers.
 

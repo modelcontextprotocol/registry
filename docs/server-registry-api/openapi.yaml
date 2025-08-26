@@ -450,6 +450,11 @@ components:
         - $ref: '#/components/schemas/Server'
         - type: object
           properties:
+            $schema:
+              type: string
+              format: uri
+              description: JSON Schema URI for this server.json format
+              example: "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json"
             packages:
               type: array
               items:

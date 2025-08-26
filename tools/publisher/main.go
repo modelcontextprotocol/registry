@@ -52,6 +52,7 @@ type Package struct {
 }
 
 type ServerJSON struct {
+	Schema        string        `json:"$schema"`
 	Name          string        `json:"name"`
 	Description   string        `json:"description"`
 	Status        string        `json:"status,omitempty"`
@@ -489,6 +490,7 @@ func createServerStructure(
 
 	// Create server structure
 	return ServerJSON{
+		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
 		Name:        name,
 		Description: description,
 		Status:      status,

@@ -7,6 +7,7 @@ _These examples show the PublishRequest format used by the `/v0/publish` API end
 ```json
 {
   "server": {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
     "name": "io.modelcontextprotocol/brave-search",
     "description": "MCP server for Brave Search API integration",
     "status": "active",
@@ -91,6 +92,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 ```json
 {
   "server": {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
     "name": "com.github.modelcontextprotocol/filesystem",
     "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
     "status": "active",
@@ -418,6 +420,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 ```json
 {
   "server": {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
     "name": "io.modelcontextprotocol.anonymous/hybrid-mcp",
     "description": "MCP server available as both local package and remote service",
     "repository": {

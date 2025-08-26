@@ -37,7 +37,7 @@ func runValidation() error {
 	basePath := filepath.Join("docs", "server-json")
 
 	examplesPath := filepath.Join(basePath, "examples.md")
-	schemaPath := filepath.Join(basePath, "schema.json")
+	schemaPath := filepath.Join(basePath, "server.schema.json")
 	registrySchemaPath := filepath.Join(basePath, "registry-schema.json")
 
 	examples, err := extractExamples(examplesPath)
@@ -56,7 +56,7 @@ func runValidation() error {
 
 	baseSchema, err := compileSchema(schemaPath)
 	if err != nil {
-		return fmt.Errorf("failed to compile schema.json: %w", err)
+		return fmt.Errorf("failed to compile server.schema.json: %w", err)
 	}
 
 	registrySchema, err := compileSchema(registrySchemaPath)
@@ -94,10 +94,10 @@ func runValidation() error {
 		registryValid := false
 
 		if err := baseSchema.Validate(serverData); err != nil {
-			log.Printf("  Validating against schema.json: ❌")
+			log.Printf("  Validating against server.schema.json: ❌")
 			log.Printf("    Error: %v", err)
 		} else {
-			log.Printf("  Validating against schema.json: ✅")
+			log.Printf("  Validating against server.schema.json: ✅")
 			baseValid = true
 		}
 
@@ -168,14 +168,14 @@ func compileSchema(path string) (*jsonschema.Schema, error) {
 
 	// For registry-schema.json, we need to register the base schema it references
 	if strings.Contains(path, "registry-schema.json") {
-		basePath := filepath.Join(filepath.Dir(path), "schema.json")
+		basePath := filepath.Join(filepath.Dir(path), "server.schema.json")
 		baseData, err := os.ReadFile(basePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read base schema: %w", err)
 		}
 
 		// Add the base schema to the compiler with the expected URL
-		if err := compiler.AddResource("https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json", bytes.NewReader(baseData)); err != nil {
+		if err := compiler.AddResource("https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json", bytes.NewReader(baseData)); err != nil {
 			return nil, fmt.Errorf("failed to add base schema resource: %w", err)
 		}
 	}

@@ -12,14 +12,14 @@ All of these scenarios (and more) would benefit from an agreed-upon, standardize
 Please note: this is different from the file commonly referred to as `mcp.json`, which is _an MCP client's configuration file for **running** a specific set of MCP servers_. See [this issue](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/292).
 
 References:
-- [schema.json](./schema.json) - The official JSON schema specification for this representation
+- [server.schema.json](./server.schema.json) - The official JSON schema specification for this representation
 - [examples.md](./examples.md) - Example manifestations of the JSON schema
-- [registry-schema.json](./registry-schema.json) - A more constrained version of `schema.json` that the official registry supports
+- [registry-schema.json](./registry-schema.json) - A more constrained version of `server.schema.json` that the official registry supports
 
 ## Validation Tools
 
 Two validation tools are provided in the repository's `tools/` directory:
-- **validate-schemas** - Validates that `schema.json` and `registry-schema.json` are valid JSON Schema documents
+- **validate-schemas** - Validates that `server.schema.json` and `registry-schema.json` are valid JSON Schema documents
 - **validate-examples** - Validates that all JSON examples in `examples.md` conform to both schemas
 
 ### Usage
