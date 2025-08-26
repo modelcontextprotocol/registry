@@ -27,7 +27,6 @@ linters:
     - gosec
     - grouper
     - importas
-    - ireturn
     - makezero
     - misspell
     - nakedret

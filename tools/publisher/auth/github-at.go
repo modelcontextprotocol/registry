@@ -63,8 +63,6 @@ type ServerHealthResponse struct {
 }
 
 // NewGitHubATProvider creates a new GitHub OAuth provider
-//
-//nolint:ireturn // Factory function intentionally returns interface for dependency injection
 func NewGitHubATProvider(forceLogin bool, registryURL string) Provider {
 	return &GitHubATProvider{
 		forceLogin:  forceLogin,

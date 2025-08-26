@@ -42,7 +42,7 @@ func NewMemoryDB(e map[string]*model.ServerDetail) *MemoryDB {
 }
 
 
-// List retrieves ServerRecord entries with optional filtering and pagination
+//nolint:cyclop // Complexity from filtering logic is acceptable for memory implementation
 func (db *MemoryDB) List(
 	ctx context.Context,
 	filter map[string]any,
@@ -87,6 +87,18 @@ func (db *MemoryDB) List(
 				}
 			case "status":
 				if string(entry.ServerJSON.Status) != value.(string) {
+					include = false
+				}
+			case "remote_url":
+				found := false
+				remoteURL := value.(string)
+				for _, remote := range entry.ServerJSON.Remotes {
+					if remote.URL == remoteURL {
+						found = true
+						break
+					}
+				}
+				if !found {
 					include = false
 				}
 			}

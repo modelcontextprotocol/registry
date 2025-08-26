@@ -71,7 +71,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		// Publish the server with extensions
 		publishedServer, err := registry.Publish(publishRequest)
 		if err != nil {
-			return nil, huma.Error500InternalServerError("Failed to publish server", err)
+			return nil, huma.Error400BadRequest("Failed to publish server", err)
 		}
 
 		// Return the published server in extension wrapper format

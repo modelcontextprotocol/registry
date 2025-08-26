@@ -13,7 +13,7 @@ var (
 	ErrAlreadyExists     = errors.New("record already exists")
 	ErrInvalidInput      = errors.New("invalid input")
 	ErrDatabase          = errors.New("database error")
-	ErrInvalidVersion    = errors.New("invalid version: cannot publish older version after newer version")
+	ErrInvalidVersion    = errors.New("invalid version: cannot publish duplicate version")
 	ErrMaxServersReached = errors.New("maximum number of versions for this server reached (10000): please reach out at https://github.com/modelcontextprotocol/registry to explain your use case")
 )
 

@@ -92,8 +92,6 @@ func WithSkipPaths(paths ...string) MiddlewareOption {
 }
 
 // NewHumaAPI creates a new Huma API with all routes registered
-//
-//nolint:ireturn // huma.API is the expected interface type for Huma APIs
 func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.ServeMux, metrics *telemetry.Metrics) huma.API {
 	// Create Huma API configuration
 	humaConfig := huma.DefaultConfig("MCP Registry API", "1.0.0")

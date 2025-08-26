@@ -203,9 +203,9 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("model.PublishRequest")).Return(nil, errors.New("database error"))
+				registry.On("Publish", mock.AnythingOfType("model.PublishRequest")).Return(nil, errors.New("cannot publish duplicate version"))
 			},
-			expectedStatus: http.StatusInternalServerError,
+			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Failed to publish server",
 		},
 	}

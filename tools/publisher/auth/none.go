@@ -19,7 +19,6 @@ type TokenResponse struct {
 	ExpiresAt     int64  `json:"expires_at"`
 }
 
-//nolint:ireturn // Factory function returns interface by design
 func NewNoneProvider(registryURL string) Provider {
 	return &NoneProvider{
 		registryURL: registryURL,
