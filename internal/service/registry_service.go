@@ -18,8 +18,6 @@ type registryServiceImpl struct {
 }
 
 // NewRegistryServiceWithDB creates a new registry service with the provided database
-//
-//nolint:ireturn // Factory function intentionally returns interface for dependency injection
 func NewRegistryServiceWithDB(db database.Database) RegistryService {
 	return &registryServiceImpl{
 		db: db,
