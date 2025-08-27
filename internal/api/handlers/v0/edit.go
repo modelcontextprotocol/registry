@@ -12,9 +12,9 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 	"github.com/modelcontextprotocol/registry/pkg/model"
-	"github.com/modelcontextprotocol/registry/internal/validators"
 	"github.com/modelcontextprotocol/registry/pkg/validation"
 )
 
@@ -92,7 +92,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// Prevent undeleting servers - once deleted, they stay deleted
-		if currentServer.Server.Status == model.ServerStatusDeleted && editRequest.Server.Status != model.ServerStatusDeleted {
+		if currentServer.Server.Status == model.StatusDeleted && editRequest.Server.Status != model.StatusDeleted {
 			return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
 		}
 

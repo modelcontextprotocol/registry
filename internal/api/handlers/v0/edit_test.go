@@ -49,7 +49,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
-					Status:      model.ServerStatusDeprecated,
+					Status:      model.StatusDeprecated,
 					Repository: model.Repository{
 						URL:    "https://github.com/domdomegg/test-server",
 						Source: "github",
@@ -66,7 +66,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -75,7 +75,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Updated test server",
-						Status:      model.ServerStatusDeprecated,
+						Status:      model.StatusDeprecated,
 					},
 				}
 				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("v1.PublishRequest")).Return(expectedResponse, nil)
@@ -135,7 +135,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -170,7 +170,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Server: model.ServerJSON{
 						Name:        "io.github.other/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -230,7 +230,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -276,7 +276,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Trying to undelete server",
-					Status:      model.ServerStatusActive,
+					Status:      model.StatusActive,
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
@@ -285,7 +285,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusDeleted,
+						Status:      model.StatusDeleted,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
