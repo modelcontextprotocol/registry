@@ -11,7 +11,7 @@ This extends [the main README](../README.md).
 
 ## API & Technical Specifications
 
-- [`openapi.yaml`](./openapi.yaml) - OpenAPI specification for the official registry API
+- [`openapi.yaml`](./server-registry-api/openapi.yaml) - OpenAPI specification for the official registry API
 - [`api_examples.md`](./api_examples.md) - Examples of what data will actually look like coming from the official registry API
 - [`architecture.md`](./architecture.md) - Technical architecture, deployment strategies, and data flows
 - [`server.json` README](./server-json/README.md) - description of the `server.json` purpose and schema
