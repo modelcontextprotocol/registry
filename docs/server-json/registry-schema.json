@@ -3,7 +3,7 @@
   "$id": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/registry-server.json",
   "title": "MCP Server Detail - Registry Schema",
   "description": "Registry-specific constraints for MCP server representation. Extends the base schema with additional validation rules.",
-  "$ref": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
+  "$ref": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "properties": {
     "repository": {
       "properties": {

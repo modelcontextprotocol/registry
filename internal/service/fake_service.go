@@ -15,8 +15,6 @@ type fakeRegistryService struct {
 }
 
 // NewFakeRegistryService creates a new fake registry service with pre-populated data
-//
-//nolint:ireturn // Factory function intentionally returns interface for dependency injection
 func NewFakeRegistryService() RegistryService {
 	// Sample registry entries with updated model structure using ServerDetail
 	serverDetails := []*model.ServerDetail{
@@ -81,7 +79,7 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]model.ServerResp
 	if err != nil {
 		return nil, "", err
 	}
-	
+
 	// Convert ServerRecord to ServerResponse format
 	result := make([]model.ServerResponse, len(serverRecords))
 	for i, record := range serverRecords {
@@ -127,8 +125,18 @@ func (s *fakeRegistryService) Publish(req model.PublishRequest) (*model.ServerRe
 	// Extract publisher extensions from request
 	publisherExtensions := model.ExtractPublisherExtensions(req)
 
+	// Create registry metadata for fake service (always marks as latest)
+	now := time.Now()
+	registryMetadata := model.RegistryMetadata{
+		ID:          uuid.New().String(),
+		PublishedAt: now,
+		UpdatedAt:   now,
+		IsLatest:    true,
+		ReleaseDate: now.Format(time.RFC3339),
+	}
+
 	// Publish to database
-	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions)
+	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, registryMetadata)
 	if err != nil {
 		return nil, err
 	}

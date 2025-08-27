@@ -40,8 +40,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 		return nil, err
 	}
 
-	// Create PostgreSQL cluster with proper timeout handling
-	// Note: This may fail on first run until CloudNativePG operator is fully ready
+	// Create PostgreSQL cluster
 	pgCluster, err := apiextensions.NewCustomResource(ctx, "registry-pg", &apiextensions.CustomResourceArgs{
 		ApiVersion: pulumi.String("postgresql.cnpg.io/v1"),
 		Kind:       pulumi.String("Cluster"),

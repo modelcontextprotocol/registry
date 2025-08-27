@@ -30,6 +30,16 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		return nil, err
 	}
 
+	// Usually we should expose the ingress to a LoadBalancer
+	// This works in GCP and most local setups e.g. minikube (with minikube tunnel)
+	// Kind unfortunately does not support LoadBalancer type, and hangs indefinitely. This is a workaround for that.
+	serviceType := cluster.Name.ApplyT(func(name string) string {
+		if name == "kind-kind" {
+			return "NodePort"
+		}
+		return "LoadBalancer"
+	}).(pulumi.StringOutput)
+
 	// Install NGINX Ingress Controller
 	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
@@ -41,7 +51,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
 				"service": pulumi.Map{
-					"type": pulumi.String("LoadBalancer"),
+					"type": serviceType,
 					"annotations": pulumi.Map{
 						// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
 						"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path": pulumi.String("/healthz"),

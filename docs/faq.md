@@ -33,26 +33,21 @@ The registry is designed for programmatic consumption by:
 - Server aggregators (Smithery, PulseMCP, etc.)
 - NOT individual end-users (they should use MCP clients or aggregator UIs)
 
-### Will there be a UI for browsing servers?
+### Will there be feature X?
 
-A UI is planned as a future milestone after the initial API launch, but is not part of the MVP.
+See [roadmap.md](./roadmap.md).
 
 ## Publishing Servers
 
 ### How do I publish my MCP server?
 
-Servers are published by submitting a `server.json` file through our CLI tool. The process requires:
-
-1. GitHub authentication
-2. A public GitHub repository (even for closed-source servers - just for the metadata)
-3. Your server package published to a supported registry (npm, PyPI, NuGet, Docker Hub, etc.)
-4. Optional: DNS verification for custom namespacing
+See the [publisher README](../tools/publisher/README.md)
 
 ### What namespaces are available?
 
-- **With DNS verification**: `com.yourcompany/server-name` (reverse DNS notation)
-- **Without DNS verification**: `io.github.yourusername/server-name`
-- DNS verification is done via TXT records and enables authoritative namespacing
+- **With GitHub verification**: `io.github.yourusername/server-name`, `io.github.yourorg/server-name`
+- **With DNS verification**: `com.yourcompany.*`, `com.yourcompany.*/*`
+- **With HTTP verification**: `com.yourcompany/*`
 
 ### Is open source required?
 
@@ -72,17 +67,39 @@ More can be added as the community desires; feel free to open an issue if you ar
 Yes, versioning is supported:
 
 - Each version gets its own immutable metadata
-- Version bumps are required for updates
+- Version strings must be unique for each server
 - Old versions remain accessible for compatibility
-- The registry tracks which version is "latest"
+- The registry tracks which version is "latest" based on semantic version ordering when possible
 
 ### How do I update my server metadata?
 
-Submit a new `server.json` with an incremented version number. Once published, version metadata is immutable (similar to npm).
+Submit a new `server.json` with a unique version string. Once published, version metadata is immutable (similar to npm).
+
+### What version format should I use?
+
+The registry accepts any version string up to 255 characters, but we recommend:
+
+- **SHOULD use semantic versioning** (e.g., "1.0.2", "2.1.0-alpha") for predictable ordering
+- **SHOULD align with package versions** to reduce confusion
+- **MAY use prerelease labels** (e.g., "1.0.0-1") for registry-specific versions
+
+The registry attempts to parse versions as semantic versions for proper ordering. Non-semantic versions are allowed but will be ordered by publication timestamp. See the [versioning guide](./versioning.md) for detailed guidance.
+
+### Can I add custom metadata when publishing?
+
+Yes, extensions under the `x-publisher` property are preserved when publishing to the registry. This allows you to include custom metadata specific to your publishing process.
 
 ### Can I delete/unpublish my server?
 
-A reverse-publication flow is planned to allow quick deletion of accidentally published data.
+At time of last update, this was open for discussion in [#104](https://github.com/modelcontextprotocol/registry/issues/104).
+
+### Can I publish a private server?
+
+Private servers are those that are only accessible to a narrow set of users. For example, servers published on a private network (like `mcp.acme-corp.internal`) or on private package registries (e.g. `npx -y @acme/mcp --registry https://artifactory.acme-corp.internal/npm`).
+
+These are generally not supported on the official MCP registry, which is designed for publicly accessible MCP servers.
+
+If you want to publish private servers we recommend you host your own MCP subregistry, and add them there.
 
 ## Security & Trust
 
@@ -91,27 +108,22 @@ A reverse-publication flow is planned to allow quick deletion of accidentally pu
 DNS verification ensures namespace ownership. For example:
 
 - `com.microsoft/server` requires DNS verification of microsoft.com
-- `io.github.username/server` is tied to a GitHub account or GitHub organization
-
-### What about typosquatting?
-
-The registry implements (or is slated to soon implement):
-
-- Automatic blocking of names within a certain edit distance of existing servers
-- Community reporting mechanisms
+- `io.github.name/server` is tied to a GitHub account or GitHub organization `name`
 
 ### Is there security scanning?
 
-The MVP delegates security to the underlying package registries. Future iterations may include:
-
-- Vulnerability scanning
-- Dependency analysis
+The MVP delegates security scanning to:
+- underlying package registries; and
+- subregistries
 
 ### How is spam prevented?
 
-- GitHub authentication requirement
-- Rate limiting (e.g., 10 new servers per user per day)
+- Namespace authentication requirements
 - Character limits and regex validation on free-form fields
+- Manual takedown of spam or malicious servers
+
+In future we might explore:
+- Stricter rate limiting (e.g., 10 new servers per user per day)
 - Potential AI-based spam detection
 - Community reporting and admin blacklisting capabilities
 
@@ -125,64 +137,42 @@ Recommended polling frequency:
 - `/servers/:id` endpoint: once per version (results are immutable)
 - Design assumes CDN caching between registry and consumers
 
+Also see [#291](https://github.com/modelcontextprotocol/registry/issues/291), which might mean the above can be more regular.
+
 ### Will there be webhooks?
 
 Not in the initial MVP, but the architecture supports adding webhooks for update notifications in the future.
 
 ### Can I run my own registry instance?
 
-While the API shapes and data formats are designed for reuse, the registry implementation itself is not designed for self-hosting. Organizations needing private registries should:
+Yes! The API shapes and data formats are intentionally designed for reuse by subregistries. Organizations needing private registries should:
 
 - Implement the same API shape
 - Use the same `server.json` format
 - Potentially mirror/filter the official registry data
 
+### Can I extend the registry API?
+
+Yes, we support `x-com.example` style extensions in a bunch of places - see the official MCP registry API spec. This can be used to add annotations to many objects, e.g. add security scanning details, enrich package metadata, etc.
+
+If you have a use case that can't be addressed here, raise a GitHub issue!
+
+### Can I use the code here to run my own registry instance?
+
+The registry implementation here is not designed for self-hosting, but you're welcome to try to use it/fork it as necessary. Note that this is not an intended use, and the registry maintainers cannot provide any support for this at this time.
+
 ## Operations & Maintenance
 
 ### What's the expected reliability?
 
-- 24-hour+ downtime tolerance is acceptable, so you shouldn't rely on the registry being always available.
-- No direct end-user impact (consumers cache data)
-- Relies on CDN for actual availability
-- Volunteer maintainer model (no formal on-call)
+- This is a community maintained project without full time staffing. You should therefore expect downtime periods of up to 1 business day. No strict guarantees are provided. (Also see discussion in [#150](https://github.com/modelcontextprotocol/registry/issues/150))
+- Ideally clients should use subregistries with higher availability guarantees, to avoid direct end-user impact (as subregistries can cache data).
 
-### How are DNS records verified?
+### What if I need to report a spam or malicious server?
 
-- Initial verification via TXT records
-- Daily re-verification to catch domain transfers
-- Publishing blocked if verification fails
-- Historical packages remain available with warnings
+1. Report it as abuse to the underlying package registry (e.g. NPM, PyPi, DockerHub, etc.); and
+2. Raise a GitHub issue on the registry repo with a title beginning `Abuse report: `
 
-### What about GitHub repository transfers?
+### What if I need to report a security vulnerability in the registry itself?
 
-The registry tracks GitHub repository IDs (not just URLs) to detect transfers. Daily checks update metadata if repositories move.
-
-### How is namespace transfer handled?
-
-Namespace transfers (e.g., when someone leaves a company) are handled through the DNS verification system and GitHub organization membership.
-
-## Future Considerations
-
-### Will download counts be tracked?
-
-Download count tracking is being considered as a quality signal, but must be designed carefully to not impact CDN caching.
-
-### What about tags or categories?
-
-Categorization and curation are intentionally left to consumers (MCP clients and aggregators) to avoid maintenance burden and subjective decisions.
-
-### Will there be quality metrics?
-
-Quality assessment is explicitly out of scope for the official registry. This is delegated to:
-
-- MCP clients (for their specific use cases)
-- Third-party aggregators
-- Community reviews on external platforms
-
-### What about internationalization?
-
-Internationalization is a future consideration but not part of the MVP.
-
-### Will private registries be supported?
-
-The registry design (API shapes, data formats) is intended to be reusable for private deployments, but the official registry will only host public servers.
+Follow [the MCP community SECURITY.md](https://github.com/modelcontextprotocol/.github/blob/main/SECURITY.md).

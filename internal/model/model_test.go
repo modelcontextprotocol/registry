@@ -98,17 +98,17 @@ func TestExtractPublisherExtensions_DoesNotDoubleNest(t *testing.T) {
 	request := PublishRequest{
 		Server: ServerDetail{Name: "test"},
 		XPublisher: map[string]interface{}{
-			"tool": "publisher-cli",
+			"tool":    "publisher-cli",
 			"version": "1.0.0",
 		},
 	}
 
 	result := ExtractPublisherExtensions(request)
-	
+
 	// Verify we get the data directly, not wrapped in another "x-publisher" key
 	assert.Equal(t, "publisher-cli", result["tool"])
 	assert.Equal(t, "1.0.0", result["version"])
-	
+
 	// Verify we don't have double nesting
 	assert.NotContains(t, result, "x-publisher")
 }
@@ -143,7 +143,7 @@ func TestRegistryMetadata_CreateRegistryExtensions(t *testing.T) {
 func TestServerResponse_JSONSerialization(t *testing.T) {
 	// Test that ServerResponse properly serializes to extension wrapper format
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
-	
+
 	response := ServerResponse{
 		Server: ServerDetail{
 			Name:        "test-server",
@@ -227,7 +227,7 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 	require.NotNil(t, request.XPublisher)
 	publisherMap := request.XPublisher.(map[string]interface{})
 	assert.Equal(t, "publisher-cli", publisherMap["tool"])
-	
+
 	metadata := publisherMap["metadata"].(map[string]interface{})
 	assert.Equal(t, "2023-12-01", metadata["build_date"])
 	assert.Equal(t, "abc123", metadata["commit"])
@@ -256,10 +256,213 @@ func TestServerResponse_EmptyExtensions(t *testing.T) {
 	// Should still have the structure, even with nil publisher extensions
 	assert.Contains(t, parsed, "server")
 	assert.Contains(t, parsed, "x-io.modelcontextprotocol.registry")
-	
+
 	// x-publisher should be null/nil in JSON when empty
 	publisherValue, exists := parsed["x-publisher"]
 	if exists {
 		assert.Nil(t, publisherValue)
+	}
+}
+
+func TestValidateRemoteNamespaceMatch(t *testing.T) {
+	tests := []struct {
+		name         string
+		serverDetail ServerDetail
+		expectError  bool
+		errorMsg     string
+	}{
+		{
+			name: "valid match - example.com domain",
+			serverDetail: ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []Remote{
+					{URL: "https://example.com/mcp"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "valid match - subdomain mcp.example.com",
+			serverDetail: ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []Remote{
+					{URL: "https://mcp.example.com/endpoint"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "valid match - api subdomain",
+			serverDetail: ServerDetail{
+				Name: "com.example/api-server",
+				Remotes: []Remote{
+					{URL: "https://api.example.com/mcp"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "invalid - wrong domain",
+			serverDetail: ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []Remote{
+					{URL: "https://google.com/mcp"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "remote URL host google.com does not match publisher domain example.com",
+		},
+		{
+			name: "invalid - different domain entirely",
+			serverDetail: ServerDetail{
+				Name: "com.microsoft/server",
+				Remotes: []Remote{
+					{URL: "https://api.github.com/endpoint"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "remote URL host api.github.com does not match publisher domain microsoft.com",
+		},
+		{
+			name: "localhost URLs allowed with any namespace",
+			serverDetail: ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []Remote{
+					{URL: "http://localhost:3000/sse"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "invalid URL format",
+			serverDetail: ServerDetail{
+				Name: "com.example/test",
+				Remotes: []Remote{
+					{URL: "not-a-valid-url"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "URL must have a valid hostname",
+		},
+		{
+			name: "empty remotes array",
+			serverDetail: ServerDetail{
+				Name:    "com.example/test",
+				Remotes: []Remote{},
+			},
+			expectError: false,
+		},
+		{
+			name: "multiple valid remotes - different subdomains",
+			serverDetail: ServerDetail{
+				Name: "com.example/server",
+				Remotes: []Remote{
+					{URL: "https://api.example.com/sse"},
+					{URL: "https://mcp.example.com/websocket"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "one valid, one invalid remote",
+			serverDetail: ServerDetail{
+				Name: "com.example/server",
+				Remotes: []Remote{
+					{URL: "https://example.com/sse"},
+					{URL: "https://google.com/websocket"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "remote URL host google.com does not match publisher domain example.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateRemoteNamespaceMatch(tt.serverDetail)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestParseServerName(t *testing.T) {
+	tests := []struct {
+		name         string
+		serverDetail ServerDetail
+		expectError  bool
+		errorMsg     string
+	}{
+		{
+			name: "valid namespace/name format",
+			serverDetail: ServerDetail{
+				Name: "com.example.api/server",
+			},
+			expectError: false,
+		},
+		{
+			name: "valid complex namespace",
+			serverDetail: ServerDetail{
+				Name: "com.github.microsoft.azure/webapp-server",
+			},
+			expectError: false,
+		},
+		{
+			name: "empty server name",
+			serverDetail: ServerDetail{
+				Name: "",
+			},
+			expectError: true,
+			errorMsg:    "server name is required",
+		},
+		{
+			name: "missing slash separator",
+			serverDetail: ServerDetail{
+				Name: "com.example.server",
+			},
+			expectError: true,
+			errorMsg:    "server name must be in format 'dns-namespace/name'",
+		},
+		{
+			name: "empty namespace part",
+			serverDetail: ServerDetail{
+				Name: "/server-name",
+			},
+			expectError: true,
+			errorMsg:    "non-empty namespace and name parts",
+		},
+		{
+			name: "empty name part",
+			serverDetail: ServerDetail{
+				Name: "com.example/",
+			},
+			expectError: true,
+			errorMsg:    "non-empty namespace and name parts",
+		},
+		{
+			name: "multiple slashes - uses first as separator",
+			serverDetail: ServerDetail{
+				Name: "com.example/server/path",
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ParseServerName(tt.serverDetail)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }

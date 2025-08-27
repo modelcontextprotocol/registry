@@ -5,7 +5,6 @@ type DNSProvider struct {
 }
 
 // NewDNSProvider creates a new DNS-based auth provider
-//nolint:ireturn // Factory function returns interface by design
 func NewDNSProvider(registryURL, domain, hexSeed string) Provider {
 	return &DNSProvider{
 		CryptoProvider: &CryptoProvider{

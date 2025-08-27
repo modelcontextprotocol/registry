@@ -76,6 +76,10 @@ func (db *PostgreSQL) List(
 			whereClause += fmt.Sprintf(" AND s.status = $%d", argIndex)
 			args = append(args, v)
 			argIndex++
+		case "remote_url":
+			whereClause += fmt.Sprintf(" AND EXISTS (SELECT 1 FROM jsonb_array_elements(CASE WHEN jsonb_typeof(s.remotes) = 'array' THEN s.remotes ELSE '[]'::jsonb END) AS remote WHERE remote->>'url' = $%d)", argIndex)
+			args = append(args, v)
+			argIndex++
 		}
 	}
 
@@ -273,7 +277,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*model.ServerReco
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*model.ServerRecord, error) {
+func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata model.RegistryMetadata) (*model.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -288,23 +292,6 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		}
 	}()
 
-	// Check if there's an existing latest version for this server
-	var existingVersion string
-	checkQuery := `
-		SELECT s.version 
-		FROM servers s
-		JOIN server_extensions se ON s.id = se.server_id
-		WHERE s.name = $1 AND se.is_latest = true
-	`
-	err = tx.QueryRow(ctx, checkQuery, serverDetail.Name).Scan(&existingVersion)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return nil, fmt.Errorf("failed to check existing version: %w", err)
-	}
-
-	// Validate version ordering
-	if existingVersion != "" && serverDetail.VersionDetail.Version <= existingVersion {
-		return nil, ErrInvalidVersion
-	}
 
 	// Prepare JSON data for server table
 	repositoryJSON, err := json.Marshal(serverDetail.Repository)
@@ -327,26 +314,9 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		return nil, fmt.Errorf("failed to marshal publisher extensions: %w", err)
 	}
 
-	// Generate server ID and create registry metadata
-	serverID := uuid.New().String()
-	registryID := uuid.New().String()
-	now := time.Now()
+	// Use the same ID for both server and server_extensions records (1:1 relationship)
+	serverID := registryMetadata.ID
 
-	// Update existing latest version to not be latest
-	if existingVersion != "" {
-		updateQuery := `
-			UPDATE server_extensions 
-			SET is_latest = false 
-			WHERE server_id IN (
-				SELECT s.id FROM servers s WHERE s.name = $1 AND server_extensions.server_id = s.id
-			)
-			AND is_latest = true
-		`
-		_, err = tx.Exec(ctx, updateQuery, serverDetail.Name)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update existing latest version: %w", err)
-		}
-	}
 
 	// Insert new server record
 	insertServerQuery := `
@@ -373,12 +343,12 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	_, err = tx.Exec(ctx, insertExtensionsQuery,
-		registryID,
+		registryMetadata.ID,
 		serverID,
-		now,
-		now,
-		true, // is_latest
-		now,  // release_date
+		registryMetadata.PublishedAt,
+		registryMetadata.UpdatedAt,
+		registryMetadata.IsLatest,
+		registryMetadata.PublishedAt,  // release_date
 		publisherExtensionsJSON,
 	)
 	if err != nil {
@@ -392,14 +362,8 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 
 	// Create and return the ServerRecord
 	record := &model.ServerRecord{
-		ServerJSON: serverDetail,
-		RegistryMetadata: model.RegistryMetadata{
-			ID:          registryID,
-			PublishedAt: now,
-			UpdatedAt:   now,
-			IsLatest:    true,
-			ReleaseDate: now.Format(time.RFC3339),
-		},
+		ServerJSON:          serverDetail,
+		RegistryMetadata:    registryMetadata,
 		PublisherExtensions: publisherExtensions,
 	}
 
@@ -447,17 +411,15 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 
 // publishWithTransaction handles publishing within an existing transaction, optionally with predefined metadata
 func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, existingMetadata *model.RegistryMetadata) error {
-	var serverID string
-	var extensionID string
-
+	// Use the same ID for both server and server_extensions (1:1 relationship)
+	var id string
 	if existingMetadata != nil && existingMetadata.ID != "" {
-		// Use predefined IDs from seed data
-		serverID = existingMetadata.ID
-		extensionID = existingMetadata.ID // In seed data, these are the same
+		// Use predefined ID from seed data
+		id = existingMetadata.ID
 	} else {
-		// Generate new UUIDs for normal publishing
-		serverID = uuid.New().String()
-		extensionID = uuid.New().String()
+		// This shouldn't happen as service layer should always provide an ID
+		// But keeping as fallback for safety
+		id = uuid.New().String()
 	}
 
 	// Marshal packages and remotes to JSONB
@@ -497,7 +459,7 @@ func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, ser
 
 	var returnedServerID string
 	err = tx.QueryRow(ctx, serverQuery,
-		serverID,
+		id,
 		serverDetail.Name,
 		serverDetail.Description,
 		string(serverDetail.Status),
@@ -532,7 +494,7 @@ func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, ser
 	}
 
 	_, err = tx.Exec(ctx, extensionQuery,
-		extensionID,
+		id,
 		returnedServerID,
 		publishedAt,
 		releaseDate,
@@ -540,6 +502,30 @@ func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, ser
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert/update server extensions: %w", err)
+	}
+
+	return nil
+}
+
+// UpdateLatestFlag updates the is_latest flag for a specific server record
+func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	query := `
+		UPDATE server_extensions 
+		SET is_latest = $1, updated_at = $2
+		WHERE id = $3
+	`
+	
+	result, err := db.conn.Exec(ctx, query, isLatest, time.Now(), id)
+	if err != nil {
+		return fmt.Errorf("failed to update latest flag: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
 	}
 
 	return nil

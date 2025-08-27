@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
+  "$id": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "title": "MCP Server Detail",
   "$ref": "#/$defs/ServerDetail",
   "$defs": {
@@ -36,8 +36,9 @@
       "properties": {
         "version": {
           "type": "string",
+          "maxLength": 255,
           "example": "1.0.2",
-          "description": "Equivalent of Implementation.version in MCP specification."
+          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably."
         }
       }
     },
@@ -346,6 +347,12 @@
         {
           "type": "object",
           "properties": {
+            "$schema": {
+              "type": "string",
+              "format": "uri",
+              "description": "JSON Schema URI for this server.json format",
+              "example": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json"
+            },
             "packages": {
               "type": "array",
               "items": {
