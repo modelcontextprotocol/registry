@@ -59,7 +59,7 @@ type PackageValidator struct{}
 
 // Validate checks if the package details are valid
 func (pv *PackageValidator) Validate(obj *model.Package) error {
-	if !HasNoSpaces(obj.Name) {
+	if !HasNoSpaces(obj.Identifier) {
 		return ErrPackageNameHasSpaces
 	}
 

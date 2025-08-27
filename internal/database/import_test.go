@@ -100,10 +100,10 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 			Description: "First test server",
 			Packages: []model.Package{
 				{
-					PackageType:  "javascript",
-					RegistryName: "npm",
-					Identifier:   "test-package-1",
-					Version:      "1.0.0",
+					RegistryType:    "npm",
+					RegistryBaseURL: "https://registry.npmjs.org",
+					Identifier:      "test-package-1",
+					Version:         "1.0.0",
 				},
 			},
 		},
@@ -119,10 +119,10 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 			Description: "Second test server",
 			Packages: []model.Package{
 				{
-					PackageType:  "javascript",
-					RegistryName: "npm",
-					Identifier:   "test-package-2",
-					Version:      "2.0.0",
+					RegistryType:    "npm",
+					RegistryBaseURL: "https://registry.npmjs.org",
+					Identifier:      "test-package-2",
+					Version:         "2.0.0",
 				},
 			},
 		},
@@ -138,10 +138,10 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		Description: "First test server",
 		Packages: []model.Package{
 			{
-				PackageType:  "javascript",
-				RegistryName: "npm",
-				Identifier:   "test-package-1",
-				Version:      "1.0.0",
+				RegistryType:    "npm",
+				RegistryBaseURL: "https://registry.npmjs.org",
+				Identifier:      "test-package-1",
+				Version:         "1.0.0",
 			},
 		},
 	}
@@ -150,10 +150,10 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		Description: "Second test server",
 		Packages: []model.Package{
 			{
-				PackageType:  "javascript",
-				RegistryName: "npm",
-				Identifier:   "test-package-2",
-				Version:      "2.0.0",
+				RegistryType:    "npm",
+				RegistryBaseURL: "https://registry.npmjs.org",
+				Identifier:      "test-package-2",
+				Version:         "2.0.0",
 			},
 		},
 	}
@@ -238,12 +238,12 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 
 	// Verify packages were imported with new schema
 	assert.Len(t, result[0].ServerJSON.Packages, 1)
-	assert.Equal(t, "javascript", result[0].ServerJSON.Packages[0].PackageType)
-	assert.Equal(t, "npm", result[0].ServerJSON.Packages[0].RegistryName)
+	assert.Equal(t, "npm", result[0].ServerJSON.Packages[0].RegistryType)
+	assert.Equal(t, "https://registry.npmjs.org", result[0].ServerJSON.Packages[0].RegistryBaseURL)
 	assert.Equal(t, "test-package-1", result[0].ServerJSON.Packages[0].Identifier)
 	assert.Len(t, result[1].ServerJSON.Packages, 1)
-	assert.Equal(t, "javascript", result[1].ServerJSON.Packages[0].PackageType)
-	assert.Equal(t, "npm", result[1].ServerJSON.Packages[0].RegistryName)
+	assert.Equal(t, "npm", result[1].ServerJSON.Packages[0].RegistryType)
+	assert.Equal(t, "https://registry.npmjs.org", result[1].ServerJSON.Packages[0].RegistryBaseURL)
 	assert.Equal(t, "test-package-2", result[1].ServerJSON.Packages[0].Identifier)
 
 	// Verify metadata was extracted

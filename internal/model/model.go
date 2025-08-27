@@ -88,14 +88,14 @@ type Argument struct {
 }
 
 type Package struct {
-	// PackageType indicates the type of package (e.g., "javascript", "python", "docker", "mcpb")
-	PackageType          string            `json:"package_type,omitempty" bson:"package_type,omitempty"`
-	// RegistryName indicates the source registry (e.g., "npm", "pypi", "docker-hub", "github-releases")
-	RegistryName         string            `json:"registry_name,omitempty" bson:"registry_name,omitempty"`
+	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "docker-hub", "mcpb")
+	RegistryType         string            `json:"registry_type,omitempty" bson:"registry_type,omitempty"`
+	// RegistryBaseURL is the base URL of the package registry
+	RegistryBaseURL      string            `json:"registry_base_url,omitempty" bson:"registry_base_url,omitempty"`
 	// Identifier is the package identifier - either a package name (for registries) or URL (for direct downloads)
 	Identifier           string            `json:"identifier,omitempty" bson:"identifier,omitempty"`
 	Version              string            `json:"version,omitempty" bson:"version,omitempty"`
-	FileHashes           map[string]string `json:"file_hashes,omitempty" bson:"file_hashes,omitempty"`
+	FileSHA256           string            `json:"file_sha256,omitempty" bson:"file_sha256,omitempty"`
 	RunTimeHint          string            `json:"runtime_hint,omitempty" bson:"runtime_hint,omitempty"`
 	RuntimeArguments     []Argument        `json:"runtime_arguments,omitempty" bson:"runtime_arguments,omitempty"`
 	PackageArguments     []Argument        `json:"package_arguments,omitempty" bson:"package_arguments,omitempty"`

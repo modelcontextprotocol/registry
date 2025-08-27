@@ -81,15 +81,16 @@
     "Package": {
       "type": "object",
       "properties": {
-        "package_type": {
+        "registry_type": {
           "type": "string",
-          "description": "Type of package (e.g., 'javascript', 'python', 'docker', 'dotnet', 'mcpb', 'binary')",
-          "examples": ["javascript", "python", "docker", "dotnet", "mcpb", "binary"]
+          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'docker-hub', 'nuget', 'mcpb')",
+          "examples": ["npm", "pypi", "docker-hub", "nuget", "mcpb"]
         },
-        "registry_name": {
+        "registry_base_url": {
           "type": "string",
-          "description": "Package registry or source (e.g., 'npm', 'pypi', 'docker-hub', 'nuget', 'github-releases', 'gitlab-releases')",
-          "examples": ["npm", "pypi", "docker-hub", "nuget", "github-releases", "gitlab-releases"]
+          "format": "uri",
+          "description": "Base URL of the package registry",
+          "examples": ["https://registry.npmjs.org", "https://pypi.org", "https://docker.io", "https://api.nuget.org", "https://github.com", "https://gitlab.com"]
         },
         "identifier": {
           "type": "string",
@@ -102,15 +103,10 @@
           "example": "1.0.2",
           "minLength": 1
         },
-        "file_hashes": {
-          "type": "object",
-          "description": "Cryptographic hashes of the package file for integrity verification. Keys are hash algorithm names (e.g., 'sha-256'), values are the hash strings.",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "example": {
-            "sha-256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
-          }
+        "file_sha256": {
+          "type": "string",
+          "description": "SHA-256 hash of the package file for integrity verification.",
+          "example": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
         },
         "runtime_hint": {
           "type": "string",

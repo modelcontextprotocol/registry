@@ -20,8 +20,8 @@ _These examples show the PublishRequest format used by the `/v0/publish` API end
     },
     "packages": [
       {
-        "package_type": "javascript",
-        "registry_name": "npm",
+        "registry_type": "npm",
+        "registry_base_url": "https://registry.npmjs.org",
         "identifier": "@modelcontextprotocol/server-brave-search",
         "version": "1.0.2",
         "environment_variables": [
@@ -59,8 +59,8 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
     },
     "packages": [
       {
-        "package_type": "dotnet",
-        "registry_name": "nuget",
+        "registry_type": "nuget",
+        "registry_base_url": "https://api.nuget.org",
         "identifier": "Knapcode.SampleMcpServer",
         "version": "0.4.0-beta",
         "package_arguments": [
@@ -108,8 +108,8 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     },
     "packages": [
       {
-        "package_type": "javascript",
-        "registry_name": "npm",
+        "registry_type": "npm",
+        "registry_base_url": "https://registry.npmjs.org",
         "identifier": "@modelcontextprotocol/server-filesystem",
         "version": "1.0.2",
         "package_arguments": [
@@ -131,8 +131,8 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
         ]
       },
       {
-        "package_type": "docker",
-        "registry_name": "docker-hub",
+        "registry_type": "docker-hub",
+        "registry_base_url": "https://docker.io",
         "identifier": "mcp/filesystem:1.0.2",
         "version": "1.0.2",
         "runtime_arguments": [
@@ -239,8 +239,8 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     },
     "packages": [
       {
-        "package_type": "python",
-        "registry_name": "pypi",
+        "registry_type": "pypi",
+        "registry_base_url": "https://pypi.org",
         "identifier": "weather-mcp-server",
         "version": "0.5.0",
         "runtime_hint": "uvx",
@@ -292,8 +292,8 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     },
     "packages": [
       {
-        "package_type": "dotnet",
-        "registry_name": "nuget",
+        "registry_type": "nuget",
+        "registry_base_url": "https://api.nuget.org",
         "identifier": "Knapcode.SampleMcpServer",
         "version": "0.5.0",
         "runtime_hint": "dnx",
@@ -339,8 +339,8 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     },
     "packages": [
       {
-        "package_type": "docker",
-        "registry_name": "docker-hub",
+        "registry_type": "docker-hub",
+        "registry_base_url": "https://docker.io",
         "identifier": "example/database-manager-mcp",
         "version": "3.1.0",
         "runtime_arguments": [
@@ -440,8 +440,8 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     },
     "packages": [
       {
-        "package_type": "javascript",
-        "registry_name": "npm",
+        "registry_type": "npm",
+        "registry_base_url": "https://registry.npmjs.org",
         "identifier": "@example/hybrid-mcp-server",
         "version": "1.5.0",
         "runtime_hint": "npx",
@@ -514,13 +514,11 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     },
     "packages": [
       {
-        "package_type": "mcpb",
-        "registry_name": "github-releases",
+        "registry_type": "mcpb",
+        "registry_base_url": "https://github.com",
         "identifier": "https://github.com/modelcontextprotocol/text-editor-mcpb/releases/download/v1.0.2/text-editor.mcpb",
         "version": "1.0.2",
-        "file_hashes": {
-        "sha-256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
-      }
+        "file_sha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
     }
   ]
   },
@@ -558,8 +556,8 @@ This example shows an MCPB (MCP Bundle) package that:
     },
     "packages": [
       {
-        "package_type": "javascript",
-        "registry_name": "npm",
+        "registry_type": "npm",
+        "registry_base_url": "https://registry.npmjs.org",
         "identifier": "@legacy/old-weather-server",
         "version": "0.9.5",
         "environment_variables": [

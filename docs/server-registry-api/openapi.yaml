@@ -95,8 +95,9 @@ paths:
                     version_detail:
                       version: "1.0.2"
                     packages:
-                      - registry_name: "npm"
-                        name: "@modelcontextprotocol/server-filesystem"
+                      - registry_type: "npm"
+                        registry_base_url: "https://registry.npmjs.org"
+                        identifier: "@modelcontextprotocol/server-filesystem"
                         version: "1.0.2"
                   x-publisher:
                     tool: "publisher-cli"
@@ -117,8 +118,9 @@ paths:
                     version_detail:
                       version: "1.0.0"
                     packages:
-                      - registry_name: "npm"
-                        name: "@example/mcp-demo-server"
+                      - registry_type: "npm"
+                        registry_base_url: "https://registry.npmjs.org"
+                        identifier: "@example/mcp-demo-server"
                         version: "1.0.0"
                   x-publisher:
                     contact_email: "maintainer@example.com"
@@ -273,26 +275,26 @@ components:
     Package:
       type: object
       properties:
-        package_type:
+        registry_type:
           type: string
-          description: Type of package (e.g., 'javascript', 'python', 'docker', 'dotnet', 'mcpb', 'binary')
-          examples:
-            - "javascript"
-            - "python"
-            - "docker"
-            - "dotnet"
-            - "mcpb"
-            - "binary"
-        registry_name:
-          type: string
-          description: Package registry or source (e.g., 'npm', 'pypi', 'docker-hub', 'nuget', 'github-releases', 'gitlab-releases')
+          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'docker-hub', 'nuget', 'mcpb')
           examples:
             - "npm"
             - "pypi"
             - "docker-hub"
             - "nuget"
-            - "github-releases"
-            - "gitlab-releases"
+            - "mcpb"
+        registry_base_url:
+          type: string
+          format: uri
+          description: Base URL of the package registry
+          examples:
+            - "https://registry.npmjs.org"
+            - "https://pypi.org"
+            - "https://docker.io"
+            - "https://api.nuget.org"
+            - "https://github.com"
+            - "https://gitlab.com"
         identifier:
           type: string
           description: Package identifier - either a package name (for registries) or URL (for direct downloads)
@@ -303,13 +305,10 @@ components:
           type: string
           description: Package version
           example: "1.0.2"
-        file_hashes:
-          type: object
-          description: Cryptographic hashes of the package file for integrity verification. Keys are hash algorithm names (e.g., 'sha-256'), values are the hash strings.
-          additionalProperties:
-            type: string
-          example:
-            sha-256: "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
+        file_sha256:
+          type: string
+          description: SHA-256 hash of the package file for integrity verification.
+          example: "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
         runtime_hint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtime_arguments` are present.

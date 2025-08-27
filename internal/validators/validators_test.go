@@ -31,8 +31,9 @@ func TestObjectValidator_Validate(t *testing.T) {
 				},
 				Packages: []model.Package{
 					{
-						Name:         "test-package",
-						RegistryName: "npm",
+						Identifier:      "test-package",
+						RegistryType:    "npm",
+						RegistryBaseURL: "https://registry.npmjs.org",
 					},
 				},
 				Remotes: []model.Remote{
@@ -102,8 +103,9 @@ func TestObjectValidator_Validate(t *testing.T) {
 				},
 				Packages: []model.Package{
 					{
-						Name:         "test package with spaces",
-						RegistryName: "npm",
+						Identifier:      "test package with spaces",
+						RegistryType:    "npm",
+						RegistryBaseURL: "https://registry.npmjs.org",
 					},
 				},
 			},
@@ -123,12 +125,14 @@ func TestObjectValidator_Validate(t *testing.T) {
 				},
 				Packages: []model.Package{
 					{
-						Name:         "valid-package",
-						RegistryName: "npm",
+						Identifier:      "valid-package",
+						RegistryType:    "npm",
+						RegistryBaseURL: "https://registry.npmjs.org",
 					},
 					{
-						Name:         "invalid package", // Has space
-						RegistryName: "pip",
+						Identifier:      "invalid package", // Has space
+						RegistryType:    "pypi",
+						RegistryBaseURL: "https://pypi.org",
 					},
 				},
 			},
