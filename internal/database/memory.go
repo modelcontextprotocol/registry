@@ -246,6 +246,29 @@ func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bo
 	return ErrNotFound
 }
 
+// UpdateServer updates an existing server record with new server details
+func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*model.ServerRecord, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	entry, exists := db.entries[id]
+	if !exists {
+		return nil, ErrNotFound
+	}
+
+	// Update the server details
+	entry.ServerJSON = serverDetail
+	entry.PublisherExtensions = publisherExtensions
+	entry.RegistryMetadata.UpdatedAt = time.Now()
+
+	// Return the updated record
+	return entry, nil
+}
+
 // Close closes the database connection
 // For an in-memory database, this is a no-op
 func (db *MemoryDB) Close() error {

@@ -1,0 +1,105 @@
+package v0
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/danielgtaylor/huma/v2"
+	"github.com/modelcontextprotocol/registry/internal/auth"
+	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/internal/service"
+	"github.com/modelcontextprotocol/registry/internal/validators"
+)
+
+// EditServerInput represents the input for editing a server
+type EditServerInput struct {
+	Authorization string `header:"Authorization" doc:"Registry JWT token with edit permissions" required:"true"`
+	ID            string `path:"id" doc:"Server ID (UUID)" format:"uuid"`
+	RawBody       []byte `body:"raw"`
+}
+
+// RegisterEditEndpoints registers the edit endpoint
+func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *config.Config) {
+	jwtManager := auth.NewJWTManager(cfg)
+
+	// Edit server endpoint
+	huma.Register(api, huma.Operation{
+		OperationID: "edit-server",
+		Method:      http.MethodPut,
+		Path:        "/v0/servers/{id}",
+		Summary:     "Edit MCP server",
+		Description: "Update an existing MCP server (admin only)",
+		Tags:        []string{"admin"},
+		Security: []map[string][]string{
+			{"bearer": {}},
+		},
+	}, func(ctx context.Context, input *EditServerInput) (*Response[model.ServerResponse], error) {
+		// Extract bearer token
+		const bearerPrefix = "Bearer "
+		authHeader := input.Authorization
+		if len(authHeader) < len(bearerPrefix) || !strings.EqualFold(authHeader[:len(bearerPrefix)], bearerPrefix) {
+			return nil, huma.Error401Unauthorized("Invalid Authorization header format. Expected 'Bearer <token>'")
+		}
+		token := authHeader[len(bearerPrefix):]
+
+		// Validate Registry JWT token
+		claims, err := jwtManager.ValidateToken(ctx, token)
+		if err != nil {
+			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
+		}
+
+		// Validate that only allowed extension fields are present
+		if err := model.ValidatePublishRequestExtensions(input.RawBody); err != nil {
+			return nil, huma.Error400BadRequest("Invalid request format", err)
+		}
+
+		// Parse the validated request body
+		var editRequest model.PublishRequest
+		if err := json.Unmarshal(input.RawBody, &editRequest); err != nil {
+			return nil, huma.Error400BadRequest("Invalid JSON format", err)
+		}
+
+		// Verify edit permissions for this server
+		if !jwtManager.HasPermission(editRequest.Server.Name, auth.PermissionActionEdit, claims.Permissions) {
+			return nil, huma.Error403Forbidden("You do not have edit permissions for this server")
+		}
+
+		// Validate the server detail
+		validator := validators.NewObjectValidator()
+		if err := validator.Validate(&editRequest.Server); err != nil {
+			return nil, huma.Error400BadRequest(err.Error())
+		}
+
+		// Check if we're trying to undelete a server
+		currentServer, err := registry.GetByID(input.ID)
+		if err != nil {
+			if errors.Is(err, database.ErrNotFound) {
+				return nil, huma.Error404NotFound("Server not found")
+			}
+			return nil, huma.Error500InternalServerError("Failed to get current server", err)
+		}
+
+		// Prevent undeleting servers - once deleted, they stay deleted
+		if currentServer.Server.Status == model.ServerStatusDeleted && editRequest.Server.Status != model.ServerStatusDeleted {
+			return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
+		}
+
+		// Edit the server
+		updatedServer, err := registry.EditServer(input.ID, editRequest)
+		if err != nil {
+			if errors.Is(err, database.ErrNotFound) {
+				return nil, huma.Error404NotFound("Server not found")
+			}
+			return nil, huma.Error400BadRequest("Failed to edit server", err)
+		}
+
+		return &Response[model.ServerResponse]{
+			Body: *updatedServer,
+		}, nil
+	})
+}

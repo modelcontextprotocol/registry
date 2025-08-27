@@ -531,6 +531,78 @@ func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest 
 	return nil
 }
 
+// UpdateServer updates an existing server record with new server details
+func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*model.ServerRecord, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	// First check if the server exists
+	_, err := db.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update servers table
+	serverQuery := `
+		UPDATE servers 
+		SET name = $1, description = $2, status = $3, repository = $4, 
+		    version = $5, packages = $6, remotes = $7, updated_at = $8
+		WHERE id = $9
+	`
+
+	repositoryJSON, err := json.Marshal(serverDetail.Repository)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal repository: %w", err)
+	}
+
+	packagesJSON, err := json.Marshal(serverDetail.Packages)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal packages: %w", err)
+	}
+
+	remotesJSON, err := json.Marshal(serverDetail.Remotes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal remotes: %w", err)
+	}
+
+	now := time.Now()
+	_, err = db.conn.Exec(ctx, serverQuery,
+		serverDetail.Name,
+		serverDetail.Description,
+		serverDetail.Status,
+		repositoryJSON,
+		serverDetail.VersionDetail.Version,
+		packagesJSON,
+		remotesJSON,
+		now,
+		id,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update server: %w", err)
+	}
+
+	// Update server_extensions table
+	publisherExtensionsJSON, err := json.Marshal(publisherExtensions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal publisher extensions: %w", err)
+	}
+
+	extQuery := `
+		UPDATE server_extensions 
+		SET updated_at = $1, publisher_extensions = $2
+		WHERE server_id = $3
+	`
+
+	_, err = db.conn.Exec(ctx, extQuery, now, publisherExtensionsJSON, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update server extensions: %w", err)
+	}
+
+	// Return the updated record
+	return db.GetByID(ctx, id)
+}
+
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
 	return db.conn.Close(context.Background())

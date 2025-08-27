@@ -254,3 +254,44 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 
 	return nil
 }
+
+// EditServer updates an existing server with new details (admin operation)
+func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*model.ServerResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Validate the request
+	if err := model.ValidatePublisherExtensions(req); err != nil {
+		return nil, err
+	}
+
+	// Validate server name exists and format
+	if _, err := model.ParseServerName(req.Server); err != nil {
+		return nil, err
+	}
+
+	// Validate all packages
+	for _, pkg := range req.Server.Packages {
+		if err := validatePackage(&pkg); err != nil {
+			return nil, fmt.Errorf("validation failed: %w", err)
+		}
+	}
+
+	// Validate reverse-DNS namespace matching for remote URLs
+	if err := model.ValidateRemoteNamespaceMatch(req.Server); err != nil {
+		return nil, err
+	}
+
+	// Extract publisher extensions from request
+	publisherExtensions := model.ExtractPublisherExtensions(req)
+
+	// Update server in database
+	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert ServerRecord to ServerResponse format
+	response := serverRecord.ToServerResponse()
+	return &response, nil
+}

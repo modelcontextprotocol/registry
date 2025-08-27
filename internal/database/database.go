@@ -28,6 +28,8 @@ type Database interface {
 	Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata model.RegistryMetadata) (*model.ServerRecord, error)
 	// UpdateLatestFlag updates the is_latest flag for a specific server record
 	UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error
+	// UpdateServer updates an existing server record with new server details
+	UpdateServer(ctx context.Context, id string, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*model.ServerRecord, error)
 	// ImportSeed imports initial data from a seed file
 	ImportSeed(ctx context.Context, seedFilePath string) error
 	// Close closes the database connection

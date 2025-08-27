@@ -66,9 +66,9 @@
         },
         "status": {
           "type": "string",
-          "enum": ["active", "deprecated"],
+          "enum": ["active", "deprecated", "deleted"],
           "default": "active",
-          "description": "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage."
+          "description": "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage. 'deleted' indicates the server should never be installed and existing installations should be uninstalled - this is rare, and usually indicates malware or a legal takedown."
         },
         "repository": {
           "$ref": "#/$defs/Repository"

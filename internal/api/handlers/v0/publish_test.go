@@ -49,6 +49,14 @@ func (m *MockRegistryService) Publish(request model.PublishRequest) (*model.Serv
 	return args.Get(0).(*model.ServerResponse), args.Error(1)
 }
 
+func (m *MockRegistryService) EditServer(id string, request model.PublishRequest) (*model.ServerResponse, error) {
+	args := m.Called(id, request)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.ServerResponse), args.Error(1)
+}
+
 // Helper function to generate a valid JWT token for testing
 func generateTestJWTToken(cfg *config.Config, claims auth.JWTClaims) (string, error) {
 	jwtManager := auth.NewJWTManager(cfg)
