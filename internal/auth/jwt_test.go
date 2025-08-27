@@ -283,3 +283,103 @@ func TestNewJWTManager_InvalidKeySize(t *testing.T) {
 		auth.NewJWTManager(cfg)
 	})
 }
+
+func TestJWTManager_BlockedNamespaces(t *testing.T) {
+	// Generate a proper Ed25519 seed for testing
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{
+		JWTPrivateKey: hex.EncodeToString(testSeed),
+	}
+
+	ctx := context.Background()
+
+	t.Run("blocked namespace should deny token", func(t *testing.T) {
+		jwtManager := auth.NewJWTManager(cfg)
+		// Add a blocked namespace for testing
+		jwtManager.BlockedNamespaces = []string{"io.github.spammer"}
+		
+		claims := auth.JWTClaims{
+			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethodSubject: "spammer",
+			Permissions: []auth.Permission{
+				{
+					Action:          auth.PermissionActionPublish,
+					ResourcePattern: "io.github.spammer/*",
+				},
+			},
+		}
+
+		tokenResponse, err := jwtManager.GenerateTokenResponse(ctx, claims)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "your namespace is blocked")
+		assert.Nil(t, tokenResponse)
+	})
+
+	t.Run("non-blocked namespace should allow token", func(t *testing.T) {
+		jwtManager := auth.NewJWTManager(cfg)
+		jwtManager.BlockedNamespaces = []string{"io.github.spammer"}
+		
+		claims := auth.JWTClaims{
+			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethodSubject: "gooduser",
+			Permissions: []auth.Permission{
+				{
+					Action:          auth.PermissionActionPublish,
+					ResourcePattern: "io.github.gooduser/*",
+				},
+			},
+		}
+
+		tokenResponse, err := jwtManager.GenerateTokenResponse(ctx, claims)
+		require.NoError(t, err)
+		assert.NotEmpty(t, tokenResponse.RegistryToken)
+	})
+
+	t.Run("multiple permissions with one blocked should deny token", func(t *testing.T) {
+		jwtManager := auth.NewJWTManager(cfg)
+		jwtManager.BlockedNamespaces = []string{"io.github.badorg"}
+		
+		claims := auth.JWTClaims{
+			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethodSubject: "user",
+			Permissions: []auth.Permission{
+				{
+					Action:          auth.PermissionActionPublish,
+					ResourcePattern: "io.github.user/*", // allowed
+				},
+				{
+					Action:          auth.PermissionActionPublish,
+					ResourcePattern: "io.github.badorg/*", // blocked
+				},
+			},
+		}
+
+		tokenResponse, err := jwtManager.GenerateTokenResponse(ctx, claims)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "your namespace is blocked")
+		assert.Nil(t, tokenResponse)
+	})
+
+	t.Run("global admin permissions should bypass denylist", func(t *testing.T) {
+		jwtManager := auth.NewJWTManager(cfg)
+		jwtManager.BlockedNamespaces = []string{"io.github.spammer"}
+		
+		claims := auth.JWTClaims{
+			AuthMethod:        model.AuthMethodNone,
+			AuthMethodSubject: "admin",
+			Permissions: []auth.Permission{
+				{
+					Action:          auth.PermissionActionPublish,
+					ResourcePattern: "*", // global permission should bypass blocking
+				},
+			},
+		}
+
+		tokenResponse, err := jwtManager.GenerateTokenResponse(ctx, claims)
+		require.NoError(t, err)
+		assert.NotEmpty(t, tokenResponse.RegistryToken)
+	})
+}
