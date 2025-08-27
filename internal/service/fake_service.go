@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // fakeRegistryService implements RegistryService interface with an in-memory database
@@ -21,7 +22,7 @@ func NewFakeRegistryService() RegistryService {
 		{
 			Name:        "bluegreen/mcp-server",
 			Description: "A dummy MCP registry for testing",
-			Repository: model.Repository{
+			Repository: pkgmodel.Repository{
 				URL:    "https://github.com/example/mcp-1",
 				Source: "github",
 				ID:     "example/mcp-1",
@@ -33,7 +34,7 @@ func NewFakeRegistryService() RegistryService {
 		{
 			Name:        "orangepurple/mcp-server",
 			Description: "Another dummy MCP registry for testing",
-			Repository: model.Repository{
+			Repository: pkgmodel.Repository{
 				URL:    "https://github.com/example/mcp-2",
 				Source: "github",
 				ID:     "example/mcp-2",
@@ -45,7 +46,7 @@ func NewFakeRegistryService() RegistryService {
 		{
 			Name:        "greenyellow/mcp-server",
 			Description: "Yet another dummy MCP registry for testing",
-			Repository: model.Repository{
+			Repository: pkgmodel.Repository{
 				URL:    "https://github.com/example/mcp-3",
 				Source: "github",
 				ID:     "example/mcp-3",

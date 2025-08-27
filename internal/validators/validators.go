@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/modelcontextprotocol/registry/internal/model"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // ServerValidator validates server details
@@ -32,7 +33,7 @@ type RepositoryValidator struct {
 }
 
 // Validate checks if the repository details are valid
-func (rv *RepositoryValidator) Validate(obj *model.Repository) error {
+func (rv *RepositoryValidator) Validate(obj *pkgmodel.Repository) error {
 	// Skip validation for empty repository (optional field)
 	if obj.URL == "" && obj.Source == "" {
 		return nil

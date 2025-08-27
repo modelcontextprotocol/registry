@@ -13,12 +13,6 @@ import (
 
 
 
-// Repository represents a source code repository as defined in the spec
-type Repository struct {
-	URL    string `json:"url" bson:"url"`
-	Source string `json:"source" bson:"source"`
-	ID     string `json:"id,omitempty" bson:"id,omitempty"`
-}
 
 // create an enum for Format
 type Format string
@@ -98,7 +92,7 @@ type ServerDetail struct {
 	Name          string        `json:"name" minLength:"1" maxLength:"200" bson:"name"`
 	Description   string        `json:"description" minLength:"1" maxLength:"100" bson:"description"`
 	Status        model.ServerStatus  `json:"status,omitempty" minLength:"1" bson:"status,omitempty"`
-	Repository    Repository    `json:"repository,omitempty" bson:"repository"`
+	Repository    model.Repository    `json:"repository,omitempty" bson:"repository"`
 	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
 	Packages      []Package     `json:"packages,omitempty" bson:"packages,omitempty"`
 	Remotes       []Remote      `json:"remotes,omitempty" bson:"remotes,omitempty"`

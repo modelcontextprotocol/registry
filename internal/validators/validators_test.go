@@ -5,6 +5,7 @@ import (
 
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/validators"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +22,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 					ID:     "owner/repo",
@@ -49,7 +50,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://bitbucket.org/owner/repo",
 					Source: "bitbucket", // Not in validSources
 				},
@@ -64,7 +65,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner", // Missing repo name
 					Source: "github",
 				},
@@ -79,7 +80,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://gitlab.com", // Missing owner and repo
 					Source: "gitlab",
 				},
@@ -94,7 +95,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -116,7 +117,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -143,7 +144,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -163,7 +164,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -183,7 +184,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -206,7 +207,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -223,7 +224,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
