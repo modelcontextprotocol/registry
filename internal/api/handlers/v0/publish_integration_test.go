@@ -63,7 +63,7 @@ func TestPublishIntegration(t *testing.T) {
 					Source: "github",
 					ID:     "testuser/test-mcp-server",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -110,7 +110,7 @@ func TestPublishIntegration(t *testing.T) {
 					Source: "github",
 					ID:     "example/test-server",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -192,7 +192,7 @@ func TestPublishIntegration(t *testing.T) {
 			Server: model.ServerDetail{
 				Name:        "io.github.other/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 				Repository: pkgmodel.Repository{

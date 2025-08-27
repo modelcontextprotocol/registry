@@ -27,7 +27,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 					Source: "github",
 					ID:     "123",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -99,7 +99,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		Server: model.ServerDetail{
 			Name:        "Test Server 1",
 			Description: "First test server",
-			Packages: []model.Package{
+			Packages: []pkgmodel.Package{
 				{
 					RegistryType:    "npm",
 					RegistryBaseURL: "https://registry.npmjs.org",
@@ -118,7 +118,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		Server: model.ServerDetail{
 			Name:        "Test Server 2",
 			Description: "Second test server",
-			Packages: []model.Package{
+			Packages: []pkgmodel.Package{
 				{
 					RegistryType:    "npm",
 					RegistryBaseURL: "https://registry.npmjs.org",
@@ -137,7 +137,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	serverDetail1 := model.ServerDetail{
 		Name:        "Test Server 1",
 		Description: "First test server",
-		Packages: []model.Package{
+		Packages: []pkgmodel.Package{
 			{
 				RegistryType:    "npm",
 				RegistryBaseURL: "https://registry.npmjs.org",
@@ -149,7 +149,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	serverDetail2 := model.ServerDetail{
 		Name:        "Test Server 2",
 		Description: "Second test server",
-		Packages: []model.Package{
+		Packages: []pkgmodel.Package{
 			{
 				RegistryType:    "npm",
 				RegistryBaseURL: "https://registry.npmjs.org",

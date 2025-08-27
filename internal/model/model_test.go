@@ -154,7 +154,7 @@ func TestServerResponse_JSONSerialization(t *testing.T) {
 				Source: "github",
 				ID:     "test/server",
 			},
-			VersionDetail: VersionDetail{
+			VersionDetail: pkgmodel.VersionDetail{
 				Version: "1.0.0",
 			},
 		},
@@ -276,7 +276,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "valid match - example.com domain",
 			serverDetail: ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "https://example.com/mcp"},
 				},
 			},
@@ -286,7 +286,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "valid match - subdomain mcp.example.com",
 			serverDetail: ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "https://mcp.example.com/endpoint"},
 				},
 			},
@@ -296,7 +296,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "valid match - api subdomain",
 			serverDetail: ServerDetail{
 				Name: "com.example/api-server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "https://api.example.com/mcp"},
 				},
 			},
@@ -306,7 +306,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "invalid - wrong domain",
 			serverDetail: ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "https://google.com/mcp"},
 				},
 			},
@@ -317,7 +317,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "invalid - different domain entirely",
 			serverDetail: ServerDetail{
 				Name: "com.microsoft/server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "https://api.github.com/endpoint"},
 				},
 			},
@@ -328,7 +328,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "localhost URLs allowed with any namespace",
 			serverDetail: ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "http://localhost:3000/sse"},
 				},
 			},
@@ -338,7 +338,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "invalid URL format",
 			serverDetail: ServerDetail{
 				Name: "com.example/test",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "not-a-valid-url"},
 				},
 			},
@@ -349,7 +349,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "empty remotes array",
 			serverDetail: ServerDetail{
 				Name:    "com.example/test",
-				Remotes: []Remote{},
+				Remotes: []pkgmodel.Remote{},
 			},
 			expectError: false,
 		},
@@ -357,7 +357,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "multiple valid remotes - different subdomains",
 			serverDetail: ServerDetail{
 				Name: "com.example/server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "https://api.example.com/sse"},
 					{URL: "https://mcp.example.com/websocket"},
 				},
@@ -368,7 +368,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 			name: "one valid, one invalid remote",
 			serverDetail: ServerDetail{
 				Name: "com.example/server",
-				Remotes: []Remote{
+				Remotes: []pkgmodel.Remote{
 					{URL: "https://example.com/sse"},
 					{URL: "https://google.com/websocket"},
 				},

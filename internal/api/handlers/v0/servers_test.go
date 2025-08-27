@@ -41,7 +41,7 @@ func TestServersListEndpoint(t *testing.T) {
 								Source: "github",
 								ID:     "example/test-server-1",
 							},
-							VersionDetail: model.VersionDetail{
+							VersionDetail: pkgmodel.VersionDetail{
 								Version: "1.0.0",
 							},
 						},
@@ -58,7 +58,7 @@ func TestServersListEndpoint(t *testing.T) {
 								Source: "github",
 								ID:     "example/test-server-2",
 							},
-							VersionDetail: model.VersionDetail{
+							VersionDetail: pkgmodel.VersionDetail{
 								Version: "2.0.0",
 							},
 						},
@@ -80,7 +80,7 @@ func TestServersListEndpoint(t *testing.T) {
 							Source: "github",
 							ID:     "example/test-server-1",
 						},
-						VersionDetail: model.VersionDetail{
+						VersionDetail: pkgmodel.VersionDetail{
 							Version: "1.0.0",
 						},
 					},
@@ -97,7 +97,7 @@ func TestServersListEndpoint(t *testing.T) {
 							Source: "github",
 							ID:     "example/test-server-2",
 						},
-						VersionDetail: model.VersionDetail{
+						VersionDetail: pkgmodel.VersionDetail{
 							Version: "2.0.0",
 						},
 					},
@@ -121,7 +121,7 @@ func TestServersListEndpoint(t *testing.T) {
 								Source: "github",
 								ID:     "example/test-server-3",
 							},
-							VersionDetail: model.VersionDetail{
+							VersionDetail: pkgmodel.VersionDetail{
 								Version: "1.5.0",
 							},
 						},
@@ -144,7 +144,7 @@ func TestServersListEndpoint(t *testing.T) {
 							Source: "github",
 							ID:     "example/test-server-3",
 						},
-						VersionDetail: model.VersionDetail{
+						VersionDetail: pkgmodel.VersionDetail{
 							Version: "1.5.0",
 						},
 					},
@@ -284,7 +284,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 							Source: "github",
 							ID:     "example/test-server-detail",
 						},
-						VersionDetail: model.VersionDetail{
+						VersionDetail: pkgmodel.VersionDetail{
 							Version: "2.0.0",
 						},
 					},
@@ -386,7 +386,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 					Source: "github",
 					ID:     "example/integration-test",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 			},

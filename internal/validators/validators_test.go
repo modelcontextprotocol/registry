@@ -27,17 +27,17 @@ func TestObjectValidator_Validate(t *testing.T) {
 					Source: "github",
 					ID:     "owner/repo",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []model.Package{
+				Packages: []pkgmodel.Package{
 					{
 						Identifier:      "test-package",
 						RegistryType:    "npm",
 						RegistryBaseURL: "https://registry.npmjs.org",
 					},
 				},
-				Remotes: []model.Remote{
+				Remotes: []pkgmodel.Remote{
 					{
 						URL: "https://example.com/remote",
 					},
@@ -54,7 +54,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://bitbucket.org/owner/repo",
 					Source: "bitbucket", // Not in validSources
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -69,7 +69,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner", // Missing repo name
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -84,7 +84,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://gitlab.com", // Missing owner and repo
 					Source: "gitlab",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -99,10 +99,10 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []model.Package{
+				Packages: []pkgmodel.Package{
 					{
 						Identifier:      "test package with spaces",
 						RegistryType:    "npm",
@@ -121,10 +121,10 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []model.Package{
+				Packages: []pkgmodel.Package{
 					{
 						Identifier:      "valid-package",
 						RegistryType:    "npm",
@@ -148,10 +148,10 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []pkgmodel.Remote{
 					{
 						URL: "not-a-valid-url",
 					},
@@ -168,10 +168,10 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []pkgmodel.Remote{
 					{
 						URL: "example.com/remote",
 					},
@@ -188,10 +188,10 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []pkgmodel.Remote{
 					{
 						URL: "https://valid.com/remote",
 					},
@@ -211,7 +211,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
 				Packages: nil,
@@ -228,11 +228,11 @@ func TestObjectValidator_Validate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
+				VersionDetail: pkgmodel.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []model.Package{},
-				Remotes:  []model.Remote{},
+				Packages: []pkgmodel.Package{},
+				Remotes:  []pkgmodel.Remote{},
 			},
 			expectedError: "",
 		},

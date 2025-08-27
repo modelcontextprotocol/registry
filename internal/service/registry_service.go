@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 const maxServerVersionsPerServer = 10000
@@ -95,7 +96,7 @@ func validateMCPBPackage(host string) error {
 }
 
 // validatePackage validates packages to ensure they meet requirements
-func validatePackage(pkg *model.Package) error {
+func validatePackage(pkg *pkgmodel.Package) error {
 	registryType := strings.ToLower(pkg.RegistryType)
 
 	// For direct download packages (mcpb or direct URLs)

@@ -55,7 +55,7 @@ func TestEditServerEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "domdomegg/test-server",
 					},
-					VersionDetail: model.VersionDetail{
+					VersionDetail: pkgmodel.VersionDetail{
 						Version: "1.0.1",
 					},
 				},

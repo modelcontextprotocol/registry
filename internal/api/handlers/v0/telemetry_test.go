@@ -29,7 +29,7 @@ func mockServerEndpoint(registry *MockRegistryService, serverID string) {
 				Source: "github",
 				ID:     "example/test-server-detail",
 			},
-			VersionDetail: model.VersionDetail{
+			VersionDetail: pkgmodel.VersionDetail{
 				Version: "2.0.0",
 			},
 		},

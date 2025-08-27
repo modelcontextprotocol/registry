@@ -59,7 +59,7 @@ func NewRepositoryValidator() *RepositoryValidator {
 type PackageValidator struct{}
 
 // Validate checks if the package details are valid
-func (pv *PackageValidator) Validate(obj *model.Package) error {
+func (pv *PackageValidator) Validate(obj *pkgmodel.Package) error {
 	if !HasNoSpaces(obj.Identifier) {
 		return ErrPackageNameHasSpaces
 	}
@@ -76,7 +76,7 @@ func NewPackageValidator() *PackageValidator {
 type RemoteValidator struct{}
 
 // Validate checks if the remote connection details are valid
-func (rv *RemoteValidator) Validate(obj *model.Remote) error {
+func (rv *RemoteValidator) Validate(obj *pkgmodel.Remote) error {
 	if !IsValidURL(obj.URL) {
 		return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
 	}

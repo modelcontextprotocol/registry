@@ -27,7 +27,7 @@ func NewFakeRegistryService() RegistryService {
 				Source: "github",
 				ID:     "example/mcp-1",
 			},
-			VersionDetail: model.VersionDetail{
+			VersionDetail: pkgmodel.VersionDetail{
 				Version: "1.0.0",
 			},
 		},
@@ -39,7 +39,7 @@ func NewFakeRegistryService() RegistryService {
 				Source: "github",
 				ID:     "example/mcp-2",
 			},
-			VersionDetail: model.VersionDetail{
+			VersionDetail: pkgmodel.VersionDetail{
 				Version: "0.9.0",
 			},
 		},
@@ -51,7 +51,7 @@ func NewFakeRegistryService() RegistryService {
 				Source: "github",
 				ID:     "example/mcp-3",
 			},
-			VersionDetail: model.VersionDetail{
+			VersionDetail: pkgmodel.VersionDetail{
 				Version: "0.9.5",
 			},
 		},
