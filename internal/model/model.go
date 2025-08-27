@@ -14,20 +14,11 @@ import (
 
 
 
-// create an enum for Format
-type Format string
-
-const (
-	FormatString   Format = "string"
-	FormatNumber   Format = "number"
-	FormatBoolean  Format = "boolean"
-	FormatFilePath Format = "file_path"
-)
 
 type Input struct {
 	Description string   `json:"description,omitempty" bson:"description,omitempty"`
 	IsRequired  bool     `json:"is_required,omitempty" bson:"is_required,omitempty"`
-	Format      Format   `json:"format,omitempty" bson:"format,omitempty"`
+	Format      model.Format   `json:"format,omitempty" bson:"format,omitempty"`
 	Value       string   `json:"value,omitempty" bson:"value,omitempty"`
 	IsSecret    bool     `json:"is_secret,omitempty" bson:"is_secret,omitempty"`
 	Default     string   `json:"default,omitempty" bson:"default,omitempty"`

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -148,7 +149,7 @@ func TestServerResponse_JSONSerialization(t *testing.T) {
 		Server: ServerDetail{
 			Name:        "test-server",
 			Description: "A test server",
-			Repository: Repository{
+			Repository: pkgmodel.Repository{
 				URL:    "https://github.com/test/server",
 				Source: "github",
 				ID:     "test/server",
