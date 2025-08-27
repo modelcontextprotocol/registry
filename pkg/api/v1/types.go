@@ -6,8 +6,8 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-// RegistryMetadata represents registry-generated metadata
-type RegistryMetadata struct {
+// RegistryExtensions represents registry-generated metadata
+type RegistryExtensions struct {
 	ID          string    `json:"id" bson:"_id"`
 	PublishedAt time.Time `json:"published_at" bson:"published_at"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
@@ -16,7 +16,7 @@ type RegistryMetadata struct {
 }
 
 // CreateRegistryExtensions generates the x-io.modelcontextprotocol.registry extension from registry metadata
-func (rm *RegistryMetadata) CreateRegistryExtensions() map[string]interface{} {
+func (rm *RegistryExtensions) CreateRegistryExtensions() map[string]interface{} {
 	return map[string]interface{}{
 		"x-io.modelcontextprotocol.registry": map[string]interface{}{
 			"id":           rm.ID,
@@ -31,7 +31,7 @@ func (rm *RegistryMetadata) CreateRegistryExtensions() map[string]interface{} {
 // ServerRecord represents the complete storage model that separates server.json from registry metadata
 type ServerRecord struct {
 	ServerJSON          model.ServerJSON       `json:"server" bson:"server"`                             // Pure MCP server.json
-	RegistryMetadata    RegistryMetadata       `json:"registry_metadata" bson:"registry_metadata"`       // Registry-generated data
+	RegistryExtensions  RegistryExtensions     `json:"registry_extensions" bson:"registry_extensions"`   // Registry-generated data
 	PublisherExtensions map[string]interface{} `json:"publisher_extensions" bson:"publisher_extensions"` // x-publisher extensions
 }
 
@@ -68,7 +68,7 @@ func (sr *ServerRecord) ToServerResponse() ServerResponse {
 	}
 
 	// Add registry metadata extension
-	response.XIOModelContextProtocolRegistry = sr.RegistryMetadata.CreateRegistryExtensions()["x-io.modelcontextprotocol.registry"]
+	response.XIOModelContextProtocolRegistry = sr.RegistryExtensions.CreateRegistryExtensions()["x-io.modelcontextprotocol.registry"]
 
 	// Add publisher extensions directly
 	if len(sr.PublisherExtensions) > 0 {

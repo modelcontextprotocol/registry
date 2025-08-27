@@ -129,10 +129,10 @@ func (db *PostgreSQL) List(
 			&packagesJSON,
 			&remotesJSON,
 			// Registry metadata fields
-			&record.RegistryMetadata.ID,
+			&record.RegistryExtensions.ID,
 			&publishedAt,
 			&updatedAt,
-			&record.RegistryMetadata.IsLatest,
+			&record.RegistryExtensions.IsLatest,
 			&releaseDate,
 			&publisherExtensionsJSON,
 		)
@@ -146,9 +146,9 @@ func (db *PostgreSQL) List(
 		}
 
 		// Set registry metadata timestamps
-		record.RegistryMetadata.PublishedAt = publishedAt
-		record.RegistryMetadata.UpdatedAt = updatedAt
-		record.RegistryMetadata.ReleaseDate = releaseDate.Format(time.RFC3339)
+		record.RegistryExtensions.PublishedAt = publishedAt
+		record.RegistryExtensions.UpdatedAt = updatedAt
+		record.RegistryExtensions.ReleaseDate = releaseDate.Format(time.RFC3339)
 
 		results = append(results, &record)
 	}
@@ -160,7 +160,7 @@ func (db *PostgreSQL) List(
 	// Determine next cursor using registry metadata ID
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
-		nextCursor = results[len(results)-1].RegistryMetadata.ID
+		nextCursor = results[len(results)-1].RegistryExtensions.ID
 	}
 
 	return results, nextCursor, nil
@@ -226,10 +226,10 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerReco
 		&packagesJSON,
 		&remotesJSON,
 		// Registry metadata fields
-		&record.RegistryMetadata.ID,
+		&record.RegistryExtensions.ID,
 		&publishedAt,
 		&updatedAt,
-		&record.RegistryMetadata.IsLatest,
+		&record.RegistryExtensions.IsLatest,
 		&releaseDate,
 		&publisherExtensionsJSON,
 	)
@@ -270,15 +270,15 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerReco
 	}
 
 	// Set registry metadata timestamps
-	record.RegistryMetadata.PublishedAt = publishedAt
-	record.RegistryMetadata.UpdatedAt = updatedAt
-	record.RegistryMetadata.ReleaseDate = releaseDate.Format(time.RFC3339)
+	record.RegistryExtensions.PublishedAt = publishedAt
+	record.RegistryExtensions.UpdatedAt = updatedAt
+	record.RegistryExtensions.ReleaseDate = releaseDate.Format(time.RFC3339)
 
 	return &record, nil
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error) {
+func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryExtensions) (*apiv1.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -362,7 +362,7 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON
 	// Create and return the ServerRecord
 	record := &apiv1.ServerRecord{
 		ServerJSON:          serverDetail,
-		RegistryMetadata:    registryMetadata,
+		RegistryExtensions:  registryMetadata,
 		PublisherExtensions: publisherExtensions,
 	}
 
@@ -395,7 +395,7 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 		publisherExtensions := record.PublisherExtensions
 
 		// Use the existing Publish logic but with specific ID from seed data
-		if err := db.publishWithTransaction(ctx, tx, serverDetail, publisherExtensions, &record.RegistryMetadata); err != nil {
+		if err := db.publishWithTransaction(ctx, tx, serverDetail, publisherExtensions, &record.RegistryExtensions); err != nil {
 			return fmt.Errorf("failed to import server %s: %w", serverDetail.Name, err)
 		}
 	}
@@ -409,7 +409,7 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 }
 
 // publishWithTransaction handles publishing within an existing transaction, optionally with predefined metadata
-func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, existingMetadata *apiv1.RegistryMetadata) error {
+func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, existingMetadata *apiv1.RegistryExtensions) error {
 	// Use the same ID for both server and server_extensions (1:1 relationship)
 	var id string
 	if existingMetadata != nil && existingMetadata.ID != "" {

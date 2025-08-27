@@ -188,9 +188,9 @@ func (s *registryServiceImpl) Publish(req apiv1.PublishRequest) (*apiv1.ServerRe
 			return nil, database.ErrInvalidVersion
 		}
 
-		if server.RegistryMetadata.IsLatest {
-			existingLatestID = server.RegistryMetadata.ID
-			existingTime, _ := time.Parse(time.RFC3339, server.RegistryMetadata.ReleaseDate)
+		if server.RegistryExtensions.IsLatest {
+			existingLatestID = server.RegistryExtensions.ID
+			existingTime, _ := time.Parse(time.RFC3339, server.RegistryExtensions.ReleaseDate)
 
 			// Compare versions using the proper versioning strategy
 			comparison := CompareVersions(newVersion, existingVersion, currentTime, existingTime)
@@ -205,7 +205,7 @@ func (s *registryServiceImpl) Publish(req apiv1.PublishRequest) (*apiv1.ServerRe
 	publisherExtensions := validation.ExtractPublisherExtensions(req)
 
 	// Create registry metadata with service-determined values
-	registryMetadata := apiv1.RegistryMetadata{
+	registryMetadata := apiv1.RegistryExtensions{
 		ID:          uuid.New().String(),
 		PublishedAt: currentTime,
 		UpdatedAt:   currentTime,

@@ -248,6 +248,6 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	assert.Equal(t, "test-package-2", result[1].ServerJSON.Packages[0].Identifier)
 
 	// Verify metadata was extracted
-	assert.Equal(t, "server-1", result[0].RegistryMetadata.ID)
-	assert.Equal(t, "server-2", result[1].RegistryMetadata.ID)
+	assert.Equal(t, "server-1", result[0].RegistryExtensions.ID)
+	assert.Equal(t, "server-2", result[1].RegistryExtensions.ID)
 }

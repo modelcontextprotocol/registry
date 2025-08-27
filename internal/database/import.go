@@ -15,7 +15,7 @@ import (
 
 // ReadSeedFile reads seed data from various sources:
 // 1. Local file paths (*.json files) - expects extension wrapper format
-// 2. Direct HTTP URLs to seed.json files - expects extension wrapper format  
+// 2. Direct HTTP URLs to seed.json files - expects extension wrapper format
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
 // Only the extension wrapper format is supported (array of ServerResponse objects)
 func ReadSeedFile(ctx context.Context, path string) ([]*apiv1.ServerRecord, error) {
@@ -127,12 +127,12 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv1.ServerR
 func convertServerResponseToRecord(response apiv1.ServerResponse) *apiv1.ServerRecord {
 	// Extract registry metadata from the extension
 	registryExt := response.XIOModelContextProtocolRegistry
-	
+
 	// Parse timestamps
 	publishedAt, _ := time.Parse(time.RFC3339, getStringFromInterface(registryExt, "published_at"))
 	updatedAt, _ := time.Parse(time.RFC3339, getStringFromInterface(registryExt, "updated_at"))
 
-	registryMetadata := apiv1.RegistryMetadata{
+	registryMetadata := apiv1.RegistryExtensions{
 		ID:          getStringFromInterface(registryExt, "id"),
 		IsLatest:    getBoolFromInterface(registryExt, "is_latest"),
 		PublishedAt: publishedAt,
@@ -150,7 +150,7 @@ func convertServerResponseToRecord(response apiv1.ServerResponse) *apiv1.ServerR
 
 	return &apiv1.ServerRecord{
 		ServerJSON:          response.Server,
-		RegistryMetadata:    registryMetadata,
+		RegistryExtensions:  registryMetadata,
 		PublisherExtensions: publisherExtensions,
 	}
 }

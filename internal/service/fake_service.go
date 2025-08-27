@@ -129,7 +129,7 @@ func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerRe
 
 	// Create registry metadata for fake service (always marks as latest)
 	now := time.Now()
-	registryMetadata := apiv1.RegistryMetadata{
+	registryMetadata := apiv1.RegistryExtensions{
 		ID:          uuid.New().String(),
 		PublishedAt: now,
 		UpdatedAt:   now,

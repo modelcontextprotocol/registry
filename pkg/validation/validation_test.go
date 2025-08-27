@@ -119,7 +119,7 @@ func TestRegistryMetadata_CreateRegistryExtensions(t *testing.T) {
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2023, 12, 1, 11, 0, 0, 0, time.UTC)
 
-	metadata := apiv1.RegistryMetadata{
+	metadata := apiv1.RegistryExtensions{
 		ID:          "test-id-123",
 		PublishedAt: publishedTime,
 		UpdatedAt:   updatedTime,

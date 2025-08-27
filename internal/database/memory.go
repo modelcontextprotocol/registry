@@ -26,7 +26,7 @@ func NewMemoryDB(e map[string]*model.ServerJSON) *MemoryDB {
 		now := time.Now()
 		record := &apiv1.ServerRecord{
 			ServerJSON: *serverDetail,
-			RegistryMetadata: apiv1.RegistryMetadata{
+			RegistryExtensions: apiv1.RegistryExtensions{
 				ID:          registryID,
 				PublishedAt: now,
 				UpdatedAt:   now,
@@ -63,7 +63,7 @@ func (db *MemoryDB) List(
 	// Convert all entries to a slice for pagination, filter by is_latest
 	var allEntries []*apiv1.ServerRecord
 	for _, entry := range db.entries {
-		if entry.RegistryMetadata.IsLatest {
+		if entry.RegistryExtensions.IsLatest {
 			allEntries = append(allEntries, entry)
 		}
 	}
@@ -110,14 +110,14 @@ func (db *MemoryDB) List(
 
 	// Sort filteredEntries by registry metadata ID for consistent pagination
 	sort.Slice(filteredEntries, func(i, j int) bool {
-		return filteredEntries[i].RegistryMetadata.ID < filteredEntries[j].RegistryMetadata.ID
+		return filteredEntries[i].RegistryExtensions.ID < filteredEntries[j].RegistryExtensions.ID
 	})
 
 	// Find starting point for cursor-based pagination using registry metadata ID
 	startIdx := 0
 	if cursor != "" {
 		for i, entry := range filteredEntries {
-			if entry.RegistryMetadata.ID == cursor {
+			if entry.RegistryExtensions.ID == cursor {
 				startIdx = i + 1 // Start after the cursor
 				break
 			}
@@ -137,7 +137,7 @@ func (db *MemoryDB) List(
 	// Determine next cursor using registry metadata ID
 	nextCursor := ""
 	if endIdx < len(filteredEntries) {
-		nextCursor = filteredEntries[endIdx-1].RegistryMetadata.ID
+		nextCursor = filteredEntries[endIdx-1].RegistryExtensions.ID
 	}
 
 	return result, nextCursor, nil
@@ -163,7 +163,7 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv1.ServerRecord
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error) {
+func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryExtensions) (*apiv1.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -190,7 +190,7 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, 
 	// Create server record
 	record := &apiv1.ServerRecord{
 		ServerJSON:          serverDetail,
-		RegistryMetadata:    registryMetadata,
+		RegistryExtensions:  registryMetadata,
 		PublisherExtensions: publisherExtensions,
 	}
 
@@ -220,7 +220,7 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	// Import each server
 	for _, record := range seedData {
 		// Use the registry metadata ID as the map key
-		db.entries[record.RegistryMetadata.ID] = record
+		db.entries[record.RegistryExtensions.ID] = record
 	}
 
 	return nil
@@ -236,8 +236,8 @@ func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bo
 	defer db.mu.Unlock()
 
 	if entry, exists := db.entries[id]; exists {
-		entry.RegistryMetadata.IsLatest = isLatest
-		entry.RegistryMetadata.UpdatedAt = time.Now()
+		entry.RegistryExtensions.IsLatest = isLatest
+		entry.RegistryExtensions.UpdatedAt = time.Now()
 		return nil
 	}
 
@@ -261,7 +261,7 @@ func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail mo
 	// Update the server details
 	entry.ServerJSON = serverDetail
 	entry.PublisherExtensions = publisherExtensions
-	entry.RegistryMetadata.UpdatedAt = time.Now()
+	entry.RegistryExtensions.UpdatedAt = time.Now()
 
 	// Return the updated record
 	return entry, nil
