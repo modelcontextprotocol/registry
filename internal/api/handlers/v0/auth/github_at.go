@@ -12,7 +12,6 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // GitHubTokenExchangeInput represents the input for GitHub token exchange
@@ -86,7 +85,7 @@ func (h *GitHubHandler) ExchangeToken(ctx context.Context, githubToken string) (
 
 	// Create JWT claims with GitHub user info
 	claims := auth.JWTClaims{
-		AuthMethod:        model.AuthMethodGitHubAT,
+		AuthMethod:        auth.MethodGitHubAT,
 		AuthMethodSubject: user.Login,
 		Permissions:       permissions,
 	}

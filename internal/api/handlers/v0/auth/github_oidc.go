@@ -15,7 +15,6 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // GitHubOIDCTokenExchangeInput represents the input for GitHub OIDC token exchange
@@ -263,7 +262,7 @@ func (h *GitHubOIDCHandler) ExchangeToken(ctx context.Context, oidcToken string)
 
 	// Create JWT claims with GitHub OIDC info
 	jwtClaims := auth.JWTClaims{
-		AuthMethod:        model.AuthMethodGitHubOIDC,
+		AuthMethod:        auth.MethodGitHubOIDC,
 		AuthMethodSubject: claims.Subject, // e.g. "repo:octo-org/octo-repo:environment:prod"
 		Permissions:       permissions,
 	}

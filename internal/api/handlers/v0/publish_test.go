@@ -102,7 +102,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
-				AuthMethod:        model.AuthMethodGitHubAT,
+				AuthMethod:        auth.MethodGitHubAT,
 				AuthMethodSubject: "example",
 				Permissions: []auth.Permission{
 					{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.example/*"},
@@ -130,7 +130,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
-				AuthMethod: model.AuthMethodNone,
+				AuthMethod: auth.MethodNone,
 				Permissions: []auth.Permission{
 					{Action: auth.PermissionActionPublish, ResourcePattern: "example/*"},
 				},
@@ -189,7 +189,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
-				AuthMethod: model.AuthMethodGitHubAT,
+				AuthMethod: auth.MethodGitHubAT,
 				Permissions: []auth.Permission{
 					{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.example/*"},
 				},
@@ -215,7 +215,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
-				AuthMethod: model.AuthMethodNone,
+				AuthMethod: auth.MethodNone,
 				Permissions: []auth.Permission{
 					{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
 				},

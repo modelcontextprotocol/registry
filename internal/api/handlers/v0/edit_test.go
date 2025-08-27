@@ -36,7 +36,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.domdomegg/*"},
@@ -114,7 +114,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.domdomegg/*"},
@@ -148,7 +148,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.domdomegg/*"},
@@ -183,7 +183,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.domdomegg/*"},
@@ -209,7 +209,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
@@ -244,7 +244,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
@@ -263,7 +263,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "*"},

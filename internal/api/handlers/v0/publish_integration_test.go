@@ -70,7 +70,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		// Generate valid JWT token
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 			Permissions: []auth.Permission{
 				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.testuser/*"},
@@ -117,7 +117,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		// Generate valid JWT token with wildcard permission
 		claims := auth.JWTClaims{
-			AuthMethod: model.AuthMethodNone,
+			AuthMethod: auth.MethodNone,
 			Permissions: []auth.Permission{
 				{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
 			},
@@ -204,7 +204,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		// Generate valid JWT token but with different permissions
 		claims := auth.JWTClaims{
-			AuthMethod: model.AuthMethodGitHubAT,
+			AuthMethod: auth.MethodGitHubAT,
 			Permissions: []auth.Permission{
 				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.myuser/*"},
 			},

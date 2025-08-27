@@ -10,7 +10,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // PermissionAction represents the type of action that can be performed
@@ -31,9 +30,9 @@ type Permission struct {
 type JWTClaims struct {
 	jwt.RegisteredClaims
 	// Authentication method used to obtain this token
-	AuthMethod        model.AuthMethod `json:"auth_method"`
-	AuthMethodSubject string           `json:"auth_method_sub"`
-	Permissions       []Permission     `json:"permissions"`
+	AuthMethod        Method       `json:"auth_method"`
+	AuthMethodSubject string       `json:"auth_method_sub"`
+	Permissions       []Permission `json:"permissions"`
 }
 
 type TokenResponse struct {

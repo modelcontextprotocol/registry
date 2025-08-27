@@ -9,23 +9,6 @@ import (
 	"time"
 )
 
-// AuthMethod represents the authentication method used
-type AuthMethod string
-
-const (
-	// GitHub OAuth authentication (access token)
-	AuthMethodGitHubAT AuthMethod = "github-at"
-	// GitHub Actions OIDC authentication
-	AuthMethodGitHubOIDC AuthMethod = "github-oidc"
-	// Generic OIDC authentication
-	AuthMethodOIDC AuthMethod = "oidc"
-	// DNS-based public/private key authentication
-	AuthMethodDNS AuthMethod = "dns"
-	// HTTP-based public/private key authentication
-	AuthMethodHTTP AuthMethod = "http"
-	// No authentication - should only be used for local development and testing
-	AuthMethodNone AuthMethod = "none"
-)
 
 // ServerStatus represents the lifecycle status of a server
 type ServerStatus string
