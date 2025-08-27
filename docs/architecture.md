@@ -44,6 +44,7 @@ graph TB
     MKT --> MC
     AGG --> MC
     API -.-> |Auth| GH
+    API -.-> |Admin Auth| GCP[Google Cloud Identity]
     API -.-> |Verify| DNS
     API -.-> |Reference| NPM
     API -.-> |Reference| PYPI
@@ -206,4 +207,42 @@ sequenceDiagram
     API->>DB: Store verification
     API-->>CLI: Domain verified
     CLI-->>User: Success!
+```
+
+### 4. Admin OIDC Authentication Flow
+
+For registry administration, users with @modelcontextprotocol.io Google Cloud Identity accounts can authenticate using OIDC:
+
+```mermaid
+sequenceDiagram
+    participant Admin as Admin User
+    participant CLI as Admin CLI
+    participant GCP as Google Cloud Identity
+    participant API as Registry API
+    
+    Admin->>CLI: Request admin token
+    CLI->>GCP: gcloud auth print-identity-token --audiences=mcp-registry
+    GCP-->>CLI: ID Token (with hd: "modelcontextprotocol.io")
+    CLI->>API: POST /v0/auth/oidc {"oidc_token": "eyJ..."}
+    API->>GCP: Verify token signature (JWKS)
+    API->>API: Validate claims (issuer, audience, hd)
+    API->>API: Grant admin permissions (edit: *, publish: *)
+    API-->>CLI: Registry JWT Token
+    CLI->>API: POST /admin/* (with Registry JWT)
+    API->>API: Validate JWT + permissions
+    API-->>CLI: Admin operation success
+```
+
+**Usage:**
+```bash
+# Get Google Cloud Identity token
+ID_TOKEN=$(gcloud auth print-identity-token)
+
+# Exchange for Registry JWT token  
+REGISTRY_TOKEN=$(curl -X POST /v0/auth/oidc \
+  -H "Content-Type: application/json" \
+  -d '{"oidc_token": "'$ID_TOKEN'"}' | jq -r .registry_token)
+
+# Use for admin operations
+curl -H "Authorization: Bearer $REGISTRY_TOKEN" /v0/...
 ```

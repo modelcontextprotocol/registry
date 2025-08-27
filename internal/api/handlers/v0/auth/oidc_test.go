@@ -13,9 +13,9 @@ import (
 
 // MockGenericOIDCValidator for testing
 type MockGenericOIDCValidator struct {
-	validateFunc        func(ctx context.Context, token string) (*auth.OIDCClaims, error)
-	authURLFunc         func(state, nonce, redirectURI string) string
-	exchangeCodeFunc    func(ctx context.Context, code, redirectURI string) (string, error)
+	validateFunc     func(ctx context.Context, token string) (*auth.OIDCClaims, error)
+	authURLFunc      func(state, nonce, redirectURI string) string
+	exchangeCodeFunc func(ctx context.Context, code, redirectURI string) (string, error)
 }
 
 func (m *MockGenericOIDCValidator) ValidateToken(ctx context.Context, token string) (*auth.OIDCClaims, error) {
@@ -41,22 +41,21 @@ func (m *MockGenericOIDCValidator) ExchangeCodeForToken(ctx context.Context, cod
 
 func TestOIDCHandler_ExchangeToken(t *testing.T) {
 	tests := []struct {
-		name           string
-		config         *config.Config
-		mockValidator  *MockGenericOIDCValidator
-		token          string
-		expectedError  bool
+		name          string
+		config        *config.Config
+		mockValidator *MockGenericOIDCValidator
+		token         string
+		expectedError bool
 	}{
 		{
 			name: "successful token exchange with publish permissions",
 			config: &config.Config{
-				OIDCEnabled:        true,
-				OIDCIssuer:         "https://accounts.google.com",
-				OIDCClientID:       "test-client-id",
-				OIDCAudience:       "mcp-registry",
-				OIDCExtraClaims:    `[{"hd":"modelcontextprotocol.io"}]`,
-				OIDCPublishPerms:   "*",
-				JWTPrivateKey:      "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef", // 32 byte hex
+				OIDCEnabled:      true,
+				OIDCIssuer:       "https://accounts.google.com",
+				OIDCClientID:     "test-client-id",
+				OIDCExtraClaims:  `[{"hd":"modelcontextprotocol.io"}]`,
+				OIDCPublishPerms: "*",
+				JWTPrivateKey:    "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef", // 32 byte hex
 			},
 			mockValidator: &MockGenericOIDCValidator{
 				validateFunc: func(_ context.Context, _ string) (*auth.OIDCClaims, error) {
@@ -76,13 +75,12 @@ func TestOIDCHandler_ExchangeToken(t *testing.T) {
 		{
 			name: "failed validation with invalid hosted domain",
 			config: &config.Config{
-				OIDCEnabled:        true,
-				OIDCIssuer:         "https://accounts.google.com",
-				OIDCClientID:       "test-client-id",
-				OIDCAudience:       "mcp-registry",
-				OIDCExtraClaims:    `[{"hd":"modelcontextprotocol.io"}]`,
-				OIDCPublishPerms:   "*",
-				JWTPrivateKey:      "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+				OIDCEnabled:      true,
+				OIDCIssuer:       "https://accounts.google.com",
+				OIDCClientID:     "test-client-id",
+				OIDCExtraClaims:  `[{"hd":"modelcontextprotocol.io"}]`,
+				OIDCPublishPerms: "*",
+				JWTPrivateKey:    "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
 			},
 			mockValidator: &MockGenericOIDCValidator{
 				validateFunc: func(_ context.Context, _ string) (*auth.OIDCClaims, error) {
@@ -130,7 +128,6 @@ func TestOIDCHandler_StartAuth(t *testing.T) {
 		OIDCIssuer:       "https://accounts.google.com",
 		OIDCClientID:     "test-client-id",
 		OIDCClientSecret: "test-secret",
-		OIDCAudience:     "mcp-registry",
 		JWTPrivateKey:    "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
 	}
 

@@ -60,9 +60,9 @@ type StandardOIDCValidator struct {
 }
 
 // NewStandardOIDCValidator creates a new standard OIDC validator using go-oidc
-func NewStandardOIDCValidator(issuer, clientID, clientSecret, _ string) (*StandardOIDCValidator, error) {
+func NewStandardOIDCValidator(issuer, clientID, clientSecret string) (*StandardOIDCValidator, error) {
 	ctx := context.Background()
-	
+
 	// Initialize the OIDC provider
 	provider, err := oidc.NewProvider(ctx, issuer)
 	if err != nil {
@@ -129,7 +129,7 @@ func (v *StandardOIDCValidator) ValidateToken(ctx context.Context, tokenString s
 	standardClaims := map[string]bool{
 		"iss": true, "sub": true, "aud": true, "exp": true, "nbf": true, "iat": true, "jti": true,
 	}
-	
+
 	for key, value := range allClaims {
 		if !standardClaims[key] {
 			oidcClaims.ExtraClaims[key] = value
@@ -144,7 +144,7 @@ func (v *StandardOIDCValidator) GetAuthorizationURL(state, nonce string, redirec
 	// Update redirect URI for this request
 	config := *v.oauth2Config
 	config.RedirectURL = redirectURI
-	
+
 	// Add nonce as additional parameter
 	authURL := config.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", nonce))
 	return authURL
@@ -196,7 +196,7 @@ func NewOIDCHandler(cfg *config.Config) *OIDCHandler {
 		panic("OIDC issuer is required when OIDC is enabled")
 	}
 
-	validator, err := NewStandardOIDCValidator(cfg.OIDCIssuer, cfg.OIDCClientID, cfg.OIDCClientSecret, cfg.OIDCAudience)
+	validator, err := NewStandardOIDCValidator(cfg.OIDCIssuer, cfg.OIDCClientID, cfg.OIDCClientSecret)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to initialize OIDC validator: %v", err))
 	}
