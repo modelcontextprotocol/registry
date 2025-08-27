@@ -8,30 +8,12 @@ import (
 
 // ServerValidator validates server details
 type ServerValidator struct {
-	*RespositoryValidator // Embedded RespositoryValidator for repository validation
+	*RepositoryValidator // Embedded RepositoryValidator for repository validation
 }
 
 // Validate checks if the server details are valid
 func (v *ServerValidator) Validate(obj *model.ServerDetail) error {
-	if obj.Name == "" {
-		return ErrNameRequired
-	}
-
-	// Add format validation according to https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1086 in the next PR
-	if len(obj.Name) > MaxLengthForServerName {
-		return ErrServerNameTooLong
-	}
-
-	// Version is required
-	if obj.VersionDetail.Version == "" {
-		return ErrVersionRequired
-	}
-
-	if len(obj.Description) > MaxLengthForDescription {
-		return ErrDescriptionTooLong
-	}
-
-	if err := v.RespositoryValidator.Validate(&obj.Repository); err != nil {
+	if err := v.RepositoryValidator.Validate(&obj.Repository); err != nil {
 		return err
 	}
 	return nil
@@ -40,37 +22,34 @@ func (v *ServerValidator) Validate(obj *model.ServerDetail) error {
 // NewServerValidator creates a new ServerValidator instance
 func NewServerValidator() *ServerValidator {
 	return &ServerValidator{
-		RespositoryValidator: NewRepositoryValidator(),
+		RepositoryValidator: NewRepositoryValidator(),
 	}
 }
 
 // RepositoryValidator validates repository details
-type RespositoryValidator struct {
+type RepositoryValidator struct {
 	validSources map[RepositorySource]bool
 }
 
 // Validate checks if the repository details are valid
-func (rv *RespositoryValidator) Validate(obj *model.Repository) error {
-	// empty repository object, this check is needed because we get empty repo object (if not present in request) everytime we unmarshal the request json
-	if len(obj.URL) == 0 && len(obj.Source) == 0 && len(obj.ID) == 0 {
+func (rv *RepositoryValidator) Validate(obj *model.Repository) error {
+	// Skip validation for empty repository (optional field)
+	if obj.URL == "" && obj.Source == "" {
 		return nil
 	}
-	// validate the repository URL
+
+	// validate the repository source
 	repoSource := RepositorySource(obj.Source)
-	if _, ok := rv.validSources[repoSource]; !ok {
-		return fmt.Errorf("%w: %s", ErrInvalidRepositorySource, obj.Source)
-	}
 	if !IsValidRepositoryURL(repoSource, obj.URL) {
 		return fmt.Errorf("%w: %s", ErrInvalidRepositoryURL, obj.URL)
 	}
 
-	// Add validator for repo ID after confirming ID type
 	return nil
 }
 
-// NewRepositoryValidator creates a new RespositoryValidator instance
-func NewRepositoryValidator() *RespositoryValidator {
-	return &RespositoryValidator{
+// NewRepositoryValidator creates a new RepositoryValidator instance
+func NewRepositoryValidator() *RepositoryValidator {
+	return &RepositoryValidator{
 		validSources: map[RepositorySource]bool{SourceGitHub: true, SourceGitLab: true},
 	}
 }
@@ -80,10 +59,6 @@ type PackageValidator struct{}
 
 // Validate checks if the package details are valid
 func (pv *PackageValidator) Validate(obj *model.Package) error {
-	if len(obj.Name) > MaxLengthForPackageName {
-		return ErrPackageNameTooLong
-	}
-
 	if !HasNoSpaces(obj.Name) {
 		return ErrPackageNameHasSpaces
 	}

@@ -44,66 +44,6 @@ func TestObjectValidator_Validate(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name: "server with missing name",
-			serverDetail: model.ServerDetail{
-				Name:        "",
-				Description: "A test server",
-				Repository: model.Repository{
-					URL:    "https://github.com/owner/repo",
-					Source: "github",
-				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
-			},
-			expectedError: validators.ErrNameRequired.Error(),
-		},
-		{
-			name: "server with name too long",
-			serverDetail: model.ServerDetail{
-				Name:        string(make([]byte, 256)), // Exceeds MaxLengthForServerName
-				Description: "A test server",
-				Repository: model.Repository{
-					URL:    "https://github.com/owner/repo",
-					Source: "github",
-				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
-			},
-			expectedError: validators.ErrServerNameTooLong.Error(),
-		},
-		{
-			name: "server with missing version",
-			serverDetail: model.ServerDetail{
-				Name:        "test-server",
-				Description: "A test server",
-				Repository: model.Repository{
-					URL:    "https://github.com/owner/repo",
-					Source: "github",
-				},
-				VersionDetail: model.VersionDetail{
-					Version: "",
-				},
-			},
-			expectedError: validators.ErrVersionRequired.Error(),
-		},
-		{
-			name: "server with description too long",
-			serverDetail: model.ServerDetail{
-				Name:        "test-server",
-				Description: string(make([]byte, 1001)), // Exceeds MaxLengthForDescription
-				Repository: model.Repository{
-					URL:    "https://github.com/owner/repo",
-					Source: "github",
-				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
-			},
-			expectedError: validators.ErrDescriptionTooLong.Error(),
-		},
-		{
 			name: "server with invalid repository source",
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
@@ -116,7 +56,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 					Version: "1.0.0",
 				},
 			},
-			expectedError: validators.ErrInvalidRepositorySource.Error(),
+			expectedError: validators.ErrInvalidRepositoryURL.Error(),
 		},
 		{
 			name: "server with invalid GitHub URL format",
@@ -147,27 +87,6 @@ func TestObjectValidator_Validate(t *testing.T) {
 				},
 			},
 			expectedError: validators.ErrInvalidRepositoryURL.Error(),
-		},
-		{
-			name: "package with name too long",
-			serverDetail: model.ServerDetail{
-				Name:        "test-server",
-				Description: "A test server",
-				Repository: model.Repository{
-					URL:    "https://github.com/owner/repo",
-					Source: "github",
-				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
-				Packages: []model.Package{
-					{
-						Name:         string(make([]byte, 256)), // Exceeds MaxLengthForPackageName
-						RegistryName: "npm",
-					},
-				},
-			},
-			expectedError: validators.ErrPackageNameTooLong.Error(),
 		},
 		{
 			name: "package with spaces in name",

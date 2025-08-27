@@ -113,7 +113,7 @@ type VersionDetail struct {
 type ServerDetail struct {
 	Schema        string        `json:"$schema,omitempty" bson:"$schema,omitempty"`
 	Name          string        `json:"name" minLength:"1" maxLength:"200" bson:"name"`
-	Description   string        `json:"description" minLength:"1" maxLength:"200" bson:"description"`
+	Description   string        `json:"description" minLength:"1" maxLength:"100" bson:"description"`
 	Status        ServerStatus  `json:"status,omitempty" minLength:"1" bson:"status,omitempty"`
 	Repository    Repository    `json:"repository,omitempty" bson:"repository"`
 	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
