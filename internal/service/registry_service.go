@@ -10,8 +10,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
+	"github.com/modelcontextprotocol/registry/pkg/validation"
 )
 
 const maxServerVersionsPerServer = 10000
@@ -29,7 +30,7 @@ func NewRegistryServiceWithDB(db database.Database) RegistryService {
 }
 
 // List returns registry entries with cursor-based pagination in extension wrapper format
-func (s *registryServiceImpl) List(cursor string, limit int) ([]model.ServerResponse, string, error) {
+func (s *registryServiceImpl) List(cursor string, limit int) ([]apiv1.ServerResponse, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -46,7 +47,7 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]model.ServerResp
 	}
 
 	// Convert ServerRecord to ServerResponse format
-	result := make([]model.ServerResponse, len(serverRecords))
+	result := make([]apiv1.ServerResponse, len(serverRecords))
 	for i, record := range serverRecords {
 		result[i] = record.ToServerResponse()
 	}
@@ -55,7 +56,7 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]model.ServerResp
 }
 
 // GetByID retrieves a specific server by its registry metadata ID in extension wrapper format
-func (s *registryServiceImpl) GetByID(id string) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) GetByID(id string) (*apiv1.ServerResponse, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -96,7 +97,7 @@ func validateMCPBPackage(host string) error {
 }
 
 // validatePackage validates packages to ensure they meet requirements
-func validatePackage(pkg *pkgmodel.Package) error {
+func validatePackage(pkg *model.Package) error {
 	registryType := strings.ToLower(pkg.RegistryType)
 
 	// For direct download packages (mcpb or direct URLs)
@@ -127,18 +128,18 @@ func validatePackage(pkg *pkgmodel.Package) error {
 }
 
 // Publish publishes a server with separated extensions
-func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) Publish(req apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validation.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists and format
-	if _, err := model.ParseServerName(req.Server); err != nil {
+	if _, err := validation.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -150,7 +151,7 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	}
 
 	// Validate reverse-DNS namespace matching for remote URLs
-	if err := model.ValidateRemoteNamespaceMatch(req.Server); err != nil {
+	if err := validation.ValidateRemoteNamespaceMatch(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -201,10 +202,10 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	publisherExtensions := validation.ExtractPublisherExtensions(req)
 
 	// Create registry metadata with service-determined values
-	registryMetadata := model.RegistryMetadata{
+	registryMetadata := apiv1.RegistryMetadata{
 		ID:          uuid.New().String(),
 		PublishedAt: currentTime,
 		UpdatedAt:   currentTime,
@@ -257,17 +258,17 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 }
 
 // EditServer updates an existing server with new details (admin operation)
-func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) EditServer(id string, req apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validation.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists and format
-	if _, err := model.ParseServerName(req.Server); err != nil {
+	if _, err := validation.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -279,7 +280,7 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 	}
 
 	// Validate reverse-DNS namespace matching for remote URLs
-	if err := model.ValidateRemoteNamespaceMatch(req.Server); err != nil {
+	if err := validation.ValidateRemoteNamespaceMatch(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -289,7 +290,7 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	publisherExtensions := validation.ExtractPublisherExtensions(req)
 
 	// Update server in database
 	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)

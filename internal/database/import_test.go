@@ -9,25 +9,25 @@ import (
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestReadSeedFile_LocalFile(t *testing.T) {
 	// Create a temporary seed file in extension wrapper format
 	tempFile := "/tmp/test_seed.json"
-	seedData := []model.ServerResponse{
+	seedData := []apiv1.ServerResponse{
 		{
 			Server: model.ServerDetail{
 				Name:        "test-server-1",
 				Description: "Test server 1",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/test/repo1",
 					Source: "github",
 					ID:     "123",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -64,7 +64,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 
 func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	// Create a test HTTP server that serves seed JSON directly in extension wrapper format
-	seedData := []model.ServerResponse{
+	seedData := []apiv1.ServerResponse{
 		{
 			Server: model.ServerDetail{
 				Name:        "test-server-1",
@@ -95,11 +95,11 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 
 func TestReadSeedFile_RegistryURL(t *testing.T) {
 	// Create mock registry responses
-	server1 := model.ServerResponse{
+	server1 := apiv1.ServerResponse{
 		Server: model.ServerDetail{
 			Name:        "Test Server 1",
 			Description: "First test server",
-			Packages: []pkgmodel.Package{
+			Packages: []model.Package{
 				{
 					RegistryType:    "npm",
 					RegistryBaseURL: "https://registry.npmjs.org",
@@ -114,11 +114,11 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 			"is_latest":    true,
 		},
 	}
-	server2 := model.ServerResponse{
+	server2 := apiv1.ServerResponse{
 		Server: model.ServerDetail{
 			Name:        "Test Server 2",
 			Description: "Second test server",
-			Packages: []pkgmodel.Package{
+			Packages: []model.Package{
 				{
 					RegistryType:    "npm",
 					RegistryBaseURL: "https://registry.npmjs.org",
@@ -137,7 +137,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	serverDetail1 := model.ServerDetail{
 		Name:        "Test Server 1",
 		Description: "First test server",
-		Packages: []pkgmodel.Package{
+		Packages: []model.Package{
 			{
 				RegistryType:    "npm",
 				RegistryBaseURL: "https://registry.npmjs.org",
@@ -149,7 +149,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	serverDetail2 := model.ServerDetail{
 		Name:        "Test Server 2",
 		Description: "Second test server",
-		Packages: []pkgmodel.Package{
+		Packages: []model.Package{
 			{
 				RegistryType:    "npm",
 				RegistryBaseURL: "https://registry.npmjs.org",
@@ -172,7 +172,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		}
 
 		type PaginatedResponse struct {
-			Servers  []model.ServerResponse `json:"servers"`
+			Servers  []apiv1.ServerResponse `json:"servers"`
 			Metadata *Metadata             `json:"metadata,omitempty"`
 		}
 
@@ -181,7 +181,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		case "":
 			// First page
 			response = PaginatedResponse{
-				Servers: []model.ServerResponse{server1},
+				Servers: []apiv1.ServerResponse{server1},
 				Metadata: &Metadata{
 					NextCursor: "next-cursor-1",
 					Count:      1,
@@ -190,7 +190,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		case "next-cursor-1":
 			// Second page
 			response = PaginatedResponse{
-				Servers: []model.ServerResponse{server2},
+				Servers: []apiv1.ServerResponse{server2},
 				Metadata: &Metadata{
 					Count: 1,
 					// No NextCursor means end of pagination
@@ -199,7 +199,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		default:
 			// No more pages
 			response = PaginatedResponse{
-				Servers:  []model.ServerResponse{},
+				Servers:  []apiv1.ServerResponse{},
 				Metadata: &Metadata{},
 			}
 		}

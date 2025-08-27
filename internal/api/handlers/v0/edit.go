@@ -11,10 +11,11 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/modelcontextprotocol/registry/internal/validators"
+	"github.com/modelcontextprotocol/registry/pkg/validation"
 )
 
 // EditServerInput represents the input for editing a server
@@ -39,7 +40,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *EditServerInput) (*Response[model.ServerResponse], error) {
+	}, func(ctx context.Context, input *EditServerInput) (*Response[apiv1.ServerResponse], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -55,7 +56,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// Validate that only allowed extension fields are present
-		if err := model.ValidatePublishRequestExtensions(input.RawBody); err != nil {
+		if err := validation.ValidatePublishRequestExtensions(input.RawBody); err != nil {
 			return nil, huma.Error400BadRequest("Invalid request format", err)
 		}
 
@@ -74,7 +75,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// Parse the validated request body
-		var editRequest model.PublishRequest
+		var editRequest apiv1.PublishRequest
 		if err := json.Unmarshal(input.RawBody, &editRequest); err != nil {
 			return nil, huma.Error400BadRequest("Invalid JSON format", err)
 		}
@@ -91,7 +92,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// Prevent undeleting servers - once deleted, they stay deleted
-		if currentServer.Server.Status == pkgmodel.ServerStatusDeleted && editRequest.Server.Status != pkgmodel.ServerStatusDeleted {
+		if currentServer.Server.Status == model.ServerStatusDeleted && editRequest.Server.Status != model.ServerStatusDeleted {
 			return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
 		}
 
@@ -104,7 +105,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest("Failed to edit server", err)
 		}
 
-		return &Response[model.ServerResponse]{
+		return &Response[apiv1.ServerResponse]{
 			Body: *updatedServer,
 		}, nil
 	})

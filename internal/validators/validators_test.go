@@ -3,9 +3,9 @@ package validators_test
 import (
 	"testing"
 
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/validators"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,22 +22,22 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 					ID:     "owner/repo",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []pkgmodel.Package{
+				Packages: []model.Package{
 					{
 						Identifier:      "test-package",
 						RegistryType:    "npm",
 						RegistryBaseURL: "https://registry.npmjs.org",
 					},
 				},
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{
 						URL: "https://example.com/remote",
 					},
@@ -50,11 +50,11 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://bitbucket.org/owner/repo",
 					Source: "bitbucket", // Not in validSources
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -65,11 +65,11 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner", // Missing repo name
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -80,11 +80,11 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://gitlab.com", // Missing owner and repo
 					Source: "gitlab",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -95,14 +95,14 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []pkgmodel.Package{
+				Packages: []model.Package{
 					{
 						Identifier:      "test package with spaces",
 						RegistryType:    "npm",
@@ -117,14 +117,14 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []pkgmodel.Package{
+				Packages: []model.Package{
 					{
 						Identifier:      "valid-package",
 						RegistryType:    "npm",
@@ -144,14 +144,14 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{
 						URL: "not-a-valid-url",
 					},
@@ -164,14 +164,14 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{
 						URL: "example.com/remote",
 					},
@@ -184,14 +184,14 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{
 						URL: "https://valid.com/remote",
 					},
@@ -207,11 +207,11 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 				Packages: nil,
@@ -224,15 +224,15 @@ func TestObjectValidator_Validate(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "test-server",
 				Description: "A test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Packages: []pkgmodel.Package{},
-				Remotes:  []pkgmodel.Remote{},
+				Packages: []model.Package{},
+				Remotes:  []model.Remote{},
 			},
 			expectedError: "",
 		},

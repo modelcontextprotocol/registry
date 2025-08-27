@@ -16,9 +16,9 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 	"github.com/modelcontextprotocol/registry/internal/service"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,16 +54,16 @@ func TestPublishIntegration(t *testing.T) {
 	v0.RegisterPublishEndpoint(api, registryService, testConfig)
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
-		publishReq := model.PublishRequest{
+		publishReq := apiv1.PublishRequest{
 			Server: model.ServerDetail{
 				Name:        "io.github.testuser/test-mcp-server",
 				Description: "A test MCP server for integration testing",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/testuser/test-mcp-server",
 					Source: "github",
 					ID:     "testuser/test-mcp-server",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -92,7 +92,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response model.ServerResponse
+		var response apiv1.ServerResponse
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
@@ -101,16 +101,16 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("successful publish with none auth (no prefix)", func(t *testing.T) {
-		publishReq := model.PublishRequest{
+		publishReq := apiv1.PublishRequest{
 			Server: model.ServerDetail{
 				Name:        "com.example/test-mcp-server-no-auth",
 				Description: "A test MCP server without authentication",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -138,7 +138,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response model.ServerResponse
+		var response apiv1.ServerResponse
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
@@ -146,7 +146,7 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {
-		publishReq := model.PublishRequest{
+		publishReq := apiv1.PublishRequest{
 			Server: model.ServerDetail{
 				Name: "test-server",
 			},
@@ -167,7 +167,7 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails with invalid token", func(t *testing.T) {
-		publishReq := model.PublishRequest{
+		publishReq := apiv1.PublishRequest{
 			Server: model.ServerDetail{
 				Name: "test-server",
 			},
@@ -188,14 +188,14 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails when permission denied", func(t *testing.T) {
-		publishReq := model.PublishRequest{
+		publishReq := apiv1.PublishRequest{
 			Server: model.ServerDetail{
 				Name:        "io.github.other/test-server",
 				Description: "A test server",
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",

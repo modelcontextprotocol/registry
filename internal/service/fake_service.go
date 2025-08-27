@@ -6,8 +6,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
+	"github.com/modelcontextprotocol/registry/pkg/validation"
 )
 
 // fakeRegistryService implements RegistryService interface with an in-memory database
@@ -22,36 +23,36 @@ func NewFakeRegistryService() RegistryService {
 		{
 			Name:        "bluegreen/mcp-server",
 			Description: "A dummy MCP registry for testing",
-			Repository: pkgmodel.Repository{
+			Repository: model.Repository{
 				URL:    "https://github.com/example/mcp-1",
 				Source: "github",
 				ID:     "example/mcp-1",
 			},
-			VersionDetail: pkgmodel.VersionDetail{
+			VersionDetail: model.VersionDetail{
 				Version: "1.0.0",
 			},
 		},
 		{
 			Name:        "orangepurple/mcp-server",
 			Description: "Another dummy MCP registry for testing",
-			Repository: pkgmodel.Repository{
+			Repository: model.Repository{
 				URL:    "https://github.com/example/mcp-2",
 				Source: "github",
 				ID:     "example/mcp-2",
 			},
-			VersionDetail: pkgmodel.VersionDetail{
+			VersionDetail: model.VersionDetail{
 				Version: "0.9.0",
 			},
 		},
 		{
 			Name:        "greenyellow/mcp-server",
 			Description: "Yet another dummy MCP registry for testing",
-			Repository: pkgmodel.Repository{
+			Repository: model.Repository{
 				URL:    "https://github.com/example/mcp-3",
 				Source: "github",
 				ID:     "example/mcp-3",
 			},
-			VersionDetail: pkgmodel.VersionDetail{
+			VersionDetail: model.VersionDetail{
 				Version: "0.9.5",
 			},
 		},
@@ -70,7 +71,7 @@ func NewFakeRegistryService() RegistryService {
 }
 
 // List retrieves servers with extension wrapper format
-func (s *fakeRegistryService) List(cursor string, limit int) ([]model.ServerResponse, string, error) {
+func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv1.ServerResponse, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -82,7 +83,7 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]model.ServerResp
 	}
 
 	// Convert ServerRecord to ServerResponse format
-	result := make([]model.ServerResponse, len(serverRecords))
+	result := make([]apiv1.ServerResponse, len(serverRecords))
 	for i, record := range serverRecords {
 		result[i] = record.ToServerResponse()
 	}
@@ -91,7 +92,7 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]model.ServerResp
 }
 
 // GetByID retrieves a specific server by its registry metadata ID in extension wrapper format
-func (s *fakeRegistryService) GetByID(id string) (*model.ServerResponse, error) {
+func (s *fakeRegistryService) GetByID(id string) (*apiv1.ServerResponse, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -108,27 +109,27 @@ func (s *fakeRegistryService) GetByID(id string) (*model.ServerResponse, error) 
 }
 
 // Publish publishes a server with separated extensions
-func (s *fakeRegistryService) Publish(req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validation.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists
-	if _, err := model.ParseServerName(req.Server); err != nil {
+	if _, err := validation.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	publisherExtensions := validation.ExtractPublisherExtensions(req)
 
 	// Create registry metadata for fake service (always marks as latest)
 	now := time.Now()
-	registryMetadata := model.RegistryMetadata{
+	registryMetadata := apiv1.RegistryMetadata{
 		ID:          uuid.New().String(),
 		PublishedAt: now,
 		UpdatedAt:   now,
@@ -148,22 +149,22 @@ func (s *fakeRegistryService) Publish(req model.PublishRequest) (*model.ServerRe
 }
 
 // EditServer updates an existing server with new details (admin operation)
-func (s *fakeRegistryService) EditServer(id string, req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *fakeRegistryService) EditServer(id string, req apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validation.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists and format
-	if _, err := model.ParseServerName(req.Server); err != nil {
+	if _, err := validation.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	publisherExtensions := validation.ExtractPublisherExtensions(req)
 
 	// Update server in database
 	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)

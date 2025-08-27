@@ -12,8 +12,8 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/google/uuid"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
-	"github.com/modelcontextprotocol/registry/internal/model"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,24 +24,24 @@ func TestServersListEndpoint(t *testing.T) {
 		queryParams     string
 		setupMocks      func(*MockRegistryService)
 		expectedStatus  int
-		expectedServers []model.ServerResponse
+		expectedServers []apiv1.ServerResponse
 		expectedMeta    *v0.Metadata
 		expectedError   string
 	}{
 		{
 			name: "successful list with default parameters",
 			setupMocks: func(registry *MockRegistryService) {
-				servers := []model.ServerResponse{
+				servers := []apiv1.ServerResponse{
 					{
 						Server: model.ServerDetail{
 							Name:        "test-server-1",
 							Description: "First test server",
-							Repository: pkgmodel.Repository{
+							Repository: model.Repository{
 								URL:    "https://github.com/example/test-server-1",
 								Source: "github",
 								ID:     "example/test-server-1",
 							},
-							VersionDetail: pkgmodel.VersionDetail{
+							VersionDetail: model.VersionDetail{
 								Version: "1.0.0",
 							},
 						},
@@ -53,12 +53,12 @@ func TestServersListEndpoint(t *testing.T) {
 						Server: model.ServerDetail{
 							Name:        "test-server-2",
 							Description: "Second test server",
-							Repository: pkgmodel.Repository{
+							Repository: model.Repository{
 								URL:    "https://github.com/example/test-server-2",
 								Source: "github",
 								ID:     "example/test-server-2",
 							},
-							VersionDetail: pkgmodel.VersionDetail{
+							VersionDetail: model.VersionDetail{
 								Version: "2.0.0",
 							},
 						},
@@ -70,17 +70,17 @@ func TestServersListEndpoint(t *testing.T) {
 				registry.Mock.On("List", "", 30).Return(servers, "", nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedServers: []model.ServerResponse{
+			expectedServers: []apiv1.ServerResponse{
 				{
 					Server: model.ServerDetail{
 						Name:        "test-server-1",
 						Description: "First test server",
-						Repository: pkgmodel.Repository{
+						Repository: model.Repository{
 							URL:    "https://github.com/example/test-server-1",
 							Source: "github",
 							ID:     "example/test-server-1",
 						},
-						VersionDetail: pkgmodel.VersionDetail{
+						VersionDetail: model.VersionDetail{
 							Version: "1.0.0",
 						},
 					},
@@ -92,12 +92,12 @@ func TestServersListEndpoint(t *testing.T) {
 					Server: model.ServerDetail{
 						Name:        "test-server-2",
 						Description: "Second test server",
-						Repository: pkgmodel.Repository{
+						Repository: model.Repository{
 							URL:    "https://github.com/example/test-server-2",
 							Source: "github",
 							ID:     "example/test-server-2",
 						},
-						VersionDetail: pkgmodel.VersionDetail{
+						VersionDetail: model.VersionDetail{
 							Version: "2.0.0",
 						},
 					},
@@ -111,17 +111,17 @@ func TestServersListEndpoint(t *testing.T) {
 			name:        "successful list with cursor and limit",
 			queryParams: "?cursor=550e8400-e29b-41d4-a716-446655440000&limit=10",
 			setupMocks: func(registry *MockRegistryService) {
-				servers := []model.ServerResponse{
+				servers := []apiv1.ServerResponse{
 					{
 						Server: model.ServerDetail{
 							Name:        "test-server-3",
 							Description: "Third test server",
-							Repository: pkgmodel.Repository{
+							Repository: model.Repository{
 								URL:    "https://github.com/example/test-server-3",
 								Source: "github",
 								ID:     "example/test-server-3",
 							},
-							VersionDetail: pkgmodel.VersionDetail{
+							VersionDetail: model.VersionDetail{
 								Version: "1.5.0",
 							},
 						},
@@ -134,17 +134,17 @@ func TestServersListEndpoint(t *testing.T) {
 				registry.Mock.On("List", mock.AnythingOfType("string"), 10).Return(servers, nextCursor, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedServers: []model.ServerResponse{
+			expectedServers: []apiv1.ServerResponse{
 				{
 					Server: model.ServerDetail{
 						Name:        "test-server-3",
 						Description: "Third test server",
-						Repository: pkgmodel.Repository{
+						Repository: model.Repository{
 							URL:    "https://github.com/example/test-server-3",
 							Source: "github",
 							ID:     "example/test-server-3",
 						},
-						VersionDetail: pkgmodel.VersionDetail{
+						VersionDetail: model.VersionDetail{
 							Version: "1.5.0",
 						},
 					},
@@ -196,7 +196,7 @@ func TestServersListEndpoint(t *testing.T) {
 		{
 			name: "registry service error",
 			setupMocks: func(registry *MockRegistryService) {
-				registry.Mock.On("List", "", 30).Return([]model.ServerResponse{}, "", errors.New("database connection error"))
+				registry.Mock.On("List", "", 30).Return([]apiv1.ServerResponse{}, "", errors.New("database connection error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "Failed to get registry list",
@@ -233,7 +233,7 @@ func TestServersListEndpoint(t *testing.T) {
 
 				// Parse response body
 				var resp struct {
-					Servers  []model.ServerResponse `json:"servers"`
+					Servers  []apiv1.ServerResponse `json:"servers"`
 					Metadata *v0.Metadata          `json:"metadata,omitempty"`
 				}
 				err := json.NewDecoder(w.Body).Decode(&resp)
@@ -268,23 +268,23 @@ func TestServersDetailEndpoint(t *testing.T) {
 		serverID       string
 		setupMocks     func(*MockRegistryService, string)
 		expectedStatus int
-		expectedServer *model.ServerResponse
+		expectedServer *apiv1.ServerResponse
 		expectedError  string
 	}{
 		{
 			name:     "successful get server detail",
 			serverID: uuid.New().String(),
 			setupMocks: func(registry *MockRegistryService, serverID string) {
-				serverDetail := &model.ServerResponse{
+				serverDetail := &apiv1.ServerResponse{
 					Server: model.ServerDetail{
 						Name:        "test-server-detail",
 						Description: "Test server detail",
-						Repository: pkgmodel.Repository{
+						Repository: model.Repository{
 							URL:    "https://github.com/example/test-server-detail",
 							Source: "github",
 							ID:     "example/test-server-detail",
 						},
-						VersionDetail: pkgmodel.VersionDetail{
+						VersionDetail: model.VersionDetail{
 							Version: "2.0.0",
 						},
 					},
@@ -352,7 +352,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 				assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 
 				// Parse response body
-				var serverDetailResp model.ServerResponse
+				var serverDetailResp apiv1.ServerResponse
 				err := json.NewDecoder(w.Body).Decode(&serverDetailResp)
 				assert.NoError(t, err)
 
@@ -376,17 +376,17 @@ func TestServersEndpointsIntegration(t *testing.T) {
 
 	// Test data
 	serverID := uuid.New().String()
-	servers := []model.ServerResponse{
+	servers := []apiv1.ServerResponse{
 		{
 			Server: model.ServerDetail{
 				Name:        "integration-test-server",
 				Description: "Integration test server",
-				Repository: pkgmodel.Repository{
+				Repository: model.Repository{
 					URL:    "https://github.com/example/integration-test",
 					Source: "github",
 					ID:     "example/integration-test",
 				},
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
 			},
@@ -396,7 +396,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		},
 	}
 
-	serverDetail := &model.ServerResponse{
+	serverDetail := &apiv1.ServerResponse{
 		Server: servers[0].Server,
 		XIOModelContextProtocolRegistry: servers[0].XIOModelContextProtocolRegistry,
 	}
@@ -439,7 +439,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 
 		// Parse response body
 		var listResp struct {
-			Servers []model.ServerResponse `json:"servers"`
+			Servers []apiv1.ServerResponse `json:"servers"`
 		}
 		err = json.NewDecoder(resp.Body).Decode(&listResp)
 		assert.NoError(t, err)
@@ -470,7 +470,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 		// Parse response body
-		var serverDetailResp model.ServerResponse
+		var serverDetailResp apiv1.ServerResponse
 		err = json.NewDecoder(resp.Body).Decode(&serverDetailResp)
 		assert.NoError(t, err)
 

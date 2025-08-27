@@ -17,8 +17,8 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func TestEditServerEndpoint(t *testing.T) {
@@ -45,40 +45,40 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
+			requestBody: apiv1.PublishRequest{
 				Server: model.ServerDetail{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
-					Status:      pkgmodel.ServerStatusDeprecated,
-					Repository: pkgmodel.Repository{
+					Status:      model.ServerStatusDeprecated,
+					Repository: model.Repository{
 						URL:    "https://github.com/domdomegg/test-server",
 						Source: "github",
 						ID:     "domdomegg/test-server",
 					},
-					VersionDetail: pkgmodel.VersionDetail{
+					VersionDetail: model.VersionDetail{
 						Version: "1.0.1",
 					},
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server (not deleted)
-				currentServer := &model.ServerResponse{
+				currentServer := &apiv1.ServerResponse{
 					Server: model.ServerDetail{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      pkgmodel.ServerStatusActive,
+						Status:      model.ServerStatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
 				
-				expectedResponse := &model.ServerResponse{
+				expectedResponse := &apiv1.ServerResponse{
 					Server: model.ServerDetail{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Updated test server",
-						Status:      pkgmodel.ServerStatusDeprecated,
+						Status:      model.ServerStatusDeprecated,
 					},
 				}
-				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("model.PublishRequest")).Return(expectedResponse, nil)
+				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("v1.PublishRequest")).Return(expectedResponse, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -86,7 +86,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "missing authorization header",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "",
-			requestBody:    model.PublishRequest{},
+			requestBody:    apiv1.PublishRequest{},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: 422,
 			expectedError:  "required header parameter is missing",
@@ -95,7 +95,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "invalid authorization header format",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "InvalidFormat token123",
-			requestBody:    model.PublishRequest{},
+			requestBody:    apiv1.PublishRequest{},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
@@ -104,7 +104,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "invalid token",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "Bearer invalid-token",
-			requestBody:    model.PublishRequest{},
+			requestBody:    apiv1.PublishRequest{},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
@@ -123,7 +123,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
+			requestBody: apiv1.PublishRequest{
 				Server: model.ServerDetail{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
@@ -131,11 +131,11 @@ func TestEditServerEndpoint(t *testing.T) {
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Need to mock GetByID since we check permissions against existing server name
-				currentServer := &model.ServerResponse{
+				currentServer := &apiv1.ServerResponse{
 					Server: model.ServerDetail{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      pkgmodel.ServerStatusActive,
+						Status:      model.ServerStatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -157,7 +157,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
+			requestBody: apiv1.PublishRequest{
 				Server: model.ServerDetail{
 					Name:        "io.github.other/test-server",
 					Description: "Updated test server",
@@ -166,11 +166,11 @@ func TestEditServerEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				// Need to mock GetByID since we check permissions against existing server name
 				// This test case shows a different scenario: existing server is "other" but user only has perms for "domdomegg"
-				currentServer := &model.ServerResponse{
+				currentServer := &apiv1.ServerResponse{
 					Server: model.ServerDetail{
 						Name:        "io.github.other/test-server",
 						Description: "Original server",
-						Status:      pkgmodel.ServerStatusActive,
+						Status:      model.ServerStatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -192,7 +192,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
+			requestBody: apiv1.PublishRequest{
 				Server: model.ServerDetail{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
@@ -218,7 +218,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
+			requestBody: apiv1.PublishRequest{
 				Server: model.ServerDetail{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
@@ -226,15 +226,15 @@ func TestEditServerEndpoint(t *testing.T) {
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server (not deleted)
-				currentServer := &model.ServerResponse{
+				currentServer := &apiv1.ServerResponse{
 					Server: model.ServerDetail{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      pkgmodel.ServerStatusActive,
+						Status:      model.ServerStatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
-				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("model.PublishRequest")).Return(nil, errors.New("database error"))
+				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("v1.PublishRequest")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Bad Request",
@@ -272,20 +272,20 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
+			requestBody: apiv1.PublishRequest{
 				Server: model.ServerDetail{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Trying to undelete server",
-					Status:      pkgmodel.ServerStatusActive,
+					Status:      model.ServerStatusActive,
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server is deleted
-				currentServer := &model.ServerResponse{
+				currentServer := &apiv1.ServerResponse{
 					Server: model.ServerDetail{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      pkgmodel.ServerStatusDeleted,
+						Status:      model.ServerStatusDeleted,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)

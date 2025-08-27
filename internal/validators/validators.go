@@ -3,8 +3,7 @@ package validators
 import (
 	"fmt"
 
-	"github.com/modelcontextprotocol/registry/internal/model"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // ServerValidator validates server details
@@ -33,7 +32,7 @@ type RepositoryValidator struct {
 }
 
 // Validate checks if the repository details are valid
-func (rv *RepositoryValidator) Validate(obj *pkgmodel.Repository) error {
+func (rv *RepositoryValidator) Validate(obj *model.Repository) error {
 	// Skip validation for empty repository (optional field)
 	if obj.URL == "" && obj.Source == "" {
 		return nil
@@ -59,7 +58,7 @@ func NewRepositoryValidator() *RepositoryValidator {
 type PackageValidator struct{}
 
 // Validate checks if the package details are valid
-func (pv *PackageValidator) Validate(obj *pkgmodel.Package) error {
+func (pv *PackageValidator) Validate(obj *model.Package) error {
 	if !HasNoSpaces(obj.Identifier) {
 		return ErrPackageNameHasSpaces
 	}
@@ -76,7 +75,7 @@ func NewPackageValidator() *PackageValidator {
 type RemoteValidator struct{}
 
 // Validate checks if the remote connection details are valid
-func (rv *RemoteValidator) Validate(obj *pkgmodel.Remote) error {
+func (rv *RemoteValidator) Validate(obj *model.Remote) error {
 	if !IsValidURL(obj.URL) {
 		return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
 	}

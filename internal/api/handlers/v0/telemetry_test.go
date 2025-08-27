@@ -14,22 +14,22 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func mockServerEndpoint(registry *MockRegistryService, serverID string) {
-	serverDetail := &model.ServerResponse{
+	serverDetail := &apiv1.ServerResponse{
 		Server: model.ServerDetail{
 			Name:        "test-server-detail",
 			Description: "Test server detail",
-			Repository: pkgmodel.Repository{
+			Repository: model.Repository{
 				URL:    "https://github.com/example/test-server-detail",
 				Source: "github",
 				ID:     "example/test-server-detail",
 			},
-			VersionDetail: pkgmodel.VersionDetail{
+			VersionDetail: model.VersionDetail{
 				Version: "2.0.0",
 			},
 		},

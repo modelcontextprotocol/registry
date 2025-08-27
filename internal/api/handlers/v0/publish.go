@@ -9,9 +9,10 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/validators"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/validation"
 )
 
 // PublishServerInput represents the input for publishing a server
@@ -35,7 +36,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*Response[model.ServerResponse], error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv1.ServerResponse], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -51,12 +52,12 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Validate that only allowed extension fields are present
-		if err := model.ValidatePublishRequestExtensions(input.RawBody); err != nil {
+		if err := validation.ValidatePublishRequestExtensions(input.RawBody); err != nil {
 			return nil, huma.Error400BadRequest("Invalid request format", err)
 		}
 
 		// Parse the validated request body
-		var publishRequest model.PublishRequest
+		var publishRequest apiv1.PublishRequest
 		if err := json.Unmarshal(input.RawBody, &publishRequest); err != nil {
 			return nil, huma.Error400BadRequest("Invalid JSON format", err)
 		}
@@ -82,7 +83,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Return the published server in extension wrapper format
-		return &Response[model.ServerResponse]{
+		return &Response[apiv1.ServerResponse]{
 			Body: *publishedServer,
 		}, nil
 	})

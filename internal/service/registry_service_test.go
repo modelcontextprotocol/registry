@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,10 +17,10 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		"existing1": {
 			Name:        "com.example/existing-server",
 			Description: "An existing server",
-			VersionDetail: pkgmodel.VersionDetail{
+			VersionDetail: model.VersionDetail{
 				Version: "1.0.0",
 			},
-			Remotes: []pkgmodel.Remote{
+			Remotes: []model.Remote{
 				{URL: "https://api.example.com/mcp"},
 				{URL: "https://webhook.example.com/sse"},
 			},
@@ -28,10 +28,10 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		"existing2": {
 			Name:        "com.microsoft/another-server",
 			Description: "Another existing server",
-			VersionDetail: pkgmodel.VersionDetail{
+			VersionDetail: model.VersionDetail{
 				Version: "1.0.0",
 			},
-			Remotes: []pkgmodel.Remote{
+			Remotes: []model.Remote{
 				{URL: "https://api.microsoft.com/mcp"},
 			},
 		},
@@ -51,10 +51,10 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "com.example/new-server",
 				Description: "A new server with no remotes",
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []pkgmodel.Remote{},
+				Remotes: []model.Remote{},
 			},
 			expectError: false,
 		},
@@ -63,10 +63,10 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "com.example/new-server",
 				Description: "A new server",
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://new.example.com/mcp"},
 					{URL: "https://unique.example.com/sse"},
 				},
@@ -78,10 +78,10 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "com.example/new-server",
 				Description: "A new server with duplicate URL",
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://api.example.com/mcp"}, // This URL already exists
 				},
 			},
@@ -93,10 +93,10 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: model.ServerDetail{
 				Name:        "com.example/existing-server", // Same name as existing
 				Description: "Updated existing server",
-				VersionDetail: pkgmodel.VersionDetail{
+				VersionDetail: model.VersionDetail{
 					Version: "1.1.0",
 				},
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://api.example.com/mcp"}, // Same URL as before
 				},
 			},

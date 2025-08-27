@@ -1,12 +1,13 @@
 //nolint:testpackage
-package model
+package validation
 
 import (
 	"encoding/json"
 	"testing"
 	"time"
 
-	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,28 +15,28 @@ import (
 func TestExtractPublisherExtensions(t *testing.T) {
 	tests := []struct {
 		name     string
-		request  PublishRequest
+		request  apiv1.PublishRequest
 		expected map[string]interface{}
 	}{
 		{
 			name: "nil publisher extensions",
-			request: PublishRequest{
-				Server: ServerDetail{Name: "test"},
+			request: apiv1.PublishRequest{
+				Server: model.ServerDetail{Name: "test"},
 			},
 			expected: map[string]interface{}{},
 		},
 		{
 			name: "empty publisher extensions",
-			request: PublishRequest{
-				Server:     ServerDetail{Name: "test"},
+			request: apiv1.PublishRequest{
+				Server:     model.ServerDetail{Name: "test"},
 				XPublisher: map[string]interface{}{},
 			},
 			expected: map[string]interface{}{},
 		},
 		{
 			name: "simple publisher extensions",
-			request: PublishRequest{
-				Server: ServerDetail{Name: "test"},
+			request: apiv1.PublishRequest{
+				Server: model.ServerDetail{Name: "test"},
 				XPublisher: map[string]interface{}{
 					"build_info": map[string]interface{}{
 						"version": "1.2.3",
@@ -54,8 +55,8 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		},
 		{
 			name: "nested publisher extensions",
-			request: PublishRequest{
-				Server: ServerDetail{Name: "test"},
+			request: apiv1.PublishRequest{
+				Server: model.ServerDetail{Name: "test"},
 				XPublisher: map[string]interface{}{
 					"ci": map[string]interface{}{
 						"pipeline": map[string]interface{}{
@@ -78,8 +79,8 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		},
 		{
 			name: "non-map publisher extensions (should be ignored)",
-			request: PublishRequest{
-				Server:     ServerDetail{Name: "test"},
+			request: apiv1.PublishRequest{
+				Server:     model.ServerDetail{Name: "test"},
 				XPublisher: "invalid-string-data",
 			},
 			expected: map[string]interface{}{},
@@ -96,8 +97,8 @@ func TestExtractPublisherExtensions(t *testing.T) {
 
 func TestExtractPublisherExtensions_DoesNotDoubleNest(t *testing.T) {
 	// This test specifically verifies the bug we fixed - no double nesting
-	request := PublishRequest{
-		Server: ServerDetail{Name: "test"},
+	request := apiv1.PublishRequest{
+		Server: model.ServerDetail{Name: "test"},
 		XPublisher: map[string]interface{}{
 			"tool":    "publisher-cli",
 			"version": "1.0.0",
@@ -118,7 +119,7 @@ func TestRegistryMetadata_CreateRegistryExtensions(t *testing.T) {
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
 	updatedTime := time.Date(2023, 12, 1, 11, 0, 0, 0, time.UTC)
 
-	metadata := RegistryMetadata{
+	metadata := apiv1.RegistryMetadata{
 		ID:          "test-id-123",
 		PublishedAt: publishedTime,
 		UpdatedAt:   updatedTime,
@@ -145,16 +146,16 @@ func TestServerResponse_JSONSerialization(t *testing.T) {
 	// Test that ServerResponse properly serializes to extension wrapper format
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
 
-	response := ServerResponse{
-		Server: ServerDetail{
+	response := apiv1.ServerResponse{
+		Server: model.ServerDetail{
 			Name:        "test-server",
 			Description: "A test server",
-			Repository: pkgmodel.Repository{
+			Repository: model.Repository{
 				URL:    "https://github.com/test/server",
 				Source: "github",
 				ID:     "test/server",
 			},
-			VersionDetail: pkgmodel.VersionDetail{
+			VersionDetail: model.VersionDetail{
 				Version: "1.0.0",
 			},
 		},
@@ -216,7 +217,7 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 		}
 	}`
 
-	var request PublishRequest
+	var request apiv1.PublishRequest
 	err := json.Unmarshal([]byte(jsonData), &request)
 	require.NoError(t, err)
 
@@ -236,8 +237,8 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 
 func TestServerResponse_EmptyExtensions(t *testing.T) {
 	// Test behavior with empty/nil extensions
-	response := ServerResponse{
-		Server: ServerDetail{
+	response := apiv1.ServerResponse{
+		Server: model.ServerDetail{
 			Name:        "minimal-server",
 			Description: "Minimal test",
 		},
@@ -268,15 +269,15 @@ func TestServerResponse_EmptyExtensions(t *testing.T) {
 func TestValidateRemoteNamespaceMatch(t *testing.T) {
 	tests := []struct {
 		name         string
-		serverDetail ServerDetail
+		serverDetail model.ServerDetail
 		expectError  bool
 		errorMsg     string
 	}{
 		{
 			name: "valid match - example.com domain",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://example.com/mcp"},
 				},
 			},
@@ -284,9 +285,9 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "valid match - subdomain mcp.example.com",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://mcp.example.com/endpoint"},
 				},
 			},
@@ -294,9 +295,9 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "valid match - api subdomain",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/api-server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://api.example.com/mcp"},
 				},
 			},
@@ -304,9 +305,9 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid - wrong domain",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://google.com/mcp"},
 				},
 			},
@@ -315,9 +316,9 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid - different domain entirely",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.microsoft/server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://api.github.com/endpoint"},
 				},
 			},
@@ -326,9 +327,9 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "localhost URLs allowed with any namespace",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/test-server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "http://localhost:3000/sse"},
 				},
 			},
@@ -336,9 +337,9 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid URL format",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/test",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "not-a-valid-url"},
 				},
 			},
@@ -347,17 +348,17 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "empty remotes array",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name:    "com.example/test",
-				Remotes: []pkgmodel.Remote{},
+				Remotes: []model.Remote{},
 			},
 			expectError: false,
 		},
 		{
 			name: "multiple valid remotes - different subdomains",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://api.example.com/sse"},
 					{URL: "https://mcp.example.com/websocket"},
 				},
@@ -366,9 +367,9 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "one valid, one invalid remote",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/server",
-				Remotes: []pkgmodel.Remote{
+				Remotes: []model.Remote{
 					{URL: "https://example.com/sse"},
 					{URL: "https://google.com/websocket"},
 				},
@@ -395,27 +396,27 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 func TestParseServerName(t *testing.T) {
 	tests := []struct {
 		name         string
-		serverDetail ServerDetail
+		serverDetail model.ServerDetail
 		expectError  bool
 		errorMsg     string
 	}{
 		{
 			name: "valid namespace/name format",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example.api/server",
 			},
 			expectError: false,
 		},
 		{
 			name: "valid complex namespace",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.github.microsoft.azure/webapp-server",
 			},
 			expectError: false,
 		},
 		{
 			name: "empty server name",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "",
 			},
 			expectError: true,
@@ -423,7 +424,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "missing slash separator",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example.server",
 			},
 			expectError: true,
@@ -431,7 +432,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "empty namespace part",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "/server-name",
 			},
 			expectError: true,
@@ -439,7 +440,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "empty name part",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/",
 			},
 			expectError: true,
@@ -447,7 +448,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "multiple slashes - uses first as separator",
-			serverDetail: ServerDetail{
+			serverDetail: model.ServerDetail{
 				Name: "com.example/server/path",
 			},
 			expectError: false,

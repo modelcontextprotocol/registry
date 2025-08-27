@@ -6,8 +6,8 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 )
 
 // Metadata contains pagination metadata
@@ -25,7 +25,7 @@ type ListServersInput struct {
 
 // ListServersBody represents the paginated server list response body
 type ListServersBody struct {
-	Servers  []model.ServerResponse `json:"servers" doc:"List of MCP servers with extensions"`
+	Servers  []apiv1.ServerResponse `json:"servers" doc:"List of MCP servers with extensions"`
 	Metadata *Metadata               `json:"metadata,omitempty" doc:"Pagination metadata"`
 }
 
@@ -85,7 +85,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "Get MCP server details",
 		Description: "Get detailed information about a specific MCP server",
 		Tags:        []string{"servers"},
-	}, func(_ context.Context, input *ServerDetailInput) (*Response[model.ServerResponse], error) {
+	}, func(_ context.Context, input *ServerDetailInput) (*Response[apiv1.ServerResponse], error) {
 		// Get the server details from the registry service
 		serverDetail, err := registry.GetByID(input.ID)
 		if err != nil {
@@ -95,7 +95,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
 		}
 
-		return &Response[model.ServerResponse]{
+		return &Response[apiv1.ServerResponse]{
 			Body: *serverDetail,
 		}, nil
 	})
