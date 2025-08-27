@@ -16,6 +16,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func mockServerEndpoint(registry *MockRegistryService, serverID string) {
@@ -23,7 +24,7 @@ func mockServerEndpoint(registry *MockRegistryService, serverID string) {
 		Server: model.ServerDetail{
 			Name:        "test-server-detail",
 			Description: "Test server detail",
-			Repository: model.Repository{
+			Repository: pkgmodel.Repository{
 				URL:    "https://github.com/example/test-server-detail",
 				Source: "github",
 				ID:     "example/test-server-detail",

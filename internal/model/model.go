@@ -8,26 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/modelcontextprotocol/registry/pkg/model"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-
-
-
-
-type Input struct {
-	Description string   `json:"description,omitempty" bson:"description,omitempty"`
-	IsRequired  bool     `json:"is_required,omitempty" bson:"is_required,omitempty"`
-	Format      model.Format   `json:"format,omitempty" bson:"format,omitempty"`
-	Value       string   `json:"value,omitempty" bson:"value,omitempty"`
-	IsSecret    bool     `json:"is_secret,omitempty" bson:"is_secret,omitempty"`
-	Default     string   `json:"default,omitempty" bson:"default,omitempty"`
-	Choices     []string `json:"choices,omitempty" bson:"choices,omitempty"`
-}
-
 type InputWithVariables struct {
-	Input     `json:",inline" bson:",inline"`
-	Variables map[string]Input `json:"variables,omitempty" bson:"variables,omitempty"`
+	pkgmodel.Input `json:",inline" bson:",inline"`
+	Variables      map[string]pkgmodel.Input `json:"variables,omitempty" bson:"variables,omitempty"`
 }
 
 type KeyValueInput struct {
@@ -79,14 +65,14 @@ type VersionDetail struct {
 
 // ServerDetail represents complete server information as defined in the MCP spec (pure, no registry metadata)
 type ServerDetail struct {
-	Schema        string        `json:"$schema,omitempty" bson:"$schema,omitempty"`
-	Name          string        `json:"name" minLength:"1" maxLength:"200" bson:"name"`
-	Description   string        `json:"description" minLength:"1" maxLength:"100" bson:"description"`
-	Status        model.ServerStatus  `json:"status,omitempty" minLength:"1" bson:"status,omitempty"`
-	Repository    model.Repository    `json:"repository,omitempty" bson:"repository"`
-	VersionDetail VersionDetail `json:"version_detail" bson:"version_detail"`
-	Packages      []Package     `json:"packages,omitempty" bson:"packages,omitempty"`
-	Remotes       []Remote      `json:"remotes,omitempty" bson:"remotes,omitempty"`
+	Schema        string                `json:"$schema,omitempty" bson:"$schema,omitempty"`
+	Name          string                `json:"name" minLength:"1" maxLength:"200" bson:"name"`
+	Description   string                `json:"description" minLength:"1" maxLength:"100" bson:"description"`
+	Status        pkgmodel.ServerStatus `json:"status,omitempty" minLength:"1" bson:"status,omitempty"`
+	Repository    pkgmodel.Repository   `json:"repository,omitempty" bson:"repository"`
+	VersionDetail VersionDetail         `json:"version_detail" bson:"version_detail"`
+	Packages      []Package             `json:"packages,omitempty" bson:"packages,omitempty"`
+	Remotes       []Remote              `json:"remotes,omitempty" bson:"remotes,omitempty"`
 }
 
 // RegistryMetadata represents registry-generated metadata

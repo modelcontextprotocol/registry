@@ -10,6 +10,7 @@ import (
 
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +22,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 			Server: model.ServerDetail{
 				Name:        "test-server-1",
 				Description: "Test server 1",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/test/repo1",
 					Source: "github",
 					ID:     "123",

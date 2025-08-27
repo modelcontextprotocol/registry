@@ -18,6 +18,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -57,7 +58,7 @@ func TestPublishIntegration(t *testing.T) {
 			Server: model.ServerDetail{
 				Name:        "io.github.testuser/test-mcp-server",
 				Description: "A test MCP server for integration testing",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/testuser/test-mcp-server",
 					Source: "github",
 					ID:     "testuser/test-mcp-server",
@@ -104,7 +105,7 @@ func TestPublishIntegration(t *testing.T) {
 			Server: model.ServerDetail{
 				Name:        "com.example/test-mcp-server-no-auth",
 				Description: "A test MCP server without authentication",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -194,7 +195,7 @@ func TestPublishIntegration(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",

@@ -25,3 +25,14 @@ const (
 	FormatBoolean  Format = "boolean"
 	FormatFilePath Format = "file_path"
 )
+
+// Input represents a configuration input
+type Input struct {
+	Description string   `json:"description,omitempty" bson:"description,omitempty"`
+	IsRequired  bool     `json:"is_required,omitempty" bson:"is_required,omitempty"`
+	Format      Format   `json:"format,omitempty" bson:"format,omitempty"`
+	Value       string   `json:"value,omitempty" bson:"value,omitempty"`
+	IsSecret    bool     `json:"is_secret,omitempty" bson:"is_secret,omitempty"`
+	Default     string   `json:"default,omitempty" bson:"default,omitempty"`
+	Choices     []string `json:"choices,omitempty" bson:"choices,omitempty"`
+}

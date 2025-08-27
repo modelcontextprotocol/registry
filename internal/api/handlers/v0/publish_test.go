@@ -18,6 +18,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -91,7 +92,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Server: model.ServerDetail{
 					Name:        "io.github.example/test-server",
 					Description: "A test server",
-					Repository: model.Repository{
+					Repository: pkgmodel.Repository{
 						URL:    "https://github.com/example/test-server",
 						Source: "github",
 						ID:     "example/test-server",
@@ -119,7 +120,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Server: model.ServerDetail{
 					Name:        "example/test-server",
 					Description: "A test server without auth",
-					Repository: model.Repository{
+					Repository: pkgmodel.Repository{
 						URL:    "https://github.com/example/test-server",
 						Source: "github",
 						ID:     "example/test-server",
@@ -181,7 +182,7 @@ func TestPublishEndpoint(t *testing.T) {
 					VersionDetail: model.VersionDetail{
 						Version: "1.0.0",
 					},
-					Repository: model.Repository{
+					Repository: pkgmodel.Repository{
 						URL:    "https://github.com/example/test-server",
 						Source: "github",
 						ID:     "example/test-server",
@@ -207,7 +208,7 @@ func TestPublishEndpoint(t *testing.T) {
 					VersionDetail: model.VersionDetail{
 						Version: "1.0.0",
 					},
-					Repository: model.Repository{
+					Repository: pkgmodel.Repository{
 						URL:    "https://github.com/example/test-server",
 						Source: "github",
 						ID:     "example/test-server",

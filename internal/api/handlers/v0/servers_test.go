@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	pkgmodel "github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -35,7 +36,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Server: model.ServerDetail{
 							Name:        "test-server-1",
 							Description: "First test server",
-							Repository: model.Repository{
+							Repository: pkgmodel.Repository{
 								URL:    "https://github.com/example/test-server-1",
 								Source: "github",
 								ID:     "example/test-server-1",
@@ -52,7 +53,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Server: model.ServerDetail{
 							Name:        "test-server-2",
 							Description: "Second test server",
-							Repository: model.Repository{
+							Repository: pkgmodel.Repository{
 								URL:    "https://github.com/example/test-server-2",
 								Source: "github",
 								ID:     "example/test-server-2",
@@ -74,7 +75,7 @@ func TestServersListEndpoint(t *testing.T) {
 					Server: model.ServerDetail{
 						Name:        "test-server-1",
 						Description: "First test server",
-						Repository: model.Repository{
+						Repository: pkgmodel.Repository{
 							URL:    "https://github.com/example/test-server-1",
 							Source: "github",
 							ID:     "example/test-server-1",
@@ -91,7 +92,7 @@ func TestServersListEndpoint(t *testing.T) {
 					Server: model.ServerDetail{
 						Name:        "test-server-2",
 						Description: "Second test server",
-						Repository: model.Repository{
+						Repository: pkgmodel.Repository{
 							URL:    "https://github.com/example/test-server-2",
 							Source: "github",
 							ID:     "example/test-server-2",
@@ -115,7 +116,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Server: model.ServerDetail{
 							Name:        "test-server-3",
 							Description: "Third test server",
-							Repository: model.Repository{
+							Repository: pkgmodel.Repository{
 								URL:    "https://github.com/example/test-server-3",
 								Source: "github",
 								ID:     "example/test-server-3",
@@ -138,7 +139,7 @@ func TestServersListEndpoint(t *testing.T) {
 					Server: model.ServerDetail{
 						Name:        "test-server-3",
 						Description: "Third test server",
-						Repository: model.Repository{
+						Repository: pkgmodel.Repository{
 							URL:    "https://github.com/example/test-server-3",
 							Source: "github",
 							ID:     "example/test-server-3",
@@ -278,7 +279,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 					Server: model.ServerDetail{
 						Name:        "test-server-detail",
 						Description: "Test server detail",
-						Repository: model.Repository{
+						Repository: pkgmodel.Repository{
 							URL:    "https://github.com/example/test-server-detail",
 							Source: "github",
 							ID:     "example/test-server-detail",
@@ -380,7 +381,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 			Server: model.ServerDetail{
 				Name:        "integration-test-server",
 				Description: "Integration test server",
-				Repository: model.Repository{
+				Repository: pkgmodel.Repository{
 					URL:    "https://github.com/example/integration-test",
 					Source: "github",
 					ID:     "example/integration-test",

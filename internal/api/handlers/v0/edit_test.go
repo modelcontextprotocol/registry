@@ -50,7 +50,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 					Status:      pkgmodel.ServerStatusDeprecated,
-					Repository: model.Repository{
+					Repository: pkgmodel.Repository{
 						URL:    "https://github.com/domdomegg/test-server",
 						Source: "github",
 						ID:     "domdomegg/test-server",
