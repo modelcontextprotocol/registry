@@ -58,15 +58,24 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest("Invalid request format", err)
 		}
 
+		// Get current server to check permissions against existing name
+		currentServer, err := registry.GetByID(input.ID)
+		if err != nil {
+			if errors.Is(err, database.ErrNotFound) {
+				return nil, huma.Error404NotFound("Server not found")
+			}
+			return nil, huma.Error500InternalServerError("Failed to get current server", err)
+		}
+
+		// Verify edit permissions for this server using the existing server name
+		if !jwtManager.HasPermission(currentServer.Server.Name, auth.PermissionActionEdit, claims.Permissions) {
+			return nil, huma.Error403Forbidden("You do not have edit permissions for this server")
+		}
+
 		// Parse the validated request body
 		var editRequest model.PublishRequest
 		if err := json.Unmarshal(input.RawBody, &editRequest); err != nil {
 			return nil, huma.Error400BadRequest("Invalid JSON format", err)
-		}
-
-		// Verify edit permissions for this server
-		if !jwtManager.HasPermission(editRequest.Server.Name, auth.PermissionActionEdit, claims.Permissions) {
-			return nil, huma.Error403Forbidden("You do not have edit permissions for this server")
 		}
 
 		// Validate the server detail
@@ -75,13 +84,9 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest(err.Error())
 		}
 
-		// Check if we're trying to undelete a server
-		currentServer, err := registry.GetByID(input.ID)
-		if err != nil {
-			if errors.Is(err, database.ErrNotFound) {
-				return nil, huma.Error404NotFound("Server not found")
-			}
-			return nil, huma.Error500InternalServerError("Failed to get current server", err)
+		// Prevent renaming servers
+		if currentServer.Server.Name != editRequest.Server.Name {
+			return nil, huma.Error400BadRequest("Cannot rename server")
 		}
 
 		// Prevent undeleting servers - once deleted, they stay deleted

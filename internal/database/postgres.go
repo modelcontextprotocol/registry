@@ -543,14 +543,18 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail 
 		return nil, err
 	}
 
-	// Update servers table
-	serverQuery := `
-		UPDATE servers 
-		SET name = $1, description = $2, status = $3, repository = $4, 
-		    version = $5, packages = $6, remotes = $7, updated_at = $8
-		WHERE id = $9
-	`
+	// Start a transaction for atomic updates
+	tx, err := db.conn.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
+			log.Printf("Failed to rollback transaction: %v", rollbackErr)
+		}
+	}()
 
+	// Prepare JSON data
 	repositoryJSON, err := json.Marshal(serverDetail.Repository)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal repository: %w", err)
@@ -566,8 +570,22 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail 
 		return nil, fmt.Errorf("failed to marshal remotes: %w", err)
 	}
 
+	publisherExtensionsJSON, err := json.Marshal(publisherExtensions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal publisher extensions: %w", err)
+	}
+
 	now := time.Now()
-	_, err = db.conn.Exec(ctx, serverQuery,
+
+	// Update servers table
+	serverQuery := `
+		UPDATE servers 
+		SET name = $1, description = $2, status = $3, repository = $4, 
+		    version = $5, packages = $6, remotes = $7, updated_at = $8
+		WHERE id = $9
+	`
+
+	_, err = tx.Exec(ctx, serverQuery,
 		serverDetail.Name,
 		serverDetail.Description,
 		serverDetail.Status,
@@ -583,20 +601,20 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail 
 	}
 
 	// Update server_extensions table
-	publisherExtensionsJSON, err := json.Marshal(publisherExtensions)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal publisher extensions: %w", err)
-	}
-
 	extQuery := `
 		UPDATE server_extensions 
 		SET updated_at = $1, publisher_extensions = $2
 		WHERE server_id = $3
 	`
 
-	_, err = db.conn.Exec(ctx, extQuery, now, publisherExtensionsJSON, id)
+	_, err = tx.Exec(ctx, extQuery, now, publisherExtensionsJSON, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update server extensions: %w", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	// Return the updated record

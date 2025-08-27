@@ -128,7 +128,17 @@ func TestEditServerEndpoint(t *testing.T) {
 					Description: "Updated test server",
 				},
 			},
-			setupMocks:     func(_ *MockRegistryService) {},
+			setupMocks: func(registry *MockRegistryService) {
+				// Need to mock GetByID since we check permissions against existing server name
+				currentServer := &model.ServerResponse{
+					Server: model.ServerDetail{
+						Name:        "io.github.domdomegg/test-server",
+						Description: "Original server",
+						Status:      model.ServerStatusActive,
+					},
+				}
+				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
+			},
 			expectedStatus: http.StatusForbidden,
 			expectedError:  "Forbidden",
 		},
@@ -152,7 +162,18 @@ func TestEditServerEndpoint(t *testing.T) {
 					Description: "Updated test server",
 				},
 			},
-			setupMocks:     func(_ *MockRegistryService) {},
+			setupMocks: func(registry *MockRegistryService) {
+				// Need to mock GetByID since we check permissions against existing server name
+				// This test case shows a different scenario: existing server is "other" but user only has perms for "domdomegg"
+				currentServer := &model.ServerResponse{
+					Server: model.ServerDetail{
+						Name:        "io.github.other/test-server",
+						Description: "Original server",
+						Status:      model.ServerStatusActive,
+					},
+				}
+				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
+			},
 			expectedStatus: http.StatusForbidden,
 			expectedError:  "Forbidden",
 		},

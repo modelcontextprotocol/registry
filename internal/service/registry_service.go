@@ -90,36 +90,36 @@ func validateMCPBPackage(host string) error {
 	if !isAllowed {
 		return fmt.Errorf("MCPB packages must be hosted on allowlisted providers (GitHub or GitLab). Host '%s' is not allowed", host)
 	}
-	
+
 	return nil
 }
 
 // validatePackage validates packages to ensure they meet requirements
 func validatePackage(pkg *model.Package) error {
 	registryType := strings.ToLower(pkg.RegistryType)
-	
+
 	// For direct download packages (mcpb or direct URLs)
-	if registryType == "mcpb" || 
-	   strings.HasPrefix(pkg.Identifier, "http://") || strings.HasPrefix(pkg.Identifier, "https://") {
+	if registryType == "mcpb" ||
+		strings.HasPrefix(pkg.Identifier, "http://") || strings.HasPrefix(pkg.Identifier, "https://") {
 		parsedURL, err := url.Parse(pkg.Identifier)
 		if err != nil {
 			return fmt.Errorf("invalid package URL: %w", err)
 		}
-		
+
 		host := strings.ToLower(parsedURL.Host)
-		
+
 		// For MCPB packages, validate they're from allowed hosts
 		if registryType == "mcpb" || strings.HasSuffix(strings.ToLower(pkg.Identifier), ".mcpb") {
 			return validateMCPBPackage(host)
 		}
-		
+
 		// For other URL-based packages, just ensure it's valid
 		if parsedURL.Scheme == "" || parsedURL.Host == "" {
 			return fmt.Errorf("package URL must be a valid absolute URL")
 		}
 		return nil
 	}
-	
+
 	// For registry-based packages, no special validation needed
 	// Registry types like "npm", "pypi", "docker-hub", "nuget" are all valid
 	return nil
@@ -279,6 +279,11 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 
 	// Validate reverse-DNS namespace matching for remote URLs
 	if err := model.ValidateRemoteNamespaceMatch(req.Server); err != nil {
+		return nil, err
+	}
+
+	// Check for duplicate remote URLs
+	if err := s.validateNoDuplicateRemoteURLs(ctx, req.Server); err != nil {
 		return nil, err
 	}
 
