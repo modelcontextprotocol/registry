@@ -72,8 +72,8 @@ func ExtractPublisherExtensions(req apiv1.PublishRequest) map[string]interface{}
 	return publisherExtensions
 }
 
-// ParseServerName extracts the server name from a model.ServerDetail for validation purposes
-func ParseServerName(serverDetail model.ServerDetail) (string, error) {
+// ParseServerName extracts the server name from a model.ServerJSON for validation purposes
+func ParseServerName(serverDetail model.ServerJSON) (string, error) {
 	name := serverDetail.Name
 	if name == "" {
 		return "", fmt.Errorf("server name is required and must be a string")
@@ -93,7 +93,7 @@ func ParseServerName(serverDetail model.ServerDetail) (string, error) {
 }
 
 // ValidateRemoteNamespaceMatch validates that remote URLs match the reverse-DNS namespace
-func ValidateRemoteNamespaceMatch(serverDetail model.ServerDetail) error {
+func ValidateRemoteNamespaceMatch(serverDetail model.ServerJSON) error {
 	namespace := serverDetail.Name
 
 	for _, remote := range serverDetail.Remotes {

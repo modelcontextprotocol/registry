@@ -46,7 +46,7 @@ func main() {
 	// Initialize services based on environment
 	switch cfg.DatabaseType {
 	case config.DatabaseTypeMemory:
-		db = database.NewMemoryDB(map[string]*model.ServerDetail{})
+		db = database.NewMemoryDB(map[string]*model.ServerJSON{})
 		registryService = service.NewRegistryServiceWithDB(db)
 	case config.DatabaseTypePostgreSQL:
 		// Use PostgreSQL for real registry service

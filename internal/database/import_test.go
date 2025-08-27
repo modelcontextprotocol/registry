@@ -19,7 +19,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 	tempFile := "/tmp/test_seed.json"
 	seedData := []apiv1.ServerResponse{
 		{
-			Server: model.ServerDetail{
+			Server: model.ServerJSON{
 				Name:        "test-server-1",
 				Description: "Test server 1",
 				Repository: model.Repository{
@@ -66,7 +66,7 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	// Create a test HTTP server that serves seed JSON directly in extension wrapper format
 	seedData := []apiv1.ServerResponse{
 		{
-			Server: model.ServerDetail{
+			Server: model.ServerJSON{
 				Name:        "test-server-1",
 				Description: "Test server 1",
 			},
@@ -96,7 +96,7 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 func TestReadSeedFile_RegistryURL(t *testing.T) {
 	// Create mock registry responses
 	server1 := apiv1.ServerResponse{
-		Server: model.ServerDetail{
+		Server: model.ServerJSON{
 			Name:        "Test Server 1",
 			Description: "First test server",
 			Packages: []model.Package{
@@ -115,7 +115,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		},
 	}
 	server2 := apiv1.ServerResponse{
-		Server: model.ServerDetail{
+		Server: model.ServerJSON{
 			Name:        "Test Server 2",
 			Description: "Second test server",
 			Packages: []model.Package{
@@ -134,7 +134,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		},
 	}
 
-	serverDetail1 := model.ServerDetail{
+	serverDetail1 := model.ServerJSON{
 		Name:        "Test Server 1",
 		Description: "First test server",
 		Packages: []model.Package{
@@ -146,7 +146,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 			},
 		},
 	}
-	serverDetail2 := model.ServerDetail{
+	serverDetail2 := model.ServerJSON{
 		Name:        "Test Server 2",
 		Description: "Second test server",
 		Packages: []model.Package{
@@ -173,7 +173,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 
 		type PaginatedResponse struct {
 			Servers  []apiv1.ServerResponse `json:"servers"`
-			Metadata *Metadata             `json:"metadata,omitempty"`
+			Metadata *Metadata              `json:"metadata,omitempty"`
 		}
 
 		var response PaginatedResponse

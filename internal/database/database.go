@@ -26,11 +26,11 @@ type Database interface {
 	GetByID(ctx context.Context, id string) (*apiv1.ServerRecord, error)
 	// Publish adds a new server to the database with separated server.json and extensions
 	// The registryMetadata contains metadata determined by the service layer (e.g., is_latest, timestamps)
-	Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error)
+	Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error)
 	// UpdateLatestFlag updates the is_latest flag for a specific server record
 	UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error
 	// UpdateServer updates an existing server record with new server details
-	UpdateServer(ctx context.Context, id string, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error)
+	UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error)
 	// ImportSeed imports initial data from a seed file
 	ImportSeed(ctx context.Context, seedFilePath string) error
 	// Close closes the database connection

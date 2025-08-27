@@ -33,7 +33,7 @@ func TestServersListEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				servers := []apiv1.ServerResponse{
 					{
-						Server: model.ServerDetail{
+						Server: model.ServerJSON{
 							Name:        "test-server-1",
 							Description: "First test server",
 							Repository: model.Repository{
@@ -50,7 +50,7 @@ func TestServersListEndpoint(t *testing.T) {
 						},
 					},
 					{
-						Server: model.ServerDetail{
+						Server: model.ServerJSON{
 							Name:        "test-server-2",
 							Description: "Second test server",
 							Repository: model.Repository{
@@ -72,7 +72,7 @@ func TestServersListEndpoint(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedServers: []apiv1.ServerResponse{
 				{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "test-server-1",
 						Description: "First test server",
 						Repository: model.Repository{
@@ -89,7 +89,7 @@ func TestServersListEndpoint(t *testing.T) {
 					},
 				},
 				{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "test-server-2",
 						Description: "Second test server",
 						Repository: model.Repository{
@@ -113,7 +113,7 @@ func TestServersListEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				servers := []apiv1.ServerResponse{
 					{
-						Server: model.ServerDetail{
+						Server: model.ServerJSON{
 							Name:        "test-server-3",
 							Description: "Third test server",
 							Repository: model.Repository{
@@ -136,7 +136,7 @@ func TestServersListEndpoint(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedServers: []apiv1.ServerResponse{
 				{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "test-server-3",
 						Description: "Third test server",
 						Repository: model.Repository{
@@ -234,7 +234,7 @@ func TestServersListEndpoint(t *testing.T) {
 				// Parse response body
 				var resp struct {
 					Servers  []apiv1.ServerResponse `json:"servers"`
-					Metadata *v0.Metadata          `json:"metadata,omitempty"`
+					Metadata *v0.Metadata           `json:"metadata,omitempty"`
 				}
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				assert.NoError(t, err)
@@ -276,7 +276,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 			serverID: uuid.New().String(),
 			setupMocks: func(registry *MockRegistryService, serverID string) {
 				serverDetail := &apiv1.ServerResponse{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "test-server-detail",
 						Description: "Test server detail",
 						Repository: model.Repository{
@@ -378,7 +378,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 	serverID := uuid.New().String()
 	servers := []apiv1.ServerResponse{
 		{
-			Server: model.ServerDetail{
+			Server: model.ServerJSON{
 				Name:        "integration-test-server",
 				Description: "Integration test server",
 				Repository: model.Repository{
@@ -397,7 +397,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 	}
 
 	serverDetail := &apiv1.ServerResponse{
-		Server: servers[0].Server,
+		Server:                          servers[0].Server,
 		XIOModelContextProtocolRegistry: servers[0].XIOModelContextProtocolRegistry,
 	}
 

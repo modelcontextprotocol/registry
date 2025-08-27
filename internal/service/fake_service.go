@@ -18,8 +18,8 @@ type fakeRegistryService struct {
 
 // NewFakeRegistryService creates a new fake registry service with pre-populated data
 func NewFakeRegistryService() RegistryService {
-	// Sample registry entries with updated model structure using ServerDetail
-	serverDetails := []*model.ServerDetail{
+	// Sample registry entries with updated model structure using ServerJSON
+	serverDetails := []*model.ServerJSON{
 		{
 			Name:        "bluegreen/mcp-server",
 			Description: "A dummy MCP registry for testing",
@@ -59,7 +59,7 @@ func NewFakeRegistryService() RegistryService {
 	}
 
 	// Create a new in-memory database using registry metadata IDs
-	serverDetailMap := make(map[string]*model.ServerDetail)
+	serverDetailMap := make(map[string]*model.ServerJSON)
 	for _, entry := range serverDetails {
 		registryID := uuid.New().String() // Generate registry metadata ID
 		serverDetailMap[registryID] = entry

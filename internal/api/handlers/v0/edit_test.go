@@ -46,7 +46,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 					Status:      model.ServerStatusDeprecated,
@@ -63,16 +63,16 @@ func TestEditServerEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server (not deleted)
 				currentServer := &apiv1.ServerResponse{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
 						Status:      model.ServerStatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
-				
+
 				expectedResponse := &apiv1.ServerResponse{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Updated test server",
 						Status:      model.ServerStatusDeprecated,
@@ -124,7 +124,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 				},
@@ -132,7 +132,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				// Need to mock GetByID since we check permissions against existing server name
 				currentServer := &apiv1.ServerResponse{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
 						Status:      model.ServerStatusActive,
@@ -158,7 +158,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.other/test-server",
 					Description: "Updated test server",
 				},
@@ -167,7 +167,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				// Need to mock GetByID since we check permissions against existing server name
 				// This test case shows a different scenario: existing server is "other" but user only has perms for "domdomegg"
 				currentServer := &apiv1.ServerResponse{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "io.github.other/test-server",
 						Description: "Original server",
 						Status:      model.ServerStatusActive,
@@ -193,7 +193,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 				},
@@ -219,7 +219,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 				},
@@ -227,7 +227,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server (not deleted)
 				currentServer := &apiv1.ServerResponse{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
 						Status:      model.ServerStatusActive,
@@ -273,7 +273,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Trying to undelete server",
 					Status:      model.ServerStatusActive,
@@ -282,7 +282,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server is deleted
 				currentServer := &apiv1.ServerResponse{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
 						Status:      model.ServerStatusDeleted,

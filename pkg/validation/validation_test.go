@@ -21,14 +21,14 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		{
 			name: "nil publisher extensions",
 			request: apiv1.PublishRequest{
-				Server: model.ServerDetail{Name: "test"},
+				Server: model.ServerJSON{Name: "test"},
 			},
 			expected: map[string]interface{}{},
 		},
 		{
 			name: "empty publisher extensions",
 			request: apiv1.PublishRequest{
-				Server:     model.ServerDetail{Name: "test"},
+				Server:     model.ServerJSON{Name: "test"},
 				XPublisher: map[string]interface{}{},
 			},
 			expected: map[string]interface{}{},
@@ -36,7 +36,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		{
 			name: "simple publisher extensions",
 			request: apiv1.PublishRequest{
-				Server: model.ServerDetail{Name: "test"},
+				Server: model.ServerJSON{Name: "test"},
 				XPublisher: map[string]interface{}{
 					"build_info": map[string]interface{}{
 						"version": "1.2.3",
@@ -56,7 +56,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		{
 			name: "nested publisher extensions",
 			request: apiv1.PublishRequest{
-				Server: model.ServerDetail{Name: "test"},
+				Server: model.ServerJSON{Name: "test"},
 				XPublisher: map[string]interface{}{
 					"ci": map[string]interface{}{
 						"pipeline": map[string]interface{}{
@@ -80,7 +80,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		{
 			name: "non-map publisher extensions (should be ignored)",
 			request: apiv1.PublishRequest{
-				Server:     model.ServerDetail{Name: "test"},
+				Server:     model.ServerJSON{Name: "test"},
 				XPublisher: "invalid-string-data",
 			},
 			expected: map[string]interface{}{},
@@ -98,7 +98,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 func TestExtractPublisherExtensions_DoesNotDoubleNest(t *testing.T) {
 	// This test specifically verifies the bug we fixed - no double nesting
 	request := apiv1.PublishRequest{
-		Server: model.ServerDetail{Name: "test"},
+		Server: model.ServerJSON{Name: "test"},
 		XPublisher: map[string]interface{}{
 			"tool":    "publisher-cli",
 			"version": "1.0.0",
@@ -147,7 +147,7 @@ func TestServerResponse_JSONSerialization(t *testing.T) {
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
 
 	response := apiv1.ServerResponse{
-		Server: model.ServerDetail{
+		Server: model.ServerJSON{
 			Name:        "test-server",
 			Description: "A test server",
 			Repository: model.Repository{
@@ -238,7 +238,7 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 func TestServerResponse_EmptyExtensions(t *testing.T) {
 	// Test behavior with empty/nil extensions
 	response := apiv1.ServerResponse{
-		Server: model.ServerDetail{
+		Server: model.ServerJSON{
 			Name:        "minimal-server",
 			Description: "Minimal test",
 		},
@@ -269,13 +269,13 @@ func TestServerResponse_EmptyExtensions(t *testing.T) {
 func TestValidateRemoteNamespaceMatch(t *testing.T) {
 	tests := []struct {
 		name         string
-		serverDetail model.ServerDetail
+		serverDetail model.ServerJSON
 		expectError  bool
 		errorMsg     string
 	}{
 		{
 			name: "valid match - example.com domain",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "https://example.com/mcp"},
@@ -285,7 +285,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "valid match - subdomain mcp.example.com",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "https://mcp.example.com/endpoint"},
@@ -295,7 +295,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "valid match - api subdomain",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/api-server",
 				Remotes: []model.Remote{
 					{URL: "https://api.example.com/mcp"},
@@ -305,7 +305,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid - wrong domain",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "https://google.com/mcp"},
@@ -316,7 +316,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid - different domain entirely",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.microsoft/server",
 				Remotes: []model.Remote{
 					{URL: "https://api.github.com/endpoint"},
@@ -327,7 +327,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "localhost URLs allowed with any namespace",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "http://localhost:3000/sse"},
@@ -337,7 +337,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid URL format",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/test",
 				Remotes: []model.Remote{
 					{URL: "not-a-valid-url"},
@@ -348,7 +348,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "empty remotes array",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:    "com.example/test",
 				Remotes: []model.Remote{},
 			},
@@ -356,7 +356,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "multiple valid remotes - different subdomains",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/server",
 				Remotes: []model.Remote{
 					{URL: "https://api.example.com/sse"},
@@ -367,7 +367,7 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "one valid, one invalid remote",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/server",
 				Remotes: []model.Remote{
 					{URL: "https://example.com/sse"},
@@ -396,27 +396,27 @@ func TestValidateRemoteNamespaceMatch(t *testing.T) {
 func TestParseServerName(t *testing.T) {
 	tests := []struct {
 		name         string
-		serverDetail model.ServerDetail
+		serverDetail model.ServerJSON
 		expectError  bool
 		errorMsg     string
 	}{
 		{
 			name: "valid namespace/name format",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example.api/server",
 			},
 			expectError: false,
 		},
 		{
 			name: "valid complex namespace",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.github.microsoft.azure/webapp-server",
 			},
 			expectError: false,
 		},
 		{
 			name: "empty server name",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "",
 			},
 			expectError: true,
@@ -424,7 +424,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "missing slash separator",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example.server",
 			},
 			expectError: true,
@@ -432,7 +432,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "empty namespace part",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "/server-name",
 			},
 			expectError: true,
@@ -440,7 +440,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "empty name part",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/",
 			},
 			expectError: true,
@@ -448,7 +448,7 @@ func TestParseServerName(t *testing.T) {
 		},
 		{
 			name: "multiple slashes - uses first as separator",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name: "com.example/server/path",
 			},
 			expectError: false,

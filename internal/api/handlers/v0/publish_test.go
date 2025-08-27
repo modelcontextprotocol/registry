@@ -89,7 +89,7 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "successful publish with GitHub auth",
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.example/test-server",
 					Description: "A test server",
 					Repository: model.Repository{
@@ -117,7 +117,7 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "successful publish with no auth (AuthMethodNone)",
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "example/test-server",
 					Description: "A test server without auth",
 					Repository: model.Repository{
@@ -160,7 +160,7 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "invalid token",
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "test-server",
 					Description: "A test server",
 					VersionDetail: model.VersionDetail{
@@ -176,7 +176,7 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "permission denied",
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "io.github.other/test-server",
 					Description: "A test server",
 					VersionDetail: model.VersionDetail{
@@ -202,7 +202,7 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "registry service error",
 			requestBody: apiv1.PublishRequest{
-				Server: model.ServerDetail{
+				Server: model.ServerJSON{
 					Name:        "example/test-server",
 					Description: "A test server",
 					VersionDetail: model.VersionDetail{

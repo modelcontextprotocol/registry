@@ -14,14 +14,14 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
+	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func mockServerEndpoint(registry *MockRegistryService, serverID string) {
 	serverDetail := &apiv1.ServerResponse{
-		Server: model.ServerDetail{
+		Server: model.ServerJSON{
 			Name:        "test-server-detail",
 			Description: "Test server detail",
 			Repository: model.Repository{

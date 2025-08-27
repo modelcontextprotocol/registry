@@ -278,7 +278,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerReco
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error) {
+func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -292,7 +292,6 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 			log.Printf("Failed to rollback transaction: %v", err)
 		}
 	}()
-
 
 	// Prepare JSON data for server table
 	repositoryJSON, err := json.Marshal(serverDetail.Repository)
@@ -317,7 +316,6 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 
 	// Use the same ID for both server and server_extensions records (1:1 relationship)
 	serverID := registryMetadata.ID
-
 
 	// Insert new server record
 	insertServerQuery := `
@@ -349,7 +347,7 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		registryMetadata.PublishedAt,
 		registryMetadata.UpdatedAt,
 		registryMetadata.IsLatest,
-		registryMetadata.PublishedAt,  // release_date
+		registryMetadata.PublishedAt, // release_date
 		publisherExtensionsJSON,
 	)
 	if err != nil {
@@ -411,7 +409,7 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 }
 
 // publishWithTransaction handles publishing within an existing transaction, optionally with predefined metadata
-func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, existingMetadata *apiv1.RegistryMetadata) error {
+func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, existingMetadata *apiv1.RegistryMetadata) error {
 	// Use the same ID for both server and server_extensions (1:1 relationship)
 	var id string
 	if existingMetadata != nil && existingMetadata.ID != "" {
@@ -519,7 +517,7 @@ func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest 
 		SET is_latest = $1, updated_at = $2
 		WHERE id = $3
 	`
-	
+
 	result, err := db.conn.Exec(ctx, query, isLatest, time.Now(), id)
 	if err != nil {
 		return fmt.Errorf("failed to update latest flag: %w", err)
@@ -533,7 +531,7 @@ func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest 
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}

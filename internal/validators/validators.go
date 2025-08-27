@@ -12,7 +12,7 @@ type ServerValidator struct {
 }
 
 // Validate checks if the server details are valid
-func (v *ServerValidator) Validate(obj *model.ServerDetail) error {
+func (v *ServerValidator) Validate(obj *model.ServerJSON) error {
 	if err := v.RepositoryValidator.Validate(&obj.Repository); err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func NewObjectValidator() *ObjectValidator {
 	}
 }
 
-func (ov *ObjectValidator) Validate(obj *model.ServerDetail) error {
+func (ov *ObjectValidator) Validate(obj *model.ServerJSON) error {
 	if err := ov.ServerValidator.Validate(obj); err != nil {
 		return err
 	}

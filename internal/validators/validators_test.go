@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,12 +13,12 @@ func TestObjectValidator_Validate(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		serverDetail  model.ServerDetail
+		serverDetail  model.ServerJSON
 		expectedError string
 	}{
 		{
 			name: "valid server detail with all fields",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -47,7 +46,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "server with invalid repository source",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -62,7 +61,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "server with invalid GitHub URL format",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -77,7 +76,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "server with invalid GitLab URL format",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -92,7 +91,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "package with spaces in name",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -114,7 +113,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "multiple packages with one invalid",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -141,7 +140,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "remote with invalid URL",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -161,7 +160,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "remote with missing scheme",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -181,7 +180,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "multiple remotes with one invalid",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -204,7 +203,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "server detail with nil packages and remotes",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -221,7 +220,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		},
 		{
 			name: "server detail with empty packages and remotes slices",
-			serverDetail: model.ServerDetail{
+			serverDetail: model.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
 				Repository: model.Repository{

@@ -18,8 +18,8 @@ type MemoryDB struct {
 }
 
 // NewMemoryDB creates a new instance of the in-memory database
-func NewMemoryDB(e map[string]*model.ServerDetail) *MemoryDB {
-	// Convert ServerDetail entries to ServerRecord entries
+func NewMemoryDB(e map[string]*model.ServerJSON) *MemoryDB {
+	// Convert ServerJSON entries to ServerRecord entries
 	serverRecords := make(map[string]*apiv1.ServerRecord)
 	for registryID, serverDetail := range e {
 		// Create registry metadata
@@ -42,7 +42,6 @@ func NewMemoryDB(e map[string]*model.ServerDetail) *MemoryDB {
 	}
 }
 
-
 //nolint:cyclop // Complexity from filtering logic is acceptable for memory implementation
 func (db *MemoryDB) List(
 	ctx context.Context,
@@ -60,7 +59,6 @@ func (db *MemoryDB) List(
 
 	db.mu.RLock()
 	defer db.mu.RUnlock()
-	
 
 	// Convert all entries to a slice for pagination, filter by is_latest
 	var allEntries []*apiv1.ServerRecord
@@ -165,17 +163,17 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv1.ServerRecord
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error) {
+func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryMetadata) (*apiv1.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
-	
+
 	// Extract name and version for validation
 	name := serverDetail.Name
 	if name == "" {
 		return nil, fmt.Errorf("name is required in server JSON")
 	}
-	
+
 	version := serverDetail.VersionDetail.Version
 	if version == "" {
 		return nil, fmt.Errorf("version is required in version_detail")
@@ -207,7 +205,7 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
-	
+
 	// This will need to be updated to work with the new ServerRecord format
 	// Read seed data using the shared ReadSeedFile function
 	seedData, err := ReadSeedFile(ctx, seedFilePath)
@@ -224,7 +222,6 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 		// Use the registry metadata ID as the map key
 		db.entries[record.RegistryMetadata.ID] = record
 	}
-	
 
 	return nil
 }
@@ -248,7 +245,7 @@ func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bo
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error) {
+func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}

@@ -6,7 +6,6 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-
 // RegistryMetadata represents registry-generated metadata
 type RegistryMetadata struct {
 	ID          string    `json:"id" bson:"_id"`
@@ -31,16 +30,16 @@ func (rm *RegistryMetadata) CreateRegistryExtensions() map[string]interface{} {
 
 // ServerRecord represents the complete storage model that separates server.json from registry metadata
 type ServerRecord struct {
-	ServerJSON          model.ServerDetail           `json:"server" bson:"server"`                             // Pure MCP server.json
+	ServerJSON          model.ServerJSON       `json:"server" bson:"server"`                             // Pure MCP server.json
 	RegistryMetadata    RegistryMetadata       `json:"registry_metadata" bson:"registry_metadata"`       // Registry-generated data
 	PublisherExtensions map[string]interface{} `json:"publisher_extensions" bson:"publisher_extensions"` // x-publisher extensions
 }
 
 // ServerResponse represents the API response format with wrapper and extensions
 type ServerResponse struct {
-	Server                          model.ServerDetail `json:"server"`
-	XIOModelContextProtocolRegistry interface{}  `json:"x-io.modelcontextprotocol.registry,omitempty"`
-	XPublisher                      interface{}  `json:"x-publisher,omitempty"`
+	Server                          model.ServerJSON `json:"server"`
+	XIOModelContextProtocolRegistry interface{}      `json:"x-io.modelcontextprotocol.registry,omitempty"`
+	XPublisher                      interface{}      `json:"x-publisher,omitempty"`
 }
 
 // ServerListResponse represents the paginated server list response
@@ -51,8 +50,8 @@ type ServerListResponse struct {
 
 // PublishRequest represents the API request format for publishing servers
 type PublishRequest struct {
-	Server     model.ServerDetail `json:"server"`
-	XPublisher interface{}  `json:"x-publisher,omitempty"`
+	Server     model.ServerJSON `json:"server"`
+	XPublisher interface{}      `json:"x-publisher,omitempty"`
 }
 
 // Metadata represents pagination metadata
