@@ -297,9 +297,12 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("blocked namespace should deny token", func(t *testing.T) {
+		// Temporarily override blocked namespaces for testing
+		originalBlocked := auth.BlockedNamespaces
+		auth.BlockedNamespaces = []string{"io.github.spammer"}
+		defer func() { auth.BlockedNamespaces = originalBlocked }()
+		
 		jwtManager := auth.NewJWTManager(cfg)
-		// Add a blocked namespace for testing
-		jwtManager.BlockedNamespaces = []string{"io.github.spammer"}
 		
 		claims := auth.JWTClaims{
 			AuthMethod:        model.AuthMethodGitHubAT,
@@ -319,8 +322,12 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 	})
 
 	t.Run("non-blocked namespace should allow token", func(t *testing.T) {
+		// Temporarily override blocked namespaces for testing
+		originalBlocked := auth.BlockedNamespaces
+		auth.BlockedNamespaces = []string{"io.github.spammer"}
+		defer func() { auth.BlockedNamespaces = originalBlocked }()
+		
 		jwtManager := auth.NewJWTManager(cfg)
-		jwtManager.BlockedNamespaces = []string{"io.github.spammer"}
 		
 		claims := auth.JWTClaims{
 			AuthMethod:        model.AuthMethodGitHubAT,
@@ -339,8 +346,12 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 	})
 
 	t.Run("multiple permissions with one blocked should deny token", func(t *testing.T) {
+		// Temporarily override blocked namespaces for testing
+		originalBlocked := auth.BlockedNamespaces
+		auth.BlockedNamespaces = []string{"io.github.badorg"}
+		defer func() { auth.BlockedNamespaces = originalBlocked }()
+		
 		jwtManager := auth.NewJWTManager(cfg)
-		jwtManager.BlockedNamespaces = []string{"io.github.badorg"}
 		
 		claims := auth.JWTClaims{
 			AuthMethod:        model.AuthMethodGitHubAT,
@@ -364,8 +375,12 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 	})
 
 	t.Run("global admin permissions should bypass denylist", func(t *testing.T) {
+		// Temporarily override blocked namespaces for testing
+		originalBlocked := auth.BlockedNamespaces
+		auth.BlockedNamespaces = []string{"io.github.spammer"}
+		defer func() { auth.BlockedNamespaces = originalBlocked }()
+		
 		jwtManager := auth.NewJWTManager(cfg)
-		jwtManager.BlockedNamespaces = []string{"io.github.spammer"}
 		
 		claims := auth.JWTClaims{
 			AuthMethod:        model.AuthMethodNone,
