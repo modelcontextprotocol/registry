@@ -72,6 +72,24 @@ func NewJWTManager(cfg *config.Config) *JWTManager {
 
 // GenerateToken generates a new Registry JWT token
 func (j *JWTManager) GenerateTokenResponse(_ context.Context, claims JWTClaims) (*TokenResponse, error) {
+	// Check whether they have global permissions (used by admins)
+	hasGlobalPermissions := false
+	for _, perm := range claims.Permissions {
+		if perm.ResourcePattern == "*" {
+			hasGlobalPermissions = true
+			break
+		}
+	}
+
+	// Check permissions against denylist, provided they are not an admin
+	if !hasGlobalPermissions {
+		for _, blockedNamespace := range BlockedNamespaces {
+			if j.HasPermission(blockedNamespace+"/test", PermissionActionPublish, claims.Permissions) {
+				return nil, fmt.Errorf("your namespace is blocked. raise an issue at https://github.com/modelcontextprotocol/registry/ if you think this is a mistake")
+			}
+		}
+	}
+
 	if claims.IssuedAt == nil {
 		claims.IssuedAt = jwt.NewNumericDate(time.Now())
 	}
