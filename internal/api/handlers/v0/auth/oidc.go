@@ -285,7 +285,6 @@ func RegisterOIDCEndpoints(api huma.API, cfg *config.Config) {
 
 // ExchangeToken exchanges an OIDC ID token for a Registry JWT token
 func (h *OIDCHandler) ExchangeToken(ctx context.Context, oidcToken string) (*auth.TokenResponse, error) {
-
 	// Validate OIDC token
 	claims, err := h.validator.ValidateToken(ctx, oidcToken)
 	if err != nil {
@@ -318,7 +317,6 @@ func (h *OIDCHandler) ExchangeToken(ctx context.Context, oidcToken string) (*aut
 
 // StartAuth initiates the OIDC authorization flow
 func (h *OIDCHandler) StartAuth(_ context.Context, redirectURI string) (string, error) {
-
 	// Generate state and nonce for security
 	state, err := generateRandomString(32)
 	if err != nil {
@@ -350,7 +348,6 @@ func (h *OIDCHandler) StartAuth(_ context.Context, redirectURI string) (string, 
 
 // HandleCallback handles the OIDC callback
 func (h *OIDCHandler) HandleCallback(ctx context.Context, code, state string) (*auth.TokenResponse, error) {
-
 	// Validate state and retrieve session
 	session, exists := h.sessions[state]
 	if !exists {

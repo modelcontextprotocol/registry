@@ -128,6 +128,31 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 										},
 									},
 								},
+								// Google Cloud Identity OIDC for admin access
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("MCP_REGISTRY_OIDC_ENABLED"),
+									Value: pulumi.String("true"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("MCP_REGISTRY_OIDC_ISSUER"),
+									Value: pulumi.String("https://accounts.google.com"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("MCP_REGISTRY_OIDC_CLIENT_ID"),
+									Value: pulumi.String("32555940559.apps.googleusercontent.com"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("MCP_REGISTRY_OIDC_EXTRA_CLAIMS"),
+									Value: pulumi.String(`[{"hd":"modelcontextprotocol.io"}]`),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("MCP_REGISTRY_OIDC_EDIT_PERMISSIONS"),
+									Value: pulumi.String("*"),
+								},
+								&corev1.EnvVarArgs{
+									Name:  pulumi.String("MCP_REGISTRY_OIDC_PUBLISH_PERMISSIONS"),
+									Value: pulumi.String("*"),
+								},
 							},
 							LivenessProbe: &corev1.ProbeArgs{
 								HttpGet: &corev1.HTTPGetActionArgs{
