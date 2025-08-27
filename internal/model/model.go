@@ -17,6 +17,8 @@ const (
 	AuthMethodGitHubAT AuthMethod = "github-at"
 	// GitHub Actions OIDC authentication
 	AuthMethodGitHubOIDC AuthMethod = "github-oidc"
+	// Generic OIDC authentication
+	AuthMethodOIDC AuthMethod = "oidc"
 	// DNS-based public/private key authentication
 	AuthMethodDNS AuthMethod = "dns"
 	// HTTP-based public/private key authentication

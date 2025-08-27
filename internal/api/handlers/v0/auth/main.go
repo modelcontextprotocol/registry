@@ -13,6 +13,9 @@ func RegisterAuthEndpoints(api huma.API, cfg *config.Config) {
 	// Register GitHub OIDC authentication endpoint
 	RegisterGitHubOIDCEndpoint(api, cfg)
 
+	// Register configurable OIDC authentication endpoints
+	RegisterOIDCEndpoints(api, cfg)
+
 	// Register DNS-based authentication endpoint
 	RegisterDNSEndpoint(api, cfg)
 
@@ -21,8 +24,4 @@ func RegisterAuthEndpoints(api huma.API, cfg *config.Config) {
 
 	// Register anonymous authentication endpoint
 	RegisterNoneEndpoint(api, cfg)
-
-	// Future auth providers can be registered here:
-	// RegisterGitLabEndpoint(api, cfg)
-	// RegisterOIDCEndpoint(api, cfg)
 }

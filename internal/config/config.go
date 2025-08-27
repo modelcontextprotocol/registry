@@ -26,6 +26,16 @@ type Config struct {
 	GithubClientSecret  string       `env:"GITHUB_CLIENT_SECRET" envDefault:""`
 	JWTPrivateKey       string       `env:"JWT_PRIVATE_KEY" envDefault:""`
 	EnableAnonymousAuth bool         `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
+	
+	// OIDC Configuration
+	OIDCEnabled        bool   `env:"OIDC_ENABLED" envDefault:"false"`
+	OIDCIssuer         string `env:"OIDC_ISSUER" envDefault:""`
+	OIDCClientID       string `env:"OIDC_CLIENT_ID" envDefault:""`
+	OIDCClientSecret   string `env:"OIDC_CLIENT_SECRET" envDefault:""`
+	OIDCAudience       string `env:"OIDC_AUDIENCE" envDefault:"mcp-registry"`
+	OIDCExtraClaims    string `env:"OIDC_EXTRA_CLAIMS" envDefault:""`
+	OIDCEditPerms      string `env:"OIDC_EDIT_PERMISSIONS" envDefault:""`
+	OIDCPublishPerms   string `env:"OIDC_PUBLISH_PERMISSIONS" envDefault:""`
 }
 
 // NewConfig creates a new configuration with default values
