@@ -62,11 +62,9 @@ func ValidatePublishRequestExtensions(requestData []byte) error {
 func ExtractPublisherExtensions(req apiv1.PublishRequest) map[string]interface{} {
 	publisherExtensions := make(map[string]interface{})
 	if req.XPublisher != nil {
-		// Cast to map and copy fields directly, avoiding double nesting
-		if publisherMap, ok := req.XPublisher.(map[string]interface{}); ok {
-			for k, v := range publisherMap {
-				publisherExtensions[k] = v
-			}
+		// Copy fields directly, avoiding double nesting
+		for k, v := range req.XPublisher {
+			publisherExtensions[k] = v
 		}
 	}
 	return publisherExtensions

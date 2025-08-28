@@ -30,8 +30,8 @@ type ServerListResponse struct {
 
 // PublishRequest represents the API request format for publishing servers
 type PublishRequest struct {
-	Server     model.ServerJSON `json:"server"`
-	XPublisher interface{}      `json:"x-publisher,omitempty"`
+	Server     model.ServerJSON       `json:"server"`
+	XPublisher map[string]interface{} `json:"x-publisher,omitempty"`
 }
 
 // Metadata represents pagination metadata

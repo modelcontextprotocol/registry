@@ -78,10 +78,10 @@ func TestExtractPublisherExtensions(t *testing.T) {
 			},
 		},
 		{
-			name: "non-map publisher extensions (should be ignored)",
+			name: "nil publisher extensions (should be ignored)",
 			request: apiv1.PublishRequest{
 				Server:     model.ServerJSON{Name: "test"},
-				XPublisher: "invalid-string-data",
+				XPublisher: nil,
 			},
 			expected: map[string]interface{}{},
 		},
@@ -201,10 +201,9 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 
 	// Verify publisher extensions
 	require.NotNil(t, request.XPublisher)
-	publisherMap := request.XPublisher.(map[string]interface{})
-	assert.Equal(t, "publisher-cli", publisherMap["tool"])
+	assert.Equal(t, "publisher-cli", request.XPublisher["tool"])
 
-	metadata := publisherMap["metadata"].(map[string]interface{})
+	metadata := request.XPublisher["metadata"].(map[string]interface{})
 	assert.Equal(t, "2023-12-01", metadata["build_date"])
 	assert.Equal(t, "abc123", metadata["commit"])
 }
