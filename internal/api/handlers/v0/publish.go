@@ -8,15 +8,15 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/validators"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
 // PublishServerInput represents the input for publishing a server
 type PublishServerInput struct {
 	Authorization string               `header:"Authorization" doc:"Registry JWT token (obtained from /v0/auth/token/github)" required:"true"`
-	Body          model.PublishRequest `body:""`
+	Body          apiv0.PublishRequest `body:""`
 }
 
 // RegisterPublishEndpoint registers the publish endpoint
@@ -34,7 +34,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*Response[model.ServerResponse], error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv0.ServerRecord], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -66,7 +66,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Return the published server in extension wrapper format
-		return &Response[model.ServerResponse]{
+		return &Response[apiv0.ServerRecord]{
 			Body: *publishedServer,
 		}, nil
 	})

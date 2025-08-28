@@ -15,7 +15,6 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"golang.org/x/oauth2"
 )
 
@@ -301,7 +300,7 @@ func (h *OIDCHandler) ExchangeToken(ctx context.Context, oidcToken string) (*aut
 
 	// Create JWT claims
 	jwtClaims := auth.JWTClaims{
-		AuthMethod:        model.AuthMethodOIDC,
+		AuthMethod:        auth.MethodOIDC,
 		AuthMethodSubject: claims.Subject,
 		Permissions:       permissions,
 	}

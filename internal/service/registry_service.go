@@ -8,7 +8,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/internal/validators"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 const maxServerVersionsPerServer = 10000
@@ -26,7 +28,7 @@ func NewRegistryServiceWithDB(db database.Database) RegistryService {
 }
 
 // List returns registry entries with cursor-based pagination in extension wrapper format
-func (s *registryServiceImpl) List(cursor string, limit int) ([]model.ServerResponse, string, error) {
+func (s *registryServiceImpl) List(cursor string, limit int) ([]apiv0.ServerRecord, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -42,17 +44,17 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]model.ServerResp
 		return nil, "", err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	result := make([]model.ServerResponse, len(serverRecords))
+	// Return ServerRecords directly (they're now the same as ServerResponse)
+	result := make([]apiv0.ServerRecord, len(serverRecords))
 	for i, record := range serverRecords {
-		result[i] = record.ToServerResponse()
+		result[i] = *record
 	}
 
 	return result, nextCursor, nil
 }
 
 // GetByID retrieves a specific server by its registry metadata ID in extension wrapper format
-func (s *registryServiceImpl) GetByID(id string) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) GetByID(id string) (*apiv0.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -63,16 +65,20 @@ func (s *registryServiceImpl) GetByID(id string) (*model.ServerResponse, error) 
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }
 
 // Publish publishes a server with separated extensions
-func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) Publish(req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	// Validate the request
+	if err := validators.ValidatePublishRequest(req); err != nil {
+		return nil, err
+	}
 
 	publishTime := time.Now()
 
@@ -93,7 +99,7 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 
 	// Check this isn't a duplicate version
 	for _, server := range existingServerVersions {
-		existingVersion := server.ServerJSON.VersionDetail.Version
+		existingVersion := server.Server.VersionDetail.Version
 		if existingVersion == req.Server.VersionDetail.Version {
 			return nil, database.ErrInvalidVersion
 		}
@@ -101,10 +107,13 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 
 	// Determine if this version should be marked as latest
 	existingLatest := s.getCurrentLatestVersion(existingServerVersions)
-	isNewLatest := CompareVersions(req.Server.VersionDetail.Version, existingLatest.ServerJSON.VersionDetail.Version, publishTime, existingLatest.RegistryMetadata.PublishedAt) > 0
+	isNewLatest := true
+	if existingLatest != nil {
+		isNewLatest = CompareVersions(req.Server.VersionDetail.Version, existingLatest.Server.VersionDetail.Version, publishTime, existingLatest.XIOModelContextProtocolRegistry.PublishedAt) > 0
+	}
 
 	// Create registry metadata with service-determined values
-	registryMetadata := model.RegistryMetadata{
+	registryMetadata := apiv0.RegistryExtensions{
 		ID:          uuid.New().String(),
 		PublishedAt: publishTime,
 		UpdatedAt:   publishTime,
@@ -112,26 +121,31 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 		ReleaseDate: publishTime.Format(time.RFC3339),
 	}
 
+	// Use publisher extensions directly from request
+	publisherExtensions := req.XPublisher
+	if publisherExtensions == nil {
+		publisherExtensions = make(map[string]interface{})
+	}
+
 	// Publish to database with the registry metadata
-	serverRecord, err := s.db.Publish(ctx, req.Server, req.XPublisher, registryMetadata)
+	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, registryMetadata)
 	if err != nil {
 		return nil, err
 	}
 
 	// Mark previous latest as no longer latest
 	if isNewLatest && existingLatest != nil {
-		if err := s.db.UpdateLatestFlag(ctx, existingLatest.RegistryMetadata.ID, false); err != nil {
+		if err := s.db.UpdateLatestFlag(ctx, existingLatest.XIOModelContextProtocolRegistry.ID, false); err != nil {
 			return nil, err
 		}
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }
 
 // validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
-func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, serverDetail model.ServerDetail) error {
+func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, serverDetail model.ServerJSON) error {
 	// Check each remote URL in the new server for conflicts
 	for _, remote := range serverDetail.Remotes {
 		// Use filter to find servers with this remote URL
@@ -146,8 +160,8 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 
 		// Check if any conflicting server has a different name
 		for _, conflictingServer := range conflictingServers {
-			if conflictingServer.ServerJSON.Name != serverDetail.Name {
-				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.ServerJSON.Name)
+			if conflictingServer.Server.Name != serverDetail.Name {
+				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.Server.Name)
 			}
 		}
 	}
@@ -156,9 +170,9 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 }
 
 // getCurrentLatestVersion finds the current latest version from existing server versions
-func (s *registryServiceImpl) getCurrentLatestVersion(existingServerVersions []*model.ServerRecord) *model.ServerRecord {
+func (s *registryServiceImpl) getCurrentLatestVersion(existingServerVersions []*apiv0.ServerRecord) *apiv0.ServerRecord {
 	for _, server := range existingServerVersions {
-		if server.RegistryMetadata.IsLatest {
+		if server.XIOModelContextProtocolRegistry.IsLatest {
 			return server
 		}
 	}
@@ -166,9 +180,14 @@ func (s *registryServiceImpl) getCurrentLatestVersion(existingServerVersions []*
 }
 
 // EditServer updates an existing server with new details (admin operation)
-func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) EditServer(id string, req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	// Validate the request
+	if err := validators.ValidatePublishRequest(req); err != nil {
+		return nil, err
+	}
 
 	// Check for duplicate remote URLs
 	if err := s.validateNoDuplicateRemoteURLs(ctx, req.Server); err != nil {
@@ -177,6 +196,9 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 
 	// Use publisher extensions directly from request
 	publisherExtensions := req.XPublisher
+	if publisherExtensions == nil {
+		publisherExtensions = make(map[string]interface{})
+	}
 
 	// Update server in database
 	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)
@@ -184,7 +206,6 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }

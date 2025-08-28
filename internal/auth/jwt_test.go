@@ -11,7 +11,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,7 +30,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 
 	t.Run("generate and verify valid token", func(t *testing.T) {
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 			Permissions: []auth.Permission{
 				{
@@ -50,7 +49,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 		// Verify token
 		verifiedClaims, err := jwtManager.ValidateToken(ctx, tokenResponse.RegistryToken)
 		require.NoError(t, err)
-		assert.Equal(t, model.AuthMethodGitHubAT, verifiedClaims.AuthMethod)
+		assert.Equal(t, auth.MethodGitHubAT, verifiedClaims.AuthMethod)
 		assert.Equal(t, "testuser", verifiedClaims.AuthMethodSubject)
 		assert.Equal(t, "mcp-registry", verifiedClaims.Issuer)
 		assert.Len(t, verifiedClaims.Permissions, 1)
@@ -70,7 +69,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 				NotBefore: notBefore,
 				Issuer:    "custom-issuer",
 			},
-			AuthMethod:        model.AuthMethodNone,
+			AuthMethod:        auth.MethodNone,
 			AuthMethodSubject: "anonymous",
 			Permissions: []auth.Permission{
 				{
@@ -87,7 +86,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 		// Verify token
 		verifiedClaims, err := jwtManager.ValidateToken(ctx, tokenResponse.RegistryToken)
 		require.NoError(t, err)
-		assert.Equal(t, model.AuthMethodNone, verifiedClaims.AuthMethod)
+		assert.Equal(t, auth.MethodNone, verifiedClaims.AuthMethod)
 		assert.Equal(t, "anonymous", verifiedClaims.AuthMethodSubject)
 		assert.Equal(t, "custom-issuer", verifiedClaims.Issuer)
 		assert.Equal(t, issuedAt.Unix(), verifiedClaims.IssuedAt.Unix())
@@ -100,7 +99,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)), // Already expired
 			},
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 		}
 
@@ -126,7 +125,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 		differentJWTManager := auth.NewJWTManager(differentCfg)
 
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 		}
 
@@ -149,7 +148,7 @@ func TestJWTManager_GenerateAndVerifyToken(t *testing.T) {
 
 	t.Run("multiple permissions", func(t *testing.T) {
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "admin",
 			Permissions: []auth.Permission{
 				{
@@ -305,7 +304,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "spammer",
 			Permissions: []auth.Permission{
 				{
@@ -330,7 +329,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "gooduser",
 			Permissions: []auth.Permission{
 				{
@@ -354,7 +353,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "user",
 			Permissions: []auth.Permission{
 				{
@@ -383,7 +382,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodNone,
+			AuthMethod:        auth.MethodNone,
 			AuthMethodSubject: "admin",
 			Permissions: []auth.Permission{
 				{

@@ -10,7 +10,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
@@ -47,7 +48,7 @@ func (db *PostgreSQL) List(
 	filter map[string]any,
 	cursor string,
 	limit int,
-) ([]*model.ServerRecord, string, error) {
+) ([]*apiv0.ServerRecord, string, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -112,26 +113,26 @@ func (db *PostgreSQL) List(
 	}
 	defer rows.Close()
 
-	var results []*model.ServerRecord
+	var results []*apiv0.ServerRecord
 	for rows.Next() {
-		var record model.ServerRecord
+		var record apiv0.ServerRecord
 		var repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte
 		var publishedAt, updatedAt, releaseDate time.Time
 
 		err := rows.Scan(
 			// Server fields
-			&record.ServerJSON.Name,
-			&record.ServerJSON.Description,
-			&record.ServerJSON.Status,
+			&record.Server.Name,
+			&record.Server.Description,
+			&record.Server.Status,
 			&repositoryJSON,
-			&record.ServerJSON.VersionDetail.Version,
+			&record.Server.VersionDetail.Version,
 			&packagesJSON,
 			&remotesJSON,
 			// Registry metadata fields
-			&record.RegistryMetadata.ID,
+			&record.XIOModelContextProtocolRegistry.ID,
 			&publishedAt,
 			&updatedAt,
-			&record.RegistryMetadata.IsLatest,
+			&record.XIOModelContextProtocolRegistry.IsLatest,
 			&releaseDate,
 			&publisherExtensionsJSON,
 		)
@@ -145,9 +146,9 @@ func (db *PostgreSQL) List(
 		}
 
 		// Set registry metadata timestamps
-		record.RegistryMetadata.PublishedAt = publishedAt
-		record.RegistryMetadata.UpdatedAt = updatedAt
-		record.RegistryMetadata.ReleaseDate = releaseDate.Format(time.RFC3339)
+		record.XIOModelContextProtocolRegistry.PublishedAt = publishedAt
+		record.XIOModelContextProtocolRegistry.UpdatedAt = updatedAt
+		record.XIOModelContextProtocolRegistry.ReleaseDate = releaseDate.Format(time.RFC3339)
 
 		results = append(results, &record)
 	}
@@ -159,45 +160,45 @@ func (db *PostgreSQL) List(
 	// Determine next cursor using registry metadata ID
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
-		nextCursor = results[len(results)-1].RegistryMetadata.ID
+		nextCursor = results[len(results)-1].XIOModelContextProtocolRegistry.ID
 	}
 
 	return results, nextCursor, nil
 }
 
 // parseJSONFields parses JSON fields for a server record
-func parseJSONFields(record *model.ServerRecord, repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte) error {
+func parseJSONFields(record *apiv0.ServerRecord, repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte) error {
 	if len(repositoryJSON) > 0 {
-		if err := json.Unmarshal(repositoryJSON, &record.ServerJSON.Repository); err != nil {
+		if err := json.Unmarshal(repositoryJSON, &record.Server.Repository); err != nil {
 			return fmt.Errorf("failed to unmarshal repository: %w", err)
 		}
 	}
 
 	if len(packagesJSON) > 0 {
-		if err := json.Unmarshal(packagesJSON, &record.ServerJSON.Packages); err != nil {
+		if err := json.Unmarshal(packagesJSON, &record.Server.Packages); err != nil {
 			return fmt.Errorf("failed to unmarshal packages: %w", err)
 		}
 	}
 
 	if len(remotesJSON) > 0 {
-		if err := json.Unmarshal(remotesJSON, &record.ServerJSON.Remotes); err != nil {
+		if err := json.Unmarshal(remotesJSON, &record.Server.Remotes); err != nil {
 			return fmt.Errorf("failed to unmarshal remotes: %w", err)
 		}
 	}
 
 	if len(publisherExtensionsJSON) > 0 {
-		if err := json.Unmarshal(publisherExtensionsJSON, &record.PublisherExtensions); err != nil {
+		if err := json.Unmarshal(publisherExtensionsJSON, &record.XPublisher); err != nil {
 			return fmt.Errorf("failed to unmarshal publisher extensions: %w", err)
 		}
 	} else {
-		record.PublisherExtensions = make(map[string]interface{})
+		record.XPublisher = make(map[string]interface{})
 	}
 
 	return nil
 }
 
 // GetByID retrieves a single ServerRecord by its registry metadata ID
-func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*model.ServerRecord, error) {
+func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -211,24 +212,24 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*model.ServerReco
 		WHERE se.id = $1
 	`
 
-	var record model.ServerRecord
+	var record apiv0.ServerRecord
 	var repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte
 	var publishedAt, updatedAt, releaseDate time.Time
 
 	err := db.conn.QueryRow(ctx, query, id).Scan(
 		// Server fields
-		&record.ServerJSON.Name,
-		&record.ServerJSON.Description,
-		&record.ServerJSON.Status,
+		&record.Server.Name,
+		&record.Server.Description,
+		&record.Server.Status,
 		&repositoryJSON,
-		&record.ServerJSON.VersionDetail.Version,
+		&record.Server.VersionDetail.Version,
 		&packagesJSON,
 		&remotesJSON,
 		// Registry metadata fields
-		&record.RegistryMetadata.ID,
+		&record.XIOModelContextProtocolRegistry.ID,
 		&publishedAt,
 		&updatedAt,
-		&record.RegistryMetadata.IsLatest,
+		&record.XIOModelContextProtocolRegistry.IsLatest,
 		&releaseDate,
 		&publisherExtensionsJSON,
 	)
@@ -242,42 +243,42 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*model.ServerReco
 
 	// Parse JSON fields
 	if len(repositoryJSON) > 0 {
-		if err := json.Unmarshal(repositoryJSON, &record.ServerJSON.Repository); err != nil {
+		if err := json.Unmarshal(repositoryJSON, &record.Server.Repository); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal repository: %w", err)
 		}
 	}
 
 	if len(packagesJSON) > 0 {
-		if err := json.Unmarshal(packagesJSON, &record.ServerJSON.Packages); err != nil {
+		if err := json.Unmarshal(packagesJSON, &record.Server.Packages); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal packages: %w", err)
 		}
 	}
 
 	if len(remotesJSON) > 0 {
-		if err := json.Unmarshal(remotesJSON, &record.ServerJSON.Remotes); err != nil {
+		if err := json.Unmarshal(remotesJSON, &record.Server.Remotes); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal remotes: %w", err)
 		}
 	}
 
 	// Parse publisher extensions
 	if len(publisherExtensionsJSON) > 0 {
-		if err := json.Unmarshal(publisherExtensionsJSON, &record.PublisherExtensions); err != nil {
+		if err := json.Unmarshal(publisherExtensionsJSON, &record.XPublisher); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal publisher extensions: %w", err)
 		}
 	} else {
-		record.PublisherExtensions = make(map[string]interface{})
+		record.XPublisher = make(map[string]interface{})
 	}
 
 	// Set registry metadata timestamps
-	record.RegistryMetadata.PublishedAt = publishedAt
-	record.RegistryMetadata.UpdatedAt = updatedAt
-	record.RegistryMetadata.ReleaseDate = releaseDate.Format(time.RFC3339)
+	record.XIOModelContextProtocolRegistry.PublishedAt = publishedAt
+	record.XIOModelContextProtocolRegistry.UpdatedAt = updatedAt
+	record.XIOModelContextProtocolRegistry.ReleaseDate = releaseDate.Format(time.RFC3339)
 
 	return &record, nil
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, registryMetadata model.RegistryMetadata) (*model.ServerRecord, error) {
+func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -291,7 +292,6 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 			log.Printf("Failed to rollback transaction: %v", err)
 		}
 	}()
-
 
 	// Prepare JSON data for server table
 	repositoryJSON, err := json.Marshal(serverDetail.Repository)
@@ -316,7 +316,6 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 
 	// Use the same ID for both server and server_extensions records (1:1 relationship)
 	serverID := registryMetadata.ID
-
 
 	// Insert new server record
 	insertServerQuery := `
@@ -348,7 +347,7 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 		registryMetadata.PublishedAt,
 		registryMetadata.UpdatedAt,
 		registryMetadata.IsLatest,
-		registryMetadata.PublishedAt,  // release_date
+		registryMetadata.PublishedAt, // release_date
 		publisherExtensionsJSON,
 	)
 	if err != nil {
@@ -361,10 +360,10 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerDeta
 	}
 
 	// Create and return the ServerRecord
-	record := &model.ServerRecord{
-		ServerJSON:          serverDetail,
-		RegistryMetadata:    registryMetadata,
-		PublisherExtensions: publisherExtensions,
+	record := &apiv0.ServerRecord{
+		Server:                          serverDetail,
+		XIOModelContextProtocolRegistry: registryMetadata,
+		XPublisher:                      publisherExtensions,
 	}
 
 	return record, nil
@@ -392,11 +391,11 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 	// Import each server
 	for _, record := range seedData {
 		// Convert record to the format expected by Publish
-		serverDetail := record.ServerJSON
-		publisherExtensions := record.PublisherExtensions
+		serverDetail := record.Server
+		publisherExtensions := record.XPublisher
 
 		// Use the existing Publish logic but with specific ID from seed data
-		if err := db.publishWithTransaction(ctx, tx, serverDetail, publisherExtensions, &record.RegistryMetadata); err != nil {
+		if err := db.publishWithTransaction(ctx, tx, serverDetail, publisherExtensions, &record.XIOModelContextProtocolRegistry); err != nil {
 			return fmt.Errorf("failed to import server %s: %w", serverDetail.Name, err)
 		}
 	}
@@ -410,7 +409,7 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 }
 
 // publishWithTransaction handles publishing within an existing transaction, optionally with predefined metadata
-func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}, existingMetadata *model.RegistryMetadata) error {
+func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, existingMetadata *apiv0.RegistryExtensions) error {
 	// Use the same ID for both server and server_extensions (1:1 relationship)
 	var id string
 	if existingMetadata != nil && existingMetadata.ID != "" {
@@ -518,7 +517,7 @@ func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest 
 		SET is_latest = $1, updated_at = $2
 		WHERE id = $3
 	`
-	
+
 	result, err := db.conn.Exec(ctx, query, isLatest, time.Now(), id)
 	if err != nil {
 		return fmt.Errorf("failed to update latest flag: %w", err)
@@ -532,7 +531,7 @@ func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest 
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail model.ServerDetail, publisherExtensions map[string]interface{}) (*model.ServerRecord, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}

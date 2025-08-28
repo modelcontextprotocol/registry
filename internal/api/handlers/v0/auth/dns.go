@@ -16,7 +16,6 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // DNSTokenExchangeInput represents the input for DNS-based authentication
@@ -147,7 +146,7 @@ func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, s
 
 	// Create JWT claims
 	jwtClaims := auth.JWTClaims{
-		AuthMethod:        model.AuthMethodDNS,
+		AuthMethod:        auth.MethodDNS,
 		AuthMethodSubject: domain,
 		Permissions:       permissions,
 	}

@@ -16,7 +16,6 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 	intauth "github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // MockHTTPKeyFetcher for testing
@@ -210,7 +209,7 @@ func TestHTTPAuthHandler_ExchangeToken(t *testing.T) {
 				claims, err := jwtManager.ValidateToken(context.Background(), result.RegistryToken)
 				require.NoError(t, err)
 
-				assert.Equal(t, model.AuthMethodHTTP, claims.AuthMethod)
+				assert.Equal(t, intauth.MethodHTTP, claims.AuthMethod)
 				assert.Equal(t, tt.domain, claims.AuthMethodSubject)
 				assert.Len(t, claims.Permissions, 1) // domain permissions only
 

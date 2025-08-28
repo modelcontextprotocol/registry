@@ -11,7 +11,6 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 	internalauth "github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -106,7 +105,7 @@ func TestGitHubOIDCHandler_ExchangeToken(t *testing.T) {
 				claims, err := jwtManager.ValidateToken(context.Background(), response.RegistryToken)
 				require.NoError(t, err)
 
-				assert.Equal(t, model.AuthMethodGitHubOIDC, claims.AuthMethod)
+				assert.Equal(t, internalauth.MethodGitHubOIDC, claims.AuthMethod)
 				assert.Equal(t, tt.expectedSubject, claims.AuthMethodSubject)
 				assert.Len(t, claims.Permissions, tt.expectedPerms)
 

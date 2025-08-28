@@ -16,7 +16,6 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 	intauth "github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // MockDNSResolver for testing
@@ -174,7 +173,7 @@ func TestDNSAuthHandler_ExchangeToken(t *testing.T) {
 				claims, err := jwtManager.ValidateToken(context.Background(), result.RegistryToken)
 				require.NoError(t, err)
 
-				assert.Equal(t, model.AuthMethodDNS, claims.AuthMethod)
+				assert.Equal(t, intauth.MethodDNS, claims.AuthMethod)
 				assert.Equal(t, tt.domain, claims.AuthMethodSubject)
 				assert.Len(t, claims.Permissions, 2) // domain and subdomain permissions
 
