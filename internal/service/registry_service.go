@@ -109,7 +109,12 @@ func (s *registryServiceImpl) Publish(req apiv0.PublishRequest) (*apiv0.ServerRe
 	existingLatest := s.getCurrentLatestVersion(existingServerVersions)
 	isNewLatest := true
 	if existingLatest != nil {
-		isNewLatest = CompareVersions(req.Server.VersionDetail.Version, existingLatest.Server.VersionDetail.Version, publishTime, existingLatest.XIOModelContextProtocolRegistry.PublishedAt) > 0
+		isNewLatest = CompareVersions(
+			req.Server.VersionDetail.Version,
+			existingLatest.Server.VersionDetail.Version,
+			publishTime,
+			existingLatest.XIOModelContextProtocolRegistry.PublishedAt,
+		) > 0
 	}
 
 	// Create registry metadata with service-determined values

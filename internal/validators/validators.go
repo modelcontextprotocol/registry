@@ -11,53 +11,40 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-// RepositoryValidator validates repository details
-type RepositoryValidator struct{}
-
-// Validate checks if the repository details are valid
-func (v *RepositoryValidator) Validate(obj *model.Repository) error {
-	return validateRepository(obj)
-}
-
-// ServerValidator validates server details
-type ServerValidator struct {
-	*RepositoryValidator // Embedded RepositoryValidator for repository validation
-}
-
-// Validate checks if the server details are valid
-func (v *ServerValidator) Validate(obj *model.ServerJSON) error {
-	if err := v.RepositoryValidator.Validate(&obj.Repository); err != nil {
+func ValidateServerJSON(serverJSON *model.ServerJSON) error {
+	// Validate server name exists and format
+	if _, err := parseServerName(*serverJSON); err != nil {
 		return err
 	}
 
 	// Validate repository
-	if err := validateRepository(&obj.Repository); err != nil {
+	if err := validateRepository(&serverJSON.Repository); err != nil {
 		return err
 	}
 
 	// Validate all packages (basic field validation)
-	for _, pkg := range obj.Packages {
+	for _, pkg := range serverJSON.Packages {
 		if err := validatePackageField(&pkg); err != nil {
 			return err
 		}
 	}
 
 	// Validate all packages (URL and registry type validation)
-	for _, pkg := range obj.Packages {
+	for _, pkg := range serverJSON.Packages {
 		if err := validatePackage(&pkg); err != nil {
 			return fmt.Errorf("validation failed: %w", err)
 		}
 	}
 
 	// Validate all remotes
-	for _, remote := range obj.Remotes {
+	for _, remote := range serverJSON.Remotes {
 		if err := validateRemote(&remote); err != nil {
 			return err
 		}
 	}
 
 	// Validate reverse-DNS namespace matching for remote URLs
-	if err := ValidateRemoteNamespaceMatch(*obj); err != nil {
+	if err := validateRemoteNamespaceMatch(*serverJSON); err != nil {
 		return err
 	}
 
@@ -147,46 +134,22 @@ func validatePackage(pkg *model.Package) error {
 	return nil
 }
 
-// ObjectValidator combines all validators for complete validation
-type ObjectValidator struct {
-	*ServerValidator
-}
-
-// NewObjectValidator creates a new ObjectValidator
-func NewObjectValidator() *ObjectValidator {
-	return &ObjectValidator{
-		ServerValidator: &ServerValidator{
-			RepositoryValidator: &RepositoryValidator{},
-		},
-	}
-}
-
-func (ov *ObjectValidator) Validate(obj *model.ServerJSON) error {
-	if err := ov.ServerValidator.Validate(obj); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // ValidatePublishRequest validates a complete publish request including extensions
 func ValidatePublishRequest(req apiv0.PublishRequest) error {
 	// Validate publisher extensions
-	if err := ValidatePublisherExtensions(req); err != nil {
+	if err := validatePublisherExtensions(req); err != nil {
 		return err
 	}
 
 	// Validate the server detail (includes all nested validation)
-	validator := NewObjectValidator()
-	if err := validator.Validate(&req.Server); err != nil {
+	if err := ValidateServerJSON(&req.Server); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// ValidatePublisherExtensions validates that publisher extensions are within size limits
-func ValidatePublisherExtensions(req apiv0.PublishRequest) error {
+func validatePublisherExtensions(req apiv0.PublishRequest) error {
 	const maxExtensionSize = 4 * 1024 // 4KB limit
 
 	// Check size limit for x-publisher extension
@@ -203,21 +166,8 @@ func ValidatePublisherExtensions(req apiv0.PublishRequest) error {
 	return nil
 }
 
-// ExtractPublisherExtensions extracts publisher extensions from a apiv0.PublishRequest
-func ExtractPublisherExtensions(req apiv0.PublishRequest) map[string]interface{} {
-	publisherExtensions := make(map[string]interface{})
-	if req.XPublisher != nil {
-		// Copy fields directly, avoiding double nesting
-		for k, v := range req.XPublisher {
-			publisherExtensions[k] = v
-		}
-	}
-	return publisherExtensions
-}
-
-// ParseServerName extracts the server name from a model.ServerJSON for validation purposes
-func ParseServerName(serverDetail model.ServerJSON) (string, error) {
-	name := serverDetail.Name
+func parseServerName(serverJSON model.ServerJSON) (string, error) {
+	name := serverJSON.Name
 	if name == "" {
 		return "", fmt.Errorf("server name is required and must be a string")
 	}
@@ -235,11 +185,11 @@ func ParseServerName(serverDetail model.ServerJSON) (string, error) {
 	return name, nil
 }
 
-// ValidateRemoteNamespaceMatch validates that remote URLs match the reverse-DNS namespace
-func ValidateRemoteNamespaceMatch(serverDetail model.ServerJSON) error {
-	namespace := serverDetail.Name
+// validateRemoteNamespaceMatch validates that remote URLs match the reverse-DNS namespace
+func validateRemoteNamespaceMatch(serverJSON model.ServerJSON) error {
+	namespace := serverJSON.Name
 
-	for _, remote := range serverDetail.Remotes {
+	for _, remote := range serverJSON.Remotes {
 		if err := validateRemoteURLMatchesNamespace(remote.URL, namespace); err != nil {
 			return fmt.Errorf("remote URL %s does not match namespace %s: %w", remote.URL, namespace, err)
 		}
