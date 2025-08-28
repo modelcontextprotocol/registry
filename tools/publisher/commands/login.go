@@ -14,7 +14,7 @@ import (
 
 const (
 	DefaultRegistryURL = "https://registry.modelcontextprotocol.io"
-	TokenFileName      = ".mcp_publisher_token"
+	TokenFileName      = ".mcp_publisher_token" //nolint:gosec // Not a credential, just a filename
 )
 
 func LoginCommand(args []string) error {
@@ -64,7 +64,7 @@ func LoginCommand(args []string) error {
 
 	// Perform login
 	ctx := context.Background()
-	fmt.Printf("Logging in with %s...\n", method)
+	_, _ = fmt.Fprintf(os.Stdout, "Logging in with %s...\n", method)
 
 	if err := authProvider.Login(ctx); err != nil {
 		return fmt.Errorf("login failed: %w", err)
@@ -98,6 +98,6 @@ func LoginCommand(args []string) error {
 		return fmt.Errorf("failed to save token: %w", err)
 	}
 
-	fmt.Println("✓ Successfully logged in")
+	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully logged in")
 	return nil
 }

@@ -62,12 +62,12 @@ func PublishCommand(args []string) error {
 	}
 
 	// Publish to registry
-	fmt.Printf("Publishing to %s...\n", registryURL)
+	_, _ = fmt.Fprintf(os.Stdout, "Publishing to %s...\n", registryURL)
 	if err := publishToRegistry(registryURL, serverData, token); err != nil {
 		return fmt.Errorf("publish failed: %w", err)
 	}
 
-	fmt.Println("✓ Successfully published")
+	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully published")
 	return nil
 }
 

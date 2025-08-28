@@ -140,13 +140,13 @@ func (g *GitHubATProvider) Login(ctx context.Context) error {
 	}
 
 	// Display instructions to the user
-	fmt.Println("\nTo authenticate, please:")
-	fmt.Println("1. Go to:", verificationURI)
-	fmt.Println("2. Enter code:", userCode)
-	fmt.Println("3. Authorize this application")
+	_, _ = fmt.Fprintln(os.Stdout, "\nTo authenticate, please:")
+	_, _ = fmt.Fprintln(os.Stdout, "1. Go to:", verificationURI)
+	_, _ = fmt.Fprintln(os.Stdout, "2. Enter code:", userCode)
+	_, _ = fmt.Fprintln(os.Stdout, "3. Authorize this application")
 
 	// Poll for the token
-	fmt.Println("Waiting for authorization...")
+	_, _ = fmt.Fprintln(os.Stdout, "Waiting for authorization...")
 	token, err := g.pollForToken(ctx, deviceCode)
 	if err != nil {
 		return fmt.Errorf("error polling for token: %w", err)
@@ -158,7 +158,7 @@ func (g *GitHubATProvider) Login(ctx context.Context) error {
 		return fmt.Errorf("error saving token: %w", err)
 	}
 
-	fmt.Println("Successfully authenticated!")
+	_, _ = fmt.Fprintln(os.Stdout, "Successfully authenticated!")
 	return nil
 }
 

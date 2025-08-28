@@ -38,16 +38,16 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println("MCP Registry Publisher Tool")
-	fmt.Println()
-	fmt.Println("Usage:")
-	fmt.Println("  mcp-publisher <command> [arguments]")
-	fmt.Println()
-	fmt.Println("Commands:")
-	fmt.Println("  init          Create a server.json file template")
-	fmt.Println("  login         Authenticate with the registry")
-	fmt.Println("  logout        Clear saved authentication")
-	fmt.Println("  publish       Publish server.json to the registry")
-	fmt.Println()
-	fmt.Println("Use 'mcp-publisher <command> --help' for more information about a command.")
+	_, _ = fmt.Fprintln(os.Stdout, "MCP Registry Publisher Tool")
+	_, _ = fmt.Fprintln(os.Stdout)
+	_, _ = fmt.Fprintln(os.Stdout, "Usage:")
+	_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher <command> [arguments]")
+	_, _ = fmt.Fprintln(os.Stdout)
+	_, _ = fmt.Fprintln(os.Stdout, "Commands:")
+	_, _ = fmt.Fprintln(os.Stdout, "  init          Create a server.json file template")
+	_, _ = fmt.Fprintln(os.Stdout, "  login         Authenticate with the registry")
+	_, _ = fmt.Fprintln(os.Stdout, "  logout        Clear saved authentication")
+	_, _ = fmt.Fprintln(os.Stdout, "  publish       Publish server.json to the registry")
+	_, _ = fmt.Fprintln(os.Stdout)
+	_, _ = fmt.Fprintln(os.Stdout, "Use 'mcp-publisher <command> --help' for more information about a command.")
 }

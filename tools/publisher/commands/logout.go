@@ -16,7 +16,7 @@ func LogoutCommand() error {
 	
 	// Check if token file exists
 	if _, err := os.Stat(tokenPath); os.IsNotExist(err) {
-		fmt.Println("Not logged in")
+		_, _ = fmt.Fprintln(os.Stdout, "Not logged in")
 		return nil
 	}
 
@@ -38,6 +38,6 @@ func LogoutCommand() error {
 		}
 	}
 
-	fmt.Println("✓ Successfully logged out")
+	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully logged out")
 	return nil
 }
