@@ -9,7 +9,6 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // NoneHandler handles anonymous authentication
@@ -66,7 +65,7 @@ func (h *NoneHandler) GetAnonymousToken(ctx context.Context) (*auth.TokenRespons
 
 	// Create JWT claims for anonymous user
 	claims := auth.JWTClaims{
-		AuthMethod:        model.AuthMethodNone,
+		AuthMethod:        auth.MethodNone,
 		AuthMethodSubject: "anonymous",
 		Permissions:       permissions,
 	}

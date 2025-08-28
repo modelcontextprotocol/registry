@@ -16,8 +16,9 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -53,8 +54,8 @@ func TestPublishIntegration(t *testing.T) {
 	v0.RegisterPublishEndpoint(api, registryService, testConfig)
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
-		publishReq := model.PublishRequest{
-			Server: model.ServerDetail{
+		publishReq := apiv0.PublishRequest{
+			Server: model.ServerJSON{
 				Name:        "io.github.testuser/test-mcp-server",
 				Description: "A test MCP server for integration testing",
 				Repository: model.Repository{
@@ -70,7 +71,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		// Generate valid JWT token
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 			Permissions: []auth.Permission{
 				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.testuser/*"},
@@ -91,7 +92,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response model.ServerResponse
+		var response apiv0.ServerRecord
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
@@ -100,8 +101,8 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("successful publish with none auth (no prefix)", func(t *testing.T) {
-		publishReq := model.PublishRequest{
-			Server: model.ServerDetail{
+		publishReq := apiv0.PublishRequest{
+			Server: model.ServerJSON{
 				Name:        "com.example/test-mcp-server-no-auth",
 				Description: "A test MCP server without authentication",
 				Repository: model.Repository{
@@ -117,7 +118,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		// Generate valid JWT token with wildcard permission
 		claims := auth.JWTClaims{
-			AuthMethod: model.AuthMethodNone,
+			AuthMethod: auth.MethodNone,
 			Permissions: []auth.Permission{
 				{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
 			},
@@ -137,7 +138,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response model.ServerResponse
+		var response apiv0.ServerRecord
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
@@ -145,8 +146,8 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {
-		publishReq := model.PublishRequest{
-			Server: model.ServerDetail{
+		publishReq := apiv0.PublishRequest{
+			Server: model.ServerJSON{
 				Name: "test-server",
 			},
 		}
@@ -166,8 +167,8 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails with invalid token", func(t *testing.T) {
-		publishReq := model.PublishRequest{
-			Server: model.ServerDetail{
+		publishReq := apiv0.PublishRequest{
+			Server: model.ServerJSON{
 				Name: "test-server",
 			},
 		}
@@ -187,8 +188,8 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails when permission denied", func(t *testing.T) {
-		publishReq := model.PublishRequest{
-			Server: model.ServerDetail{
+		publishReq := apiv0.PublishRequest{
+			Server: model.ServerJSON{
 				Name:        "io.github.other/test-server",
 				Description: "A test server",
 				VersionDetail: model.VersionDetail{
@@ -204,7 +205,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		// Generate valid JWT token but with different permissions
 		claims := auth.JWTClaims{
-			AuthMethod: model.AuthMethodGitHubAT,
+			AuthMethod: auth.MethodGitHubAT,
 			Permissions: []auth.Permission{
 				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.myuser/*"},
 			},

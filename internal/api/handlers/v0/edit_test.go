@@ -17,7 +17,8 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func TestEditServerEndpoint(t *testing.T) {
@@ -36,7 +37,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.domdomegg/*"},
@@ -44,11 +45,11 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
-				Server: model.ServerDetail{
+			requestBody: apiv0.PublishRequest{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
-					Status:      model.ServerStatusDeprecated,
+					Status:      model.StatusDeprecated,
 					Repository: model.Repository{
 						URL:    "https://github.com/domdomegg/test-server",
 						Source: "github",
@@ -61,23 +62,23 @@ func TestEditServerEndpoint(t *testing.T) {
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server (not deleted)
-				currentServer := &model.ServerResponse{
-					Server: model.ServerDetail{
+				currentServer := &apiv0.ServerRecord{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
-				
-				expectedResponse := &model.ServerResponse{
-					Server: model.ServerDetail{
+
+				expectedResponse := &apiv0.ServerRecord{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Updated test server",
-						Status:      model.ServerStatusDeprecated,
+						Status:      model.StatusDeprecated,
 					},
 				}
-				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("model.PublishRequest")).Return(expectedResponse, nil)
+				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("v0.PublishRequest")).Return(expectedResponse, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -85,7 +86,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "missing authorization header",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "",
-			requestBody:    model.PublishRequest{},
+			requestBody:    apiv0.PublishRequest{},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: 422,
 			expectedError:  "required header parameter is missing",
@@ -94,7 +95,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "invalid authorization header format",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "InvalidFormat token123",
-			requestBody:    model.PublishRequest{},
+			requestBody:    apiv0.PublishRequest{},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
@@ -103,7 +104,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "invalid token",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "Bearer invalid-token",
-			requestBody:    model.PublishRequest{},
+			requestBody:    apiv0.PublishRequest{},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
@@ -114,7 +115,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.domdomegg/*"},
@@ -122,19 +123,19 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
-				Server: model.ServerDetail{
+			requestBody: apiv0.PublishRequest{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Need to mock GetByID since we check permissions against existing server name
-				currentServer := &model.ServerResponse{
-					Server: model.ServerDetail{
+				currentServer := &apiv0.ServerRecord{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -148,7 +149,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.domdomegg/*"},
@@ -156,8 +157,8 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
-				Server: model.ServerDetail{
+			requestBody: apiv0.PublishRequest{
+				Server: model.ServerJSON{
 					Name:        "io.github.other/test-server",
 					Description: "Updated test server",
 				},
@@ -165,11 +166,11 @@ func TestEditServerEndpoint(t *testing.T) {
 			setupMocks: func(registry *MockRegistryService) {
 				// Need to mock GetByID since we check permissions against existing server name
 				// This test case shows a different scenario: existing server is "other" but user only has perms for "domdomegg"
-				currentServer := &model.ServerResponse{
-					Server: model.ServerDetail{
+				currentServer := &apiv0.ServerRecord{
+					Server: model.ServerJSON{
 						Name:        "io.github.other/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
@@ -183,7 +184,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.domdomegg/*"},
@@ -191,8 +192,8 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
-				Server: model.ServerDetail{
+			requestBody: apiv0.PublishRequest{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 				},
@@ -209,7 +210,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
@@ -217,23 +218,23 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
-				Server: model.ServerDetail{
+			requestBody: apiv0.PublishRequest{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Updated test server",
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server (not deleted)
-				currentServer := &model.ServerResponse{
-					Server: model.ServerDetail{
+				currentServer := &apiv0.ServerRecord{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusActive,
+						Status:      model.StatusActive,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
-				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("model.PublishRequest")).Return(nil, errors.New("database error"))
+				registry.On("EditServer", "550e8400-e29b-41d4-a716-446655440001", mock.AnythingOfType("v0.PublishRequest")).Return(nil, errors.New("database error"))
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Bad Request",
@@ -244,7 +245,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
@@ -263,7 +264,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
-					AuthMethod:        model.AuthMethodGitHubAT,
+					AuthMethod:        auth.MethodGitHubAT,
 					AuthMethodSubject: "domdomegg",
 					Permissions: []auth.Permission{
 						{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
@@ -271,20 +272,20 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody: model.PublishRequest{
-				Server: model.ServerDetail{
+			requestBody: apiv0.PublishRequest{
+				Server: model.ServerJSON{
 					Name:        "io.github.domdomegg/test-server",
 					Description: "Trying to undelete server",
-					Status:      model.ServerStatusActive,
+					Status:      model.StatusActive,
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
 				// Current server is deleted
-				currentServer := &model.ServerResponse{
-					Server: model.ServerDetail{
+				currentServer := &apiv0.ServerRecord{
+					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
-						Status:      model.ServerStatusDeleted,
+						Status:      model.StatusDeleted,
 					},
 				}
 				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)

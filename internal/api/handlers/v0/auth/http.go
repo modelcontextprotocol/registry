@@ -16,7 +16,6 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 )
 
 // HTTPTokenExchangeInput represents the input for HTTP-based authentication
@@ -182,7 +181,7 @@ func (h *HTTPAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, 
 
 	// Create JWT claims
 	jwtClaims := auth.JWTClaims{
-		AuthMethod:        model.AuthMethodHTTP,
+		AuthMethod:        auth.MethodHTTP,
 		AuthMethodSubject: domain,
 		Permissions:       permissions,
 	}

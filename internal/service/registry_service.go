@@ -10,7 +10,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/internal/validators"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 const maxServerVersionsPerServer = 10000
@@ -28,7 +30,7 @@ func NewRegistryServiceWithDB(db database.Database) RegistryService {
 }
 
 // List returns registry entries with cursor-based pagination in extension wrapper format
-func (s *registryServiceImpl) List(cursor string, limit int) ([]model.ServerResponse, string, error) {
+func (s *registryServiceImpl) List(cursor string, limit int) ([]apiv0.ServerRecord, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -44,17 +46,17 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]model.ServerResp
 		return nil, "", err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	result := make([]model.ServerResponse, len(serverRecords))
+	// Return ServerRecords directly (they're now the same as ServerResponse)
+	result := make([]apiv0.ServerRecord, len(serverRecords))
 	for i, record := range serverRecords {
-		result[i] = record.ToServerResponse()
+		result[i] = *record
 	}
 
 	return result, nextCursor, nil
 }
 
 // GetByID retrieves a specific server by its registry metadata ID in extension wrapper format
-func (s *registryServiceImpl) GetByID(id string) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) GetByID(id string) (*apiv0.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -65,9 +67,8 @@ func (s *registryServiceImpl) GetByID(id string) (*model.ServerResponse, error) 
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }
 
 // validateMCPBPackage validates MCPB packages
@@ -126,18 +127,18 @@ func validatePackage(pkg *model.Package) error {
 }
 
 // Publish publishes a server with separated extensions
-func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) Publish(req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists and format
-	if _, err := model.ParseServerName(req.Server); err != nil {
+	if _, err := validators.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -149,7 +150,7 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	}
 
 	// Validate reverse-DNS namespace matching for remote URLs
-	if err := model.ValidateRemoteNamespaceMatch(req.Server); err != nil {
+	if err := validators.ValidateRemoteNamespaceMatch(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -179,16 +180,16 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 
 	// Check all existing versions for duplicates and determine if new version should be latest
 	for _, server := range existingServers {
-		existingVersion := server.ServerJSON.VersionDetail.Version
+		existingVersion := server.Server.VersionDetail.Version
 
 		// Early exit: check for duplicate version
 		if existingVersion == newVersion {
 			return nil, database.ErrInvalidVersion
 		}
 
-		if server.RegistryMetadata.IsLatest {
-			existingLatestID = server.RegistryMetadata.ID
-			existingTime, _ := time.Parse(time.RFC3339, server.RegistryMetadata.ReleaseDate)
+		if server.XIOModelContextProtocolRegistry.IsLatest {
+			existingLatestID = server.XIOModelContextProtocolRegistry.ID
+			existingTime, _ := time.Parse(time.RFC3339, server.XIOModelContextProtocolRegistry.ReleaseDate)
 
 			// Compare versions using the proper versioning strategy
 			comparison := CompareVersions(newVersion, existingVersion, currentTime, existingTime)
@@ -200,10 +201,10 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	publisherExtensions := validators.ExtractPublisherExtensions(req)
 
 	// Create registry metadata with service-determined values
-	registryMetadata := model.RegistryMetadata{
+	registryMetadata := apiv0.RegistryExtensions{
 		ID:          uuid.New().String(),
 		PublishedAt: currentTime,
 		UpdatedAt:   currentTime,
@@ -225,13 +226,12 @@ func (s *registryServiceImpl) Publish(req model.PublishRequest) (*model.ServerRe
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }
 
 // validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
-func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, serverDetail model.ServerDetail) error {
+func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, serverDetail model.ServerJSON) error {
 	// Check each remote URL in the new server for conflicts
 	for _, remote := range serverDetail.Remotes {
 		// Use filter to find servers with this remote URL
@@ -246,8 +246,8 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 
 		// Check if any conflicting server has a different name
 		for _, conflictingServer := range conflictingServers {
-			if conflictingServer.ServerJSON.Name != serverDetail.Name {
-				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.ServerJSON.Name)
+			if conflictingServer.Server.Name != serverDetail.Name {
+				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.Server.Name)
 			}
 		}
 	}
@@ -256,17 +256,17 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 }
 
 // EditServer updates an existing server with new details (admin operation)
-func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*model.ServerResponse, error) {
+func (s *registryServiceImpl) EditServer(id string, req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists and format
-	if _, err := model.ParseServerName(req.Server); err != nil {
+	if _, err := validators.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -278,7 +278,7 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 	}
 
 	// Validate reverse-DNS namespace matching for remote URLs
-	if err := model.ValidateRemoteNamespaceMatch(req.Server); err != nil {
+	if err := validators.ValidateRemoteNamespaceMatch(req.Server); err != nil {
 		return nil, err
 	}
 
@@ -288,7 +288,7 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	publisherExtensions := validators.ExtractPublisherExtensions(req)
 
 	// Update server in database
 	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)
@@ -296,7 +296,6 @@ func (s *registryServiceImpl) EditServer(id string, req model.PublishRequest) (*
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }

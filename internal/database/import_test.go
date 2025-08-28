@@ -7,18 +7,20 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestReadSeedFile_LocalFile(t *testing.T) {
 	// Create a temporary seed file in extension wrapper format
 	tempFile := "/tmp/test_seed.json"
-	seedData := []model.ServerResponse{
+	seedData := []apiv0.ServerRecord{
 		{
-			Server: model.ServerDetail{
+			Server: model.ServerJSON{
 				Name:        "test-server-1",
 				Description: "Test server 1",
 				Repository: model.Repository{
@@ -30,10 +32,11 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 					Version: "1.0.0",
 				},
 			},
-			XIOModelContextProtocolRegistry: map[string]interface{}{
-				"id":           "test-id-1",
-				"published_at": "2023-01-01T00:00:00Z",
-				"is_latest":    true,
+			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+				ID:          "test-id-1",
+				PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
+				IsLatest:    true,
+				ReleaseDate: "2023-01-01T00:00:00Z",
 			},
 		},
 	}
@@ -58,21 +61,22 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 	result, err := database.ReadSeedFile(context.Background(), tempFile)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	assert.Equal(t, "test-server-1", result[0].ServerJSON.Name)
+	assert.Equal(t, "test-server-1", result[0].Server.Name)
 }
 
 func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	// Create a test HTTP server that serves seed JSON directly in extension wrapper format
-	seedData := []model.ServerResponse{
+	seedData := []apiv0.ServerRecord{
 		{
-			Server: model.ServerDetail{
+			Server: model.ServerJSON{
 				Name:        "test-server-1",
 				Description: "Test server 1",
 			},
-			XIOModelContextProtocolRegistry: map[string]interface{}{
-				"id":           "test-id-1",
-				"published_at": "2023-01-01T00:00:00Z",
-				"is_latest":    true,
+			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+				ID:          "test-id-1",
+				PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
+				IsLatest:    true,
+				ReleaseDate: "2023-01-01T00:00:00Z",
 			},
 		},
 	}
@@ -89,13 +93,13 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	result, err := database.ReadSeedFile(context.Background(), server.URL+"/seed.json")
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	assert.Equal(t, "test-server-1", result[0].ServerJSON.Name)
+	assert.Equal(t, "test-server-1", result[0].Server.Name)
 }
 
 func TestReadSeedFile_RegistryURL(t *testing.T) {
 	// Create mock registry responses
-	server1 := model.ServerResponse{
-		Server: model.ServerDetail{
+	server1 := apiv0.ServerRecord{
+		Server: model.ServerJSON{
 			Name:        "Test Server 1",
 			Description: "First test server",
 			Packages: []model.Package{
@@ -107,14 +111,15 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 				},
 			},
 		},
-		XIOModelContextProtocolRegistry: map[string]interface{}{
-			"id":           "server-1",
-			"published_at": "2023-01-01T00:00:00Z",
-			"is_latest":    true,
+		XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+			ID:          "server-1",
+			PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
+			IsLatest:    true,
+			ReleaseDate: "2023-01-01T00:00:00Z",
 		},
 	}
-	server2 := model.ServerResponse{
-		Server: model.ServerDetail{
+	server2 := apiv0.ServerRecord{
+		Server: model.ServerJSON{
 			Name:        "Test Server 2",
 			Description: "Second test server",
 			Packages: []model.Package{
@@ -126,14 +131,15 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 				},
 			},
 		},
-		XIOModelContextProtocolRegistry: map[string]interface{}{
-			"id":           "server-2",
-			"published_at": "2023-01-01T00:00:00Z",
-			"is_latest":    true,
+		XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+			ID:          "server-2",
+			PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
+			IsLatest:    true,
+			ReleaseDate: "2023-01-01T00:00:00Z",
 		},
 	}
 
-	serverDetail1 := model.ServerDetail{
+	serverDetail1 := model.ServerJSON{
 		Name:        "Test Server 1",
 		Description: "First test server",
 		Packages: []model.Package{
@@ -145,7 +151,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 			},
 		},
 	}
-	serverDetail2 := model.ServerDetail{
+	serverDetail2 := model.ServerJSON{
 		Name:        "Test Server 2",
 		Description: "Second test server",
 		Packages: []model.Package{
@@ -171,8 +177,8 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		}
 
 		type PaginatedResponse struct {
-			Servers  []model.ServerResponse `json:"servers"`
-			Metadata *Metadata             `json:"metadata,omitempty"`
+			Servers  []apiv0.ServerRecord `json:"servers"`
+			Metadata *Metadata            `json:"metadata,omitempty"`
 		}
 
 		var response PaginatedResponse
@@ -180,7 +186,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		case "":
 			// First page
 			response = PaginatedResponse{
-				Servers: []model.ServerResponse{server1},
+				Servers: []apiv0.ServerRecord{server1},
 				Metadata: &Metadata{
 					NextCursor: "next-cursor-1",
 					Count:      1,
@@ -189,7 +195,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		case "next-cursor-1":
 			// Second page
 			response = PaginatedResponse{
-				Servers: []model.ServerResponse{server2},
+				Servers: []apiv0.ServerRecord{server2},
 				Metadata: &Metadata{
 					Count: 1,
 					// No NextCursor means end of pagination
@@ -198,7 +204,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		default:
 			// No more pages
 			response = PaginatedResponse{
-				Servers:  []model.ServerResponse{},
+				Servers:  []apiv0.ServerRecord{},
 				Metadata: &Metadata{},
 			}
 		}
@@ -233,20 +239,20 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 	assert.Len(t, result, 2)
 
 	// Verify the servers were imported correctly
-	assert.Equal(t, "Test Server 1", result[0].ServerJSON.Name)
-	assert.Equal(t, "Test Server 2", result[1].ServerJSON.Name)
+	assert.Equal(t, "Test Server 1", result[0].Server.Name)
+	assert.Equal(t, "Test Server 2", result[1].Server.Name)
 
 	// Verify packages were imported with new schema
-	assert.Len(t, result[0].ServerJSON.Packages, 1)
-	assert.Equal(t, "npm", result[0].ServerJSON.Packages[0].RegistryType)
-	assert.Equal(t, "https://registry.npmjs.org", result[0].ServerJSON.Packages[0].RegistryBaseURL)
-	assert.Equal(t, "test-package-1", result[0].ServerJSON.Packages[0].Identifier)
-	assert.Len(t, result[1].ServerJSON.Packages, 1)
-	assert.Equal(t, "npm", result[1].ServerJSON.Packages[0].RegistryType)
-	assert.Equal(t, "https://registry.npmjs.org", result[1].ServerJSON.Packages[0].RegistryBaseURL)
-	assert.Equal(t, "test-package-2", result[1].ServerJSON.Packages[0].Identifier)
+	assert.Len(t, result[0].Server.Packages, 1)
+	assert.Equal(t, "npm", result[0].Server.Packages[0].RegistryType)
+	assert.Equal(t, "https://registry.npmjs.org", result[0].Server.Packages[0].RegistryBaseURL)
+	assert.Equal(t, "test-package-1", result[0].Server.Packages[0].Identifier)
+	assert.Len(t, result[1].Server.Packages, 1)
+	assert.Equal(t, "npm", result[1].Server.Packages[0].RegistryType)
+	assert.Equal(t, "https://registry.npmjs.org", result[1].Server.Packages[0].RegistryBaseURL)
+	assert.Equal(t, "test-package-2", result[1].Server.Packages[0].Identifier)
 
 	// Verify metadata was extracted
-	assert.Equal(t, "server-1", result[0].RegistryMetadata.ID)
-	assert.Equal(t, "server-2", result[1].RegistryMetadata.ID)
+	assert.Equal(t, "server-1", result[0].XIOModelContextProtocolRegistry.ID)
+	assert.Equal(t, "server-2", result[1].XIOModelContextProtocolRegistry.ID)
 }

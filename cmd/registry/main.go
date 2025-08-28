@@ -14,9 +14,9 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func main() {
@@ -46,7 +46,7 @@ func main() {
 	// Initialize services based on environment
 	switch cfg.DatabaseType {
 	case config.DatabaseTypeMemory:
-		db = database.NewMemoryDB(map[string]*model.ServerDetail{})
+		db = database.NewMemoryDB(map[string]*model.ServerJSON{})
 		registryService = service.NewRegistryServiceWithDB(db)
 	case config.DatabaseTypePostgreSQL:
 		// Use PostgreSQL for real registry service

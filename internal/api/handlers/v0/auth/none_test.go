@@ -10,7 +10,6 @@ import (
 	v0auth "github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,7 +40,7 @@ func TestNoneHandler_GetAnonymousToken(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check auth method
-	assert.Equal(t, model.AuthMethodNone, claims.AuthMethod)
+	assert.Equal(t, auth.MethodNone, claims.AuthMethod)
 	assert.Equal(t, "anonymous", claims.AuthMethodSubject)
 
 	// Check permissions

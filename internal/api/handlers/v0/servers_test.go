@@ -12,7 +12,8 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/google/uuid"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -23,16 +24,16 @@ func TestServersListEndpoint(t *testing.T) {
 		queryParams     string
 		setupMocks      func(*MockRegistryService)
 		expectedStatus  int
-		expectedServers []model.ServerResponse
+		expectedServers []apiv0.ServerRecord
 		expectedMeta    *v0.Metadata
 		expectedError   string
 	}{
 		{
 			name: "successful list with default parameters",
 			setupMocks: func(registry *MockRegistryService) {
-				servers := []model.ServerResponse{
+				servers := []apiv0.ServerRecord{
 					{
-						Server: model.ServerDetail{
+						Server: model.ServerJSON{
 							Name:        "test-server-1",
 							Description: "First test server",
 							Repository: model.Repository{
@@ -44,12 +45,12 @@ func TestServersListEndpoint(t *testing.T) {
 								Version: "1.0.0",
 							},
 						},
-						XIOModelContextProtocolRegistry: map[string]interface{}{
-							"id": "550e8400-e29b-41d4-a716-446655440001",
+						XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+							ID: "550e8400-e29b-41d4-a716-446655440001",
 						},
 					},
 					{
-						Server: model.ServerDetail{
+						Server: model.ServerJSON{
 							Name:        "test-server-2",
 							Description: "Second test server",
 							Repository: model.Repository{
@@ -61,17 +62,17 @@ func TestServersListEndpoint(t *testing.T) {
 								Version: "2.0.0",
 							},
 						},
-						XIOModelContextProtocolRegistry: map[string]interface{}{
-							"id": "550e8400-e29b-41d4-a716-446655440002",
+						XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+							ID: "550e8400-e29b-41d4-a716-446655440002",
 						},
 					},
 				}
 				registry.Mock.On("List", "", 30).Return(servers, "", nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedServers: []model.ServerResponse{
+			expectedServers: []apiv0.ServerRecord{
 				{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "test-server-1",
 						Description: "First test server",
 						Repository: model.Repository{
@@ -83,12 +84,12 @@ func TestServersListEndpoint(t *testing.T) {
 							Version: "1.0.0",
 						},
 					},
-					XIOModelContextProtocolRegistry: map[string]interface{}{
-						"id": "550e8400-e29b-41d4-a716-446655440001",
+					XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+						ID: "550e8400-e29b-41d4-a716-446655440001",
 					},
 				},
 				{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "test-server-2",
 						Description: "Second test server",
 						Repository: model.Repository{
@@ -100,8 +101,8 @@ func TestServersListEndpoint(t *testing.T) {
 							Version: "2.0.0",
 						},
 					},
-					XIOModelContextProtocolRegistry: map[string]interface{}{
-						"id": "550e8400-e29b-41d4-a716-446655440002",
+					XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+						ID: "550e8400-e29b-41d4-a716-446655440002",
 					},
 				},
 			},
@@ -110,9 +111,9 @@ func TestServersListEndpoint(t *testing.T) {
 			name:        "successful list with cursor and limit",
 			queryParams: "?cursor=550e8400-e29b-41d4-a716-446655440000&limit=10",
 			setupMocks: func(registry *MockRegistryService) {
-				servers := []model.ServerResponse{
+				servers := []apiv0.ServerRecord{
 					{
-						Server: model.ServerDetail{
+						Server: model.ServerJSON{
 							Name:        "test-server-3",
 							Description: "Third test server",
 							Repository: model.Repository{
@@ -124,8 +125,8 @@ func TestServersListEndpoint(t *testing.T) {
 								Version: "1.5.0",
 							},
 						},
-						XIOModelContextProtocolRegistry: map[string]interface{}{
-							"id": "550e8400-e29b-41d4-a716-446655440003",
+						XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+							ID: "550e8400-e29b-41d4-a716-446655440003",
 						},
 					},
 				}
@@ -133,9 +134,9 @@ func TestServersListEndpoint(t *testing.T) {
 				registry.Mock.On("List", mock.AnythingOfType("string"), 10).Return(servers, nextCursor, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedServers: []model.ServerResponse{
+			expectedServers: []apiv0.ServerRecord{
 				{
-					Server: model.ServerDetail{
+					Server: model.ServerJSON{
 						Name:        "test-server-3",
 						Description: "Third test server",
 						Repository: model.Repository{
@@ -147,8 +148,8 @@ func TestServersListEndpoint(t *testing.T) {
 							Version: "1.5.0",
 						},
 					},
-					XIOModelContextProtocolRegistry: map[string]interface{}{
-						"id": "550e8400-e29b-41d4-a716-446655440003",
+					XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+						ID: "550e8400-e29b-41d4-a716-446655440003",
 					},
 				},
 			},
@@ -195,7 +196,7 @@ func TestServersListEndpoint(t *testing.T) {
 		{
 			name: "registry service error",
 			setupMocks: func(registry *MockRegistryService) {
-				registry.Mock.On("List", "", 30).Return([]model.ServerResponse{}, "", errors.New("database connection error"))
+				registry.Mock.On("List", "", 30).Return([]apiv0.ServerRecord{}, "", errors.New("database connection error"))
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedError:  "Failed to get registry list",
@@ -232,8 +233,8 @@ func TestServersListEndpoint(t *testing.T) {
 
 				// Parse response body
 				var resp struct {
-					Servers  []model.ServerResponse `json:"servers"`
-					Metadata *v0.Metadata          `json:"metadata,omitempty"`
+					Servers  []apiv0.ServerRecord `json:"servers"`
+					Metadata *v0.Metadata         `json:"metadata,omitempty"`
 				}
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				assert.NoError(t, err)
@@ -267,15 +268,15 @@ func TestServersDetailEndpoint(t *testing.T) {
 		serverID       string
 		setupMocks     func(*MockRegistryService, string)
 		expectedStatus int
-		expectedServer *model.ServerResponse
+		expectedServer *apiv0.ServerRecord
 		expectedError  string
 	}{
 		{
 			name:     "successful get server detail",
 			serverID: uuid.New().String(),
 			setupMocks: func(registry *MockRegistryService, serverID string) {
-				serverDetail := &model.ServerResponse{
-					Server: model.ServerDetail{
+				serverDetail := &apiv0.ServerRecord{
+					Server: model.ServerJSON{
 						Name:        "test-server-detail",
 						Description: "Test server detail",
 						Repository: model.Repository{
@@ -287,8 +288,8 @@ func TestServersDetailEndpoint(t *testing.T) {
 							Version: "2.0.0",
 						},
 					},
-					XIOModelContextProtocolRegistry: map[string]interface{}{
-						"id": serverID,
+					XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+						ID: serverID,
 					},
 				}
 				registry.Mock.On("GetByID", serverID).Return(serverDetail, nil)
@@ -351,7 +352,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 				assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 
 				// Parse response body
-				var serverDetailResp model.ServerResponse
+				var serverDetailResp apiv0.ServerRecord
 				err := json.NewDecoder(w.Body).Decode(&serverDetailResp)
 				assert.NoError(t, err)
 
@@ -375,9 +376,9 @@ func TestServersEndpointsIntegration(t *testing.T) {
 
 	// Test data
 	serverID := uuid.New().String()
-	servers := []model.ServerResponse{
+	servers := []apiv0.ServerRecord{
 		{
-			Server: model.ServerDetail{
+			Server: model.ServerJSON{
 				Name:        "integration-test-server",
 				Description: "Integration test server",
 				Repository: model.Repository{
@@ -389,14 +390,14 @@ func TestServersEndpointsIntegration(t *testing.T) {
 					Version: "1.0.0",
 				},
 			},
-			XIOModelContextProtocolRegistry: map[string]interface{}{
-				"id": serverID,
+			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
+				ID: serverID,
 			},
 		},
 	}
 
-	serverDetail := &model.ServerResponse{
-		Server: servers[0].Server,
+	serverDetail := &apiv0.ServerRecord{
+		Server:                          servers[0].Server,
 		XIOModelContextProtocolRegistry: servers[0].XIOModelContextProtocolRegistry,
 	}
 
@@ -438,7 +439,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 
 		// Parse response body
 		var listResp struct {
-			Servers []model.ServerResponse `json:"servers"`
+			Servers []apiv0.ServerRecord `json:"servers"`
 		}
 		err = json.NewDecoder(resp.Body).Decode(&listResp)
 		assert.NoError(t, err)
@@ -469,7 +470,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 		// Parse response body
-		var serverDetailResp model.ServerResponse
+		var serverDetailResp apiv0.ServerRecord
 		err = json.NewDecoder(resp.Body).Decode(&serverDetailResp)
 		assert.NoError(t, err)
 

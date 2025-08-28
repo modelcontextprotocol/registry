@@ -16,7 +16,6 @@ import (
 	v0auth "github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -78,7 +77,7 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
 		require.NoError(t, err)
-		assert.Equal(t, model.AuthMethodGitHubAT, claims.AuthMethod)
+		assert.Equal(t, auth.MethodGitHubAT, claims.AuthMethod)
 		assert.Equal(t, "testuser", claims.AuthMethodSubject)
 		assert.Len(t, claims.Permissions, 1)
 		assert.Equal(t, auth.PermissionActionPublish, claims.Permissions[0].Action)
@@ -333,7 +332,7 @@ func TestJWTTokenValidation(t *testing.T) {
 	t.Run("generate and validate token", func(t *testing.T) {
 		// Create test claims
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 			Permissions: []auth.Permission{
 				{
@@ -351,7 +350,7 @@ func TestJWTTokenValidation(t *testing.T) {
 		// Validate token
 		validatedClaims, err := jwtManager.ValidateToken(ctx, tokenResponse.RegistryToken)
 		require.NoError(t, err)
-		assert.Equal(t, model.AuthMethodGitHubAT, validatedClaims.AuthMethod)
+		assert.Equal(t, auth.MethodGitHubAT, validatedClaims.AuthMethod)
 		assert.Equal(t, "testuser", validatedClaims.AuthMethodSubject)
 		assert.Len(t, validatedClaims.Permissions, 1)
 	})
@@ -360,7 +359,7 @@ func TestJWTTokenValidation(t *testing.T) {
 		// Create claims with past expiration
 		pastTime := time.Now().Add(-1 * time.Hour)
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(pastTime),
@@ -381,7 +380,7 @@ func TestJWTTokenValidation(t *testing.T) {
 	t.Run("invalid signature", func(t *testing.T) {
 		// Create test claims
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "testuser",
 		}
 
