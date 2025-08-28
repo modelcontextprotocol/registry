@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/validators"
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
@@ -71,7 +71,7 @@ func NewFakeRegistryService() RegistryService {
 }
 
 // List retrieves servers with extension wrapper format
-func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv1.ServerRecord, string, error) {
+func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv0.ServerRecord, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -83,7 +83,7 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv1.ServerReco
 	}
 
 	// Return ServerRecords directly (they're now the same as ServerResponse)
-	result := make([]apiv1.ServerRecord, len(serverRecords))
+	result := make([]apiv0.ServerRecord, len(serverRecords))
 	for i, record := range serverRecords {
 		result[i] = *record
 	}
@@ -92,7 +92,7 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv1.ServerReco
 }
 
 // GetByID retrieves a specific server by its registry metadata ID in extension wrapper format
-func (s *fakeRegistryService) GetByID(id string) (*apiv1.ServerRecord, error) {
+func (s *fakeRegistryService) GetByID(id string) (*apiv0.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -108,7 +108,7 @@ func (s *fakeRegistryService) GetByID(id string) (*apiv1.ServerRecord, error) {
 }
 
 // Publish publishes a server with separated extensions
-func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerRecord, error) {
+func (s *fakeRegistryService) Publish(req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -128,7 +128,7 @@ func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerRe
 
 	// Create registry metadata for fake service (always marks as latest)
 	now := time.Now()
-	registryMetadata := apiv1.RegistryExtensions{
+	registryMetadata := apiv0.RegistryExtensions{
 		ID:          uuid.New().String(),
 		PublishedAt: now,
 		UpdatedAt:   now,
@@ -147,7 +147,7 @@ func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerRe
 }
 
 // EditServer updates an existing server with new details (admin operation)
-func (s *fakeRegistryService) EditServer(id string, req apiv1.PublishRequest) (*apiv1.ServerRecord, error) {
+func (s *fakeRegistryService) EditServer(id string, req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

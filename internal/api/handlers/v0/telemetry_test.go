@@ -15,12 +15,12 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func mockServerEndpoint(registry *MockRegistryService, serverID string) {
-	serverDetail := &apiv1.ServerRecord{
+	serverDetail := &apiv0.ServerRecord{
 		Server: model.ServerJSON{
 			Name:        "test-server-detail",
 			Description: "Test server detail",
@@ -33,7 +33,7 @@ func mockServerEndpoint(registry *MockRegistryService, serverID string) {
 				Version: "2.0.0",
 			},
 		},
-		XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+		XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 			ID: serverID,
 		},
 	}

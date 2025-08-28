@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -258,19 +258,19 @@ func TestObjectValidator_Validate(t *testing.T) {
 func TestExtractPublisherExtensions(t *testing.T) {
 	tests := []struct {
 		name     string
-		request  apiv1.PublishRequest
+		request  apiv0.PublishRequest
 		expected map[string]interface{}
 	}{
 		{
 			name: "nil publisher extensions",
-			request: apiv1.PublishRequest{
+			request: apiv0.PublishRequest{
 				Server: model.ServerJSON{Name: "test"},
 			},
 			expected: map[string]interface{}{},
 		},
 		{
 			name: "empty publisher extensions",
-			request: apiv1.PublishRequest{
+			request: apiv0.PublishRequest{
 				Server:     model.ServerJSON{Name: "test"},
 				XPublisher: map[string]interface{}{},
 			},
@@ -278,7 +278,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		},
 		{
 			name: "simple publisher extensions",
-			request: apiv1.PublishRequest{
+			request: apiv0.PublishRequest{
 				Server: model.ServerJSON{Name: "test"},
 				XPublisher: map[string]interface{}{
 					"build_info": map[string]interface{}{
@@ -298,7 +298,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		},
 		{
 			name: "nested publisher extensions",
-			request: apiv1.PublishRequest{
+			request: apiv0.PublishRequest{
 				Server: model.ServerJSON{Name: "test"},
 				XPublisher: map[string]interface{}{
 					"ci": map[string]interface{}{
@@ -322,7 +322,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 		},
 		{
 			name: "nil publisher extensions (should be ignored)",
-			request: apiv1.PublishRequest{
+			request: apiv0.PublishRequest{
 				Server:     model.ServerJSON{Name: "test"},
 				XPublisher: nil,
 			},
@@ -340,7 +340,7 @@ func TestExtractPublisherExtensions(t *testing.T) {
 
 func TestExtractPublisherExtensions_DoesNotDoubleNest(t *testing.T) {
 	// This test specifically verifies the bug we fixed - no double nesting
-	request := apiv1.PublishRequest{
+	request := apiv0.PublishRequest{
 		Server: model.ServerJSON{Name: "test"},
 		XPublisher: map[string]interface{}{
 			"tool":    "publisher-cli",
@@ -362,7 +362,7 @@ func TestServerResponse_JSONSerialization(t *testing.T) {
 	// Test that ServerResponse properly serializes to extension wrapper format
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
 
-	response := apiv1.ServerRecord{
+	response := apiv0.ServerRecord{
 		Server: model.ServerJSON{
 			Name:        "test-server",
 			Description: "A test server",
@@ -375,7 +375,7 @@ func TestServerResponse_JSONSerialization(t *testing.T) {
 				Version: "1.0.0",
 			},
 		},
-		XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+		XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 			ID:          "registry-id-123",
 			PublishedAt: publishedTime,
 			IsLatest:    true,
@@ -434,7 +434,7 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 		}
 	}`
 
-	var request apiv1.PublishRequest
+	var request apiv0.PublishRequest
 	err := json.Unmarshal([]byte(jsonData), &request)
 	require.NoError(t, err)
 
@@ -453,12 +453,12 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 
 func TestServerResponse_EmptyExtensions(t *testing.T) {
 	// Test behavior with empty/nil extensions
-	response := apiv1.ServerRecord{
+	response := apiv0.ServerRecord{
 		Server: model.ServerJSON{
 			Name:        "minimal-server",
 			Description: "Minimal test",
 		},
-		XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+		XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 			ID: "min-id",
 		},
 		XPublisher: nil,

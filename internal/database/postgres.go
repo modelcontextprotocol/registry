@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
@@ -48,7 +48,7 @@ func (db *PostgreSQL) List(
 	filter map[string]any,
 	cursor string,
 	limit int,
-) ([]*apiv1.ServerRecord, string, error) {
+) ([]*apiv0.ServerRecord, string, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -113,9 +113,9 @@ func (db *PostgreSQL) List(
 	}
 	defer rows.Close()
 
-	var results []*apiv1.ServerRecord
+	var results []*apiv0.ServerRecord
 	for rows.Next() {
-		var record apiv1.ServerRecord
+		var record apiv0.ServerRecord
 		var repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte
 		var publishedAt, updatedAt, releaseDate time.Time
 
@@ -167,7 +167,7 @@ func (db *PostgreSQL) List(
 }
 
 // parseJSONFields parses JSON fields for a server record
-func parseJSONFields(record *apiv1.ServerRecord, repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte) error {
+func parseJSONFields(record *apiv0.ServerRecord, repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte) error {
 	if len(repositoryJSON) > 0 {
 		if err := json.Unmarshal(repositoryJSON, &record.Server.Repository); err != nil {
 			return fmt.Errorf("failed to unmarshal repository: %w", err)
@@ -198,7 +198,7 @@ func parseJSONFields(record *apiv1.ServerRecord, repositoryJSON, packagesJSON, r
 }
 
 // GetByID retrieves a single ServerRecord by its registry metadata ID
-func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerRecord, error) {
+func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -212,7 +212,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerReco
 		WHERE se.id = $1
 	`
 
-	var record apiv1.ServerRecord
+	var record apiv0.ServerRecord
 	var repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte
 	var publishedAt, updatedAt, releaseDate time.Time
 
@@ -278,7 +278,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerReco
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryExtensions) (*apiv1.ServerRecord, error) {
+func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -360,10 +360,10 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON
 	}
 
 	// Create and return the ServerRecord
-	record := &apiv1.ServerRecord{
-		Server:          serverDetail,
-		XIOModelContextProtocolRegistry:  registryMetadata,
-		XPublisher: publisherExtensions,
+	record := &apiv0.ServerRecord{
+		Server:                          serverDetail,
+		XIOModelContextProtocolRegistry: registryMetadata,
+		XPublisher:                      publisherExtensions,
 	}
 
 	return record, nil
@@ -409,7 +409,7 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 }
 
 // publishWithTransaction handles publishing within an existing transaction, optionally with predefined metadata
-func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, existingMetadata *apiv1.RegistryExtensions) error {
+func (db *PostgreSQL) publishWithTransaction(ctx context.Context, tx pgx.Tx, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, existingMetadata *apiv0.RegistryExtensions) error {
 	// Use the same ID for both server and server_extensions (1:1 relationship)
 	var id string
 	if existingMetadata != nil && existingMetadata.ID != "" {
@@ -531,7 +531,7 @@ func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest 
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}

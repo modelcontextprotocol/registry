@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
 // ReadSeedFile reads seed data from various sources:
@@ -17,7 +17,7 @@ import (
 // 2. Direct HTTP URLs to seed.json files - expects extension wrapper format
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
 // Only the extension wrapper format is supported (array of ServerResponse objects)
-func ReadSeedFile(ctx context.Context, path string) ([]*apiv1.ServerRecord, error) {
+func ReadSeedFile(ctx context.Context, path string) ([]*apiv0.ServerRecord, error) {
 	var data []byte
 	var err error
 
@@ -39,17 +39,17 @@ func ReadSeedFile(ctx context.Context, path string) ([]*apiv1.ServerRecord, erro
 	}
 
 	// Parse extension wrapper format (only supported format)
-	var serverResponses []apiv1.ServerRecord
+	var serverResponses []apiv0.ServerRecord
 	if err := json.Unmarshal(data, &serverResponses); err != nil {
 		return nil, fmt.Errorf("failed to parse seed data as extension wrapper format: %w", err)
 	}
 
 	if len(serverResponses) == 0 {
-		return []*apiv1.ServerRecord{}, nil
+		return []*apiv0.ServerRecord{}, nil
 	}
 
 	// Convert ServerResponse to ServerRecord
-	var records []*apiv1.ServerRecord
+	var records []*apiv0.ServerRecord
 	for _, response := range serverResponses {
 		record := convertServerResponseToRecord(response)
 		records = append(records, record)
@@ -77,8 +77,8 @@ func fetchFromHTTP(ctx context.Context, url string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv1.ServerRecord, error) {
-	var allRecords []*apiv1.ServerRecord
+func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerRecord, error) {
+	var allRecords []*apiv0.ServerRecord
 	cursor := ""
 
 	for {
@@ -97,7 +97,7 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv1.ServerR
 		}
 
 		var response struct {
-			Servers  []apiv1.ServerRecord `json:"servers"`
+			Servers  []apiv0.ServerRecord `json:"servers"`
 			Metadata *struct {
 				NextCursor string `json:"next_cursor,omitempty"`
 			} `json:"metadata,omitempty"`
@@ -123,7 +123,7 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv1.ServerR
 	return allRecords, nil
 }
 
-func convertServerResponseToRecord(response apiv1.ServerRecord) *apiv1.ServerRecord {
+func convertServerResponseToRecord(response apiv0.ServerRecord) *apiv0.ServerRecord {
 	// The registry extensions are already properly typed, so we can use them directly
 	registryMetadata := response.XIOModelContextProtocolRegistry
 
@@ -133,10 +133,9 @@ func convertServerResponseToRecord(response apiv1.ServerRecord) *apiv1.ServerRec
 		publisherExtensions = make(map[string]interface{})
 	}
 
-	return &apiv1.ServerRecord{
+	return &apiv0.ServerRecord{
 		Server:                          response.Server,
 		XIOModelContextProtocolRegistry: registryMetadata,
 		XPublisher:                      publisherExtensions,
 	}
 }
-

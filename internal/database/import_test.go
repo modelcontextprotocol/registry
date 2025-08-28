@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +18,7 @@ import (
 func TestReadSeedFile_LocalFile(t *testing.T) {
 	// Create a temporary seed file in extension wrapper format
 	tempFile := "/tmp/test_seed.json"
-	seedData := []apiv1.ServerRecord{
+	seedData := []apiv0.ServerRecord{
 		{
 			Server: model.ServerJSON{
 				Name:        "test-server-1",
@@ -32,7 +32,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 					Version: "1.0.0",
 				},
 			},
-			XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 				ID:          "test-id-1",
 				PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
 				IsLatest:    true,
@@ -66,13 +66,13 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 
 func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	// Create a test HTTP server that serves seed JSON directly in extension wrapper format
-	seedData := []apiv1.ServerRecord{
+	seedData := []apiv0.ServerRecord{
 		{
 			Server: model.ServerJSON{
 				Name:        "test-server-1",
 				Description: "Test server 1",
 			},
-			XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 				ID:          "test-id-1",
 				PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
 				IsLatest:    true,
@@ -98,7 +98,7 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 
 func TestReadSeedFile_RegistryURL(t *testing.T) {
 	// Create mock registry responses
-	server1 := apiv1.ServerRecord{
+	server1 := apiv0.ServerRecord{
 		Server: model.ServerJSON{
 			Name:        "Test Server 1",
 			Description: "First test server",
@@ -111,14 +111,14 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 				},
 			},
 		},
-		XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+		XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 			ID:          "server-1",
 			PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
 			IsLatest:    true,
 			ReleaseDate: "2023-01-01T00:00:00Z",
 		},
 	}
-	server2 := apiv1.ServerRecord{
+	server2 := apiv0.ServerRecord{
 		Server: model.ServerJSON{
 			Name:        "Test Server 2",
 			Description: "Second test server",
@@ -131,7 +131,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 				},
 			},
 		},
-		XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+		XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 			ID:          "server-2",
 			PublishedAt: time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
 			IsLatest:    true,
@@ -177,7 +177,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		}
 
 		type PaginatedResponse struct {
-			Servers  []apiv1.ServerRecord `json:"servers"`
+			Servers  []apiv0.ServerRecord `json:"servers"`
 			Metadata *Metadata            `json:"metadata,omitempty"`
 		}
 
@@ -186,7 +186,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		case "":
 			// First page
 			response = PaginatedResponse{
-				Servers: []apiv1.ServerRecord{server1},
+				Servers: []apiv0.ServerRecord{server1},
 				Metadata: &Metadata{
 					NextCursor: "next-cursor-1",
 					Count:      1,
@@ -195,7 +195,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		case "next-cursor-1":
 			// Second page
 			response = PaginatedResponse{
-				Servers: []apiv1.ServerRecord{server2},
+				Servers: []apiv0.ServerRecord{server2},
 				Metadata: &Metadata{
 					Count: 1,
 					// No NextCursor means end of pagination
@@ -204,7 +204,7 @@ func TestReadSeedFile_RegistryURL(t *testing.T) {
 		default:
 			// No more pages
 			response = PaginatedResponse{
-				Servers:  []apiv1.ServerRecord{},
+				Servers:  []apiv0.ServerRecord{},
 				Metadata: &Metadata{},
 			}
 		}

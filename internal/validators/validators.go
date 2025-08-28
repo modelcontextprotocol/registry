@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
@@ -129,7 +129,7 @@ func (ov *ObjectValidator) Validate(obj *model.ServerJSON) error {
 }
 
 // ValidatePublisherExtensions validates that publisher extensions are within size limits
-func ValidatePublisherExtensions(req apiv1.PublishRequest) error {
+func ValidatePublisherExtensions(req apiv0.PublishRequest) error {
 	const maxExtensionSize = 4 * 1024 // 4KB limit
 
 	// Check size limit for x-publisher extension
@@ -175,8 +175,8 @@ func ValidatePublishRequestExtensions(requestData []byte) error {
 	return nil
 }
 
-// ExtractPublisherExtensions extracts publisher extensions from a apiv1.PublishRequest
-func ExtractPublisherExtensions(req apiv1.PublishRequest) map[string]interface{} {
+// ExtractPublisherExtensions extracts publisher extensions from a apiv0.PublishRequest
+func ExtractPublisherExtensions(req apiv0.PublishRequest) map[string]interface{} {
 	publisherExtensions := make(map[string]interface{})
 	if req.XPublisher != nil {
 		// Copy fields directly, avoiding double nesting

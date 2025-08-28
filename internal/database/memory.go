@@ -7,26 +7,26 @@ import (
 	"sync"
 	"time"
 
-	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // MemoryDB is an in-memory implementation of the Database interface
 type MemoryDB struct {
-	entries map[string]*apiv1.ServerRecord // maps registry metadata ID to ServerRecord
+	entries map[string]*apiv0.ServerRecord // maps registry metadata ID to ServerRecord
 	mu      sync.RWMutex
 }
 
 // NewMemoryDB creates a new instance of the in-memory database
 func NewMemoryDB(e map[string]*model.ServerJSON) *MemoryDB {
 	// Convert ServerJSON entries to ServerRecord entries
-	serverRecords := make(map[string]*apiv1.ServerRecord)
+	serverRecords := make(map[string]*apiv0.ServerRecord)
 	for registryID, serverDetail := range e {
 		// Create registry metadata
 		now := time.Now()
-		record := &apiv1.ServerRecord{
+		record := &apiv0.ServerRecord{
 			Server: *serverDetail,
-			XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 				ID:          registryID,
 				PublishedAt: now,
 				UpdatedAt:   now,
@@ -48,7 +48,7 @@ func (db *MemoryDB) List(
 	filter map[string]any,
 	cursor string,
 	limit int,
-) ([]*apiv1.ServerRecord, string, error) {
+) ([]*apiv0.ServerRecord, string, error) {
 	if ctx.Err() != nil {
 		return nil, "", ctx.Err()
 	}
@@ -61,7 +61,7 @@ func (db *MemoryDB) List(
 	defer db.mu.RUnlock()
 
 	// Convert all entries to a slice for pagination, filter by is_latest
-	var allEntries []*apiv1.ServerRecord
+	var allEntries []*apiv0.ServerRecord
 	for _, entry := range db.entries {
 		if entry.XIOModelContextProtocolRegistry.IsLatest {
 			allEntries = append(allEntries, entry)
@@ -69,7 +69,7 @@ func (db *MemoryDB) List(
 	}
 
 	// Simple filtering implementation
-	var filteredEntries []*apiv1.ServerRecord
+	var filteredEntries []*apiv0.ServerRecord
 	for _, entry := range allEntries {
 		include := true
 
@@ -127,11 +127,11 @@ func (db *MemoryDB) List(
 	// Apply pagination
 	endIdx := min(startIdx+limit, len(filteredEntries))
 
-	var result []*apiv1.ServerRecord
+	var result []*apiv0.ServerRecord
 	if startIdx < len(filteredEntries) {
 		result = filteredEntries[startIdx:endIdx]
 	} else {
-		result = []*apiv1.ServerRecord{}
+		result = []*apiv0.ServerRecord{}
 	}
 
 	// Determine next cursor using registry metadata ID
@@ -144,7 +144,7 @@ func (db *MemoryDB) List(
 }
 
 // GetByID retrieves a single ServerRecord by its registry metadata ID
-func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv1.ServerRecord, error) {
+func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -163,7 +163,7 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv1.ServerRecord
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv1.RegistryExtensions) (*apiv1.ServerRecord, error) {
+func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -188,7 +188,7 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, 
 	}
 
 	// Create server record
-	record := &apiv1.ServerRecord{
+	record := &apiv0.ServerRecord{
 		Server:                          serverDetail,
 		XIOModelContextProtocolRegistry: registryMetadata,
 		XPublisher:                      publisherExtensions,
@@ -245,7 +245,7 @@ func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bo
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv1.ServerRecord, error) {
+func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerRecord, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
