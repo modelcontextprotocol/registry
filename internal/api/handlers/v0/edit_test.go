@@ -273,7 +273,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				currentServer := &model.ServerResponse{
+				currentServer := &apiv0.ServerRecord{
 					Server: model.ServerJSON{
 						Name:        "io.github.domdomegg/test-server",
 						Description: "Original server",
