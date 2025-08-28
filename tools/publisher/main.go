@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/modelcontextprotocol/registry/tools/publisher/auth"
 )
 
@@ -27,10 +28,6 @@ const (
 )
 
 // Server structure types for JSON generation
-type Repository struct {
-	URL    string `json:"url"`
-	Source string `json:"source"`
-}
 
 type VersionDetail struct {
 	Version string `json:"version"`
@@ -63,13 +60,13 @@ type Package struct {
 }
 
 type ServerJSON struct {
-	Schema        string        `json:"$schema"`
-	Name          string        `json:"name"`
-	Description   string        `json:"description"`
-	Status        string        `json:"status,omitempty"`
-	Repository    Repository    `json:"repository"`
-	VersionDetail VersionDetail `json:"version_detail"`
-	Packages      []Package     `json:"packages"`
+	Schema        string           `json:"$schema"`
+	Name          string           `json:"name"`
+	Description   string           `json:"description"`
+	Status        string           `json:"status,omitempty"`
+	Repository    model.Repository `json:"repository"`
+	VersionDetail VersionDetail    `json:"version_detail"`
+	Packages      []Package        `json:"packages"`
 }
 
 func main() {
@@ -579,7 +576,7 @@ func createServerStructure(
 		Name:        name,
 		Description: description,
 		Status:      status,
-		Repository: Repository{
+		Repository: model.Repository{
 			URL:    repoURL,
 			Source: repoSource,
 		},
