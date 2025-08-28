@@ -169,7 +169,9 @@ func TestPublishIntegration(t *testing.T) {
 	t.Run("publish fails with invalid token", func(t *testing.T) {
 		publishReq := apiv0.PublishRequest{
 			Server: model.ServerJSON{
-				Name: "test-server",
+				Name:        "io.github.domdomegg/test-server",
+				Description: "Test server",
+				VersionDetail: model.VersionDetail{Version: "1.0.0"},
 			},
 		}
 

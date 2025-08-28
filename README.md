@@ -134,15 +134,19 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   └── server-registry-api/ # API specification
 ├── internal/                # Private application code
 │   ├── api/                 # HTTP handlers and routing
-│   ├── auth/                # Authentication (GitHub OAuth, JWT)
+│   ├── auth/                # Authentication (GitHub OAuth, JWT, namespace blocking)
 │   ├── config/              # Configuration management
 │   ├── database/            # Data persistence (PostgreSQL, in-memory)
-│   ├── model/               # Data models and domain structures
 │   ├── service/             # Business logic
-│   └── telemetry/           # Metrics and monitoring
+│   ├── telemetry/           # Metrics and monitoring
+│   └── validators/          # Input validation
+├── pkg/                     # Public packages
+│   ├── api/                 # API types and structures
+│   │   └── v0/              # Version 0 API types
+│   └── model/               # Data models for server.json
 ├── scripts/                 # Development and testing scripts
 ├── tests/                   # Integration tests
-└── tools/                   # CLI tools
+└── tools/                   # CLI tools and utilities
     ├── publisher/           # Server publishing tool
     └── validate-*.sh        # Schema validation tools
 ```

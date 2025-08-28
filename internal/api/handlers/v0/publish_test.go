@@ -150,8 +150,14 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedError:  "required header parameter is missing",
 		},
 		{
-			name:           "invalid authorization header format",
-			requestBody:    apiv0.PublishRequest{},
+			name: "invalid authorization header format",
+			requestBody: apiv0.PublishRequest{
+				Server: model.ServerJSON{
+					Name:          "io.github.domdomegg/test-server",
+					Description:   "Test server",
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				},
+			},
 			authHeader:     "InvalidFormat",
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,

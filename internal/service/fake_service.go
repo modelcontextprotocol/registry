@@ -114,17 +114,15 @@ func (s *fakeRegistryService) Publish(req apiv0.PublishRequest) (*apiv0.ServerRe
 	defer cancel()
 
 	// Validate the request
-	if err := validators.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublishRequest(req); err != nil {
 		return nil, err
 	}
 
-	// Validate server name exists
-	if _, err := validators.ParseServerName(req.Server); err != nil {
-		return nil, err
+	// Use publisher extensions directly from request
+	publisherExtensions := req.XPublisher
+	if publisherExtensions == nil {
+		publisherExtensions = make(map[string]interface{})
 	}
-
-	// Extract publisher extensions from request
-	publisherExtensions := validators.ExtractPublisherExtensions(req)
 
 	// Create registry metadata for fake service (always marks as latest)
 	now := time.Now()
@@ -152,17 +150,15 @@ func (s *fakeRegistryService) EditServer(id string, req apiv0.PublishRequest) (*
 	defer cancel()
 
 	// Validate the request
-	if err := validators.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublishRequest(req); err != nil {
 		return nil, err
 	}
 
-	// Validate server name exists and format
-	if _, err := validators.ParseServerName(req.Server); err != nil {
-		return nil, err
+	// Use publisher extensions directly from request
+	publisherExtensions := req.XPublisher
+	if publisherExtensions == nil {
+		publisherExtensions = make(map[string]interface{})
 	}
-
-	// Extract publisher extensions from request
-	publisherExtensions := validators.ExtractPublisherExtensions(req)
 
 	// Update server in database
 	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)
