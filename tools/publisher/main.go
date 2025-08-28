@@ -29,9 +29,6 @@ const (
 
 // Server structure types for JSON generation
 
-type VersionDetail struct {
-	Version string `json:"version"`
-}
 
 type EnvironmentVariable struct {
 	Name        string `json:"name"`
@@ -65,7 +62,7 @@ type ServerJSON struct {
 	Description   string           `json:"description"`
 	Status        string           `json:"status,omitempty"`
 	Repository    model.Repository `json:"repository"`
-	VersionDetail VersionDetail    `json:"version_detail"`
+	VersionDetail model.VersionDetail    `json:"version_detail"`
 	Packages      []Package        `json:"packages"`
 }
 
@@ -580,7 +577,7 @@ func createServerStructure(
 			URL:    repoURL,
 			Source: repoSource,
 		},
-		VersionDetail: VersionDetail{
+		VersionDetail: model.VersionDetail{
 			Version: version,
 		},
 		Packages: []Package{pkg},
