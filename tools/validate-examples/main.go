@@ -15,6 +15,8 @@ import (
 	"strings"
 
 	jsonschema "github.com/santhosh-tekuri/jsonschema/v5"
+	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/internal/validators"
 )
 
 const (
@@ -65,6 +67,8 @@ func runValidation() error {
 	}
 
 	validatedCount := 0
+	objectValidator := validators.NewObjectValidator()
+
 	for i, example := range examples {
 		log.Printf("Example %d:", i+1)
 
@@ -92,6 +96,7 @@ func runValidation() error {
 
 		baseValid := false
 		registryValid := false
+		goValidatorValid := false
 
 		if err := baseSchema.Validate(serverData); err != nil {
 			log.Printf("  Validating against server.schema.json: ❌")
@@ -109,8 +114,25 @@ func runValidation() error {
 			registryValid = true
 		}
 
+		// Validate using Go ObjectValidator
+		var serverDetail model.ServerDetail
+		serverDataBytes, err := json.Marshal(serverData)
+		if err != nil {
+			log.Printf("  Validating with Go ObjectValidator: ❌")
+			log.Printf("    Error marshaling server data: %v", err)
+		} else if err := json.Unmarshal(serverDataBytes, &serverDetail); err != nil {
+			log.Printf("  Validating with Go ObjectValidator: ❌")
+			log.Printf("    Error unmarshaling to ServerDetail: %v", err)
+		} else if err := objectValidator.Validate(&serverDetail); err != nil {
+			log.Printf("  Validating with Go ObjectValidator: ❌")
+			log.Printf("    Error: %v", err)
+		} else {
+			log.Printf("  Validating with Go ObjectValidator: ✅")
+			goValidatorValid = true
+		}
+
 		// Only count as validated if all validations passed
-		if publishRequestValid && baseValid && registryValid {
+		if publishRequestValid && baseValid && registryValid && goValidatorValid {
 			validatedCount++
 		}
 
@@ -118,7 +140,7 @@ func runValidation() error {
 	}
 
 	if validatedCount != expectedExampleCount {
-		return fmt.Errorf("validation failed: expected %d examples to pass both validations but only %d did",
+		return fmt.Errorf("validation failed: expected %d examples to pass all validations but only %d did",
 			expectedExampleCount, validatedCount)
 	}
 
