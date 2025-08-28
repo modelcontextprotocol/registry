@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 )
@@ -125,20 +124,8 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv1.ServerR
 }
 
 func convertServerResponseToRecord(response apiv1.ServerRecord) *apiv1.ServerRecord {
-	// Extract registry metadata from the extension
-	registryExt := response.XIOModelContextProtocolRegistry
-
-	// Parse timestamps
-	publishedAt, _ := time.Parse(time.RFC3339, getStringFromInterface(registryExt, "published_at"))
-	updatedAt, _ := time.Parse(time.RFC3339, getStringFromInterface(registryExt, "updated_at"))
-
-	registryMetadata := apiv1.RegistryExtensions{
-		ID:          getStringFromInterface(registryExt, "id"),
-		IsLatest:    getBoolFromInterface(registryExt, "is_latest"),
-		PublishedAt: publishedAt,
-		UpdatedAt:   updatedAt,
-		ReleaseDate: getStringFromInterface(registryExt, "release_date"),
-	}
+	// The registry extensions are already properly typed, so we can use them directly
+	registryMetadata := response.XIOModelContextProtocolRegistry
 
 	// Publisher extensions
 	publisherExtensions := response.XPublisher
@@ -153,24 +140,3 @@ func convertServerResponseToRecord(response apiv1.ServerRecord) *apiv1.ServerRec
 	}
 }
 
-func getStringFromInterface(data interface{}, key string) string {
-	if dataMap, ok := data.(map[string]interface{}); ok {
-		if value, exists := dataMap[key]; exists {
-			if strValue, ok := value.(string); ok {
-				return strValue
-			}
-		}
-	}
-	return ""
-}
-
-func getBoolFromInterface(data interface{}, key string) bool {
-	if dataMap, ok := data.(map[string]interface{}); ok {
-		if value, exists := dataMap[key]; exists {
-			if boolValue, ok := value.(bool); ok {
-				return boolValue
-			}
-		}
-	}
-	return false
-}

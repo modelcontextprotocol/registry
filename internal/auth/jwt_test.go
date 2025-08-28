@@ -304,7 +304,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "spammer",
 			Permissions: []auth.Permission{
 				{
@@ -329,7 +329,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "gooduser",
 			Permissions: []auth.Permission{
 				{
@@ -353,7 +353,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodGitHubAT,
+			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "user",
 			Permissions: []auth.Permission{
 				{
@@ -382,7 +382,7 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		jwtManager := auth.NewJWTManager(cfg)
 		
 		claims := auth.JWTClaims{
-			AuthMethod:        model.AuthMethodNone,
+			AuthMethod:        auth.MethodNone,
 			AuthMethodSubject: "admin",
 			Permissions: []auth.Permission{
 				{
