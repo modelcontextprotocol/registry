@@ -21,7 +21,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 	seedData := []apiv0.ServerRecord{
 		{
 			Server: model.ServerJSON{
-				Name:        "test-server-1",
+				Name:        "com.example/test-server-1",
 				Description: "Test server 1",
 				Repository: model.Repository{
 					URL:    "https://github.com/test/repo1",
@@ -30,6 +30,11 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 				},
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
+				},
+				Remotes: []model.Remote{
+					{
+						URL: "https://example.com/remote",
+					},
 				},
 			},
 			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
@@ -61,7 +66,7 @@ func TestReadSeedFile_LocalFile(t *testing.T) {
 	result, err := database.ReadSeedFile(context.Background(), tempFile)
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	assert.Equal(t, "test-server-1", result[0].Server.Name)
+	assert.Equal(t, "com.example/test-server-1", result[0].Server.Name)
 }
 
 func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
@@ -69,8 +74,13 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	seedData := []apiv0.ServerRecord{
 		{
 			Server: model.ServerJSON{
-				Name:        "test-server-1",
+				Name:        "com.example/test-server-1",
 				Description: "Test server 1",
+				Remotes: []model.Remote{
+					{
+						URL: "https://example.com/remote",
+					},
+				},
 			},
 			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
 				ID:          "test-id-1",
@@ -93,7 +103,7 @@ func TestReadSeedFile_DirectHTTPURL(t *testing.T) {
 	result, err := database.ReadSeedFile(context.Background(), server.URL+"/seed.json")
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	assert.Equal(t, "test-server-1", result[0].Server.Name)
+	assert.Equal(t, "com.example/test-server-1", result[0].Server.Name)
 }
 
 func TestReadSeedFile_RegistryURL(t *testing.T) {

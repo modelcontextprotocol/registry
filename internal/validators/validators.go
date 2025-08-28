@@ -72,16 +72,15 @@ func validatePackageField(obj *model.Package) error {
 	}
 
 	// Validate runtime arguments
-	argumentValidator := NewArgumentValidator()
 	for _, arg := range obj.RuntimeArguments {
-		if err := argumentValidator.Validate(&arg); err != nil {
+		if err := validateArgument(&arg); err != nil {
 			return fmt.Errorf("invalid runtime argument: %w", err)
 		}
 	}
 
 	// Validate package arguments
 	for _, arg := range obj.PackageArguments {
-		if err := argumentValidator.Validate(&arg); err != nil {
+		if err := validateArgument(&arg); err != nil {
 			return fmt.Errorf("invalid package argument: %w", err)
 		}
 	}
@@ -89,26 +88,23 @@ func validatePackageField(obj *model.Package) error {
 	return nil
 }
 
-// ArgumentValidator validates argument details
-type ArgumentValidator struct{}
-
-// Validate checks if the argument details are valid
-func (av *ArgumentValidator) Validate(obj *model.Argument) error {
+// validateArgument validates argument details
+func validateArgument(obj *model.Argument) error {
 	if obj.Type == model.ArgumentTypeNamed {
 		// Validate named argument name format
-		if err := av.validateNamedArgumentName(obj.Name); err != nil {
+		if err := validateNamedArgumentName(obj.Name); err != nil {
 			return err
 		}
 
 		// Validate value and default don't start with the name
-		if err := av.validateValueFields(obj.Name, obj.Value, obj.Default); err != nil {
+		if err := validateArgumentValueFields(obj.Name, obj.Value, obj.Default); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (av *ArgumentValidator) validateNamedArgumentName(name string) error {
+func validateNamedArgumentName(name string) error {
 	// Check if name is required for named arguments
 	if name == "" {
 		return ErrNamedArgumentNameRequired
@@ -125,7 +121,7 @@ func (av *ArgumentValidator) validateNamedArgumentName(name string) error {
 	return nil
 }
 
-func (av *ArgumentValidator) validateValueFields(name, value, defaultValue string) error {
+func validateArgumentValueFields(name, value, defaultValue string) error {
 	// Check if value starts with the argument name (using startsWith, not contains)
 	if value != "" && strings.HasPrefix(value, name) {
 		return fmt.Errorf("%w: value starts with argument name '%s': %s", ErrArgumentValueStartsWithName, name, value)
@@ -136,11 +132,6 @@ func (av *ArgumentValidator) validateValueFields(name, value, defaultValue strin
 	}
 
 	return nil
-}
-
-// NewArgumentValidator creates a new ArgumentValidator instance
-func NewArgumentValidator() *ArgumentValidator {
-	return &ArgumentValidator{}
 }
 
 func validateRemote(obj *model.Remote) error {

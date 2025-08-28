@@ -51,13 +51,12 @@ func ReadSeedFile(ctx context.Context, path string) ([]*apiv0.ServerRecord, erro
 	}
 
 	// Validate servers and collect warnings instead of failing the whole batch
-	validator := validators.NewObjectValidator()
 	var validRecords []*apiv0.ServerRecord
 	var invalidServers []string
 	var validationFailures []string
 
 	for _, response := range serverResponses {
-		if err := validator.Validate(&response.Server); err != nil {
+		if err := validators.ValidateServerJSON(&response.Server); err != nil {
 			// Log warning and track invalid server instead of failing
 			invalidServers = append(invalidServers, response.Server.Name)
 			validationFailures = append(validationFailures, fmt.Sprintf("Server '%s': %v", response.Server.Name, err))

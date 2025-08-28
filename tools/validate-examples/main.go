@@ -67,12 +67,11 @@ func runValidation() error {
 	}
 
 	validatedCount := 0
-	objectValidator := validators.NewObjectValidator()
 
 	for i, example := range examples {
 		log.Printf("Example %d:", i+1)
 
-		if validateExample(example, baseSchema, registrySchema, objectValidator) {
+		if validateExample(example, baseSchema, registrySchema) {
 			validatedCount++
 		}
 
@@ -88,7 +87,7 @@ func runValidation() error {
 	return nil
 }
 
-func validateExample(ex example, baseSchema, registrySchema *jsonschema.Schema, objectValidator *validators.ObjectValidator) bool {
+func validateExample(ex example, baseSchema, registrySchema *jsonschema.Schema) bool {
 	var data any
 	if err := json.Unmarshal([]byte(ex.content), &data); err != nil {
 		log.Printf("  ❌ Invalid JSON: %v", err)
@@ -113,7 +112,7 @@ func validateExample(ex example, baseSchema, registrySchema *jsonschema.Schema, 
 
 	baseValid := validateAgainstSchema(serverData, baseSchema, "server.schema.json")
 	registryValid := validateAgainstSchema(serverData, registrySchema, "registry-schema.json")
-	goValidatorValid := validateWithObjectValidator(serverData, objectValidator)
+	goValidatorValid := validateWithObjectValidator(serverData)
 
 	// Only count as validated if all validations passed
 	return publishRequestValid && baseValid && registryValid && goValidatorValid
@@ -129,28 +128,28 @@ func validateAgainstSchema(data any, schema *jsonschema.Schema, schemaName strin
 	return true
 }
 
-func validateWithObjectValidator(serverData any, objectValidator *validators.ObjectValidator) bool {
+func validateWithObjectValidator(serverData any) bool {
 	var serverDetail model.ServerJSON
 	serverDataBytes, err := json.Marshal(serverData)
 	if err != nil {
-		log.Printf("  Validating with Go ObjectValidator: ❌")
+		log.Printf("  Validating with Go Validator: ❌")
 		log.Printf("    Error marshaling server data: %v", err)
 		return false
 	}
 	
 	if err := json.Unmarshal(serverDataBytes, &serverDetail); err != nil {
-		log.Printf("  Validating with Go ObjectValidator: ❌")
+		log.Printf("  Validating with Go Validator: ❌")
 		log.Printf("    Error unmarshaling to ServerDetail: %v", err)
 		return false
 	}
 	
-	if err := objectValidator.Validate(&serverDetail); err != nil {
-		log.Printf("  Validating with Go ObjectValidator: ❌")
+	if err := validators.ValidateServerJSON(&serverDetail); err != nil {
+		log.Printf("  Validating with Go Validator: ❌")
 		log.Printf("    Error: %v", err)
 		return false
 	}
 	
-	log.Printf("  Validating with Go ObjectValidator: ✅")
+	log.Printf("  Validating with Go Validator: ✅")
 	return true
 }
 
