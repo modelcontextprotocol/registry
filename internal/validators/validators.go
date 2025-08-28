@@ -2,6 +2,7 @@ package validators
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/model"
 )
@@ -63,12 +64,81 @@ func (pv *PackageValidator) Validate(obj *model.Package) error {
 		return ErrPackageNameHasSpaces
 	}
 
+	// Validate runtime arguments
+	argumentValidator := NewArgumentValidator()
+	for _, arg := range obj.RuntimeArguments {
+		if err := argumentValidator.Validate(&arg); err != nil {
+			return fmt.Errorf("invalid runtime argument: %w", err)
+		}
+	}
+
+	// Validate package arguments
+	for _, arg := range obj.PackageArguments {
+		if err := argumentValidator.Validate(&arg); err != nil {
+			return fmt.Errorf("invalid package argument: %w", err)
+		}
+	}
+
 	return nil
 }
 
 // NewPackageValidator creates a new PackageValidator instance
 func NewPackageValidator() *PackageValidator {
 	return &PackageValidator{}
+}
+
+// ArgumentValidator validates argument details
+type ArgumentValidator struct{}
+
+// Validate checks if the argument details are valid
+func (av *ArgumentValidator) Validate(obj *model.Argument) error {
+	if obj.Type == model.ArgumentTypeNamed {
+		// Validate named argument name format
+		if err := av.validateNamedArgumentName(obj.Name); err != nil {
+			return err
+		}
+
+		// Validate value and default don't start with the name
+		if err := av.validateValueFields(obj.Name, obj.Value, obj.Default); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (av *ArgumentValidator) validateNamedArgumentName(name string) error {
+	// Check if name is required for named arguments
+	if name == "" {
+		return ErrNamedArgumentNameRequired
+	}
+
+	// Check for invalid characters that suggest embedded values or descriptions
+	// Valid: "--directory", "--port", "-v", "config", "verbose"
+	// Invalid: "--directory <absolute_path_to_adfin_mcp_folder>", "--port 8080"
+	if strings.Contains(name, "<") || strings.Contains(name, ">") ||
+		strings.Contains(name, " ") || strings.Contains(name, "$") {
+		return fmt.Errorf("%w: %s", ErrInvalidNamedArgumentName, name)
+	}
+
+	return nil
+}
+
+func (av *ArgumentValidator) validateValueFields(name, value, defaultValue string) error {
+	// Check if value starts with the argument name (using startsWith, not contains)
+	if value != "" && strings.HasPrefix(value, name) {
+		return fmt.Errorf("%w: value starts with argument name '%s': %s", ErrArgumentValueStartsWithName, name, value)
+	}
+
+	if defaultValue != "" && strings.HasPrefix(defaultValue, name) {
+		return fmt.Errorf("%w: default starts with argument name '%s': %s", ErrArgumentDefaultStartsWithName, name, defaultValue)
+	}
+
+	return nil
+}
+
+// NewArgumentValidator creates a new ArgumentValidator instance
+func NewArgumentValidator() *ArgumentValidator {
+	return &ArgumentValidator{}
 }
 
 // RemoteValidator validates remote connection details
@@ -91,16 +161,18 @@ func NewRemoteValidator() *RemoteValidator {
 // This allows for a single entry point to validate complex objects that may contain multiple fields
 // that need validation.
 type ObjectValidator struct {
-	ServerValidator  *ServerValidator
-	PackageValidator *PackageValidator
-	RemoteValidator  *RemoteValidator
+	ServerValidator   *ServerValidator
+	PackageValidator  *PackageValidator
+	RemoteValidator   *RemoteValidator
+	ArgumentValidator *ArgumentValidator
 }
 
 func NewObjectValidator() *ObjectValidator {
 	return &ObjectValidator{
-		ServerValidator:  NewServerValidator(),
-		PackageValidator: NewPackageValidator(),
-		RemoteValidator:  NewRemoteValidator(),
+		ServerValidator:   NewServerValidator(),
+		PackageValidator:  NewPackageValidator(),
+		RemoteValidator:   NewRemoteValidator(),
+		ArgumentValidator: NewArgumentValidator(),
 	}
 }
 

@@ -12,6 +12,12 @@ var (
 
 	// Remote validation errors
 	ErrInvalidRemoteURL = errors.New("invalid remote URL")
+
+	// Argument validation errors
+	ErrNamedArgumentNameRequired    = errors.New("named argument name is required")
+	ErrInvalidNamedArgumentName     = errors.New("invalid named argument name format")
+	ErrArgumentValueStartsWithName  = errors.New("argument value cannot start with the argument name")
+	ErrArgumentDefaultStartsWithName = errors.New("argument default cannot start with the argument name")
 )
 
 // RepositorySource represents valid repository sources
