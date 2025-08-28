@@ -6,9 +6,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 	"github.com/modelcontextprotocol/registry/pkg/model"
-	"github.com/modelcontextprotocol/registry/pkg/validation"
 )
 
 // fakeRegistryService implements RegistryService interface with an in-memory database
@@ -114,17 +114,17 @@ func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerRe
 	defer cancel()
 
 	// Validate the request
-	if err := validation.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists
-	if _, err := validation.ParseServerName(req.Server); err != nil {
+	if _, err := validators.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := validation.ExtractPublisherExtensions(req)
+	publisherExtensions := validators.ExtractPublisherExtensions(req)
 
 	// Create registry metadata for fake service (always marks as latest)
 	now := time.Now()
@@ -152,17 +152,17 @@ func (s *fakeRegistryService) EditServer(id string, req apiv1.PublishRequest) (*
 	defer cancel()
 
 	// Validate the request
-	if err := validation.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublisherExtensions(req); err != nil {
 		return nil, err
 	}
 
 	// Validate server name exists and format
-	if _, err := validation.ParseServerName(req.Server); err != nil {
+	if _, err := validators.ParseServerName(req.Server); err != nil {
 		return nil, err
 	}
 
 	// Extract publisher extensions from request
-	publisherExtensions := validation.ExtractPublisherExtensions(req)
+	publisherExtensions := validators.ExtractPublisherExtensions(req)
 
 	// Update server in database
 	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)

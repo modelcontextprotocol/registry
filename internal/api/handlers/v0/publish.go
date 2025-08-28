@@ -12,7 +12,6 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
-	"github.com/modelcontextprotocol/registry/pkg/validation"
 )
 
 // PublishServerInput represents the input for publishing a server
@@ -52,7 +51,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Validate that only allowed extension fields are present
-		if err := validation.ValidatePublishRequestExtensions(input.RawBody); err != nil {
+		if err := validators.ValidatePublishRequestExtensions(input.RawBody); err != nil {
 			return nil, huma.Error400BadRequest("Invalid request format", err)
 		}
 
