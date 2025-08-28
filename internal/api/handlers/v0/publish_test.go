@@ -29,33 +29,33 @@ type MockRegistryService struct {
 	mock.Mock
 }
 
-func (m *MockRegistryService) List(cursor string, limit int) ([]apiv1.ServerResponse, string, error) {
+func (m *MockRegistryService) List(cursor string, limit int) ([]apiv1.ServerRecord, string, error) {
 	args := m.Called(cursor, limit)
-	return args.Get(0).([]apiv1.ServerResponse), args.String(1), args.Error(2)
+	return args.Get(0).([]apiv1.ServerRecord), args.String(1), args.Error(2)
 }
 
-func (m *MockRegistryService) GetByID(id string) (*apiv1.ServerResponse, error) {
+func (m *MockRegistryService) GetByID(id string) (*apiv1.ServerRecord, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*apiv1.ServerResponse), args.Error(1)
+	return args.Get(0).(*apiv1.ServerRecord), args.Error(1)
 }
 
-func (m *MockRegistryService) Publish(request apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
+func (m *MockRegistryService) Publish(request apiv1.PublishRequest) (*apiv1.ServerRecord, error) {
 	args := m.Called(request)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*apiv1.ServerResponse), args.Error(1)
+	return args.Get(0).(*apiv1.ServerRecord), args.Error(1)
 }
 
-func (m *MockRegistryService) EditServer(id string, request apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
+func (m *MockRegistryService) EditServer(id string, request apiv1.PublishRequest) (*apiv1.ServerRecord, error) {
 	args := m.Called(id, request)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*apiv1.ServerResponse), args.Error(1)
+	return args.Get(0).(*apiv1.ServerRecord), args.Error(1)
 }
 
 // Helper function to generate a valid JWT token for testing
@@ -110,7 +110,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v1.PublishRequest")).Return(&apiv1.ServerResponse{}, nil)
+				registry.On("Publish", mock.AnythingOfType("v1.PublishRequest")).Return(&apiv1.ServerRecord{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -137,7 +137,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v1.PublishRequest")).Return(&apiv1.ServerResponse{}, nil)
+				registry.On("Publish", mock.AnythingOfType("v1.PublishRequest")).Return(&apiv1.ServerRecord{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},

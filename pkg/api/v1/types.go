@@ -15,37 +15,17 @@ type RegistryExtensions struct {
 	ReleaseDate string    `json:"release_date" bson:"release_date"`
 }
 
-// CreateRegistryExtensions generates the x-io.modelcontextprotocol.registry extension from registry metadata
-func (rm *RegistryExtensions) CreateRegistryExtensions() map[string]interface{} {
-	return map[string]interface{}{
-		"x-io.modelcontextprotocol.registry": map[string]interface{}{
-			"id":           rm.ID,
-			"published_at": rm.PublishedAt,
-			"updated_at":   rm.UpdatedAt,
-			"is_latest":    rm.IsLatest,
-			"release_date": rm.ReleaseDate,
-		},
-	}
-}
-
-// ServerRecord represents the complete storage model that separates server.json from registry metadata
+// ServerRecord represents the unified storage and API response model
 type ServerRecord struct {
-	ServerJSON          model.ServerJSON       `json:"server" bson:"server"`                             // Pure MCP server.json
-	RegistryExtensions  RegistryExtensions     `json:"registry_extensions" bson:"registry_extensions"`   // Registry-generated data
-	PublisherExtensions map[string]interface{} `json:"publisher_extensions" bson:"publisher_extensions"` // x-publisher extensions
-}
-
-// ServerResponse represents the API response format with wrapper and extensions
-type ServerResponse struct {
-	Server                          model.ServerJSON `json:"server"`
-	XIOModelContextProtocolRegistry interface{}      `json:"x-io.modelcontextprotocol.registry,omitempty"`
-	XPublisher                      interface{}      `json:"x-publisher,omitempty"`
+	Server                          model.ServerJSON       `json:"server" bson:"server"`                                                    // Pure MCP server.json
+	XIOModelContextProtocolRegistry RegistryExtensions     `json:"x-io.modelcontextprotocol.registry,omitempty" bson:"registry_extensions"` // Registry-generated data
+	XPublisher                      map[string]interface{} `json:"x-publisher,omitempty" bson:"publisher_extensions"`                       // x-publisher extensions
 }
 
 // ServerListResponse represents the paginated server list response
 type ServerListResponse struct {
-	Servers  []ServerResponse `json:"servers"`
-	Metadata *Metadata        `json:"metadata,omitempty"`
+	Servers  []ServerRecord `json:"servers"`
+	Metadata *Metadata      `json:"metadata,omitempty"`
 }
 
 // PublishRequest represents the API request format for publishing servers
@@ -59,21 +39,4 @@ type Metadata struct {
 	NextCursor string `json:"next_cursor,omitempty"`
 	Count      int    `json:"count,omitempty"`
 	Total      int    `json:"total,omitempty"`
-}
-
-// ToServerResponse converts a ServerRecord to API response format
-func (sr *ServerRecord) ToServerResponse() ServerResponse {
-	response := ServerResponse{
-		Server: sr.ServerJSON,
-	}
-
-	// Add registry metadata extension
-	response.XIOModelContextProtocolRegistry = sr.RegistryExtensions.CreateRegistryExtensions()["x-io.modelcontextprotocol.registry"]
-
-	// Add publisher extensions directly
-	if len(sr.PublisherExtensions) > 0 {
-		response.XPublisher = sr.PublisherExtensions
-	}
-
-	return response
 }

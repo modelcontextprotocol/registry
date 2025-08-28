@@ -71,7 +71,7 @@ func NewFakeRegistryService() RegistryService {
 }
 
 // List retrieves servers with extension wrapper format
-func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv1.ServerResponse, string, error) {
+func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv1.ServerRecord, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -82,17 +82,17 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv1.ServerResp
 		return nil, "", err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	result := make([]apiv1.ServerResponse, len(serverRecords))
+	// Return ServerRecords directly (they're now the same as ServerResponse)
+	result := make([]apiv1.ServerRecord, len(serverRecords))
 	for i, record := range serverRecords {
-		result[i] = record.ToServerResponse()
+		result[i] = *record
 	}
 
 	return result, nextCursor, nil
 }
 
 // GetByID retrieves a specific server by its registry metadata ID in extension wrapper format
-func (s *fakeRegistryService) GetByID(id string) (*apiv1.ServerResponse, error) {
+func (s *fakeRegistryService) GetByID(id string) (*apiv1.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -103,13 +103,12 @@ func (s *fakeRegistryService) GetByID(id string) (*apiv1.ServerResponse, error) 
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }
 
 // Publish publishes a server with separated extensions
-func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
+func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerRecord, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -143,13 +142,12 @@ func (s *fakeRegistryService) Publish(req apiv1.PublishRequest) (*apiv1.ServerRe
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }
 
 // EditServer updates an existing server with new details (admin operation)
-func (s *fakeRegistryService) EditServer(id string, req apiv1.PublishRequest) (*apiv1.ServerResponse, error) {
+func (s *fakeRegistryService) EditServer(id string, req apiv1.PublishRequest) (*apiv1.ServerRecord, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -172,9 +170,8 @@ func (s *fakeRegistryService) EditServer(id string, req apiv1.PublishRequest) (*
 		return nil, err
 	}
 
-	// Convert ServerRecord to ServerResponse format
-	response := serverRecord.ToServerResponse()
-	return &response, nil
+	// Return ServerRecord directly (it's now the same as ServerResponse)
+	return serverRecord, nil
 }
 
 // Close closes the in-memory database connection

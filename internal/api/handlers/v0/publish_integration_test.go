@@ -92,7 +92,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response apiv1.ServerResponse
+		var response apiv1.ServerRecord
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
@@ -138,7 +138,7 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response apiv1.ServerResponse
+		var response apiv1.ServerRecord
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 

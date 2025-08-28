@@ -121,18 +121,18 @@ func (db *PostgreSQL) List(
 
 		err := rows.Scan(
 			// Server fields
-			&record.ServerJSON.Name,
-			&record.ServerJSON.Description,
-			&record.ServerJSON.Status,
+			&record.Server.Name,
+			&record.Server.Description,
+			&record.Server.Status,
 			&repositoryJSON,
-			&record.ServerJSON.VersionDetail.Version,
+			&record.Server.VersionDetail.Version,
 			&packagesJSON,
 			&remotesJSON,
 			// Registry metadata fields
-			&record.RegistryExtensions.ID,
+			&record.XIOModelContextProtocolRegistry.ID,
 			&publishedAt,
 			&updatedAt,
-			&record.RegistryExtensions.IsLatest,
+			&record.XIOModelContextProtocolRegistry.IsLatest,
 			&releaseDate,
 			&publisherExtensionsJSON,
 		)
@@ -146,9 +146,9 @@ func (db *PostgreSQL) List(
 		}
 
 		// Set registry metadata timestamps
-		record.RegistryExtensions.PublishedAt = publishedAt
-		record.RegistryExtensions.UpdatedAt = updatedAt
-		record.RegistryExtensions.ReleaseDate = releaseDate.Format(time.RFC3339)
+		record.XIOModelContextProtocolRegistry.PublishedAt = publishedAt
+		record.XIOModelContextProtocolRegistry.UpdatedAt = updatedAt
+		record.XIOModelContextProtocolRegistry.ReleaseDate = releaseDate.Format(time.RFC3339)
 
 		results = append(results, &record)
 	}
@@ -160,7 +160,7 @@ func (db *PostgreSQL) List(
 	// Determine next cursor using registry metadata ID
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
-		nextCursor = results[len(results)-1].RegistryExtensions.ID
+		nextCursor = results[len(results)-1].XIOModelContextProtocolRegistry.ID
 	}
 
 	return results, nextCursor, nil
@@ -169,29 +169,29 @@ func (db *PostgreSQL) List(
 // parseJSONFields parses JSON fields for a server record
 func parseJSONFields(record *apiv1.ServerRecord, repositoryJSON, packagesJSON, remotesJSON, publisherExtensionsJSON []byte) error {
 	if len(repositoryJSON) > 0 {
-		if err := json.Unmarshal(repositoryJSON, &record.ServerJSON.Repository); err != nil {
+		if err := json.Unmarshal(repositoryJSON, &record.Server.Repository); err != nil {
 			return fmt.Errorf("failed to unmarshal repository: %w", err)
 		}
 	}
 
 	if len(packagesJSON) > 0 {
-		if err := json.Unmarshal(packagesJSON, &record.ServerJSON.Packages); err != nil {
+		if err := json.Unmarshal(packagesJSON, &record.Server.Packages); err != nil {
 			return fmt.Errorf("failed to unmarshal packages: %w", err)
 		}
 	}
 
 	if len(remotesJSON) > 0 {
-		if err := json.Unmarshal(remotesJSON, &record.ServerJSON.Remotes); err != nil {
+		if err := json.Unmarshal(remotesJSON, &record.Server.Remotes); err != nil {
 			return fmt.Errorf("failed to unmarshal remotes: %w", err)
 		}
 	}
 
 	if len(publisherExtensionsJSON) > 0 {
-		if err := json.Unmarshal(publisherExtensionsJSON, &record.PublisherExtensions); err != nil {
+		if err := json.Unmarshal(publisherExtensionsJSON, &record.XPublisher); err != nil {
 			return fmt.Errorf("failed to unmarshal publisher extensions: %w", err)
 		}
 	} else {
-		record.PublisherExtensions = make(map[string]interface{})
+		record.XPublisher = make(map[string]interface{})
 	}
 
 	return nil
@@ -218,18 +218,18 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerReco
 
 	err := db.conn.QueryRow(ctx, query, id).Scan(
 		// Server fields
-		&record.ServerJSON.Name,
-		&record.ServerJSON.Description,
-		&record.ServerJSON.Status,
+		&record.Server.Name,
+		&record.Server.Description,
+		&record.Server.Status,
 		&repositoryJSON,
-		&record.ServerJSON.VersionDetail.Version,
+		&record.Server.VersionDetail.Version,
 		&packagesJSON,
 		&remotesJSON,
 		// Registry metadata fields
-		&record.RegistryExtensions.ID,
+		&record.XIOModelContextProtocolRegistry.ID,
 		&publishedAt,
 		&updatedAt,
-		&record.RegistryExtensions.IsLatest,
+		&record.XIOModelContextProtocolRegistry.IsLatest,
 		&releaseDate,
 		&publisherExtensionsJSON,
 	)
@@ -243,36 +243,36 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv1.ServerReco
 
 	// Parse JSON fields
 	if len(repositoryJSON) > 0 {
-		if err := json.Unmarshal(repositoryJSON, &record.ServerJSON.Repository); err != nil {
+		if err := json.Unmarshal(repositoryJSON, &record.Server.Repository); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal repository: %w", err)
 		}
 	}
 
 	if len(packagesJSON) > 0 {
-		if err := json.Unmarshal(packagesJSON, &record.ServerJSON.Packages); err != nil {
+		if err := json.Unmarshal(packagesJSON, &record.Server.Packages); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal packages: %w", err)
 		}
 	}
 
 	if len(remotesJSON) > 0 {
-		if err := json.Unmarshal(remotesJSON, &record.ServerJSON.Remotes); err != nil {
+		if err := json.Unmarshal(remotesJSON, &record.Server.Remotes); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal remotes: %w", err)
 		}
 	}
 
 	// Parse publisher extensions
 	if len(publisherExtensionsJSON) > 0 {
-		if err := json.Unmarshal(publisherExtensionsJSON, &record.PublisherExtensions); err != nil {
+		if err := json.Unmarshal(publisherExtensionsJSON, &record.XPublisher); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal publisher extensions: %w", err)
 		}
 	} else {
-		record.PublisherExtensions = make(map[string]interface{})
+		record.XPublisher = make(map[string]interface{})
 	}
 
 	// Set registry metadata timestamps
-	record.RegistryExtensions.PublishedAt = publishedAt
-	record.RegistryExtensions.UpdatedAt = updatedAt
-	record.RegistryExtensions.ReleaseDate = releaseDate.Format(time.RFC3339)
+	record.XIOModelContextProtocolRegistry.PublishedAt = publishedAt
+	record.XIOModelContextProtocolRegistry.UpdatedAt = updatedAt
+	record.XIOModelContextProtocolRegistry.ReleaseDate = releaseDate.Format(time.RFC3339)
 
 	return &record, nil
 }
@@ -361,9 +361,9 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail model.ServerJSON
 
 	// Create and return the ServerRecord
 	record := &apiv1.ServerRecord{
-		ServerJSON:          serverDetail,
-		RegistryExtensions:  registryMetadata,
-		PublisherExtensions: publisherExtensions,
+		Server:          serverDetail,
+		XIOModelContextProtocolRegistry:  registryMetadata,
+		XPublisher: publisherExtensions,
 	}
 
 	return record, nil
@@ -391,11 +391,11 @@ func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error
 	// Import each server
 	for _, record := range seedData {
 		// Convert record to the format expected by Publish
-		serverDetail := record.ServerJSON
-		publisherExtensions := record.PublisherExtensions
+		serverDetail := record.Server
+		publisherExtensions := record.XPublisher
 
 		// Use the existing Publish logic but with specific ID from seed data
-		if err := db.publishWithTransaction(ctx, tx, serverDetail, publisherExtensions, &record.RegistryExtensions); err != nil {
+		if err := db.publishWithTransaction(ctx, tx, serverDetail, publisherExtensions, &record.XIOModelContextProtocolRegistry); err != nil {
 			return fmt.Errorf("failed to import server %s: %w", serverDetail.Name, err)
 		}
 	}

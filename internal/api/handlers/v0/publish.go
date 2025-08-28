@@ -36,7 +36,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv1.ServerResponse], error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv1.ServerRecord], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -83,7 +83,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Return the published server in extension wrapper format
-		return &Response[apiv1.ServerResponse]{
+		return &Response[apiv1.ServerRecord]{
 			Body: *publishedServer,
 		}, nil
 	})

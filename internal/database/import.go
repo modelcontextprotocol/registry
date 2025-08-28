@@ -40,7 +40,7 @@ func ReadSeedFile(ctx context.Context, path string) ([]*apiv1.ServerRecord, erro
 	}
 
 	// Parse extension wrapper format (only supported format)
-	var serverResponses []apiv1.ServerResponse
+	var serverResponses []apiv1.ServerRecord
 	if err := json.Unmarshal(data, &serverResponses); err != nil {
 		return nil, fmt.Errorf("failed to parse seed data as extension wrapper format: %w", err)
 	}
@@ -98,7 +98,7 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv1.ServerR
 		}
 
 		var response struct {
-			Servers  []apiv1.ServerResponse `json:"servers"`
+			Servers  []apiv1.ServerRecord `json:"servers"`
 			Metadata *struct {
 				NextCursor string `json:"next_cursor,omitempty"`
 			} `json:"metadata,omitempty"`
@@ -124,7 +124,7 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv1.ServerR
 	return allRecords, nil
 }
 
-func convertServerResponseToRecord(response apiv1.ServerResponse) *apiv1.ServerRecord {
+func convertServerResponseToRecord(response apiv1.ServerRecord) *apiv1.ServerRecord {
 	// Extract registry metadata from the extension
 	registryExt := response.XIOModelContextProtocolRegistry
 
@@ -141,17 +141,15 @@ func convertServerResponseToRecord(response apiv1.ServerResponse) *apiv1.ServerR
 	}
 
 	// Publisher extensions
-	publisherExtensions := make(map[string]interface{})
-	if response.XPublisher != nil {
-		if publisherMap, ok := response.XPublisher.(map[string]interface{}); ok {
-			publisherExtensions = publisherMap
-		}
+	publisherExtensions := response.XPublisher
+	if publisherExtensions == nil {
+		publisherExtensions = make(map[string]interface{})
 	}
 
 	return &apiv1.ServerRecord{
-		ServerJSON:          response.Server,
-		RegistryExtensions:  registryMetadata,
-		PublisherExtensions: publisherExtensions,
+		Server:                          response.Server,
+		XIOModelContextProtocolRegistry: registryMetadata,
+		XPublisher:                      publisherExtensions,
 	}
 }
 

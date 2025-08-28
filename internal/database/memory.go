@@ -25,15 +25,15 @@ func NewMemoryDB(e map[string]*model.ServerJSON) *MemoryDB {
 		// Create registry metadata
 		now := time.Now()
 		record := &apiv1.ServerRecord{
-			ServerJSON: *serverDetail,
-			RegistryExtensions: apiv1.RegistryExtensions{
+			Server: *serverDetail,
+			XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
 				ID:          registryID,
 				PublishedAt: now,
 				UpdatedAt:   now,
 				IsLatest:    true,
 				ReleaseDate: now.Format(time.RFC3339),
 			},
-			PublisherExtensions: make(map[string]interface{}),
+			XPublisher: make(map[string]interface{}),
 		}
 		serverRecords[registryID] = record
 	}
@@ -63,7 +63,7 @@ func (db *MemoryDB) List(
 	// Convert all entries to a slice for pagination, filter by is_latest
 	var allEntries []*apiv1.ServerRecord
 	for _, entry := range db.entries {
-		if entry.RegistryExtensions.IsLatest {
+		if entry.XIOModelContextProtocolRegistry.IsLatest {
 			allEntries = append(allEntries, entry)
 		}
 	}
@@ -77,21 +77,21 @@ func (db *MemoryDB) List(
 		for key, value := range filter {
 			switch key {
 			case "name":
-				if entry.ServerJSON.Name != value.(string) {
+				if entry.Server.Name != value.(string) {
 					include = false
 				}
 			case "version":
-				if entry.ServerJSON.VersionDetail.Version != value.(string) {
+				if entry.Server.VersionDetail.Version != value.(string) {
 					include = false
 				}
 			case "status":
-				if string(entry.ServerJSON.Status) != value.(string) {
+				if string(entry.Server.Status) != value.(string) {
 					include = false
 				}
 			case "remote_url":
 				found := false
 				remoteURL := value.(string)
-				for _, remote := range entry.ServerJSON.Remotes {
+				for _, remote := range entry.Server.Remotes {
 					if remote.URL == remoteURL {
 						found = true
 						break
@@ -110,14 +110,14 @@ func (db *MemoryDB) List(
 
 	// Sort filteredEntries by registry metadata ID for consistent pagination
 	sort.Slice(filteredEntries, func(i, j int) bool {
-		return filteredEntries[i].RegistryExtensions.ID < filteredEntries[j].RegistryExtensions.ID
+		return filteredEntries[i].XIOModelContextProtocolRegistry.ID < filteredEntries[j].XIOModelContextProtocolRegistry.ID
 	})
 
 	// Find starting point for cursor-based pagination using registry metadata ID
 	startIdx := 0
 	if cursor != "" {
 		for i, entry := range filteredEntries {
-			if entry.RegistryExtensions.ID == cursor {
+			if entry.XIOModelContextProtocolRegistry.ID == cursor {
 				startIdx = i + 1 // Start after the cursor
 				break
 			}
@@ -137,7 +137,7 @@ func (db *MemoryDB) List(
 	// Determine next cursor using registry metadata ID
 	nextCursor := ""
 	if endIdx < len(filteredEntries) {
-		nextCursor = filteredEntries[endIdx-1].RegistryExtensions.ID
+		nextCursor = filteredEntries[endIdx-1].XIOModelContextProtocolRegistry.ID
 	}
 
 	return result, nextCursor, nil
@@ -189,9 +189,9 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, 
 
 	// Create server record
 	record := &apiv1.ServerRecord{
-		ServerJSON:          serverDetail,
-		RegistryExtensions:  registryMetadata,
-		PublisherExtensions: publisherExtensions,
+		Server:                          serverDetail,
+		XIOModelContextProtocolRegistry: registryMetadata,
+		XPublisher:                      publisherExtensions,
 	}
 
 	// Store the record using registry metadata ID
@@ -220,7 +220,7 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	// Import each server
 	for _, record := range seedData {
 		// Use the registry metadata ID as the map key
-		db.entries[record.RegistryExtensions.ID] = record
+		db.entries[record.XIOModelContextProtocolRegistry.ID] = record
 	}
 
 	return nil
@@ -236,8 +236,8 @@ func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bo
 	defer db.mu.Unlock()
 
 	if entry, exists := db.entries[id]; exists {
-		entry.RegistryExtensions.IsLatest = isLatest
-		entry.RegistryExtensions.UpdatedAt = time.Now()
+		entry.XIOModelContextProtocolRegistry.IsLatest = isLatest
+		entry.XIOModelContextProtocolRegistry.UpdatedAt = time.Now()
 		return nil
 	}
 
@@ -259,9 +259,9 @@ func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail mo
 	}
 
 	// Update the server details
-	entry.ServerJSON = serverDetail
-	entry.PublisherExtensions = publisherExtensions
-	entry.RegistryExtensions.UpdatedAt = time.Now()
+	entry.Server = serverDetail
+	entry.XPublisher = publisherExtensions
+	entry.XIOModelContextProtocolRegistry.UpdatedAt = time.Now()
 
 	// Return the updated record
 	return entry, nil

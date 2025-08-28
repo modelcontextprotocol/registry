@@ -115,38 +115,11 @@ func TestExtractPublisherExtensions_DoesNotDoubleNest(t *testing.T) {
 	assert.NotContains(t, result, "x-publisher")
 }
 
-func TestRegistryMetadata_CreateRegistryExtensions(t *testing.T) {
-	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
-	updatedTime := time.Date(2023, 12, 1, 11, 0, 0, 0, time.UTC)
-
-	metadata := apiv1.RegistryExtensions{
-		ID:          "test-id-123",
-		PublishedAt: publishedTime,
-		UpdatedAt:   updatedTime,
-		IsLatest:    true,
-		ReleaseDate: "2023-12-01T10:30:00Z",
-	}
-
-	result := metadata.CreateRegistryExtensions()
-
-	expected := map[string]interface{}{
-		"x-io.modelcontextprotocol.registry": map[string]interface{}{
-			"id":           "test-id-123",
-			"published_at": publishedTime,
-			"updated_at":   updatedTime,
-			"is_latest":    true,
-			"release_date": "2023-12-01T10:30:00Z",
-		},
-	}
-
-	assert.Equal(t, expected, result)
-}
-
 func TestServerResponse_JSONSerialization(t *testing.T) {
 	// Test that ServerResponse properly serializes to extension wrapper format
 	publishedTime := time.Date(2023, 12, 1, 10, 30, 0, 0, time.UTC)
 
-	response := apiv1.ServerResponse{
+	response := apiv1.ServerRecord{
 		Server: model.ServerJSON{
 			Name:        "test-server",
 			Description: "A test server",
@@ -159,10 +132,11 @@ func TestServerResponse_JSONSerialization(t *testing.T) {
 				Version: "1.0.0",
 			},
 		},
-		XIOModelContextProtocolRegistry: map[string]interface{}{
-			"id":           "registry-id-123",
-			"published_at": publishedTime.Format(time.RFC3339),
-			"is_latest":    true,
+		XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+			ID:          "registry-id-123",
+			PublishedAt: publishedTime,
+			IsLatest:    true,
+			ReleaseDate: publishedTime.Format(time.RFC3339),
 		},
 		XPublisher: map[string]interface{}{
 			"build_tool": "ci-pipeline",
@@ -237,13 +211,13 @@ func TestPublishRequest_WithPublisherExtensions(t *testing.T) {
 
 func TestServerResponse_EmptyExtensions(t *testing.T) {
 	// Test behavior with empty/nil extensions
-	response := apiv1.ServerResponse{
+	response := apiv1.ServerRecord{
 		Server: model.ServerJSON{
 			Name:        "minimal-server",
 			Description: "Minimal test",
 		},
-		XIOModelContextProtocolRegistry: map[string]interface{}{
-			"id": "min-id",
+		XIOModelContextProtocolRegistry: apiv1.RegistryExtensions{
+			ID: "min-id",
 		},
 		XPublisher: nil,
 	}
