@@ -30,31 +30,6 @@ const (
 // Server structure types for JSON generation
 
 
-type EnvironmentVariable struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-type RuntimeArgument struct {
-	Description string `json:"description"`
-	IsRequired  bool   `json:"is_required"`
-	Format      string `json:"format"`
-	Value       string `json:"value"`
-	Default     string `json:"default"`
-	Type        string `json:"type"`
-	ValueHint   string `json:"value_hint"`
-}
-
-type Package struct {
-	RegistryType         string                `json:"registry_type,omitempty"`
-	RegistryBaseURL      string                `json:"registry_base_url,omitempty"`
-	Identifier           string                `json:"identifier,omitempty"`
-	Version              string                `json:"version,omitempty"`
-	RuntimeHint          string                `json:"runtime_hint,omitempty"`
-	RuntimeArguments     []RuntimeArgument     `json:"runtime_arguments,omitempty"`
-	PackageArguments     []RuntimeArgument     `json:"package_arguments,omitempty"`
-	EnvironmentVariables []EnvironmentVariable `json:"environment_variables,omitempty"`
-}
 
 type ServerJSON struct {
 	Schema        string           `json:"$schema"`
@@ -63,7 +38,7 @@ type ServerJSON struct {
 	Status        string           `json:"status,omitempty"`
 	Repository    model.Repository `json:"repository"`
 	VersionDetail model.VersionDetail    `json:"version_detail"`
-	Packages      []Package        `json:"packages"`
+	Packages      []model.Package        `json:"packages"`
 }
 
 func main() {
@@ -404,29 +379,31 @@ func publishToRegistry(registryURL string, mcpData []byte, token string) error {
 }
 
 // parseEnvironmentVariables parses environment variable specifications
-func parseEnvironmentVariables(envVars []string) []EnvironmentVariable {
-	var environmentVariables []EnvironmentVariable
+func parseEnvironmentVariables(envVars []string) []model.KeyValueInput {
+	var environmentVariables []model.KeyValueInput
 	for _, envVar := range envVars {
 		parts := strings.SplitN(envVar, ":", 2)
+		description := fmt.Sprintf("Environment variable for %s", parts[0])
 		if len(parts) == 2 {
-			environmentVariables = append(environmentVariables, EnvironmentVariable{
-				Name:        parts[0],
-				Description: parts[1],
-			})
-		} else {
-			// If no description provided, use a default
-			environmentVariables = append(environmentVariables, EnvironmentVariable{
-				Name:        parts[0],
-				Description: fmt.Sprintf("Environment variable for %s", parts[0]),
-			})
+			description = parts[1]
 		}
+		
+		environmentVariables = append(environmentVariables, model.KeyValueInput{
+			Name: parts[0],
+			InputWithVariables: model.InputWithVariables{
+				Input: model.Input{
+					Description: description,
+					Format:      model.FormatString,
+				},
+			},
+		})
 	}
 	return environmentVariables
 }
 
 // parsePackageArguments parses package argument specifications
-func parsePackageArguments(packageArgs []string) []RuntimeArgument {
-	var packageArguments []RuntimeArgument
+func parsePackageArguments(packageArgs []string) []model.Argument {
+	var packageArguments []model.Argument
 	for i, pkgArg := range packageArgs {
 		parts := strings.SplitN(pkgArg, ":", 2)
 		value := parts[0]
@@ -435,22 +412,26 @@ func parsePackageArguments(packageArgs []string) []RuntimeArgument {
 			description = parts[1]
 		}
 
-		packageArguments = append(packageArguments, RuntimeArgument{
-			Description: description,
-			IsRequired:  true, // Package arguments are typically required
-			Format:      "string",
-			Value:       value,
-			Default:     value,
-			Type:        "positional",
-			ValueHint:   value,
+		packageArguments = append(packageArguments, model.Argument{
+			Type:      model.ArgumentTypePositional,
+			ValueHint: value,
+			InputWithVariables: model.InputWithVariables{
+				Input: model.Input{
+					Description: description,
+					IsRequired:  true, // Package arguments are typically required
+					Format:      model.FormatString,
+					Value:       value,
+					Default:     value,
+				},
+			},
 		})
 	}
 	return packageArguments
 }
 
 // parseRuntimeArguments parses the execute command to create runtime arguments
-func parseRuntimeArguments(execute string) []RuntimeArgument {
-	var runtimeArguments []RuntimeArgument
+func parseRuntimeArguments(execute string) []model.Argument {
+	var runtimeArguments []model.Argument
 	if execute == "" {
 		return runtimeArguments
 	}
@@ -464,14 +445,18 @@ func parseRuntimeArguments(execute string) []RuntimeArgument {
 	// Skip the first part (command) and add each argument as a runtime argument
 	for i, arg := range parts[1:] {
 		description := getArgumentDescription(arg, i, parts)
-		runtimeArguments = append(runtimeArguments, RuntimeArgument{
-			Description: description,
-			IsRequired:  false,
-			Format:      "string",
-			Value:       arg,
-			Default:     arg,
-			Type:        "positional",
-			ValueHint:   arg,
+		runtimeArguments = append(runtimeArguments, model.Argument{
+			Type:      model.ArgumentTypePositional,
+			ValueHint: arg,
+			InputWithVariables: model.InputWithVariables{
+				Input: model.Input{
+					Description: description,
+					IsRequired:  false,
+					Format:      model.FormatString,
+					Value:       arg,
+					Default:     arg,
+				},
+			},
 		})
 	}
 
@@ -556,12 +541,12 @@ func createServerStructure(
 	}
 
 	// Create package with new structured fields
-	pkg := Package{
+	pkg := model.Package{
 		RegistryType:         registryTypeValue,
 		RegistryBaseURL:      registryBaseURLValue,
 		Identifier:           identifier,
 		Version:              packageVersion,
-		RuntimeHint:          runtimeHint,
+		RunTimeHint:          runtimeHint,
 		RuntimeArguments:     runtimeArguments,
 		PackageArguments:     packageArguments,
 		EnvironmentVariables: environmentVariables,
@@ -580,7 +565,7 @@ func createServerStructure(
 		VersionDetail: model.VersionDetail{
 			Version: version,
 		},
-		Packages: []Package{pkg},
+		Packages: []model.Package{pkg},
 	}
 }
 
