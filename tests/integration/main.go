@@ -20,8 +20,6 @@ import (
 
 const registryURL = "http://localhost:8080"
 
-var publishedIDRegex = regexp.MustCompile(`"x-io\.modelcontextprotocol\.registry":\s*\{[^}]*"id":\s*"([^"]+)"`)
-
 func main() {
 	log.SetFlags(0)
 	if err := run(); err != nil {
@@ -29,68 +27,48 @@ func main() {
 	}
 }
 
-func getAnonymousToken() (string, error) {
+func run() error {
+	examplesPath := filepath.Join("docs", "server-json", "examples.md")
+	examples, err := getExamples(examplesPath)
+	if err != nil {
+		log.Fatalf("failed to extract examples: %v", err)
+	}
+	log.Printf("Found %d examples in %q\n", len(examples), examplesPath)
+
+	// Set up authentication using the new login workflow
+	err = setupPublisherAuth()
+	if err != nil {
+		log.Fatalf("failed to set up publisher auth: %v", err)
+	}
+	defer cleanupPublisherAuth()
+
+	return publish(examples)
+}
+
+func setupPublisherAuth() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, registryURL+"/v0/auth/none", nil)
+	cmd := exec.CommandContext(ctx, "./bin/publisher", "login", "none", "--registry", registryURL)
+	cmd.WaitDelay = 100 * time.Millisecond
+
+	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to get anonymous token: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("auth endpoint returned %d: %s", resp.StatusCode, string(body))
+		return fmt.Errorf("login failed: %s", string(out))
 	}
 
-	var tokenResponse struct {
-		RegistryToken string `json:"registry_token"`
-		ExpiresAt     int    `json:"expires_at"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResponse); err != nil {
-		return "", fmt.Errorf("failed to decode token response: %w", err)
-	}
-
-	if tokenResponse.RegistryToken == "" {
-		return "", fmt.Errorf("received empty token from auth endpoint")
-	}
-
-	log.Printf("Got anonymous token (expires at %d)", tokenResponse.ExpiresAt)
-	return tokenResponse.RegistryToken, nil
+	log.Printf("Publisher login successful: %s", strings.TrimSpace(string(out)))
+	return nil
 }
 
-func run() error {
-	examplesPath := filepath.Join("docs", "server-json", "examples.md")
-	examples, err := examples(examplesPath)
+func cleanupPublisherAuth() {
+	// Clean up the token file
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			log.Fatalf("%q not found; run this test from the repo root", examplesPath)
-		}
-		log.Fatalf("failed to extract examples from %q: %v", examplesPath, err)
+		return
 	}
-
-	log.Printf("Found %d examples in %q\n", len(examples), examplesPath)
-
-	// Get anonymous token from the none endpoint
-	token, err := getAnonymousToken()
-	if err != nil {
-		log.Fatalf("failed to get anonymous token: %v", err)
-	}
-
-	if err := os.WriteFile(".mcpregistry_registry_token", []byte(token), 0600); err != nil {
-		log.Fatalf("failed to write token: %v", err)
-	}
-	defer os.Remove(".mcpregistry_registry_token")
-
-	return publish(examples)
+	tokenPath := filepath.Join(homeDir, ".mcp_publisher_token")
+	os.Remove(tokenPath)
 }
 
 func publish(examples []example) error {
@@ -177,24 +155,95 @@ func publishToRegistry(expected map[string]any, line int) error {
 func runPublisher(filePath string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "./bin/publisher", "publish", "--mcp-file", filePath, "--registry-url", registryURL, "--auth-method", "none")
+
+	cmd := exec.CommandContext(ctx, "./bin/publisher", "publish", filePath)
 	cmd.WaitDelay = 100 * time.Millisecond
 
 	out, err := cmd.CombinedOutput()
-	if errors.Is(err, exec.ErrNotFound) || errors.Is(err, os.ErrNotExist) {
-		return "", errors.New("publisher not found; did you run tests/integration/run.sh?")
-	}
 	output := strings.TrimSpace("publisher output:\n\t" + strings.ReplaceAll(string(out), "\n", "\n  \t"))
 	if err != nil {
 		return "", errors.New(output)
 	}
 	log.Println("  ✅", output)
 
-	m := publishedIDRegex.FindStringSubmatch(output)
-	if len(m) != 2 || m[1] == "" {
-		return "", errors.New("didn't find ID in publisher output")
+	// Get the server name from the file to look up the ID
+	serverName, err := getServerNameFromFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to get server name from file: %w", err)
 	}
-	return m[1], nil
+
+	// Find the server in the registry by name
+	return findServerIDByName(serverName)
+}
+
+func getServerNameFromFile(filePath string) (string, error) {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	var serverData map[string]any
+	if err := json.Unmarshal(data, &serverData); err != nil {
+		return "", err
+	}
+
+	// Handle both old ServerDetail format and new PublishRequest format
+	if server, exists := serverData["server"]; exists {
+		// New PublishRequest format
+		if serverMap, ok := server.(map[string]any); ok {
+			if name, ok := serverMap["name"].(string); ok {
+				return name, nil
+			}
+		}
+	} else if name, ok := serverData["name"].(string); ok {
+		// Old ServerDetail format
+		return name, nil
+	}
+
+	return "", errors.New("could not find server name in file")
+}
+
+func findServerIDByName(serverName string) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, registryURL+"/v0/servers", nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("registry responded %d: %s", resp.StatusCode, string(body))
+	}
+
+	var serverList struct {
+		Servers []map[string]any `json:"servers"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
+		return "", fmt.Errorf("failed to decode server list: %w", err)
+	}
+
+	// Find the server with matching name
+	for _, server := range serverList.Servers {
+		if registryMeta, ok := server["x-io.modelcontextprotocol.registry"].(map[string]any); ok {
+			if id, ok := registryMeta["id"].(string); ok {
+				if serverData, ok := server["server"].(map[string]any); ok {
+					if name, ok := serverData["name"].(string); ok && name == serverName {
+						return id, nil
+					}
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("could not find server with name %s", serverName)
 }
 
 func verifyPublishedServer(id string, expected map[string]any) error {
@@ -221,20 +270,20 @@ func verifyPublishedServer(id string, expected map[string]any) error {
 	if err := json.Unmarshal(content, &actual); err != nil {
 		return fmt.Errorf("failed to unmarshal registry response: %w", err)
 	}
-	
+
 	// Both API response and expected are now in extension wrapper format
 	// Compare the server portions of both
 	actualServer, ok := actual["server"]
 	if !ok {
 		return fmt.Errorf("expected server field in registry response")
 	}
-	
+
 	// Extract expected server portion for comparison
 	expectedServer := expected
 	if server, exists := expected["server"]; exists {
 		expectedServer = server.(map[string]any)
 	}
-	
+
 	if err := compare(expectedServer, actualServer); err != nil {
 		return fmt.Errorf(`example "%s": %w`, expectedServer["name"], err)
 	}
@@ -246,9 +295,10 @@ type example struct {
 	line    int
 }
 
-func examples(path string) ([]example, error) {
+func getExamples(path string) ([]example, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
+		log.Fatalf("examples not found; run this test from the repo root")
 		return nil, err
 	}
 

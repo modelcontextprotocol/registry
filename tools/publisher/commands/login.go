@@ -19,7 +19,7 @@ const (
 
 func LoginCommand(args []string) error {
 	if len(args) < 1 {
-		return errors.New("authentication method required\n\nUsage: mcp-publisher login <method>\n\nMethods:\n  github        Interactive GitHub authentication\n  github-oidc   GitHub Actions OIDC authentication\n  dns           DNS-based authentication (requires --domain and --private-key)\n  http          HTTP-based authentication (requires --domain and --private-key)")
+		return errors.New("authentication method required\n\nUsage: mcp-publisher login <method>\n\nMethods:\n  github        Interactive GitHub authentication\n  github-oidc   GitHub Actions OIDC authentication\n  dns           DNS-based authentication (requires --domain and --private-key)\n  http          HTTP-based authentication (requires --domain and --private-key)\n  none          Anonymous authentication (for testing)")
 	}
 
 	method := args[0]
@@ -58,6 +58,8 @@ func LoginCommand(args []string) error {
 			return errors.New("http authentication requires --domain and --private-key")
 		}
 		authProvider = auth.NewHTTPProvider(registryURL, domain, privateKey)
+	case "none":
+		authProvider = auth.NewNoneProvider(registryURL)
 	default:
 		return fmt.Errorf("unknown authentication method: %s\nFor a list of available methods, run: mcp-publisher login", method)
 	}
