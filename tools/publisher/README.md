@@ -1,10 +1,8 @@
 # MCP Registry Publisher Tool
 
-The MCP Registry Publisher Tool is designed to publish Model Context Protocol (MCP) server details to an MCP registry. This tool uses GitHub OAuth device flow authentication to securely manage the publishing process.
+The MCP Registry Publisher Tool helps you publish Model Context Protocol (MCP) servers to the official registry. It follows a simple, npm-like workflow that's familiar to most developers.
 
-## Building the Tool
-
-You can build the publisher tool using the provided build script:
+## Installation
 
 ```bash
 # Build for current platform
@@ -16,158 +14,91 @@ You can build the publisher tool using the provided build script:
 
 The compiled binary will be placed in the `bin` directory.
 
-## Usage
-
-The tool supports two main commands:
-
-### Publishing a server
+## Quick Start
 
 ```bash
-# Basic usage with GitHub OAuth (interactive authentication)
-./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE>
+# 1. Create a template server.json file
+mcp-publisher init
 
-# Use GitHub Actions OIDC (for CI/CD pipelines)
-./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --auth-method github-oidc
+# 2. Edit server.json with your server details
 
-# Force a new login even if a token exists
-./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --login
+# 3. Authenticate with the registry (one-time setup)
+mcp-publisher login <method>
+
+# 4. Publish your server
+mcp-publisher publish
 ```
 
-### Creating a server.json file
+## Commands
+
+### `mcp-publisher init`
+
+Creates a template `server.json` file with smart defaults. This command automatically detects values from your environment when possible.
 
 ```bash
-# Create a new server.json file
-./bin/mcp-publisher create --name "io.github.owner/repo" --description "My server" --repo-url "https://github.com/owner/repo"
+mcp-publisher init
 ```
 
-### Command-line Arguments
+Auto-detection sources:
+- **Git remote origin** for repository URL and server name
+- **package.json** for npm packages (name, description)
+- **pyproject.toml** for Python packages
+- **Current directory** for fallback naming
 
-- `--registry-url`: URL of the MCP registry (required)
-- `--mcp-file`: Path to the MCP configuration file (required)
-- `--login`: Force a new GitHub authentication even if a token already exists (overwrites existing token file)
-- `--auth-method`: Authentication method to use (default: github-at)
-  - `github-at`: Interactive GitHub OAuth device flow authentication
-  - `github-oidc`: GitHub Actions OIDC authentication (for CI/CD)
-  - `dns`: DNS-based public/private key authentication
-  - `http`: HTTP-based public/private key authentication
-  - `none`: No authentication (for registry contributors testing locally)
-- `--dns-domain`: Domain name for DNS authentication (required for dns auth method)
-- `--dns-private-key`: 64-character hex seed for DNS authentication (required for dns auth method)
-- `--http-domain`: Domain name for HTTP authentication (required for http auth method)
-- `--http-private-key`: 64-character hex seed for HTTP authentication (required for http auth method)
+The generated file includes placeholder values that you should update before publishing.
 
-## Creating a server.json file
+### `mcp-publisher login <method>`
 
-The tool provides a `create` command to help generate a properly formatted `server.json` file. This command takes various flags to specify the server details and generates a complete server.json file that you can then modify as needed.
-
-### Usage
+Authenticates with the MCP registry. You'll only need to do this once - the tool saves your credentials locally.
 
 ```bash
-./bin/mcp-publisher create [flags]
+# GitHub interactive authentication
+mcp-publisher login github
+
+# GitHub Actions OIDC (for CI/CD)
+mcp-publisher login github-oidc
+
+# DNS-based authentication
+mcp-publisher login dns --domain example.com --private-key abc123...
+
+# HTTP-based authentication  
+mcp-publisher login http --domain example.com --private-key abc123...
 ```
 
-### Create Command Flags
+**Authentication Methods:**
 
-#### Required Flags
-- `--name`, `-n`: Server name (e.g., io.github.owner/repo-name)
-- `--description`, `-d`: Server description
-- `--repo-url`: Repository URL
+- **`github`**: Interactive GitHub OAuth flow. Opens browser for authentication.
+- **`github-oidc`**: For GitHub Actions. Uses OIDC tokens automatically.
+- **`dns`**: Domain-based auth using DNS TXT records. Requires `--domain` and `--private-key`.
+- **`http`**: Domain-based auth using HTTPS endpoint. Requires `--domain` and `--private-key`.
 
-#### Optional Flags
-- `--version`, `-v`: Server version (default: "1.0.0")
-- `--repo-source`: Repository source (default: "github")
-- `--output`, `-o`: Output file path (default: "server.json")
-- `--execute`, `-e`: Command to execute the server (generates runtime arguments)
-- `--registry`: Package registry name (default: "npm")
-- `--package-name`: Package name (defaults to server name)
-- `--package-version`: Package version (defaults to server version)
-- `--runtime-hint`: Runtime hint (e.g., "docker")
-- `--env-var`: Environment variable in format NAME:DESCRIPTION (can be repeated)
-- `--package-arg`: Package argument in format VALUE:DESCRIPTION (can be repeated)
+### `mcp-publisher publish`
 
-### Create Examples
-
-#### Basic NPX Server
+Publishes your `server.json` file to the registry. You must be logged in first.
 
 ```bash
-./bin/mcp-publisher create \
-  --name "io.github.example/my-server" \
-  --description "My MCP server" \
-  --repo-url "https://github.com/example/my-server" \
-  --execute "npx @example/my-server --verbose" \
-  --env-var "API_KEY:Your API key for the service"
+mcp-publisher publish
 ```
 
-#### Docker Server
+This command:
+- Validates your `server.json` file
+- Checks your authentication
+- Uploads the server configuration to the registry
+
+### `mcp-publisher logout`
+
+Clears your saved authentication credentials.
 
 ```bash
-./bin/mcp-publisher create \
-  --name "io.github.example/docker-server" \
-  --description "Docker-based MCP server" \
-  --repo-url "https://github.com/example/docker-server" \
-  --runtime-hint "docker" \
-  --execute "docker run --mount type=bind,src=/data,dst=/app/data example/server" \
-  --env-var "CONFIG_PATH:Path to configuration file"
+mcp-publisher logout
 ```
 
-#### Server with Package Arguments
+## GitHub Actions
 
-```bash
-./bin/mcp-publisher create \
-  --name "io.github.example/full-server" \
-  --description "Complete server example" \
-  --repo-url "https://github.com/example/full-server" \
-  --execute "npx @example/server" \
-  --package-arg "-s:Specify services and permissions" \
-  --package-arg "--config:Configuration file path" \
-  --env-var "API_KEY:Service API key" \
-  --env-var "DEBUG:Enable debug mode"
-```
-
-The `create` command will generate a `server.json` file with:
-- Proper structure and formatting
-- Runtime arguments parsed from the `--execute` command
-- Environment variables with descriptions
-- Package arguments for user configuration
-- All necessary metadata
-
-After creation, you may need to manually edit the file to:
-- Adjust argument descriptions and requirements
-- Set environment variable optionality (`is_required`, `is_secret`)
-- Add remote server configurations
-- Fine-tune runtime and package arguments
-
-## Authentication
-
-The tool supports multiple authentication methods to accommodate different use cases:
-
-### GitHub OAuth Device Flow (`github-at`) - Default
-
-For interactive use:
-
-1. **Automatic Setup**: The tool automatically retrieves the GitHub Client ID from the registry's health endpoint
-2. **First Run Authentication**: When first run (or with the `--login` flag), the tool initiates the GitHub device flow
-3. **User Authorization**: You'll be provided with a URL and a verification code to enter on GitHub
-4. **Token Storage**: After successful authentication, the tool saves the access token locally in `.mcpregistry_github_token` for future use
-5. **Token Exchange**: The GitHub token is exchanged for a short-lived registry token, which is saved locally in `.mcpregistry_registry_token`
-6. **Secure Communication**: The registry token is sent in the HTTP Authorization header with the Bearer scheme for all registry API calls
-
-```bash
-./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --auth-method github-at
-```
-
-### GitHub Actions OIDC (`github-oidc`)
-
-For CI/CD pipelines using GitHub Actions:
-
-1. **Prerequisites**: Your GitHub Actions workflow must have `id-token: write` permissions
-2. **Token Exchange**: The OIDC token is exchanged directly for a registry token via `/v0/auth/github-oidc`
-3. **No Storage**: No local token files are created; authentication is ephemeral per workflow run
-
-**Example GitHub Actions workflow:**
+For automated publishing from GitHub Actions:
 
 ```yaml
-name: Publish MCP Server
+name: Publish to MCP Registry
 on:
   push:
     tags: ['v*']
@@ -176,72 +107,112 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Required for OIDC token generation
-      contents: read   # E.g. To read the server.json file from your Git repo
+      id-token: write  # Required for OIDC
+      contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Publish to MCP Registry
+      
+      - name: Setup MCP Publisher
         run: |
-          ./bin/mcp-publisher publish \
-            --registry-url "https://registry.modelcontextprotocol.org" \
-            --mcp-file "./server.json" \
-            --auth-method github-oidc
+          curl -LO https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher-linux-amd64
+          chmod +x mcp-publisher-linux-amd64
+          
+      - name: Login to Registry
+        run: ./mcp-publisher-linux-amd64 login github-oidc
+        
+      - name: Publish to Registry
+        run: ./mcp-publisher-linux-amd64 publish
 ```
 
-### DNS Authentication (`dns`)
+The `login github-oidc` command uses GitHub's OIDC tokens for authentication in CI environments.
 
-For domain-based authentication using public/private key cryptography:
+## Examples
 
-1. **Generate Ed25519 keypair**: 
+### Publishing an NPM-based server
+
+```bash
+# Create template server.json (auto-detects from package.json)
+# Then edit server.json to add your specific details
+mcp-publisher init
+
+# Login (first time only)
+mcp-publisher login github
+
+# Publish
+mcp-publisher publish
+```
+
+### Publishing a Python server
+
+```bash
+# Create template server.json (auto-detects from pyproject.toml)
+# Then edit server.json to add your specific details
+mcp-publisher init
+
+# Publish (assuming already logged in)
+mcp-publisher publish
+```
+
+### Publishing with DNS authentication
+
+```bash
+# Setup DNS TXT record first (see DNS Authentication section below)
+
+# Login with DNS
+mcp-publisher login dns --domain example.com --private-key YOUR_PRIVATE_KEY
+
+# Publish
+mcp-publisher publish
+```
+
+## Authentication Details
+
+### DNS Authentication
+
+For domain-based authentication using DNS:
+
+1. Generate an Ed25519 keypair:
    ```bash
    openssl genpkey -algorithm Ed25519 -out /tmp/key.pem && \
-   echo "\n\nDNS record to add to your domain:" && \
-   echo "  Type: TXT" && \
-   echo "  Value: v=MCPv1; k=ed25519; p=$(openssl pkey -in /tmp/key.pem -pubout -outform DER | tail -c 32 | base64)" && \
+   echo "DNS TXT Record:" && \
+   echo "  v=MCPv1; k=ed25519; p=$(openssl pkey -in /tmp/key.pem -pubout -outform DER | tail -c 32 | base64)" && \
    echo "" && \
-   echo "Private key for --dns-private-key flag:" && \
-   echo "  $(openssl pkey -in /tmp/key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')\n" && \
+   echo "Private key for login:" && \
+   echo "  $(openssl pkey -in /tmp/key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')" && \
    rm /tmp/key.pem
    ```
-2. **Add DNS TXT record**: Add a TXT record to your domain with format: `v=MCPv1; k=ed25519; p=<base64-public-key>`
-3. **Use CLI arguments**: Provide domain and private key via command line flags
 
-```bash
-./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> \
-  --auth-method dns --dns-domain example.com --dns-private-key abc123...
-```
+2. Add the TXT record to your domain's DNS
 
-This grants publishing permissions for both `example.com/*` and `*.example.com/*` namespaces.
-
-### HTTP Authentication (`http`)
-
-For domain-based authentication using HTTP-hosted public keys:
-
-1. **Generate Ed25519 keypair**: 
+3. Login with:
    ```bash
-   openssl genpkey -algorithm Ed25519 -out /tmp/key.pem && \
-   echo "\n\nFile to host on your domain:" && \
-   echo "  URL: https://yoursite.com/.well-known/mcp-registry-auth" && \
-   echo "  Content: v=MCPv1; k=ed25519; p=$(openssl pkey -in /tmp/key.pem -pubout -outform DER | tail -c 32 | base64)" && \
-   echo "" && \
-   echo "Private key for --http-private-key flag:" && \
-   echo "  $(openssl pkey -in /tmp/key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')\n" && \
-   rm /tmp/key.pem
+   mcp-publisher login dns --domain example.com --private-key YOUR_PRIVATE_KEY
    ```
-2. **Host public key**: Create an HTTP endpoint at `https://yoursite.com/.well-known/mcp-registry-auth` that returns: `v=MCPv1; k=ed25519; p=<base64-public-key>`
-3. **Use CLI arguments**: Provide domain and private key via command line flags
 
-```bash
-./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> \
-  --auth-method http --http-domain example.com --http-private-key abc123...
-```
+This grants publishing rights for `example.com/*` and `*.example.com/*` namespaces.
 
-This grants publishing permissions for the `example.com/*` namespace.
+### HTTP Authentication
 
-### No Authentication (`none`)
+For HTTP-based authentication:
 
-Mainly for registry contributors, for testing locally:
+1. Generate an Ed25519 keypair (same as DNS)
 
-```bash
-./bin/mcp-publisher publish --registry-url <REGISTRY_URL> --mcp-file <PATH_TO_MCP_FILE> --auth-method none
-```
+2. Host the public key at `https://yoursite.com/.well-known/mcp-registry-auth`:
+   ```
+   v=MCPv1; k=ed25519; p=YOUR_PUBLIC_KEY_BASE64
+   ```
+
+3. Login with:
+   ```bash
+   mcp-publisher login http --domain example.com --private-key YOUR_PRIVATE_KEY
+   ```
+
+This grants publishing rights for the `example.com/*` namespace.
+
+## Troubleshooting
+
+**"Not authenticated" error**: Run `mcp-publisher login <method>` to authenticate (e.g., `mcp-publisher login github`).
+
+**"Invalid server.json" error**: Ensure your `server.json` file is valid. You can recreate it with `mcp-publisher init`.
+
+**GitHub Actions failing**: Ensure your workflow has `id-token: write` permission and you're using `mcp-publisher login github-oidc`.

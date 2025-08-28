@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -141,13 +140,13 @@ func (g *GitHubATProvider) Login(ctx context.Context) error {
 	}
 
 	// Display instructions to the user
-	log.Println("\nTo authenticate, please:")
-	log.Println("1. Go to:", verificationURI)
-	log.Println("2. Enter code:", userCode)
-	log.Println("3. Authorize this application")
+	fmt.Println("\nTo authenticate, please:")
+	fmt.Println("1. Go to:", verificationURI)
+	fmt.Println("2. Enter code:", userCode)
+	fmt.Println("3. Authorize this application")
 
 	// Poll for the token
-	log.Println("Waiting for authorization...")
+	fmt.Println("Waiting for authorization...")
 	token, err := g.pollForToken(ctx, deviceCode)
 	if err != nil {
 		return fmt.Errorf("error polling for token: %w", err)
@@ -159,7 +158,7 @@ func (g *GitHubATProvider) Login(ctx context.Context) error {
 		return fmt.Errorf("error saving token: %w", err)
 	}
 
-	log.Println("Successfully authenticated!")
+	fmt.Println("Successfully authenticated!")
 	return nil
 }
 
@@ -310,31 +309,26 @@ func getClientID(ctx context.Context, registryURL string) (string, error) {
 	healthURL := registryURL + "/v0/health"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, healthURL, nil)
 	if err != nil {
-		log.Printf("Error creating request: %s\n", err.Error())
 		return "", err
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Error fetching health endpoint: %s\n", err.Error())
 		return "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		log.Printf("Health endpoint returned status %d: %s\n", resp.StatusCode, body)
 		return "", fmt.Errorf("health endpoint returned status %d: %s", resp.StatusCode, body)
 	}
 
 	var healthResponse ServerHealthResponse
 	err = json.NewDecoder(resp.Body).Decode(&healthResponse)
 	if err != nil {
-		log.Printf("Error decoding health response: %s\n", err.Error())
 		return "", err
 	}
 	if healthResponse.GitHubClientID == "" {
-		log.Println("GitHub Client ID is not set in the server's health response.")
 		return "", fmt.Errorf("GitHub Client ID is not set in the server's health response")
 	}
 

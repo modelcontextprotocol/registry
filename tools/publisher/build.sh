@@ -19,7 +19,7 @@ go build -o "$OUTPUT_DIR/$BINARY_NAME" .
 # Make the binary executable
 chmod +x "$OUTPUT_DIR/$BINARY_NAME"
 
-echo "Build complete: $OUTPUT_DIR/$BINARY_NAME"
+echo "Build complete: $(realpath $OUTPUT_DIR/$BINARY_NAME)"
 
 # Optional: Build for multiple platforms
 if [ "$1" == "--all" ]; then
@@ -37,5 +37,5 @@ if [ "$1" == "--all" ]; then
     # Windows AMD64
     GOOS=windows GOARCH=amd64 go build -o "$OUTPUT_DIR/${BINARY_NAME}-windows-amd64.exe" .
     
-    echo "Multi-platform build complete in $OUTPUT_DIR/"
+    echo "Multi-platform build complete in $(realpath $OUTPUT_DIR)"
 fi
