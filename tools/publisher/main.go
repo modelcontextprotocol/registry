@@ -29,18 +29,6 @@ const (
 
 // Server structure types for JSON generation
 
-
-
-type ServerJSON struct {
-	Schema        string           `json:"$schema"`
-	Name          string           `json:"name"`
-	Description   string           `json:"description"`
-	Status        string           `json:"status,omitempty"`
-	Repository    model.Repository `json:"repository"`
-	VersionDetail model.VersionDetail    `json:"version_detail"`
-	Packages      []model.Package        `json:"packages"`
-}
-
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -486,7 +474,7 @@ func createServerStructure(
 	name, description, version, repoURL, repoSource, registryName,
 	packageName, packageVersion, runtimeHint, execute string,
 	envVars []string, packageArgs []string, status string,
-) ServerJSON {
+) model.ServerJSON {
 	// Parse environment variables
 	environmentVariables := parseEnvironmentVariables(envVars)
 
@@ -552,12 +540,23 @@ func createServerStructure(
 		EnvironmentVariables: environmentVariables,
 	}
 
+	// Convert string status to model.Status type
+	var statusValue model.Status
+	switch status {
+	case "active":
+		statusValue = model.StatusActive
+	case "deprecated":
+		statusValue = model.StatusDeprecated
+	default:
+		statusValue = model.StatusActive // fallback to active
+	}
+
 	// Create server structure
-	return ServerJSON{
+	return model.ServerJSON{
 		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
 		Name:        name,
 		Description: description,
-		Status:      status,
+		Status:      statusValue,
 		Repository: model.Repository{
 			URL:    repoURL,
 			Source: repoSource,
