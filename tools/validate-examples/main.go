@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	jsonschema "github.com/santhosh-tekuri/jsonschema/v5"
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 )
 
@@ -130,7 +130,7 @@ func validateAgainstSchema(data any, schema *jsonschema.Schema, schemaName strin
 }
 
 func validateWithObjectValidator(serverData any, objectValidator *validators.ObjectValidator) bool {
-	var serverDetail model.ServerDetail
+	var serverDetail model.ServerJSON
 	serverDataBytes, err := json.Marshal(serverData)
 	if err != nil {
 		log.Printf("  Validating with Go ObjectValidator: ❌")

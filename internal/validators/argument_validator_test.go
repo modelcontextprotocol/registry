@@ -3,7 +3,7 @@ package validators_test
 import (
 	"testing"
 
-	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 )
 
