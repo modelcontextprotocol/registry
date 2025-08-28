@@ -2,7 +2,7 @@ package service
 
 import apiv1 "github.com/modelcontextprotocol/registry/pkg/api/v1"
 
-// RegistryService defines the interface for registry operations with extension wrapper architecture
+// RegistryService defines the interface for registry operations
 type RegistryService interface {
 	// List retrieves servers with unified format
 	List(cursor string, limit int) ([]apiv1.ServerRecord, string, error)
