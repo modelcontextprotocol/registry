@@ -149,8 +149,14 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedError:  "required header parameter is missing",
 		},
 		{
-			name:           "invalid authorization header format",
-			requestBody:    model.PublishRequest{},
+			name: "invalid authorization header format",
+			requestBody: model.PublishRequest{
+				Server: model.ServerDetail{
+					Name:          "io.github.domdomegg/test-server",
+					Description:   "Test server",
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				},
+			},
 			authHeader:     "InvalidFormat",
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,

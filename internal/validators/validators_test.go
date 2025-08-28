@@ -8,9 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestObjectValidator_Validate(t *testing.T) {
-	validator := validators.NewObjectValidator()
-
+func TestValidate(t *testing.T) {
 	tests := []struct {
 		name          string
 		serverDetail  model.ServerDetail
@@ -19,7 +17,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "valid server detail with all fields",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -47,7 +45,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "server with invalid repository source",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://bitbucket.org/owner/repo",
@@ -62,7 +60,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "server with invalid GitHub URL format",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner", // Missing repo name
@@ -77,7 +75,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "server with invalid GitLab URL format",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://gitlab.com", // Missing owner and repo
@@ -92,7 +90,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "package with spaces in name",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -114,7 +112,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "multiple packages with one invalid",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -141,7 +139,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "remote with invalid URL",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -161,7 +159,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "remote with missing scheme",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -181,7 +179,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "multiple remotes with one invalid",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -204,7 +202,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "server detail with nil packages and remotes",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -221,7 +219,7 @@ func TestObjectValidator_Validate(t *testing.T) {
 		{
 			name: "server detail with empty packages and remotes slices",
 			serverDetail: model.ServerDetail{
-				Name:        "test-server",
+				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
 					URL:    "https://github.com/owner/repo",
@@ -239,13 +237,216 @@ func TestObjectValidator_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validator.Validate(&tt.serverDetail)
+			err := validators.ValidateServerDetail(&tt.serverDetail)
 
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
+func TestValidate_RemoteNamespaceMatch(t *testing.T) {
+	tests := []struct {
+		name         string
+		serverDetail model.ServerDetail
+		expectError  bool
+		errorMsg     string
+	}{
+		{
+			name: "valid match - example.com domain",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []model.Remote{
+					{URL: "https://example.com/mcp"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "valid match - subdomain mcp.example.com",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []model.Remote{
+					{URL: "https://mcp.example.com/endpoint"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "valid match - api subdomain",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/api-server",
+				Remotes: []model.Remote{
+					{URL: "https://api.example.com/mcp"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "invalid - wrong domain",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []model.Remote{
+					{URL: "https://google.com/mcp"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "remote URL host google.com does not match publisher domain example.com",
+		},
+		{
+			name: "invalid - different domain entirely",
+			serverDetail: model.ServerDetail{
+				Name: "com.microsoft/server",
+				Remotes: []model.Remote{
+					{URL: "https://api.github.com/endpoint"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "remote URL host api.github.com does not match publisher domain microsoft.com",
+		},
+		{
+			name: "localhost URLs allowed with any namespace",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/test-server",
+				Remotes: []model.Remote{
+					{URL: "http://localhost:3000/sse"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "invalid URL format",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/test",
+				Remotes: []model.Remote{
+					{URL: "not-a-valid-url"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "invalid remote URL",
+		},
+		{
+			name: "empty remotes array",
+			serverDetail: model.ServerDetail{
+				Name:    "com.example/test",
+				Remotes: []model.Remote{},
+			},
+			expectError: false,
+		},
+		{
+			name: "multiple valid remotes - different subdomains",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/server",
+				Remotes: []model.Remote{
+					{URL: "https://api.example.com/sse"},
+					{URL: "https://mcp.example.com/websocket"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "one valid, one invalid remote",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/server",
+				Remotes: []model.Remote{
+					{URL: "https://example.com/sse"},
+					{URL: "https://google.com/websocket"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "remote URL host google.com does not match publisher domain example.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validators.ValidateServerDetail(&tt.serverDetail)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidate_ServerNameFormat(t *testing.T) {
+	tests := []struct {
+		name         string
+		serverDetail model.ServerDetail
+		expectError  bool
+		errorMsg     string
+	}{
+		{
+			name: "valid namespace/name format",
+			serverDetail: model.ServerDetail{
+				Name: "com.example.api/server",
+			},
+			expectError: false,
+		},
+		{
+			name: "valid complex namespace",
+			serverDetail: model.ServerDetail{
+				Name: "com.github.microsoft.azure/webapp-server",
+			},
+			expectError: false,
+		},
+		{
+			name: "empty server name",
+			serverDetail: model.ServerDetail{
+				Name: "",
+			},
+			expectError: true,
+			errorMsg:    "server name is required",
+		},
+		{
+			name: "missing slash separator",
+			serverDetail: model.ServerDetail{
+				Name: "com.example.server",
+			},
+			expectError: true,
+			errorMsg:    "server name must be in format 'dns-namespace/name'",
+		},
+		{
+			name: "empty namespace part",
+			serverDetail: model.ServerDetail{
+				Name: "/server-name",
+			},
+			expectError: true,
+			errorMsg:    "non-empty namespace and name parts",
+		},
+		{
+			name: "empty name part",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/",
+			},
+			expectError: true,
+			errorMsg:    "non-empty namespace and name parts",
+		},
+		{
+			name: "multiple slashes - uses first as separator",
+			serverDetail: model.ServerDetail{
+				Name: "com.example/server/path",
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validators.ValidateServerDetail(&tt.serverDetail)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMsg)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

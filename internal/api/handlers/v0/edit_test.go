@@ -94,7 +94,13 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "invalid authorization header format",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "InvalidFormat token123",
-			requestBody:    model.PublishRequest{},
+			requestBody: model.PublishRequest{
+				Server: model.ServerDetail{
+					Name:        "io.github.domdomegg/test-server",
+					Description: "Test server",
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				},
+			},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
@@ -103,7 +109,13 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:           "invalid token",
 			serverID:       "550e8400-e29b-41d4-a716-446655440001",
 			authHeader:     "Bearer invalid-token",
-			requestBody:    model.PublishRequest{},
+			requestBody: model.PublishRequest{
+				Server: model.ServerDetail{
+					Name:        "io.github.domdomegg/test-server",
+					Description: "Test server",
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				},
+			},
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
@@ -239,7 +251,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedError:  "Bad Request",
 		},
 		{
-			name:     "invalid request body",
+			name:     "validation error - invalid server name",
 			serverID: "550e8400-e29b-41d4-a716-446655440001",
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
@@ -252,8 +264,23 @@ func TestEditServerEndpoint(t *testing.T) {
 				})
 				return "Bearer " + token
 			}(),
-			requestBody:    "invalid json",
-			setupMocks:     func(_ *MockRegistryService) {},
+			requestBody: model.PublishRequest{
+				Server: model.ServerDetail{
+					Name:        "invalid-name-format", // Missing namespace/name format
+					Description: "Test server",
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				},
+			},
+			setupMocks: func(registry *MockRegistryService) {
+				currentServer := &model.ServerResponse{
+					Server: model.ServerDetail{
+						Name:        "io.github.domdomegg/test-server",
+						Description: "Original server",
+						Status:      model.ServerStatusActive,
+					},
+				}
+				registry.On("GetByID", "550e8400-e29b-41d4-a716-446655440001").Return(currentServer, nil)
+			},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Bad Request",
 		},

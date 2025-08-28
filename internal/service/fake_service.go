@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/model"
+	"github.com/modelcontextprotocol/registry/internal/validators"
 )
 
 // fakeRegistryService implements RegistryService interface with an in-memory database
@@ -113,17 +114,12 @@ func (s *fakeRegistryService) Publish(req model.PublishRequest) (*model.ServerRe
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublishRequest(req); err != nil {
 		return nil, err
 	}
 
-	// Validate server name exists
-	if _, err := model.ParseServerName(req.Server); err != nil {
-		return nil, err
-	}
-
-	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	// Use publisher extensions directly from request
+	publisherExtensions := req.XPublisher
 
 	// Create registry metadata for fake service (always marks as latest)
 	now := time.Now()
@@ -152,17 +148,12 @@ func (s *fakeRegistryService) EditServer(id string, req model.PublishRequest) (*
 	defer cancel()
 
 	// Validate the request
-	if err := model.ValidatePublisherExtensions(req); err != nil {
+	if err := validators.ValidatePublishRequest(req); err != nil {
 		return nil, err
 	}
 
-	// Validate server name exists and format
-	if _, err := model.ParseServerName(req.Server); err != nil {
-		return nil, err
-	}
-
-	// Extract publisher extensions from request
-	publisherExtensions := model.ExtractPublisherExtensions(req)
+	// Use publisher extensions directly from request
+	publisherExtensions := req.XPublisher
 
 	// Update server in database
 	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)
