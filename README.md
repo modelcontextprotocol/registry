@@ -127,6 +127,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 
 ```
 ├── cmd/                     # Application entry points
+│   └── publisher/           # Server publishing tool
 ├── data/                    # Seed data
 ├── deploy/                  # Deployment configuration (Pulumi)
 ├── docs/                    # Technical documentation
@@ -147,7 +148,6 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 ├── scripts/                 # Development and testing scripts
 ├── tests/                   # Integration tests
 └── tools/                   # CLI tools and utilities
-    ├── publisher/           # Server publishing tool
     └── validate-*.sh        # Schema validation tools
 ```
 
