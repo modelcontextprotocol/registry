@@ -103,10 +103,10 @@ To publish a server, we've built a simple CLI. You can use it with:
 make publisher
 
 # Use it!
-./tools/publisher/bin/mcp-publisher --help
+./cmd/publisher/bin/mcp-publisher --help
 ```
 
-See [the publisher README](./tools/publisher/README.md) for more details.
+See [the publisher README](./cmd/publisher/README.md) for more details.
 
 #### Other commands
 

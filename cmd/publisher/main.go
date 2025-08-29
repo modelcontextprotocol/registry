@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/modelcontextprotocol/registry/tools/publisher/commands"
+	"github.com/modelcontextprotocol/registry/cmd/publisher/commands"
 )
 
 func main() {

@@ -18,10 +18,10 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/tools/publisher/main.go",
+            "program": "${workspaceFolder}/cmd/publisher/main.go",
             "args": [
                 "-registry-url=http://localhost:8080",
-                "-mcp-file=${workspaceFolder}/tools/publisher/server.json",
+                "-mcp-file=${workspaceFolder}/cmd/publisher/server.json",
             ],
         }
     ]

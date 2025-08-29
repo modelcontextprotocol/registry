@@ -9,7 +9,7 @@ cleanup() {
     docker compose down -v
 }
 
-go build -o ./bin/publisher ./tools/publisher
+go build -o ./bin/publisher ./cmd/publisher
 
 docker build -t registry .
 
