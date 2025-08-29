@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/modelcontextprotocol/registry/tools/publisher/auth"
+	"github.com/modelcontextprotocol/registry/cmd/publisher/auth"
 )
 
 const (

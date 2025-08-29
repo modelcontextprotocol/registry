@@ -10,7 +10,7 @@ build: ## Build the registry application
 	go build -o bin/registry ./cmd/registry
 
 publisher: ## Build the publisher tool
-	cd tools/publisher && ./build.sh
+	cd cmd/publisher && ./build.sh
 
 # Test targets
 test-unit: ## Run unit tests with coverage
@@ -64,7 +64,7 @@ dev-local: ## Run registry locally
 clean: ## Clean build artifacts and coverage files
 	rm -rf bin
 	rm -f coverage.out coverage.html
-	cd tools/publisher && rm -f publisher
+	cd cmd/publisher && rm -f publisher
 
 
 .DEFAULT_GOAL := help

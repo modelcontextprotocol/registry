@@ -41,7 +41,7 @@ See [roadmap.md](./roadmap.md).
 
 ### How do I publish my MCP server?
 
-See the [publisher README](../tools/publisher/README.md)
+See the [publisher README](../cmd/publisher/README.md)
 
 ### What namespaces are available?
 

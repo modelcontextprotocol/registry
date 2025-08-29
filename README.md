@@ -103,10 +103,10 @@ To publish a server, we've built a simple CLI. You can use it with:
 make publisher
 
 # Use it!
-./tools/publisher/bin/mcp-publisher --help
+./cmd/publisher/bin/mcp-publisher --help
 ```
 
-See [the publisher README](./tools/publisher/README.md) for more details.
+See [the publisher README](./cmd/publisher/README.md) for more details.
 
 #### Other commands
 
@@ -127,6 +127,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 
 ```
 ├── cmd/                     # Application entry points
+│   └── publisher/           # Server publishing tool
 ├── data/                    # Seed data
 ├── deploy/                  # Deployment configuration (Pulumi)
 ├── docs/                    # Technical documentation
@@ -147,7 +148,6 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 ├── scripts/                 # Development and testing scripts
 ├── tests/                   # Integration tests
 └── tools/                   # CLI tools and utilities
-    ├── publisher/           # Server publishing tool
     └── validate-*.sh        # Schema validation tools
 ```
 

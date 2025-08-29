@@ -8,18 +8,18 @@ import (
 
 // RegistryExtensions represents registry-generated metadata
 type RegistryExtensions struct {
-	ID          string    `json:"id" bson:"_id"`
-	PublishedAt time.Time `json:"published_at" bson:"published_at"`
-	UpdatedAt   time.Time `json:"updated_at,omitempty" bson:"updated_at,omitempty"`
-	IsLatest    bool      `json:"is_latest" bson:"is_latest"`
-	ReleaseDate string    `json:"release_date" bson:"release_date"`
+	ID          string    `json:"id"`
+	PublishedAt time.Time `json:"published_at"`
+	UpdatedAt   time.Time `json:"updated_at,omitempty"`
+	IsLatest    bool      `json:"is_latest"`
+	ReleaseDate string    `json:"release_date"`
 }
 
 // ServerRecord represents the unified storage and API response model
 type ServerRecord struct {
-	Server                          model.ServerJSON       `json:"server" bson:"server"`                                                    // Pure MCP server.json
-	XIOModelContextProtocolRegistry RegistryExtensions     `json:"x-io.modelcontextprotocol.registry,omitempty" bson:"registry_extensions"` // Registry-generated data
-	XPublisher                      map[string]interface{} `json:"x-publisher,omitempty" bson:"publisher_extensions"`                       // x-publisher extensions
+	Server                          model.ServerJSON       `json:"server"`                                                    // Pure MCP server.json
+	XIOModelContextProtocolRegistry RegistryExtensions     `json:"x-io.modelcontextprotocol.registry,omitempty"` // Registry-generated data
+	XPublisher                      map[string]interface{} `json:"x-publisher,omitempty"`                       // x-publisher extensions
 }
 
 // ServerListResponse represents the paginated server list response
