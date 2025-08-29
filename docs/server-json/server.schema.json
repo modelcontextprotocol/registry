@@ -83,8 +83,8 @@
       "properties": {
         "registry_type": {
           "type": "string",
-          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'docker-hub', 'nuget', 'mcpb')",
-          "examples": ["npm", "pypi", "docker-hub", "nuget", "mcpb"]
+          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')",
+          "examples": ["npm", "pypi", "oci", "nuget", "mcpb"]
         },
         "registry_base_url": {
           "type": "string",

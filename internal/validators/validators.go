@@ -189,8 +189,7 @@ func validatePackage(pkg *model.Package) error {
 		return nil
 	}
 
-	// For registry-based packages, no special validation needed
-	// Registry types like "npm", "pypi", "docker-hub", "nuget" are all valid
+	// For other registry-based packages, no special validation needed
 	return nil
 }
 

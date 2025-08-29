@@ -23,7 +23,7 @@ type ServerJSON struct {
 
 // Package represents a package configuration
 type Package struct {
-	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "docker-hub", "mcpb")
+	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "mcpb")
 	RegistryType string `json:"registry_type,omitempty" bson:"registry_type,omitempty"`
 	// RegistryBaseURL is the base URL of the package registry
 	RegistryBaseURL string `json:"registry_base_url,omitempty" bson:"registry_base_url,omitempty"`

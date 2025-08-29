@@ -466,8 +466,8 @@
       "packages": [
         {
           "version": "",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/apache/iotdb",
+          "registry_type": "oci",
+          "identifier": "apache/iotdb",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -550,8 +550,8 @@
               "name": "APIMATIC_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/apimatic-validator---mcp",
+          "registry_type": "oci",
+          "identifier": "apimatic-validator---mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -747,8 +747,8 @@
               "name": "BICSCAN_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/bicscan-mcp",
+          "registry_type": "oci",
+          "identifier": "bicscan-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -814,8 +814,8 @@
               "name": "BITRISE_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/bitrise-mcp",
+          "registry_type": "oci",
+          "identifier": "bitrise-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -1210,8 +1210,8 @@
               "name": "OPIK_WORKSPACE_NAME"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/test-opik-mcp",
+          "registry_type": "oci",
+          "identifier": "test-opik-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -1354,8 +1354,8 @@
               "name": "DART_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/dart-mcp-server",
+          "registry_type": "oci",
+          "identifier": "dart-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -1444,8 +1444,8 @@
       "packages": [
         {
           "version": "",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/e2b-mcp-root",
+          "registry_type": "oci",
+          "identifier": "e2b-mcp-root",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -1583,8 +1583,8 @@
               "name": "EDUBASE_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/@edubase/mcp",
+          "registry_type": "oci",
+          "identifier": "@edubase/mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -2045,8 +2045,8 @@
               "name": "GYAZO_ACCESS_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/@notainc/gyazo-mcp-server",
+          "registry_type": "oci",
+          "identifier": "@notainc/gyazo-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -2179,8 +2179,8 @@
               "name": "GRAFANA_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/grafana/mcp-grafana",
+          "registry_type": "oci",
+          "identifier": "grafana/mcp-grafana",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -2781,8 +2781,8 @@
               "name": "LARA_ACCESS_KEY_SECRET"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/@translated/lara-mcp",
+          "registry_type": "oci",
+          "identifier": "@translated/lara-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -2877,8 +2877,8 @@
               "name": "LANGFUSE_BASEURL"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-langfuse",
+          "registry_type": "oci",
+          "identifier": "mcp-server-langfuse",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -2907,8 +2907,8 @@
       "packages": [
         {
           "version": "",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/@lingo.dev",
+          "registry_type": "oci",
+          "identifier": "@lingo.dev",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -3375,8 +3375,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-oceanbase",
+          "registry_type": "oci",
+          "identifier": "mcp-oceanbase",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -3678,8 +3678,8 @@
               "name": "PINECONE_ASSISTANT_HOST"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/pinecone-io/assistant-mcp",
+          "registry_type": "oci",
+          "identifier": "pinecone-io/assistant-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -3834,8 +3834,8 @@
               "value_hint": "SECRET_KEY=\u003cyour_redis_cloud_api_secret_key\u003e"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-redis-cloud",
+          "registry_type": "oci",
+          "identifier": "mcp-redis-cloud",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -3947,8 +3947,8 @@
               "name": "COLLECTION_NAME"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-qdrant",
+          "registry_type": "oci",
+          "identifier": "mcp-server-qdrant",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -4587,8 +4587,8 @@
       "packages": [
         {
           "version": "1.0.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/veyrax-mcp",
+          "registry_type": "oci",
+          "identifier": "veyrax-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -5314,8 +5314,8 @@
               "value_hint": "src/server.py"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/aranet4-mcp-server",
+          "registry_type": "oci",
+          "identifier": "aranet4-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -5392,8 +5392,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/choturoboserver",
+          "registry_type": "oci",
+          "identifier": "choturoboserver",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -5458,8 +5458,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/attestable-mcp-server",
+          "registry_type": "oci",
+          "identifier": "attestable-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -5488,8 +5488,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-aws",
+          "registry_type": "oci",
+          "identifier": "mcp-server-aws",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -5696,8 +5696,8 @@
               "value_hint": "buryhuang/mcp-server-aws-resources:latest"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-aws-resources",
+          "registry_type": "oci",
+          "identifier": "mcp-server-aws-resources",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -5859,8 +5859,8 @@
               "name": "ADX_TOKEN_FILE_PATH"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/adx_mcp_server",
+          "registry_type": "oci",
+          "identifier": "adx_mcp_server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -6133,8 +6133,8 @@
               "name": "BING_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp_server_bing",
+          "registry_type": "oci",
+          "identifier": "mcp_server_bing",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -6490,8 +6490,8 @@
               "value_hint": "D:/Github/mcp-test"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/aiql-desktop",
+          "registry_type": "oci",
+          "identifier": "aiql-desktop",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -6526,8 +6526,8 @@
               "name": "CHAT_DB_PATH"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-chatsum",
+          "registry_type": "oci",
+          "identifier": "mcp-server-chatsum",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -6823,8 +6823,8 @@
               "value_hint": "/path/to/code/storage/my_script_abc123.py"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/code_execution_server",
+          "registry_type": "oci",
+          "identifier": "code_execution_server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -6853,8 +6853,8 @@
       "packages": [
         {
           "version": "1.0.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/consul-mcp",
+          "registry_type": "oci",
+          "identifier": "consul-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -6931,8 +6931,8 @@
               "name": "COINMARKETCAP_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/coin-api-mcp",
+          "registry_type": "oci",
+          "identifier": "coin-api-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -7042,8 +7042,8 @@
               "value_hint": "buryhuang/mcp-remote-macos-use:latest"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp_remote_macos_use",
+          "registry_type": "oci",
+          "identifier": "mcp_remote_macos_use",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -7584,8 +7584,8 @@
       "packages": [
         {
           "version": "0.1.1",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-deep-research",
+          "registry_type": "oci",
+          "identifier": "mcp-server-deep-research",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -7736,8 +7736,8 @@
               "name": "DESCOPE_MANAGEMENT_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/descope-mcp-server",
+          "registry_type": "oci",
+          "identifier": "descope-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -8068,8 +8068,8 @@
       "packages": [
         {
           "version": "1.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-dblp",
+          "registry_type": "oci",
+          "identifier": "mcp-dblp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -8098,8 +8098,8 @@
       "packages": [
         {
           "version": "",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/Omedia/mcp-server-drupal",
+          "registry_type": "oci",
+          "identifier": "Omedia/mcp-server-drupal",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -8329,8 +8329,8 @@
       "packages": [
         {
           "version": "0.0.2",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/eunomia-mcp-server",
+          "registry_type": "oci",
+          "identifier": "eunomia-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9019,8 +9019,8 @@
               "name": "google_access_token"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-headless-gmail",
+          "registry_type": "oci",
+          "identifier": "mcp-server-headless-gmail",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9115,8 +9115,8 @@
               "name": "DEBUG"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/godot-mcp",
+          "registry_type": "oci",
+          "identifier": "godot-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9165,8 +9165,8 @@
               "value_hint": "/path/to/allowed/directory"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mark3labs/mcp-filesystem-server",
+          "registry_type": "oci",
+          "identifier": "mark3labs/mcp-filesystem-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9226,8 +9226,8 @@
               "name": "COHERE_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-goodnews",
+          "registry_type": "oci",
+          "identifier": "mcp-goodnews",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9438,8 +9438,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-vertexai-search",
+          "registry_type": "oci",
+          "identifier": "mcp-vertexai-search",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9549,8 +9549,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mesh-mcp-server",
+          "registry_type": "oci",
+          "identifier": "mesh-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9655,8 +9655,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/homeassistant-mcp",
+          "registry_type": "oci",
+          "identifier": "homeassistant-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9744,8 +9744,8 @@
               "name": "HA_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/hass-mcp",
+          "registry_type": "oci",
+          "identifier": "hass-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -9824,8 +9824,8 @@
               "value_hint": "buryhuang/mcp-hubspot:latest"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-hubspot",
+          "registry_type": "oci",
+          "identifier": "mcp-server-hubspot",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10070,8 +10070,8 @@
               "name": "CONFIG_PATH"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/ifly-workflow-mcp-server",
+          "registry_type": "oci",
+          "identifier": "ifly-workflow-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10220,8 +10220,8 @@
               "name": "INTERCOM_ACCESS_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-for-intercom",
+          "registry_type": "oci",
+          "identifier": "mcp-server-for-intercom",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10250,8 +10250,8 @@
       "packages": [
         {
           "version": "1.0.1",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-simulator-ios-idb",
+          "registry_type": "oci",
+          "identifier": "mcp-server-simulator-ios-idb",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10350,8 +10350,8 @@
               "value_hint": "jmeter_server.py"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/jmeter-mcp-server",
+          "registry_type": "oci",
+          "identifier": "jmeter-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10604,8 +10604,8 @@
               "name": "KIBELA_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/@kiwamizamurai/mcp-kibela-server",
+          "registry_type": "oci",
+          "identifier": "@kiwamizamurai/mcp-kibela-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10644,8 +10644,8 @@
               "name": "KONNECT_REGION"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/kong-konnect-mcp",
+          "registry_type": "oci",
+          "identifier": "kong-konnect-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10710,8 +10710,8 @@
               "name": "API_ENDPOINT"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/doc-qa-server",
+          "registry_type": "oci",
+          "identifier": "doc-qa-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10740,8 +10740,8 @@
       "packages": [
         {
           "version": "",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-lark",
+          "registry_type": "oci",
+          "identifier": "mcp-server-lark",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -10822,8 +10822,8 @@
               "value_hint": "debug"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/lsp-mcp-server",
+          "registry_type": "oci",
+          "identifier": "lsp-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -11271,8 +11271,8 @@
               "value_hint": "mcpk8s/server:latest"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/strowk/mcp-k8s-go",
+          "registry_type": "oci",
+          "identifier": "strowk/mcp-k8s-go",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -11454,8 +11454,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mem0-mcp",
+          "registry_type": "oci",
+          "identifier": "mem0-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -11883,8 +11883,8 @@
               "value_hint": "/path/to/output/folder:/output"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mindmap-mcp-server",
+          "registry_type": "oci",
+          "identifier": "mindmap-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -12074,8 +12074,8 @@
       "packages": [
         {
           "version": "1.0.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/multi-model-advisor",
+          "registry_type": "oci",
+          "identifier": "multi-model-advisor",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -12491,8 +12491,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-nba",
+          "registry_type": "oci",
+          "identifier": "mcp-server-nba",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -12701,8 +12701,8 @@
               "value_hint": "kocierik/mcpnomad-server:latest"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/kocierik/mcp-nomad",
+          "registry_type": "oci",
+          "identifier": "kocierik/mcp-nomad",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -12788,8 +12788,8 @@
               "name": "NOTION_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/notionmcp",
+          "registry_type": "oci",
+          "identifier": "notionmcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13155,8 +13155,8 @@
               "name": "OKTA_API_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/okta-mcp-server",
+          "registry_type": "oci",
+          "identifier": "okta-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13322,8 +13322,8 @@
               "value_hint": "buryhuang/mcp-server-any-openapi:latest"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-any-openapi",
+          "registry_type": "oci",
+          "identifier": "mcp-server-any-openapi",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13414,8 +13414,8 @@
               "name": "OPENCTI_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/opencti-server",
+          "registry_type": "oci",
+          "identifier": "opencti-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13474,8 +13474,8 @@
               "value_hint": "cd ~/opendota-mcp-server && source .venv/bin/activate && python src/opendota_server/server.py"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/opendota-mcp-server",
+          "registry_type": "oci",
+          "identifier": "opendota-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13546,8 +13546,8 @@
               "value_hint": "git+https://github.com/open-strategy-partners/osp_marketing_tools@main"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/osp-marketing-tools",
+          "registry_type": "oci",
+          "identifier": "osp-marketing-tools",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13734,8 +13734,8 @@
               "value_hint": "stdio"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-paradex",
+          "registry_type": "oci",
+          "identifier": "mcp-paradex",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13764,8 +13764,8 @@
       "packages": [
         {
           "version": "1.0.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-pif",
+          "registry_type": "oci",
+          "identifier": "mcp-pif",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -13876,8 +13876,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/plane-mcp-server",
+          "registry_type": "oci",
+          "identifier": "plane-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -14098,8 +14098,8 @@
               "name": "PROMETHEUS_PASSWORD"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/prometheus_mcp_server",
+          "registry_type": "oci",
+          "identifier": "prometheus_mcp_server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -14215,8 +14215,8 @@
               "name": "PULUMI_ACCESS_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/pulumi-mcp-server",
+          "registry_type": "oci",
+          "identifier": "pulumi-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -14423,8 +14423,8 @@
               "name": "DASHSCOPE_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/qwen_max",
+          "registry_type": "oci",
+          "identifier": "qwen_max",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -14601,8 +14601,8 @@
               "name": "RAINDROP_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/raindrop-io-mcp-server",
+          "registry_type": "oci",
+          "identifier": "raindrop-io-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -14631,8 +14631,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/reaper-mcp-server",
+          "registry_type": "oci",
+          "identifier": "reaper-mcp-server",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -14681,8 +14681,8 @@
               "value_hint": "host.docker.internal:6379"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/@gongrzhe/server-redis-mcp",
+          "registry_type": "oci",
+          "identifier": "@gongrzhe/server-redis-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -15037,8 +15037,8 @@
               "name": "SEARXNG_URL"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-searxng",
+          "registry_type": "oci",
+          "identifier": "mcp-searxng",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -15329,8 +15329,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-soccer-data",
+          "registry_type": "oci",
+          "identifier": "mcp-soccer-data",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -15496,8 +15496,8 @@
               "value_hint": "ch_abc123"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-stripe",
+          "registry_type": "oci",
+          "identifier": "mcp-stripe",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -15628,8 +15628,8 @@
               "name": "TMDB_API_KEY"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-tmdb",
+          "registry_type": "oci",
+          "identifier": "mcp-server-tmdb",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -15706,8 +15706,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/teradata-mcp",
+          "registry_type": "oci",
+          "identifier": "teradata-mcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -16008,8 +16008,8 @@
               "name": "TICKTICK_ACCESS_TOKEN"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/@alexarevalo.ai/mcp-server-ticktick",
+          "registry_type": "oci",
+          "identifier": "@alexarevalo.ai/mcp-server-ticktick",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -16420,8 +16420,8 @@
               "value_hint": "\u003cyour schema name\u003e"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-unitycatalog",
+          "registry_type": "oci",
+          "identifier": "mcp-server-unitycatalog",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -16450,8 +16450,8 @@
       "packages": [
         {
           "version": "1.0.2",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/com.gamelovers.mcp-unity",
+          "registry_type": "oci",
+          "identifier": "com.gamelovers.mcp-unity",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -16486,8 +16486,8 @@
               "name": "MCP_WEBSOCKET_PORT"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/com.quaza.unitymcp",
+          "registry_type": "oci",
+          "identifier": "com.quaza.unitymcp",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -16516,8 +16516,8 @@
       "packages": [
         {
           "version": "0.0.1",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-vegalite",
+          "registry_type": "oci",
+          "identifier": "mcp-server-vegalite",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -16786,8 +16786,8 @@
               "name": "TOS_BUCKET"
             }
           ],
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-server-tos",
+          "registry_type": "oci",
+          "identifier": "mcp-server-tos",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -16965,8 +16965,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcp-wikidata",
+          "registry_type": "oci",
+          "identifier": "mcp-wikidata",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -17333,8 +17333,8 @@
       "packages": [
         {
           "version": "0.0.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/ynabmcpserver",
+          "registry_type": "oci",
+          "identifier": "ynabmcpserver",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -17846,8 +17846,8 @@
       "packages": [
         {
           "version": "0.2.1",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/mcphub-desktop",
+          "registry_type": "oci",
+          "identifier": "mcphub-desktop",
           "registry_base_url": "https://docker.io"
         }
       ]
@@ -17876,8 +17876,8 @@
       "packages": [
         {
           "version": "0.1.0",
-          "registry_type": "docker-hub",
-          "identifier": "https://hub.docker.com/r/navfast",
+          "registry_type": "oci",
+          "identifier": "navfast",
           "registry_base_url": "https://docker.io"
         }
       ]

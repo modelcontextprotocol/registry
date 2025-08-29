@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	RegistryTypeNPM    = "npm"
-	RegistryTypePyPi   = "pypi"
-	RegistryTypeDocker = "docker"
+	RegistryTypeNPM  = "npm"
+	RegistryTypePyPi = "pypi"
+	RegistryTypeOci  = "oci"
 )
 
 func InitCommand() error {
@@ -206,7 +206,7 @@ func detectPackageType() string {
 
 	// Check for Dockerfile
 	if _, err := os.Stat("Dockerfile"); err == nil {
-		return RegistryTypeDocker
+		return RegistryTypeOci
 	}
 
 	// Default to npm as most common
@@ -281,8 +281,8 @@ func createServerJSON(
 	case RegistryTypePyPi:
 		registryType = RegistryTypePyPi
 		registryBaseURL = "https://pypi.org"
-	case RegistryTypeDocker:
-		registryType = "docker-hub"
+	case RegistryTypeOci:
+		registryType = RegistryTypeOci
 		registryBaseURL = "https://docker.io"
 	case "url":
 		registryType = "url"

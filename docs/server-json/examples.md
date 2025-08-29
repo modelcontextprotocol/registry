@@ -131,7 +131,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
         ]
       },
       {
-        "registry_type": "docker-hub",
+        "registry_type": "oci",
         "registry_base_url": "https://docker.io",
         "identifier": "mcp/filesystem:1.0.2",
         "version": "1.0.2",
@@ -339,7 +339,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     },
     "packages": [
       {
-        "registry_type": "docker-hub",
+        "registry_type": "oci",
         "registry_base_url": "https://docker.io",
         "identifier": "example/database-manager-mcp",
         "version": "3.1.0",

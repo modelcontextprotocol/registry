@@ -21,7 +21,7 @@
             "enum": [
               "npm",
               "pypi", 
-              "docker-hub",
+              "oci",
               "nuget",
               "mcpb"
             ]
