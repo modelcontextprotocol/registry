@@ -7,7 +7,7 @@
 
 ## What is the registry?
 
-The registry will provide MCP clients with a list of MCP servers. Like an app store for MCP servers. (In future it might do more, like also hosting a list of clients.)
+The registry will provide MCP clients with a list of MCP servers, like an app store for MCP servers. (In the future it might do more, like also hosting a list of clients).
 
 There are two parts to the registry project:
 1. 🟦 **The MCP registry spec**: An [API specification](./docs/server-registry-api/) that allows anyone to implement a registry.
