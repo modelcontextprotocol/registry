@@ -8,47 +8,49 @@ import (
 	"time"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
-	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // MemoryDB is an in-memory implementation of the Database interface
 type MemoryDB struct {
-	entries map[string]*apiv0.ServerRecord // maps registry metadata ID to ServerRecord
+	entries map[string]*apiv0.ServerJSON // maps registry metadata ID to ServerJSON
 	mu      sync.RWMutex
 }
 
 // NewMemoryDB creates a new instance of the in-memory database
-func NewMemoryDB(e map[string]*model.ServerJSON) *MemoryDB {
-	// Convert ServerJSON entries to ServerRecord entries
-	serverRecords := make(map[string]*apiv0.ServerRecord)
+func NewMemoryDB(e map[string]*apiv0.ServerJSON) *MemoryDB {
+	// Convert input ServerJSON entries to have proper metadata
+	serverRecords := make(map[string]*apiv0.ServerJSON)
 	for registryID, serverDetail := range e {
-		// Create registry metadata
+		// Create a copy and add registry metadata
 		now := time.Now()
-		record := &apiv0.ServerRecord{
-			Server: *serverDetail,
-			XIOModelContextProtocolRegistry: apiv0.RegistryExtensions{
-				ID:          registryID,
-				PublishedAt: now,
-				UpdatedAt:   now,
-				IsLatest:    true,
-				ReleaseDate: now.Format(time.RFC3339),
-			},
-			XPublisher: make(map[string]interface{}),
+		server := *serverDetail // Copy the server
+		if server.Meta == nil {
+			server.Meta = &apiv0.ServerMeta{}
 		}
-		serverRecords[registryID] = record
+		server.Meta.IOModelContextProtocolRegistry = &apiv0.RegistryExtensions{
+			ID:          registryID,
+			PublishedAt: now,
+			UpdatedAt:   now,
+			IsLatest:    true,
+			ReleaseDate: now.Format(time.RFC3339),
+		}
+		if server.Meta.Publisher == nil {
+			server.Meta.Publisher = make(map[string]interface{})
+		}
+		serverRecords[registryID] = &server
 	}
 	return &MemoryDB{
 		entries: serverRecords,
 	}
 }
 
-//nolint:cyclop // Complexity from filtering logic is acceptable for memory implementation
+//nolint:cyclop,gocyclo,gocognit // Complexity from filtering logic is acceptable for memory implementation
 func (db *MemoryDB) List(
 	ctx context.Context,
 	filter map[string]any,
 	cursor string,
 	limit int,
-) ([]*apiv0.ServerRecord, string, error) {
+) ([]*apiv0.ServerJSON, string, error) {
 	if ctx.Err() != nil {
 		return nil, "", ctx.Err()
 	}
@@ -61,15 +63,15 @@ func (db *MemoryDB) List(
 	defer db.mu.RUnlock()
 
 	// Convert all entries to a slice for pagination, filter by is_latest
-	var allEntries []*apiv0.ServerRecord
+	var allEntries []*apiv0.ServerJSON
 	for _, entry := range db.entries {
-		if entry.XIOModelContextProtocolRegistry.IsLatest {
+		if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil && entry.Meta.IOModelContextProtocolRegistry.IsLatest {
 			allEntries = append(allEntries, entry)
 		}
 	}
 
 	// Simple filtering implementation
-	var filteredEntries []*apiv0.ServerRecord
+	var filteredEntries []*apiv0.ServerJSON
 	for _, entry := range allEntries {
 		include := true
 
@@ -77,21 +79,21 @@ func (db *MemoryDB) List(
 		for key, value := range filter {
 			switch key {
 			case "name":
-				if entry.Server.Name != value.(string) {
+				if entry.Name != value.(string) {
 					include = false
 				}
 			case "version":
-				if entry.Server.VersionDetail.Version != value.(string) {
+				if entry.VersionDetail.Version != value.(string) {
 					include = false
 				}
 			case "status":
-				if string(entry.Server.Status) != value.(string) {
+				if string(entry.Status) != value.(string) {
 					include = false
 				}
 			case "remote_url":
 				found := false
 				remoteURL := value.(string)
-				for _, remote := range entry.Server.Remotes {
+				for _, remote := range entry.Remotes {
 					if remote.URL == remoteURL {
 						found = true
 						break
@@ -110,14 +112,23 @@ func (db *MemoryDB) List(
 
 	// Sort filteredEntries by registry metadata ID for consistent pagination
 	sort.Slice(filteredEntries, func(i, j int) bool {
-		return filteredEntries[i].XIOModelContextProtocolRegistry.ID < filteredEntries[j].XIOModelContextProtocolRegistry.ID
+		iID := ""
+		jID := ""
+		if filteredEntries[i].Meta != nil && filteredEntries[i].Meta.IOModelContextProtocolRegistry != nil {
+			iID = filteredEntries[i].Meta.IOModelContextProtocolRegistry.ID
+		}
+		if filteredEntries[j].Meta != nil && filteredEntries[j].Meta.IOModelContextProtocolRegistry != nil {
+			jID = filteredEntries[j].Meta.IOModelContextProtocolRegistry.ID
+		}
+		return iID < jID
 	})
 
 	// Find starting point for cursor-based pagination using registry metadata ID
 	startIdx := 0
 	if cursor != "" {
 		for i, entry := range filteredEntries {
-			if entry.XIOModelContextProtocolRegistry.ID == cursor {
+			if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil &&
+				entry.Meta.IOModelContextProtocolRegistry.ID == cursor {
 				startIdx = i + 1 // Start after the cursor
 				break
 			}
@@ -127,24 +138,27 @@ func (db *MemoryDB) List(
 	// Apply pagination
 	endIdx := min(startIdx+limit, len(filteredEntries))
 
-	var result []*apiv0.ServerRecord
+	var result []*apiv0.ServerJSON
 	if startIdx < len(filteredEntries) {
 		result = filteredEntries[startIdx:endIdx]
 	} else {
-		result = []*apiv0.ServerRecord{}
+		result = []*apiv0.ServerJSON{}
 	}
 
 	// Determine next cursor using registry metadata ID
 	nextCursor := ""
-	if endIdx < len(filteredEntries) {
-		nextCursor = filteredEntries[endIdx-1].XIOModelContextProtocolRegistry.ID
+	if endIdx < len(filteredEntries) && len(result) > 0 {
+		lastEntry := result[len(result)-1]
+		if lastEntry.Meta != nil && lastEntry.Meta.IOModelContextProtocolRegistry != nil {
+			nextCursor = lastEntry.Meta.IOModelContextProtocolRegistry.ID
+		}
 	}
 
 	return result, nextCursor, nil
 }
 
 // GetByID retrieves a single ServerRecord by its registry metadata ID
-func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerRecord, error) {
+func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -163,7 +177,7 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerRecord
 }
 
 // Publish adds a new server to the database with separated server.json and extensions
-func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerRecord, error) {
+func (db *MemoryDB) Publish(ctx context.Context, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -187,17 +201,26 @@ func (db *MemoryDB) Publish(ctx context.Context, serverDetail model.ServerJSON, 
 		return nil, ErrInvalidInput
 	}
 
-	// Create server record
-	record := &apiv0.ServerRecord{
-		Server:                          serverDetail,
-		XIOModelContextProtocolRegistry: registryMetadata,
-		XPublisher:                      publisherExtensions,
+	// Create server record with metadata
+	record := serverDetail // Copy the input
+
+	// Initialize meta if not present
+	if record.Meta == nil {
+		record.Meta = &apiv0.ServerMeta{}
+	}
+
+	// Set registry metadata
+	record.Meta.IOModelContextProtocolRegistry = &registryMetadata
+
+	// Set publisher extensions if provided
+	if len(publisherExtensions) > 0 {
+		record.Meta.Publisher = publisherExtensions
 	}
 
 	// Store the record using registry metadata ID
-	db.entries[registryMetadata.ID] = record
+	db.entries[registryMetadata.ID] = &record
 
-	return record, nil
+	return &record, nil
 }
 
 // ImportSeed imports initial data from a seed file into memory database
@@ -220,7 +243,9 @@ func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
 	// Import each server
 	for _, record := range seedData {
 		// Use the registry metadata ID as the map key
-		db.entries[record.XIOModelContextProtocolRegistry.ID] = record
+		if record.Meta != nil && record.Meta.IOModelContextProtocolRegistry != nil {
+			db.entries[record.Meta.IOModelContextProtocolRegistry.ID] = record
+		}
 	}
 
 	return nil
@@ -236,8 +261,10 @@ func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bo
 	defer db.mu.Unlock()
 
 	if entry, exists := db.entries[id]; exists {
-		entry.XIOModelContextProtocolRegistry.IsLatest = isLatest
-		entry.XIOModelContextProtocolRegistry.UpdatedAt = time.Now()
+		if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil {
+			entry.Meta.IOModelContextProtocolRegistry.IsLatest = isLatest
+			entry.Meta.IOModelContextProtocolRegistry.UpdatedAt = time.Now()
+		}
 		return nil
 	}
 
@@ -245,7 +272,7 @@ func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bo
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail model.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerRecord, error) {
+func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -258,10 +285,19 @@ func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail mo
 		return nil, ErrNotFound
 	}
 
-	// Update the server details
-	entry.Server = serverDetail
-	entry.XPublisher = publisherExtensions
-	entry.XIOModelContextProtocolRegistry.UpdatedAt = time.Now()
+	// Update the server details by copying fields from serverDetail
+	*entry = serverDetail
+
+	// Ensure meta exists and update it
+	if entry.Meta == nil {
+		entry.Meta = &apiv0.ServerMeta{}
+	}
+	if entry.Meta.IOModelContextProtocolRegistry != nil {
+		entry.Meta.IOModelContextProtocolRegistry.UpdatedAt = time.Now()
+	}
+	if len(publisherExtensions) > 0 {
+		entry.Meta.Publisher = publisherExtensions
+	}
 
 	// Return the updated record
 	return entry, nil

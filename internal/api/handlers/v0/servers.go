@@ -25,8 +25,8 @@ type ListServersInput struct {
 
 // ListServersBody represents the paginated server list response body
 type ListServersBody struct {
-	Servers  []apiv0.ServerRecord `json:"servers" doc:"List of MCP servers with extensions"`
-	Metadata *Metadata            `json:"metadata,omitempty" doc:"Pagination metadata"`
+	Servers  []apiv0.ServerJSON `json:"servers" doc:"List of MCP servers with extensions"`
+	Metadata *Metadata          `json:"metadata,omitempty" doc:"Pagination metadata"`
 }
 
 // ServerDetailInput represents the input for getting server details
@@ -85,7 +85,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "Get MCP server details",
 		Description: "Get detailed information about a specific MCP server",
 		Tags:        []string{"servers"},
-	}, func(_ context.Context, input *ServerDetailInput) (*Response[apiv0.ServerRecord], error) {
+	}, func(_ context.Context, input *ServerDetailInput) (*Response[apiv0.ServerJSON], error) {
 		// Get the server details from the registry service
 		serverDetail, err := registry.GetByID(input.ID)
 		if err != nil {
@@ -95,7 +95,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
 		}
 
-		return &Response[apiv0.ServerRecord]{
+		return &Response[apiv0.ServerJSON]{
 			Body: *serverDetail,
 		}, nil
 	})

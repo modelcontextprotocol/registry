@@ -54,18 +54,16 @@ func TestPublishIntegration(t *testing.T) {
 	v0.RegisterPublishEndpoint(api, registryService, testConfig)
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
-		publishReq := apiv0.PublishRequest{
-			Server: model.ServerJSON{
-				Name:        "io.github.testuser/test-mcp-server",
-				Description: "A test MCP server for integration testing",
-				Repository: model.Repository{
-					URL:    "https://github.com/testuser/test-mcp-server",
-					Source: "github",
-					ID:     "testuser/test-mcp-server",
-				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+		publishReq := apiv0.ServerJSON{
+			Name:        "io.github.testuser/test-mcp-server",
+			Description: "A test MCP server for integration testing",
+			Repository: model.Repository{
+				URL:    "https://github.com/testuser/test-mcp-server",
+				Source: "github",
+				ID:     "testuser/test-mcp-server",
+			},
+			VersionDetail: model.VersionDetail{
+				Version: "1.0.0",
 			},
 		}
 
@@ -92,27 +90,25 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response apiv0.ServerRecord
+		var response apiv0.ServerJSON
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.Server.Name, response.Server.Name)
-		assert.Equal(t, publishReq.Server.VersionDetail.Version, response.Server.VersionDetail.Version)
+		assert.Equal(t, publishReq.Name, response.Name)
+		assert.Equal(t, publishReq.VersionDetail.Version, response.VersionDetail.Version)
 	})
 
 	t.Run("successful publish with none auth (no prefix)", func(t *testing.T) {
-		publishReq := apiv0.PublishRequest{
-			Server: model.ServerJSON{
-				Name:        "com.example/test-mcp-server-no-auth",
-				Description: "A test MCP server without authentication",
-				Repository: model.Repository{
-					URL:    "https://github.com/example/test-server",
-					Source: "github",
-					ID:     "example/test-server",
-				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+		publishReq := apiv0.ServerJSON{
+			Name:        "com.example/test-mcp-server-no-auth",
+			Description: "A test MCP server without authentication",
+			Repository: model.Repository{
+				URL:    "https://github.com/example/test-server",
+				Source: "github",
+				ID:     "example/test-server",
+			},
+			VersionDetail: model.VersionDetail{
+				Version: "1.0.0",
 			},
 		}
 
@@ -138,18 +134,16 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response apiv0.ServerRecord
+		var response apiv0.ServerJSON
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.Server.Name, response.Server.Name)
+		assert.Equal(t, publishReq.Name, response.Name)
 	})
 
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {
-		publishReq := apiv0.PublishRequest{
-			Server: model.ServerJSON{
-				Name: "test-server",
-			},
+		publishReq := apiv0.ServerJSON{
+			Name: "test-server",
 		}
 
 		body, err := json.Marshal(publishReq)
@@ -167,12 +161,10 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails with invalid token", func(t *testing.T) {
-		publishReq := apiv0.PublishRequest{
-			Server: model.ServerJSON{
-				Name:        "io.github.domdomegg/test-server",
-				Description: "Test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
-			},
+		publishReq := apiv0.ServerJSON{
+			Name:          "io.github.domdomegg/test-server",
+			Description:   "Test server",
+			VersionDetail: model.VersionDetail{Version: "1.0.0"},
 		}
 
 		body, err := json.Marshal(publishReq)
@@ -190,18 +182,16 @@ func TestPublishIntegration(t *testing.T) {
 	})
 
 	t.Run("publish fails when permission denied", func(t *testing.T) {
-		publishReq := apiv0.PublishRequest{
-			Server: model.ServerJSON{
-				Name:        "io.github.other/test-server",
-				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
-				Repository: model.Repository{
-					URL:    "https://github.com/example/test-server",
-					Source: "github",
-					ID:     "example/test-server",
-				},
+		publishReq := apiv0.ServerJSON{
+			Name:        "io.github.other/test-server",
+			Description: "A test server",
+			VersionDetail: model.VersionDetail{
+				Version: "1.0.0",
+			},
+			Repository: model.Repository{
+				URL:    "https://github.com/example/test-server",
+				Source: "github",
+				ID:     "example/test-server",
 			},
 		}
 

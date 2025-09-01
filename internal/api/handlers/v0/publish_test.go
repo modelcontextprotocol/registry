@@ -29,33 +29,33 @@ type MockRegistryService struct {
 	mock.Mock
 }
 
-func (m *MockRegistryService) List(cursor string, limit int) ([]apiv0.ServerRecord, string, error) {
+func (m *MockRegistryService) List(cursor string, limit int) ([]apiv0.ServerJSON, string, error) {
 	args := m.Called(cursor, limit)
-	return args.Get(0).([]apiv0.ServerRecord), args.String(1), args.Error(2)
+	return args.Get(0).([]apiv0.ServerJSON), args.String(1), args.Error(2)
 }
 
-func (m *MockRegistryService) GetByID(id string) (*apiv0.ServerRecord, error) {
+func (m *MockRegistryService) GetByID(id string) (*apiv0.ServerJSON, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*apiv0.ServerRecord), args.Error(1)
+	return args.Get(0).(*apiv0.ServerJSON), args.Error(1)
 }
 
-func (m *MockRegistryService) Publish(request apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
+func (m *MockRegistryService) Publish(request apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	args := m.Called(request)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*apiv0.ServerRecord), args.Error(1)
+	return args.Get(0).(*apiv0.ServerJSON), args.Error(1)
 }
 
-func (m *MockRegistryService) EditServer(id string, request apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
+func (m *MockRegistryService) EditServer(id string, request apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	args := m.Called(id, request)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*apiv0.ServerRecord), args.Error(1)
+	return args.Get(0).(*apiv0.ServerJSON), args.Error(1)
 }
 
 // Helper function to generate a valid JWT token for testing
@@ -88,18 +88,16 @@ func TestPublishEndpoint(t *testing.T) {
 	}{
 		{
 			name: "successful publish with GitHub auth",
-			requestBody: apiv0.PublishRequest{
-				Server: model.ServerJSON{
-					Name:        "io.github.example/test-server",
-					Description: "A test server",
-					Repository: model.Repository{
-						URL:    "https://github.com/example/test-server",
-						Source: "github",
-						ID:     "example/test-server",
-					},
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+			requestBody: apiv0.ServerJSON{
+				Name:        "io.github.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/example/test-server",
+					Source: "github",
+					ID:     "example/test-server",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
@@ -110,24 +108,22 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v0.PublishRequest")).Return(&apiv0.ServerRecord{}, nil)
+				registry.On("Publish", mock.AnythingOfType("v0.ServerJSON")).Return(&apiv0.ServerJSON{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name: "successful publish with no auth (AuthMethodNone)",
-			requestBody: apiv0.PublishRequest{
-				Server: model.ServerJSON{
-					Name:        "example/test-server",
-					Description: "A test server without auth",
-					Repository: model.Repository{
-						URL:    "https://github.com/example/test-server",
-						Source: "github",
-						ID:     "example/test-server",
-					},
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+			requestBody: apiv0.ServerJSON{
+				Name:        "example/test-server",
+				Description: "A test server without auth",
+				Repository: model.Repository{
+					URL:    "https://github.com/example/test-server",
+					Source: "github",
+					ID:     "example/test-server",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
@@ -137,13 +133,13 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v0.PublishRequest")).Return(&apiv0.ServerRecord{}, nil)
+				registry.On("Publish", mock.AnythingOfType("v0.ServerJSON")).Return(&apiv0.ServerJSON{}, nil)
 			},
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "missing authorization header",
-			requestBody:    apiv0.PublishRequest{},
+			requestBody:    apiv0.ServerJSON{},
 			authHeader:     "", // Empty auth header
 			setupMocks:     func(_ *MockRegistryService) {},
 			expectedStatus: http.StatusUnprocessableEntity,
@@ -151,12 +147,10 @@ func TestPublishEndpoint(t *testing.T) {
 		},
 		{
 			name: "invalid authorization header format",
-			requestBody: apiv0.PublishRequest{
-				Server: model.ServerJSON{
-					Name:          "io.github.domdomegg/test-server",
-					Description:   "Test server",
-					VersionDetail: model.VersionDetail{Version: "1.0.0"},
-				},
+			requestBody: apiv0.ServerJSON{
+				Name:          "io.github.domdomegg/test-server",
+				Description:   "Test server",
+				VersionDetail: model.VersionDetail{Version: "1.0.0"},
 			},
 			authHeader:     "InvalidFormat",
 			setupMocks:     func(_ *MockRegistryService) {},
@@ -165,13 +159,11 @@ func TestPublishEndpoint(t *testing.T) {
 		},
 		{
 			name: "invalid token",
-			requestBody: apiv0.PublishRequest{
-				Server: model.ServerJSON{
-					Name:        "test-server",
-					Description: "A test server",
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+			requestBody: apiv0.ServerJSON{
+				Name:        "test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
 				},
 			},
 			authHeader:     "Bearer invalidToken",
@@ -181,18 +173,16 @@ func TestPublishEndpoint(t *testing.T) {
 		},
 		{
 			name: "permission denied",
-			requestBody: apiv0.PublishRequest{
-				Server: model.ServerJSON{
-					Name:        "io.github.other/test-server",
-					Description: "A test server",
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
-					Repository: model.Repository{
-						URL:    "https://github.com/example/test-server",
-						Source: "github",
-						ID:     "example/test-server",
-					},
+			requestBody: apiv0.ServerJSON{
+				Name:        "io.github.other/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Repository: model.Repository{
+					URL:    "https://github.com/example/test-server",
+					Source: "github",
+					ID:     "example/test-server",
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
@@ -207,18 +197,16 @@ func TestPublishEndpoint(t *testing.T) {
 		},
 		{
 			name: "registry service error",
-			requestBody: apiv0.PublishRequest{
-				Server: model.ServerJSON{
-					Name:        "example/test-server",
-					Description: "A test server",
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
-					Repository: model.Repository{
-						URL:    "https://github.com/example/test-server",
-						Source: "github",
-						ID:     "example/test-server",
-					},
+			requestBody: apiv0.ServerJSON{
+				Name:        "example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Repository: model.Repository{
+					URL:    "https://github.com/example/test-server",
+					Source: "github",
+					ID:     "example/test-server",
 				},
 			},
 			tokenClaims: &auth.JWTClaims{
@@ -228,7 +216,7 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v0.PublishRequest")).Return(nil, errors.New("cannot publish duplicate version"))
+				registry.On("Publish", mock.AnythingOfType("v0.ServerJSON")).Return(nil, errors.New("cannot publish duplicate version"))
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Failed to publish server",

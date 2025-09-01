@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 	// Create test data
-	existingServers := map[string]*model.ServerJSON{
+	existingServers := map[string]*apiv0.ServerJSON{
 		"existing1": {
 			Name:        "com.example/existing-server",
 			Description: "An existing server",
@@ -41,13 +42,13 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		serverDetail model.ServerJSON
+		serverDetail apiv0.ServerJSON
 		expectError  bool
 		errorMsg     string
 	}{
 		{
 			name: "no remote URLs - should pass",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/new-server",
 				Description: "A new server with no remotes",
 				VersionDetail: model.VersionDetail{
@@ -59,7 +60,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		},
 		{
 			name: "new unique remote URLs - should pass",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/new-server",
 				Description: "A new server",
 				VersionDetail: model.VersionDetail{
@@ -74,7 +75,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		},
 		{
 			name: "duplicate remote URL - should fail",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/new-server",
 				Description: "A new server with duplicate URL",
 				VersionDetail: model.VersionDetail{
@@ -89,7 +90,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		},
 		{
 			name: "updating same server with same URLs - should pass",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/existing-server", // Same name as existing
 				Description: "Updated existing server",
 				VersionDetail: model.VersionDetail{

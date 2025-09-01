@@ -14,9 +14,9 @@ import (
 	"regexp"
 	"strings"
 
-	jsonschema "github.com/santhosh-tekuri/jsonschema/v5"
-	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/modelcontextprotocol/registry/internal/validators"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	jsonschema "github.com/santhosh-tekuri/jsonschema/v5"
 )
 
 const (
@@ -129,26 +129,26 @@ func validateAgainstSchema(data any, schema *jsonschema.Schema, schemaName strin
 }
 
 func validateWithObjectValidator(serverData any) bool {
-	var serverDetail model.ServerJSON
+	var serverDetail apiv0.ServerJSON
 	serverDataBytes, err := json.Marshal(serverData)
 	if err != nil {
 		log.Printf("  Validating with Go Validator: ❌")
 		log.Printf("    Error marshaling server data: %v", err)
 		return false
 	}
-	
+
 	if err := json.Unmarshal(serverDataBytes, &serverDetail); err != nil {
 		log.Printf("  Validating with Go Validator: ❌")
 		log.Printf("    Error unmarshaling to ServerDetail: %v", err)
 		return false
 	}
-	
+
 	if err := validators.ValidateServerJSON(&serverDetail); err != nil {
 		log.Printf("  Validating with Go Validator: ❌")
 		log.Printf("    Error: %v", err)
 		return false
 	}
-	
+
 	log.Printf("  Validating with Go Validator: ✅")
 	return true
 }

@@ -19,7 +19,7 @@ type fakeRegistryService struct {
 // NewFakeRegistryService creates a new fake registry service with pre-populated data
 func NewFakeRegistryService() RegistryService {
 	// Sample registry entries with updated model structure using ServerJSON
-	serverDetails := []*model.ServerJSON{
+	serverDetails := []*apiv0.ServerJSON{
 		{
 			Name:        "bluegreen/mcp-server",
 			Description: "A dummy MCP registry for testing",
@@ -59,7 +59,7 @@ func NewFakeRegistryService() RegistryService {
 	}
 
 	// Create a new in-memory database using registry metadata IDs
-	serverDetailMap := make(map[string]*model.ServerJSON)
+	serverDetailMap := make(map[string]*apiv0.ServerJSON)
 	for _, entry := range serverDetails {
 		registryID := uuid.New().String() // Generate registry metadata ID
 		serverDetailMap[registryID] = entry
@@ -71,7 +71,7 @@ func NewFakeRegistryService() RegistryService {
 }
 
 // List retrieves servers with extension wrapper format
-func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv0.ServerRecord, string, error) {
+func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv0.ServerJSON, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -83,7 +83,7 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv0.ServerReco
 	}
 
 	// Return ServerRecords directly (they're now the same as ServerResponse)
-	result := make([]apiv0.ServerRecord, len(serverRecords))
+	result := make([]apiv0.ServerJSON, len(serverRecords))
 	for i, record := range serverRecords {
 		result[i] = *record
 	}
@@ -92,7 +92,7 @@ func (s *fakeRegistryService) List(cursor string, limit int) ([]apiv0.ServerReco
 }
 
 // GetByID retrieves a specific server by its registry metadata ID in extension wrapper format
-func (s *fakeRegistryService) GetByID(id string) (*apiv0.ServerRecord, error) {
+func (s *fakeRegistryService) GetByID(id string) (*apiv0.ServerJSON, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -108,7 +108,7 @@ func (s *fakeRegistryService) GetByID(id string) (*apiv0.ServerRecord, error) {
 }
 
 // Publish publishes a server with separated extensions
-func (s *fakeRegistryService) Publish(req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
+func (s *fakeRegistryService) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -118,10 +118,10 @@ func (s *fakeRegistryService) Publish(req apiv0.PublishRequest) (*apiv0.ServerRe
 		return nil, err
 	}
 
-	// Use publisher extensions directly from request
-	publisherExtensions := req.XPublisher
-	if publisherExtensions == nil {
-		publisherExtensions = make(map[string]interface{})
+	// Extract publisher extensions from _meta.publisher
+	publisherExtensions := make(map[string]interface{})
+	if req.Meta != nil && req.Meta.Publisher != nil {
+		publisherExtensions = req.Meta.Publisher
 	}
 
 	// Create registry metadata for fake service (always marks as latest)
@@ -135,7 +135,7 @@ func (s *fakeRegistryService) Publish(req apiv0.PublishRequest) (*apiv0.ServerRe
 	}
 
 	// Publish to database
-	serverRecord, err := s.db.Publish(ctx, req.Server, publisherExtensions, registryMetadata)
+	serverRecord, err := s.db.Publish(ctx, req, publisherExtensions, registryMetadata)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (s *fakeRegistryService) Publish(req apiv0.PublishRequest) (*apiv0.ServerRe
 }
 
 // EditServer updates an existing server with new details (admin operation)
-func (s *fakeRegistryService) EditServer(id string, req apiv0.PublishRequest) (*apiv0.ServerRecord, error) {
+func (s *fakeRegistryService) EditServer(id string, req apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -154,14 +154,14 @@ func (s *fakeRegistryService) EditServer(id string, req apiv0.PublishRequest) (*
 		return nil, err
 	}
 
-	// Use publisher extensions directly from request
-	publisherExtensions := req.XPublisher
-	if publisherExtensions == nil {
-		publisherExtensions = make(map[string]interface{})
+	// Extract publisher extensions from _meta.publisher
+	publisherExtensions := make(map[string]interface{})
+	if req.Meta != nil && req.Meta.Publisher != nil {
+		publisherExtensions = req.Meta.Publisher
 	}
 
 	// Update server in database
-	serverRecord, err := s.db.UpdateServer(ctx, id, req.Server, publisherExtensions)
+	serverRecord, err := s.db.UpdateServer(ctx, id, req, publisherExtensions)
 	if err != nil {
 		return nil, err
 	}

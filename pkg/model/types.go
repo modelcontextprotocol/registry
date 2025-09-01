@@ -9,17 +9,6 @@ const (
 	StatusDeleted    Status = "deleted"
 )
 
-// ServerJSON represents complete server information as defined in the MCP spec (pure, no registry metadata)
-type ServerJSON struct {
-	Schema        string        `json:"$schema,omitempty"`
-	Name          string        `json:"name" minLength:"1" maxLength:"200"`
-	Description   string        `json:"description" minLength:"1" maxLength:"100"`
-	Status        Status        `json:"status,omitempty" minLength:"1"`
-	Repository    Repository    `json:"repository,omitempty"`
-	VersionDetail VersionDetail `json:"version_detail"`
-	Packages      []Package     `json:"packages,omitempty"`
-	Remotes       []Remote      `json:"remotes,omitempty"`
-}
 
 // Package represents a package configuration
 type Package struct {

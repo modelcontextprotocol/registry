@@ -16,6 +16,8 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
 const registryURL = "http://localhost:8080"
@@ -105,38 +107,23 @@ func publishExample(example example) error {
 	return nil
 }
 
-func parseExample(example example) (map[string]any, error) {
-	expected := map[string]any{}
-	if err := json.Unmarshal(example.content, &expected); err != nil {
+func parseExample(example example) (*apiv0.ServerJSON, error) {
+	expected := &apiv0.ServerJSON{}
+	if err := json.Unmarshal(example.content, expected); err != nil {
 		return nil, fmt.Errorf("example isn't valid JSON: %w", err)
 	}
 
-	// Handle both old ServerDetail format and new PublishRequest format
-	var serverData map[string]any
-	if server, exists := expected["server"]; exists {
-		// New PublishRequest format
-		serverData = server.(map[string]any)
-	} else {
-		// Old ServerDetail format (backward compatibility)
-		serverData = expected
-	}
-
 	// Remove any existing namespace prefix and add anonymous prefix
-	if !strings.HasPrefix(serverData["name"].(string), "io.modelcontextprotocol.anonymous/") {
-		parts := strings.SplitN(serverData["name"].(string), "/", 2)
+	if !strings.HasPrefix(expected.Name, "io.modelcontextprotocol.anonymous/") {
+		parts := strings.SplitN(expected.Name, "/", 2)
 		serverName := parts[len(parts)-1]
-		serverData["name"] = "io.modelcontextprotocol.anonymous/" + serverName
-	}
-
-	// Update the expected structure if it's PublishRequest format
-	if _, exists := expected["server"]; exists {
-		expected["server"] = serverData
+		expected.Name = "io.modelcontextprotocol.anonymous/" + serverName
 	}
 
 	return expected, nil
 }
 
-func publishToRegistry(expected map[string]any, line int) error {
+func publishToRegistry(expected *apiv0.ServerJSON, line int) error {
 	content, _ := json.Marshal(expected)
 	p := filepath.Join("bin", fmt.Sprintf("example-line-%d.json", line))
 	if err := os.WriteFile(p, content, 0600); err != nil {
@@ -223,30 +210,22 @@ func findServerIDByName(serverName string) (string, error) {
 		return "", fmt.Errorf("registry responded %d: %s", resp.StatusCode, string(body))
 	}
 
-	var serverList struct {
-		Servers []map[string]any `json:"servers"`
-	}
+	var serverList *apiv0.ServerListResponse
 	if err := json.NewDecoder(resp.Body).Decode(&serverList); err != nil {
 		return "", fmt.Errorf("failed to decode server list: %w", err)
 	}
 
 	// Find the server with matching name
 	for _, server := range serverList.Servers {
-		if registryMeta, ok := server["x-io.modelcontextprotocol.registry"].(map[string]any); ok {
-			if id, ok := registryMeta["id"].(string); ok {
-				if serverData, ok := server["server"].(map[string]any); ok {
-					if name, ok := serverData["name"].(string); ok && name == serverName {
-						return id, nil
-					}
-				}
-			}
+		if server.Name == serverName {
+			return server.Meta.IOModelContextProtocolRegistry.ID, nil
 		}
 	}
 
 	return "", fmt.Errorf("could not find server with name %s", serverName)
 }
 
-func verifyPublishedServer(id string, expected map[string]any) error {
+func verifyPublishedServer(id string, expected *apiv0.ServerJSON) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, registryURL+"/v0/servers/"+id, nil)
@@ -266,26 +245,13 @@ func verifyPublishedServer(id string, expected map[string]any) error {
 		return fmt.Errorf("registry responded %d: %s", res.StatusCode, string(content))
 	}
 
-	actual := map[string]any{}
+	var actual *apiv0.ServerJSON
 	if err := json.Unmarshal(content, &actual); err != nil {
 		return fmt.Errorf("failed to unmarshal registry response: %w", err)
 	}
 
-	// Both API response and expected are now in extension wrapper format
-	// Compare the server portions of both
-	actualServer, ok := actual["server"]
-	if !ok {
-		return fmt.Errorf("expected server field in registry response")
-	}
-
-	// Extract expected server portion for comparison
-	expectedServer := expected
-	if server, exists := expected["server"]; exists {
-		expectedServer = server.(map[string]any)
-	}
-
-	if err := compare(expectedServer, actualServer); err != nil {
-		return fmt.Errorf(`example "%s": %w`, expectedServer["name"], err)
+	if err := compareServerJSON(expected, actual); err != nil {
+		return fmt.Errorf(`example "%s": %w`, expected.Name, err)
 	}
 	return nil
 }
@@ -325,56 +291,47 @@ func getExamples(path string) ([]example, error) {
 	return examples, nil
 }
 
-// compare performs a deep comparison of JSON values. It returns an error when an expected value
-// isn't in actual, unless the expected value is the zero value for its type. This exception
-// is necessary because registry model fields are typically tagged "omitempty". A field having a
-// zero value may therefore not be present in a registry response. compare doesn't consider whether
-// actual has additional fields not in expected; it only checks that all expected fields are present.
-func compare(expected, actual any) error {
-	if reflect.ValueOf(expected).IsZero() {
-		return nil
+func compareServerJSON(expected, actual *apiv0.ServerJSON) error {
+	// Compare core fields (ignore Meta as it contains registry-generated data)
+	if expected.Name != actual.Name {
+		return fmt.Errorf("name mismatch: expected %q, got %q", expected.Name, actual.Name)
 	}
-	if actual == nil {
-		return fmt.Errorf("expected %v, got nil", expected)
+	if expected.Description != actual.Description {
+		return fmt.Errorf("description mismatch: expected %q, got %q", expected.Description, actual.Description)
+	}
+	if expected.Status != actual.Status {
+		return fmt.Errorf("status mismatch: expected %q, got %q", expected.Status, actual.Status)
 	}
 
-	switch expectedValue := expected.(type) {
-	case map[string]any:
-		actualMap, ok := actual.(map[string]any)
-		if !ok {
-			return fmt.Errorf("expected map, got %T", actual)
-		}
-		for k, v := range expectedValue {
-			// note key may not be present in actualMap, if the value would be zero
-			if actualValue, ok := actualMap[k]; ok {
-				if err := compare(v, actualValue); err != nil {
-					return fmt.Errorf("key %q: %w", k, err)
-				}
-			}
-		}
-		return nil
-	case []any:
-		actualSlice, ok := actual.([]any)
-		if !ok {
-			return fmt.Errorf("expected array, got %T", actual)
-		}
-		for _, expectedItem := range expectedValue {
-			found := false
-			for _, actualItem := range actualSlice {
-				if err := compare(expectedItem, actualItem); err == nil {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("%v missing in actual array", expectedItem)
-			}
-		}
-		return nil
-	default:
-		if expected != actual {
-			return fmt.Errorf("expected %v, got %v", expected, actual)
-		}
-		return nil
+	// Compare repository
+	if !reflect.DeepEqual(expected.Repository, actual.Repository) {
+		return fmt.Errorf("repository mismatch: expected %+v, got %+v", expected.Repository, actual.Repository)
 	}
+
+	// Compare version detail
+	if !reflect.DeepEqual(expected.VersionDetail, actual.VersionDetail) {
+		return fmt.Errorf("version detail mismatch: expected %+v, got %+v", expected.VersionDetail, actual.VersionDetail)
+	}
+
+	// Compare packages
+	if !reflect.DeepEqual(expected.Packages, actual.Packages) {
+		return fmt.Errorf("packages mismatch: expected %+v, got %+v", expected.Packages, actual.Packages)
+	}
+
+	// Compare remotes
+	if !reflect.DeepEqual(expected.Remotes, actual.Remotes) {
+		return fmt.Errorf("remotes mismatch: expected %+v, got %+v", expected.Remotes, actual.Remotes)
+	}
+
+	// Compare only publisher metadata if present
+	if expected.Meta != nil && expected.Meta.Publisher != nil {
+		if actual.Meta == nil || actual.Meta.Publisher == nil {
+			return fmt.Errorf("expected publisher metadata, but got none")
+		}
+		if !reflect.DeepEqual(expected.Meta.Publisher, actual.Meta.Publisher) {
+			return fmt.Errorf("publisher metadata mismatch: expected %+v, got %+v", expected.Meta.Publisher, actual.Meta.Publisher)
+		}
+	}
+
+	return nil
 }

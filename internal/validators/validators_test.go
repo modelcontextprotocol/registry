@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,12 +13,12 @@ import (
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name          string
-		serverDetail  model.ServerJSON
+		serverDetail  apiv0.ServerJSON
 		expectedError string
 	}{
 		{
 			name: "valid server detail with all fields",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -45,7 +46,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "server with invalid repository source",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -60,7 +61,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "server with invalid GitHub URL format",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -75,7 +76,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "server with invalid GitLab URL format",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -90,7 +91,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "package with spaces in name",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -112,7 +113,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "multiple packages with one invalid",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -139,7 +140,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "remote with invalid URL",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -159,7 +160,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "remote with missing scheme",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -179,7 +180,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "multiple remotes with one invalid",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -202,7 +203,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "server detail with nil packages and remotes",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -219,7 +220,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "server detail with empty packages and remotes slices",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Repository: model.Repository{
@@ -253,13 +254,13 @@ func TestValidate(t *testing.T) {
 func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 	tests := []struct {
 		name         string
-		serverDetail model.ServerJSON
+		serverDetail apiv0.ServerJSON
 		expectError  bool
 		errorMsg     string
 	}{
 		{
 			name: "valid match - example.com domain",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "https://example.com/mcp"},
@@ -269,7 +270,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "valid match - subdomain mcp.example.com",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "https://mcp.example.com/endpoint"},
@@ -279,7 +280,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "valid match - api subdomain",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/api-server",
 				Remotes: []model.Remote{
 					{URL: "https://api.example.com/mcp"},
@@ -289,7 +290,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid - wrong domain",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "https://google.com/mcp"},
@@ -300,7 +301,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid - different domain entirely",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.microsoft/server",
 				Remotes: []model.Remote{
 					{URL: "https://api.github.com/endpoint"},
@@ -311,7 +312,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "localhost URLs allowed with any namespace",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test-server",
 				Remotes: []model.Remote{
 					{URL: "http://localhost:3000/sse"},
@@ -321,7 +322,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "invalid URL format",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test",
 				Remotes: []model.Remote{
 					{URL: "not-a-valid-url"},
@@ -332,7 +333,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "empty remotes array",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name:    "com.example/test",
 				Remotes: []model.Remote{},
 			},
@@ -340,7 +341,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "multiple valid remotes - different subdomains",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/server",
 				Remotes: []model.Remote{
 					{URL: "https://api.example.com/sse"},
@@ -351,7 +352,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		},
 		{
 			name: "one valid, one invalid remote",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/server",
 				Remotes: []model.Remote{
 					{URL: "https://example.com/sse"},
@@ -380,27 +381,27 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 func TestValidate_ServerNameFormat(t *testing.T) {
 	tests := []struct {
 		name         string
-		serverDetail model.ServerJSON
+		serverDetail apiv0.ServerJSON
 		expectError  bool
 		errorMsg     string
 	}{
 		{
 			name: "valid namespace/name format",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example.api/server",
 			},
 			expectError: false,
 		},
 		{
 			name: "valid complex namespace",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.github.microsoft.azure/webapp-server",
 			},
 			expectError: false,
 		},
 		{
 			name: "empty server name",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "",
 			},
 			expectError: true,
@@ -408,7 +409,7 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		},
 		{
 			name: "missing slash separator",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example.server",
 			},
 			expectError: true,
@@ -416,7 +417,7 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		},
 		{
 			name: "empty namespace part",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "/server-name",
 			},
 			expectError: true,
@@ -424,7 +425,7 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		},
 		{
 			name: "empty name part",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/",
 			},
 			expectError: true,
@@ -432,7 +433,7 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		},
 		{
 			name: "multiple slashes - uses first as separator",
-			serverDetail: model.ServerJSON{
+			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/server/path",
 			},
 			expectError: false,
@@ -647,8 +648,8 @@ func TestValidateArgument_ValidValueFields(t *testing.T) {
 }
 
 // Helper function to create a valid server with a specific argument for testing
-func createValidServerWithArgument(arg model.Argument) model.ServerJSON {
-	return model.ServerJSON{
+func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
+	return apiv0.ServerJSON{
 		Name:        "com.example/test-server",
 		Description: "A test server",
 		Repository: model.Repository{
@@ -661,9 +662,9 @@ func createValidServerWithArgument(arg model.Argument) model.ServerJSON {
 		},
 		Packages: []model.Package{
 			{
-				Identifier:      "test-package",
-				RegistryType:    "npm",
-				RegistryBaseURL: "https://registry.npmjs.org",
+				Identifier:       "test-package",
+				RegistryType:     "npm",
+				RegistryBaseURL:  "https://registry.npmjs.org",
 				RuntimeArguments: []model.Argument{arg},
 			},
 		},

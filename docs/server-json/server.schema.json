@@ -370,6 +370,23 @@
               "items": {
                 "$ref": "#/$defs/Remote"
               }
+            },
+            "_meta": {
+              "type": "object",
+              "description": "Extension metadata using reverse DNS namespacing for vendor-specific data",
+              "additionalProperties": true,
+              "properties": {
+                "publisher": {
+                  "type": "object",
+                  "description": "Publisher-provided metadata for downstream registries",
+                  "additionalProperties": true
+                },
+                "io.modelcontextprotocol.registry": {
+                  "type": "object", 
+                  "description": "Official MCP registry metadata (read-only, added by registry)",
+                  "additionalProperties": true
+                }
+              }
             }
           }
         }

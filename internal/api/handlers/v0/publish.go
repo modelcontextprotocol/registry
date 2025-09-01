@@ -15,8 +15,8 @@ import (
 
 // PublishServerInput represents the input for publishing a server
 type PublishServerInput struct {
-	Authorization string               `header:"Authorization" doc:"Registry JWT token (obtained from /v0/auth/token/github)" required:"true"`
-	Body          apiv0.PublishRequest `body:""`
+	Authorization string           `header:"Authorization" doc:"Registry JWT token (obtained from /v0/auth/token/github)" required:"true"`
+	Body          apiv0.ServerJSON `body:""`
 }
 
 // RegisterPublishEndpoint registers the publish endpoint
@@ -34,7 +34,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv0.ServerRecord], error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv0.ServerJSON], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -55,7 +55,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Verify that the token has permission to publish the server
-		if !jwtManager.HasPermission(input.Body.Server.Name, auth.PermissionActionPublish, claims.Permissions) {
+		if !jwtManager.HasPermission(input.Body.Name, auth.PermissionActionPublish, claims.Permissions) {
 			return nil, huma.Error403Forbidden("You do not have permission to publish this server")
 		}
 
@@ -65,8 +65,8 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 			return nil, huma.Error400BadRequest("Failed to publish server", err)
 		}
 
-		// Return the published server in extension wrapper format
-		return &Response[apiv0.ServerRecord]{
+		// Return the published server in flattened format
+		return &Response[apiv0.ServerJSON]{
 			Body: *publishedServer,
 		}, nil
 	})

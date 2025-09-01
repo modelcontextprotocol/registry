@@ -19,7 +19,7 @@ import (
 // 2. Direct HTTP URLs to seed.json files - expects extension wrapper format
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
 // Only the extension wrapper format is supported (array of ServerResponse objects)
-func ReadSeedFile(ctx context.Context, path string) ([]*apiv0.ServerRecord, error) {
+func ReadSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error) {
 	var data []byte
 	var err error
 
@@ -41,30 +41,30 @@ func ReadSeedFile(ctx context.Context, path string) ([]*apiv0.ServerRecord, erro
 	}
 
 	// Parse extension wrapper format (only supported format)
-	var serverResponses []apiv0.ServerRecord
+	var serverResponses []apiv0.ServerJSON
 	if err := json.Unmarshal(data, &serverResponses); err != nil {
 		return nil, fmt.Errorf("failed to parse seed data as extension wrapper format: %w", err)
 	}
 
 	if len(serverResponses) == 0 {
-		return []*apiv0.ServerRecord{}, nil
+		return []*apiv0.ServerJSON{}, nil
 	}
 
 	// Validate servers and collect warnings instead of failing the whole batch
-	var validRecords []*apiv0.ServerRecord
+	var validRecords []*apiv0.ServerJSON
 	var invalidServers []string
 	var validationFailures []string
 
 	for _, response := range serverResponses {
-		if err := validators.ValidateServerJSON(&response.Server); err != nil {
+		if err := validators.ValidateServerJSON(&response); err != nil {
 			// Log warning and track invalid server instead of failing
-			invalidServers = append(invalidServers, response.Server.Name)
-			validationFailures = append(validationFailures, fmt.Sprintf("Server '%s': %v", response.Server.Name, err))
-			log.Printf("Warning: Skipping invalid server '%s': %v", response.Server.Name, err)
+			invalidServers = append(invalidServers, response.Name)
+			validationFailures = append(validationFailures, fmt.Sprintf("Server '%s': %v", response.Name, err))
+			log.Printf("Warning: Skipping invalid server '%s': %v", response.Name, err)
 			continue
 		}
 
-		// Convert valid ServerResponse to ServerRecord
+		// Convert valid ServerJSON to ServerRecord
 		record := convertServerResponseToRecord(response)
 		validRecords = append(validRecords, record)
 	}
@@ -102,8 +102,8 @@ func fetchFromHTTP(ctx context.Context, url string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerRecord, error) {
-	var allRecords []*apiv0.ServerRecord
+func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerJSON, error) {
+	var allRecords []*apiv0.ServerJSON
 	cursor := ""
 
 	for {
@@ -122,7 +122,7 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerR
 		}
 
 		var response struct {
-			Servers  []apiv0.ServerRecord `json:"servers"`
+			Servers  []apiv0.ServerJSON `json:"servers"`
 			Metadata *struct {
 				NextCursor string `json:"next_cursor,omitempty"`
 			} `json:"metadata,omitempty"`
@@ -148,19 +148,8 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerR
 	return allRecords, nil
 }
 
-func convertServerResponseToRecord(response apiv0.ServerRecord) *apiv0.ServerRecord {
-	// The registry extensions are already properly typed, so we can use them directly
-	registryMetadata := response.XIOModelContextProtocolRegistry
-
-	// Publisher extensions
-	publisherExtensions := response.XPublisher
-	if publisherExtensions == nil {
-		publisherExtensions = make(map[string]interface{})
-	}
-
-	return &apiv0.ServerRecord{
-		Server:                          response.Server,
-		XIOModelContextProtocolRegistry: registryMetadata,
-		XPublisher:                      publisherExtensions,
-	}
+func convertServerResponseToRecord(response apiv0.ServerJSON) *apiv0.ServerJSON {
+	// The response is already in the correct flattened format
+	// Just return a pointer to it
+	return &response
 }

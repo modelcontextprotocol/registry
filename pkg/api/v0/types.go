@@ -15,23 +15,29 @@ type RegistryExtensions struct {
 	ReleaseDate string    `json:"release_date"`
 }
 
-// ServerRecord represents the unified storage and API response model
-type ServerRecord struct {
-	Server                          model.ServerJSON       `json:"server"`                                                    // Pure MCP server.json
-	XIOModelContextProtocolRegistry RegistryExtensions     `json:"x-io.modelcontextprotocol.registry,omitempty"` // Registry-generated data
-	XPublisher                      map[string]interface{} `json:"x-publisher,omitempty"`                       // x-publisher extensions
-}
-
 // ServerListResponse represents the paginated server list response
 type ServerListResponse struct {
-	Servers  []ServerRecord `json:"servers"`
-	Metadata *Metadata      `json:"metadata,omitempty"`
+	Servers  []ServerJSON `json:"servers"`
+	Metadata *Metadata    `json:"metadata,omitempty"`
 }
 
-// PublishRequest represents the API request format for publishing servers
-type PublishRequest struct {
-	Server     model.ServerJSON       `json:"server"`
-	XPublisher map[string]interface{} `json:"x-publisher,omitempty"`
+// ServerMeta represents the structured metadata with known extension fields
+type ServerMeta struct {
+	Publisher                      map[string]interface{} `json:"publisher,omitempty"`
+	IOModelContextProtocolRegistry *RegistryExtensions    `json:"io.modelcontextprotocol.registry,omitempty"`
+}
+
+// ServerJSON represents complete server information as defined in the MCP spec, with extension support
+type ServerJSON struct {
+	Schema        string              `json:"$schema,omitempty"`
+	Name          string              `json:"name" minLength:"1" maxLength:"200"`
+	Description   string              `json:"description" minLength:"1" maxLength:"100"`
+	Status        model.Status        `json:"status,omitempty" minLength:"1"`
+	Repository    model.Repository    `json:"repository,omitempty"`
+	VersionDetail model.VersionDetail `json:"version_detail"`
+	Packages      []model.Package     `json:"packages,omitempty"`
+	Remotes       []model.Remote      `json:"remotes,omitempty"`
+	Meta          *ServerMeta         `json:"_meta,omitempty"`
 }
 
 // Metadata represents pagination metadata

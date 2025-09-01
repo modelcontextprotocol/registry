@@ -11,7 +11,7 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-func ValidateServerJSON(serverJSON *model.ServerJSON) error {
+func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	// Validate server name exists and format
 	if _, err := parseServerName(*serverJSON); err != nil {
 		return err
@@ -194,38 +194,45 @@ func validatePackage(pkg *model.Package) error {
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions
-func ValidatePublishRequest(req apiv0.PublishRequest) error {
-	// Validate publisher extensions
+func ValidatePublishRequest(req apiv0.ServerJSON) error {
+	// Validate publisher extensions in _meta
 	if err := validatePublisherExtensions(req); err != nil {
 		return err
 	}
 
 	// Validate the server detail (includes all nested validation)
-	if err := ValidateServerJSON(&req.Server); err != nil {
+	if err := ValidateServerJSON(&req); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func validatePublisherExtensions(req apiv0.PublishRequest) error {
+func validatePublisherExtensions(req apiv0.ServerJSON) error {
 	const maxExtensionSize = 4 * 1024 // 4KB limit
 
-	// Check size limit for x-publisher extension
-	if req.XPublisher != nil {
-		extensionsJSON, err := json.Marshal(req.XPublisher)
+	// Check size limit for _meta.publisher extension
+	if req.Meta != nil && req.Meta.Publisher != nil {
+		extensionsJSON, err := json.Marshal(req.Meta.Publisher)
 		if err != nil {
-			return fmt.Errorf("failed to marshal x-publisher extension: %w", err)
+			return fmt.Errorf("failed to marshal _meta.publisher extension: %w", err)
 		}
 		if len(extensionsJSON) > maxExtensionSize {
-			return fmt.Errorf("x-publisher extension exceeds 4KB limit (%d bytes)", len(extensionsJSON))
+			return fmt.Errorf("_meta.publisher extension exceeds 4KB limit (%d bytes)", len(extensionsJSON))
+		}
+	}
+
+	if req.Meta != nil {
+		// Validate that only "publisher" is allowed in _meta during publish (no registry metadata should be present)
+		if req.Meta.IOModelContextProtocolRegistry != nil {
+			return fmt.Errorf("registry metadata '_meta.io.modelcontextprotocol.registry' is not allowed during publish")
 		}
 	}
 
 	return nil
 }
 
-func parseServerName(serverJSON model.ServerJSON) (string, error) {
+func parseServerName(serverJSON apiv0.ServerJSON) (string, error) {
 	name := serverJSON.Name
 	if name == "" {
 		return "", fmt.Errorf("server name is required and must be a string")
@@ -245,7 +252,7 @@ func parseServerName(serverJSON model.ServerJSON) (string, error) {
 }
 
 // validateRemoteNamespaceMatch validates that remote URLs match the reverse-DNS namespace
-func validateRemoteNamespaceMatch(serverJSON model.ServerJSON) error {
+func validateRemoteNamespaceMatch(serverJSON apiv0.ServerJSON) error {
 	namespace := serverJSON.Name
 
 	for _, remote := range serverJSON.Remotes {

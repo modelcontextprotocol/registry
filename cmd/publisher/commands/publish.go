@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
 func PublishCommand(args []string) error {
@@ -30,7 +32,7 @@ func PublishCommand(args []string) error {
 	}
 
 	// Validate JSON
-	var serverJSON map[string]any
+	var serverJSON apiv0.ServerJSON
 	if err := json.Unmarshal(serverData, &serverJSON); err != nil {
 		return fmt.Errorf("invalid server.json: %w", err)
 	}
@@ -73,26 +75,14 @@ func PublishCommand(args []string) error {
 
 func publishToRegistry(registryURL string, serverData []byte, token string) error {
 	// Parse the server JSON data
-	var serverDetails map[string]any
-	err := json.Unmarshal(serverData, &serverDetails)
+	var serverJSON apiv0.ServerJSON
+	err := json.Unmarshal(serverData, &serverJSON)
 	if err != nil {
 		return fmt.Errorf("error parsing server.json file: %w", err)
 	}
 
-	// Create the publish request payload
-	var publishReq map[string]any
-	if _, hasServerField := serverDetails["server"]; hasServerField {
-		// Already in PublishRequest format
-		publishReq = serverDetails
-	} else {
-		// Wrap in server field
-		publishReq = map[string]any{
-			"server": serverDetails,
-		}
-	}
-
 	// Convert to JSON
-	jsonData, err := json.Marshal(publishReq)
+	jsonData, err := json.Marshal(serverJSON)
 	if err != nil {
 		return fmt.Errorf("error serializing request: %w", err)
 	}

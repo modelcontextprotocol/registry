@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
+	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
-
 
 func InitCommand() error {
 	// Check if server.json already exists
@@ -266,7 +266,7 @@ func createServerJSON(
 	name, description, version, repoURL, repoSource,
 	packageType, packageIdentifier, packageVersion string,
 	envVars []model.KeyValueInput,
-) model.ServerJSON {
+) apiv0.ServerJSON {
 	// Determine registry type and base URL
 	var registryType, registryBaseURL string
 	switch packageType {
@@ -297,7 +297,7 @@ func createServerJSON(
 	}
 
 	// Create server structure
-	return model.ServerJSON{
+	return apiv0.ServerJSON{
 		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
 		Name:        name,
 		Description: description,
