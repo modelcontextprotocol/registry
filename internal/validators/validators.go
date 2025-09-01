@@ -168,7 +168,7 @@ func validatePackage(pkg *model.Package) error {
 	registryType := strings.ToLower(pkg.RegistryType)
 
 	// For direct download packages (mcpb or direct URLs)
-	if registryType == "mcpb" ||
+	if registryType == model.RegistryTypeMCPB ||
 		strings.HasPrefix(pkg.Identifier, "http://") || strings.HasPrefix(pkg.Identifier, "https://") {
 		parsedURL, err := url.Parse(pkg.Identifier)
 		if err != nil {
@@ -178,7 +178,7 @@ func validatePackage(pkg *model.Package) error {
 		host := strings.ToLower(parsedURL.Host)
 
 		// For MCPB packages, validate they're from allowed hosts
-		if registryType == "mcpb" {
+		if registryType == model.RegistryTypeMCPB {
 			return validateMCPBPackage(host)
 		}
 
