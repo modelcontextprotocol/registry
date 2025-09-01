@@ -217,7 +217,7 @@ func findServerIDByName(serverName string) (string, error) {
 
 	// Find the server with matching name
 	for _, server := range serverList.Servers {
-		if server.Name == serverName {
+		if server.Name == serverName && server.Meta.IOModelContextProtocolRegistry.IsLatest {
 			return server.Meta.IOModelContextProtocolRegistry.ID, nil
 		}
 	}
