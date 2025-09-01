@@ -37,8 +37,15 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		},
 	}
 
-	memDB := database.NewMemoryDB(existingServers)
+	memDB := database.NewMemoryDB()
 	service := NewRegistryServiceWithDB(memDB)
+
+	for _, server := range existingServers {
+		_, err := service.Publish(*server)
+		if err != nil {
+			t.Fatalf("failed to publish server: %v", err)
+		}
+	}
 
 	tests := []struct {
 		name         string

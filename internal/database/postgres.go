@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -42,10 +40,9 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	}, nil
 }
 
-// List retrieves ServerJSON entries with optional filtering and pagination
 func (db *PostgreSQL) List(
 	ctx context.Context,
-	filter map[string]any,
+	filter *ServerFilter,
 	cursor string,
 	limit int,
 ) ([]*apiv0.ServerJSON, string, error) {
@@ -57,30 +54,21 @@ func (db *PostgreSQL) List(
 		return nil, "", ctx.Err()
 	}
 
-	// Build WHERE clause for filtering - always filter by is_latest = true by default
+	// Build WHERE clause for filtering
 	var whereConditions []string
-	whereConditions = append(whereConditions, "(value->'_meta'->'io.modelcontextprotocol.registry'->>'is_latest')::boolean = true")
 	args := []any{}
 	argIndex := 1
 
 	// Add filters using JSON operators
-	for k, v := range filter {
-		switch k {
-		case "name":
+	if filter != nil {
+		if filter.Name != nil {
 			whereConditions = append(whereConditions, fmt.Sprintf("value->>'name' = $%d", argIndex))
-			args = append(args, v)
+			args = append(args, *filter.Name)
 			argIndex++
-		case "version":
-			whereConditions = append(whereConditions, fmt.Sprintf("value->'version_detail'->>'version' = $%d", argIndex))
-			args = append(args, v)
-			argIndex++
-		case "status":
-			whereConditions = append(whereConditions, fmt.Sprintf("value->>'status' = $%d", argIndex))
-			args = append(args, v)
-			argIndex++
-		case "remote_url":
+		}
+		if filter.RemoteURL != nil {
 			whereConditions = append(whereConditions, fmt.Sprintf("EXISTS (SELECT 1 FROM jsonb_array_elements(value->'remotes') AS remote WHERE remote->>'url' = $%d)", argIndex))
-			args = append(args, v)
+			args = append(args, *filter.RemoteURL)
 			argIndex++
 		}
 	}
@@ -151,7 +139,6 @@ func (db *PostgreSQL) List(
 	return results, nextCursor, nil
 }
 
-// GetByID retrieves a single ServerJSON by its registry metadata ID
 func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
@@ -183,27 +170,18 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON
 	return &serverJSON, nil
 }
 
-// Publish adds a new server to the simple servers table
-func (db *PostgreSQL) Publish(ctx context.Context, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerJSON, error) {
+// CreateServer adds a new server to the database
+func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	// Create complete server with metadata
-	server := serverDetail // Copy the input
-
-	// Initialize meta if not present
-	if server.Meta == nil {
-		server.Meta = &apiv0.ServerMeta{}
+	// Get the ID from the registry metadata
+	if server.Meta == nil || server.Meta.IOModelContextProtocolRegistry == nil {
+		return nil, fmt.Errorf("server must have registry metadata with ID")
 	}
 
-	// Set registry metadata
-	server.Meta.IOModelContextProtocolRegistry = &registryMetadata
-
-	// Set publisher extensions if provided
-	if len(publisherExtensions) > 0 {
-		server.Meta.Publisher = publisherExtensions
-	}
+	id := server.Meta.IOModelContextProtocolRegistry.ID
 
 	// Marshal the complete server to JSONB
 	valueJSON, err := json.Marshal(server)
@@ -217,130 +195,22 @@ func (db *PostgreSQL) Publish(ctx context.Context, serverDetail apiv0.ServerJSON
 		VALUES ($1, $2)
 	`
 
-	_, err = db.conn.Exec(ctx, query, registryMetadata.ID, valueJSON)
+	_, err = db.conn.Exec(ctx, query, id, valueJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
 	}
 
-	return &server, nil
-}
-
-// ImportSeed imports initial data from a seed file into PostgreSQL
-func (db *PostgreSQL) ImportSeed(ctx context.Context, seedFilePath string) error {
-	// Read seed data using the shared ReadSeedFile function
-	seedData, err := ReadSeedFile(ctx, seedFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to read seed file: %w", err)
-	}
-
-	// Start a transaction for batch import
-	tx, err := db.conn.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to start transaction: %w", err)
-	}
-	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && !errors.Is(rollbackErr, pgx.ErrTxClosed) {
-			log.Printf("Failed to rollback transaction: %v", rollbackErr)
-		}
-	}()
-
-	// Import each server
-	for _, record := range seedData {
-		// Marshal the server to JSONB
-		valueJSON, err := json.Marshal(record)
-		if err != nil {
-			return fmt.Errorf("failed to marshal server JSON for import: %w", err)
-		}
-
-		// Get registry ID from metadata
-		var registryID string
-		if record.Meta != nil && record.Meta.IOModelContextProtocolRegistry != nil {
-			registryID = record.Meta.IOModelContextProtocolRegistry.ID
-		} else {
-			registryID = uuid.New().String() // Generate ID if not present
-		}
-
-		// Insert into simple servers table
-		_, err = tx.Exec(ctx, "INSERT INTO servers (id, value) VALUES ($1, $2)", registryID, valueJSON)
-		if err != nil {
-			return fmt.Errorf("failed to import server %s: %w", record.Name, err)
-		}
-	}
-
-	// Commit the transaction
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("failed to commit seed import transaction: %w", err)
-	}
-
-	return nil
-}
-
-// UpdateLatestFlag updates the is_latest flag for a specific server record
-func (db *PostgreSQL) UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
-
-	query := `
-		UPDATE servers 
-		SET value = jsonb_set(
-			jsonb_set(
-				value, 
-				'{_meta,io.modelcontextprotocol.registry,is_latest}', 
-				$1::jsonb
-			),
-			'{_meta,io.modelcontextprotocol.registry,updated_at}',
-			$2::jsonb
-		)
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry'->>'id') = $3
-	`
-
-	result, err := db.conn.Exec(ctx, query,
-		fmt.Sprintf("%t", isLatest),
-		fmt.Sprintf("\"%s\"", time.Now().Format(time.RFC3339)),
-		id)
-	if err != nil {
-		return fmt.Errorf("failed to update latest flag: %w", err)
-	}
-
-	if result.RowsAffected() == 0 {
-		return ErrNotFound
-	}
-
-	return nil
+	return server, nil
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	// Get the existing server to preserve registry metadata
-	existingServer, err := db.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Update the server details while preserving registry metadata
-	updatedServer := serverDetail
-	if updatedServer.Meta == nil {
-		updatedServer.Meta = &apiv0.ServerMeta{}
-	}
-
-	// Preserve existing registry metadata but update timestamp
-	if existingServer.Meta != nil && existingServer.Meta.IOModelContextProtocolRegistry != nil {
-		updatedServer.Meta.IOModelContextProtocolRegistry = existingServer.Meta.IOModelContextProtocolRegistry
-		updatedServer.Meta.IOModelContextProtocolRegistry.UpdatedAt = time.Now()
-	}
-
-	// Update publisher extensions if provided
-	if len(publisherExtensions) > 0 {
-		updatedServer.Meta.Publisher = publisherExtensions
-	}
-
 	// Marshal updated server
-	valueJSON, err := json.Marshal(updatedServer)
+	valueJSON, err := json.Marshal(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal updated server: %w", err)
 	}
@@ -361,27 +231,10 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, serverDetail 
 		return nil, ErrNotFound
 	}
 
-	return &updatedServer, nil
+	return server, nil
 }
 
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
 	return db.conn.Close(context.Background())
-}
-
-// Connection returns information about the database connection
-func (db *PostgreSQL) Connection() *ConnectionInfo {
-	isConnected := false
-	if db.conn != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		defer cancel()
-		err := db.conn.Ping(ctx)
-		isConnected = (err == nil)
-	}
-
-	return &ConnectionInfo{
-		Type:        ConnectionTypePostgreSQL,
-		IsConnected: isConnected,
-		Raw:         db.conn,
-	}
 }

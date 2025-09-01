@@ -37,7 +37,7 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]apiv0.ServerJSON
 		limit = 30
 	}
 
-	// Use the database's List method with pagination
+	// Use the database's ListServers method with pagination
 	serverRecords, nextCursor, err := s.db.List(ctx, nil, cursor, limit)
 	if err != nil {
 		return nil, "", err
@@ -58,7 +58,6 @@ func (s *registryServiceImpl) GetByID(id string) (*apiv0.ServerJSON, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Use the database's GetByID method to retrieve the server record
 	serverRecord, err := s.db.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -87,7 +86,8 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		return nil, err
 	}
 
-	existingServerVersions, _, err := s.db.List(ctx, map[string]any{"name": serverJSON.Name}, "", maxServerVersionsPerServer)
+	filter := &database.ServerFilter{Name: &serverJSON.Name}
+	existingServerVersions, _, err := s.db.List(ctx, filter, "", maxServerVersionsPerServer)
 	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		return nil, err
 	}
@@ -121,8 +121,16 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		) > 0
 	}
 
-	// Create registry metadata with service-determined values
-	registryMetadata := apiv0.RegistryExtensions{
+	// Create complete server with metadata
+	server := serverJSON // Copy the input
+
+	// Initialize meta if not present
+	if server.Meta == nil {
+		server.Meta = &apiv0.ServerMeta{}
+	}
+
+	// Set registry metadata
+	server.Meta.IOModelContextProtocolRegistry = &apiv0.RegistryExtensions{
 		ID:          uuid.New().String(),
 		PublishedAt: publishTime,
 		UpdatedAt:   publishTime,
@@ -130,14 +138,8 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		ReleaseDate: publishTime.Format(time.RFC3339),
 	}
 
-	// Extract publisher extensions from _meta.publisher
-	publisherExtensions := make(map[string]interface{})
-	if serverJSON.Meta != nil && serverJSON.Meta.Publisher != nil {
-		publisherExtensions = serverJSON.Meta.Publisher
-	}
-
-	// Publish to database with the registry metadata (still using old format internally)
-	serverRecord, err := s.db.Publish(ctx, serverJSON, publisherExtensions, registryMetadata)
+	// Create server in database
+	serverRecord, err := s.db.CreateServer(ctx, &server)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +151,10 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 			existingLatestID = existingLatest.Meta.IOModelContextProtocolRegistry.ID
 		}
 		if existingLatestID != "" {
-			if err := s.db.UpdateLatestFlag(ctx, existingLatestID, false); err != nil {
+			// Update the existing server to set is_latest = false
+			existingLatest.Meta.IOModelContextProtocolRegistry.IsLatest = false
+			existingLatest.Meta.IOModelContextProtocolRegistry.UpdatedAt = time.Now()
+			if _, err := s.db.UpdateServer(ctx, existingLatestID, existingLatest); err != nil {
 				return nil, err
 			}
 		}
@@ -164,9 +169,7 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 	// Check each remote URL in the new server for conflicts
 	for _, remote := range serverDetail.Remotes {
 		// Use filter to find servers with this remote URL
-		filter := map[string]any{
-			"remote_url": remote.URL,
-		}
+		filter := &database.ServerFilter{RemoteURL: &remote.URL}
 
 		conflictingServers, _, err := s.db.List(ctx, filter, "", 1000)
 		if err != nil {
@@ -187,8 +190,8 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 // getCurrentLatestVersion finds the current latest version from existing server versions
 func (s *registryServiceImpl) getCurrentLatestVersion(existingServerVersions []*apiv0.ServerJSON) *apiv0.ServerJSON {
 	for _, server := range existingServerVersions {
-		if server.Meta != nil && server.Meta.IOModelContextProtocolRegistry != nil && 
-		   server.Meta.IOModelContextProtocolRegistry.IsLatest {
+		if server.Meta != nil && server.Meta.IOModelContextProtocolRegistry != nil &&
+			server.Meta.IOModelContextProtocolRegistry.IsLatest {
 			return server
 		}
 	}
@@ -212,14 +215,8 @@ func (s *registryServiceImpl) EditServer(id string, req apiv0.ServerJSON) (*apiv
 		return nil, err
 	}
 
-	// Extract publisher extensions from _meta.publisher
-	publisherExtensions := make(map[string]interface{})
-	if serverJSON.Meta != nil && serverJSON.Meta.Publisher != nil {
-		publisherExtensions = serverJSON.Meta.Publisher
-	}
-
 	// Update server in database
-	serverRecord, err := s.db.UpdateServer(ctx, id, serverJSON, publisherExtensions)
+	serverRecord, err := s.db.UpdateServer(ctx, id, &serverJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -227,4 +224,3 @@ func (s *registryServiceImpl) EditServer(id string, req apiv0.ServerJSON) (*apiv
 	// Return the server record directly
 	return serverRecord, nil
 }
-

@@ -14,9 +14,9 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/api"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/importer"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
-	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
 func main() {
@@ -46,7 +46,7 @@ func main() {
 	// Initialize services based on environment
 	switch cfg.DatabaseType {
 	case config.DatabaseTypeMemory:
-		db = database.NewMemoryDB(map[string]*apiv0.ServerJSON{})
+		db = database.NewMemoryDB()
 		registryService = service.NewRegistryServiceWithDB(db)
 	case config.DatabaseTypePostgreSQL:
 		// Use PostgreSQL for real registry service
@@ -84,7 +84,8 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
-		if err := db.ImportSeed(ctx, cfg.SeedFrom); err != nil {
+		importerService := importer.NewService(db)
+		if err := importerService.ImportFromPath(ctx, cfg.SeedFrom); err != nil {
 			log.Printf("Failed to import seed data: %v", err)
 		} else {
 			log.Println("Data import completed successfully")

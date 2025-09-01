@@ -17,21 +17,22 @@ var (
 	ErrMaxServersReached = errors.New("maximum number of versions for this server reached (10000): please reach out at https://github.com/modelcontextprotocol/registry to explain your use case")
 )
 
-// Database defines the interface for database operations with extension wrapper architecture
+// ServerFilter defines filtering options for server queries
+type ServerFilter struct {
+	Name      *string // for finding versions of same server
+	RemoteURL *string // for duplicate URL detection
+}
+
+// Database defines the interface for database operations
 type Database interface {
-	// List retrieves all ServerRecord entries with optional filtering
-	List(ctx context.Context, filter map[string]any, cursor string, limit int) ([]*apiv0.ServerJSON, string, error)
-	// GetByID retrieves a single ServerRecord by its ID
+	// Retrieve server entries with optional filtering
+	List(ctx context.Context, filter *ServerFilter, cursor string, limit int) ([]*apiv0.ServerJSON, string, error)
+	// Retrieve a single server by its ID
 	GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, error)
-	// Publish adds a new server to the database with separated server.json and extensions
-	// The registryMetadata contains metadata determined by the service layer (e.g., is_latest, timestamps)
-	Publish(ctx context.Context, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerJSON, error)
-	// UpdateLatestFlag updates the is_latest flag for a specific server record
-	UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error
-	// UpdateServer updates an existing server record with new server details
-	UpdateServer(ctx context.Context, id string, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerJSON, error)
-	// ImportSeed imports initial data from a seed file
-	ImportSeed(ctx context.Context, seedFilePath string) error
+	// CreateServer adds a new server to the database
+	CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
+	// UpdateServer updates an existing server record
+	UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
 	// Close closes the database connection
 	Close() error
 }
@@ -45,15 +46,3 @@ const (
 	// ConnectionTypePostgreSQL represents a PostgreSQL database connection
 	ConnectionTypePostgreSQL ConnectionType = "postgresql"
 )
-
-// ConnectionInfo provides information about the database connection
-type ConnectionInfo struct {
-	// Type indicates the type of database connection
-	Type ConnectionType
-	// IsConnected indicates whether the database is currently connected
-	IsConnected bool
-	// Raw provides access to the underlying connection object, which will vary by implementation
-	// For PostgreSQL, this will be *pgx.Conn
-	// For MemoryDB, this will be map[string]*model.MCPRegistry
-	Raw any
-}

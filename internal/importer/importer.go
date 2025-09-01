@@ -1,4 +1,4 @@
-package database
+package importer
 
 import (
 	"context"
@@ -10,16 +10,45 @@ import (
 	"os"
 	"strings"
 
+	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
-// ReadSeedFile reads seed data from various sources:
+// Service handles importing seed data into the registry
+type Service struct {
+	db database.Database
+}
+
+// NewService creates a new importer service
+func NewService(db database.Database) *Service {
+	return &Service{db: db}
+}
+
+// ImportFromPath imports seed data from various sources:
 // 1. Local file paths (*.json files) - expects extension wrapper format
 // 2. Direct HTTP URLs to seed.json files - expects extension wrapper format
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
-// Only the extension wrapper format is supported (array of ServerResponse objects)
-func ReadSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error) {
+func (s *Service) ImportFromPath(ctx context.Context, path string) error {
+	servers, err := readSeedFile(ctx, path)
+	if err != nil {
+		return fmt.Errorf("failed to read seed data: %w", err)
+	}
+
+	// Import each server using CreateServer
+	for _, server := range servers {
+		_, err := s.db.CreateServer(ctx, server)
+		if err != nil {
+			return fmt.Errorf("failed to import server %s: %w", server.Name, err)
+		}
+	}
+
+	return nil
+}
+
+
+// readSeedFile reads seed data from various sources
+func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error) {
 	var data []byte
 	var err error
 

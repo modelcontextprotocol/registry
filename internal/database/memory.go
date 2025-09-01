@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-	"time"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
@@ -16,38 +15,17 @@ type MemoryDB struct {
 	mu      sync.RWMutex
 }
 
-// NewMemoryDB creates a new instance of the in-memory database
-func NewMemoryDB(e map[string]*apiv0.ServerJSON) *MemoryDB {
+func NewMemoryDB() *MemoryDB {
 	// Convert input ServerJSON entries to have proper metadata
 	serverRecords := make(map[string]*apiv0.ServerJSON)
-	for registryID, serverDetail := range e {
-		// Create a copy and add registry metadata
-		now := time.Now()
-		server := *serverDetail // Copy the server
-		if server.Meta == nil {
-			server.Meta = &apiv0.ServerMeta{}
-		}
-		server.Meta.IOModelContextProtocolRegistry = &apiv0.RegistryExtensions{
-			ID:          registryID,
-			PublishedAt: now,
-			UpdatedAt:   now,
-			IsLatest:    true,
-			ReleaseDate: now.Format(time.RFC3339),
-		}
-		if server.Meta.Publisher == nil {
-			server.Meta.Publisher = make(map[string]interface{})
-		}
-		serverRecords[registryID] = &server
-	}
 	return &MemoryDB{
 		entries: serverRecords,
 	}
 }
 
-//nolint:cyclop,gocyclo,gocognit // Complexity from filtering logic is acceptable for memory implementation
 func (db *MemoryDB) List(
 	ctx context.Context,
-	filter map[string]any,
+	filter *ServerFilter,
 	cursor string,
 	limit int,
 ) ([]*apiv0.ServerJSON, string, error) {
@@ -62,73 +40,20 @@ func (db *MemoryDB) List(
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	// Convert all entries to a slice for pagination, filter by is_latest
+	// Convert all entries to a slice for pagination
 	var allEntries []*apiv0.ServerJSON
 	for _, entry := range db.entries {
-		if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil && entry.Meta.IOModelContextProtocolRegistry.IsLatest {
-			allEntries = append(allEntries, entry)
-		}
+		allEntries = append(allEntries, entry)
 	}
 
-	// Simple filtering implementation
-	var filteredEntries []*apiv0.ServerJSON
-	for _, entry := range allEntries {
-		include := true
+	// Apply filtering and sorting
+	filteredEntries := db.filterAndSort(allEntries, filter)
 
-		// Apply filters if any
-		for key, value := range filter {
-			switch key {
-			case "name":
-				if entry.Name != value.(string) {
-					include = false
-				}
-			case "version":
-				if entry.VersionDetail.Version != value.(string) {
-					include = false
-				}
-			case "status":
-				if string(entry.Status) != value.(string) {
-					include = false
-				}
-			case "remote_url":
-				found := false
-				remoteURL := value.(string)
-				for _, remote := range entry.Remotes {
-					if remote.URL == remoteURL {
-						found = true
-						break
-					}
-				}
-				if !found {
-					include = false
-				}
-			}
-		}
-
-		if include {
-			filteredEntries = append(filteredEntries, entry)
-		}
-	}
-
-	// Sort filteredEntries by registry metadata ID for consistent pagination
-	sort.Slice(filteredEntries, func(i, j int) bool {
-		iID := ""
-		jID := ""
-		if filteredEntries[i].Meta != nil && filteredEntries[i].Meta.IOModelContextProtocolRegistry != nil {
-			iID = filteredEntries[i].Meta.IOModelContextProtocolRegistry.ID
-		}
-		if filteredEntries[j].Meta != nil && filteredEntries[j].Meta.IOModelContextProtocolRegistry != nil {
-			jID = filteredEntries[j].Meta.IOModelContextProtocolRegistry.ID
-		}
-		return iID < jID
-	})
-
-	// Find starting point for cursor-based pagination using registry metadata ID
+	// Find starting point for cursor-based pagination
 	startIdx := 0
 	if cursor != "" {
 		for i, entry := range filteredEntries {
-			if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil &&
-				entry.Meta.IOModelContextProtocolRegistry.ID == cursor {
+			if db.getRegistryID(entry) == cursor {
 				startIdx = i + 1 // Start after the cursor
 				break
 			}
@@ -145,19 +70,15 @@ func (db *MemoryDB) List(
 		result = []*apiv0.ServerJSON{}
 	}
 
-	// Determine next cursor using registry metadata ID
+	// Determine next cursor
 	nextCursor := ""
 	if endIdx < len(filteredEntries) && len(result) > 0 {
-		lastEntry := result[len(result)-1]
-		if lastEntry.Meta != nil && lastEntry.Meta.IOModelContextProtocolRegistry != nil {
-			nextCursor = lastEntry.Meta.IOModelContextProtocolRegistry.ID
-		}
+		nextCursor = db.getRegistryID(result[len(result)-1])
 	}
 
 	return result, nextCursor, nil
 }
 
-// GetByID retrieves a single ServerRecord by its registry metadata ID
 func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
@@ -176,103 +97,28 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, 
 	return nil, ErrNotFound
 }
 
-// Publish adds a new server to the database with separated server.json and extensions
-func (db *MemoryDB) Publish(ctx context.Context, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}, registryMetadata apiv0.RegistryExtensions) (*apiv0.ServerJSON, error) {
+func (db *MemoryDB) CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	// Extract name and version for validation
-	name := serverDetail.Name
-	if name == "" {
-		return nil, fmt.Errorf("name is required in server JSON")
+	// Get the ID from the registry metadata
+	if server.Meta == nil || server.Meta.IOModelContextProtocolRegistry == nil {
+		return nil, fmt.Errorf("server must have registry metadata with ID")
 	}
 
-	version := serverDetail.VersionDetail.Version
-	if version == "" {
-		return nil, fmt.Errorf("version is required in version_detail")
-	}
+	id := server.Meta.IOModelContextProtocolRegistry.ID
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
-
-	// Validate repository URL
-	if serverDetail.Repository.URL == "" {
-		return nil, ErrInvalidInput
-	}
-
-	// Create server record with metadata
-	record := serverDetail // Copy the input
-
-	// Initialize meta if not present
-	if record.Meta == nil {
-		record.Meta = &apiv0.ServerMeta{}
-	}
-
-	// Set registry metadata
-	record.Meta.IOModelContextProtocolRegistry = &registryMetadata
-
-	// Set publisher extensions if provided
-	if len(publisherExtensions) > 0 {
-		record.Meta.Publisher = publisherExtensions
-	}
 
 	// Store the record using registry metadata ID
-	db.entries[registryMetadata.ID] = &record
+	db.entries[id] = server
 
-	return &record, nil
+	return server, nil
 }
 
-// ImportSeed imports initial data from a seed file into memory database
-func (db *MemoryDB) ImportSeed(ctx context.Context, seedFilePath string) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
-
-	// This will need to be updated to work with the new ServerRecord format
-	// Read seed data using the shared ReadSeedFile function
-	seedData, err := ReadSeedFile(ctx, seedFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to read seed file: %w", err)
-	}
-
-	// Lock for concurrent access
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	// Import each server
-	for _, record := range seedData {
-		// Use the registry metadata ID as the map key
-		if record.Meta != nil && record.Meta.IOModelContextProtocolRegistry != nil {
-			db.entries[record.Meta.IOModelContextProtocolRegistry.ID] = record
-		}
-	}
-
-	return nil
-}
-
-// UpdateLatestFlag updates the is_latest flag for a specific server record
-func (db *MemoryDB) UpdateLatestFlag(ctx context.Context, id string, isLatest bool) error {
-	if ctx.Err() != nil {
-		return ctx.Err()
-	}
-
-	db.mu.Lock()
-	defer db.mu.Unlock()
-
-	if entry, exists := db.entries[id]; exists {
-		if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil {
-			entry.Meta.IOModelContextProtocolRegistry.IsLatest = isLatest
-			entry.Meta.IOModelContextProtocolRegistry.UpdatedAt = time.Now()
-		}
-		return nil
-	}
-
-	return ErrNotFound
-}
-
-// UpdateServer updates an existing server record with new server details
-func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail apiv0.ServerJSON, publisherExtensions map[string]interface{}) (*apiv0.ServerJSON, error) {
+func (db *MemoryDB) UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -280,40 +126,75 @@ func (db *MemoryDB) UpdateServer(ctx context.Context, id string, serverDetail ap
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	entry, exists := db.entries[id]
+	_, exists := db.entries[id]
 	if !exists {
 		return nil, ErrNotFound
 	}
 
-	// Update the server details by copying fields from serverDetail
-	*entry = serverDetail
-
-	// Ensure meta exists and update it
-	if entry.Meta == nil {
-		entry.Meta = &apiv0.ServerMeta{}
-	}
-	if entry.Meta.IOModelContextProtocolRegistry != nil {
-		entry.Meta.IOModelContextProtocolRegistry.UpdatedAt = time.Now()
-	}
-	if len(publisherExtensions) > 0 {
-		entry.Meta.Publisher = publisherExtensions
-	}
+	// Update the server
+	db.entries[id] = server
 
 	// Return the updated record
-	return entry, nil
+	return server, nil
 }
 
-// Close closes the database connection
 // For an in-memory database, this is a no-op
 func (db *MemoryDB) Close() error {
 	return nil
 }
 
-// Connection returns information about the database connection
-func (db *MemoryDB) Connection() *ConnectionInfo {
-	return &ConnectionInfo{
-		Type:        ConnectionTypeMemory,
-		IsConnected: true, // Memory DB is always connected
-		Raw:         db.entries,
+// filterAndSort applies filtering and sorting to the entries
+func (db *MemoryDB) filterAndSort(allEntries []*apiv0.ServerJSON, filter *ServerFilter) []*apiv0.ServerJSON {
+	// Apply filtering
+	var filteredEntries []*apiv0.ServerJSON
+	for _, entry := range allEntries {
+		if db.matchesFilter(entry, filter) {
+			filteredEntries = append(filteredEntries, entry)
+		}
 	}
+
+	// Sort by registry metadata ID for consistent pagination
+	sort.Slice(filteredEntries, func(i, j int) bool {
+		iID := db.getRegistryID(filteredEntries[i])
+		jID := db.getRegistryID(filteredEntries[j])
+		return iID < jID
+	})
+
+	return filteredEntries
+}
+
+// matchesFilter checks if an entry matches the provided filter
+func (db *MemoryDB) matchesFilter(entry *apiv0.ServerJSON, filter *ServerFilter) bool {
+	if filter == nil {
+		return true
+	}
+
+	// Check name filter
+	if filter.Name != nil && entry.Name != *filter.Name {
+		return false
+	}
+
+	// Check remote URL filter
+	if filter.RemoteURL != nil {
+		found := false
+		for _, remote := range entry.Remotes {
+			if remote.URL == *filter.RemoteURL {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return true
+}
+
+// getRegistryID safely extracts the registry ID from an entry
+func (db *MemoryDB) getRegistryID(entry *apiv0.ServerJSON) string {
+	if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil {
+		return entry.Meta.IOModelContextProtocolRegistry.ID
+	}
+	return ""
 }

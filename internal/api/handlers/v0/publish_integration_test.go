@@ -16,6 +16,7 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -36,7 +37,7 @@ func generateIntegrationTestJWTToken(cfg *config.Config, claims auth.JWTClaims) 
 
 func TestPublishIntegration(t *testing.T) {
 	// Setup fake service
-	registryService := service.NewFakeRegistryService()
+	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
 
 	// Create test config with a valid Ed25519 seed
 	testSeed := make([]byte, ed25519.SeedSize)

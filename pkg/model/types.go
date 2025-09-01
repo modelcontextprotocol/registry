@@ -9,7 +9,6 @@ const (
 	StatusDeleted    Status = "deleted"
 )
 
-
 // Package represents a package configuration
 type Package struct {
 	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "mcpb")
@@ -92,5 +91,5 @@ type Argument struct {
 
 // VersionDetail represents the version details of a server (pure MCP spec, no registry metadata)
 type VersionDetail struct {
-	Version string `json:"version"`
+	Version string `json:"version" minLength:"1"`
 }
