@@ -14,11 +14,6 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-const (
-	RegistryTypeNPM  = "npm"
-	RegistryTypePyPi = "pypi"
-	RegistryTypeOci  = "oci"
-)
 
 func InitCommand() error {
 	// Check if server.json already exists
@@ -193,29 +188,29 @@ func detectRepoURL() string {
 func detectPackageType() string {
 	// Check for package.json
 	if _, err := os.Stat("package.json"); err == nil {
-		return RegistryTypeNPM
+		return model.RegistryTypeNPM
 	}
 
 	// Check for pyproject.toml or setup.py
 	if _, err := os.Stat("pyproject.toml"); err == nil {
-		return RegistryTypePyPi
+		return model.RegistryTypePyPI
 	}
 	if _, err := os.Stat("setup.py"); err == nil {
-		return RegistryTypePyPi
+		return model.RegistryTypePyPI
 	}
 
 	// Check for Dockerfile
 	if _, err := os.Stat("Dockerfile"); err == nil {
-		return RegistryTypeOci
+		return model.RegistryTypeOCI
 	}
 
 	// Default to npm as most common
-	return RegistryTypeNPM
+	return model.RegistryTypeNPM
 }
 
 func detectPackageIdentifier(serverName string, packageType string) string {
 	switch packageType {
-	case RegistryTypeNPM:
+	case model.RegistryTypeNPM:
 		// Try to get from package.json
 		if data, err := os.ReadFile("package.json"); err == nil {
 			var pkg map[string]any
@@ -235,7 +230,7 @@ func detectPackageIdentifier(serverName string, packageType string) string {
 		}
 		return "@your-org/your-package"
 
-	case "pypi":
+	case model.RegistryTypePyPI:
 		// Try to get from pyproject.toml or setup.py
 		if data, err := os.ReadFile("pyproject.toml"); err == nil {
 			// Simple extraction - could be improved with proper TOML parser
@@ -254,7 +249,7 @@ func detectPackageIdentifier(serverName string, packageType string) string {
 		}
 		return "your-package"
 
-	case "docker":
+	case model.RegistryTypeOCI:
 		// Use a sensible default
 		if strings.Contains(serverName, "/") {
 			parts := strings.Split(serverName, "/")
@@ -275,15 +270,15 @@ func createServerJSON(
 	// Determine registry type and base URL
 	var registryType, registryBaseURL string
 	switch packageType {
-	case RegistryTypeNPM:
-		registryType = RegistryTypeNPM
-		registryBaseURL = "https://registry.npmjs.org"
-	case RegistryTypePyPi:
-		registryType = RegistryTypePyPi
-		registryBaseURL = "https://pypi.org"
-	case RegistryTypeOci:
-		registryType = RegistryTypeOci
-		registryBaseURL = "https://docker.io"
+	case model.RegistryTypeNPM:
+		registryType = model.RegistryTypeNPM
+		registryBaseURL = model.RegistryURLNPM
+	case model.RegistryTypePyPI:
+		registryType = model.RegistryTypePyPI
+		registryBaseURL = model.RegistryURLPyPI
+	case model.RegistryTypeOCI:
+		registryType = model.RegistryTypeOCI
+		registryBaseURL = model.RegistryURLDocker
 	case "url":
 		registryType = "url"
 		registryBaseURL = ""
