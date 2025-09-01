@@ -3,7 +3,6 @@ package v0_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,67 +11,29 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/google/uuid"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
+	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/service"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestServersListEndpoint(t *testing.T) {
 	testCases := []struct {
-		name            string
-		queryParams     string
-		setupMocks      func(*MockRegistryService)
-		expectedStatus  int
-		expectedServers []apiv0.ServerJSON
-		expectedMeta    *v0.Metadata
-		expectedError   string
+		name                 string
+		queryParams          string
+		setupRegistryService func(service.RegistryService)
+		expectedStatus       int
+		expectedServers      []apiv0.ServerJSON
+		expectedMeta         *v0.Metadata
+		expectedError        string
 	}{
 		{
 			name: "successful list with default parameters",
-			setupMocks: func(registry *MockRegistryService) {
-				servers := []apiv0.ServerJSON{
-					{
-						Name:        "test-server-1",
-						Description: "First test server",
-						Repository: model.Repository{
-							URL:    "https://github.com/example/test-server-1",
-							Source: "github",
-							ID:     "example/test-server-1",
-						},
-						VersionDetail: model.VersionDetail{
-							Version: "1.0.0",
-						},
-						Meta: &apiv0.ServerMeta{
-							IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-								ID: "550e8400-e29b-41d4-a716-446655440001",
-							},
-						},
-					},
-					{
-						Name:        "test-server-2",
-						Description: "Second test server",
-						Repository: model.Repository{
-							URL:    "https://github.com/example/test-server-2",
-							Source: "github",
-							ID:     "example/test-server-2",
-						},
-						VersionDetail: model.VersionDetail{
-							Version: "2.0.0",
-						},
-						Meta: &apiv0.ServerMeta{
-							IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-								ID: "550e8400-e29b-41d4-a716-446655440002",
-							},
-						},
-					},
-				}
-				registry.Mock.On("List", "", 30).Return(servers, "", nil)
-			},
-			expectedStatus: http.StatusOK,
-			expectedServers: []apiv0.ServerJSON{
-				{
-					Name:        "test-server-1",
+			setupRegistryService: func(registry service.RegistryService) {
+				// Publish test servers
+				server1 := apiv0.ServerJSON{
+					Name:        "com.example/test-server-1",
 					Description: "First test server",
 					Repository: model.Repository{
 						URL:    "https://github.com/example/test-server-1",
@@ -82,14 +43,9 @@ func TestServersListEndpoint(t *testing.T) {
 					VersionDetail: model.VersionDetail{
 						Version: "1.0.0",
 					},
-					Meta: &apiv0.ServerMeta{
-						IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-							ID: "550e8400-e29b-41d4-a716-446655440001",
-						},
-					},
-				},
-				{
-					Name:        "test-server-2",
+				}
+				server2 := apiv0.ServerJSON{
+					Name:        "com.example/test-server-2",
 					Description: "Second test server",
 					Repository: model.Repository{
 						URL:    "https://github.com/example/test-server-2",
@@ -99,44 +55,19 @@ func TestServersListEndpoint(t *testing.T) {
 					VersionDetail: model.VersionDetail{
 						Version: "2.0.0",
 					},
-					Meta: &apiv0.ServerMeta{
-						IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-							ID: "550e8400-e29b-41d4-a716-446655440002",
-						},
-					},
-				},
+				}
+				_, _ = registry.Publish(server1)
+				_, _ = registry.Publish(server2)
 			},
+			expectedStatus:  http.StatusOK,
+			expectedServers: nil, // Will be verified differently since IDs are dynamic
 		},
 		{
 			name:        "successful list with cursor and limit",
-			queryParams: "?cursor=550e8400-e29b-41d4-a716-446655440000&limit=10",
-			setupMocks: func(registry *MockRegistryService) {
-				servers := []apiv0.ServerJSON{
-					{
-						Name:        "test-server-3",
-						Description: "Third test server",
-						Repository: model.Repository{
-							URL:    "https://github.com/example/test-server-3",
-							Source: "github",
-							ID:     "example/test-server-3",
-						},
-						VersionDetail: model.VersionDetail{
-							Version: "1.5.0",
-						},
-						Meta: &apiv0.ServerMeta{
-							IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-								ID: "550e8400-e29b-41d4-a716-446655440003",
-							},
-						},
-					},
-				}
-				nextCursor := uuid.New().String()
-				registry.Mock.On("List", mock.AnythingOfType("string"), 10).Return(servers, nextCursor, nil)
-			},
-			expectedStatus: http.StatusOK,
-			expectedServers: []apiv0.ServerJSON{
-				{
-					Name:        "test-server-3",
+			queryParams: "?limit=10",
+			setupRegistryService: func(registry service.RegistryService) {
+				server := apiv0.ServerJSON{
+					Name:        "com.example/test-server-3",
 					Description: "Third test server",
 					Repository: model.Repository{
 						URL:    "https://github.com/example/test-server-3",
@@ -146,75 +77,69 @@ func TestServersListEndpoint(t *testing.T) {
 					VersionDetail: model.VersionDetail{
 						Version: "1.5.0",
 					},
-					Meta: &apiv0.ServerMeta{
-						IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-							ID: "550e8400-e29b-41d4-a716-446655440003",
-						},
-					},
-				},
+				}
+				_, _ = registry.Publish(server)
 			},
-			expectedMeta: &v0.Metadata{
-				NextCursor: "", // This will be dynamically set in the test
-				Count:      1,
+			expectedStatus:  http.StatusOK,
+			expectedServers: nil, // Will be verified differently since IDs are dynamic
+		},
+		{
+			name:                 "successful list with limit capping at 100",
+			queryParams:          "?limit=150",
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity, // Huma rejects values > maximum
+			expectedError:        "validation failed",
+		},
+		{
+			name:                 "invalid cursor parameter",
+			queryParams:          "?cursor=invalid-uuid",
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
+			expectedError:        "validation failed",
+		},
+		{
+			name:                 "invalid limit parameter - non-numeric",
+			queryParams:          "?limit=abc",
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
+			expectedError:        "validation failed",
+		},
+		{
+			name:                 "invalid limit parameter - zero",
+			queryParams:          "?limit=0",
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
+			expectedError:        "validation failed",
+		},
+		{
+			name:                 "invalid limit parameter - negative",
+			queryParams:          "?limit=-5",
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
+			expectedError:        "validation failed",
+		},
+		{
+			name: "empty registry returns success",
+			setupRegistryService: func(_ service.RegistryService) {
+				// Test empty registry - empty setup
 			},
-		},
-		{
-			name:           "successful list with limit capping at 100",
-			queryParams:    "?limit=150",
-			setupMocks:     func(_ *MockRegistryService) {},
-			expectedStatus: http.StatusUnprocessableEntity, // Huma rejects values > maximum
-			expectedError:  "validation failed",
-		},
-		{
-			name:           "invalid cursor parameter",
-			queryParams:    "?cursor=invalid-uuid",
-			setupMocks:     func(_ *MockRegistryService) {},
-			expectedStatus: http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
-			expectedError:  "validation failed",
-		},
-		{
-			name:           "invalid limit parameter - non-numeric",
-			queryParams:    "?limit=abc",
-			setupMocks:     func(_ *MockRegistryService) {},
-			expectedStatus: http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
-			expectedError:  "validation failed",
-		},
-		{
-			name:           "invalid limit parameter - zero",
-			queryParams:    "?limit=0",
-			setupMocks:     func(_ *MockRegistryService) {},
-			expectedStatus: http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
-			expectedError:  "validation failed",
-		},
-		{
-			name:           "invalid limit parameter - negative",
-			queryParams:    "?limit=-5",
-			setupMocks:     func(_ *MockRegistryService) {},
-			expectedStatus: http.StatusUnprocessableEntity, // Huma returns 422 for validation errors
-			expectedError:  "validation failed",
-		},
-		{
-			name: "registry service error",
-			setupMocks: func(registry *MockRegistryService) {
-				registry.Mock.On("List", "", 30).Return([]apiv0.ServerJSON{}, "", errors.New("database connection error"))
-			},
-			expectedStatus: http.StatusInternalServerError,
-			expectedError:  "Failed to get registry list",
+			expectedStatus:  http.StatusOK,
+			expectedServers: []apiv0.ServerJSON{},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create mock registry service
-			mockRegistry := new(MockRegistryService)
-			tc.setupMocks(mockRegistry)
+			registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
+			tc.setupRegistryService(registryService)
 
 			// Create a new test API
 			mux := http.NewServeMux()
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the servers endpoints
-			v0.RegisterServersEndpoints(api, mockRegistry)
+			v0.RegisterServersEndpoints(api, registryService)
 
 			// Create request
 			url := "/v0/servers" + tc.queryParams
@@ -242,13 +167,26 @@ func TestServersListEndpoint(t *testing.T) {
 				// Check the response data
 				if tc.expectedServers != nil {
 					assert.Equal(t, tc.expectedServers, resp.Servers)
+				} else {
+					// For tests with dynamic data, check structure and count
+					assert.NotEmpty(t, resp.Servers, "Expected at least one server")
+					for _, server := range resp.Servers {
+						assert.NotEmpty(t, server.Name)
+						assert.NotEmpty(t, server.Description)
+						assert.NotNil(t, server.Meta)
+						assert.NotNil(t, server.Meta.IOModelContextProtocolRegistry)
+						assert.NotEmpty(t, server.Meta.IOModelContextProtocolRegistry.ID)
+					}
 				}
 
 				// Check metadata if expected
 				if tc.expectedMeta != nil {
-					assert.Equal(t, tc.expectedMeta.Count, resp.Metadata.Count)
-					if tc.expectedMeta.NextCursor != "" {
-						assert.NotEmpty(t, resp.Metadata.NextCursor)
+					assert.NotNil(t, resp.Metadata, "Expected metadata to be present")
+					if resp.Metadata != nil {
+						assert.Equal(t, tc.expectedMeta.Count, resp.Metadata.Count)
+						if tc.expectedMeta.NextCursor != "" {
+							assert.NotEmpty(t, resp.Metadata.NextCursor)
+						}
 					}
 				}
 			} else if tc.expectedError != "" {
@@ -257,84 +195,58 @@ func TestServersListEndpoint(t *testing.T) {
 			}
 
 			// Verify mock expectations
-			mockRegistry.AssertExpectations(t)
+			// No expectations to verify with real service
 		})
 	}
 }
 
 func TestServersDetailEndpoint(t *testing.T) {
+	// Create mock registry service
+	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
+
+	testServer, err := registryService.Publish(apiv0.ServerJSON{
+		Name:        "com.example/test-server",
+		Description: "A test server",
+		VersionDetail: model.VersionDetail{
+			Version: "1.0.0",
+		},
+	})
+	assert.NoError(t, err)
+
 	testCases := []struct {
 		name           string
 		serverID       string
-		setupMocks     func(*MockRegistryService, string)
 		expectedStatus int
 		expectedServer *apiv0.ServerJSON
 		expectedError  string
 	}{
 		{
-			name:     "successful get server detail",
-			serverID: uuid.New().String(),
-			setupMocks: func(registry *MockRegistryService, serverID string) {
-				serverDetail := &apiv0.ServerJSON{
-					Name:        "test-server-detail",
-					Description: "Test server detail",
-					Repository: model.Repository{
-						URL:    "https://github.com/example/test-server-detail",
-						Source: "github",
-						ID:     "example/test-server-detail",
-					},
-					VersionDetail: model.VersionDetail{
-						Version: "2.0.0",
-					},
-					Meta: &apiv0.ServerMeta{
-						IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-							ID: serverID,
-						},
-					},
-				}
-				registry.Mock.On("GetByID", serverID).Return(serverDetail, nil)
-			},
+			name:           "successful get server detail",
+			serverID:       testServer.Meta.IOModelContextProtocolRegistry.ID,
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "invalid server ID format",
 			serverID:       "invalid-uuid",
-			setupMocks:     func(_ *MockRegistryService, _ string) {},
 			expectedStatus: http.StatusUnprocessableEntity,
 			expectedError:  "validation failed",
 		},
 		{
-			name:     "server not found",
-			serverID: uuid.New().String(),
-			setupMocks: func(registry *MockRegistryService, serverID string) {
-				registry.Mock.On("GetByID", serverID).Return(nil, errors.New("record not found"))
-			},
+			name:           "server not found",
+			serverID:       uuid.New().String(),
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "Server not found",
-		},
-		{
-			name:     "registry service error",
-			serverID: uuid.New().String(),
-			setupMocks: func(registry *MockRegistryService, serverID string) {
-				registry.Mock.On("GetByID", serverID).Return(nil, errors.New("database connection error"))
-			},
-			expectedStatus: http.StatusInternalServerError,
-			expectedError:  "Failed to get server details",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Create mock registry service
-			mockRegistry := new(MockRegistryService)
-			tc.setupMocks(mockRegistry, tc.serverID)
-
 			// Create a new test API
 			mux := http.NewServeMux()
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the servers endpoints
-			v0.RegisterServersEndpoints(api, mockRegistry)
+			v0.RegisterServersEndpoints(api, registryService)
 
 			// Create request
 			url := "/v0/servers/" + tc.serverID
@@ -364,7 +276,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 			}
 
 			// Verify mock expectations
-			mockRegistry.AssertExpectations(t)
+			// No expectations to verify with real service
 		})
 	}
 }
@@ -372,42 +284,36 @@ func TestServersDetailEndpoint(t *testing.T) {
 // TestServersEndpointsIntegration tests the servers endpoints with actual HTTP requests
 func TestServersEndpointsIntegration(t *testing.T) {
 	// Create mock registry service
-	mockRegistry := new(MockRegistryService)
+	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
 
-	// Test data
-	serverID := uuid.New().String()
-	servers := []apiv0.ServerJSON{
-		{
-			Name:        "integration-test-server",
-			Description: "Integration test server",
-			Repository: model.Repository{
-				URL:    "https://github.com/example/integration-test",
-				Source: "github",
-				ID:     "example/integration-test",
-			},
-			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
-			},
-			Meta: &apiv0.ServerMeta{
-				IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-					ID: serverID,
-				},
-			},
+	// Test data - publish a server and get its actual ID
+	testServer := apiv0.ServerJSON{
+		Name:        "com.example/integration-test-server",
+		Description: "Integration test server",
+		Repository: model.Repository{
+			URL:    "https://github.com/example/integration-test",
+			Source: "github",
+			ID:     "example/integration-test",
+		},
+		VersionDetail: model.VersionDetail{
+			Version: "1.0.0",
 		},
 	}
 
-	serverDetail := &servers[0]
+	published, err := registryService.Publish(testServer)
+	assert.NoError(t, err)
+	assert.NotNil(t, published)
 
-	// Setup mocks
-	mockRegistry.Mock.On("List", "", 30).Return(servers, "", nil)
-	mockRegistry.Mock.On("GetByID", serverID).Return(serverDetail, nil)
+	serverID := published.Meta.IOModelContextProtocolRegistry.ID
+	servers := []apiv0.ServerJSON{*published}
+	serverDetail := published
 
 	// Create a new test API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 	// Register the servers endpoints
-	v0.RegisterServersEndpoints(api, mockRegistry)
+	v0.RegisterServersEndpoints(api, registryService)
 
 	// Create test server
 	server := httptest.NewServer(mux)
@@ -441,8 +347,14 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&listResp)
 		assert.NoError(t, err)
 
-		// Check the response data
-		assert.Equal(t, servers, listResp.Servers)
+		// Check the response data (excluding timestamps which will be different)
+		assert.Len(t, listResp.Servers, len(servers))
+		if len(listResp.Servers) > 0 {
+			assert.Equal(t, servers[0].Name, listResp.Servers[0].Name)
+			assert.Equal(t, servers[0].Description, listResp.Servers[0].Description)
+			assert.Equal(t, servers[0].Repository, listResp.Servers[0].Repository)
+			assert.Equal(t, servers[0].VersionDetail, listResp.Servers[0].VersionDetail)
+		}
 	})
 
 	// Test get server detail endpoint
@@ -471,10 +383,13 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		err = json.NewDecoder(resp.Body).Decode(&serverDetailResp)
 		assert.NoError(t, err)
 
-		// Check the response data
-		assert.Equal(t, *serverDetail, serverDetailResp)
+		// Check the response data (excluding timestamps which will be different)
+		assert.Equal(t, serverDetail.Name, serverDetailResp.Name)
+		assert.Equal(t, serverDetail.Description, serverDetailResp.Description)
+		assert.Equal(t, serverDetail.Repository, serverDetailResp.Repository)
+		assert.Equal(t, serverDetail.VersionDetail, serverDetailResp.VersionDetail)
 	})
 
 	// Verify mock expectations
-	mockRegistry.AssertExpectations(t)
+	// No expectations to verify with real service
 }

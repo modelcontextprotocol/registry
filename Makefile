@@ -14,7 +14,7 @@ publisher: ## Build the publisher tool
 
 # Test targets
 test-unit: ## Run unit tests with coverage
-	go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
+	go test -v -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./internal/... ./internal/...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 

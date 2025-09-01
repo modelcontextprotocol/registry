@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,46 +16,14 @@ import (
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/service"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-// MockRegistryService is a mock implementation of the RegistryService interface
-type MockRegistryService struct {
-	mock.Mock
-}
-
-func (m *MockRegistryService) List(cursor string, limit int) ([]apiv0.ServerJSON, string, error) {
-	args := m.Called(cursor, limit)
-	return args.Get(0).([]apiv0.ServerJSON), args.String(1), args.Error(2)
-}
-
-func (m *MockRegistryService) GetByID(id string) (*apiv0.ServerJSON, error) {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*apiv0.ServerJSON), args.Error(1)
-}
-
-func (m *MockRegistryService) Publish(request apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
-	args := m.Called(request)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*apiv0.ServerJSON), args.Error(1)
-}
-
-func (m *MockRegistryService) EditServer(id string, request apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
-	args := m.Called(id, request)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*apiv0.ServerJSON), args.Error(1)
-}
 
 // Helper function to generate a valid JWT token for testing
 func generateTestJWTToken(cfg *config.Config, claims auth.JWTClaims) (string, error) {
@@ -82,7 +49,7 @@ func TestPublishEndpoint(t *testing.T) {
 		requestBody    interface{}
 		tokenClaims    *auth.JWTClaims
 		authHeader     string
-		setupMocks     func(*MockRegistryService)
+		setupRegistryService func(service.RegistryService)
 		expectedStatus int
 		expectedError  string
 	}{
@@ -107,8 +74,8 @@ func TestPublishEndpoint(t *testing.T) {
 					{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.example/*"},
 				},
 			},
-			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v0.ServerJSON")).Return(&apiv0.ServerJSON{}, nil)
+			setupRegistryService: func(_ service.RegistryService) {
+				// Empty registry - no setup needed
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -132,8 +99,8 @@ func TestPublishEndpoint(t *testing.T) {
 					{Action: auth.PermissionActionPublish, ResourcePattern: "example/*"},
 				},
 			},
-			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v0.ServerJSON")).Return(&apiv0.ServerJSON{}, nil)
+			setupRegistryService: func(_ service.RegistryService) {
+				// Empty registry - no setup needed
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -141,7 +108,9 @@ func TestPublishEndpoint(t *testing.T) {
 			name:           "missing authorization header",
 			requestBody:    apiv0.ServerJSON{},
 			authHeader:     "", // Empty auth header
-			setupMocks:     func(_ *MockRegistryService) {},
+			setupRegistryService: func(_ service.RegistryService) {
+				// Empty registry - no setup needed
+			},
 			expectedStatus: http.StatusUnprocessableEntity,
 			expectedError:  "required header parameter is missing",
 		},
@@ -153,7 +122,9 @@ func TestPublishEndpoint(t *testing.T) {
 				VersionDetail: model.VersionDetail{Version: "1.0.0"},
 			},
 			authHeader:     "InvalidFormat",
-			setupMocks:     func(_ *MockRegistryService) {},
+			setupRegistryService: func(_ service.RegistryService) {
+				// Empty registry - no setup needed
+			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Invalid Authorization header format",
 		},
@@ -167,7 +138,9 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			authHeader:     "Bearer invalidToken",
-			setupMocks:     func(_ *MockRegistryService) {},
+			setupRegistryService: func(_ service.RegistryService) {
+				// Empty registry - no setup needed
+			},
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Invalid or expired Registry JWT token",
 		},
@@ -191,7 +164,9 @@ func TestPublishEndpoint(t *testing.T) {
 					{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.example/*"},
 				},
 			},
-			setupMocks:     func(_ *MockRegistryService) {},
+			setupRegistryService: func(_ service.RegistryService) {
+				// Empty registry - no setup needed
+			},
 			expectedStatus: http.StatusForbidden,
 			expectedError:  "You do not have permission to publish this server",
 		},
@@ -215,28 +190,41 @@ func TestPublishEndpoint(t *testing.T) {
 					{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
 				},
 			},
-			setupMocks: func(registry *MockRegistryService) {
-				registry.On("Publish", mock.AnythingOfType("v0.ServerJSON")).Return(nil, errors.New("cannot publish duplicate version"))
+			setupRegistryService: func(registry service.RegistryService) {
+				// Pre-publish the same server to cause duplicate version error
+				existingServer := apiv0.ServerJSON{
+					Name:        "example/test-server",
+					Description: "Existing test server",
+					VersionDetail: model.VersionDetail{
+						Version: "1.0.0",
+					},
+					Repository: model.Repository{
+						URL:    "https://github.com/example/test-server-existing",
+						Source: "github",
+						ID:     "example/test-server-existing",
+					},
+				}
+				_, _ = registry.Publish(existingServer)
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  "Failed to publish server",
+			expectedError:  "invalid version: cannot publish duplicate version",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Create mocks
-			mockRegistry := new(MockRegistryService)
-
-			// Setup mocks
-			tc.setupMocks(mockRegistry)
+			// Create registry service
+			registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
+			
+			// Setup registry service
+			tc.setupRegistryService(registryService)
 
 			// Create a new ServeMux and Huma API
 			mux := http.NewServeMux()
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint with test config
-			v0.RegisterPublishEndpoint(api, mockRegistry, testConfig)
+			v0.RegisterPublishEndpoint(api, registryService, testConfig)
 
 			// Prepare request body
 			var requestBody []byte
@@ -272,8 +260,7 @@ func TestPublishEndpoint(t *testing.T) {
 				assert.Contains(t, rr.Body.String(), tc.expectedError)
 			}
 
-			// Verify mock expectations
-			mockRegistry.AssertExpectations(t)
+			// No mock expectations to verify
 		})
 	}
 }

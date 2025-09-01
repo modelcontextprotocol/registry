@@ -8,43 +8,33 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-func mockServerEndpoint(registry *MockRegistryService, serverID string) {
-	serverDetail := &apiv0.ServerJSON{
-		Name:        "test-server-detail",
+func TestPrometheusHandler(t *testing.T) {
+	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
+	server, err := registryService.Publish(apiv0.ServerJSON{
+		Name:        "io.github.example/test-server",
 		Description: "Test server detail",
 		Repository: model.Repository{
-			URL:    "https://github.com/example/test-server-detail",
+			URL:    "https://github.com/example/test-server",
 			Source: "github",
-			ID:     "example/test-server-detail",
+			ID:     "example/test-server",
 		},
 		VersionDetail: model.VersionDetail{
 			Version: "2.0.0",
 		},
-		Meta: &apiv0.ServerMeta{
-			IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
-				ID: serverID,
-			},
-		},
-	}
-	registry.Mock.On("GetByID", serverID).Return(serverDetail, nil)
-}
-
-func TestPrometheusHandler(t *testing.T) {
-	mockRegistry := new(MockRegistryService)
-
-	serverID := uuid.New().String()
-	mockServerEndpoint(mockRegistry, serverID)
+	})
+	assert.NoError(t, err)
 
 	cfg := config.NewConfig()
 	shutdownTelemetry, metrics, _ := telemetry.InitMetrics("dev")
@@ -57,13 +47,13 @@ func TestPrometheusHandler(t *testing.T) {
 		router.WithSkipPaths("/health", "/metrics", "/ping", "/docs"),
 	))
 	v0.RegisterHealthEndpoint(api, cfg, metrics)
-	v0.RegisterServersEndpoints(api, mockRegistry)
+	v0.RegisterServersEndpoints(api, registryService)
 
 	// Add /metrics for Prometheus metrics using promhttp
 	mux.Handle("/metrics", metrics.PrometheusHandler())
 
 	// Create request
-	url := "/v0/servers/" + serverID
+	url := "/v0/servers/" + server.Meta.IOModelContextProtocolRegistry.ID
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	w := httptest.NewRecorder()
 
