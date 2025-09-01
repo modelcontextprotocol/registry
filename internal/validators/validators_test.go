@@ -395,7 +395,7 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "valid complex namespace",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.github.microsoft.azure/webapp-server",
+				Name: "com.microsoft.azure.service/webapp-server",
 			},
 			expectError: false,
 		},

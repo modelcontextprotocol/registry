@@ -49,7 +49,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
 
 ```json
 {
-  "name": "com.github.joelverhagen/knapcode-samplemcpserver",
+  "name": "io.github.joelverhagen/knapcode-samplemcpserver",
   "description": "Sample NuGet MCP server for a random number and random weather",
   "version_detail": {
     "version": "0.4.0-beta"
@@ -92,7 +92,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "com.github.modelcontextprotocol/filesystem",
+  "name": "io.github.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
   "status": "active",
   "repository": {
@@ -130,7 +130,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     {
       "registry_type": "oci",
       "registry_base_url": "https://docker.io",
-      "identifier": "mcp/filesystem:1.0.2",
+      "identifier": "mcp/filesystem",
       "version": "1.0.2",
       "runtime_arguments": [
         {
@@ -224,7 +224,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 
 ```json
 {
-  "name": "com.github.example/weather-mcp",
+  "name": "io.github.example/weather-mcp",
   "description": "Python MCP server for weather data access",
   "repository": {
     "url": "https://github.com/example/weather-mcp",
@@ -277,7 +277,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
-  "name": "com.github.joelverhagen/knapcode-samplemcpserver",
+  "name": "io.github.joelverhagen/knapcode-samplemcpserver",
   "description": "Sample NuGet MCP server for a random number and random weather",
   "repository": {
     "url": "https://github.com/joelverhagen/Knapcode.SampleMcpServer",
@@ -324,7 +324,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
-  "name": "com.github.example/database-manager",
+  "name": "io.github.example/database-manager",
   "description": "MCP server for database operations with support for multiple database types",
   "repository": {
     "url": "https://github.com/example/database-manager-mcp",
@@ -557,7 +557,7 @@ This example shows an MCPB (MCP Bundle) package that:
 
 ```json
 {
-  "name": "com.github.example/old-weather",
+  "name": "io.github.example/old-weather",
   "description": "Legacy weather server - DEPRECATED: Use weather-v2 instead for new projects",
   "status": "deprecated",
   "repository": {
