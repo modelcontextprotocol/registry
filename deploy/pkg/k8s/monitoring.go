@@ -37,12 +37,11 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 				"retentionPeriod": pulumi.String("14d"),
 				"resources": pulumi.Map{
 					"requests": pulumi.Map{
-						"memory": pulumi.String("2Gi"),
-						"cpu":    pulumi.String("500m"),
+						"memory": pulumi.String("128Mi"),
+						"cpu":    pulumi.String("50m"),
 					},
 					"limits": pulumi.Map{
-						"memory": pulumi.String("4Gi"),
-						"cpu":    pulumi.String("1"),
+						"memory": pulumi.String("256Mi"),
 					},
 				},
 			},
@@ -93,12 +92,11 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 			},
 			"resources": pulumi.Map{
 				"requests": pulumi.Map{
-					"memory": pulumi.String("256Mi"),
-					"cpu":    pulumi.String("100m"),
+					"memory": pulumi.String("64Mi"),
+					"cpu":    pulumi.String("25m"),
 				},
 				"limits": pulumi.Map{
-					"memory": pulumi.String("512Mi"),
-					"cpu":    pulumi.String("200m"),
+					"memory": pulumi.String("128Mi"),
 				},
 			},
 		},
@@ -264,12 +262,11 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 			},
 			"resources": pulumi.Map{
 				"requests": pulumi.Map{
-					"memory": pulumi.String("512Mi"),
-					"cpu":    pulumi.String("200m"),
+					"memory": pulumi.String("128Mi"),
+					"cpu":    pulumi.String("50m"),
 				},
 				"limits": pulumi.Map{
-					"memory": pulumi.String("1Gi"),
-					"cpu":    pulumi.String("500m"),
+					"memory": pulumi.String("256Mi"),
 				},
 			},
 		},

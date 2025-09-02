@@ -170,6 +170,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 								InitialDelaySeconds: pulumi.Int(5),
 								TimeoutSeconds:      pulumi.Int(3),
 							},
+							Resources: &corev1.ResourceRequirementsArgs{
+								Requests: pulumi.StringMap{
+									"memory": pulumi.String("128Mi"),
+									"cpu":    pulumi.String("100m"),
+								},
+								Limits: pulumi.StringMap{
+									"memory": pulumi.String("256Mi"),
+								},
+							},
 						},
 					},
 				},
