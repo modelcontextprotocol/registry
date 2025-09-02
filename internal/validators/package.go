@@ -21,8 +21,7 @@ func ValidatePackageOwnership(ctx context.Context, pkg model.Package, serverName
 	case model.RegistryTypeOCI:
 		return registries.ValidateOCI(ctx, pkg, serverName)
 	case model.RegistryTypeMCPB:
-		// No validation for MCPB packages
-		return nil
+		return registries.ValidateMCPB(ctx, pkg, serverName)
 	default:
 		return fmt.Errorf("unsupported registry type: %s", pkg.RegistryType)
 	}
