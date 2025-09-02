@@ -52,10 +52,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 			"controller": pulumi.Map{
 				"service": pulumi.Map{
 					"type": serviceType,
-					"annotations": pulumi.Map{
-						// Add Azure Load Balancer health probe annotation as otherwise it defaults to / which fails
-						"service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path": pulumi.String("/healthz"),
-					},
+					"annotations": pulumi.Map{},
 				},
 				"config": pulumi.Map{
 					// Disable strict path validation, to work around a bug in ingress-nginx
