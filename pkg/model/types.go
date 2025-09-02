@@ -20,6 +20,7 @@ type Package struct {
 	Version              string          `json:"version,omitempty"`
 	FileSHA256           string          `json:"file_sha256,omitempty"`
 	RunTimeHint          string          `json:"runtime_hint,omitempty"`
+	TransportType        string          `json:"transport_type,omitempty"`
 	RuntimeArguments     []Argument      `json:"runtime_arguments,omitempty"`
 	PackageArguments     []Argument      `json:"package_arguments,omitempty"`
 	EnvironmentVariables []KeyValueInput `json:"environment_variables,omitempty"`

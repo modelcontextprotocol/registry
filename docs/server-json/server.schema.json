@@ -117,6 +117,16 @@
             "dnx"
           ]
         },
+        "transport_type": {
+          "type": "string",
+          "enum": [
+            "streamable",
+            "sse",
+            "stdio"
+          ],
+          "description": "Transport protocol type for the package",
+          "example": "stdio"
+        },
         "runtime_arguments": {
           "type": "array",
           "description": "A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.",
@@ -324,7 +334,8 @@
           "type": "string",
           "enum": [
             "streamable",
-            "sse"
+            "sse",
+            "stdio"
           ],
           "description": "Transport protocol type",
           "example": "sse"
