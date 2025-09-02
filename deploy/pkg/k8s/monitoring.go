@@ -279,7 +279,7 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 	}
 
 	// Create ingress for external access
-	grafanaHost := "grafana.registry." + environment + ".modelcontextprotocol.io"
+	grafanaHost := "grafana." + environment + ".registry.modelcontextprotocol.io"
 
 	_, err = networkingv1.NewIngress(ctx, "grafana-ingress", &networkingv1.IngressArgs{
 		Metadata: &metav1.ObjectMetaArgs{
