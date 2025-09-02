@@ -490,7 +490,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
       ]
     },
     {
-      "transport_type": "streamable",
+      "transport_type": "streamable-http",
       "url": "https://mcp.anonymous.modelcontextprotocol.io/http"
     }
   ],

@@ -21,8 +21,9 @@ const (
 
 // Transport Types - supported remote transport protocols
 const (
-	TransportTypeStreamable = "streamable"
-	TransportTypeSSE        = "sse"
+	TransportTypeStreamableHTTP = "streamable-http"
+	TransportTypeSSE            = "sse"
+	TransportTypeStdio          = "stdio"
 )
 
 // Runtime Hints - supported package runtime hints

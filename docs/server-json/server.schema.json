@@ -120,7 +120,7 @@
         "transport_type": {
           "type": "string",
           "enum": [
-            "streamable",
+            "streamable-http",
             "sse",
             "stdio"
           ],
@@ -333,7 +333,7 @@
         "transport_type": {
           "type": "string",
           "enum": [
-            "streamable",
+            "streamable-http",
             "sse",
             "stdio"
           ],

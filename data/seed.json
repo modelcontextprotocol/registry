@@ -17641,7 +17641,7 @@
     ],
     "remotes": [
       {
-        "transport_type": "",
+        "transport_type": "sse",
         "url": "http://localhost:8000/sse"
       }
     ],
