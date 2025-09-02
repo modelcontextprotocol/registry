@@ -178,6 +178,7 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 	}
 
 	// Deploy Grafana
+	grafanaHost := "grafana." + environment + ".registry.modelcontextprotocol.io"
 	_, err = helm.NewChart(ctx, "grafana", helm.ChartArgs{
 		Chart:   pulumi.String("grafana"),
 		Version: pulumi.String("9.4.4"),
@@ -195,6 +196,9 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 				},
 			},
 			"grafana.ini": pulumi.Map{
+				"server": pulumi.Map{
+					"root_url": pulumi.String("https://" + grafanaHost),
+				},
 				"auth": pulumi.Map{
 					"disable_login_form": pulumi.Bool(true),
 				},
@@ -276,8 +280,6 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 	}
 
 	// Create ingress for external access
-	grafanaHost := "grafana." + environment + ".registry.modelcontextprotocol.io"
-
 	_, err = networkingv1.NewIngress(ctx, "grafana-ingress", &networkingv1.IngressArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("grafana-ingress"),
