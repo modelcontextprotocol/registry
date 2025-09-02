@@ -2,6 +2,7 @@ package validators_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -648,6 +649,183 @@ func TestValidateArgument_ValidValueFields(t *testing.T) {
 }
 
 // Helper function to create a valid server with a specific argument for testing
+func TestValidate_RegistryTypes(t *testing.T) {
+	testCases := []struct {
+		name         string
+		registryType string
+		baseURL      string
+		identifier   string
+		expectError  bool
+	}{
+		// Valid registry types (should pass)
+		{"valid_npm", model.RegistryTypeNPM, model.RegistryURLNPM, "test-package", false},
+		{"valid_pypi", model.RegistryTypePyPI, model.RegistryURLPyPI, "test-package", false},
+		{"valid_oci", model.RegistryTypeOCI, model.RegistryURLDocker, "test-package", false},
+		{"valid_nuget", model.RegistryTypeNuGet, model.RegistryURLNuGet, "test-package", false},
+		{"valid_mcpb_github", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/owner/repo", false},
+		{"valid_mcpb_gitlab", model.RegistryTypeMCPB, model.RegistryURLGitLab, "https://gitlab.com/owner/repo", false},
+
+		// Invalid registry types (should fail)
+		{"invalid_maven", "maven", "https://example.com/registry", "test-package", true},
+		{"invalid_cargo", "cargo", "https://example.com/registry", "test-package", true},
+		{"invalid_gem", "gem", "https://example.com/registry", "test-package", true},
+		{"invalid_invalid", "invalid", "https://example.com/registry", "test-package", true},
+		{"invalid_unknown", "UNKNOWN", "https://example.com/registry", "test-package", true},
+		{"invalid_custom", "custom-registry", "https://example.com/registry", "test-package", true},
+		{"invalid_github", "github", "https://example.com/registry", "test-package", true}, // This is a source, not a registry type
+		{"invalid_docker", "docker", "https://example.com/registry", "test-package", true}, // Should be "oci"
+		{"invalid_empty", "", "https://example.com/registry", "test-package", true},        // Empty registry type
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			serverDetail := apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+					ID:     "owner/repo",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:      tc.identifier,
+						RegistryType:    tc.registryType,
+						RegistryBaseURL: tc.baseURL,
+					},
+				},
+				Remotes: []model.Remote{
+					{
+						URL: "https://example.com/remote",
+					},
+				},
+			}
+
+			err := validators.ValidateServerJSON(&serverDetail)
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), validators.ErrUnsupportedRegistryType.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidate_RegistryBaseURLs(t *testing.T) {
+	testCases := []struct {
+		name         string
+		registryType string
+		baseURL      string
+		identifier   string
+		expectError  bool
+	}{
+		// Invalid base URLs for specific registry types
+		{"npm_wrong_url", model.RegistryTypeNPM, "https://pypi.org", "test-package", true},
+		{"pypi_wrong_url", model.RegistryTypePyPI, "https://registry.npmjs.org", "test-package", true},
+		{"oci_wrong_url", model.RegistryTypeOCI, "https://registry.npmjs.org", "test-package", true},
+		{"nuget_wrong_url", model.RegistryTypeNuGet, "https://docker.io", "test-package", true},
+		{"mcpb_wrong_url", model.RegistryTypeMCPB, "https://evil.com", "https://github.com/owner/repo", true},
+		{"empty_base_url", model.RegistryTypeNPM, "", "test-package", true},
+		{"empty_base_url", model.RegistryTypeNPM, model.RegistryURLDocker, "test-package", true},
+		{"empty_base_url", model.RegistryTypeOCI, model.RegistryTypeNuGet, "test-package", true},
+
+		// Localhost URLs should be rejected - no development exceptions
+		{"localhost_npm", model.RegistryTypeNPM, "http://localhost:3000", "test-package", true},
+		{"localhost_ip", model.RegistryTypePyPI, "http://127.0.0.1:8080", "test-package", true},
+
+		// Valid combinations (should pass)
+		{"valid_npm", model.RegistryTypeNPM, model.RegistryURLNPM, "test-package", false},
+		{"valid_pypi", model.RegistryTypePyPI, model.RegistryURLPyPI, "test-package", false},
+		{"valid_oci", model.RegistryTypeOCI, model.RegistryURLDocker, "test-package", false},
+		{"valid_nuget", model.RegistryTypeNuGet, model.RegistryURLNuGet, "test-package", false},
+		{"valid_mcpb_github", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/owner/repo", false},
+		{"valid_mcpb_gitlab", model.RegistryTypeMCPB, model.RegistryURLGitLab, "https://gitlab.com/owner/repo", false},
+
+		// Trailing slash URLs should be rejected - strict exact match only
+		{"npm_trailing_slash", model.RegistryTypeNPM, "https://registry.npmjs.org/", "test-package", true},
+		{"pypi_trailing_slash", model.RegistryTypePyPI, "https://pypi.org/", "test-package", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			serverDetail := apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+					ID:     "owner/repo",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:      tc.identifier,
+						RegistryType:    tc.registryType,
+						RegistryBaseURL: tc.baseURL,
+					},
+				},
+				Remotes: []model.Remote{
+					{
+						URL: "https://example.com/remote",
+					},
+				},
+			}
+
+			err := validators.ValidateServerJSON(&serverDetail)
+			if tc.expectError {
+				assert.Error(t, err)
+				// Check that the error is related to registry validation
+				errStr := err.Error()
+				assert.True(t,
+					strings.Contains(errStr, validators.ErrUnsupportedRegistryBaseURL.Error()) ||
+						strings.Contains(errStr, validators.ErrMismatchedRegistryTypeAndURL.Error()),
+					"Expected registry validation error, got: %s", errStr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidate_EmptyRegistryType(t *testing.T) {
+	// Test that empty registry type is rejected
+	serverDetail := apiv0.ServerJSON{
+		Name:        "com.example/test-server",
+		Description: "A test server",
+		Repository: model.Repository{
+			URL:    "https://github.com/owner/repo",
+			Source: "github",
+			ID:     "owner/repo",
+		},
+		VersionDetail: model.VersionDetail{
+			Version: "1.0.0",
+		},
+		Packages: []model.Package{
+			{
+				Identifier:      "test-package",
+				RegistryType:    "", // Empty registry type
+				RegistryBaseURL: "",
+			},
+		},
+		Remotes: []model.Remote{
+			{
+				URL: "https://example.com/remote",
+			},
+		},
+	}
+
+	err := validators.ValidateServerJSON(&serverDetail)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), validators.ErrUnsupportedRegistryType.Error())
+	assert.Contains(t, err.Error(), "registry type is required")
+}
+
 func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 	return apiv0.ServerJSON{
 		Name:        "com.example/test-server",

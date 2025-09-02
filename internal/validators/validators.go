@@ -164,8 +164,80 @@ func validateMCPBPackage(host string) error {
 	return nil
 }
 
+// validateRegistryType checks if the registry type is supported
+func validateRegistryType(registryType string) error {
+	// Registry type is required
+	if registryType == "" {
+		return fmt.Errorf("%w: registry type is required", ErrUnsupportedRegistryType)
+	}
+
+	supportedTypes := []string{
+		model.RegistryTypeNPM,
+		model.RegistryTypePyPI,
+		model.RegistryTypeOCI,
+		model.RegistryTypeNuGet,
+		model.RegistryTypeMCPB,
+	}
+
+	for _, supported := range supportedTypes {
+		if registryType == supported {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%w: '%s'. Supported types: %v", ErrUnsupportedRegistryType, registryType, supportedTypes)
+}
+
+// validateRegistryBaseURL checks if the registry base URL is valid for the given registry type
+func validateRegistryBaseURL(registryType, baseURL string) error {
+	// Base URL is required for all registry types except MCPB (which uses direct URLs)
+	if baseURL == "" {
+		if registryType == model.RegistryTypeMCPB {
+			return nil // MCPB packages use direct URLs in the identifier
+		}
+		return fmt.Errorf("%w: registry base URL is required for registry type '%s'", ErrUnsupportedRegistryBaseURL, registryType)
+	}
+
+	// Define expected base URLs for each registry type
+	expectedURLs := map[string][]string{
+		model.RegistryTypeNPM:   {model.RegistryURLNPM},
+		model.RegistryTypePyPI:  {model.RegistryURLPyPI},
+		model.RegistryTypeOCI:   {model.RegistryURLDocker},
+		model.RegistryTypeNuGet: {model.RegistryURLNuGet},
+		model.RegistryTypeMCPB:  {model.RegistryURLGitHub, model.RegistryURLGitLab},
+	}
+
+	// Check if the base URL is valid for the registry type
+	if expectedURLsForType, exists := expectedURLs[registryType]; exists {
+		for _, expected := range expectedURLsForType {
+			if baseURL == expected {
+				return nil
+			}
+		}
+		return fmt.Errorf("%w: '%s' is not valid for registry type '%s'. Expected: %v",
+			ErrMismatchedRegistryTypeAndURL, baseURL, registryType, expectedURLsForType)
+	}
+
+	// If registry type is not in our expected URLs map but base URL is provided,
+	// it's likely an unsupported base URL
+	return fmt.Errorf("%w: '%s'", ErrUnsupportedRegistryBaseURL, baseURL)
+}
+
 func validatePackage(pkg *model.Package) error {
 	registryType := strings.ToLower(pkg.RegistryType)
+
+	// Only validate if package has an identifier (i.e., it's a real package reference)
+	if pkg.Identifier != "" {
+		// Validate registry type is supported
+		if err := validateRegistryType(registryType); err != nil {
+			return err
+		}
+
+		// Validate registry base URL matches the registry type
+		if err := validateRegistryBaseURL(registryType, pkg.RegistryBaseURL); err != nil {
+			return err
+		}
+	}
 
 	// For direct download packages (mcpb or direct URLs)
 	if registryType == model.RegistryTypeMCPB ||
