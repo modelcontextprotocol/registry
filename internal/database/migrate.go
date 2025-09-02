@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"path/filepath"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -96,7 +96,7 @@ func (m *Migrator) loadMigrations() ([]Migration, error) {
 		}
 
 		// Read the migration SQL
-		content, err := migrationFiles.ReadFile(filepath.Join("migrations", name))
+		content, err := migrationFiles.ReadFile(path.Join("migrations", name))
 		if err != nil {
 			return nil, fmt.Errorf("failed to read migration file %s: %w", name, err)
 		}
