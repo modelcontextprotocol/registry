@@ -334,8 +334,7 @@
           "type": "string",
           "enum": [
             "streamable-http",
-            "sse",
-            "stdio"
+            "sse"
           ],
           "description": "Transport protocol type",
           "example": "sse"
