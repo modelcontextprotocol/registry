@@ -93,7 +93,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,
-					Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 				},
 			},
 		}
@@ -130,7 +130,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 		assert.Equal(t, model.RegistryTypeMCPB, response.Packages[0].RegistryType)
 	})
 
-	t.Run("publish fails when second package fails validation", func(t *testing.T) {
+	t.Run("publish fails when second package fails npm validation", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "com.example/test-server-multiple-packages",
 			Description: "A test server with multiple packages where second fails",
@@ -140,7 +140,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,
-					Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 				},
 				{
 					RegistryType: model.RegistryTypeNPM,
@@ -171,7 +171,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 		mux.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Contains(t, rr.Body.String(), "registry validation failed for package 2")
+		assert.Contains(t, rr.Body.String(), "registry validation failed for package 1")
 		assert.Contains(t, rr.Body.String(), "nonexistent-second-package-abc123")
 	})
 
@@ -190,7 +190,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 				},
 				{
 					RegistryType: model.RegistryTypeMCPB,
-					Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 				},
 			},
 		}
@@ -216,7 +216,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 		mux.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Contains(t, rr.Body.String(), "registry validation failed for package 1")
+		assert.Contains(t, rr.Body.String(), "registry validation failed for package 0")
 		assert.Contains(t, rr.Body.String(), "nonexistent-first-package-xyz789")
 	})
 }

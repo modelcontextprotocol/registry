@@ -13,19 +13,45 @@ func TestValidateMCPB(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		packageName string
-		serverName  string
+		name         string
+		packageName  string
+		serverName   string
+		expectError  bool
+		errorMessage string
 	}{
 		{
-			name:        "any MCPB package should pass validation",
-			packageName: "https://github.com/example/mcp-server/releases/download/v1.0.0/server.tar.gz",
-			serverName:  "com.example/test",
+			name:        "valid MCPB package should pass",
+			packageName: "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
+			serverName:  "com.microsoft/playwright-mcp",
+			expectError: false,
 		},
 		{
-			name:        "another MCPB package should pass validation",
-			packageName: "https://gitlab.com/user/project/archive/main.zip",
-			serverName:  "com.different/server",
+			name:         "valid MCPB package with .mcpb extension should fail accessibility check",
+			packageName:  "https://github.com/example/server/releases/download/v1.0.0/server.mcpb",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "not publicly accessible",
+		},
+		{
+			name:         "invalid URL without mcp anywhere should fail",
+			packageName:  "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "URL must contain 'mcp'",
+		},
+		{
+			name:         "invalid URL format should fail",
+			packageName:  "not a valid url for mcpb!",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "invalid MCPB package URL",
+		},
+		{
+			name:         "non-existent file should fail accessibility check",
+			packageName:  "https://github.com/nonexistent/repo/releases/download/v1.0.0/mcp-server.tar.gz",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "not publicly accessible",
 		},
 	}
 
@@ -37,7 +63,13 @@ func TestValidateMCPB(t *testing.T) {
 			}
 
 			err := registries.ValidateMCPB(ctx, pkg, tt.serverName)
-			assert.NoError(t, err, "MCPB packages should always pass validation")
+
+			if tt.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMessage)
+			} else {
+				assert.NoError(t, err)
+			}
 		})
 	}
 }

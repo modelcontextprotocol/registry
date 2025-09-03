@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	dockerIoApiBaseUrl = "https://registry-1.docker.io"
+	dockerIoAPIBaseURL = "https://registry-1.docker.io"
 )
 
 // OCIAuthResponse represents the Docker Hub authentication response
@@ -32,13 +32,14 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	// Parse image reference (namespace/repo or repo)
 	parts := strings.Split(pkg.Identifier, "/")
 	var namespace, repo string
-	if len(parts) == 2 {
+	switch len(parts) {
+	case 2:
 		namespace = parts[0]
 		repo = parts[1]
-	} else if len(parts) == 1 {
+	case 1:
 		namespace = "library"
 		repo = pkg.Identifier
-	} else {
+	default:
 		return fmt.Errorf("invalid image reference: %s", pkg.Identifier)
 	}
 
@@ -48,14 +49,14 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		tag = "latest"
 	}
 
-	apiBaseUrl := pkg.RegistryBaseURL
+	apiBaseURL := pkg.RegistryBaseURL
 	if pkg.RegistryBaseURL == model.RegistryURLDocker || pkg.RegistryBaseURL == "" {
 		// docker.io is an exceptional registry that was created before standardisation, so needs a custom API base url
 		// https://github.com/containers/image/blob/5e4845dddd57598eb7afeaa6e0f4c76531bd3c91/docker/docker_client.go#L225-L229
-		apiBaseUrl = dockerIoApiBaseUrl
+		apiBaseURL = dockerIoAPIBaseURL
 	}
 
-	manifestURL := fmt.Sprintf("%s/v2/%s/%s/manifests/%s", apiBaseUrl, namespace, repo, tag)
+	manifestURL := fmt.Sprintf("%s/v2/%s/%s/manifests/%s", apiBaseURL, namespace, repo, tag)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, manifestURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create manifest request: %w", err)
@@ -63,7 +64,7 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 
 	// Get auth token for docker.io
 	// We only support auth for docker.io, other registries must allow unauthed requests
-	if apiBaseUrl == dockerIoApiBaseUrl {
+	if apiBaseURL == dockerIoAPIBaseURL {
 		token, err := getDockerIoAuthToken(ctx, client, namespace, repo)
 		if err != nil {
 			return fmt.Errorf("failed to authenticate with Docker registry: %w", err)
