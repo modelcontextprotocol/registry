@@ -207,11 +207,13 @@ func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
 		return err
 	}
 
-	// Validate registry ownership if packages are specified and validation is enabled
-	if cfg.EnableRegistryValidation && len(req.Packages) > 0 {
+	// Validate registry ownership for all packages if validation is enabled
+	if cfg.EnableRegistryValidation {
 		ctx := context.Background()
-		if err := ValidatePackageOwnership(ctx, req.Packages[0], req.Name); err != nil {
-			return fmt.Errorf("registry validation failed: %w", err)
+		for i, pkg := range req.Packages {
+			if err := ValidatePackageOwnership(ctx, pkg, req.Name); err != nil {
+				return fmt.Errorf("registry validation failed for package %d (%s): %w", i+1, pkg.Identifier, err)
+			}
 		}
 	}
 

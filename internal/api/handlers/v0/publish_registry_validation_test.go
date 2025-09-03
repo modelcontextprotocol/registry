@@ -53,7 +53,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeNPM,
-					Identifier:   "definitely-nonexistent-npm-package-xyz123",
+					Identifier:   "nonexistent-npm-package-xyz123",
 					Version:      "1.0.0",
 				},
 			},
@@ -128,5 +128,95 @@ func TestPublishRegistryValidation(t *testing.T) {
 		assert.Equal(t, publishReq.VersionDetail.Version, response.VersionDetail.Version)
 		assert.Len(t, response.Packages, 1)
 		assert.Equal(t, model.RegistryTypeMCPB, response.Packages[0].RegistryType)
+	})
+
+	t.Run("publish fails when second package fails validation", func(t *testing.T) {
+		publishReq := apiv0.ServerJSON{
+			Name:        "com.example/test-server-multiple-packages",
+			Description: "A test server with multiple packages where second fails",
+			VersionDetail: model.VersionDetail{
+				Version: "1.0.0",
+			},
+			Packages: []model.Package{
+				{
+					RegistryType: model.RegistryTypeMCPB,
+					Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+				},
+				{
+					RegistryType: model.RegistryTypeNPM,
+					Identifier:   "nonexistent-second-package-abc123",
+					Version:      "1.0.0",
+				},
+			},
+		}
+
+		// Generate valid JWT token with wildcard permission
+		claims := auth.JWTClaims{
+			AuthMethod: auth.MethodNone,
+			Permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+			},
+		}
+		token, err := generateTestJWTToken(testConfig, claims)
+		require.NoError(t, err)
+
+		body, err := json.Marshal(publishReq)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "registry validation failed for package 2")
+		assert.Contains(t, rr.Body.String(), "nonexistent-second-package-abc123")
+	})
+
+	t.Run("publish fails when first package fails validation", func(t *testing.T) {
+		publishReq := apiv0.ServerJSON{
+			Name:        "com.example/test-server-first-package-fails",
+			Description: "A test server where first package fails",
+			VersionDetail: model.VersionDetail{
+				Version: "1.0.0",
+			},
+			Packages: []model.Package{
+				{
+					RegistryType: model.RegistryTypeNPM,
+					Identifier:   "nonexistent-first-package-xyz789",
+					Version:      "1.0.0",
+				},
+				{
+					RegistryType: model.RegistryTypeMCPB,
+					Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+				},
+			},
+		}
+
+		// Generate valid JWT token with wildcard permission
+		claims := auth.JWTClaims{
+			AuthMethod: auth.MethodNone,
+			Permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+			},
+		}
+		token, err := generateTestJWTToken(testConfig, claims)
+		require.NoError(t, err)
+
+		body, err := json.Marshal(publishReq)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "registry validation failed for package 1")
+		assert.Contains(t, rr.Body.String(), "nonexistent-first-package-xyz789")
 	})
 }
