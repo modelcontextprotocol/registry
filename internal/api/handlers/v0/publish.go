@@ -9,7 +9,6 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/service"
-	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
@@ -47,11 +46,6 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		claims, err := jwtManager.ValidateToken(ctx, token)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
-		}
-
-		// Perform all schema validation
-		if err := validators.ValidatePublishRequest(input.Body); err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
 		}
 
 		// Verify that the token has permission to publish the server

@@ -11,7 +11,6 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
-	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
@@ -65,11 +64,6 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		// Verify edit permissions for this server using the existing server name
 		if !jwtManager.HasPermission(currentServer.Name, auth.PermissionActionEdit, claims.Permissions) {
 			return nil, huma.Error403Forbidden("You do not have edit permissions for this server")
-		}
-
-		// Perform all schema validation
-		if err := validators.ValidatePublishRequest(input.Body); err != nil {
-			return nil, huma.Error400BadRequest(err.Error())
 		}
 
 		// Prevent renaming servers

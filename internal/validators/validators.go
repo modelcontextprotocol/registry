@@ -1,12 +1,14 @@
 package validators
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"slices"
 	"strings"
 
+	"github.com/modelcontextprotocol/registry/internal/config"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
@@ -194,7 +196,7 @@ func validatePackage(pkg *model.Package) error {
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions
-func ValidatePublishRequest(req apiv0.ServerJSON) error {
+func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
 	// Validate publisher extensions in _meta
 	if err := validatePublisherExtensions(req); err != nil {
 		return err
@@ -203,6 +205,14 @@ func ValidatePublishRequest(req apiv0.ServerJSON) error {
 	// Validate the server detail (includes all nested validation)
 	if err := ValidateServerJSON(&req); err != nil {
 		return err
+	}
+
+	// Validate registry ownership if packages are specified and validation is enabled
+	if cfg.EnableRegistryValidation && len(req.Packages) > 0 {
+		ctx := context.Background()
+		if err := ValidatePackageOwnership(ctx, req.Packages[0], req.Name); err != nil {
+			return fmt.Errorf("registry validation failed: %w", err)
+		}
 	}
 
 	return nil

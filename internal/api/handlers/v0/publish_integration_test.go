@@ -36,16 +36,17 @@ func generateIntegrationTestJWTToken(cfg *config.Config, claims auth.JWTClaims) 
 }
 
 func TestPublishIntegration(t *testing.T) {
-	// Setup fake service
-	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
-
-	// Create test config with a valid Ed25519 seed
+	// Create test config with a valid Ed25519 seed and validation disabled for testing
 	testSeed := make([]byte, ed25519.SeedSize)
 	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 	testConfig := &config.Config{
-		JWTPrivateKey: hex.EncodeToString(testSeed),
+		JWTPrivateKey:            hex.EncodeToString(testSeed),
+		EnableRegistryValidation: false, // Disable for integration tests
 	}
+
+	// Setup fake service
+	registryService := service.NewRegistryService(database.NewMemoryDB(), testConfig)
 
 	// Create a new ServeMux and Huma API
 	mux := http.NewServeMux()
@@ -218,5 +219,52 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusForbidden, rr.Code)
 		assert.Contains(t, rr.Body.String(), "You do not have permission to publish this server")
+	})
+
+	t.Run("publish succeeds with MCPB package", func(t *testing.T) {
+		publishReq := apiv0.ServerJSON{
+			Name:        "com.example/test-server-mcpb",
+			Description: "A test server with MCPB package",
+			VersionDetail: model.VersionDetail{
+				Version: "1.0.0",
+			},
+			Packages: []model.Package{
+				{
+					RegistryType: model.RegistryTypeMCPB,
+					Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+				},
+			},
+		}
+
+		// Generate valid JWT token with wildcard permission
+		claims := auth.JWTClaims{
+			AuthMethod: auth.MethodNone,
+			Permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+			},
+		}
+		token, err := generateIntegrationTestJWTToken(testConfig, claims)
+		require.NoError(t, err)
+
+		body, err := json.Marshal(publishReq)
+		require.NoError(t, err)
+
+		req := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+
+		var response apiv0.ServerJSON
+		err = json.Unmarshal(rr.Body.Bytes(), &response)
+		require.NoError(t, err)
+
+		assert.Equal(t, publishReq.Name, response.Name)
+		assert.Equal(t, publishReq.VersionDetail.Version, response.VersionDetail.Version)
+		assert.Len(t, response.Packages, 1)
+		assert.Equal(t, model.RegistryTypeMCPB, response.Packages[0].RegistryType)
 	})
 }

@@ -2,6 +2,7 @@ services:
   registry:
     environment:
       - MCP_REGISTRY_SEED_FROM=
+      - MCP_REGISTRY_ENABLE_REGISTRY_VALIDATION=false
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8080/v0/servers"]
       interval: 1s

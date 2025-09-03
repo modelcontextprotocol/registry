@@ -47,7 +47,6 @@ func main() {
 	switch cfg.DatabaseType {
 	case config.DatabaseTypeMemory:
 		db = database.NewMemoryDB()
-		registryService = service.NewRegistryServiceWithDB(db)
 	case config.DatabaseTypePostgreSQL:
 		// Use PostgreSQL for real registry service
 		// Create a context with timeout for PostgreSQL connection
@@ -61,10 +60,6 @@ func main() {
 			return
 		}
 
-		// Create registry service with PostgreSQL
-		registryService = service.NewRegistryServiceWithDB(db)
-		log.Printf("PostgreSQL database URL: %s", cfg.DatabaseURL)
-
 		// Store the PostgreSQL instance for later cleanup
 		defer func() {
 			if err := db.Close(); err != nil {
@@ -77,6 +72,8 @@ func main() {
 		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypePostgreSQL)
 		return
 	}
+
+	registryService = service.NewRegistryService(db, cfg)
 
 	// Import seed data if seed source is provided
 	if cfg.SeedFrom != "" {
