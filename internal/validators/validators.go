@@ -164,6 +164,36 @@ func validateMCPBPackage(host string) error {
 	return nil
 }
 
+// getDefaultRegistryBaseURL returns the default registry base URL for a given registry type
+func getDefaultRegistryBaseURL(registryType string) string {
+	defaultURLs := map[string]string{
+		model.RegistryTypeNPM:   model.RegistryURLNPM,
+		model.RegistryTypePyPI:  model.RegistryURLPyPI,
+		model.RegistryTypeOCI:   model.RegistryURLDocker,
+		model.RegistryTypeNuGet: model.RegistryURLNuGet,
+	}
+	
+	return defaultURLs[registryType]
+}
+
+// inferMCPBRegistryBaseURL infers the registry base URL from an MCPB identifier
+func inferMCPBRegistryBaseURL(identifier string) string {
+	parsedURL, err := url.Parse(identifier)
+	if err != nil {
+		return ""
+	}
+	
+	host := strings.ToLower(parsedURL.Host)
+	switch host {
+	case "github.com", "www.github.com":
+		return model.RegistryURLGitHub
+	case "gitlab.com", "www.gitlab.com":
+		return model.RegistryURLGitLab
+	default:
+		return ""
+	}
+}
+
 // validateRegistryType checks if the registry type is supported
 func validateRegistryType(registryType string) error {
 	// Registry type is required
@@ -231,6 +261,17 @@ func validatePackage(pkg *model.Package) error {
 		// Validate registry type is supported
 		if err := validateRegistryType(registryType); err != nil {
 			return err
+		}
+
+		// Apply defaults for registry base URL if empty
+		if pkg.RegistryBaseURL == "" {
+			if registryType == model.RegistryTypeMCPB {
+				// For MCPB, infer from identifier
+				pkg.RegistryBaseURL = inferMCPBRegistryBaseURL(pkg.Identifier)
+			} else {
+				// For other types, use default
+				pkg.RegistryBaseURL = getDefaultRegistryBaseURL(registryType)
+			}
 		}
 
 		// Validate registry base URL matches the registry type

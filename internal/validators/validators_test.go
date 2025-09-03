@@ -729,9 +729,8 @@ func TestValidate_RegistryBaseURLs(t *testing.T) {
 		{"oci_wrong_url", model.RegistryTypeOCI, "https://registry.npmjs.org", "test-package", true},
 		{"nuget_wrong_url", model.RegistryTypeNuGet, "https://docker.io", "test-package", true},
 		{"mcpb_wrong_url", model.RegistryTypeMCPB, "https://evil.com", "https://github.com/owner/repo", true},
-		{"empty_base_url", model.RegistryTypeNPM, "", "test-package", true},
-		{"empty_base_url", model.RegistryTypeNPM, model.RegistryURLDocker, "test-package", true},
-		{"empty_base_url", model.RegistryTypeOCI, model.RegistryTypeNuGet, "test-package", true},
+		{"mismatched_base_url_1", model.RegistryTypeNPM, model.RegistryURLDocker, "test-package", true},
+		{"mismatched_base_url_2", model.RegistryTypeOCI, model.RegistryTypeNuGet, "test-package", true},
 
 		// Localhost URLs should be rejected - no development exceptions
 		{"localhost_npm", model.RegistryTypeNPM, "http://localhost:3000", "test-package", true},
@@ -744,6 +743,9 @@ func TestValidate_RegistryBaseURLs(t *testing.T) {
 		{"valid_nuget", model.RegistryTypeNuGet, model.RegistryURLNuGet, "test-package", false},
 		{"valid_mcpb_github", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/owner/repo", false},
 		{"valid_mcpb_gitlab", model.RegistryTypeMCPB, model.RegistryURLGitLab, "https://gitlab.com/owner/repo", false},
+		{"empty_base_url_npm", model.RegistryTypeNPM, "", "test-package", false},     // should be inferred
+		{"empty_base_url_nuget", model.RegistryTypeNuGet, "", "test-package", false}, // should be inferred
+		{"empty_base_url_mcpb", model.RegistryTypeMCPB, "", "https://github.com/owner/repo", false},
 
 		// Trailing slash URLs should be rejected - strict exact match only
 		{"npm_trailing_slash", model.RegistryTypeNPM, "https://registry.npmjs.org/", "test-package", true},
