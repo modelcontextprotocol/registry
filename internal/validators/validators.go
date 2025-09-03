@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -141,7 +142,13 @@ func validateRemote(obj *model.Remote) error {
 	return nil
 }
 
-func validateMCPBPackage(host string) error {
+func validateMCPBPackage(fullURL string) error {
+	parsedURL, err := url.Parse(fullURL)
+	if err != nil {
+		return fmt.Errorf("invalid MCPB package URL: %w", err)
+	}
+
+	host := strings.ToLower(parsedURL.Host)
 	allowedHosts := []string{
 		"github.com",
 		"www.github.com",
@@ -161,6 +168,21 @@ func validateMCPBPackage(host string) error {
 		return fmt.Errorf("MCPB packages must be hosted on allowlisted providers (GitHub or GitLab). Host '%s' is not allowed", host)
 	}
 
+	// Validate URL path is a proper release URL with strict structure validation
+	path := parsedURL.Path
+	switch host {
+	case "github.com", "www.github.com":
+		// GitHub release URLs must match: /owner/repo/releases/download/tag/filename
+		if !isValidGitHubReleaseURL(path) {
+			return fmt.Errorf("GitHub MCPB packages must be release assets following the pattern '/owner/repo/releases/download/tag/filename'")
+		}
+	case "gitlab.com", "www.gitlab.com":
+		// GitLab release URLs must match specific patterns
+		if !isValidGitLabReleaseURL(path) {
+			return fmt.Errorf("GitLab MCPB packages must be release assets following patterns '/owner/repo/-/releases/tag/downloads/filename' or '/owner/repo/-/package_files/id/download'")
+		}
+	}
+
 	return nil
 }
 
@@ -172,8 +194,46 @@ func getDefaultRegistryBaseURL(registryType string) string {
 		model.RegistryTypeOCI:   model.RegistryURLDocker,
 		model.RegistryTypeNuGet: model.RegistryURLNuGet,
 	}
-	
+
 	return defaultURLs[registryType]
+}
+
+// isValidGitHubReleaseURL validates that a path follows the GitHub release asset pattern
+// Pattern: /owner/repo/releases/download/tag/filename
+func isValidGitHubReleaseURL(path string) bool {
+	// GitHub release URL pattern: /owner/repo/releases/download/tag/filename
+	// - owner: username or organization (1-39 chars, alphanumeric + hyphens, no consecutive hyphens)
+	// - repo: repository name (similar rules to owner)
+	// - tag: release tag (can contain various characters but not empty)
+	// - filename: asset filename (not empty)
+	pattern := `^/([a-zA-Z0-9]([a-zA-Z0-9\-]{0,37}[a-zA-Z0-9])?)/([a-zA-Z0-9._\-]+)/releases/download/([^/]+)/([^/]+)$`
+	matched, _ := regexp.MatchString(pattern, path)
+	return matched
+}
+
+// isValidGitLabReleaseURL validates that a path follows GitLab release asset patterns
+func isValidGitLabReleaseURL(path string) bool {
+	// GitLab release URL patterns:
+	// 1. /owner/repo/-/releases/tag/downloads/filename
+	// 2. /owner/repo/-/package_files/id/download
+	// 3. /group/subgroup/repo/-/releases/tag/downloads/filename (nested groups)
+	
+	// The key insight is that GitLab URLs have "/-/" as a delimiter that separates the 
+	// project path from the GitLab-specific routes. Everything before "/-/" is the project path.
+	
+	// Pattern 1: Release downloads with /-/releases/tag/downloads/filename
+	releasePattern := `^/([a-zA-Z0-9._\-]+(?:/[a-zA-Z0-9._\-]+)*)/-/releases/([^/]+)/downloads/([^/]+)$`
+	if matched, _ := regexp.MatchString(releasePattern, path); matched {
+		return true
+	}
+	
+	// Pattern 2: Package files with /-/package_files/id/download
+	packagePattern := `^/([a-zA-Z0-9._\-]+(?:/[a-zA-Z0-9._\-]+)*)/-/package_files/([0-9]+)/download$`
+	if matched, _ := regexp.MatchString(packagePattern, path); matched {
+		return true
+	}
+	
+	return false
 }
 
 // inferMCPBRegistryBaseURL infers the registry base URL from an MCPB identifier
@@ -182,7 +242,7 @@ func inferMCPBRegistryBaseURL(identifier string) string {
 	if err != nil {
 		return ""
 	}
-	
+
 	host := strings.ToLower(parsedURL.Host)
 	switch host {
 	case "github.com", "www.github.com":
@@ -288,11 +348,9 @@ func validatePackage(pkg *model.Package) error {
 			return fmt.Errorf("invalid package URL: %w", err)
 		}
 
-		host := strings.ToLower(parsedURL.Host)
-
-		// For MCPB packages, validate they're from allowed hosts
+		// For MCPB packages, validate they're from allowed hosts and are release URLs
 		if registryType == model.RegistryTypeMCPB {
-			return validateMCPBPackage(host)
+			return validateMCPBPackage(pkg.Identifier)
 		}
 
 		// For other URL-based packages, just ensure it's valid
