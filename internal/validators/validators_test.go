@@ -2,6 +2,7 @@ package validators_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -648,6 +649,185 @@ func TestValidateArgument_ValidValueFields(t *testing.T) {
 }
 
 // Helper function to create a valid server with a specific argument for testing
+func TestValidate_RegistryTypes(t *testing.T) {
+	testCases := []struct {
+		name         string
+		registryType string
+		baseURL      string
+		identifier   string
+		expectError  bool
+	}{
+		// Valid registry types (should pass)
+		{"valid_npm", model.RegistryTypeNPM, model.RegistryURLNPM, "test-package", false},
+		{"valid_pypi", model.RegistryTypePyPI, model.RegistryURLPyPI, "test-package", false},
+		{"valid_oci", model.RegistryTypeOCI, model.RegistryURLDocker, "test-package", false},
+		{"valid_nuget", model.RegistryTypeNuGet, model.RegistryURLNuGet, "test-package", false},
+		{"valid_mcpb_github", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/owner/repo/releases/download/v1.0.0/package.mcpb", false},
+		{"valid_mcpb_gitlab", model.RegistryTypeMCPB, model.RegistryURLGitLab, "https://gitlab.com/owner/repo/-/releases/v1.0.0/downloads/package.mcpb", false},
+
+		// Invalid registry types (should fail)
+		{"invalid_maven", "maven", "https://example.com/registry", "test-package", true},
+		{"invalid_cargo", "cargo", "https://example.com/registry", "test-package", true},
+		{"invalid_gem", "gem", "https://example.com/registry", "test-package", true},
+		{"invalid_invalid", "invalid", "https://example.com/registry", "test-package", true},
+		{"invalid_unknown", "UNKNOWN", "https://example.com/registry", "test-package", true},
+		{"invalid_custom", "custom-registry", "https://example.com/registry", "test-package", true},
+		{"invalid_github", "github", "https://example.com/registry", "test-package", true}, // This is a source, not a registry type
+		{"invalid_docker", "docker", "https://example.com/registry", "test-package", true}, // Should be "oci"
+		{"invalid_empty", "", "https://example.com/registry", "test-package", true},        // Empty registry type
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			serverDetail := apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+					ID:     "owner/repo",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:      tc.identifier,
+						RegistryType:    tc.registryType,
+						RegistryBaseURL: tc.baseURL,
+					},
+				},
+				Remotes: []model.Remote{
+					{
+						URL: "https://example.com/remote",
+					},
+				},
+			}
+
+			err := validators.ValidateServerJSON(&serverDetail)
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), validators.ErrUnsupportedRegistryType.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidate_RegistryBaseURLs(t *testing.T) {
+	testCases := []struct {
+		name         string
+		registryType string
+		baseURL      string
+		identifier   string
+		expectError  bool
+	}{
+		// Invalid base URLs for specific registry types
+		{"npm_wrong_url", model.RegistryTypeNPM, "https://pypi.org", "test-package", true},
+		{"pypi_wrong_url", model.RegistryTypePyPI, "https://registry.npmjs.org", "test-package", true},
+		{"oci_wrong_url", model.RegistryTypeOCI, "https://registry.npmjs.org", "test-package", true},
+		{"nuget_wrong_url", model.RegistryTypeNuGet, "https://docker.io", "test-package", true},
+		{"mcpb_wrong_url", model.RegistryTypeMCPB, "https://evil.com", "https://github.com/owner/repo", true},
+		{"mismatched_base_url_1", model.RegistryTypeNPM, model.RegistryURLDocker, "test-package", true},
+		{"mismatched_base_url_2", model.RegistryTypeOCI, model.RegistryTypeNuGet, "test-package", true},
+
+		// Localhost URLs should be rejected - no development exceptions
+		{"localhost_npm", model.RegistryTypeNPM, "http://localhost:3000", "test-package", true},
+		{"localhost_ip", model.RegistryTypePyPI, "http://127.0.0.1:8080", "test-package", true},
+
+		// Valid combinations (should pass)
+		{"valid_npm", model.RegistryTypeNPM, model.RegistryURLNPM, "test-package", false},
+		{"valid_pypi", model.RegistryTypePyPI, model.RegistryURLPyPI, "test-package", false},
+		{"valid_oci", model.RegistryTypeOCI, model.RegistryURLDocker, "test-package", false},
+		{"valid_nuget", model.RegistryTypeNuGet, model.RegistryURLNuGet, "test-package", false},
+		{"valid_mcpb_github", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/owner/repo/releases/download/v1.0.0/package.mcpb", false},
+		{"valid_mcpb_gitlab", model.RegistryTypeMCPB, model.RegistryURLGitLab, "https://gitlab.com/owner/repo/-/releases/v1.0.0/downloads/package.mcpb", false},
+		{"empty_base_url_npm", model.RegistryTypeNPM, "", "test-package", false},     // should be inferred
+		{"empty_base_url_nuget", model.RegistryTypeNuGet, "", "test-package", false}, // should be inferred
+		{"empty_base_url_mcpb", model.RegistryTypeMCPB, "", "https://github.com/owner/repo/releases/download/v1.0.0/package.mcpb", false},
+
+		// Trailing slash URLs should be rejected - strict exact match only
+		{"npm_trailing_slash", model.RegistryTypeNPM, "https://registry.npmjs.org/", "test-package", true},
+		{"pypi_trailing_slash", model.RegistryTypePyPI, "https://pypi.org/", "test-package", true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			serverDetail := apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+					ID:     "owner/repo",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:      tc.identifier,
+						RegistryType:    tc.registryType,
+						RegistryBaseURL: tc.baseURL,
+					},
+				},
+				Remotes: []model.Remote{
+					{
+						URL: "https://example.com/remote",
+					},
+				},
+			}
+
+			err := validators.ValidateServerJSON(&serverDetail)
+			if tc.expectError {
+				assert.Error(t, err)
+				// Check that the error is related to registry validation
+				errStr := err.Error()
+				assert.True(t,
+					strings.Contains(errStr, validators.ErrUnsupportedRegistryBaseURL.Error()) ||
+						strings.Contains(errStr, validators.ErrMismatchedRegistryTypeAndURL.Error()),
+					"Expected registry validation error, got: %s", errStr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidate_EmptyRegistryType(t *testing.T) {
+	// Test that empty registry type is rejected
+	serverDetail := apiv0.ServerJSON{
+		Name:        "com.example/test-server",
+		Description: "A test server",
+		Repository: model.Repository{
+			URL:    "https://github.com/owner/repo",
+			Source: "github",
+			ID:     "owner/repo",
+		},
+		VersionDetail: model.VersionDetail{
+			Version: "1.0.0",
+		},
+		Packages: []model.Package{
+			{
+				Identifier:      "test-package",
+				RegistryType:    "", // Empty registry type
+				RegistryBaseURL: "",
+			},
+		},
+		Remotes: []model.Remote{
+			{
+				URL: "https://example.com/remote",
+			},
+		},
+	}
+
+	err := validators.ValidateServerJSON(&serverDetail)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), validators.ErrUnsupportedRegistryType.Error())
+	assert.Contains(t, err.Error(), "registry type is required")
+}
+
 func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 	return apiv0.ServerJSON{
 		Name:        "com.example/test-server",
@@ -673,5 +853,74 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 				URL: "https://example.com/remote",
 			},
 		},
+	}
+}
+
+func TestValidate_MCPBReleaseURLs(t *testing.T) {
+	testCases := []struct {
+		name        string
+		identifier  string
+		expectError bool
+		errorMsg    string
+	}{
+		// Valid GitHub release URLs
+		{"valid_github_release", "https://github.com/owner/repo/releases/download/v1.0.0/package.mcpb", false, ""},
+		{"valid_github_release_with_path", "https://github.com/org/project/releases/download/v2.1.0/my-server.mcpb", false, ""},
+		{"valid_github_complex_tag", "https://github.com/owner/repo/releases/download/v1.0.0-alpha.1+build.123/package.mcpb", false, ""},
+		{"valid_github_single_char_owner", "https://github.com/a/b/releases/download/v1.0.0/package.mcpb", false, ""},
+		
+		// Valid GitLab release URLs
+		{"valid_gitlab_releases", "https://gitlab.com/owner/repo/-/releases/v1.0.0/downloads/package.mcpb", false, ""},
+		{"valid_gitlab_package_files", "https://gitlab.com/owner/repo/-/package_files/123/download", false, ""},
+		{"valid_gitlab_nested_group", "https://gitlab.com/group/subgroup/repo/-/releases/v1.0.0/downloads/package.mcpb", false, ""},
+		{"valid_gitlab_deep_nested", "https://gitlab.com/org/team/project/repo/-/releases/v2.0.0/downloads/server.mcpb", false, ""},
+		
+		// Invalid GitHub URLs (not release URLs)
+		{"invalid_github_root", "https://github.com/owner/repo", true, "GitHub MCPB packages must be release assets"},
+		{"invalid_github_tree", "https://github.com/owner/repo/tree/main", true, "GitHub MCPB packages must be release assets"},
+		{"invalid_github_blob", "https://github.com/owner/repo/blob/main/file.mcpb", true, "GitHub MCPB packages must be release assets"},
+		{"invalid_github_fake_release_path", "https://github.com/owner/repo/fake/releases/download/v1.0.0/file.mcpb", true, "GitHub MCPB packages must be release assets"},
+		{"invalid_github_missing_tag", "https://github.com/owner/repo/releases/download//file.mcpb", true, "GitHub MCPB packages must be release assets"},
+		{"invalid_github_missing_filename", "https://github.com/owner/repo/releases/download/v1.0.0/", true, "GitHub MCPB packages must be release assets"},
+		
+		// Invalid GitLab URLs (not release URLs)
+		{"invalid_gitlab_root", "https://gitlab.com/owner/repo", true, "GitLab MCPB packages must be release assets"},
+		{"invalid_gitlab_tree", "https://gitlab.com/owner/repo/-/tree/main", true, "GitLab MCPB packages must be release assets"},
+		{"invalid_gitlab_blob", "https://gitlab.com/owner/repo/-/blob/main/file.mcpb", true, "GitLab MCPB packages must be release assets"},
+		{"invalid_gitlab_missing_dash_prefix", "https://gitlab.com/owner/repo/releases/v1.0.0/downloads/file.mcpb", true, "GitLab MCPB packages must be release assets"},
+		{"invalid_gitlab_missing_downloads", "https://gitlab.com/owner/repo/-/releases/v1.0.0/file.mcpb", true, "GitLab MCPB packages must be release assets"},
+		{"invalid_gitlab_invalid_package_files", "https://gitlab.com/owner/repo/-/package_files/abc/download", true, "GitLab MCPB packages must be release assets"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			server := apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "Test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						RegistryType:    model.RegistryTypeMCPB,
+						RegistryBaseURL: model.RegistryURLGitHub,
+						Identifier:      tc.identifier,
+					},
+				},
+				Remotes: []model.Remote{
+					{
+						URL: "https://example.com/remote",
+					},
+				},
+			}
+
+			err := validators.ValidateServerJSON(&server)
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errorMsg)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }
