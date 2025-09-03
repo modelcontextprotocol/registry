@@ -11,6 +11,10 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+const (
+	dockerIoApiBaseUrl = "https://registry-1.docker.io"
+)
+
 // OCIAuthResponse represents the Docker Hub authentication response
 type OCIAuthResponse struct {
 	Token string `json:"token"`
@@ -18,11 +22,7 @@ type OCIAuthResponse struct {
 
 // OCIManifest represents an OCI image manifest
 type OCIManifest struct {
-	SchemaVersion int                    `json:"schemaVersion"`
-	MediaType     string                 `json:"mediaType"`
-	Annotations   map[string]string      `json:"annotations"`
-	Config        map[string]interface{} `json:"config"`
-	Layers        []map[string]interface{} `json:"layers"`
+	Annotations map[string]string `json:"annotations"`
 }
 
 // ValidateOCI validates that an OCI image contains the correct MCP server name annotation
@@ -33,15 +33,13 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	parts := strings.Split(pkg.Identifier, "/")
 	var namespace, repo string
 	if len(parts) == 2 {
-		namespace, repo = parts[0], parts[1]
+		namespace = parts[0]
+		repo = parts[1]
+	} else if len(parts) == 1 {
+		namespace = "library"
+		repo = pkg.Identifier
 	} else {
-		namespace, repo = "library", pkg.Identifier // Docker Hub official images
-	}
-
-	// Get auth token from Docker Hub
-	token, err := getDockerAuthToken(ctx, client, namespace, repo)
-	if err != nil {
-		return fmt.Errorf("failed to authenticate with Docker registry: %w", err)
+		return fmt.Errorf("invalid image reference: %s", pkg.Identifier)
 	}
 
 	// Get image manifest
@@ -50,13 +48,29 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		tag = "latest"
 	}
 
-	manifestURL := fmt.Sprintf("https://registry-1.docker.io/v2/%s/%s/manifests/%s", namespace, repo, tag)
+	apiBaseUrl := pkg.RegistryBaseURL
+	if pkg.RegistryBaseURL == model.RegistryURLDocker || pkg.RegistryBaseURL == "" {
+		// docker.io is an exceptional registry that was created before standardisation, so needs a custom API base url
+		// https://github.com/containers/image/blob/5e4845dddd57598eb7afeaa6e0f4c76531bd3c91/docker/docker_client.go#L225-L229
+		apiBaseUrl = dockerIoApiBaseUrl
+	}
+
+	manifestURL := fmt.Sprintf("%s/v2/%s/%s/manifests/%s", apiBaseUrl, namespace, repo, tag)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, manifestURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create manifest request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+token)
+	// Get auth token for docker.io
+	// We only support auth for docker.io, other registries must allow unauthed requests
+	if apiBaseUrl == dockerIoApiBaseUrl {
+		token, err := getDockerIoAuthToken(ctx, client, namespace, repo)
+		if err != nil {
+			return fmt.Errorf("failed to authenticate with Docker registry: %w", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
 	req.Header.Set("Accept", "application/vnd.oci.image.manifest.v1+json")
 	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
 
@@ -87,10 +101,10 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	return nil
 }
 
-// getDockerAuthToken retrieves an authentication token from Docker Hub
-func getDockerAuthToken(ctx context.Context, client *http.Client, namespace, repo string) (string, error) {
+// getDockerIoAuthToken retrieves an authentication token from Docker Hub
+func getDockerIoAuthToken(ctx context.Context, client *http.Client, namespace, repo string) (string, error) {
 	authURL := fmt.Sprintf("https://auth.docker.io/token?service=registry.docker.io&scope=repository:%s/%s:pull", namespace, repo)
-	
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, authURL, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create auth request: %w", err)

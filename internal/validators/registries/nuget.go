@@ -19,7 +19,7 @@ type NuSpecMetadata struct {
 
 // NuSpecPackage represents the root element of a .nuspec file
 type NuSpecPackage struct {
-	XMLName  xml.Name        `xml:"package"`
+	XMLName  xml.Name       `xml:"package"`
 	Metadata NuSpecMetadata `xml:"metadata"`
 }
 
@@ -31,21 +31,19 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	
-	// NuGet API format: https://api.nuget.org/v3-flatcontainer/{id}/{version}/{id}.nuspec
-	// For now, use the latest version by constructing the URL with the identifier
+
 	lowerID := strings.ToLower(pkg.Identifier)
 	lowerVersion := strings.ToLower(pkg.Version)
 	if lowerVersion == "" {
 		return fmt.Errorf("NuGet package validation requires a specific version, but none was provided")
 	}
-	
+
 	url := fmt.Sprintf("%s/v3-flatcontainer/%s/%s/%s.nuspec", baseURL, lowerID, lowerVersion, lowerID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
 
 	resp, err := client.Do(req)

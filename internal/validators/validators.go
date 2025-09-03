@@ -212,7 +212,7 @@ func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
 		ctx := context.Background()
 		for i, pkg := range req.Packages {
 			if err := ValidatePackageOwnership(ctx, pkg, req.Name); err != nil {
-				return fmt.Errorf("registry validation failed for package %d (%s): %w", i+1, pkg.Identifier, err)
+				return fmt.Errorf("registry validation failed for package %d (%s): %w", i, pkg.Identifier, err)
 			}
 		}
 	}
