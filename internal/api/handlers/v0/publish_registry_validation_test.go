@@ -88,12 +88,13 @@ func TestPublishRegistryValidation(t *testing.T) {
 			Name:        "com.example/test-server-mcpb-validation",
 			Description: "A test server with MCPB package and registry validation enabled",
 			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
+				Version: "0.0.36",
 			},
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
+					Version:      "0.0.36",
 				},
 			},
 		}
@@ -141,6 +142,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 				{
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
+					Version:      "1.0.0",
 				},
 				{
 					RegistryType: model.RegistryTypeNPM,
@@ -191,6 +193,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 				{
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
+					Version:      "1.0.0",
 				},
 			},
 		}

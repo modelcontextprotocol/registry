@@ -63,6 +63,8 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Skip("Skipping OCI registry tests because we keep hitting DockerHub rate limits")
+
 			pkg := model.Package{
 				RegistryType: model.RegistryTypeOCI,
 				Identifier:   tt.packageName,

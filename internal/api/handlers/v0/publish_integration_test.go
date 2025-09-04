@@ -233,6 +233,7 @@ func TestPublishIntegration(t *testing.T) {
 				{
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
+					Version:      "1.7.2",
 				},
 			},
 		}

@@ -221,6 +221,7 @@ func TestPublishEndpoint(t *testing.T) {
 					{
 						RegistryType: model.RegistryTypeMCPB,
 						Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+						Version:      "1.0.0",
 					},
 				},
 			},

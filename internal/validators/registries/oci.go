@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -93,6 +94,11 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 
 	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusUnauthorized {
 		return fmt.Errorf("OCI image '%s/%s:%s' not found (status: %d)", namespace, repo, tag, resp.StatusCode)
+	}
+	if resp.StatusCode == http.StatusTooManyRequests {
+		// Rate limited, skip validation for now
+		log.Printf("Warning: Rate limited when accessing OCI image '%s/%s:%s'. Skipping validation.", namespace, repo, tag)
+		return nil
 	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to fetch OCI manifest (status: %d)", resp.StatusCode)
