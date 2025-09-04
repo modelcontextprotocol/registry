@@ -65,26 +65,38 @@ func PublishCommand(args []string) error {
 
 	// Publish to registry
 	_, _ = fmt.Fprintf(os.Stdout, "Publishing to %s...\n", registryURL)
-	if err := publishToRegistry(registryURL, serverData, token); err != nil {
+	response, err := publishToRegistry(registryURL, serverData, token)
+	if err != nil {
 		return fmt.Errorf("publish failed: %w", err)
 	}
 
 	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully published")
+	if serverID := id(response); serverID != "" {
+		_, _ = fmt.Fprintf(os.Stdout, "✓ Server Id %s", serverID)
+	}
+
 	return nil
 }
 
-func publishToRegistry(registryURL string, serverData []byte, token string) error {
+func id(response apiv0.ServerJSON) string {
+	if response.Meta != nil && response.Meta.IOModelContextProtocolRegistry != nil {
+		return response.Meta.IOModelContextProtocolRegistry.ID
+	}
+	return ""
+}
+
+func publishToRegistry(registryURL string, serverData []byte, token string) (apiv0.ServerJSON, error) {
 	// Parse the server JSON data
 	var serverJSON apiv0.ServerJSON
 	err := json.Unmarshal(serverData, &serverJSON)
 	if err != nil {
-		return fmt.Errorf("error parsing server.json file: %w", err)
+		return serverJSON, fmt.Errorf("error parsing server.json file: %w", err)
 	}
 
 	// Convert to JSON
 	jsonData, err := json.Marshal(serverJSON)
 	if err != nil {
-		return fmt.Errorf("error serializing request: %w", err)
+		return serverJSON, fmt.Errorf("error serializing request: %w", err)
 	}
 
 	// Ensure URL ends with the publish endpoint
@@ -96,7 +108,7 @@ func publishToRegistry(registryURL string, serverData []byte, token string) erro
 	// Create and send request
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, publishURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("error creating request: %w", err)
+		return serverJSON, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -104,19 +116,25 @@ func publishToRegistry(registryURL string, serverData []byte, token string) erro
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error sending request: %w", err)
+		return serverJSON, fmt.Errorf("error sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Read response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("error reading response: %w", err)
+		return serverJSON, fmt.Errorf("error reading response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
+		return serverJSON, fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
 	}
 
-	return nil
+	// Parse response to extract server ID
+	if err := json.Unmarshal(body, &serverJSON); err != nil {
+		// Don't fail the publish if we can't parse response, just return empty ID
+		return serverJSON, nil
+	}
+
+	return serverJSON, nil
 }
