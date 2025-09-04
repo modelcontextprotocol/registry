@@ -29,20 +29,27 @@ func TestValidatePyPI_RealPackages(t *testing.T) {
 			errorMessage: "not found",
 		},
 		{
-			name:         "real package without MCP project URL should fail",
-			packageName:  "requests", // Popular package without MCP project URL
+			name:         "real package without MCP server name should fail",
+			packageName:  "requests", // Popular package without MCP server name in keywords/description/URLs
 			version:      "2.31.0",
 			serverName:   "com.example/test",
 			expectError:  true,
-			errorMessage: "missing required 'MCP' project URL",
+			errorMessage: "ownership validation failed",
 		},
 		{
-			name:         "real package with different MCP project URL should fail",
+			name:         "real package with different server name should fail",
 			packageName:  "numpy", // Another popular package
 			version:      "1.25.2",
 			serverName:   "com.example/completely-different-name",
 			expectError:  true,
-			errorMessage: "missing required 'MCP' project URL", // Will fail because numpy doesn't have MCP URL
+			errorMessage: "ownership validation failed", // Will fail because numpy doesn't have this server name
+		},
+		{
+			name:        "real package with server name in README should pass",
+			packageName: "time-mcp-pypi",
+			version:     "1.0.0",
+			serverName:  "io.github.domdomegg/time-mcp-pypi",
+			expectError: false,
 		},
 	}
 

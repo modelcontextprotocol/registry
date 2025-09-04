@@ -22,7 +22,19 @@ type OCIAuthResponse struct {
 
 // OCIManifest represents an OCI image manifest
 type OCIManifest struct {
-	Annotations map[string]string `json:"annotations"`
+	Manifests []struct {
+		Digest string `json:"digest"`
+	} `json:"manifests,omitempty"`
+	Config struct {
+		Digest string `json:"digest"`
+	} `json:"config,omitempty"`
+}
+
+// OCIImageConfig represents an OCI image configuration
+type OCIImageConfig struct {
+	Config struct {
+		Labels map[string]string `json:"Labels"`
+	} `json:"config"`
 }
 
 // ValidateOCI validates that an OCI image contains the correct MCP server name annotation
@@ -72,7 +84,7 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
-	req.Header.Set("Accept", "application/vnd.oci.image.manifest.v1+json")
+	req.Header.Set("Accept", "application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json")
 	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
 
 	resp, err := client.Do(req)
@@ -90,7 +102,30 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		return fmt.Errorf("failed to parse OCI manifest: %w", err)
 	}
 
-	mcpName, exists := manifest.Annotations["io.modelcontextprotocol.server.name"]
+	// Handle multi-arch images by using first manifest
+	var configDigest string
+	if len(manifest.Manifests) > 0 {
+		// This is a multi-arch image, get the specific manifest
+		specificManifest, err := getSpecificManifest(ctx, client, apiBaseURL, namespace, repo, manifest.Manifests[0].Digest)
+		if err != nil {
+			return fmt.Errorf("failed to get specific manifest: %w", err)
+		}
+		configDigest = specificManifest.Config.Digest
+	} else {
+		configDigest = manifest.Config.Digest
+	}
+
+	if configDigest == "" {
+		return fmt.Errorf("unable to determine image config digest for '%s/%s:%s'", namespace, repo, tag)
+	}
+
+	// Get image config (contains labels)
+	config, err := getImageConfig(ctx, client, apiBaseURL, namespace, repo, configDigest)
+	if err != nil {
+		return fmt.Errorf("failed to get image config: %w", err)
+	}
+
+	mcpName, exists := config.Config.Labels["io.modelcontextprotocol.server.name"]
 	if !exists {
 		return fmt.Errorf("OCI image '%s/%s:%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", namespace, repo, tag, serverName)
 	}
@@ -127,4 +162,80 @@ func getDockerIoAuthToken(ctx context.Context, client *http.Client, namespace, r
 	}
 
 	return authResp.Token, nil
+}
+
+// getSpecificManifest retrieves a specific manifest for multi-arch images
+func getSpecificManifest(ctx context.Context, client *http.Client, apiBaseURL, namespace, repo, digest string) (*OCIManifest, error) {
+	manifestURL := fmt.Sprintf("%s/v2/%s/%s/manifests/%s", apiBaseURL, namespace, repo, digest)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, manifestURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create specific manifest request: %w", err)
+	}
+
+	// Get auth token for docker.io
+	if apiBaseURL == dockerIoAPIBaseURL {
+		token, err := getDockerIoAuthToken(ctx, client, namespace, repo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to authenticate with Docker registry: %w", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	req.Header.Set("Accept", "application/vnd.oci.image.manifest.v1+json")
+	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch specific manifest: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("specific manifest not found (status: %d)", resp.StatusCode)
+	}
+
+	var manifest OCIManifest
+	if err := json.NewDecoder(resp.Body).Decode(&manifest); err != nil {
+		return nil, fmt.Errorf("failed to parse specific manifest: %w", err)
+	}
+
+	return &manifest, nil
+}
+
+// getImageConfig retrieves the image configuration containing labels
+func getImageConfig(ctx context.Context, client *http.Client, apiBaseURL, namespace, repo, configDigest string) (*OCIImageConfig, error) {
+	configURL := fmt.Sprintf("%s/v2/%s/%s/blobs/%s", apiBaseURL, namespace, repo, configDigest)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, configURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create config request: %w", err)
+	}
+
+	// Get auth token for docker.io
+	if apiBaseURL == dockerIoAPIBaseURL {
+		token, err := getDockerIoAuthToken(ctx, client, namespace, repo)
+		if err != nil {
+			return nil, fmt.Errorf("failed to authenticate with Docker registry: %w", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	req.Header.Set("Accept", "application/vnd.docker.distribution.manifest.v2+json")
+	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch image config: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("image config not found (status: %d)", resp.StatusCode)
+	}
+
+	var config OCIImageConfig
+	if err := json.NewDecoder(resp.Body).Decode(&config); err != nil {
+		return nil, fmt.Errorf("failed to parse image config: %w", err)
+	}
+
+	return &config, nil
 }

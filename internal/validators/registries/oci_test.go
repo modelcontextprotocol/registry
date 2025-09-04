@@ -52,6 +52,13 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 			expectError:  true,
 			errorMessage: "missing required annotation",
 		},
+		{
+			name:        "real image with correct MCP annotation should pass",
+			packageName: "domdomegg/airtable-mcp-server",
+			version:     "1.7.2",
+			serverName:  "io.github.domdomegg/airtable-mcp-server", // This should match the annotation
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {

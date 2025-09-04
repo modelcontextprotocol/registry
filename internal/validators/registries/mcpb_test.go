@@ -21,6 +21,12 @@ func TestValidateMCPB(t *testing.T) {
 	}{
 		{
 			name:        "valid MCPB package should pass",
+			packageName: "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
+			serverName:  "io.github.domdomegg/airtable-mcp-server",
+			expectError: false,
+		},
+		{
+			name:        "valid MCPB package should pass",
 			packageName: "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 			serverName:  "com.microsoft/playwright-mcp",
 			expectError: false,

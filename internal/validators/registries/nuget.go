@@ -2,26 +2,14 @@ package registries
 
 import (
 	"context"
-	"encoding/xml"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
-
-// NuSpecMetadata represents the metadata section of a .nuspec file
-type NuSpecMetadata struct {
-	XMLName xml.Name `xml:"metadata"`
-	MCPName string   `xml:"mcp-name"`
-}
-
-// NuSpecPackage represents the root element of a .nuspec file
-type NuSpecPackage struct {
-	XMLName  xml.Name       `xml:"package"`
-	Metadata NuSpecMetadata `xml:"metadata"`
-}
 
 // ValidateNuGet validates that a NuGet package contains the correct MCP server name
 func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) error {
@@ -38,8 +26,9 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 		return fmt.Errorf("NuGet package validation requires a specific version, but none was provided")
 	}
 
-	url := fmt.Sprintf("%s/v3-flatcontainer/%s/%s/%s.nuspec", baseURL, lowerID, lowerVersion, lowerID)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	// Try to get README from the package
+	readmeURL := fmt.Sprintf("%s/v3-flatcontainer/%s/%s/readme", baseURL, lowerID, lowerVersion)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, readmeURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -48,26 +37,25 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to fetch .nuspec from NuGet: %w", err)
+		return fmt.Errorf("failed to fetch README from NuGet: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("NuGet package '%s' version '%s' not found (status: %d)", pkg.Identifier, pkg.Version, resp.StatusCode)
+	if resp.StatusCode == http.StatusOK {
+		// Check README content
+		readmeBytes, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read README content: %w", err)
+		}
+
+		readmeContent := string(readmeBytes)
+
+		// Check for mcp-name: format (more specific)
+		mcpNamePattern := "mcp-name: " + serverName
+		if strings.Contains(readmeContent, mcpNamePattern) {
+			return nil // Found as mcp-name: format
+		}
 	}
 
-	var nuspec NuSpecPackage
-	if err := xml.NewDecoder(resp.Body).Decode(&nuspec); err != nil {
-		return fmt.Errorf("failed to parse .nuspec metadata: %w", err)
-	}
-
-	if nuspec.Metadata.MCPName == "" {
-		return fmt.Errorf("NuGet package '%s' is missing required '<mcp-name>' element. Add this to your .nuspec: <mcp-name>%s</mcp-name>", pkg.Identifier, serverName)
-	}
-
-	if nuspec.Metadata.MCPName != serverName {
-		return fmt.Errorf("NuGet package ownership validation failed. Expected mcp-name '%s', got '%s'", serverName, nuspec.Metadata.MCPName)
-	}
-
-	return nil
+	return fmt.Errorf("NuGet package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README. Add it to your package README", pkg.Identifier, serverName, serverName)
 }

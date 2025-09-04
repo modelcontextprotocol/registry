@@ -26,7 +26,7 @@ func TestValidateNuGet_RealPackages(t *testing.T) {
 			version:      "1.0.0",
 			serverName:   "com.example/test",
 			expectError:  true,
-			errorMessage: "not found",
+			errorMessage: "ownership validation failed",
 		},
 		{
 			name:         "real package without version should fail",
@@ -42,15 +42,30 @@ func TestValidateNuGet_RealPackages(t *testing.T) {
 			version:      "999.999.999", // Version that doesn't exist
 			serverName:   "com.example/test",
 			expectError:  true,
-			errorMessage: "not found",
+			errorMessage: "ownership validation failed",
 		},
 		{
-			name:         "real package without mcp-name should fail",
+			name:         "real package without server name in README should fail",
 			packageName:  "Newtonsoft.Json",
 			version:      "13.0.3", // Popular version
 			serverName:   "com.example/test",
 			expectError:  true,
-			errorMessage: "missing required '<mcp-name>' element",
+			errorMessage: "ownership validation failed",
+		},
+		{
+			name:         "real package without server name in README should fail",
+			packageName:  "TimeMcpServer",
+			version:      "1.0.0",
+			serverName:   "io.github.domdomegg/time-mcp-server",
+			expectError:  true,
+			errorMessage: "ownership validation failed",
+		},
+		{
+			name:        "real package with server name in README should pass",
+			packageName: "TimeMcpServer",
+			version:     "1.0.2",
+			serverName:  "io.github.domdomegg/time-mcp-server",
+			expectError: false,
 		},
 	}
 

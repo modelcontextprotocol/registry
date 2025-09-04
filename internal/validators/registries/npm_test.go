@@ -37,12 +37,35 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 			errorMessage: "missing required 'mcpName' field",
 		},
 		{
-			name:         "real package with different mcpName should fail",
+			name:         "real package without mcpName should fail",
 			packageName:  "lodash", // Another popular package
 			version:      "4.17.21",
 			serverName:   "com.example/completely-different-name",
 			expectError:  true,
-			errorMessage: "missing required 'mcpName' field", // Will fail because lodash doesn't have mcpName
+			errorMessage: "missing required 'mcpName' field",
+		},
+		{
+			name:         "real package without mcpName should fail",
+			packageName:  "airtable-mcp-server",
+			version:      "1.5.0",
+			serverName:   "io.github.domdomegg/airtable-mcp-server",
+			expectError:  true,
+			errorMessage: "missing required 'mcpName' field",
+		},
+		{
+			name:         "real package with incorrect mcpName should fail",
+			packageName:  "airtable-mcp-server",
+			version:      "1.7.2",
+			serverName:   "io.github.not-domdomegg/airtable-mcp-server",
+			expectError:  true,
+			errorMessage: "Expected mcpName 'io.github.not-domdomegg/airtable-mcp-server', got 'io.github.domdomegg/airtable-mcp-server'",
+		},
+		{
+			name:        "real package with correct mcpName should pass",
+			packageName: "airtable-mcp-server",
+			version:     "1.7.2",
+			serverName:  "io.github.domdomegg/airtable-mcp-server",
+			expectError: false,
 		},
 	}
 

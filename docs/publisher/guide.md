@@ -88,18 +88,15 @@ The official MCP registry currently only supports the NPM public registry (`http
 <summary><strong>🐍 PyPI Packages</strong></summary>
 
 ### Requirements
-Add an `MCP` project URL to your `pyproject.toml`:
+Include your server name in your package README file using this format:
 
-```toml
-[project.urls]
-Homepage = "https://github.com/you/your-project"
-MCP = "io.github.username/server-name"
-```
+**MCP name format**: `mcp-name: io.github.username/server-name`
+
+Add it to your README.md file (which becomes the package description on PyPI).
 
 ### How It Works
 - Registry fetches `https://pypi.org/pypi/your-package/json`
-- Checks that `project_urls["MCP"]` matches your server name
-- Fails if MCP URL is missing or doesn't match
+- Passes if `mcp-name: server-name` is in the README content
 
 ### Example server.json
 ```json
@@ -123,24 +120,15 @@ The official MCP registry currently only supports the official PyPI registry (`h
 <summary><strong>📋 NuGet Packages</strong></summary>
 
 ### Requirements
-Add an `<mcp-name>` element to your `.nuspec` file:
+Include your server name in your package's README using this format:
 
-```xml
-<package>
-  <metadata>
-    <id>Your.NuGet.Package</id>
-    <version>1.0.0</version>
-    <mcp-name>io.github.username/server-name</mcp-name>
-    <!-- other metadata -->
-  </metadata>
-</package>
-```
+**MCP name format**: `mcp-name: io.github.username/server-name`
+
+Add a README file to your NuGet package that includes the server name.
 
 ### How It Works
-- Registry fetches `.nuspec` file directly from NuGet API
-- Uses URL pattern: `https://api.nuget.org/v3-flatcontainer/{id}/{version}/{id}.nuspec`
-- Checks that `<mcp-name>` element matches your server name
-- Fails if element is missing or doesn't match
+- Registry fetches README from `https://api.nuget.org/v3-flatcontainer/{id}/{version}/readme`
+- Passes if `mcp-name: server-name` is found in the README content
 
 ### Example server.json
 ```json

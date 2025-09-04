@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -13,7 +14,7 @@ import (
 // PyPIPackageResponse represents the structure returned by the PyPI JSON API
 type PyPIPackageResponse struct {
 	Info struct {
-		ProjectUrls map[string]string `json:"project_urls"`
+		Description string `json:"description"`
 	} `json:"info"`
 }
 
@@ -25,13 +26,13 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	
+
 	url := fmt.Sprintf("%s/pypi/%s/json", baseURL, pkg.Identifier)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
 	req.Header.Set("Accept", "application/json")
 
@@ -50,14 +51,14 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 		return fmt.Errorf("failed to parse PyPI package metadata: %w", err)
 	}
 
-	mcpName, exists := pypiResp.Info.ProjectUrls["MCP"]
-	if !exists {
-		return fmt.Errorf("PyPI package '%s' is missing required 'MCP' project URL. Add this to your pyproject.toml: [project.urls] MCP = \"%s\"", pkg.Identifier, serverName)
+	// Check description (README) content
+	description := pypiResp.Info.Description
+
+	// Check for mcp-name: format (more specific)
+	mcpNamePattern := "mcp-name: " + serverName
+	if strings.Contains(description, mcpNamePattern) {
+		return nil // Found as mcp-name: format
 	}
 
-	if mcpName != serverName {
-		return fmt.Errorf("PyPI package ownership validation failed. Expected MCP project URL '%s', got '%s'", serverName, mcpName)
-	}
-
-	return nil
+	return fmt.Errorf("PyPI package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
 }

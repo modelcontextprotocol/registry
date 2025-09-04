@@ -23,13 +23,13 @@ func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) erro
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	
-	url := baseURL + "/" + pkg.Identifier
+
+	url := baseURL + "/" + pkg.Identifier + "/" + pkg.Version
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	
+
 	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
 	req.Header.Set("Accept", "application/json")
 
