@@ -25,7 +25,7 @@ Additionally, we expect clients pull from _subregistries_. These subregistries a
 
 ## Development Status
 
-**2025-08-26 update**: We're targeting a 'preview' go-live on 4th September. This may still be unstable and not provide durability guarantees, but is a step towards being more solidified. A general availability (GA) release will follow later.
+**2025-09-04 update**: We're targeting a 'preview' go-live on 8th September. This may still be unstable and not provide durability guarantees, but is a step towards being more solidified. A general availability (GA) release will follow later.
 
 Current key maintainers:
 - **Adam Jones** (Anthropic) [@domdomegg](https://github.com/domdomegg)  
