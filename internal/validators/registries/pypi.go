@@ -20,14 +20,20 @@ type PyPIPackageResponse struct {
 
 // ValidatePyPI validates that a PyPI package contains the correct MCP server name
 func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) error {
-	baseURL := pkg.RegistryBaseURL
-	if baseURL == "" {
-		baseURL = model.RegistryURLPyPI
+	// Set default registry base URL if empty
+	if pkg.RegistryBaseURL == "" {
+		pkg.RegistryBaseURL = model.RegistryURLPyPI
+	}
+
+	// Validate that the registry base URL matches PyPI exactly
+	if pkg.RegistryBaseURL != model.RegistryURLPyPI {
+		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",
+			pkg.RegistryBaseURL, model.RegistryTypePyPI, model.RegistryURLPyPI)
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	url := fmt.Sprintf("%s/pypi/%s/json", baseURL, pkg.Identifier)
+	url := fmt.Sprintf("%s/pypi/%s/json", pkg.RegistryBaseURL, pkg.Identifier)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

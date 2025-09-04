@@ -12,12 +12,12 @@ const (
 // Package represents a package configuration
 type Package struct {
 	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "mcpb")
-	RegistryType string `json:"registry_type,omitempty"`
+	RegistryType string `json:"registry_type" minLength:"1"`
 	// RegistryBaseURL is the base URL of the package registry
 	RegistryBaseURL string `json:"registry_base_url,omitempty"`
 	// Identifier is the package identifier - either a package name (for registries) or URL (for direct downloads)
-	Identifier           string          `json:"identifier,omitempty"`
-	Version              string          `json:"version,omitempty"`
+	Identifier           string          `json:"identifier" minLength:"1"`
+	Version              string          `json:"version" minLength:"1"`
 	FileSHA256           string          `json:"file_sha256,omitempty"`
 	RunTimeHint          string          `json:"runtime_hint,omitempty"`
 	TransportType        string          `json:"transport_type,omitempty"`

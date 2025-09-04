@@ -223,15 +223,16 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish succeeds with MCPB package", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
-			Name:        "com.example/test-server-mcpb",
+			Name:        "io.github.domdomegg/airtable-mcp-server",
 			Description: "A test server with MCPB package",
 			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
+				Version: "1.7.2",
 			},
+			Status: model.StatusActive,
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,
-					Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+					Identifier:   "github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
 				},
 			},
 		}

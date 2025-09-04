@@ -13,9 +13,15 @@ import (
 
 // ValidateNuGet validates that a NuGet package contains the correct MCP server name
 func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) error {
-	baseURL := pkg.RegistryBaseURL
-	if baseURL == "" {
-		baseURL = model.RegistryURLNuGet
+	// Set default registry base URL if empty
+	if pkg.RegistryBaseURL == "" {
+		pkg.RegistryBaseURL = model.RegistryURLNuGet
+	}
+
+	// Validate that the registry base URL matches NuGet exactly
+	if pkg.RegistryBaseURL != model.RegistryURLNuGet {
+		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",
+			pkg.RegistryBaseURL, model.RegistryTypeNuGet, model.RegistryURLNuGet)
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -27,7 +33,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 	}
 
 	// Try to get README from the package
-	readmeURL := fmt.Sprintf("%s/v3-flatcontainer/%s/%s/readme", baseURL, lowerID, lowerVersion)
+	readmeURL := fmt.Sprintf("%s/v3-flatcontainer/%s/%s/readme", pkg.RegistryBaseURL, lowerID, lowerVersion)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, readmeURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

@@ -17,14 +17,20 @@ type NPMPackageResponse struct {
 
 // ValidateNPM validates that an NPM package contains the correct MCP server name
 func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) error {
-	baseURL := pkg.RegistryBaseURL
-	if baseURL == "" {
-		baseURL = model.RegistryURLNPM
+	// Set default registry base URL if empty
+	if pkg.RegistryBaseURL == "" {
+		pkg.RegistryBaseURL = model.RegistryURLNPM
+	}
+
+	// Validate that the registry base URL matches NPM exactly
+	if pkg.RegistryBaseURL != model.RegistryURLNPM {
+		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",
+			pkg.RegistryBaseURL, model.RegistryTypeNPM, model.RegistryURLNPM)
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	url := baseURL + "/" + pkg.Identifier + "/" + pkg.Version
+	url := pkg.RegistryBaseURL + "/" + pkg.Identifier + "/" + pkg.Version
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

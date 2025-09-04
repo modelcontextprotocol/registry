@@ -39,35 +39,33 @@ type OCIImageConfig struct {
 
 // ValidateOCI validates that an OCI image contains the correct MCP server name annotation
 func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) error {
+	// Set default registry base URL if empty
+	if pkg.RegistryBaseURL == "" {
+		pkg.RegistryBaseURL = model.RegistryURLDocker
+	}
+
+	// Validate that the registry base URL matches OCI/Docker exactly
+	if pkg.RegistryBaseURL != model.RegistryURLDocker {
+		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",
+			pkg.RegistryBaseURL, model.RegistryTypeOCI, model.RegistryURLDocker)
+	}
+
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	// Parse image reference (namespace/repo or repo)
-	parts := strings.Split(pkg.Identifier, "/")
-	var namespace, repo string
-	switch len(parts) {
-	case 2:
-		namespace = parts[0]
-		repo = parts[1]
-	case 1:
-		namespace = "library"
-		repo = pkg.Identifier
-	default:
-		return fmt.Errorf("invalid image reference: %s", pkg.Identifier)
-	}
-
-	// Get image manifest
-	tag := pkg.Version
-	if tag == "" {
-		tag = "latest"
+	namespace, repo, err := parseImageReference(pkg.Identifier)
+	if err != nil {
+		return fmt.Errorf("invalid OCI image reference: %w", err)
 	}
 
 	apiBaseURL := pkg.RegistryBaseURL
-	if pkg.RegistryBaseURL == model.RegistryURLDocker || pkg.RegistryBaseURL == "" {
+	if pkg.RegistryBaseURL == model.RegistryURLDocker {
 		// docker.io is an exceptional registry that was created before standardisation, so needs a custom API base url
 		// https://github.com/containers/image/blob/5e4845dddd57598eb7afeaa6e0f4c76531bd3c91/docker/docker_client.go#L225-L229
 		apiBaseURL = dockerIoAPIBaseURL
 	}
 
+	tag := pkg.Version
 	manifestURL := fmt.Sprintf("%s/v2/%s/%s/manifests/%s", apiBaseURL, namespace, repo, tag)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, manifestURL, nil)
 	if err != nil {
@@ -93,8 +91,11 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusUnauthorized {
 		return fmt.Errorf("OCI image '%s/%s:%s' not found (status: %d)", namespace, repo, tag, resp.StatusCode)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to fetch OCI manifest (status: %d)", resp.StatusCode)
 	}
 
 	var manifest OCIManifest
@@ -135,6 +136,18 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	}
 
 	return nil
+}
+
+func parseImageReference(identifier string) (string, string, error) {
+	parts := strings.Split(identifier, "/")
+	switch len(parts) {
+	case 2:
+		return parts[0], parts[1], nil
+	case 1:
+		return "library", parts[0], nil
+	default:
+		return "", "", fmt.Errorf("invalid image reference: %s", identifier)
+	}
 }
 
 // getDockerIoAuthToken retrieves an authentication token from Docker Hub

@@ -47,7 +47,7 @@ func TestValidateMCPB(t *testing.T) {
 		},
 		{
 			name:         "invalid URL format should fail",
-			packageName:  "not a valid url for mcpb!",
+			packageName:  "not://a valid url for mcpb!",
 			serverName:   "com.example/test",
 			expectError:  true,
 			errorMessage: "invalid MCPB package URL",

@@ -8,9 +8,10 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-// ValidatePackageOwnership validates that the package referenced in the server configuration
-// is owned by the publisher, by checking for a matching server name in the package metadata.
-func ValidatePackageOwnership(ctx context.Context, pkg model.Package, serverName string) error {
+// ValidatePackage validates that the package referenced in the server configuration is:
+// 1. allowed on the official registry (based on registry base url); and
+// 2. owned by the publisher, by checking for a matching server name in the package metadata
+func ValidatePackage(ctx context.Context, pkg model.Package, serverName string) error {
 	switch pkg.RegistryType {
 	case model.RegistryTypeNPM:
 		return registries.ValidateNPM(ctx, pkg, serverName)
