@@ -43,7 +43,7 @@ func IsValidURL(rawURL string) bool {
 		return false
 	}
 
-	if u.Host == "" {
+	if u.Host == "" || u.Hostname() == "localhost" {
 		return false
 	}
 	return true
