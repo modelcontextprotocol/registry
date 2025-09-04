@@ -11,6 +11,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/google/uuid"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
@@ -131,7 +132,7 @@ func TestServersListEndpoint(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create mock registry service
-			registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
+			registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
 			tc.setupRegistryService(registryService)
 
 			// Create a new test API
@@ -202,7 +203,7 @@ func TestServersListEndpoint(t *testing.T) {
 
 func TestServersDetailEndpoint(t *testing.T) {
 	// Create mock registry service
-	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
+	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
 
 	testServer, err := registryService.Publish(apiv0.ServerJSON{
 		Name:        "com.example/test-server",
@@ -284,7 +285,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 // TestServersEndpointsIntegration tests the servers endpoints with actual HTTP requests
 func TestServersEndpointsIntegration(t *testing.T) {
 	// Create mock registry service
-	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
+	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
 
 	// Test data - publish a server and get its actual ID
 	testServer := apiv0.ServerJSON{

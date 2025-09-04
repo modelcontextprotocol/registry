@@ -24,7 +24,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 // Helper function to generate a valid JWT token for testing
 func generateTestJWTToken(cfg *config.Config, claims auth.JWTClaims) (string, error) {
 	jwtManager := auth.NewJWTManager(cfg)
@@ -41,17 +40,18 @@ func TestPublishEndpoint(t *testing.T) {
 	_, err := rand.Read(testSeed)
 	require.NoError(t, err)
 	testConfig := &config.Config{
-		JWTPrivateKey: hex.EncodeToString(testSeed),
+		JWTPrivateKey:            hex.EncodeToString(testSeed),
+		EnableRegistryValidation: false, // Disable for unit tests
 	}
 
 	testCases := []struct {
-		name           string
-		requestBody    interface{}
-		tokenClaims    *auth.JWTClaims
-		authHeader     string
+		name                 string
+		requestBody          interface{}
+		tokenClaims          *auth.JWTClaims
+		authHeader           string
 		setupRegistryService func(service.RegistryService)
-		expectedStatus int
-		expectedError  string
+		expectedStatus       int
+		expectedError        string
 	}{
 		{
 			name: "successful publish with GitHub auth",
@@ -105,9 +105,9 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "missing authorization header",
-			requestBody:    apiv0.ServerJSON{},
-			authHeader:     "", // Empty auth header
+			name:        "missing authorization header",
+			requestBody: apiv0.ServerJSON{},
+			authHeader:  "", // Empty auth header
 			setupRegistryService: func(_ service.RegistryService) {
 				// Empty registry - no setup needed
 			},
@@ -121,7 +121,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Description:   "Test server",
 				VersionDetail: model.VersionDetail{Version: "1.0.0"},
 			},
-			authHeader:     "InvalidFormat",
+			authHeader: "InvalidFormat",
 			setupRegistryService: func(_ service.RegistryService) {
 				// Empty registry - no setup needed
 			},
@@ -137,7 +137,7 @@ func TestPublishEndpoint(t *testing.T) {
 					Version: "1.0.0",
 				},
 			},
-			authHeader:     "Bearer invalidToken",
+			authHeader: "Bearer invalidToken",
 			setupRegistryService: func(_ service.RegistryService) {
 				// Empty registry - no setup needed
 			},
@@ -209,13 +209,38 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "invalid version: cannot publish duplicate version",
 		},
+		{
+			name: "package validation success - MCPB package",
+			requestBody: apiv0.ServerJSON{
+				Name:        "com.example/test-server-mcpb",
+				Description: "A test server with MCPB package",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						RegistryType: model.RegistryTypeMCPB,
+						Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
+						Version:      "1.0.0",
+					},
+				},
+			},
+			tokenClaims: &auth.JWTClaims{
+				AuthMethod: auth.MethodNone,
+				Permissions: []auth.Permission{
+					{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+				},
+			},
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusOK,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create registry service
-			registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
-			
+			registryService := service.NewRegistryService(database.NewMemoryDB(), testConfig)
+
 			// Setup registry service
 			tc.setupRegistryService(registryService)
 

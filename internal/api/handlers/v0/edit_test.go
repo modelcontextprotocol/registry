@@ -22,8 +22,8 @@ import (
 
 func TestEditServerEndpoint(t *testing.T) {
 	// Create registry service and insert a common test server
-	registryService := service.NewRegistryServiceWithDB(database.NewMemoryDB())
-	
+	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+
 	// Publish a test server that will be used across test cases
 	testServer := apiv0.ServerJSON{
 		Name:        "io.github.domdomegg/test-server",
@@ -43,9 +43,9 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NotNil(t, published)
 	assert.NotNil(t, published.Meta)
 	assert.NotNil(t, published.Meta.IOModelContextProtocolRegistry)
-	
+
 	testServerID := published.Meta.IOModelContextProtocolRegistry.ID
-	
+
 	// Publish a second server for permission testing
 	otherServer := apiv0.ServerJSON{
 		Name:        "io.github.other/test-server",
@@ -65,9 +65,9 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NotNil(t, otherPublished)
 	assert.NotNil(t, otherPublished.Meta)
 	assert.NotNil(t, otherPublished.Meta.IOModelContextProtocolRegistry)
-	
+
 	otherServerID := otherPublished.Meta.IOModelContextProtocolRegistry.ID
-	
+
 	// Publish a deleted server for undelete testing
 	deletedServer := apiv0.ServerJSON{
 		Name:        "io.github.domdomegg/deleted-server",
@@ -87,7 +87,7 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NotNil(t, deletedPublished)
 	assert.NotNil(t, deletedPublished.Meta)
 	assert.NotNil(t, deletedPublished.Meta.IOModelContextProtocolRegistry)
-	
+
 	deletedServerID := deletedPublished.Meta.IOModelContextProtocolRegistry.ID
 
 	testCases := []struct {
@@ -143,9 +143,9 @@ func TestEditServerEndpoint(t *testing.T) {
 				Description:   "Test server",
 				VersionDetail: model.VersionDetail{Version: "1.0.0"},
 			},
-			serverID:             testServerID,
-			expectedStatus:       http.StatusUnauthorized,
-			expectedError:        "Unauthorized",
+			serverID:       testServerID,
+			expectedStatus: http.StatusUnauthorized,
+			expectedError:  "Unauthorized",
 		},
 		{
 			name:       "invalid token",
@@ -155,12 +155,12 @@ func TestEditServerEndpoint(t *testing.T) {
 				Description:   "Test server",
 				VersionDetail: model.VersionDetail{Version: "1.0.0"},
 			},
-			serverID:             testServerID,
-			expectedStatus:       http.StatusUnauthorized,
-			expectedError:        "Unauthorized",
+			serverID:       testServerID,
+			expectedStatus: http.StatusUnauthorized,
+			expectedError:  "Unauthorized",
 		},
 		{
-			name:     "permission denied - no edit permissions",
+			name: "permission denied - no edit permissions",
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
@@ -182,7 +182,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedError:  "Forbidden",
 		},
 		{
-			name:     "permission denied - wrong resource",
+			name: "permission denied - wrong resource",
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
@@ -204,7 +204,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedError:  "Forbidden",
 		},
 		{
-			name:     "server not found",
+			name: "server not found",
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
@@ -226,7 +226,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedError:  "Not Found",
 		},
 		{
-			name:     "validation error - invalid server name",
+			name: "validation error - invalid server name",
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{
@@ -248,7 +248,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedError:  "Bad Request",
 		},
 		{
-			name:     "cannot undelete server",
+			name: "cannot undelete server",
 			authHeader: func() string {
 				cfg := &config.Config{JWTPrivateKey: "bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c"}
 				token, _ := generateTestJWTToken(cfg, auth.JWTClaims{

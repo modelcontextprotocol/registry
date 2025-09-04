@@ -5,6 +5,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -38,7 +39,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 	}
 
 	memDB := database.NewMemoryDB()
-	service := NewRegistryServiceWithDB(memDB)
+	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
 
 	for _, server := range existingServers {
 		_, err := service.Publish(*server)

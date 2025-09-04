@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
@@ -16,13 +17,15 @@ const maxServerVersionsPerServer = 10000
 
 // registryServiceImpl implements the RegistryService interface using our Database
 type registryServiceImpl struct {
-	db database.Database
+	db  database.Database
+	cfg *config.Config
 }
 
-// NewRegistryServiceWithDB creates a new registry service with the provided database
-func NewRegistryServiceWithDB(db database.Database) RegistryService {
+// NewRegistryService creates a new registry service with the provided database
+func NewRegistryService(db database.Database, cfg *config.Config) RegistryService {
 	return &registryServiceImpl{
-		db: db,
+		db:  db,
+		cfg: cfg,
 	}
 }
 
@@ -74,7 +77,7 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 	defer cancel()
 
 	// Validate the request
-	if err := validators.ValidatePublishRequest(req); err != nil {
+	if err := validators.ValidatePublishRequest(req, s.cfg); err != nil {
 		return nil, err
 	}
 
@@ -204,7 +207,7 @@ func (s *registryServiceImpl) EditServer(id string, req apiv0.ServerJSON) (*apiv
 	defer cancel()
 
 	// Validate the request
-	if err := validators.ValidatePublishRequest(req); err != nil {
+	if err := validators.ValidatePublishRequest(req, s.cfg); err != nil {
 		return nil, err
 	}
 
