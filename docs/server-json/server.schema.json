@@ -114,6 +114,7 @@
           "examples": [
             "npx",
             "uvx",
+            "docker",
             "dnx"
           ]
         },
