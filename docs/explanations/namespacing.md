@@ -2,6 +2,8 @@
 
 Namespacing prevents name squatting, makes impersonation and typo squatting much harder, and provides attribution through domain-based identity.
 
+For practical steps on how to authenticate for different namespaces, see the [publishing guide](../guides/publishing/publish-server.md#authenticate).
+
 ## Namespace Format
 
 All server names follow reverse-DNS format. Examples:

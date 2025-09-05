@@ -2,9 +2,9 @@
 
 The MCP Registry project is a **metaregistry**, meaning that it hosts metadata for MCP servers but does not host the code for the servers directly.
 
-For local MCP servers, the MCP Registry has pointers in the `packages` node of the [`server.json`](server-json/README.md) schema that refer to packages in supported package managers.
+For local MCP servers, the MCP Registry has pointers in the `packages` node of the [`server.json`](../../reference/server-json/generic-server-json.md) schema that refer to packages in supported package managers.
 
-The list of supported package managers for hosting MCP servers is defined by the `properties.packages[N].properties.registry_type` string enum in the [`server.json` schema](server-json/server.schema.json). For example, this could be "npm" (for npmjs.com packages) or "pypi" (for PyPI packages).
+The list of supported package managers for hosting MCP servers is defined by the `properties.packages[N].properties.registry_type` string enum in the [`server.json` schema](../../reference/server-json/server.schema.json). For example, this could be "npm" (for npmjs.com packages) or "pypi" (for PyPI packages).
 
 For remote MCP servers, the package registry is not relevant. The MCP client consumes the server via a URL instead of by downloading and running a package. In other words, this document only applies to local MCP servers.
 
@@ -33,11 +33,11 @@ These steps may evolve as additional validations or details are discovered and m
 1. [Create a feature request issue](https://github.com/modelcontextprotocol/registry/issues/new?template=feature_request.md) on the MCP Registry repository to begin the discussion about adding the package registry.
    - Example for NuGet: https://github.com/modelcontextprotocol/registry/issues/126
 1. Open a PR with the following changes:
-   - Update the [`server.json` schema](server-json/server.schema.json)
+   - Update the [`server.json` schema](../../reference/server-json/server.schema.json)
      - Add your package registry name to the `registry_type` example array.
      - Add your package registry base url to the `registry_base_url` example array.
      - Add the single-shot CLI command name to the `runtime_hint` example value array.
-   - Update the [`openapi.yaml`](server-registry-api/openapi.yaml)
+   - Update the [`openapi.yaml`](../../reference/api/openapi.yaml)
      - Add your package registry name to the `registry_type` enum value array.
      - Add your package registry base url to the `registry_base_url` enum value array.
      - Add the single-shot CLI command name to the `runtime_hint` example value array.

@@ -2,7 +2,7 @@
 
 CLI tool for publishing MCP servers to the registry.
 
-> These docs are for contributors. See the [Publisher User Guide](../../docs/publisher/guide.md) for end-user documentation.
+> These docs are for contributors. See the [Publisher User Guide](../../docs/guides/publishing/publish-server.md) for end-user documentation.
 
 ## Quick Development Setup
 

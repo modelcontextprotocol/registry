@@ -2,6 +2,8 @@
 
 This document describes the additional requirements and validation rules that apply when publishing to the official MCP Registry at `registry.modelcontextprotocol.io`.
 
+For step-by-step publishing instructions, see the [publishing guide](../../guides/publishing/publish-server.md).
+
 ## Overview
 
 While the [generic server.json format](./generic-server-json.md) defines the base specification, the official registry enforces additional validation to ensure:
@@ -16,13 +18,13 @@ While the [generic server.json format](./generic-server-json.md) defines the bas
 
 Publishers must prove ownership of their namespace. For example to publish to `com.example/server`, the publisher must prove they own the `example.com` domain.
 
-See the [publishing guide](../../../guides/publishing/publish-server.md) for authentication details for GitHub and domain namespaces.
+See the [publishing guide](../../guides/publishing/publish-server.md) for authentication details for GitHub and domain namespaces.
 
 ## Package Ownership Verification
 
 All packages must include metadata proving the publisher owns them. This prevents impersonation and ensures authenticity (see more reasoning in [#96](https://github.com/modelcontextprotocol/registry/issues/96)).
 
-For detailed verification requirements for each registry type, see the [publishing guide](../../../guides/publishing/publish-server.md).
+For detailed verification requirements for each registry type, see the [publishing guide](../../guides/publishing/publish-server.md).
 
 ## Remote Server URL Match
 

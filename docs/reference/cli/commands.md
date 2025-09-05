@@ -2,6 +2,8 @@
 
 Complete command reference for the `mcp-publisher` CLI tool.
 
+See the [publishing guide](../../guides/publishing/publish-server.md) for a walkthrough of using the CLI to publish a server.
+
 ## Installation
 
 <!-- TODO: update once #358 solved -->
@@ -128,6 +130,8 @@ mcp-publisher login none [--registry=URL]
 ### `mcp-publisher publish`
 
 Publish server to the registry.
+
+For detailed guidance on the publishing process, see the [publishing guide](../../guides/publishing/publish-server.md).
 
 **Usage:**
 ```bash

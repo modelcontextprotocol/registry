@@ -301,7 +301,7 @@ You should see your server metadata returned as JSON.
 ## Next Steps
 
 - **Update your server**: Publish new versions with updated server.json files
-- **Set up CI/CD**: Automate publishing with [GitHub Actions](github-actions-publishing.md)
+- **Set up CI/CD**: Automate publishing with [GitHub Actions](github-actions.md)
 - **Learn more**: Understand [server.json format](../../reference/server-json/generic-server-json.md) in depth
 
 ## What You've Accomplished

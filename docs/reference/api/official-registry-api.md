@@ -2,6 +2,8 @@
 
 This document describes the API for the official MCP Registry hosted at `registry.modelcontextprotocol.io`.
 
+This API is based on the [generic registry API](./generic-registry-api.md) with additional endpoints and authentication. For practical examples of consuming the API, see the [API usage guide](../../guides/consuming/use-rest-api.md). For publishing servers using the API, see the [publishing guide](../../guides/publishing/publish-server.md).
+
 ## Base URLs
 
 - **Production**: `https://registry.modelcontextprotocol.io`
@@ -12,7 +14,7 @@ This document describes the API for the official MCP Registry hosted at `registr
 - **[Live API Docs](https://registry.modelcontextprotocol.io/docs)** - Stoplight elements with try-it-now functionality
 - **[OpenAPI Spec](https://registry.modelcontextprotocol.io/openapi.yaml)** - Complete machine-readable specification
 
-## Implementation
+## Extensions
 
 The official registry implements the [Generic Registry API](./generic-registry-api.md) with the following specific configurations and extensions:
 

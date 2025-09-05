@@ -25,14 +25,13 @@ func main() {
 }
 
 func runValidation() error {
-	basePath := filepath.Join("docs", "server-json")
+	basePath := filepath.Join("docs", "reference", "server-json")
 
 	schemas := []struct {
 		name string
 		path string
 	}{
 		{"server.schema.json", filepath.Join(basePath, "server.schema.json")},
-		{"registry-schema.json", filepath.Join(basePath, "registry-schema.json")},
 	}
 
 	expectedSchemaCount := len(schemas)

@@ -2,6 +2,9 @@
 
 A standardized RESTful HTTP API for MCP registries to provide consistent endpoints for discovering and retrieving MCP servers.
 
+Also see:
+- For guidance consuming the API, see the [consuming guide](../../guides/consuming/use-rest-api.md).
+
 ## Browse the Complete API Specification
 
 **📋 View the full API specification interactively**: Open [openapi.yaml](./openapi.yaml) in an OpenAPI viewer like [Stoplight Elements](https://elements-demo.stoplight.io/?spec=https://raw.githubusercontent.com/modelcontextprotocol/registry/refs/heads/main/docs/reference/api/openapi.yaml).

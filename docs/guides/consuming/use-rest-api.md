@@ -74,4 +74,4 @@ You likely should filter out servers that are not `active` in the `status` field
 
 ### Running servers
 
-You can use the `packages` or `remotes` field to determine how to run a server. More details of these fields are in the [server.json documentation](../../reference/server-json/).
+You can use the `packages` or `remotes` field to determine how to run a server. More details of these fields are in the [server.json documentation](../../reference/server-json/generic-server-json.md).

@@ -12,7 +12,7 @@ By the end of this tutorial, you'll have:
 
 ## Prerequisites
 
-- Already published your server manually (complete [Publishing Tutorial](publish-your-first-server.md) first)
+- Already published your server manually (complete [Publishing Tutorial](publish-server.md) first)
 - GitHub repository with your MCP server code
 - Basic understanding of CI/CD concepts
 - 20-30 minutes

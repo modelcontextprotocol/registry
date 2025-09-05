@@ -16,7 +16,7 @@ The MCP Registry is the official centralized metadata repository for publicly-ac
 ### What is the difference between "Official MCP Registry", "MCP Registry", "MCP registry", "MCP Registry API", etc?
 
 There are four underlying concepts:
-- "MCP Server Registry API" (or "MCP Registry API"): The OpenAPI specification defined in [openapi.yaml](./server-registry-api/openapi.yaml). This is a reusable API specification that anyone building any sort of "MCP server registry" should consider adopting / aligning with.
+- "MCP Server Registry API" (or "MCP Registry API"): The OpenAPI specification defined in [openapi.yaml](./api/openapi.yaml). This is a reusable API specification that anyone building any sort of "MCP server registry" should consider adopting / aligning with.
 - "Official MCP Registry" (or "MCP Registry"): The application that lives at `https://registry.modelcontextprotocol.io`. This registry currently only catalogs MCP servers, but may be extended in the future to also catalog MCP client/host apps and frameworks.
 - "Official MCP Registry API": The REST API served at `https://registry.modelcontextprotocol.io`, which is a superset of the MCP Registry API. Its OpenAPI specification can be downloaded from [https://registry.modelcontextprotocol.io/openapi.yaml](https://registry.modelcontextprotocol.io/openapi.yaml)
 - "MCP server registry" (or "MCP registry"): A third party, likely commercial, implementation of the MCP Server Registry API or derivative specification.
@@ -35,13 +35,13 @@ The registry is designed for programmatic consumption by:
 
 ### Will there be feature X?
 
-See [roadmap.md](./roadmap.md).
+See [roadmap.md](../explanations/roadmap.md).
 
 ## Publishing Servers
 
 ### How do I publish my MCP server?
 
-See the [publisher README](../cmd/publisher/README.md)
+See the [publisher README](../../cmd/publisher/README.md)
 
 ### What namespaces are available?
 
@@ -83,7 +83,7 @@ The registry accepts any version string up to 255 characters, but we recommend:
 - **SHOULD align with package versions** to reduce confusion
 - **MAY use prerelease labels** (e.g., "1.0.0-1") for registry-specific versions
 
-The registry attempts to parse versions as semantic versions for proper ordering. Non-semantic versions are allowed but will be ordered by publication timestamp. See the [versioning guide](./versioning.md) for detailed guidance.
+The registry attempts to parse versions as semantic versions for proper ordering. Non-semantic versions are allowed but will be ordered by publication timestamp. See the [versioning guide](../explanations/versioning.md) for detailed guidance.
 
 ### Can I add custom metadata when publishing?
 

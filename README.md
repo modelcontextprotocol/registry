@@ -90,7 +90,7 @@ make publisher
 ./cmd/publisher/bin/mcp-publisher --help
 ```
 
-See [the publisher guide](./docs/guides/publishing/use-publisher-cli.md) for more details.
+See [the publisher guide](./docs/guides/publishing/publish-server.md) for more details.
 
 #### Other commands
 
