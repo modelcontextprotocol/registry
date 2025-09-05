@@ -90,6 +90,41 @@ func IsValidURL(rawURL string) bool {
 	return true
 }
 
+// IsValidSubfolderPath checks if a subfolder path is valid
+func IsValidSubfolderPath(path string) bool {
+	// Empty path is valid (subfolder is optional)
+	if path == "" {
+		return true
+	}
+
+	// Must not start with / (must be relative)
+	if strings.HasPrefix(path, "/") {
+		return false
+	}
+
+	// Must not end with / (clean path format)
+	if strings.HasSuffix(path, "/") {
+		return false
+	}
+
+	// Check for valid path characters (alphanumeric, dash, underscore, dot, forward slash)
+	validPathRegex := regexp.MustCompile(`^[a-zA-Z0-9\-_./]+$`)
+	if !validPathRegex.MatchString(path) {
+		return false
+	}
+
+	// Check that path segments are valid
+	segments := strings.Split(path, "/")
+	for _, segment := range segments {
+		// Disallow empty segments ("//"), current dir ("."), and parent dir ("..")
+		if segment == "" || segment == "." || segment == ".." {
+			return false
+		}
+	}
+
+	return true
+}
+
 // IsValidRemoteURL checks if a URL is valid for remotes (stricter than packages - no localhost allowed)
 func IsValidRemoteURL(rawURL string) bool {
 	// First check basic URL structure

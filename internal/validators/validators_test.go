@@ -95,6 +95,102 @@ func TestValidate(t *testing.T) {
 			expectedError: validators.ErrInvalidRepositoryURL.Error(),
 		},
 		{
+			name: "server with valid repository subfolder",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:       "https://github.com/owner/repo",
+					Source:    "github",
+					Subfolder: "servers/my-server",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "server with repository subfolder containing path traversal",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:       "https://github.com/owner/repo",
+					Source:    "github",
+					Subfolder: "../parent/folder",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+			},
+			expectedError: validators.ErrInvalidSubfolderPath.Error(),
+		},
+		{
+			name: "server with repository subfolder starting with slash",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:       "https://github.com/owner/repo",
+					Source:    "github",
+					Subfolder: "/absolute/path",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+			},
+			expectedError: validators.ErrInvalidSubfolderPath.Error(),
+		},
+		{
+			name: "server with repository subfolder ending with slash",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:       "https://github.com/owner/repo",
+					Source:    "github",
+					Subfolder: "servers/my-server/",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+			},
+			expectedError: validators.ErrInvalidSubfolderPath.Error(),
+		},
+		{
+			name: "server with repository subfolder containing invalid characters",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:       "https://github.com/owner/repo",
+					Source:    "github",
+					Subfolder: "servers/my server",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+			},
+			expectedError: validators.ErrInvalidSubfolderPath.Error(),
+		},
+		{
+			name: "server with repository subfolder containing empty segments",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:       "https://github.com/owner/repo",
+					Source:    "github",
+					Subfolder: "servers//my-server",
+				},
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+			},
+			expectedError: validators.ErrInvalidSubfolderPath.Error(),
+		},
+		{
 			name: "package with spaces in name",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",

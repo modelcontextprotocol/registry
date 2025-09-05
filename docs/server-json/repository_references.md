@@ -8,6 +8,8 @@ Consumers of the `server.json` metadata MAY use the `source` property to determi
 
 The `url` property MAY be used to browse the source code. Some source forges, such as GitHub, support `git clone <url>` on the URL, which also works for web browsing. For the purposes of the Official MCP Registry, the URL MUST be accessible in a web browser.
 
+The optional `subfolder` property MAY be used to specify a relative path from the repository root to the location of the MCP server within a monorepo structure. The value MUST be a clean relative path.
+
 The `id` property is owned and determined by the source forge, such as GitHub. This value SHOULD be stable across repository renames and, if applicable on the source forge, MAY be used to detect repository resurrection attacks. If a repository is renamed, the `id` value SHOULD remain constant. If the repository is deleted and then recreated later, the `id` value SHOULD change.
 
 Determining the `id` is specific to the source forge. For GitHub, the following [GitHub CLI](https://cli.github.com/) command MAY be used (works for both public and private repositories):

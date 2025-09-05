@@ -46,6 +46,47 @@
 }
 ```
 
+## Server in a Monorepo with Subfolder
+
+For MCP servers located within a subdirectory of a larger repository (monorepo structure), use the `subfolder` field to specify the relative path:
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.modelcontextprotocol/everything",
+  "description": "MCP server that exercises all the features of the MCP protocol",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/modelcontextprotocol/servers",
+    "source": "github",
+    "subfolder": "src/everything"
+  },
+  "version_detail": {
+    "version": "0.6.2"
+  },
+  "packages": [
+    {
+      "registry_type": "npm",
+      "registry_base_url": "https://registry.npmjs.org",
+      "identifier": "@modelcontextprotocol/everything",
+      "version": "0.6.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "_meta": {
+    "publisher": {
+      "tool": "npm-publisher",
+      "version": "1.0.1",
+      "build_info": {
+        "timestamp": "2023-12-01T10:30:00Z"
+      }
+    }
+  }
+}
+```
+
 ## Constant (fixed) arguments needed to start the MCP server
 
 Suppose your MCP server application requires a `mcp start` CLI arguments to start in MCP server mode. Express these as positional arguments like this:
@@ -579,6 +620,43 @@ This example shows an MCPB (MCP Bundle) package that:
 - Is hosted on GitHub Releases (an allowlisted provider)
 - Includes a SHA-256 hash for integrity verification
 - Can be downloaded and executed directly by MCP clients that support MCPB
+
+## Embedded MCP inside a CLI tool
+
+Some CLI tools bundle an MCP server, without a standalone MCP package or a public repository. In these cases, reuse the existing `packages` shape by pointing at the host CLI package and supplying the `package_arguments` and `runtime_hint` if needed to start the MCP server.
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.snyk/cli-mcp",
+  "description": "MCP server provided by the Snyk CLI",
+  "status": "active",
+  "version_detail": {
+    "version": "1.1298.0"
+  },
+  "packages": [
+    {
+      "registry_type": "npm",
+      "registry_base_url": "https://registry.npmjs.org",
+      "identifier": "snyk",
+      "version": "1.1298.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "package_arguments": [
+        { "type": "positional", "value": "mcp" },
+        {
+          "type": "named",
+          "name": "-t",
+          "description": "Transport type for MCP server",
+          "default": "stdio",
+          "choices": ["stdio", "sse"]
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Deprecated Server Example
 

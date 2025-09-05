@@ -59,6 +59,11 @@ func validateRepository(obj *model.Repository) error {
 		return fmt.Errorf("%w: %s", ErrInvalidRepositoryURL, obj.URL)
 	}
 
+	// validate subfolder if present
+	if obj.Subfolder != "" && !IsValidSubfolderPath(obj.Subfolder) {
+		return fmt.Errorf("%w: %s", ErrInvalidSubfolderPath, obj.Subfolder)
+	}
+
 	return nil
 }
 

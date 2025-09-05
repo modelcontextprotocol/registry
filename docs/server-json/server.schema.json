@@ -24,6 +24,11 @@
         "id": {
           "type": "string",
           "example": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
+        },
+        "subfolder": {
+          "type": "string",
+          "description": "Optional relative path from repository root to the server location within a monorepo or nested package structure",
+          "example": "src/everything"
         }
       }
     },
@@ -448,7 +453,7 @@
                   "additionalProperties": true
                 },
                 "io.modelcontextprotocol.registry": {
-                  "type": "object", 
+                  "type": "object",
                   "description": "Official MCP registry metadata (read-only, added by registry)",
                   "additionalProperties": true
                 }
