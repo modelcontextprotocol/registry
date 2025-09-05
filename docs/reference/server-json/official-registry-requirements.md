@@ -1,4 +1,4 @@
-# Official Registry Requirements
+# Official Registry Server.json Requirements
 
 This document describes the additional requirements and validation rules that apply when publishing to the official MCP Registry at `registry.modelcontextprotocol.io`.
 

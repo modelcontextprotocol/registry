@@ -12,7 +12,7 @@ info:
     identifier: MIT
 
 paths:
-  /servers:
+  /v0/servers:
     get:
       summary: List MCP servers
       description: Returns a list of all registered MCP servers
@@ -36,7 +36,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
-  /servers/{id}:
+  /v0/servers/{id}:
     get:
       summary: Get MCP server details
       description: Returns detailed information about a specific MCP server
@@ -70,10 +70,15 @@ paths:
                   error:
                     type: string
                     example: "Server not found"
-  /publish:
+  /v0/publish:
     post:
-      summary: Publish MCP server
-      description: Publish a new MCP server to the registry or update an existing one
+      summary: Publish MCP server (Optional)
+      description: |
+        Publish a new MCP server to the registry or update an existing one.
+        
+        **Note**: This endpoint is optional for registry implementations. Read-only registries may not provide this functionality.
+        
+        Authentication mechanism is registry-specific and may vary between implementations.
       security:
         - bearerAuth: []
       requestBody:
@@ -176,7 +181,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Registry JWT token. Convention is that this can be obtained from a `/v0/auth/` endpoint.
+      description: |
+        Registry-specific authentication token. The authentication mechanism and token format may vary between registry implementations.
+        
+        Some registries may use JWT tokens, others may use API keys or OAuth. Consult your specific registry's authentication documentation.
   schemas:
     Repository:
       type: object
