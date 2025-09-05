@@ -34,7 +34,7 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 
 	// Validate all remotes
 	for _, remote := range serverJSON.Remotes {
-		if err := validateTransport(&remote); err != nil {
+		if err := validateRemoteTransport(&remote); err != nil {
 			return err
 		}
 	}
@@ -173,7 +173,10 @@ func validatePackageTransport(transport *model.Transport, availableVariables []s
 	// Validate transport type is supported
 	switch transport.Type {
 	case model.TransportTypeStdio:
-		// No additional validation needed for stdio - URL should be empty
+		// Validate that URL is empty for stdio transport
+		if transport.URL != "" {
+			return fmt.Errorf("url must be empty for %s transport type, got: %s", transport.Type, transport.URL)
+		}
 		return nil
 	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
 		// URL is required for streamable-http and sse
@@ -196,8 +199,8 @@ func validatePackageTransport(transport *model.Transport, availableVariables []s
 	}
 }
 
-// validateTransport validates a remote transport (no templating allowed)
-func validateTransport(obj *model.Transport) error {
+// validateRemoteTransport validates a remote transport (no templating allowed)
+func validateRemoteTransport(obj *model.Transport) error {
 	// Validate transport type is supported - remotes only support streamable-http and sse
 	switch obj.Type {
 	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
