@@ -9,6 +9,13 @@ const (
 	StatusDeleted    Status = "deleted"
 )
 
+// Transport represents transport configuration with optional URL templating
+type Transport struct {
+	Type    string          `json:"type"`
+	URL     string          `json:"url,omitempty"`
+	Headers []KeyValueInput `json:"headers,omitempty"`
+}
+
 // Package represents a package configuration
 type Package struct {
 	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "mcpb")
@@ -20,17 +27,10 @@ type Package struct {
 	Version              string          `json:"version" minLength:"1"`
 	FileSHA256           string          `json:"file_sha256,omitempty"`
 	RunTimeHint          string          `json:"runtime_hint,omitempty"`
-	TransportType        string          `json:"transport_type,omitempty"`
+	Transport            Transport       `json:"transport,omitempty"`
 	RuntimeArguments     []Argument      `json:"runtime_arguments,omitempty"`
 	PackageArguments     []Argument      `json:"package_arguments,omitempty"`
 	EnvironmentVariables []KeyValueInput `json:"environment_variables,omitempty"`
-}
-
-// Remote represents a remote connection endpoint
-type Remote struct {
-	TransportType string          `json:"transport_type"`
-	URL           string          `json:"url" format:"uri"`
-	Headers       []KeyValueInput `json:"headers,omitempty"`
 }
 
 // Repository represents a source code repository as defined in the spec

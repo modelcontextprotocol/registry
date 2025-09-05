@@ -34,7 +34,7 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 
 	// Validate all remotes
 	for _, remote := range serverJSON.Remotes {
-		if err := validateRemote(&remote); err != nil {
+		if err := validateTransport(&remote); err != nil {
 			return err
 		}
 	}
@@ -130,8 +130,8 @@ func validateArgumentValueFields(name, value, defaultValue string) error {
 	return nil
 }
 
-func validateRemote(obj *model.Remote) error {
-	if !IsValidURL(obj.URL) {
+func validateTransport(obj *model.Transport) error {
+	if obj.URL != "" && !IsValidURL(obj.URL) {
 		return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
 	}
 	return nil
