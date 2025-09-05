@@ -52,15 +52,16 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Server name/identifier",
-          "example": "io.modelcontextprotocol/filesystem",
-          "minLength": 1,
+          "description": "Server name in reverse-DNS format. Must contain exactly one forward slash separating namespace from server name.",
+          "example": "io.github.user/weather",
+          "pattern": "^[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+$",
+          "minLength": 3,
           "maxLength": 200
         },
         "description": {
           "type": "string",
-          "description": "Human-readable description of the server's functionality",
-          "example": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
+          "description": "Clear human-readable explanation of server functionality. Should focus on capabilities, not implementation details.",
+          "example": "MCP server providing weather data and forecasts via OpenWeatherMap API",
           "minLength": 1,
           "maxLength": 100
         },

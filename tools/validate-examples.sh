@@ -1,6 +1,5 @@
 #!/bin/bash
-# Validate examples in docs/server-json/examples.md
-# For more information, see docs/server-json/README.md
+# Validate example server.json files
 
 set -e
 

@@ -66,7 +66,6 @@ mcp-publisher login github [--registry=URL]
 ```
 - Opens browser for GitHub OAuth flow
 - Grants access to `io.github.{username}/*` and `io.github.{org}/*` namespaces
-- Stores token in `~/.mcp_publisher_token`
 
 #### GitHub OIDC (CI/CD)  
 ```bash
@@ -75,6 +74,8 @@ mcp-publisher login github-oidc [--registry=URL]
 - Uses GitHub Actions OIDC tokens automatically
 - Requires `id-token: write` permission in workflow
 - No browser interaction needed
+
+Also see [the guide to publishing from GitHub Actions](../../guides/publishing/github-actions.md).
 
 #### DNS Verification
 ```bash
@@ -140,7 +141,7 @@ mcp-publisher publish [options]
 
 **Process:**
 1. Validates `server.json` against schema
-2. Verifies package ownership (see [Validation Reference](../server-json/validation.md))
+2. Verifies package ownership (see [Official Registry Requirements](../server-json/official-registry-requirements.md))
 3. Checks namespace authentication
 4. Publishes to registry
 
@@ -168,7 +169,6 @@ mcp-publisher logout
 **Behavior:**
 - Removes `~/.mcp_publisher_token`
 - Does not revoke tokens on server side
-- Safe to run multiple times
 
 ## Configuration
 
@@ -180,38 +180,4 @@ Authentication tokens stored in `~/.mcp_publisher_token` as JSON:
   "registry_url": "https://registry.modelcontextprotocol.io",
   "expires_at": "2024-12-31T23:59:59Z"
 }
-```
-
-### Environment Variables
-- `MCP_PUBLISHER_REGISTRY` - Default registry URL
-- `MCP_PUBLISHER_TOKEN_FILE` - Custom token file location
-
-## Exit Codes
-
-- `0` - Success
-- `1` - General error (validation, network, etc.)
-- `2` - Authentication error
-- `3` - Permission denied (namespace mismatch)
-
-## Common Workflows
-
-### First-time Publishing
-```bash
-mcp-publisher init
-# Edit server.json
-mcp-publisher login github
-mcp-publisher publish
-```
-
-### CI/CD Publishing  
-```bash
-mcp-publisher login github-oidc
-mcp-publisher publish --file=./.registry/server.json
-```
-
-### Update Existing Server
-```bash
-# Update version in server.json
-mcp-publisher publish --dry-run  # validate
-mcp-publisher publish           # publish
 ```

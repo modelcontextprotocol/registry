@@ -30,7 +30,7 @@ func main() {
 }
 
 func run() error {
-	examplesPath := filepath.Join("docs", "server-json", "examples.md")
+	examplesPath := filepath.Join("docs", "reference", "server-json", "generic-server-json.md")
 	examples, err := getExamples(examplesPath)
 	if err != nil {
 		log.Fatalf("failed to extract examples: %v", err)

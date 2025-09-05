@@ -20,10 +20,9 @@ import (
 )
 
 const (
-	// expectedExampleCount is the number of JSON examples we expect to find in examples.md
-	// IMPORTANT: Only change this count if you have intentionally added or removed examples
-	// from the examples.md file. This check prevents accidental formatting changes from
-	// causing examples to be skipped during validation.
+	// expectedExampleCount is the number of JSON examples we expect to find in generic-server-json.md
+	// IMPORTANT: Only change this count if you have intentionally added or removed examples. This
+	// check prevents accidental formatting changes from causing examples to be skipped during validation.
 	expectedExampleCount = 10
 )
 
@@ -36,11 +35,10 @@ func main() {
 }
 
 func runValidation() error {
-	basePath := filepath.Join("docs", "server-json")
+	basePath := filepath.Join("docs", "reference", "server-json")
 
-	examplesPath := filepath.Join(basePath, "examples.md")
+	examplesPath := filepath.Join(basePath, "generic-server-json.md")
 	schemaPath := filepath.Join(basePath, "server.schema.json")
-	registrySchemaPath := filepath.Join(basePath, "registry-schema.json")
 
 	examples, err := extractExamples(examplesPath)
 	if err != nil {
@@ -61,17 +59,12 @@ func runValidation() error {
 		return fmt.Errorf("failed to compile server.schema.json: %w", err)
 	}
 
-	registrySchema, err := compileSchema(registrySchemaPath)
-	if err != nil {
-		return fmt.Errorf("failed to compile registry-schema.json: %w", err)
-	}
-
 	validatedCount := 0
 
 	for i, example := range examples {
 		log.Printf("Example %d:", i+1)
 
-		if validateExample(example, baseSchema, registrySchema) {
+		if validateExample(example, baseSchema) {
 			validatedCount++
 		}
 
@@ -87,7 +80,7 @@ func runValidation() error {
 	return nil
 }
 
-func validateExample(ex example, baseSchema, registrySchema *jsonschema.Schema) bool {
+func validateExample(ex example, baseSchema *jsonschema.Schema) bool {
 	var data any
 	if err := json.Unmarshal([]byte(ex.content), &data); err != nil {
 		log.Printf("  ❌ Invalid JSON: %v", err)
@@ -111,11 +104,10 @@ func validateExample(ex example, baseSchema, registrySchema *jsonschema.Schema) 
 	}
 
 	baseValid := validateAgainstSchema(serverData, baseSchema, "server.schema.json")
-	registryValid := validateAgainstSchema(serverData, registrySchema, "registry-schema.json")
 	goValidatorValid := validateWithObjectValidator(serverData)
 
 	// Only count as validated if all validations passed
-	return publishRequestValid && baseValid && registryValid && goValidatorValid
+	return publishRequestValid && baseValid && goValidatorValid
 }
 
 func validateAgainstSchema(data any, schema *jsonschema.Schema, schemaName string) bool {

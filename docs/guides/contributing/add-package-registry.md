@@ -41,7 +41,7 @@ These steps may evolve as additional validations or details are discovered and m
      - Add your package registry name to the `registry_type` enum value array.
      - Add your package registry base url to the `registry_base_url` enum value array.
      - Add the single-shot CLI command name to the `runtime_hint` example value array.
-   - Add a sample, minimal `server.json` to the [`server.json` examples](server-json/examples.md).
+   - Add a sample, minimal `server.json` to the [`server.json` examples](../../reference/server-json/generic-server-json.md).
    - Implement a registry validator:
       - Create a new validator file: `internal/validators/registries/yourregistry.go`, following the pattern of existing validators. Examples:
          - **npm**: Checks for an `mcpName` field in `package.json` that matches the server name
@@ -50,3 +50,7 @@ These steps may evolve as additional validations or details are discovered and m
          - **Docker/OCI**: Validates a Docker image label `io.modelcontextprotocol.server.name` in the image manifest
       - Add corresponding unit tests: `internal/validators/registries/yourregistry_test.go`
       - Register your validator in `internal/validators/validators.go`
+   - Update the publishing documentation:
+      - Add a new publishing guide: `docs/guides/publishing/publish-[yourregistry].md`, following the pattern of existing publishing guides (e.g., `publish-npm.md`, `publish-pypi.md`)
+      - Include instructions on how to prepare packages for your registry, including any specific validation requirements
+      - Update `docs/guides/publishing/README.md` to reference your new publishing guide

@@ -4,18 +4,18 @@ Technical specifications and quick lookups for the MCP Registry.
 
 ## API Reference
 
-- **[Registry API](./api/registry-api.md)** - Complete REST API specification
-- **[Live OpenAPI Docs](https://registry.modelcontextprotocol.io/docs)** - Interactive API documentation
+- [Generic Registry API](./api/generic-registry-api.md)
+- [Official Registry API](./api/official-registry-api.md)
 
 ## server.json Reference
 
-- **[Schema Reference](./server-json/schema.md)** - Complete field specification
-- **[Validation Requirements](./server-json/validation.md)** - Package verification rules
+- [Generic server.json Format](./server-json/generic-server-json.md)
+- [Official Registry Requirements](./server-json/official-registry-requirements.md)
 
-## CLI Reference  
+## CLI Reference
 
-- **[Publisher Commands](./cli/commands.md)** - Complete CLI command reference
+- [Commands](./cli/commands.md)
 
 ## Quick Reference
 
-- **[FAQ](./faq.md)** - Frequently asked questions with brief answers
+- [FAQ](./faq.md)

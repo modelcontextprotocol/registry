@@ -6,7 +6,7 @@ This directory contains an end-to-end test for publishing to the registry.
 
 1. **Publisher Tool**: Tests the `publisher` CLI that publishes metadata to the registry
 2. **Registry API**: Validates the `/v0/publish` and `/v0/servers/{id}` endpoints work correctly
-3. **Example Validation**: Ensures all example JSON in `docs/server-json/examples.md` is valid and can be published
+3. **Example Validation**: Ensures all example JSON in `docs/reference/server-json/generic-server-json.md` is valid and can be published
 4. **Data Consistency**: Verifies published data matches what's retrieved from the registry
 
 ## Test Flow
