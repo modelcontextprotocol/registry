@@ -44,3 +44,10 @@ type Metadata struct {
 	NextCursor string `json:"next_cursor,omitempty"`
 	Count      int    `json:"count"`
 }
+
+func (s *ServerJSON) GetID() string {
+	if s.Meta != nil && s.Meta.IOModelContextProtocolRegistry != nil {
+		return s.Meta.IOModelContextProtocolRegistry.ID
+	}
+	return ""
+}
