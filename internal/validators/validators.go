@@ -81,6 +81,12 @@ func validatePackageField(obj *model.Package) error {
 		}
 	}
 
+	// Validate transport with template variable support
+	availableVariables := collectAvailableVariables(obj)
+	if err := validatePackageTransport(&obj.Transport, availableVariables); err != nil {
+		return fmt.Errorf("invalid transport: %w", err)
+	}
+
 	return nil
 }
 
@@ -162,11 +168,51 @@ func collectAvailableVariables(pkg *model.Package) []string {
 	return variables
 }
 
-func validateTransport(obj *model.Transport) error {
-	if obj.URL != "" && !IsValidURL(obj.URL) {
-		return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
+// validatePackageTransport validates a package's transport with templating support
+func validatePackageTransport(transport *model.Transport, availableVariables []string) error {
+	// Validate transport type is supported
+	switch transport.Type {
+	case model.TransportTypeStdio:
+		// No additional validation needed for stdio - URL should be empty
+		return nil
+	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
+		// URL is required for streamable-http and sse
+		if transport.URL == "" {
+			return fmt.Errorf("url is required for %s transport type", transport.Type)
+		}
+		// Validate URL format with template variable support
+		if !IsValidTemplatedURL(transport.URL, availableVariables, true) {
+			// Check if it's a template variable issue or basic URL issue
+			templateVars := extractTemplateVariables(transport.URL)
+			if len(templateVars) > 0 {
+				return fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v", 
+					ErrInvalidRemoteURL, transport.URL, availableVariables)
+			}
+			return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported transport type: %s", transport.Type)
 	}
-	return nil
+}
+
+// validateTransport validates a remote transport (no templating allowed)
+func validateTransport(obj *model.Transport) error {
+	// Validate transport type is supported - remotes only support streamable-http and sse
+	switch obj.Type {
+	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
+		// URL is required for streamable-http and sse
+		if obj.URL == "" {
+			return fmt.Errorf("url is required for %s transport type", obj.Type)
+		}
+		// Validate URL format (no templates allowed for remotes)
+		if !IsValidURL(obj.URL) {
+			return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported transport type for remotes: %s (only streamable-http and sse are supported)", obj.Type)
+	}
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions
