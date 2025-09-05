@@ -1,29 +1,13 @@
 # MCP Registry
 
-> [!WARNING]  
-> The registry is under [active development](#development-status). The registry API spec is unstable and the official MCP registry database may be wiped at any time.
+The MCP registry provides MCP clients with a list of MCP servers, like an app store for MCP servers.
 
-📖 **[API Documentation](https://staging.registry.modelcontextprotocol.io/docs)** | 📚 **[Technical Docs](./docs)**
-
-## What is the registry?
-
-The registry will provide MCP clients with a list of MCP servers, like an app store for MCP servers. (In the future it might do more, like also hosting a list of clients).
-
-There are two parts to the registry project:
-1. 🟦 **The MCP registry spec**: An [API specification](./docs/server-registry-api/) that allows anyone to implement a registry.
-2. 🟥 **The Official MCP registry**: A hosted registry following the MCP registry spec at [`registry.modelcontextprotocol.io`](https://registry.modelcontextprotocol.io). This serves as the **authoritative repository** for publicly-available MCP servers. Server creators publish once, and all consumers (MCP clients, aggregators, marketplaces) reference the same canonical data. This is owned by the MCP open-source community, backed by major trusted contributors to the MCP ecosystem such as Anthropic, GitHub, PulseMCP and Microsoft.
-
-The registry is built around the [`server.json`](./docs/server-json/) format - a standardized way to describe MCP servers that works across discovery, initialization, and packaging scenarios.
-
-In time, we expect the ecosystem to look a bit like this:
-
-![](./docs/ecosystem-diagram.excalidraw.svg)
-
-Note that MCP registries are _metaregistries_. They host metadata about packages, but not the package code or binaries. Instead, they reference other package registries (like NPM, PyPi or Docker) for this.
-
-Additionally, we expect clients pull from _subregistries_. These subregistries add value to the registry ecosystem by providing curation, or extending it with additional metadata. The Official MCP registry expects a lot of API requests from ETL jobs from these subregistries.
+📖 **[Full documentation](./docs)**
 
 ## Development Status
+
+> [!WARNING]  
+> The registry is under [active development](#development-status). The registry API spec is unstable and the official MCP registry database may be wiped at any time.
 
 **2025-09-04 update**: We're targeting a 'preview' go-live on 8th September. This may still be unstable and not provide durability guarantees, but is a step towards being more solidified. A general availability (GA) release will follow later.
 
@@ -106,7 +90,7 @@ make publisher
 ./cmd/publisher/bin/mcp-publisher --help
 ```
 
-See [the publisher README](./cmd/publisher/README.md) for more details.
+See [the publisher guide](./docs/guides/publishing/use-publisher-cli.md) for more details.
 
 #### Other commands
 
@@ -130,9 +114,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   └── publisher/           # Server publishing tool
 ├── data/                    # Seed data
 ├── deploy/                  # Deployment configuration (Pulumi)
-├── docs/                    # Technical documentation
-│   ├── server-json/         # server.json specification & examples
-│   └── server-registry-api/ # API specification
+├── docs/                    # Documentation
 ├── internal/                # Private application code
 │   ├── api/                 # HTTP handlers and routing
 │   ├── auth/                # Authentication (GitHub OAuth, JWT, namespace blocking)
@@ -165,4 +147,4 @@ The registry validates namespace ownership when publishing. E.g. to publish...:
 
 ## More documentation
 
-See the [docs](./docs) folder for more details if your question has not been answered here!
+See the [documentation](./docs) for more details if your question has not been answered here!

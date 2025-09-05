@@ -1,56 +1,10 @@
-# MCP Registry Architecture
+# MCP Registry Technical Architecture
 
 This document describes the technical architecture of the MCP Registry, including system components, deployment strategies, and data flows.
 
 ## System Overview
 
 The MCP Registry is designed as a lightweight metadata service that bridges MCP server creators with consumers (MCP clients and aggregators).
-
-```mermaid
-graph TB
-    subgraph "Server Maintainers"
-        CLI[CLI Tool]
-    end
-    
-    subgraph "MCP Registry"
-        API[REST API<br/>Go]
-        DB[(PostgreSQL)]
-        CDN[CDN Cache]
-    end
-    
-    subgraph "Intermediaries"
-        MKT[Marketplaces]
-        AGG[Aggregators]
-    end
-    
-    subgraph "End Consumers"
-        MC[MCP Client Host Apps<br/>e.g. Claude Desktop]
-    end
-    
-    subgraph "External Services"
-        NPM[npm Registry]
-        PYPI[PyPI Registry]
-        DOCKER[Docker Hub]
-        NUGET[NuGet Gallery]
-        DNS[DNS Services]
-        GH[GitHub OAuth]
-    end
-    
-    CLI --> |Publish| API
-    API --> DB
-    API --> CDN
-    CDN --> |Daily ETL| MKT
-    CDN --> |Daily ETL| AGG
-    MKT --> MC
-    AGG --> MC
-    API -.-> |Auth| GH
-    API -.-> |Admin Auth| GCP[Google Cloud Identity]
-    API -.-> |Verify| DNS
-    API -.-> |Reference| NPM
-    API -.-> |Reference| PYPI
-    API -.-> |Reference| NUGET
-    API -.-> |Reference| DOCKER
-```
 
 ## Core Components
 

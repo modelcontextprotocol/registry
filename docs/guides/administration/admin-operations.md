@@ -1,6 +1,6 @@
 # Admin Operations
 
-This is a brief guide for admins and moderators managing content on the registry. All actions should be taken in line with the [moderation guidelines](./moderation-guidelines.md).
+This is a brief guide for admins and moderators managing content on the registry. All actions should be taken in line with the [moderation guidelines](moderation-guidelines.md).
 
 ## Prerequisites
 

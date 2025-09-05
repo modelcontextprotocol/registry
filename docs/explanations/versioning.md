@@ -130,6 +130,104 @@ Existing servers with non-semantic versions will continue to work without change
 2. Consider the ordering implications when transitioning from non-semantic to semantic versions
 3. Use prerelease labels for registry-specific versioning needs
 
+## Common Scenarios
+
+### Standard Releases
+**Package and server versions aligned**:
+```json
+{
+  "version_detail": {
+    "version": "1.2.3"
+  },
+  "packages": [
+    {
+      "registry_type": "npm",
+      "identifier": "@myorg/server",
+      "version": "1.2.3"
+    }
+  ]
+}
+```
+
+### Registry-Only Updates
+**Server metadata changes without package updates**:
+```json
+{
+  "version_detail": {
+    "version": "1.2.3-1"
+  },
+  "packages": [
+    {
+      "registry_type": "npm",
+      "identifier": "@myorg/server", 
+      "version": "1.2.3"
+    }
+  ]
+}
+```
+
+Note: `1.2.3-1` is considered lower than `1.2.3` in semver ordering. Publish prerelease versions first.
+
+### Remote Server Versioning
+**Remote servers without package dependencies**:
+```json
+{
+  "version_detail": {
+    "version": "2.1.0"
+  },
+  "remotes": [
+    {
+      "transport_type": "sse",
+      "url": "https://api.myservice.com/mcp/v2.1"
+    }
+  ]
+}
+```
+
+Version strategy options:
+- **API versioning**: Match your service API version
+- **Semantic versioning**: Standard semver for feature changes  
+- **Date-based**: `2024.03.15` for regular releases
+
+### Multi-Package Versioning
+**Different package versions**:
+```json
+{
+  "version_detail": {
+    "version": "1.3.0"
+  },
+  "packages": [
+    {
+      "registry_type": "npm",
+      "identifier": "@myorg/server",
+      "version": "1.3.0"
+    },
+    {
+      "registry_type": "oci",
+      "identifier": "myorg/server",
+      "version": "1.2.5"
+    }
+  ]
+}
+```
+
+Use server version to indicate the overall release.
+
+## Decision Guide
+
+**Which version strategy should I use?**
+
+```
+Do you have underlying packages?
+├─ Yes: Align with package version
+│  ├─ Same package version → Use package version
+│  └─ Different package versions → Use highest + indicate relationship
+└─ No (remote server): Choose versioning scheme
+   ├─ API versioning → Match service API version
+   ├─ Feature-based → Use semantic versioning
+   └─ Regular releases → Consider date-based versioning
+```
+
 ## Future Considerations
 
 This versioning approach is designed to be compatible with potential future changes to the MCP specification's `Implementation.version` field. Any SHOULD requirements introduced here may be proposed as updates to the specification through the SEP (Specification Enhancement Proposal) process.
