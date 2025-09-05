@@ -6,6 +6,7 @@ import "errors"
 var (
 	// Repository validation errors
 	ErrInvalidRepositoryURL = errors.New("invalid repository URL")
+	ErrInvalidSubfolderPath = errors.New("invalid subfolder path")
 
 	// Package validation errors
 	ErrPackageNameHasSpaces = errors.New("package name cannot contain spaces")

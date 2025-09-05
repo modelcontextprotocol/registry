@@ -34,7 +34,7 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 
 	// Validate all remotes
 	for _, remote := range serverJSON.Remotes {
-		if err := validateRemote(&remote); err != nil {
+		if err := validateTransport(&remote); err != nil {
 			return err
 		}
 	}
@@ -59,6 +59,11 @@ func validateRepository(obj *model.Repository) error {
 		return fmt.Errorf("%w: %s", ErrInvalidRepositoryURL, obj.URL)
 	}
 
+	// validate subfolder if present
+	if obj.Subfolder != "" && !IsValidSubfolderPath(obj.Subfolder) {
+		return fmt.Errorf("%w: %s", ErrInvalidSubfolderPath, obj.Subfolder)
+	}
+
 	return nil
 }
 
@@ -79,6 +84,12 @@ func validatePackageField(obj *model.Package) error {
 		if err := validateArgument(&arg); err != nil {
 			return fmt.Errorf("invalid package argument: %w", err)
 		}
+	}
+
+	// Validate transport with template variable support
+	availableVariables := collectAvailableVariables(obj)
+	if err := validatePackageTransport(&obj.Transport, availableVariables); err != nil {
+		return fmt.Errorf("invalid transport: %w", err)
 	}
 
 	return nil
@@ -130,11 +141,83 @@ func validateArgumentValueFields(name, value, defaultValue string) error {
 	return nil
 }
 
-func validateRemote(obj *model.Remote) error {
-	if !IsValidURL(obj.URL) {
-		return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
+// collectAvailableVariables collects all available template variables from a package
+func collectAvailableVariables(pkg *model.Package) []string {
+	var variables []string
+	
+	// Add environment variable names
+	for _, env := range pkg.EnvironmentVariables {
+		variables = append(variables, env.Name)
 	}
-	return nil
+	
+	// Add runtime argument names and value hints
+	for _, arg := range pkg.RuntimeArguments {
+		if arg.Name != "" {
+			variables = append(variables, arg.Name)
+		}
+		if arg.ValueHint != "" {
+			variables = append(variables, arg.ValueHint)
+		}
+	}
+	
+	// Add package argument names and value hints
+	for _, arg := range pkg.PackageArguments {
+		if arg.Name != "" {
+			variables = append(variables, arg.Name)
+		}
+		if arg.ValueHint != "" {
+			variables = append(variables, arg.ValueHint)
+		}
+	}
+	
+	return variables
+}
+
+// validatePackageTransport validates a package's transport with templating support
+func validatePackageTransport(transport *model.Transport, availableVariables []string) error {
+	// Validate transport type is supported
+	switch transport.Type {
+	case model.TransportTypeStdio:
+		// No additional validation needed for stdio - URL should be empty
+		return nil
+	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
+		// URL is required for streamable-http and sse
+		if transport.URL == "" {
+			return fmt.Errorf("url is required for %s transport type", transport.Type)
+		}
+		// Validate URL format with template variable support
+		if !IsValidTemplatedURL(transport.URL, availableVariables, true) {
+			// Check if it's a template variable issue or basic URL issue
+			templateVars := extractTemplateVariables(transport.URL)
+			if len(templateVars) > 0 {
+				return fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v", 
+					ErrInvalidRemoteURL, transport.URL, availableVariables)
+			}
+			return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported transport type: %s", transport.Type)
+	}
+}
+
+// validateTransport validates a remote transport (no templating allowed)
+func validateTransport(obj *model.Transport) error {
+	// Validate transport type is supported - remotes only support streamable-http and sse
+	switch obj.Type {
+	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
+		// URL is required for streamable-http and sse
+		if obj.URL == "" {
+			return fmt.Errorf("url is required for %s transport type", obj.Type)
+		}
+		// Validate URL format (no templates allowed for remotes, no localhost)
+		if !IsValidRemoteURL(obj.URL) {
+			return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
+		}
+		return nil
+	default:
+		return fmt.Errorf("unsupported transport type for remotes: %s (only streamable-http and sse are supported)", obj.Type)
+	}
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions

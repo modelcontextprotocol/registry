@@ -55,6 +55,9 @@ func TestPublishRegistryValidation(t *testing.T) {
 					RegistryType: model.RegistryTypeNPM,
 					Identifier:   "nonexistent-npm-package-xyz123",
 					Version:      "1.0.0",
+					Transport: model.Transport{
+						Type: model.TransportTypeStdio,
+					},
 				},
 			},
 		}
@@ -95,6 +98,9 @@ func TestPublishRegistryValidation(t *testing.T) {
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 					Version:      "0.0.36",
+					Transport: model.Transport{
+						Type: model.TransportTypeStdio,
+					},
 				},
 			},
 		}
@@ -143,11 +149,17 @@ func TestPublishRegistryValidation(t *testing.T) {
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 					Version:      "1.0.0",
+					Transport: model.Transport{
+						Type: model.TransportTypeStdio,
+					},
 				},
 				{
 					RegistryType: model.RegistryTypeNPM,
 					Identifier:   "nonexistent-second-package-abc123",
 					Version:      "1.0.0",
+					Transport: model.Transport{
+						Type: model.TransportTypeStdio,
+					},
 				},
 			},
 		}
@@ -189,11 +201,17 @@ func TestPublishRegistryValidation(t *testing.T) {
 					RegistryType: model.RegistryTypeNPM,
 					Identifier:   "nonexistent-first-package-xyz789",
 					Version:      "1.0.0",
+					Transport: model.Transport{
+						Type: model.TransportTypeStdio,
+					},
 				},
 				{
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 					Version:      "1.0.0",
+					Transport: model.Transport{
+						Type: model.TransportTypeStdio,
+					},
 				},
 			},
 		}

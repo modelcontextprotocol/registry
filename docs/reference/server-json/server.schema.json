@@ -6,6 +6,7 @@
   "$defs": {
     "Repository": {
       "type": "object",
+      "description": "Repository metadata for the MCP server source code. Enables users and security experts to inspect the code, improving transparency.",
       "required": [
         "url",
         "source"
@@ -14,16 +15,23 @@
         "url": {
           "type": "string",
           "format": "uri",
+          "description": "Repository URL for browsing source code. Should support both web browsing and git clone operations.",
           "example": "https://github.com/modelcontextprotocol/servers"
         },
         "source": {
           "type": "string",
-          "description": "Repository hosting service",
+          "description": "Repository hosting service identifier. Used by registries to determine validation and API access methods.",
           "example": "github"
         },
         "id": {
           "type": "string",
+          "description": "Repository identifier from the hosting service (e.g., GitHub repo ID). Owned and determined by the source forge. Should remain stable across repository renames and may be used to detect repository resurrection attacks - if a repository is deleted and recreated, the ID should change. For GitHub, use: gh api repos/<owner>/<repo> --jq '.id'",
           "example": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
+        },
+        "subfolder": {
+          "type": "string",
+          "description": "Optional relative path from repository root to the server location within a monorepo or nested package structure. Must be a clean relative path.",
+          "example": "src/everything"
         }
       }
     },
@@ -72,7 +80,8 @@
           "description": "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage. 'deleted' indicates the server should never be installed and existing installations should be uninstalled - this is rare, and usually indicates malware or a legal takedown."
         },
         "repository": {
-          "$ref": "#/$defs/Repository"
+          "$ref": "#/$defs/Repository",
+          "description": "Optional repository metadata for the MCP server source code. Recommended for transparency and security inspection."
         },
         "version_detail": {
           "$ref": "#/$defs/VersionDetail"
@@ -115,18 +124,23 @@
           "examples": [
             "npx",
             "uvx",
+            "docker",
             "dnx"
           ]
         },
-        "transport_type": {
-          "type": "string",
-          "enum": [
-            "streamable-http",
-            "sse",
-            "stdio"
+        "transport": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StdioTransport"
+            },
+            {
+              "$ref": "#/$defs/StreamableHttpTransport"
+            },
+            {
+              "$ref": "#/$defs/SseTransport"
+            }
           ],
-          "description": "Transport protocol type for the package",
-          "example": "stdio"
+          "description": "Transport protocol configuration for the package"
         },
         "runtime_arguments": {
           "type": "array",
@@ -324,26 +338,70 @@
         }
       ]
     },
-    "Remote": {
+    "StdioTransport": {
       "type": "object",
       "required": [
-        "transport_type",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "stdio"
+          ],
+          "description": "Transport type",
+          "example": "stdio"
+        }
+      }
+    },
+    "StreamableHttpTransport": {
+      "type": "object",
+      "required": [
+        "type",
         "url"
       ],
       "properties": {
-        "transport_type": {
+        "type": {
           "type": "string",
           "enum": [
-            "streamable-http",
+            "streamable-http"
+          ],
+          "description": "Transport type",
+          "example": "streamable-http"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL template for the streamable-http transport. Variables in {curly_braces} reference argument value_hints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
+          "example": "https://api.example.com/mcp"
+        },
+        "headers": {
+          "type": "array",
+          "description": "HTTP headers to include",
+          "items": {
+            "$ref": "#/$defs/KeyValueInput"
+          }
+        }
+      }
+    },
+    "SseTransport": {
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
             "sse"
           ],
-          "description": "Transport protocol type",
+          "description": "Transport type",
           "example": "sse"
         },
         "url": {
           "type": "string",
           "format": "uri",
-          "description": "Remote server URL",
+          "description": "Server-Sent Events endpoint URL",
           "example": "https://mcp-fs.example.com/sse"
         },
         "headers": {
@@ -379,7 +437,14 @@
             "remotes": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/Remote"
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreamableHttpTransport"
+                  },
+                  {
+                    "$ref": "#/$defs/SseTransport"
+                  }
+                ]
               }
             },
             "_meta": {
@@ -393,7 +458,7 @@
                   "additionalProperties": true
                 },
                 "io.modelcontextprotocol.registry": {
-                  "type": "object", 
+                  "type": "object",
                   "description": "Official MCP registry metadata (read-only, added by registry)",
                   "additionalProperties": true
                 }
