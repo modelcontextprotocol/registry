@@ -10,6 +10,8 @@ For remote MCP servers, the package registry is not relevant. The MCP client con
 
 For the sake of illustration, this document will use npm (the Node.js package manager) as an example at each step.
 
+**Note:** As of PR #350, the registry now includes validation to prevent misattribution. New package registries must implement validation that requires specific metadata in packages to prove ownership of the server name.
+
 ## Prerequisites
 
 The package registry must meet the following requirements:
@@ -21,6 +23,10 @@ The package registry must meet the following requirements:
    - For example, the MCP client can map the `server.json` metadata to an `npx` CLI execution, with args and environment variables populated via user input.
 1. The package registry supports anonymous package downloads. This allows the MCP client software to use the metadata found in the MCP registry to discover, download, and execute package-based local MCP servers with minimal user intervention.
    - `npx` by default connects to the public npmjs.com registry, allowing simple consumption of public npm packages.
+1. The package registry must support a validation mechanism to verify ownership of the server name. This prevents misattribution and ensures that only the actual package owner can reference their packages in server registrations.
+   - npm requires an `mcpName` field in `package.json` that matches the server name being registered
+   - PyPI requires a `mcp-name:` line in the package README/description
+   - Each registry type must implement a validation mechanism accessible via public API
 
 ## Steps
 
@@ -37,3 +43,21 @@ These steps are currently very brief because the MCP Registry service is not yet
      - Add the single-shot CLI command name to the `runtime_hint` example value array.
      - This duplicates the previous step and will be improved with [issue #159](https://github.com/modelcontextprotocol/registry/issues/159).
    - Add a sample, minimal `server.json` to the [`server.json` examples](server-json/examples.md).
+   - **Implement a registry validator** (required for package validation):
+     - Create a new validator file: `internal/validators/registries/yourregistry.go`
+     - Implement the validation function following the pattern of existing validators (npm, pypi, nuget, oci, mcpb)
+     - Add corresponding unit tests: `internal/validators/registries/yourregistry_test.go`
+     - Register your validator in `internal/validators/validators.go`
+     - See existing validators for reference on implementing ownership verification via your registry's API
+
+## Validation Examples
+
+For reference, here's how existing package registries implement validation:
+
+- **npm**: Checks for an `mcpName` field in `package.json` that matches the server name
+- **PyPI**: Searches for `mcp-name: server-name` format in the package description/README content
+- **NuGet**: Looks for `mcp-name: server-name` format in the package README file
+- **Docker/OCI**: Validates a Docker image label `io.modelcontextprotocol.server.name` in the image manifest
+- **MCPB**: Ensures the package URL contains "mcp" somewhere in the identifier (URL or filename)
+
+Each validator fetches metadata from the respective registry's public API and verifies that the required ownership proof exists.
