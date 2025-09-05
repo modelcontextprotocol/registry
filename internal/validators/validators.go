@@ -130,6 +130,38 @@ func validateArgumentValueFields(name, value, defaultValue string) error {
 	return nil
 }
 
+// collectAvailableVariables collects all available template variables from a package
+func collectAvailableVariables(pkg *model.Package) []string {
+	var variables []string
+	
+	// Add environment variable names
+	for _, env := range pkg.EnvironmentVariables {
+		variables = append(variables, env.Name)
+	}
+	
+	// Add runtime argument names and value hints
+	for _, arg := range pkg.RuntimeArguments {
+		if arg.Name != "" {
+			variables = append(variables, arg.Name)
+		}
+		if arg.ValueHint != "" {
+			variables = append(variables, arg.ValueHint)
+		}
+	}
+	
+	// Add package argument names and value hints
+	for _, arg := range pkg.PackageArguments {
+		if arg.Name != "" {
+			variables = append(variables, arg.Name)
+		}
+		if arg.ValueHint != "" {
+			variables = append(variables, arg.ValueHint)
+		}
+	}
+	
+	return variables
+}
+
 func validateTransport(obj *model.Transport) error {
 	if obj.URL != "" && !IsValidURL(obj.URL) {
 		return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
