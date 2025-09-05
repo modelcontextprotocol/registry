@@ -35,11 +35,15 @@ func TestValidate(t *testing.T) {
 						Identifier:      "test-package",
 						RegistryType:    "npm",
 						RegistryBaseURL: "https://registry.npmjs.org",
+						Transport: model.Transport{
+							Type: "stdio",
+						},
 					},
 				},
-				Remotes: []model.Remote{
+				Remotes: []model.Transport{
 					{
-						URL: "https://example.com/remote",
+						Type: "streamable-http",
+						URL:  "https://example.com/remote",
 					},
 				},
 			},
@@ -107,6 +111,9 @@ func TestValidate(t *testing.T) {
 						Identifier:      "test package with spaces",
 						RegistryType:    "npm",
 						RegistryBaseURL: "https://registry.npmjs.org",
+						Transport: model.Transport{
+							Type: "stdio",
+						},
 					},
 				},
 			},
@@ -129,11 +136,17 @@ func TestValidate(t *testing.T) {
 						Identifier:      "valid-package",
 						RegistryType:    "npm",
 						RegistryBaseURL: "https://registry.npmjs.org",
+						Transport: model.Transport{
+							Type: "stdio",
+						},
 					},
 					{
 						Identifier:      "invalid package", // Has space
 						RegistryType:    "pypi",
 						RegistryBaseURL: "https://pypi.org",
+						Transport: model.Transport{
+							Type: "stdio",
+						},
 					},
 				},
 			},
@@ -151,9 +164,10 @@ func TestValidate(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []model.Transport{
 					{
-						URL: "not-a-valid-url",
+						Type: "streamable-http",
+						URL:  "not-a-valid-url",
 					},
 				},
 			},
@@ -171,9 +185,10 @@ func TestValidate(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []model.Transport{
 					{
-						URL: "example.com/remote",
+						Type: "streamable-http",
+						URL:  "example.com/remote",
 					},
 				},
 			},
@@ -191,9 +206,10 @@ func TestValidate(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []model.Transport{
 					{
-						URL: "http://localhost",
+						Type: "streamable-http",
+						URL:  "http://localhost",
 					},
 				},
 			},
@@ -211,9 +227,10 @@ func TestValidate(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []model.Transport{
 					{
-						URL: "http://localhost:3000",
+						Type: "streamable-http",
+						URL:  "http://localhost:3000",
 					},
 				},
 			},
@@ -231,12 +248,14 @@ func TestValidate(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
+				Remotes: []model.Transport{
 					{
-						URL: "https://valid.com/remote",
+						Type: "streamable-http",
+						URL:  "https://valid.com/remote",
 					},
 					{
-						URL: "invalid-url",
+						Type: "streamable-http",
+						URL:  "invalid-url",
 					},
 				},
 			},
@@ -272,7 +291,7 @@ func TestValidate(t *testing.T) {
 					Version: "1.0.0",
 				},
 				Packages: []model.Package{},
-				Remotes:  []model.Remote{},
+				Remotes:  []model.Transport{},
 			},
 			expectedError: "",
 		},
@@ -303,8 +322,11 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "valid match - example.com domain",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test-server",
-				Remotes: []model.Remote{
-					{URL: "https://example.com/mcp"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://example.com/mcp",
+					},
 				},
 			},
 			expectError: false,
@@ -313,8 +335,11 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "valid match - subdomain mcp.example.com",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test-server",
-				Remotes: []model.Remote{
-					{URL: "https://mcp.example.com/endpoint"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://mcp.example.com/endpoint",
+					},
 				},
 			},
 			expectError: false,
@@ -323,8 +348,11 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "valid match - api subdomain",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/api-server",
-				Remotes: []model.Remote{
-					{URL: "https://api.example.com/mcp"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://api.example.com/mcp",
+					},
 				},
 			},
 			expectError: false,
@@ -333,8 +361,11 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "invalid - wrong domain",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test-server",
-				Remotes: []model.Remote{
-					{URL: "https://google.com/mcp"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://google.com/mcp",
+					},
 				},
 			},
 			expectError: true,
@@ -344,8 +375,11 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "invalid - different domain entirely",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.microsoft/server",
-				Remotes: []model.Remote{
-					{URL: "https://api.github.com/endpoint"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://api.github.com/endpoint",
+					},
 				},
 			},
 			expectError: true,
@@ -355,8 +389,11 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "invalid URL format",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/test",
-				Remotes: []model.Remote{
-					{URL: "not-a-valid-url"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "not-a-valid-url",
+					},
 				},
 			},
 			expectError: true,
@@ -366,7 +403,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "empty remotes array",
 			serverDetail: apiv0.ServerJSON{
 				Name:    "com.example/test",
-				Remotes: []model.Remote{},
+				Remotes: []model.Transport{},
 			},
 			expectError: false,
 		},
@@ -374,9 +411,15 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "multiple valid remotes - different subdomains",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/server",
-				Remotes: []model.Remote{
-					{URL: "https://api.example.com/sse"},
-					{URL: "https://mcp.example.com/websocket"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://api.example.com/sse",
+					},
+					{
+						Type: "streamable-http",
+						URL:  "https://mcp.example.com/websocket",
+					},
 				},
 			},
 			expectError: false,
@@ -385,9 +428,15 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 			name: "one valid, one invalid remote",
 			serverDetail: apiv0.ServerJSON{
 				Name: "com.example/server",
-				Remotes: []model.Remote{
-					{URL: "https://example.com/sse"},
-					{URL: "https://google.com/websocket"},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://example.com/sse",
+					},
+					{
+						Type: "streamable-http",
+						URL:  "https://google.com/websocket",
+					},
 				},
 			},
 			expectError: true,
@@ -679,6 +728,363 @@ func TestValidateArgument_ValidValueFields(t *testing.T) {
 }
 
 // Helper function to create a valid server with a specific argument for testing
+func TestValidate_TransportValidation(t *testing.T) {
+	tests := []struct {
+		name          string
+		serverDetail  apiv0.ServerJSON
+		expectedError string
+	}{
+		// Package transport tests - stdio (no URL required)
+		{
+			name: "package transport stdio without URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "stdio",
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "package transport stdio with URL (should still work)",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "stdio",
+							URL:  "ignored-for-stdio",
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		// Package transport tests - streamable-http (URL required)
+		{
+			name: "package transport streamable-http with valid URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "streamable-http",
+							URL:  "https://example.com/mcp",
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "package transport streamable-http with templated URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "streamable-http",
+							URL:  "http://{host}:{port}/mcp",
+						},
+						EnvironmentVariables: []model.KeyValueInput{
+							{Name: "host"},
+							{Name: "port"},
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "package transport streamable-http without URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "streamable-http",
+						},
+					},
+				},
+			},
+			expectedError: "url is required for streamable-http transport type",
+		},
+		{
+			name: "package transport streamable-http with templated URL missing variables",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "streamable-http",
+							URL:  "http://{host}:{port}/mcp",
+						},
+						// Missing host and port variables
+					},
+				},
+			},
+			expectedError: "template variables in URL",
+		},
+		// Package transport tests - sse (URL required)
+		{
+			name: "package transport sse with valid URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "sse",
+							URL:  "https://example.com/events",
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "package transport sse without URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "sse",
+						},
+					},
+				},
+			},
+			expectedError: "url is required for sse transport type",
+		},
+		// Package transport tests - unsupported type
+		{
+			name: "package transport unsupported type",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "websocket",
+						},
+					},
+				},
+			},
+			expectedError: "unsupported transport type: websocket",
+		},
+		// Remote transport tests - streamable-http
+		{
+			name: "remote transport streamable-http with valid URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://example.com/mcp",
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "remote transport streamable-http without URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+					},
+				},
+			},
+			expectedError: "url is required for streamable-http transport type",
+		},
+		// Remote transport tests - sse
+		{
+			name: "remote transport sse with valid URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Remotes: []model.Transport{
+					{
+						Type: "sse",
+						URL:  "https://example.com/events",
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "remote transport sse without URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Remotes: []model.Transport{
+					{
+						Type: "sse",
+					},
+				},
+			},
+			expectedError: "url is required for sse transport type",
+		},
+		// Remote transport tests - unsupported types
+		{
+			name: "remote transport stdio not supported",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Remotes: []model.Transport{
+					{
+						Type: "stdio",
+					},
+				},
+			},
+			expectedError: "unsupported transport type for remotes: stdio",
+		},
+		{
+			name: "remote transport unsupported type",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Remotes: []model.Transport{
+					{
+						Type: "websocket",
+						URL:  "wss://example.com/ws",
+					},
+				},
+			},
+			expectedError: "unsupported transport type for remotes: websocket",
+		},
+		// Localhost URL tests - packages vs remotes
+		{
+			name: "package transport allows localhost URLs",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: "npm",
+						Transport: model.Transport{
+							Type: "streamable-http",
+							URL:  "http://localhost:3000/mcp",
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "remote transport rejects localhost URLs",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				VersionDetail: model.VersionDetail{
+					Version: "1.0.0",
+				},
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "http://localhost:3000/mcp",
+					},
+				},
+			},
+			expectedError: "invalid remote URL",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validators.ValidateServerJSON(&tt.serverDetail)
+
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
 func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 	testCases := []struct {
 		tcName       string
@@ -735,6 +1141,9 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 						RegistryType:    tc.registryType,
 						RegistryBaseURL: tc.baseURL,
 						Version:         tc.version,
+						Transport: model.Transport{
+							Type: "stdio",
+						},
 					},
 				},
 			}
@@ -768,12 +1177,16 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 				Identifier:       "test-package",
 				RegistryType:     "npm",
 				RegistryBaseURL:  "https://registry.npmjs.org",
+				Transport: model.Transport{
+					Type: "stdio",
+				},
 				RuntimeArguments: []model.Argument{arg},
 			},
 		},
-		Remotes: []model.Remote{
+		Remotes: []model.Transport{
 			{
-				URL: "https://example.com/remote",
+				Type: "streamable-http",
+				URL:  "https://example.com/remote",
 			},
 		},
 	}

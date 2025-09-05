@@ -90,6 +90,28 @@ func IsValidURL(rawURL string) bool {
 	return true
 }
 
+// IsValidRemoteURL checks if a URL is valid for remotes (stricter than packages - no localhost allowed)
+func IsValidRemoteURL(rawURL string) bool {
+	// First check basic URL structure
+	if !IsValidURL(rawURL) {
+		return false
+	}
+	
+	// Parse the URL to check for localhost restriction
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+	
+	// Reject localhost URLs for remotes (security/production concerns)
+	hostname := u.Hostname()
+	if hostname == "localhost" || hostname == "127.0.0.1" || strings.HasSuffix(hostname, ".localhost") {
+		return false
+	}
+	
+	return true
+}
+
 // IsValidTemplatedURL validates a URL with template variables against available variables
 // For packages: validates that template variables reference package arguments or environment variables
 // For remotes: disallows template variables entirely

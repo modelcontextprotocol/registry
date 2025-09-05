@@ -205,8 +205,8 @@ func validateTransport(obj *model.Transport) error {
 		if obj.URL == "" {
 			return fmt.Errorf("url is required for %s transport type", obj.Type)
 		}
-		// Validate URL format (no templates allowed for remotes)
-		if !IsValidURL(obj.URL) {
+		// Validate URL format (no templates allowed for remotes, no localhost)
+		if !IsValidRemoteURL(obj.URL) {
 			return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
 		}
 		return nil
