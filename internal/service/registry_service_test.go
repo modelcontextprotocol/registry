@@ -21,9 +21,9 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			VersionDetail: model.VersionDetail{
 				Version: "1.0.0",
 			},
-			Remotes: []model.Remote{
-				{URL: "https://api.example.com/mcp"},
-				{URL: "https://webhook.example.com/sse"},
+			Remotes: []model.Transport{
+				{Type: "streamable-http", URL: "https://api.example.com/mcp"},
+				{Type: "sse", URL: "https://webhook.example.com/sse"},
 			},
 		},
 		"existing2": {
@@ -32,8 +32,8 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			VersionDetail: model.VersionDetail{
 				Version: "1.0.0",
 			},
-			Remotes: []model.Remote{
-				{URL: "https://api.microsoft.com/mcp"},
+			Remotes: []model.Transport{
+				{Type: "streamable-http", URL: "https://api.microsoft.com/mcp"},
 			},
 		},
 	}
@@ -62,7 +62,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{},
+				Remotes: []model.Transport{},
 			},
 			expectError: false,
 		},
@@ -74,9 +74,9 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
-					{URL: "https://new.example.com/mcp"},
-					{URL: "https://unique.example.com/sse"},
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://new.example.com/mcp"},
+					{Type: "sse", URL: "https://unique.example.com/sse"},
 				},
 			},
 			expectError: false,
@@ -89,8 +89,8 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.0.0",
 				},
-				Remotes: []model.Remote{
-					{URL: "https://api.example.com/mcp"}, // This URL already exists
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://api.example.com/mcp"}, // This URL already exists
 				},
 			},
 			expectError: true,
@@ -104,8 +104,8 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				VersionDetail: model.VersionDetail{
 					Version: "1.1.0",
 				},
-				Remotes: []model.Remote{
-					{URL: "https://api.example.com/mcp"}, // Same URL as before
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://api.example.com/mcp"}, // Same URL as before
 				},
 			},
 			expectError: false,

@@ -117,15 +117,19 @@
             "dnx"
           ]
         },
-        "transport_type": {
-          "type": "string",
-          "enum": [
-            "streamable-http",
-            "sse",
-            "stdio"
+        "transport": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StdioTransport"
+            },
+            {
+              "$ref": "#/$defs/StreamableHttpTransport"
+            },
+            {
+              "$ref": "#/$defs/SseTransport"
+            }
           ],
-          "description": "Transport protocol type for the package",
-          "example": "stdio"
+          "description": "Transport protocol configuration for the package"
         },
         "runtime_arguments": {
           "type": "array",
@@ -323,26 +327,70 @@
         }
       ]
     },
-    "Remote": {
+    "StdioTransport": {
       "type": "object",
       "required": [
-        "transport_type",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "stdio"
+          ],
+          "description": "Transport type",
+          "example": "stdio"
+        }
+      }
+    },
+    "StreamableHttpTransport": {
+      "type": "object",
+      "required": [
+        "type",
         "url"
       ],
       "properties": {
-        "transport_type": {
+        "type": {
           "type": "string",
           "enum": [
-            "streamable-http",
+            "streamable-http"
+          ],
+          "description": "Transport type",
+          "example": "streamable-http"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL template for the streamable-http transport. Variables in {curly_braces} reference argument value_hints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
+          "example": "https://api.example.com/mcp"
+        },
+        "headers": {
+          "type": "array",
+          "description": "HTTP headers to include",
+          "items": {
+            "$ref": "#/$defs/KeyValueInput"
+          }
+        }
+      }
+    },
+    "SseTransport": {
+      "type": "object",
+      "required": [
+        "type",
+        "url"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
             "sse"
           ],
-          "description": "Transport protocol type",
+          "description": "Transport type",
           "example": "sse"
         },
         "url": {
           "type": "string",
           "format": "uri",
-          "description": "Remote server URL",
+          "description": "Server-Sent Events endpoint URL",
           "example": "https://mcp-fs.example.com/sse"
         },
         "headers": {
@@ -378,7 +426,14 @@
             "remotes": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/Remote"
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreamableHttpTransport"
+                  },
+                  {
+                    "$ref": "#/$defs/SseTransport"
+                  }
+                ]
               }
             },
             "_meta": {
