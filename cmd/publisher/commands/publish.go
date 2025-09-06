@@ -120,11 +120,11 @@ func publishToRegistry(registryURL string, serverData []byte, token string) (*ap
 	}
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return &serverJSON, fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
+		return nil, fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
 	}
 
 	if err := json.Unmarshal(body, &serverJSON); err != nil {
-		return &serverJSON, err
+		return nil, err
 	}
 
 	return &serverJSON, nil
