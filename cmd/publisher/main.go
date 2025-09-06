@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/modelcontextprotocol/registry/cmd/publisher/commands"
@@ -37,7 +38,7 @@ func main() {
 	case "publish":
 		err = commands.PublishCommand(os.Args[2:])
 	case "--version", "-v", "version":
-		fmt.Printf("mcp-publisher %s (commit: %s, built: %s)\n", Version, GitCommit, BuildTime)
+		log.Printf("mcp-publisher %s (commit: %s, built: %s)", Version, GitCommit, BuildTime)
 		return
 	case "--help", "-h", "help":
 		printUsage()
