@@ -49,6 +49,35 @@ source:
 changelog:
   sort: asc
   use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - '^style:'
+      - 'merge conflict'
+      - 'Merge pull request'
+      - 'Merge remote-tracking branch'
+      - 'Merge branch'
+  groups:
+    - title: 'New Features'
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Bug Fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: 'Performance Improvements'
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: 'Refactors'
+      regexp: '^.*?refactor(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: 'Documentation'
+      regexp: '^.*?docs?(\([[:word:]]+\))??!?:.+$'
+      order: 4
+    - title: 'Other Changes'
+      order: 999
 
 # This section defines for which artifact types to generate SBOMs.
 sboms:
@@ -62,7 +91,8 @@ release:
 
 # This section defines how and which artifacts we want to sign for the release.
 signs:
-  - cmd: cosign
+  - id: archives
+    cmd: cosign
     args:
       - "sign-blob"
       - "--output-signature=${signature}"
@@ -72,6 +102,19 @@ signs:
     artifacts: archive
     output: true
     certificate: '{{ trimsuffix (trimsuffix .Env.artifact ".zip") ".tar.gz" }}.pem'
+    
+  # Also sign checksums file for additional verification
+  - id: checksums
+    cmd: cosign
+    args:
+      - "sign-blob"
+      - "--output-signature=${signature}"
+      - "--output-certificate=${certificate}"
+      - "${artifact}"
+      - "--yes"
+    artifacts: checksum
+    output: true
+    certificate: '{{ trimsuffix .Env.artifact ".txt" }}.pem'
 
 # This section defines the release format.
 archives:
