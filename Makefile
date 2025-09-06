@@ -6,11 +6,13 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
 # Build targets
-build: ## Build the registry application
-	go build -o bin/registry ./cmd/registry
+build: ## Build the registry application with version info
+	@mkdir -p bin
+	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/registry ./cmd/registry
 
-publisher: ## Build the publisher tool
-	cd cmd/publisher && ./build.sh
+publisher: ## Build the publisher tool with version info
+	@mkdir -p bin
+	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
 
 # Test targets
 test-unit: ## Run unit tests with coverage
@@ -64,7 +66,6 @@ dev-local: ## Run registry locally
 clean: ## Clean build artifacts and coverage files
 	rm -rf bin
 	rm -f coverage.out coverage.html
-	cd cmd/publisher && rm -f publisher
 
 
 .DEFAULT_GOAL := help
