@@ -1,0 +1,78 @@
+# GoReleaser configuration for MCP Registry
+version: 2
+
+# Build configuration
+builds:
+  # Registry server binary
+  - id: registry
+    binary: registry
+    main: ./cmd/registry
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.GitCommit={{.FullCommit}}
+      - -X main.BuildTime={{.Date}}
+    
+  # Publisher CLI tool binary
+  - id: publisher
+    binary: mcp-publisher
+    main: ./cmd/publisher
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.GitCommit={{.FullCommit}}
+      - -X main.BuildTime={{.Date}}
+
+# This section defines whether we want to release the source code too.
+source:
+  enabled: true
+
+# This section defines how to generate the changelog
+changelog:
+  sort: asc
+  use: github
+
+# This section defines for which artifact types to generate SBOMs.
+sboms:
+  - artifacts: archive
+
+# This section defines the release policy.
+release:
+  github:
+    owner: modelcontextprotocol
+    name: registry
+
+# This section defines how and which artifacts we want to sign for the release.
+signs:
+  - cmd: cosign
+    args:
+      - "sign-blob"
+      - "--output-signature=${signature}"
+      - "--output-certificate=${certificate}"
+      - "${artifact}"
+      - "--yes" # needed on cosign 2.0.0+
+    artifacts: archive
+    output: true
+    certificate: '{{ trimsuffix (trimsuffix .Env.artifact ".zip") ".tar.gz" }}.pem'
+
+# This section defines the release format.
+archives:
+  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
