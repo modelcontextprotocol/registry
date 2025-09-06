@@ -67,14 +67,19 @@ The service runs on [`localhost:8080`](http://localhost:8080) by default. This c
 Pre-built Docker images are automatically published to GitHub Container Registry:
 
 ```bash
-# Run latest from main branch
+# Run latest stable release
 docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:latest
 
-# Run specific commit build
-docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main-20250806-a1b2c3d
+# Run specific release version
+docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:v1.0.0
+
+# Run development build from main branch
+docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main-20250906-abc123d
 ```
 
-**Available tags:** `latest`, `main-<date>-<sha>`
+**Available tags:** 
+- **Releases**: `latest`, `v1.0.0`, `v1.1.0`, etc.
+- **Development**: `main-<date>-<sha>` (from main branch commits)
 
 </details>
 
@@ -87,7 +92,7 @@ To publish a server, we've built a simple CLI. You can use it with:
 make publisher
 
 # Use it!
-./cmd/publisher/bin/mcp-publisher --help
+./bin/mcp-publisher --help
 ```
 
 See [the publisher guide](./docs/guides/publishing/publish-server.md) for more details.
