@@ -131,8 +131,8 @@ func (db *PostgreSQL) List(
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
 		lastResult := results[len(results)-1]
-		if lastResult.Meta != nil && lastResult.Meta.IOModelContextProtocolRegistry != nil {
-			nextCursor = lastResult.Meta.IOModelContextProtocolRegistry.ID
+		if lastResult.Meta != nil && lastResult.Meta.Official != nil {
+			nextCursor = lastResult.Meta.Official.ID
 		}
 	}
 
@@ -177,11 +177,11 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON
 	}
 
 	// Get the ID from the registry metadata
-	if server.Meta == nil || server.Meta.IOModelContextProtocolRegistry == nil {
+	if server.Meta == nil || server.Meta.Official == nil {
 		return nil, fmt.Errorf("server must have registry metadata with ID")
 	}
 
-	id := server.Meta.IOModelContextProtocolRegistry.ID
+	id := server.Meta.Official.ID
 
 	// Marshal the complete server to JSONB
 	valueJSON, err := json.Marshal(server)

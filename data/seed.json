@@ -27,7 +27,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4e9cf4cf-71f6-4aca-bae8-2d10a29ca2e0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -89,7 +89,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d3669201-252f-403c-944b-c3ec0845782b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -126,7 +126,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d86f2098-0be9-4b52-b32e-9d0f17333197",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -174,7 +174,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c296f683-5578-474a-bbef-00cfc2716fbc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -256,7 +256,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2a0775fa-ff8e-47ff-a5e3-8b7c9b0567a9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -330,7 +330,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7f6e6610-4df3-490e-95e3-03ec954eb2ab",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -371,7 +371,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "24303d73-1ee0-4119-b2f1-3a57c17de967",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -449,7 +449,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "31d9b130-4676-45d9-930f-a8bc2d5a3b9e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -480,7 +480,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "330047d1-f8c2-4931-9347-d133f1717de3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -529,7 +529,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "195dfdbd-bb15-4752-80b6-abc9212cd80f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -566,7 +566,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5c95a170-d394-4b21-a100-bb953b872922",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -597,7 +597,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "de2d7f51-ca20-4fac-abdb-85a912d26375",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -628,7 +628,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "50f15d97-7d84-49f7-9232-f797e006358d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -673,7 +673,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d85fa87b-48e1-4b81-8408-9d0c446f7de3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -710,7 +710,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2535daf3-637b-40d1-a4c2-41ef60a726b8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -768,7 +768,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "36e14e79-6228-442f-b3c7-c7080b6282f0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -836,7 +836,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9e07df79-22e2-464d-a842-06f08b875196",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -877,7 +877,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "46bcb36f-ede9-412e-8181-7c7ece41fa04",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -908,7 +908,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "97de67c4-a78f-4ea7-9233-4da9fe6752cf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -949,7 +949,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a48ff624-6d95-4b8e-a0ed-498c4d838411",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1029,7 +1029,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "98259539-3c6f-4462-b2b6-9a2567ff0545",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1081,7 +1081,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2ad7c503-7daa-46c8-9295-8a1ed53271a6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1122,7 +1122,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c746fe90-e3f6-4328-82c1-aeef49a2b6d9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1153,7 +1153,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6e6e3083-47bf-47da-9d0f-14805de093a9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1240,7 +1240,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "61b3cbd8-8eee-4bef-a0ef-5fcaf6449201",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1310,7 +1310,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3f49614c-5424-4875-92ef-9697923375cf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1386,7 +1386,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9c2d91f0-76c4-4292-a19f-e81e962954b5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1417,7 +1417,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1743c861-7e1a-42b2-a300-6059fcd82cb9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1448,7 +1448,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3afff2d4-d77f-42c2-bf39-ce786ecb0ecf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1479,7 +1479,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1f25c28f-9afe-4f34-9e29-d18aab507255",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1516,7 +1516,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7c870985-c457-4221-8088-977680764f70",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1620,7 +1620,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "33102362-9e44-442f-8aa9-4443ce50c396",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1672,7 +1672,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1b8a16d9-0648-4790-b853-d919a6be16e9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1703,7 +1703,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d689b152-64e8-4f5d-a937-91331fa3a771",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1752,7 +1752,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2a2aa283-57c8-474f-8a27-27954214cb6b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1789,7 +1789,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0e7533d0-5925-4e06-a6bf-5da4e4e21aec",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1861,7 +1861,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "78c126ff-906a-4596-9bf4-db2cf61796b8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1902,7 +1902,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2d870a4e-d521-4d66-a471-abce884ea07b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1933,7 +1933,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "13b91785-9041-468d-a136-e6c9e9dd7be9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -1964,7 +1964,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0bee6074-d16a-4482-a315-5b8f0f1abcf1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2005,7 +2005,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3e50df21-8223-440d-bad9-dfc9ce117af4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2092,7 +2092,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "11e3a5f5-867c-4f1e-ba79-1b803550fb1a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2129,7 +2129,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0f970fc6-418a-45c7-a665-00e725e8338d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2228,7 +2228,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1329d108-67d0-488a-85a1-cc65b58cf5cd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2273,7 +2273,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e44b5cad-3801-4403-b8ee-67f3ea1cd909",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2322,7 +2322,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7974b19d-8030-428b-a016-168c65058b41",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2353,7 +2353,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cb1a844b-0145-433b-9a6f-f8ef19b2b3f4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2406,7 +2406,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e67dda78-7d99-43e5-9e98-c80267f34940",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2443,7 +2443,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "feb2b365-5fab-461e-a8d3-89e9349ee743",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2474,7 +2474,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "afd9f984-ea69-4a8c-86ac-fdb58f3ab37c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2549,7 +2549,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "bfcde7fb-0ea1-499f-bca0-17ffcba95a0c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2590,7 +2590,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "584b368d-b659-4bac-9036-dc319cf8d88d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2627,7 +2627,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a51c6dec-56ed-403e-831b-fa5f155f8696",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2689,7 +2689,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "77963df5-3dc8-4961-ae0c-03e448b8713c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2761,7 +2761,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "eba4813b-2591-4264-b7bc-c485b7652e92",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2842,7 +2842,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5026f1b0-0426-4ea2-8ec2-fab1fabb0a7e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2895,7 +2895,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6e66e04c-86cc-43ec-90ed-1a91a0e4eb76",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2940,7 +2940,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f88b50da-f452-452b-9f22-1c7da7542b36",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -2971,7 +2971,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1e2d718a-95b0-460b-8e57-86feec5356ce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3016,7 +3016,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f4fca7d7-fbab-4174-ba76-1396c3451cf1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3047,7 +3047,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "11d467e3-6001-4e60-ba90-494ad9eb7ad2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3078,7 +3078,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "dd730dba-107c-40f0-b172-85500a22b5c2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3140,7 +3140,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e458676a-2727-4daf-84c5-d607932fa000",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3185,7 +3185,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b99e5603-6346-4b2c-bae8-876c9b71e18b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3238,7 +3238,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9fd2c1fb-b8a6-4411-89cf-d4612cc3a539",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3310,7 +3310,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b3fa3fa4-901d-4584-82cf-d027dbdf290b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3367,7 +3367,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "be6eb263-3492-4073-b28f-0fd33d070982",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3418,7 +3418,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9a6bd437-fe20-4f40-b776-5507f2871441",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3449,7 +3449,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "afe07206-691c-4bfb-bf17-8a39014cf4a7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3486,7 +3486,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2d53cc39-27e0-446f-96b5-1324bab9eb21",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3548,7 +3548,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4632fbcb-d313-4e26-ad1d-aea8f57524f7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3600,7 +3600,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "be79836b-8a99-4e4e-9487-c81c02833f4a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3637,7 +3637,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9eab3795-a96d-4fad-8521-921599e85240",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3668,7 +3668,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ed4c9613-5046-4570-8d15-209f7294ba75",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3758,7 +3758,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "08668c6a-c2f6-47b0-a4e0-75a8ee9bcf10",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3807,7 +3807,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "324d6879-eb6f-4565-bdeb-6c4b00d91384",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3844,7 +3844,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "87f325e6-a742-43e4-b8ae-069f7301475d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -3917,7 +3917,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b8c0e12b-0c04-486d-95a7-caa33b9eefeb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4031,7 +4031,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "823afe6f-4494-4fc1-a2ab-2ca989e59d21",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4115,7 +4115,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "687591a4-a5da-44df-8d55-f32e19d5658a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4152,7 +4152,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f6ee7600-c27a-4210-9a94-29a35c41c274",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4195,7 +4195,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5e354d7f-e19e-40ba-a760-342d5c93e9aa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4232,7 +4232,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7b93304c-5a49-45a7-a37c-84e82707d81d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4269,7 +4269,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cb1647e0-2df7-4f2a-b63b-cfaea1e5e98a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4317,7 +4317,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "87c7dec1-1b0c-414b-9f7b-7a113e67989d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4348,7 +4348,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d012ea8c-2f32-43e4-9583-7418d750193e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4399,7 +4399,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "901e1b1c-7414-4240-89b8-1def9aca4708",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4436,7 +4436,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ba8028f7-73e6-4d3d-9974-790d438a1446",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4467,7 +4467,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9dd7f908-4c1b-4ba3-a33f-86be881cc8b6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4498,7 +4498,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "adb9a058-774f-4505-aa80-1afa9bab8cb9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4550,7 +4550,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8b01f838-0cb6-4c17-b381-108713321d6d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4603,7 +4603,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c1b727f7-1570-465f-8153-585840de260a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4655,7 +4655,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c0c30db1-cc08-426e-886f-0bdbcd31d101",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4686,7 +4686,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2cc83e0a-3ca5-4e21-b346-83254cc72e1f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4738,7 +4738,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4bc3b6d3-666e-4bb7-8ad7-6b38bc9c5ab8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4806,7 +4806,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "64fdea5a-9fe3-4492-b9fb-6260e6c3dc34",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4837,7 +4837,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "60b95692-579f-4de4-8095-1efdca5d8591",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4868,7 +4868,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "98b8992b-77cc-43a5-825e-d14270fd9ca5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4910,7 +4910,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1101c394-e912-42b6-85be-d2479b72d27f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4951,7 +4951,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ffe051ab-1088-4040-9bbb-8a1bf3fd2a7b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -4982,7 +4982,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4813a35a-7d43-42fa-999d-86e68b2aca1a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5048,7 +5048,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ae6d4cd8-c930-4737-9aba-93609f53cde1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5085,7 +5085,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a4902ee8-060c-47d1-9dfc-ec6af1a9c398",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5133,7 +5133,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "04216a87-0760-4f25-b809-42ffbfbb8962",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5164,7 +5164,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cac9fd2a-2c08-441f-a94d-16c67821221f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5195,7 +5195,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ad6e04de-5f80-4274-9464-c6bbff533ad3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5305,7 +5305,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "fee5894b-e255-408d-9cd2-e6ee29d78d78",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5346,7 +5346,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0d7bc864-fdf3-4afd-8b44-48468b12d550",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5377,7 +5377,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8a38266e-dee5-41ce-8228-2b51a307785f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5429,7 +5429,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "775bd83c-b33a-471c-9deb-8a444fb4ac79",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5478,7 +5478,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1e97b930-031a-47b6-afb1-8af61dd81ec0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5509,7 +5509,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "466926d1-72a6-42be-b2c1-ef94d44e5a67",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5546,7 +5546,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4df1406c-1bb1-4495-96e8-8c25de454b5d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5577,7 +5577,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "05ca6ccc-d6e1-47ab-ab8d-25949db9ada7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5608,7 +5608,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e9799403-3917-4c38-9638-c69aebf1ac08",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5661,7 +5661,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d3139564-f4c3-44f9-902a-8d172038af01",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5739,7 +5739,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9ddac40e-d776-4232-a00f-7e698eb2dca8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5819,7 +5819,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6dd26dd7-d5c3-4aa8-bb9a-3aba328790ad",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5850,7 +5850,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f7f8acea-8725-48ec-a2f8-08ee16c738db",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -5984,7 +5984,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "bb734a22-a274-48ee-9740-d4a6a9a0a367",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6015,7 +6015,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4502246b-f419-4879-a179-149c6d87a871",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6052,7 +6052,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b7e8b7c6-548b-49a7-9001-2bf1733ca539",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6093,7 +6093,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c3123664-33b3-4f29-bc08-40b88300f57c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6134,7 +6134,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "377dba9b-63cc-4ca9-bb39-97f5e12497b4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6165,7 +6165,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0e517488-6e73-41c3-a297-7602f5937079",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6228,7 +6228,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e3053bd5-1a4d-473c-a41b-f83ab1a46174",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6265,7 +6265,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a0db598f-81d1-44d6-9008-e9a71e742cd3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6318,7 +6318,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4a33ebab-f5cf-48b3-adb3-3f7094ea706c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6367,7 +6367,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "fd341719-247e-45e8-a911-ad7c336eb163",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6398,7 +6398,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b9bf1c69-4a64-47ec-a781-fb81d1922695",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6475,7 +6475,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "27b05d20-fd9c-437d-a86c-923629491ff5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6506,7 +6506,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "36156772-6775-4b79-b560-b72ccaaca085",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6537,7 +6537,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "87cf029b-441f-439a-aae9-9ef27ddd4322",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6588,7 +6588,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9fcb3e74-e8af-4b55-9bfc-808fa2560148",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6630,7 +6630,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "16fc441d-0d72-4b14-afd7-d5c9dd25c909",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6667,7 +6667,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "196a8cbd-8234-4336-a4d7-f6dda870bcfb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6719,7 +6719,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "12ca72e6-3bbf-4c79-94d5-91016543f8ca",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6771,7 +6771,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4b637a92-c1af-463d-afc1-e0ce65d7c057",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6823,7 +6823,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3b404956-9bad-4bd9-89a9-17534b4bd22e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6872,7 +6872,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "34b93e72-0fa8-4dbe-ae9b-82a9e40de735",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6928,7 +6928,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7baddfbe-3618-41d8-befe-40fc2aabcd8e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -6970,7 +6970,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0cdfed38-6495-42a3-a837-3788f35aadd3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7001,7 +7001,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a9fe34f1-7c82-4f7d-8fbe-20bb8ca29e7b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7032,7 +7032,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ae9ce022-800d-4a10-a452-5bc396d25430",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7081,7 +7081,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "28fc08e1-1afc-42cb-8eca-0b500e23c73e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7112,7 +7112,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7e3a17ce-fbbd-48cb-b29f-34a4b8c6ca55",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7194,7 +7194,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5e32ec37-7a46-4e84-9f19-845cd6b151f4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7247,7 +7247,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "347d6881-c509-4dca-9ece-95e25098436b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7278,7 +7278,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "45ee52ba-1e4c-48a5-9eef-de7a234997db",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7326,7 +7326,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0852caec-a861-4f9c-9e94-a7c8b67a1641",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7363,7 +7363,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "bb7a2190-2e72-4ccf-9603-226e0fde174c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7394,7 +7394,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "91f75500-0051-4d05-a5b2-9a87aa52ec3a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7431,7 +7431,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "58b5f6c8-1ad7-4378-9921-7b9b7982c84c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7514,7 +7514,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "24f2d280-583d-4511-af0c-47910fc52c4d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7545,7 +7545,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "14074b80-f3a7-4b45-97ba-7204c92c5f6e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7576,7 +7576,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "59a6acf5-d65f-4884-a9b8-ae7d2c9f6728",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7617,7 +7617,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "200d7310-6d18-4b22-98b3-68ae63ea985a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7717,7 +7717,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ec2849c6-e8ed-46b1-8e57-646fd2e8be93",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7748,7 +7748,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "79f72036-83ee-4420-9767-980e27590e6f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7785,7 +7785,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "345bf964-02ce-4814-b37f-52c2e73ab395",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7822,7 +7822,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a2015046-780d-421a-999f-c52c808236fa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7863,7 +7863,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "883a7c72-e6ca-41cb-91e9-e65436a58729",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7904,7 +7904,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "bac14e5d-08c4-4b69-8e40-b845632d26ed",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7935,7 +7935,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8b17658e-2a1b-4ca7-a1ae-583e7b190bce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -7996,7 +7996,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c83f2ca0-ca97-43cf-8288-5ff4a0771e29",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8058,7 +8058,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5f64133c-70f4-4044-ac82-dcb2e7758c8c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8089,7 +8089,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "361ed7f4-8df4-4a8e-931f-edfb380e0019",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8137,7 +8137,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ae4c8106-9947-4577-924e-c7106256dd69",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8182,7 +8182,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "dedc68af-03ef-49ce-a331-e4717b96f693",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8213,7 +8213,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d2aacd5b-0642-4832-8629-58272a922e4b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8244,7 +8244,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5a9955bc-6c28-4ebd-974e-73226eb3e58f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8275,7 +8275,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7902d399-3080-4926-afb8-4f98c3a7d870",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8306,7 +8306,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2d851046-40f2-4088-95df-d6c0f93c2f0a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8337,7 +8337,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f97607ba-eb50-4258-b46c-ce9fc6587fa9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8368,7 +8368,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "995ac56a-5ec7-4411-a86c-4ebfef9c9605",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8450,7 +8450,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1d89482a-a7de-4d3b-a7cb-1b7be49939ec",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8481,7 +8481,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c0a64e6c-2ff2-4a2f-afe6-f52119a020a0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8512,7 +8512,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "35e1e1a0-30c9-4857-a9e0-5c64f7e29fa9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8549,7 +8549,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e944c7a9-9eb0-495a-8bee-d8da751240e7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8607,7 +8607,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c6f8403f-30d0-45d2-b7c3-95a6cb61c4b4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8650,7 +8650,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2a5c04e4-0526-492b-aa98-49896e033b74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8681,7 +8681,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f1da402e-a006-4364-a100-5131eb05b579",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8722,7 +8722,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3d7c6822-88bd-4569-a099-1e58b9b365b0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8759,7 +8759,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2382172a-b26a-40fc-adee-f82132b56edc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8790,7 +8790,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c2f4ab61-b279-4cb9-932d-5f60bcd1534a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8842,7 +8842,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e61c643c-ec01-483c-a586-20f87ab6280e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8873,7 +8873,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d7a1d303-082e-477d-8ab5-9d65dc0117d9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8904,7 +8904,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3947e186-beb0-4372-8f74-045047dacebd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8945,7 +8945,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "50b7ab52-c3d0-40bc-b342-38fa93da54ff",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -8976,7 +8976,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "573c235f-93d7-45a3-9f23-b1166a660c97",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9021,7 +9021,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e4927319-b643-498e-935f-51bad4e30381",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9069,7 +9069,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "fa6d267b-a797-42b7-9510-5abc3c518f3e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9110,7 +9110,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cc190d52-686a-4286-812d-c4542161203d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9141,7 +9141,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "36ad8cdb-408e-4110-827b-8d6a0a0f94bb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9219,7 +9219,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "83932f7e-8c4d-475b-b03b-f30bc31793d3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9250,7 +9250,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "21242e10-3373-40a3-9119-e4d075b7c27e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9281,7 +9281,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6e61849a-2312-4c76-a9d0-0a4b84a7795e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9318,7 +9318,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8663db3e-ad80-4805-8032-11a3f303b5fc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9369,7 +9369,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "93c84b33-4392-41b2-85be-764e5f39da74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9431,7 +9431,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "91c0fc60-7dc9-4095-a05a-9f816738df67",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9462,7 +9462,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "165ef95f-bfb3-4b08-b523-d17748fdfe31",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9493,7 +9493,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6543c44a-7ad6-4f9e-bf7e-9f8f969934bf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9524,7 +9524,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d5076249-cb9d-4c5e-ae2e-544779ec1a04",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9576,7 +9576,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "69ae0fdb-713d-4f8e-bf8e-d214e79fa295",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9618,7 +9618,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b1051584-3b09-49af-a97f-a92b47861ed1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9649,7 +9649,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "07ccf835-680a-42b4-bf0b-db28367519ee",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9691,7 +9691,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7461c9c2-108f-46c1-8f35-6206ec509267",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9732,7 +9732,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0f4331b9-9229-49c4-b41c-5c254b610daa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9763,7 +9763,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "97174daf-db12-40ac-bab2-1c4255ce1741",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9800,7 +9800,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "27c761f6-dc25-4c35-9912-2dc2bbdeaadd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9841,7 +9841,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "fffcda50-ddc1-4357-a9bf-b7022f86c582",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9872,7 +9872,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b87405fe-1aae-4a7a-a4d7-cd0b5f267ad8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -9962,7 +9962,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "67c71178-8632-4d67-abad-c28f6e58c87f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10043,7 +10043,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "aef75131-e237-4b91-a2b8-c0f416d3618f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10123,7 +10123,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "532d7690-7a65-470f-81da-2ba3042bee05",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10154,7 +10154,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0d57edf7-3fbb-42b4-aa9e-b255e7d6f8fa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10235,7 +10235,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b51467a7-698f-4a33-9598-db5aaf4e07b3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10293,7 +10293,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6a9b532e-61df-4d4d-a898-25d66aa60315",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10334,7 +10334,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5bf6d045-dc83-4b51-858f-eb9c3403087f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10379,7 +10379,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d78df157-559d-4e87-af1f-0dcbfe703a23",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10410,7 +10410,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "601ee7e9-e0db-470e-80e5-f1509cddf6d7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10447,7 +10447,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1967f4e6-f229-4d5f-a648-9bdc67d39da8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10478,7 +10478,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b9fa6e10-c6f4-424d-b289-469d49decaaf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10509,7 +10509,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "dcac9b0e-b18c-4570-947c-7a6d351b02df",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10540,7 +10540,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "add3f73d-394b-4b99-b255-8d9d89db84c2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10581,7 +10581,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d0f30dc9-bc11-43f8-9b61-034e2bec78d5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10612,7 +10612,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7e73a81a-e914-4cf7-aff2-482d0047e8dd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10664,7 +10664,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "243a8c0e-4bb7-4932-9d7c-8e8229306295",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10695,7 +10695,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e80eb5ed-497b-4bcf-8cc3-f7f2c5eed889",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10751,7 +10751,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ac8e4d2b-da97-4a40-934b-1c516b4250fe",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10840,7 +10840,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "984ee65a-dec0-4a75-b21b-2efbcd9600bd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10881,7 +10881,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "86a12728-3ab9-4a69-a447-bcb67957a5f7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10912,7 +10912,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6a4d324e-7d12-495c-b72c-fe5803363af1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10949,7 +10949,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3c265bda-03e4-4e46-bceb-437a1b02f431",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -10980,7 +10980,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "39843dbb-856d-46d9-92c4-74b5041c4444",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11021,7 +11021,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "17c2c7f2-20f2-424f-8466-b164ed19ddef",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11064,7 +11064,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "32f876df-1f34-40d7-aed8-0431b32d5091",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11101,7 +11101,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a4a1013a-5789-4020-9a16-eda6c453aba7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11138,7 +11138,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a0e6ce8a-15eb-4776-b9de-a4bb3c7e4730",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11221,7 +11221,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6cfb4c39-82bb-4b43-94a5-1f50ebd10c71",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11264,7 +11264,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b9f04c6e-0d22-4f17-af83-ccde8b03e4e8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11295,7 +11295,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e7e51609-0d23-4d96-8063-d136bd993c93",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11369,7 +11369,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8197c60c-08c6-4d90-9d63-e64bf48ab6e4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11400,7 +11400,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e4578522-e426-44f4-818c-68784f2a3038",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11431,7 +11431,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "84bda3c9-65ce-45f2-898f-6e370718b43d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11462,7 +11462,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9f5885d3-fe18-483d-b7b2-f507b2f37ccb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11523,7 +11523,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a59a162f-d811-4344-bf53-606a74bb50c6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11575,7 +11575,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "93be69a3-6dbf-4e3c-aa47-a4d5a15f0588",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11606,7 +11606,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5b01e888-7245-46a6-8747-d6f9ca374c43",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11649,7 +11649,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9ad8f293-3ea1-4f0d-8c9f-a24945851bb6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11680,7 +11680,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3ec2249d-2ed3-45d2-8b52-185abfa918ac",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11711,7 +11711,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4f189cdd-04a5-47f6-b87b-7d38cc82e625",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11777,7 +11777,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "819f0338-1101-475c-9915-65a8727a8dc5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11840,7 +11840,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b3dbb84c-3e48-4cbc-a581-bb9ebe133cb4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11881,7 +11881,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "091ef217-8e6d-4e06-8cb9-bc5ffe5467b1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11955,7 +11955,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "53290776-f4aa-488d-a10f-135a17645b02",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -11986,7 +11986,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4365781f-28ff-4865-aa7d-909678f6dbb4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12023,7 +12023,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "71120aef-743c-47ee-bb7d-3b215c7f22a7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12096,7 +12096,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5ebda83c-f2b3-4b14-ba72-13d940fa940a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12148,7 +12148,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7f9416dd-34cf-4f0d-bcfb-c87cbee3abf6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12179,7 +12179,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6fefc93f-3f03-47b0-9f42-21d5a5841490",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12221,7 +12221,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b61a2d2e-db6c-47b4-9437-7edc8525d063",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12252,7 +12252,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b4970e5b-1259-4ff9-a40a-c570f27d0930",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12283,7 +12283,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ac665c5c-e1de-4686-9012-5ac101186a31",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12314,7 +12314,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "55ba52cd-8e0a-4bcb-9a96-1658f2d713e0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12345,7 +12345,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "abcce212-b3e1-4741-a8b3-86c95c276fb1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12409,7 +12409,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "22fbb4c3-d5fd-4191-af7a-c78686cc6123",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12483,7 +12483,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "56577627-939e-4f31-8c96-654586538eb5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12535,7 +12535,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "309e2634-8163-47c9-951e-1cfec85e701b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12628,7 +12628,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6a44b030-46c7-4390-adf2-2a75652dee27",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12671,7 +12671,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9326c18e-b2fb-4012-a170-cdd5753f0b1e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12708,7 +12708,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "010904ec-6e39-4bdc-878a-75a6e79d0500",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12739,7 +12739,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f10c234b-cf64-4dc2-9e38-5f57e53aeecb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12770,7 +12770,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9c7c309a-fb3c-4099-b461-0ca725c9083b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12818,7 +12818,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "afcff9a2-a4ed-457f-80fb-8bdd1948771a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12863,7 +12863,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b4c38c39-7381-49fa-b7b4-75e2604ed93d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12904,7 +12904,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d9d7e246-d3f4-4214-aa79-fe1981c73c2e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -12984,7 +12984,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6ebc1c16-ea8d-44eb-958c-74f3f0531058",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13036,7 +13036,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e9a5215c-6485-462f-b086-6e97f0466b30",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13073,7 +13073,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1455eb68-3cf0-4cc3-a8ee-fd729a00acd3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13121,7 +13121,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "dd3f5299-5869-43ec-89a8-77e25e6a157e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13158,7 +13158,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ba368d1c-d64d-4ecd-9bde-72304d69c4d1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13200,7 +13200,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ab58cca1-94ad-42d8-be13-980556ac552b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13251,7 +13251,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "752ef535-2865-4d95-bcc5-647a7be83f74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13314,7 +13314,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b71bb3e0-0871-4ca6-9336-3c731607d3ad",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13366,7 +13366,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d3194c4f-b73a-40b2-9170-0e6e8ee713c0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13407,7 +13407,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4d3dba83-9775-4b5a-9de7-f18f7263460c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13448,7 +13448,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "618671cb-8783-47c7-a81c-164f5f9e2cc1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13497,7 +13497,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "531956a8-df6a-4edd-bb72-36c284c1d7c8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13528,7 +13528,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "47685d63-d574-4311-b823-c0ddc29d8514",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13618,7 +13618,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c52271b3-e48e-4896-b5a2-2ff93189b339",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13660,7 +13660,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7d68a487-bc40-4783-a2eb-1c9107fc26a4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13712,7 +13712,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c01d9a66-7a37-4f66-870d-38829c0047ea",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13773,7 +13773,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a81b1d9e-c1a5-4848-a3f5-350ea2872ae3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13804,7 +13804,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9c804dd3-4283-4a5b-a34e-6f1c7065b671",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13847,7 +13847,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0d8b287c-6023-4809-a5ba-963c5612efa2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13878,7 +13878,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d6801d4f-2f27-4e67-8b70-10754b48ff0d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13936,7 +13936,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "925a5d1d-ab12-44bd-9297-a20bdde6ec68",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -13967,7 +13967,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a0f6fd01-5eb2-4aca-b4a6-c67eb6e0c5da",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14039,7 +14039,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "038a3024-c319-4a07-bd7f-9cf699cfebf1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14070,7 +14070,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "dd586d17-4a7e-4658-92df-8cf6b58bff4d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14123,7 +14123,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "23b81af0-3e03-47b8-a310-c9b07bebd547",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14154,7 +14154,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cfe44c73-8b61-48c9-9d7f-b28e98d23b5b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14185,7 +14185,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "dd8073c5-c7c4-42c1-a0d7-cad8089de750",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14216,7 +14216,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "328e3069-005e-4179-add1-c13b18db4102",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14247,7 +14247,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "503a5c73-c147-4b2c-90d3-292378268706",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14278,7 +14278,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "94872987-6992-4fec-ab4b-9ef5311b3108",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14315,7 +14315,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "00613acb-73e2-4f93-8b96-296df17316c8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14412,7 +14412,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cf42caa8-50d1-489d-aa3c-3e8432efe9e2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14443,7 +14443,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "68966508-9094-4eb5-9588-ff7456d6c1ce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14531,7 +14531,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4f9043b6-e17a-494e-89d4-52c3f39999ac",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14562,7 +14562,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7997496a-c366-4949-9ca7-6741bcfdf2a0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14624,7 +14624,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "61ffe82e-5288-4af8-a45f-9a0907c941de",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14676,7 +14676,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2e9aa092-56fc-4adb-93ba-e9c9d9919440",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14707,7 +14707,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "904d15ba-e312-4dec-88b6-f52c1077bc96",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14744,7 +14744,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "92c66a82-172a-45e6-92a4-ee6a053e95e6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14846,7 +14846,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "edf43b88-36a4-4f07-9d46-cab08bd418aa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14877,7 +14877,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "abcd869f-0159-408c-8965-9dbcc8c2d001",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14925,7 +14925,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ddfb0c36-c116-4333-a62e-c9447d699b6e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -14956,7 +14956,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c214300b-5fcc-48fb-ad3a-bb2d14b0403d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15007,7 +15007,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "01129bff-3d65-4e3d-8e82-6f2f269f818c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15038,7 +15038,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8f234bf9-d65f-4406-bed6-f8217adee4c9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15075,7 +15075,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "b5ee338d-655b-4067-9e17-f1bfc442a1eb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15112,7 +15112,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ab0a0d85-7031-4eb0-bd01-5db69fb8c667",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15143,7 +15143,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0c43f128-7589-4ce6-9382-5399ba24bebd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15180,7 +15180,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6a64a548-c36c-400f-b43c-4d977aa1e482",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15211,7 +15211,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "87e2c1e7-4fdb-436f-b52c-af683f63fb1b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15242,7 +15242,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0e45cb5a-5b45-47f3-8b5e-12bdf88d176a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15273,7 +15273,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f43b2576-74d3-4b79-b9d0-0c5816835369",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15304,7 +15304,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "874336ad-3dfa-467f-8356-3de7d8b2b93d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15373,7 +15373,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "02cdb980-1dcd-4345-a8d1-d3f3f522d04b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15404,7 +15404,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8d526532-7125-4b3c-b180-901914ead390",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15464,7 +15464,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3f9a95e0-3a22-4ff8-8c92-60d89d847f5c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15517,7 +15517,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "fcde90d4-5b99-4262-8101-7a507bf05915",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15548,7 +15548,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "fbef362d-ba4b-4708-8579-332d2a57582d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15610,7 +15610,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "61942e80-99c9-4856-90c8-5a11ac76ade5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15641,7 +15641,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "523175e8-6767-4387-af85-a46f256a6390",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15672,7 +15672,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "387ef1e6-0e4c-43ea-9416-bf3b399a3c76",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15703,7 +15703,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f25f6cdb-0623-4a04-bac2-f1b26331b432",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15769,7 +15769,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "20c38c50-831e-478a-9f52-064d3ad8a6ce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15800,7 +15800,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "09a2ecf8-1774-490e-8542-2b25a6445a58",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15843,7 +15843,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e532ff07-269a-47fb-98ad-6315d7081ccb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15910,7 +15910,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0b245c5f-ba2b-4e8d-b9db-26681b0fa2e3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15941,7 +15941,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9826cb7a-bc6f-41d9-b9b7-f76f781c1eca",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -15978,7 +15978,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ff2b0e88-9426-4aa1-bfb1-165cc810344f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16027,7 +16027,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "bdeb1cca-49ce-476a-87a2-f27c30b086bd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16058,7 +16058,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cb9e2dc2-e335-4271-8e8d-5aff43cd389b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16101,7 +16101,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6275eefc-3f97-4a30-85ca-9678de62bdcf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16164,7 +16164,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1aa1e801-80d9-4ea1-80c2-e7d037ce98e3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16222,7 +16222,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ea41dc54-96fd-41db-90ec-92a1a45e7151",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16259,7 +16259,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7f7268e0-670a-4630-83da-acc1090264c3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16365,7 +16365,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5c1709d9-3f57-4dbd-a727-5ce383a59c32",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16402,7 +16402,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f79220af-20c6-4d21-b4f6-13f176b7f1d8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16454,7 +16454,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "10bb9deb-9384-4e4d-935e-9d830015a43e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16495,7 +16495,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4bd856fc-761e-43e3-9236-7b996b6b7ec7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16568,7 +16568,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a038d159-c51e-49ef-aa02-c794e8a5cb94",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16605,7 +16605,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "7d8aa739-c9c6-4afd-991b-cf425be475db",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16652,7 +16652,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1ff3b09d-5c19-4254-849f-34244dc6ee88",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16704,7 +16704,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "1dd6d7a5-ba98-4fce-b4a4-d0541df84569",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16785,7 +16785,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "51d74701-2a57-476f-a5ed-75a93be58f42",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16816,7 +16816,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3cccaee3-1b35-4a97-bc23-d1a8603aa366",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16853,7 +16853,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "162d7f33-0f96-47d7-980b-361fb0ddc381",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16884,7 +16884,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "aa301cee-889b-4606-b66b-fd9dc1e77817",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -16951,7 +16951,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "6b136dc5-ffcf-41b0-bf5f-e5dff5d47981",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17032,7 +17032,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cbc3c68c-82c8-4a9f-86b9-78e3893df494",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17081,7 +17081,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "8b5bb45d-a025-4e7b-a185-dbb5e349af32",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17158,7 +17158,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5f14d558-f478-43b5-8dde-20c9997f196a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17195,7 +17195,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "f3285cc9-1d33-472f-aa28-0b9d7723f877",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17243,7 +17243,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c7876b07-1fe3-4006-a104-93ef9f9e1669",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17280,7 +17280,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "e69c8abd-6964-48b1-a7cb-89c926932c47",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17311,7 +17311,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "5f5a497c-673d-4988-b86b-c3bcaaf1a317",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17342,7 +17342,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "02b79b89-cce8-4401-aa1f-255b01587266",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17373,7 +17373,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a8a08cbd-074f-49ba-8f98-3ef8583cc93b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17425,7 +17425,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "4e6fc5a4-eecb-46e4-a3ce-4310cbb8c3f4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17474,7 +17474,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "ccb9aa0c-bbf5-46e6-a5f0-a5b4c11d519a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17533,7 +17533,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a24e506b-b16b-412d-b806-fcf7e39b4549",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17564,7 +17564,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "bce1c06f-6325-418a-91e2-0ff2f6cf8ffc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17609,7 +17609,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "aeca0d6b-ed78-4634-a29a-6d08f71de2b6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17646,7 +17646,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "a33de229-5e89-468d-aa2a-570b0f6e3dfa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17688,7 +17688,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "cd63d589-6f0e-4d2d-8c9c-b6857f48cc62",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17719,7 +17719,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c859bceb-143a-43dc-84e6-8ad8f707fcb0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17756,7 +17756,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "0278fd92-a009-4a47-a6df-5f77db37e6ab",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17801,7 +17801,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "be45349a-793d-44d9-b2c6-6d4a30785a18",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17832,7 +17832,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "17829ab3-ae45-4fdd-95dc-4bb82a75752d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17863,7 +17863,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c636fa7e-796e-40a3-bdfc-52d7f4b82db4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17894,7 +17894,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9297bbe7-81bc-4a7c-97ba-fcaaf8c7a626",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17942,7 +17942,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "c978017d-b94a-4d0c-a46e-5395cb94a67e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -17996,7 +17996,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "816a9400-2e2b-4697-8fbb-2a22fd81de74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18033,7 +18033,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "bdcb0c25-b41c-4e61-ad25-89e5ddb35dcc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18075,7 +18075,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "2a679bdd-d106-4510-99ea-b4802070d30f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18122,7 +18122,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "d0568ded-6678-4940-b344-9644e04e6d7b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18153,7 +18153,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "29cf2977-4a42-44f0-8e62-f92ca8391412",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18184,7 +18184,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "963aac9c-4999-4ce6-93c9-43d4b2de16bb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18215,7 +18215,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "3288499d-b820-45c9-8abf-60c050c5c741",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18246,7 +18246,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "9f38c975-9a2a-484f-8173-562153f515e4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
@@ -18277,7 +18277,7 @@
       }
     ],
     "_meta": {
-      "io.modelcontextprotocol.registry": {
+      "io.modelcontextprotocol.registry/official": {
         "id": "53bef572-b137-447a-bb2f-9fdd37926619",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",

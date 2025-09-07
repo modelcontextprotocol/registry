@@ -23,8 +23,8 @@ type ServerListResponse struct {
 
 // ServerMeta represents the structured metadata with known extension fields
 type ServerMeta struct {
-	Publisher                      map[string]interface{} `json:"publisher,omitempty"`
-	IOModelContextProtocolRegistry *RegistryExtensions    `json:"io.modelcontextprotocol.registry,omitempty"`
+	Official         *RegistryExtensions    `json:"io.modelcontextprotocol.registry/official,omitempty"`
+	PublisherProvided map[string]interface{} `json:"io.modelcontextprotocol.registry/publisher-provided,omitempty"`
 }
 
 // ServerJSON represents complete server information as defined in the MCP spec, with extension support

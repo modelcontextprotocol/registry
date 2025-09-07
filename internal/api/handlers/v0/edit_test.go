@@ -42,9 +42,9 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, published)
 	assert.NotNil(t, published.Meta)
-	assert.NotNil(t, published.Meta.IOModelContextProtocolRegistry)
+	assert.NotNil(t, published.Meta.Official)
 
-	testServerID := published.Meta.IOModelContextProtocolRegistry.ID
+	testServerID := published.Meta.Official.ID
 
 	// Publish a second server for permission testing
 	otherServer := apiv0.ServerJSON{
@@ -64,9 +64,9 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, otherPublished)
 	assert.NotNil(t, otherPublished.Meta)
-	assert.NotNil(t, otherPublished.Meta.IOModelContextProtocolRegistry)
+	assert.NotNil(t, otherPublished.Meta.Official)
 
-	otherServerID := otherPublished.Meta.IOModelContextProtocolRegistry.ID
+	otherServerID := otherPublished.Meta.Official.ID
 
 	// Publish a deleted server for undelete testing
 	deletedServer := apiv0.ServerJSON{
@@ -86,9 +86,9 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, deletedPublished)
 	assert.NotNil(t, deletedPublished.Meta)
-	assert.NotNil(t, deletedPublished.Meta.IOModelContextProtocolRegistry)
+	assert.NotNil(t, deletedPublished.Meta.Official)
 
-	deletedServerID := deletedPublished.Meta.IOModelContextProtocolRegistry.ID
+	deletedServerID := deletedPublished.Meta.Official.ID
 
 	testCases := []struct {
 		name           string

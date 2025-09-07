@@ -53,7 +53,7 @@ func TestPrometheusHandler(t *testing.T) {
 	mux.Handle("/metrics", metrics.PrometheusHandler())
 
 	// Create request
-	url := "/v0/servers/" + server.Meta.IOModelContextProtocolRegistry.ID
+	url := "/v0/servers/" + server.Meta.Official.ID
 	req := httptest.NewRequest(http.MethodGet, url, nil)
 	w := httptest.NewRecorder()
 

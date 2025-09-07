@@ -113,8 +113,8 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 	isNewLatest := true
 	if existingLatest != nil {
 		var existingPublishedAt time.Time
-		if existingLatest.Meta != nil && existingLatest.Meta.IOModelContextProtocolRegistry != nil {
-			existingPublishedAt = existingLatest.Meta.IOModelContextProtocolRegistry.PublishedAt
+		if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
+			existingPublishedAt = existingLatest.Meta.Official.PublishedAt
 		}
 		isNewLatest = CompareVersions(
 			serverJSON.VersionDetail.Version,
@@ -133,7 +133,7 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 	}
 
 	// Set registry metadata
-	server.Meta.IOModelContextProtocolRegistry = &apiv0.RegistryExtensions{
+	server.Meta.Official = &apiv0.RegistryExtensions{
 		ID:          uuid.New().String(),
 		PublishedAt: publishTime,
 		UpdatedAt:   publishTime,
@@ -150,13 +150,13 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 	// Mark previous latest as no longer latest
 	if isNewLatest && existingLatest != nil {
 		var existingLatestID string
-		if existingLatest.Meta != nil && existingLatest.Meta.IOModelContextProtocolRegistry != nil {
-			existingLatestID = existingLatest.Meta.IOModelContextProtocolRegistry.ID
+		if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
+			existingLatestID = existingLatest.Meta.Official.ID
 		}
 		if existingLatestID != "" {
 			// Update the existing server to set is_latest = false
-			existingLatest.Meta.IOModelContextProtocolRegistry.IsLatest = false
-			existingLatest.Meta.IOModelContextProtocolRegistry.UpdatedAt = time.Now()
+			existingLatest.Meta.Official.IsLatest = false
+			existingLatest.Meta.Official.UpdatedAt = time.Now()
 			if _, err := s.db.UpdateServer(ctx, existingLatestID, existingLatest); err != nil {
 				return nil, err
 			}
@@ -193,8 +193,8 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 // getCurrentLatestVersion finds the current latest version from existing server versions
 func (s *registryServiceImpl) getCurrentLatestVersion(existingServerVersions []*apiv0.ServerJSON) *apiv0.ServerJSON {
 	for _, server := range existingServerVersions {
-		if server.Meta != nil && server.Meta.IOModelContextProtocolRegistry != nil &&
-			server.Meta.IOModelContextProtocolRegistry.IsLatest {
+		if server.Meta != nil && server.Meta.Official != nil &&
+			server.Meta.Official.IsLatest {
 			return server
 		}
 	}

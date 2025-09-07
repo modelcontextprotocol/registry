@@ -33,7 +33,7 @@ func TestImportService_LocalFile(t *testing.T) {
 				Version: "1.0.0",
 			},
 			Meta: &apiv0.ServerMeta{
-				IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
+				Official: &apiv0.RegistryExtensions{
 					ID:          "test-id-1",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
@@ -79,7 +79,7 @@ func TestImportService_HTTPFile(t *testing.T) {
 				Version: "2.0.0",
 			},
 			Meta: &apiv0.ServerMeta{
-				IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
+				Official: &apiv0.RegistryExtensions{
 					ID:          "test-id-2",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
@@ -124,7 +124,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 				Version: "1.0.0",
 			},
 			Meta: &apiv0.ServerMeta{
-				IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
+				Official: &apiv0.RegistryExtensions{
 					ID:          "api-test-id-1",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
@@ -144,7 +144,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 				Version: "2.0.0",
 			},
 			Meta: &apiv0.ServerMeta{
-				IOModelContextProtocolRegistry: &apiv0.RegistryExtensions{
+				Official: &apiv0.RegistryExtensions{
 					ID:          "api-test-id-2",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),

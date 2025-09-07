@@ -175,8 +175,8 @@ func TestServersListEndpoint(t *testing.T) {
 						assert.NotEmpty(t, server.Name)
 						assert.NotEmpty(t, server.Description)
 						assert.NotNil(t, server.Meta)
-						assert.NotNil(t, server.Meta.IOModelContextProtocolRegistry)
-						assert.NotEmpty(t, server.Meta.IOModelContextProtocolRegistry.ID)
+						assert.NotNil(t, server.Meta.Official)
+						assert.NotEmpty(t, server.Meta.Official.ID)
 					}
 				}
 
@@ -223,7 +223,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 	}{
 		{
 			name:           "successful get server detail",
-			serverID:       testServer.Meta.IOModelContextProtocolRegistry.ID,
+			serverID:       testServer.Meta.Official.ID,
 			expectedStatus: http.StatusOK,
 		},
 		{
@@ -305,7 +305,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, published)
 
-	serverID := published.Meta.IOModelContextProtocolRegistry.ID
+	serverID := published.Meta.Official.ID
 	servers := []apiv0.ServerJSON{*published}
 	serverDetail := published
 

@@ -103,11 +103,11 @@ func (db *MemoryDB) CreateServer(ctx context.Context, server *apiv0.ServerJSON) 
 	}
 
 	// Get the ID from the registry metadata
-	if server.Meta == nil || server.Meta.IOModelContextProtocolRegistry == nil {
+	if server.Meta == nil || server.Meta.Official == nil {
 		return nil, fmt.Errorf("server must have registry metadata with ID")
 	}
 
-	id := server.Meta.IOModelContextProtocolRegistry.ID
+	id := server.Meta.Official.ID
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
@@ -193,8 +193,8 @@ func (db *MemoryDB) matchesFilter(entry *apiv0.ServerJSON, filter *ServerFilter)
 
 // getRegistryID safely extracts the registry ID from an entry
 func (db *MemoryDB) getRegistryID(entry *apiv0.ServerJSON) string {
-	if entry.Meta != nil && entry.Meta.IOModelContextProtocolRegistry != nil {
-		return entry.Meta.IOModelContextProtocolRegistry.ID
+	if entry.Meta != nil && entry.Meta.Official != nil {
+		return entry.Meta.Official.ID
 	}
 	return ""
 }

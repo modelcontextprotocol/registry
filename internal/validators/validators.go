@@ -251,21 +251,21 @@ func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
 func validatePublisherExtensions(req apiv0.ServerJSON) error {
 	const maxExtensionSize = 4 * 1024 // 4KB limit
 
-	// Check size limit for _meta.publisher extension
-	if req.Meta != nil && req.Meta.Publisher != nil {
-		extensionsJSON, err := json.Marshal(req.Meta.Publisher)
+	// Check size limit for _meta publisher-provided extension
+	if req.Meta != nil && req.Meta.PublisherProvided != nil {
+		extensionsJSON, err := json.Marshal(req.Meta.PublisherProvided)
 		if err != nil {
-			return fmt.Errorf("failed to marshal _meta.publisher extension: %w", err)
+			return fmt.Errorf("failed to marshal _meta.io.modelcontextprotocol.registry/publisher-provided extension: %w", err)
 		}
 		if len(extensionsJSON) > maxExtensionSize {
-			return fmt.Errorf("_meta.publisher extension exceeds 4KB limit (%d bytes)", len(extensionsJSON))
+			return fmt.Errorf("_meta.io.modelcontextprotocol.registry/publisher-provided extension exceeds 4KB limit (%d bytes)", len(extensionsJSON))
 		}
 	}
 
 	if req.Meta != nil {
-		// Validate that only "publisher" is allowed in _meta during publish (no registry metadata should be present)
-		if req.Meta.IOModelContextProtocolRegistry != nil {
-			return fmt.Errorf("registry metadata '_meta.io.modelcontextprotocol.registry' is not allowed during publish")
+		// Validate that only publisher-provided data is allowed in _meta during publish (no official registry metadata should be present)
+		if req.Meta.Official != nil {
+			return fmt.Errorf("official registry metadata '_meta.io.modelcontextprotocol.registry/official' is not allowed during publish")
 		}
 	}
 

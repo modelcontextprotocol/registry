@@ -217,8 +217,8 @@ func findServerIDByName(serverName string) (string, error) {
 
 	// Find the server with matching name
 	for _, server := range serverList.Servers {
-		if server.Name == serverName && server.Meta.IOModelContextProtocolRegistry.IsLatest {
-			return server.Meta.IOModelContextProtocolRegistry.ID, nil
+		if server.Name == serverName && server.Meta.Official.IsLatest {
+			return server.Meta.Official.ID, nil
 		}
 	}
 
@@ -324,12 +324,12 @@ func compareServerJSON(expected, actual *apiv0.ServerJSON) error {
 	}
 
 	// Compare only publisher metadata if present
-	if expected.Meta != nil && expected.Meta.Publisher != nil {
-		if actual.Meta == nil || actual.Meta.Publisher == nil {
+	if expected.Meta != nil && expected.Meta.PublisherProvided != nil {
+		if actual.Meta == nil || actual.Meta.PublisherProvided == nil {
 			return fmt.Errorf("expected publisher metadata, but got none")
 		}
-		if !reflect.DeepEqual(expected.Meta.Publisher, actual.Meta.Publisher) {
-			return fmt.Errorf("publisher metadata mismatch: expected %+v, got %+v", expected.Meta.Publisher, actual.Meta.Publisher)
+		if !reflect.DeepEqual(expected.Meta.PublisherProvided, actual.Meta.PublisherProvided) {
+			return fmt.Errorf("publisher metadata mismatch: expected %+v, got %+v", expected.Meta.PublisherProvided, actual.Meta.PublisherProvided)
 		}
 	}
 
