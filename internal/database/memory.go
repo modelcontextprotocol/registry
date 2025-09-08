@@ -165,6 +165,7 @@ func (db *MemoryDB) filterAndSort(allEntries []*apiv0.ServerJSON, filter *Server
 }
 
 // matchesFilter checks if an entry matches the provided filter
+//nolint:cyclop // Filter matching logic is inherently complex but clear
 func (db *MemoryDB) matchesFilter(entry *apiv0.ServerJSON, filter *ServerFilter) bool {
 	if filter == nil {
 		return true
