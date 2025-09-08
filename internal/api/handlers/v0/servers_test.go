@@ -133,7 +133,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/test-matching",
 					},
-					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+					Version: "1.0.0",
 				}
 				server2 := apiv0.ServerJSON{
 					Name:        "com.example/other-server",
@@ -143,7 +143,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/other",
 					},
-					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+					Version: "1.0.0",
 				}
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2)
@@ -163,7 +163,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/recent",
 					},
-					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+					Version: "1.0.0",
 				}
 				_, _ = registry.Publish(server)
 			},
@@ -182,7 +182,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/versioned",
 					},
-					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+					Version: "1.0.0",
 				}
 				server2 := apiv0.ServerJSON{
 					Name:        "com.example/versioned-server",
@@ -192,7 +192,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/versioned",
 					},
-					VersionDetail: model.VersionDetail{Version: "2.0.0"},
+					Version: "2.0.0",
 				}
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2) // This will be marked as latest
@@ -212,7 +212,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/combined",
 					},
-					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+					Version: "1.0.0",
 				}
 				server2 := apiv0.ServerJSON{
 					Name:        "com.example/other-server",
@@ -222,7 +222,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/nomatch",
 					},
-					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+					Version: "1.0.0",
 				}
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2)

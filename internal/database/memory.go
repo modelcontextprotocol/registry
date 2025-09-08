@@ -213,7 +213,7 @@ func (db *MemoryDB) matchesFilter(entry *apiv0.ServerJSON, filter *ServerFilter)
 
 	// Check exact version filter
 	if filter.Version != nil {
-		if entry.VersionDetail.Version != *filter.Version {
+		if entry.Version != *filter.Version {
 			return false
 		}
 	}
