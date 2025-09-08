@@ -56,6 +56,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     needs: docker-push
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -92,6 +95,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     needs: deploy-staging
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
