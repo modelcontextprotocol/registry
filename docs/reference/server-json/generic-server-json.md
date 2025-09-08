@@ -53,7 +53,7 @@ The official registry has some more restrictions on top of this. See the [offici
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "npm-publisher",
       "version": "1.0.1",
       "build_info": {
@@ -94,7 +94,7 @@ For MCP servers located within a subdirectory of a larger repository (monorepo s
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "npm-publisher",
       "version": "1.0.1",
       "build_info": {
@@ -138,7 +138,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "nuget-publisher",
       "version": "2.1.0",
       "build_info": {
@@ -242,7 +242,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "ci-publisher",
       "version": "3.2.1",
       "build_info": {
@@ -277,7 +277,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "cloud-deployer",
       "version": "2.4.0",
       "build_info": {
@@ -331,7 +331,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "poetry-publisher",
       "version": "1.8.3",
       "build_info": {
@@ -382,7 +382,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "dotnet-publisher",
       "version": "8.0.100",
       "build_info": {
@@ -494,7 +494,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "docker-buildx",
       "version": "0.12.1",
       "build_info": {
@@ -578,7 +578,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "hybrid-deployer",
       "version": "1.7.2",
       "build_info": {
@@ -622,7 +622,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "mcpb-publisher",
       "version": "1.0.0",
       "build_info": {
@@ -711,7 +711,7 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
     }
   ],
   "_meta": {
-    "publisher": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
       "tool": "legacy-publisher",
       "version": "0.8.1",
       "build_info": {

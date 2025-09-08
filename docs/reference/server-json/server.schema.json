@@ -452,12 +452,12 @@
               "description": "Extension metadata using reverse DNS namespacing for vendor-specific data",
               "additionalProperties": true,
               "properties": {
-                "publisher": {
+                "io.modelcontextprotocol.registry/publisher-provided": {
                   "type": "object",
                   "description": "Publisher-provided metadata for downstream registries",
                   "additionalProperties": true
                 },
-                "io.modelcontextprotocol.registry": {
+                "io.modelcontextprotocol.registry/official": {
                   "type": "object",
                   "description": "Official MCP registry metadata (read-only, added by registry)",
                   "additionalProperties": true

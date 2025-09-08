@@ -133,8 +133,10 @@ func publishToRegistry(expected *apiv0.ServerJSON, line int) error {
 
 	id, err := runPublisher(p)
 	if err != nil {
+		log.Printf("  ⛔ Failed to get server ID: %v", err)
 		return err
 	}
+	log.Printf("  📋 Got server ID: %s", id)
 
 	return verifyPublishedServer(id, expected)
 }
@@ -159,6 +161,9 @@ func runPublisher(filePath string) (string, error) {
 		return "", fmt.Errorf("failed to get server name from file: %w", err)
 	}
 
+	// Add a small delay to ensure database consistency
+	time.Sleep(100 * time.Millisecond)
+	
 	// Find the server in the registry by name
 	return findServerIDByName(serverName)
 }
@@ -216,16 +221,24 @@ func findServerIDByName(serverName string) (string, error) {
 	}
 
 	// Find the server with matching name
+	var foundServers []string
 	for _, server := range serverList.Servers {
-		if server.Name == serverName && server.Meta.Official.IsLatest {
-			return server.Meta.Official.ID, nil
+		if server.Name == serverName {
+			foundServers = append(foundServers, fmt.Sprintf("ID:%s IsLatest:%t", server.Meta.Official.ID, server.Meta.Official.IsLatest))
+			if server.Meta.Official.IsLatest {
+				return server.Meta.Official.ID, nil
+			}
 		}
 	}
 
-	return "", fmt.Errorf("could not find server with name %s", serverName)
+	if len(foundServers) > 0 {
+		return "", fmt.Errorf("found server %s but none marked as latest: %v", serverName, foundServers)
+	}
+	return "", fmt.Errorf("could not find any server with name %s", serverName)
 }
 
 func verifyPublishedServer(id string, expected *apiv0.ServerJSON) error {
+	log.Printf("  🔍 Verifying server with ID: %s", id)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, registryURL+"/v0/servers/"+id, nil)

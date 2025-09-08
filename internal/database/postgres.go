@@ -78,7 +78,7 @@ func (db *PostgreSQL) List(
 		if _, err := uuid.Parse(cursor); err != nil {
 			return nil, "", fmt.Errorf("invalid cursor format: %w", err)
 		}
-		whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry'->>'id') > $%d", argIndex))
+		whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry/official'->>'id') > $%d", argIndex))
 		args = append(args, cursor)
 		argIndex++
 	}
@@ -94,7 +94,7 @@ func (db *PostgreSQL) List(
 		SELECT value
 		FROM servers
 		%s
-		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry'->>'id')
+		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'id')
 		LIMIT $%d
 	`, whereClause, argIndex)
 	args = append(args, limit)
@@ -147,7 +147,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON
 	query := `
 		SELECT value
 		FROM servers
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry'->>'id') = $1
+		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'id') = $1
 	`
 
 	var valueJSON []byte
@@ -219,7 +219,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 	query := `
 		UPDATE servers 
 		SET value = $1
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry'->>'id') = $2
+		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'id') = $2
 	`
 
 	result, err := db.conn.Exec(ctx, query, valueJSON, id)

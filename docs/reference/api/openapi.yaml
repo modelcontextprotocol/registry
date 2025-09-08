@@ -105,7 +105,7 @@ paths:
                       identifier: "@modelcontextprotocol/server-filesystem"
                       version: "1.0.2"
                   _meta:
-                    publisher:
+                    io.modelcontextprotocol.registry/publisher-provided:
                       tool: "publisher-cli"
                       version: "1.2.3"
                       build_info:
@@ -128,7 +128,7 @@ paths:
                       identifier: "@example/mcp-demo-server"
                       version: "1.0.0"
                   _meta:
-                    publisher:
+                    io.modelcontextprotocol.registry/publisher-provided:
                       contact_email: "maintainer@example.com"
                       build_metadata:
                         commit: "abc123"
@@ -496,7 +496,7 @@ components:
               type: object
               description: Extension metadata using reverse DNS namespacing
               properties:
-                publisher:
+                io.modelcontextprotocol.registry/publisher-provided:
                   type: object
                   description: Publisher-specific metadata and build information
                   additionalProperties: true
@@ -507,7 +507,7 @@ components:
                       commit: "abc123def456"
                       timestamp: "2023-12-01T10:30:00Z"
                       pipeline_id: "build-789"
-                io.modelcontextprotocol.registry:
+                io.modelcontextprotocol.registry/official:
                   type: object
                   description: Registry-specific metadata managed by the MCP registry system
                   required:
