@@ -127,6 +127,122 @@ func TestServersListEndpoint(t *testing.T) {
 			expectedStatus:  http.StatusOK,
 			expectedServers: []apiv0.ServerJSON{},
 		},
+		{
+			name:        "successful search by name substring",
+			queryParams: "?search=test-server",
+			setupRegistryService: func(registry service.RegistryService) {
+				server1 := apiv0.ServerJSON{
+					Name:        "com.example/test-server-matching",
+					Description: "Matching test server",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/test-matching",
+						Source: "github",
+						ID:     "example/test-matching",
+					},
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				}
+				server2 := apiv0.ServerJSON{
+					Name:        "com.example/other-server",
+					Description: "Non-matching server",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/other",
+						Source: "github",
+						ID:     "example/other",
+					},
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				}
+				_, _ = registry.Publish(server1)
+				_, _ = registry.Publish(server2)
+			},
+			expectedStatus:  http.StatusOK,
+			expectedServers: nil, // Will verify in test that only matching server is returned
+		},
+		{
+			name:        "successful updated_since filter with RFC3339",
+			queryParams: "?updated_since=2020-01-01T00:00:00Z",
+			setupRegistryService: func(registry service.RegistryService) {
+				server := apiv0.ServerJSON{
+					Name:        "com.example/recent-server",
+					Description: "Recently updated server",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/recent",
+						Source: "github",
+						ID:     "example/recent",
+					},
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				}
+				_, _ = registry.Publish(server)
+			},
+			expectedStatus:  http.StatusOK,
+			expectedServers: nil, // Will verify server is returned since it was updated after 2020
+		},
+		{
+			name:        "successful version=latest filter",
+			queryParams: "?version=latest",
+			setupRegistryService: func(registry service.RegistryService) {
+				server1 := apiv0.ServerJSON{
+					Name:        "com.example/versioned-server",
+					Description: "First version",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/versioned",
+						Source: "github",
+						ID:     "example/versioned",
+					},
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				}
+				server2 := apiv0.ServerJSON{
+					Name:        "com.example/versioned-server",
+					Description: "Second version (latest)",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/versioned",
+						Source: "github",
+						ID:     "example/versioned",
+					},
+					VersionDetail: model.VersionDetail{Version: "2.0.0"},
+				}
+				_, _ = registry.Publish(server1)
+				_, _ = registry.Publish(server2) // This will be marked as latest
+			},
+			expectedStatus:  http.StatusOK,
+			expectedServers: nil, // Will verify only latest server is returned
+		},
+		{
+			name:        "combined search and updated_since filter",
+			queryParams: "?search=combined&updated_since=2020-01-01T00:00:00Z",
+			setupRegistryService: func(registry service.RegistryService) {
+				server1 := apiv0.ServerJSON{
+					Name:        "com.example/combined-test",
+					Description: "Server with combined filtering",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/combined",
+						Source: "github",
+						ID:     "example/combined",
+					},
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				}
+				server2 := apiv0.ServerJSON{
+					Name:        "com.example/other-server",
+					Description: "Server that doesn't match search",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/nomatch",
+						Source: "github",
+						ID:     "example/nomatch",
+					},
+					VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				}
+				_, _ = registry.Publish(server1)
+				_, _ = registry.Publish(server2)
+			},
+			expectedStatus:  http.StatusOK,
+			expectedServers: nil, // Will verify only matching server is returned
+		},
+		{
+			name:                 "invalid updated_since format",
+			queryParams:          "?updated_since=invalid-timestamp",
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusBadRequest,
+			expectedError:        "Invalid updated_since format: expected RFC3339",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -170,7 +286,25 @@ func TestServersListEndpoint(t *testing.T) {
 					assert.Equal(t, tc.expectedServers, resp.Servers)
 				} else {
 					// For tests with dynamic data, check structure and count
-					assert.NotEmpty(t, resp.Servers, "Expected at least one server")
+					// Special handling for filter test cases
+					switch tc.name {
+					case "successful search by name substring":
+						assert.Len(t, resp.Servers, 1, "Expected exactly one matching server")
+						assert.Contains(t, resp.Servers[0].Name, "test-server", "Server name should contain search term")
+					case "successful updated_since filter with RFC3339":
+						assert.Len(t, resp.Servers, 1, "Expected one server updated after 2020")
+						assert.Contains(t, resp.Servers[0].Name, "recent-server")
+					case "successful version=latest filter":
+						assert.Len(t, resp.Servers, 1, "Expected one latest server")
+						assert.Contains(t, resp.Servers[0].Description, "latest")
+					case "combined search and updated_since filter":
+						assert.Len(t, resp.Servers, 1, "Expected one server matching both filters")
+						assert.Contains(t, resp.Servers[0].Name, "combined", "Server name should contain search term")
+					default:
+						assert.NotEmpty(t, resp.Servers, "Expected at least one server")
+					}
+					
+					// General structure validation
 					for _, server := range resp.Servers {
 						assert.NotEmpty(t, server.Name)
 						assert.NotEmpty(t, server.Description)

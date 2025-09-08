@@ -29,8 +29,8 @@ func NewRegistryService(db database.Database, cfg *config.Config) RegistryServic
 	}
 }
 
-// List returns registry entries with cursor-based pagination in flattened format
-func (s *registryServiceImpl) List(cursor string, limit int) ([]apiv0.ServerJSON, string, error) {
+// List returns registry entries with cursor-based pagination and optional filtering
+func (s *registryServiceImpl) List(filter *database.ServerFilter, cursor string, limit int) ([]apiv0.ServerJSON, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -40,8 +40,8 @@ func (s *registryServiceImpl) List(cursor string, limit int) ([]apiv0.ServerJSON
 		limit = 30
 	}
 
-	// Use the database's ListServers method with pagination
-	serverRecords, nextCursor, err := s.db.List(ctx, nil, cursor, limit)
+	// Use the database's ListServers method with pagination and filtering
+	serverRecords, nextCursor, err := s.db.List(ctx, filter, cursor, limit)
 	if err != nil {
 		return nil, "", err
 	}

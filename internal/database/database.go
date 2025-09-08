@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"errors"
+	"time"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
@@ -19,8 +20,12 @@ var (
 
 // ServerFilter defines filtering options for server queries
 type ServerFilter struct {
-	Name      *string // for finding versions of same server
-	RemoteURL *string // for duplicate URL detection
+	Name          *string    // for finding versions of same server
+	RemoteURL     *string    // for duplicate URL detection
+	UpdatedSince  *time.Time // for incremental sync filtering
+	SubstringName *string    // for substring search on name
+	Version       *string    // for exact version matching
+	IsLatest      *bool      // for filtering latest versions only
 }
 
 // Database defines the interface for database operations

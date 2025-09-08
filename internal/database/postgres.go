@@ -71,6 +71,26 @@ func (db *PostgreSQL) List(
 			args = append(args, *filter.RemoteURL)
 			argIndex++
 		}
+		if filter.UpdatedSince != nil {
+			whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry/official'->>'updated_at')::timestamp > $%d", argIndex))
+			args = append(args, *filter.UpdatedSince)
+			argIndex++
+		}
+		if filter.SubstringName != nil {
+			whereConditions = append(whereConditions, fmt.Sprintf("value->>'name' ILIKE $%d", argIndex))
+			args = append(args, "%"+*filter.SubstringName+"%")
+			argIndex++
+		}
+		if filter.Version != nil {
+			whereConditions = append(whereConditions, fmt.Sprintf("(value->'version_detail'->>'version') = $%d", argIndex))
+			args = append(args, *filter.Version)
+			argIndex++
+		}
+		if filter.IsLatest != nil {
+			whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry/official'->>'is_latest')::boolean = $%d", argIndex))
+			args = append(args, *filter.IsLatest)
+			argIndex++
+		}
 	}
 
 	// Add cursor pagination using registry metadata ID
