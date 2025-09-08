@@ -118,4 +118,14 @@ signs:
 
 # This section defines the release format.
 archives:
-  - name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  # Registry server archive
+  - id: registry
+    name_template: "registry_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    ids:
+      - registry
+  
+  # Publisher CLI archive
+  - id: publisher
+    name_template: "mcp-publisher_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    ids:
+      - publisher
