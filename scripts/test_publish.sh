@@ -86,9 +86,7 @@ cat > "$PAYLOAD_FILE" << EOF
     "source": "github",
     "id": "example/test-mcp-server"
   },
-  "version_detail": {
-    "version": "1.0.$(date +%s)"
-  },
+  "version": "1.0.$(date +%s)",
   "packages": [
     {
       "package_type": "javascript",

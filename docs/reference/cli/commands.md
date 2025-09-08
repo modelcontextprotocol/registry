@@ -45,7 +45,7 @@ mcp-publisher init [options]
 {
   "name": "io.github.username/server-name",
   "description": "TODO: Add server description",
-  "version_detail": { "version": "1.0.0" },
+  "version": "1.0.0",
   "packages": [
     {
       "registry_type": "npm",

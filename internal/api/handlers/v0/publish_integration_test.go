@@ -64,9 +64,7 @@ func TestPublishIntegration(t *testing.T) {
 				Source: "github",
 				ID:     "testuser/test-mcp-server",
 			},
-			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
-			},
+			Version: "1.0.0",
 		}
 
 		// Generate valid JWT token
@@ -97,7 +95,7 @@ func TestPublishIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, publishReq.Name, response.Name)
-		assert.Equal(t, publishReq.VersionDetail.Version, response.VersionDetail.Version)
+		assert.Equal(t, publishReq.Version, response.Version)
 	})
 
 	t.Run("successful publish with none auth (no prefix)", func(t *testing.T) {
@@ -109,9 +107,7 @@ func TestPublishIntegration(t *testing.T) {
 				Source: "github",
 				ID:     "example/test-server",
 			},
-			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
-			},
+			Version: "1.0.0",
 		}
 
 		// Generate valid JWT token with wildcard permission
@@ -166,7 +162,7 @@ func TestPublishIntegration(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:          "io.github.domdomegg/test-server",
 			Description:   "Test server",
-			VersionDetail: model.VersionDetail{Version: "1.0.0"},
+			Version: "1.0.0",
 		}
 
 		body, err := json.Marshal(publishReq)
@@ -187,9 +183,7 @@ func TestPublishIntegration(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "io.github.other/test-server",
 			Description: "A test server",
-			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
-			},
+			Version: "1.0.0",
 			Repository: model.Repository{
 				URL:    "https://github.com/example/test-server",
 				Source: "github",
@@ -225,9 +219,7 @@ func TestPublishIntegration(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "io.github.domdomegg/airtable-mcp-server",
 			Description: "A test server with MCPB package",
-			VersionDetail: model.VersionDetail{
-				Version: "1.7.2",
-			},
+			Version: "1.7.2",
 			Status: model.StatusActive,
 			Packages: []model.Package{
 				{
@@ -269,7 +261,7 @@ func TestPublishIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, publishReq.Name, response.Name)
-		assert.Equal(t, publishReq.VersionDetail.Version, response.VersionDetail.Version)
+		assert.Equal(t, publishReq.Version, response.Version)
 		assert.Len(t, response.Packages, 1)
 		assert.Equal(t, model.RegistryTypeMCPB, response.Packages[0].RegistryType)
 	})

@@ -163,7 +163,7 @@ func runPublisher(filePath string) (string, error) {
 
 	// Add a small delay to ensure database consistency
 	time.Sleep(100 * time.Millisecond)
-	
+
 	// Find the server in the registry by name
 	return findServerIDByName(serverName)
 }
@@ -315,15 +315,13 @@ func compareServerJSON(expected, actual *apiv0.ServerJSON) error {
 	if expected.Status != actual.Status {
 		return fmt.Errorf("status mismatch: expected %q, got %q", expected.Status, actual.Status)
 	}
+	if expected.Version != actual.Version {
+		return fmt.Errorf("version mismatch: expected %+v, got %+v", expected.Version, actual.Version)
+	}
 
 	// Compare repository
 	if !reflect.DeepEqual(expected.Repository, actual.Repository) {
 		return fmt.Errorf("repository mismatch: expected %+v, got %+v", expected.Repository, actual.Repository)
-	}
-
-	// Compare version detail
-	if !reflect.DeepEqual(expected.VersionDetail, actual.VersionDetail) {
-		return fmt.Errorf("version detail mismatch: expected %+v, got %+v", expected.VersionDetail, actual.VersionDetail)
 	}
 
 	// Compare packages

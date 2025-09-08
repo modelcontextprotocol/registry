@@ -34,9 +34,7 @@ You can also add custom metadata to servers using the `_meta` field. For example
   "name": "io.github.yourname/weather-server",
   "description": "MCP server for weather data access",
   "status": "active",
-  "version_detail": {
-    "version": "1.0.0"
-  },
+  "version": "1.0.0",
   "packages": [
     {
       "registry_type": "npm",

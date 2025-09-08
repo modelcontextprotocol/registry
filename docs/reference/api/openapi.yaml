@@ -97,8 +97,7 @@ paths:
                   repository:
                     url: "https://github.com/modelcontextprotocol/servers"
                     source: "github"
-                  version_detail:
-                    version: "1.0.2"
+                  version: "1.0.2"
                   packages:
                     - registry_type: "npm"
                       registry_base_url: "https://registry.npmjs.org"
@@ -120,8 +119,7 @@ paths:
                   repository:
                     url: "https://github.com/example/mcp-demo"
                     source: "github"
-                  version_detail:
-                    version: "1.0.0"
+                  version: "1.0.0"
                   packages:
                     - registry_type: "npm"
                       registry_base_url: "https://registry.npmjs.org"
@@ -213,7 +211,7 @@ components:
       required:
         - name
         - description
-        - version_detail
+        - version
       properties:
         name:
           type: string
@@ -231,8 +229,10 @@ components:
           example: "active"
         repository:
           $ref: '#/components/schemas/Repository'
-        version_detail:
-          $ref: '#/components/schemas/VersionDetail'
+        version:
+          type: string
+          example: "1.0.2"
+          description: "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification."
         created_at:
           type: string
           format: date-time
@@ -240,26 +240,6 @@ components:
           type: string
           format: date-time
 
-    VersionDetail:
-      type: object
-      required:
-        - version
-        - release_date
-        - is_latest
-      properties:
-        version:
-          type: string
-          example: "1.0.2"
-          description: Equivalent of Implementation.version in MCP specification.
-        release_date:
-          type: string
-          format: date-time
-          example: "2023-06-15T10:30:00Z"
-          description: Datetime that the MCP server version was published to the registry.
-        is_latest:
-          type: boolean
-          example: true
-          description: Whether the MCP server version is the latest version available in the registry.
 
     ServerList:
       type: object
@@ -535,10 +515,5 @@ components:
                       type: boolean
                       description: Whether this is the latest version of the server
                       example: true
-                    release_date:
-                      type: string
-                      format: date-time
-                      description: Release date of the server version
-                      example: "2023-12-01T10:30:00Z"
                   additionalProperties: false
               additionalProperties: true

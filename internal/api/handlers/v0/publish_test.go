@@ -63,9 +63,7 @@ func TestPublishEndpoint(t *testing.T) {
 					Source: "github",
 					ID:     "example/test-server",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			tokenClaims: &auth.JWTClaims{
 				AuthMethod:        auth.MethodGitHubAT,
@@ -89,9 +87,7 @@ func TestPublishEndpoint(t *testing.T) {
 					Source: "github",
 					ID:     "example/test-server",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			tokenClaims: &auth.JWTClaims{
 				AuthMethod: auth.MethodNone,
@@ -119,7 +115,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:          "io.github.domdomegg/test-server",
 				Description:   "Test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				Version: "1.0.0",
 			},
 			authHeader: "InvalidFormat",
 			setupRegistryService: func(_ service.RegistryService) {
@@ -133,9 +129,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			authHeader: "Bearer invalidToken",
 			setupRegistryService: func(_ service.RegistryService) {
@@ -149,9 +143,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "io.github.other/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Repository: model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
@@ -175,9 +167,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Repository: model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
@@ -195,9 +185,7 @@ func TestPublishEndpoint(t *testing.T) {
 				existingServer := apiv0.ServerJSON{
 					Name:        "example/test-server",
 					Description: "Existing test server",
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+					Version: "1.0.0",
 					Repository: model.Repository{
 						URL:    "https://github.com/example/test-server-existing",
 						Source: "github",
@@ -214,9 +202,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "com.example/test-server-mcpb",
 				Description: "A test server with MCPB package",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						RegistryType: model.RegistryTypeMCPB,

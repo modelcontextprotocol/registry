@@ -12,7 +12,6 @@ type RegistryExtensions struct {
 	PublishedAt time.Time `json:"published_at"`
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 	IsLatest    bool      `json:"is_latest"`
-	ReleaseDate string    `json:"release_date"`
 }
 
 // ServerListResponse represents the paginated server list response
@@ -34,7 +33,7 @@ type ServerJSON struct {
 	Description   string              `json:"description" minLength:"1" maxLength:"100"`
 	Status        model.Status        `json:"status,omitempty" minLength:"1"`
 	Repository    model.Repository    `json:"repository,omitempty"`
-	VersionDetail model.VersionDetail `json:"version_detail"`
+	Version string `json:"version"`
 	Packages      []model.Package     `json:"packages,omitempty"`
 	Remotes       []model.Transport   `json:"remotes,omitempty"`
 	Meta          *ServerMeta         `json:"_meta,omitempty"`

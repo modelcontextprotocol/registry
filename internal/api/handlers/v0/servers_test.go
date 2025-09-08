@@ -41,9 +41,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/test-server-1",
 					},
-					VersionDetail: model.VersionDetail{
-						Version: "1.0.0",
-					},
+					Version: "1.0.0",
 				}
 				server2 := apiv0.ServerJSON{
 					Name:        "com.example/test-server-2",
@@ -53,9 +51,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/test-server-2",
 					},
-					VersionDetail: model.VersionDetail{
-						Version: "2.0.0",
-					},
+					Version: "2.0.0",
 				}
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2)
@@ -75,9 +71,7 @@ func TestServersListEndpoint(t *testing.T) {
 						Source: "github",
 						ID:     "example/test-server-3",
 					},
-					VersionDetail: model.VersionDetail{
-						Version: "1.5.0",
-					},
+					Version: "1.5.0",
 				}
 				_, _ = registry.Publish(server)
 			},
@@ -342,9 +336,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 	testServer, err := registryService.Publish(apiv0.ServerJSON{
 		Name:        "com.example/test-server",
 		Description: "A test server",
-		VersionDetail: model.VersionDetail{
-			Version: "1.0.0",
-		},
+		Version: "1.0.0",
 	})
 	assert.NoError(t, err)
 
@@ -430,9 +422,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 			Source: "github",
 			ID:     "example/integration-test",
 		},
-		VersionDetail: model.VersionDetail{
-			Version: "1.0.0",
-		},
+		Version: "1.0.0",
 	}
 
 	published, err := registryService.Publish(testServer)
@@ -488,7 +478,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 			assert.Equal(t, servers[0].Name, listResp.Servers[0].Name)
 			assert.Equal(t, servers[0].Description, listResp.Servers[0].Description)
 			assert.Equal(t, servers[0].Repository, listResp.Servers[0].Repository)
-			assert.Equal(t, servers[0].VersionDetail, listResp.Servers[0].VersionDetail)
+			assert.Equal(t, servers[0].Version, listResp.Servers[0].Version)
 		}
 	})
 
@@ -522,7 +512,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		assert.Equal(t, serverDetail.Name, serverDetailResp.Name)
 		assert.Equal(t, serverDetail.Description, serverDetailResp.Description)
 		assert.Equal(t, serverDetail.Repository, serverDetailResp.Repository)
-		assert.Equal(t, serverDetail.VersionDetail, serverDetailResp.VersionDetail)
+		assert.Equal(t, serverDetail.Version, serverDetailResp.Version)
 	})
 
 	// Verify mock expectations

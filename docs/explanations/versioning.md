@@ -19,9 +19,7 @@ Server authors SHOULD use [semantic versions](https://semver.org/) following the
 
 ```json
 {
-  "version_detail": {
-    "version": "1.2.3"
-  }
+  "version": "1.2.3"
 }
 ```
 
@@ -30,9 +28,7 @@ Server authors SHOULD use versions aligned with their underlying packages to red
 
 ```json
 {
-  "version_detail": {
-    "version": "1.2.3"
-  },
+  "version": "1.2.3",
   "packages": [{
     "registry_name": "npm",
     "name": "@myorg/my-server",
@@ -46,9 +42,7 @@ If server authors expect to have multiple registry versions for the same package
 
 ```json
 {
-  "version_detail": {
-    "version": "1.2.3-1"
-  },
+  "version": "1.2.3-1",
   "packages": [{
     "registry_name": "npm", 
     "name": "@myorg/my-server",
@@ -111,9 +105,7 @@ Registry clients SHOULD:
 ### Alignment Examples
 ```json
 {
-  "version_detail": {
-    "version": "1.2.3-1"
-  },
+  "version": "1.2.3-1",
   "packages": [{
     "registry_name": "npm",
     "name": "@myorg/k8s-server", 
@@ -136,9 +128,7 @@ Existing servers with non-semantic versions will continue to work without change
 **Package and server versions aligned**:
 ```json
 {
-  "version_detail": {
-    "version": "1.2.3"
-  },
+  "version": "1.2.3",
   "packages": [
     {
       "registry_type": "npm",
@@ -153,9 +143,7 @@ Existing servers with non-semantic versions will continue to work without change
 **Server metadata changes without package updates**:
 ```json
 {
-  "version_detail": {
-    "version": "1.2.3-1"
-  },
+  "version": "1.2.3-1",
   "packages": [
     {
       "registry_type": "npm",
@@ -172,9 +160,7 @@ Note: `1.2.3-1` is considered lower than `1.2.3` in semver ordering. Publish pre
 **Remote servers without package dependencies**:
 ```json
 {
-  "version_detail": {
-    "version": "2.1.0"
-  },
+  "version": "2.1.0",
   "remotes": [
     {
       "transport_type": "sse",
@@ -193,9 +179,7 @@ Version strategy options:
 **Different package versions**:
 ```json
 {
-  "version_detail": {
-    "version": "1.3.0"
-  },
+  "version": "1.3.0",
   "packages": [
     {
       "registry_type": "npm",

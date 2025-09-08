@@ -30,9 +30,7 @@ The official registry has some more restrictions on top of this. See the [offici
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github"
   },
-  "version_detail": {
-    "version": "1.0.2"
-  },
+  "version": "1.0.2",
   "packages": [
     {
       "registry_type": "npm",
@@ -79,9 +77,7 @@ For MCP servers located within a subdirectory of a larger repository (monorepo s
     "source": "github",
     "subfolder": "src/everything"
   },
-  "version_detail": {
-    "version": "0.6.2"
-  },
+  "version": "0.6.2",
   "packages": [
     {
       "registry_type": "npm",
@@ -113,9 +109,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
 {
   "name": "io.github.joelverhagen/knapcode-samplemcpserver",
   "description": "Sample NuGet MCP server for a random number and random weather",
-  "version_detail": {
-    "version": "0.4.0-beta"
-  },
+  "version": "0.4.0-beta",
   "packages": [
     {
       "registry_type": "nuget",
@@ -165,9 +159,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     "source": "github",
     "id": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"
   },
-  "version_detail": {
-    "version": "1.0.2"
-  },
+  "version": "1.0.2",
   "packages": [
     {
       "registry_type": "npm",
@@ -267,9 +259,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     "source": "github",
     "id": "xyz789ab-cdef-0123-4567-890ghijklmno"
   },
-  "version_detail": {
-    "version": "2.0.0"
-  },
+  "version": "2.0.0",
   "remotes": [
     {
       "type": "sse",
@@ -302,9 +292,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
     "source": "github",
     "id": "def456gh-ijkl-7890-mnop-qrstuvwxyz12"
   },
-  "version_detail": {
-    "version": "0.5.0"
-  },
+  "version": "0.5.0",
   "packages": [
     {
       "registry_type": "pypi",
@@ -358,9 +346,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "source": "github",
     "id": "example-nuget-id-0000-1111-222222222222"
   },
-  "version_detail": {
-    "version": "0.5.0"
-  },
+  "version": "0.5.0",
   "packages": [
     {
       "registry_type": "nuget",
@@ -408,9 +394,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "source": "github",
     "id": "ghi789jk-lmno-1234-pqrs-tuvwxyz56789"
   },
-  "version_detail": {
-    "version": "3.1.0"
-  },
+  "version": "3.1.0",
   "packages": [
     {
       "registry_type": "oci",
@@ -521,9 +505,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "source": "github",
     "id": "klm012no-pqrs-3456-tuvw-xyz789abcdef"
   },
-  "version_detail": {
-    "version": "1.5.0"
-  },
+  "version": "1.5.0",
   "packages": [
     {
       "registry_type": "npm",
@@ -606,9 +588,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
     "url": "https://github.com/modelcontextprotocol/text-editor-mcpb",
     "source": "github"
   },
-  "version_detail": {
-    "version": "1.0.2"
-  },
+  "version": "1.0.2",
   "packages": [
     {
       "registry_type": "mcpb",
@@ -649,9 +629,7 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
   "name": "io.snyk/cli-mcp",
   "description": "MCP server provided by the Snyk CLI",
   "status": "active",
-  "version_detail": {
-    "version": "1.1298.0"
-  },
+  "version": "1.1298.0",
   "packages": [
     {
       "registry_type": "npm",
@@ -688,9 +666,7 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
     "source": "github",
     "id": "legacy-abc123-def456-789012-345678-901234567890"
   },
-  "version_detail": {
-    "version": "0.9.5"
-  },
+  "version": "0.9.5",
   "packages": [
     {
       "registry_type": "npm",

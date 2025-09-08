@@ -254,7 +254,7 @@ Keep your package version and server.json version in sync:
 - name: Update server.json version
   run: |
     VERSION=${GITHUB_REF#refs/tags/v}
-    jq --arg version "$VERSION" '.version_detail.version = $version' server.json > tmp.json
+    jq --arg version "$VERSION" '.version = $version' server.json > tmp.json
     mv tmp.json server.json
 ```
 

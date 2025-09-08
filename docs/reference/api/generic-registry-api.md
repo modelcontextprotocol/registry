@@ -38,10 +38,7 @@ curl https://registry.example.com/v0/servers?limit=10
       "name": "io.modelcontextprotocol/filesystem",
       "description": "Filesystem operations server", 
       "status": "active",
-      "version_detail": {
-        "version": "1.0.2",
-        "is_latest": true
-      }
+      "version": "1.0.2"
     }
   ],
   "metadata": {

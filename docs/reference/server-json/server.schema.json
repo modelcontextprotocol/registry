@@ -35,27 +35,12 @@
         }
       }
     },
-    "VersionDetail": {
-      "type": "object",
-      "description": "Version information for this server. Defined as an object to allow for downstream extensibility (e.g. release_date)",
-      "required": [
-        "version"
-      ],
-      "properties": {
-        "version": {
-          "type": "string",
-          "maxLength": 255,
-          "example": "1.0.2",
-          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably."
-        }
-      }
-    },
     "Server": {
       "type": "object",
       "required": [
         "name",
         "description",
-        "version_detail"
+        "version"
       ],
       "properties": {
         "name": {
@@ -83,8 +68,11 @@
           "$ref": "#/$defs/Repository",
           "description": "Optional repository metadata for the MCP server source code. Recommended for transparency and security inspection."
         },
-        "version_detail": {
-          "$ref": "#/$defs/VersionDetail"
+        "version": {
+          "type": "string",
+          "maxLength": 255,
+          "example": "1.0.2",
+          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably."
         }
       }
     },

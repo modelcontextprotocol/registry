@@ -47,9 +47,7 @@ This creates a `server.json` with auto-detected values. You'll see something lik
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.yourname/your-server",
   "description": "A description of your MCP server",
-  "version_detail": {
-    "version": "1.0.0"
-  },
+  "version": "1.0.0",
   "packages": [
     {
       "registry_type": "npm",

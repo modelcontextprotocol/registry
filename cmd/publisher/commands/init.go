@@ -309,9 +309,7 @@ func createServerJSON(
 			URL:    repoURL,
 			Source: repoSource,
 		},
-		VersionDetail: model.VersionDetail{
-			Version: version,
-		},
+		Version: version,
 		Packages: []model.Package{pkg},
 	}
 }

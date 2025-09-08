@@ -8,9 +8,7 @@
       "source": "github",
       "id": "935450522"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.46",
@@ -31,7 +29,6 @@
         "id": "4e9cf4cf-71f6-4aca-bae8-2d10a29ca2e0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:56:49Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -45,9 +42,7 @@
       "source": "github",
       "id": "951338147"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -93,7 +88,6 @@
         "id": "d3669201-252f-403c-944b-c3ec0845782b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:56:52Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -107,9 +101,7 @@
       "source": "github",
       "id": "906462272"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -130,7 +122,6 @@
         "id": "d86f2098-0be9-4b52-b32e-9d0f17333197",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:56:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -144,9 +135,7 @@
       "source": "github",
       "id": "949728461"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -178,7 +167,6 @@
         "id": "c296f683-5578-474a-bbef-00cfc2716fbc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:56:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -192,9 +180,7 @@
       "source": "github",
       "id": "947751392"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.4",
@@ -260,7 +246,6 @@
         "id": "2a0775fa-ff8e-47ff-a5e3-8b7c9b0567a9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:01Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -274,9 +259,7 @@
       "source": "github",
       "id": "956503834"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -334,7 +317,6 @@
         "id": "7f6e6610-4df3-490e-95e3-03ec954eb2ab",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -348,9 +330,7 @@
       "source": "github",
       "id": "967873415"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.8.6",
@@ -375,7 +355,6 @@
         "id": "24303d73-1ee0-4119-b2f1-3a57c17de967",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -389,9 +368,7 @@
       "source": "github",
       "id": "959057712"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -453,7 +430,6 @@
         "id": "31d9b130-4676-45d9-930f-a8bc2d5a3b9e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -467,9 +443,7 @@
       "source": "github",
       "id": "158975124"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -484,7 +458,6 @@
         "id": "330047d1-f8c2-4931-9347-d133f1717de3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:12Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -498,9 +471,7 @@
       "source": "github",
       "id": "911256711"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.31",
@@ -533,7 +504,6 @@
         "id": "195dfdbd-bb15-4752-80b6-abc9212cd80f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -547,9 +517,7 @@
       "source": "github",
       "id": "951214203"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -570,7 +538,6 @@
         "id": "5c95a170-d394-4b21-a100-bb953b872922",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:18Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -584,9 +551,7 @@
       "source": "github",
       "id": "564072810"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -601,7 +566,6 @@
         "id": "de2d7f51-ca20-4fac-abdb-85a912d26375",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -615,9 +579,7 @@
       "source": "github",
       "id": "943241240"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.2.0",
@@ -632,7 +594,6 @@
         "id": "50f15d97-7d84-49f7-9232-f797e006358d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -646,9 +607,7 @@
       "source": "github",
       "id": "925304505"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -677,7 +636,6 @@
         "id": "d85fa87b-48e1-4b81-8408-9d0c446f7de3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:26Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -691,9 +649,7 @@
       "source": "github",
       "id": "946011336"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.6",
@@ -714,7 +670,6 @@
         "id": "2535daf3-637b-40d1-a4c2-41ef60a726b8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:37Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -728,9 +683,7 @@
       "source": "github",
       "id": "954410951"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -772,7 +725,6 @@
         "id": "36e14e79-6228-442f-b3c7-c7080b6282f0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:40Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -786,9 +738,7 @@
       "source": "github",
       "id": "958502546"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -840,7 +790,6 @@
         "id": "9e07df79-22e2-464d-a842-06f08b875196",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:44Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -854,9 +803,7 @@
       "source": "github",
       "id": "938387717"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -881,7 +828,6 @@
         "id": "46bcb36f-ede9-412e-8181-7c7ece41fa04",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -895,9 +841,7 @@
       "source": "github",
       "id": "930632525"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.2",
@@ -912,7 +856,6 @@
         "id": "97de67c4-a78f-4ea7-9233-4da9fe6752cf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -926,9 +869,7 @@
       "source": "github",
       "id": "955501958"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.7.1",
@@ -953,7 +894,6 @@
         "id": "a48ff624-6d95-4b8e-a0ed-498c4d838411",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:57:58Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -967,9 +907,7 @@
       "source": "github",
       "id": "908231244"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.7",
@@ -1033,7 +971,6 @@
         "id": "98259539-3c6f-4462-b2b6-9a2567ff0545",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1047,9 +984,7 @@
       "source": "github",
       "id": "895268756"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -1085,7 +1020,6 @@
         "id": "2ad7c503-7daa-46c8-9295-8a1ed53271a6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:05Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1099,9 +1033,7 @@
       "source": "github",
       "id": "954645052"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -1126,7 +1058,6 @@
         "id": "c746fe90-e3f6-4328-82c1-aeef49a2b6d9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1140,9 +1071,7 @@
       "source": "github",
       "id": "959229901"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.2",
@@ -1157,7 +1086,6 @@
         "id": "6e6e3083-47bf-47da-9d0f-14805de093a9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1171,9 +1099,7 @@
       "source": "github",
       "id": "946763772"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -1244,7 +1170,6 @@
         "id": "61b3cbd8-8eee-4bef-a0ef-5fcaf6449201",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1258,9 +1183,7 @@
       "source": "github",
       "id": "955488295"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -1314,7 +1237,6 @@
         "id": "3f49614c-5424-4875-92ef-9697923375cf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:19Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1328,9 +1250,7 @@
       "source": "github",
       "id": "936960342"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.13",
@@ -1390,7 +1310,6 @@
         "id": "9c2d91f0-76c4-4292-a19f-e81e962954b5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:23Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1404,9 +1323,7 @@
       "source": "github",
       "id": "950064178"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.0",
@@ -1421,7 +1338,6 @@
         "id": "1743c861-7e1a-42b2-a300-6059fcd82cb9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:24Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1435,9 +1351,7 @@
       "source": "github",
       "id": "971357826"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -1452,7 +1366,6 @@
         "id": "3afff2d4-d77f-42c2-bf39-ce786ecb0ecf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:26Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1466,9 +1379,7 @@
       "source": "github",
       "id": "896943331"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -1483,7 +1394,6 @@
         "id": "1f25c28f-9afe-4f34-9e29-d18aab507255",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1497,9 +1407,7 @@
       "source": "github",
       "id": "957822597"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -1520,7 +1428,6 @@
         "id": "7c870985-c457-4221-8088-977680764f70",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1534,9 +1441,7 @@
       "source": "github",
       "id": "940803959"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.10",
@@ -1624,7 +1529,6 @@
         "id": "33102362-9e44-442f-8aa9-4443ce50c396",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:35Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1638,9 +1542,7 @@
       "source": "github",
       "id": "953992846"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -1676,7 +1578,6 @@
         "id": "1b8a16d9-0648-4790-b853-d919a6be16e9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:37Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1690,9 +1591,7 @@
       "source": "github",
       "id": "922105354"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -1707,7 +1606,6 @@
         "id": "d689b152-64e8-4f5d-a937-91331fa3a771",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:39Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1721,9 +1619,7 @@
       "source": "github",
       "id": "895291604"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.10",
@@ -1756,7 +1652,6 @@
         "id": "2a2aa283-57c8-474f-8a27-27954214cb6b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:43Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1770,9 +1665,7 @@
       "source": "github",
       "id": "947211439"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.4",
@@ -1793,7 +1686,6 @@
         "id": "0e7533d0-5925-4e06-a6bf-5da4e4e21aec",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:45Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1807,9 +1699,7 @@
       "source": "github",
       "id": "947810349"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -1865,7 +1755,6 @@
         "id": "78c126ff-906a-4596-9bf4-db2cf61796b8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:49Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1879,9 +1768,7 @@
       "source": "github",
       "id": "944516885"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -1906,7 +1793,6 @@
         "id": "2d870a4e-d521-4d66-a471-abce884ea07b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:53Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1920,9 +1806,7 @@
       "source": "github",
       "id": "899407931"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.9.0",
@@ -1937,7 +1821,6 @@
         "id": "13b91785-9041-468d-a136-e6c9e9dd7be9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1951,9 +1834,7 @@
       "source": "github",
       "id": "904432283"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -1968,7 +1849,6 @@
         "id": "0bee6074-d16a-4482-a315-5b8f0f1abcf1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:58:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -1982,9 +1862,7 @@
       "source": "github",
       "id": "946754858"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.6.1",
@@ -2009,7 +1887,6 @@
         "id": "3e50df21-8223-440d-bad9-dfc9ce117af4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2023,9 +1900,7 @@
       "source": "github",
       "id": "922406701"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -2096,7 +1971,6 @@
         "id": "11e3a5f5-867c-4f1e-ba79-1b803550fb1a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2110,9 +1984,7 @@
       "source": "github",
       "id": "952612861"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -2133,7 +2005,6 @@
         "id": "0f970fc6-418a-45c7-a665-00e725e8338d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:13Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2147,9 +2018,7 @@
       "source": "github",
       "id": "907869862"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -2232,7 +2101,6 @@
         "id": "1329d108-67d0-488a-85a1-cc65b58cf5cd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:19Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2246,9 +2114,7 @@
       "source": "github",
       "id": "940989522"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -2277,7 +2143,6 @@
         "id": "e44b5cad-3801-4403-b8ee-67f3ea1cd909",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:21Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2291,9 +2156,7 @@
       "source": "github",
       "id": "947171153"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -2326,7 +2189,6 @@
         "id": "7974b19d-8030-428b-a016-168c65058b41",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:25Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2340,9 +2202,7 @@
       "source": "github",
       "id": "955359601"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.4",
@@ -2357,7 +2217,6 @@
         "id": "cb1a844b-0145-433b-9a6f-f8ef19b2b3f4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:29Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2371,9 +2230,7 @@
       "source": "github",
       "id": "951662313"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.9",
@@ -2410,7 +2267,6 @@
         "id": "e67dda78-7d99-43e5-9e98-c80267f34940",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:31Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2424,9 +2280,7 @@
       "source": "github",
       "id": "938957096"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.25",
@@ -2447,7 +2301,6 @@
         "id": "feb2b365-5fab-461e-a8d3-89e9349ee743",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:35Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2461,9 +2314,7 @@
       "source": "github",
       "id": "665613753"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -2478,7 +2329,6 @@
         "id": "afd9f984-ea69-4a8c-86ac-fdb58f3ab37c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:41Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2492,9 +2342,7 @@
       "source": "github",
       "id": "947631175"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -2553,7 +2401,6 @@
         "id": "bfcde7fb-0ea1-499f-bca0-17ffcba95a0c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2567,9 +2414,7 @@
       "source": "github",
       "id": "916850434"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.3",
@@ -2594,7 +2439,6 @@
         "id": "584b368d-b659-4bac-9036-dc319cf8d88d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2608,9 +2452,7 @@
       "source": "github",
       "id": "900744587"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.8.0",
@@ -2631,7 +2473,6 @@
         "id": "a51c6dec-56ed-403e-831b-fa5f155f8696",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:50Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2645,9 +2486,7 @@
       "source": "github",
       "id": "902662933"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -2693,7 +2532,6 @@
         "id": "77963df5-3dc8-4961-ae0c-03e448b8713c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2707,9 +2545,7 @@
       "source": "github",
       "id": "915789942"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.17.4",
@@ -2765,7 +2601,6 @@
         "id": "eba4813b-2591-4264-b7bc-c485b7652e92",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T18:59:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2779,9 +2614,7 @@
       "source": "github",
       "id": "957768661"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.10",
@@ -2846,7 +2679,6 @@
         "id": "5026f1b0-0426-4ea2-8ec2-fab1fabb0a7e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2860,9 +2692,7 @@
       "source": "github",
       "id": "943883428"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -2899,7 +2729,6 @@
         "id": "6e66e04c-86cc-43ec-90ed-1a91a0e4eb76",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2913,9 +2742,7 @@
       "source": "github",
       "id": "933201974"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -2944,7 +2771,6 @@
         "id": "f88b50da-f452-452b-9f22-1c7da7542b36",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2958,9 +2784,7 @@
       "source": "github",
       "id": "771479895"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -2975,7 +2799,6 @@
         "id": "1e2d718a-95b0-460b-8e57-86feec5356ce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -2989,9 +2812,7 @@
       "source": "github",
       "id": "946079810"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.5.0",
@@ -3020,7 +2841,6 @@
         "id": "f4fca7d7-fbab-4174-ba76-1396c3451cf1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3034,9 +2854,7 @@
       "source": "github",
       "id": "907425333"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.0",
@@ -3051,7 +2869,6 @@
         "id": "11d467e3-6001-4e60-ba90-494ad9eb7ad2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3065,9 +2882,7 @@
       "source": "github",
       "id": "946087272"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -3082,7 +2897,6 @@
         "id": "dd730dba-107c-40f0-b172-85500a22b5c2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3096,9 +2910,7 @@
       "source": "github",
       "id": "943619628"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -3144,7 +2956,6 @@
         "id": "e458676a-2727-4daf-84c5-d607932fa000",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3158,9 +2969,7 @@
       "source": "github",
       "id": "960008375"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -3189,7 +2998,6 @@
         "id": "b99e5603-6346-4b2c-bae8-876c9b71e18b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:31Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3203,9 +3011,7 @@
       "source": "github",
       "id": "960484071"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -3242,7 +3048,6 @@
         "id": "9fd2c1fb-b8a6-4411-89cf-d4612cc3a539",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3256,9 +3061,7 @@
       "source": "github",
       "id": "902619224"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.2",
@@ -3314,7 +3117,6 @@
         "id": "b3fa3fa4-901d-4584-82cf-d027dbdf290b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3328,9 +3130,7 @@
       "source": "github",
       "id": "903772115"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -3371,7 +3171,6 @@
         "id": "be6eb263-3492-4073-b28f-0fd33d070982",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:40Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3385,9 +3184,7 @@
       "source": "github",
       "id": "896203400"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.0",
@@ -3422,7 +3219,6 @@
         "id": "9a6bd437-fe20-4f40-b776-5507f2871441",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:45Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3436,9 +3232,7 @@
       "source": "github",
       "id": "951176417"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -3453,7 +3247,6 @@
         "id": "afe07206-691c-4bfb-bf17-8a39014cf4a7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:47Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3467,9 +3260,7 @@
       "source": "github",
       "id": "947569884"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.18",
@@ -3490,7 +3281,6 @@
         "id": "2d53cc39-27e0-446f-96b5-1324bab9eb21",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:49Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3504,9 +3294,7 @@
       "source": "github",
       "id": "918221533"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -3552,7 +3340,6 @@
         "id": "4632fbcb-d313-4e26-ad1d-aea8f57524f7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3566,9 +3353,7 @@
       "source": "github",
       "id": "955461567"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -3604,7 +3389,6 @@
         "id": "be79836b-8a99-4e4e-9487-c81c02833f4a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:00:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3618,9 +3402,7 @@
       "source": "github",
       "id": "946214670"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -3641,7 +3423,6 @@
         "id": "9eab3795-a96d-4fad-8521-921599e85240",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:00Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3655,9 +3436,7 @@
       "source": "github",
       "id": "963450460"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.14",
@@ -3672,7 +3451,6 @@
         "id": "ed4c9613-5046-4570-8d15-209f7294ba75",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3686,9 +3464,7 @@
       "source": "github",
       "id": "940446625"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -3762,7 +3538,6 @@
         "id": "08668c6a-c2f6-47b0-a4e0-75a8ee9bcf10",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3776,9 +3551,7 @@
       "source": "github",
       "id": "940305209"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.7",
@@ -3811,7 +3584,6 @@
         "id": "324d6879-eb6f-4565-bdeb-6c4b00d91384",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:08Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3825,9 +3597,7 @@
       "source": "github",
       "id": "959084910"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -3848,7 +3618,6 @@
         "id": "87f325e6-a742-43e4-b8ae-069f7301475d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3862,9 +3631,7 @@
       "source": "github",
       "id": "956477944"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -3921,7 +3688,6 @@
         "id": "b8c0e12b-0c04-486d-95a7-caa33b9eefeb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:13Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -3935,9 +3701,7 @@
       "source": "github",
       "id": "897308110"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.7.1",
@@ -4035,7 +3799,6 @@
         "id": "823afe6f-4494-4fc1-a2ab-2ca989e59d21",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:35Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4049,9 +3812,7 @@
       "source": "github",
       "id": "951969645"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -4119,7 +3880,6 @@
         "id": "687591a4-a5da-44df-8d55-f32e19d5658a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:39Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4133,9 +3893,7 @@
       "source": "github",
       "id": "895741231"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -4156,7 +3914,6 @@
         "id": "f6ee7600-c27a-4210-9a94-29a35c41c274",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:41Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4170,9 +3927,7 @@
       "source": "github",
       "id": "940533374"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.3",
@@ -4199,7 +3954,6 @@
         "id": "5e354d7f-e19e-40ba-a760-342d5c93e9aa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:43Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4213,9 +3967,7 @@
       "source": "github",
       "id": "902093354"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -4236,7 +3988,6 @@
         "id": "7b93304c-5a49-45a7-a37c-84e82707d81d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4250,9 +4001,7 @@
       "source": "github",
       "id": "894382523"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -4273,7 +4022,6 @@
         "id": "cb1647e0-2df7-4f2a-b63b-cfaea1e5e98a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4287,9 +4035,7 @@
       "source": "github",
       "id": "934098377"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -4321,7 +4067,6 @@
         "id": "87c7dec1-1b0c-414b-9f7b-7a113e67989d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:51Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4335,9 +4080,7 @@
       "source": "github",
       "id": "950213855"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -4352,7 +4095,6 @@
         "id": "d012ea8c-2f32-43e4-9583-7418d750193e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:53Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4366,9 +4108,7 @@
       "source": "github",
       "id": "941979361"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -4403,7 +4143,6 @@
         "id": "901e1b1c-7414-4240-89b8-1def9aca4708",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:01:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4417,9 +4156,7 @@
       "source": "github",
       "id": "923109265"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -4440,7 +4177,6 @@
         "id": "ba8028f7-73e6-4d3d-9974-790d438a1446",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4454,9 +4190,7 @@
       "source": "github",
       "id": "685392779"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.20.9",
@@ -4471,7 +4205,6 @@
         "id": "9dd7f908-4c1b-4ba3-a33f-86be881cc8b6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4485,9 +4218,7 @@
       "source": "github",
       "id": "894960290"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.2",
@@ -4502,7 +4233,6 @@
         "id": "adb9a058-774f-4505-aa80-1afa9bab8cb9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4516,9 +4246,7 @@
       "source": "github",
       "id": "947454003"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.6",
@@ -4554,7 +4282,6 @@
         "id": "8b01f838-0cb6-4c17-b381-108713321d6d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:15Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4568,9 +4295,7 @@
       "source": "github",
       "id": "946057362"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.3",
@@ -4607,7 +4332,6 @@
         "id": "c1b727f7-1570-465f-8153-585840de260a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:18Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4621,9 +4345,7 @@
       "source": "github",
       "id": "924683561"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -4659,7 +4381,6 @@
         "id": "c0c30db1-cc08-426e-886f-0bdbcd31d101",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4673,9 +4394,7 @@
       "source": "github",
       "id": "942928935"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -4690,7 +4409,6 @@
         "id": "2cc83e0a-3ca5-4e21-b346-83254cc72e1f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4704,9 +4422,7 @@
       "source": "github",
       "id": "949710667"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.12",
@@ -4742,7 +4458,6 @@
         "id": "4bc3b6d3-666e-4bb7-8ad7-6b38bc9c5ab8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:25Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4756,9 +4471,7 @@
       "source": "github",
       "id": "937211343"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -4810,7 +4523,6 @@
         "id": "64fdea5a-9fe3-4492-b9fb-6260e6c3dc34",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4824,9 +4536,7 @@
       "source": "github",
       "id": "938133354"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -4841,7 +4551,6 @@
         "id": "60b95692-579f-4de4-8095-1efdca5d8591",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4855,9 +4564,7 @@
       "source": "github",
       "id": "951429064"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -4872,7 +4579,6 @@
         "id": "98b8992b-77cc-43a5-825e-d14270fd9ca5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4886,9 +4592,7 @@
       "source": "github",
       "id": "945678498"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -4914,7 +4618,6 @@
         "id": "1101c394-e912-42b6-85be-d2479b72d27f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4928,9 +4631,7 @@
       "source": "github",
       "id": "958905017"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -4955,7 +4656,6 @@
         "id": "ffe051ab-1088-4040-9bbb-8a1bf3fd2a7b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:37Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -4969,9 +4669,7 @@
       "source": "github",
       "id": "946072706"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "2.7.7",
@@ -4986,7 +4684,6 @@
         "id": "4813a35a-7d43-42fa-999d-86e68b2aca1a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:39Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5000,9 +4697,7 @@
       "source": "github",
       "id": "931916510"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.2",
@@ -5052,7 +4747,6 @@
         "id": "ae6d4cd8-c930-4737-9aba-93609f53cde1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:43Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5066,9 +4760,7 @@
       "source": "github",
       "id": "902495626"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.4.1",
@@ -5089,7 +4781,6 @@
         "id": "a4902ee8-060c-47d1-9dfc-ec6af1a9c398",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:45Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5103,9 +4794,7 @@
       "source": "github",
       "id": "904238387"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.0",
@@ -5137,7 +4826,6 @@
         "id": "04216a87-0760-4f25-b809-42ffbfbb8962",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5151,9 +4839,7 @@
       "source": "github",
       "id": "899668514"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.10",
@@ -5168,7 +4854,6 @@
         "id": "cac9fd2a-2c08-441f-a94d-16c67821221f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:50Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5182,9 +4867,7 @@
       "source": "github",
       "id": "963136865"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5199,7 +4882,6 @@
         "id": "ad6e04de-5f80-4274-9464-c6bbff533ad3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:02:51Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5213,9 +4895,7 @@
       "source": "github",
       "id": "966588444"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5309,7 +4989,6 @@
         "id": "fee5894b-e255-408d-9cd2-e6ee29d78d78",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5323,9 +5002,7 @@
       "source": "github",
       "id": "930007673"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5350,7 +5027,6 @@
         "id": "0d7bc864-fdf3-4afd-8b44-48468b12d550",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:05Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5364,9 +5040,7 @@
       "source": "github",
       "id": "970501693"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5381,7 +5055,6 @@
         "id": "8a38266e-dee5-41ce-8228-2b51a307785f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5395,9 +5068,7 @@
       "source": "github",
       "id": "965063885"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5433,7 +5104,6 @@
         "id": "775bd83c-b33a-471c-9deb-8a444fb4ac79",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5447,9 +5117,7 @@
       "source": "github",
       "id": "909459279"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.4",
@@ -5482,7 +5150,6 @@
         "id": "1e97b930-031a-47b6-afb1-8af61dd81ec0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:13Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5496,9 +5163,7 @@
       "source": "github",
       "id": "947567270"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5513,7 +5178,6 @@
         "id": "466926d1-72a6-42be-b2c1-ef94d44e5a67",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5527,9 +5191,7 @@
       "source": "github",
       "id": "897809208"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.10.6",
@@ -5550,7 +5212,6 @@
         "id": "4df1406c-1bb1-4495-96e8-8c25de454b5d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5564,9 +5225,7 @@
       "source": "github",
       "id": "955641588"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5581,7 +5240,6 @@
         "id": "05ca6ccc-d6e1-47ab-ab8d-25949db9ada7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:19Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5595,9 +5253,7 @@
       "source": "github",
       "id": "898207013"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5612,7 +5268,6 @@
         "id": "e9799403-3917-4c38-9638-c69aebf1ac08",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5626,9 +5281,7 @@
       "source": "github",
       "id": "938923691"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -5665,7 +5318,6 @@
         "id": "d3139564-f4c3-44f9-902a-8d172038af01",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:23Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5679,9 +5331,7 @@
       "source": "github",
       "id": "945535318"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5743,7 +5393,6 @@
         "id": "9ddac40e-d776-4232-a00f-7e698eb2dca8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5757,9 +5406,7 @@
       "source": "github",
       "id": "916512524"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5823,7 +5470,6 @@
         "id": "6dd26dd7-d5c3-4aa8-bb9a-3aba328790ad",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5837,9 +5483,7 @@
       "source": "github",
       "id": "907453245"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -5854,7 +5498,6 @@
         "id": "f7f8acea-8725-48ec-a2f8-08ee16c738db",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -5868,9 +5511,7 @@
       "source": "github",
       "id": "945904536"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.9",
@@ -5988,7 +5629,6 @@
         "id": "bb734a22-a274-48ee-9740-d4a6a9a0a367",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:40Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6002,9 +5642,7 @@
       "source": "github",
       "id": "948085438"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.6.0",
@@ -6019,7 +5657,6 @@
         "id": "4502246b-f419-4879-a179-149c6d87a871",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:42Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6033,9 +5670,7 @@
       "source": "github",
       "id": "727502310"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -6056,7 +5691,6 @@
         "id": "b7e8b7c6-548b-49a7-9001-2bf1733ca539",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:44Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6070,9 +5704,7 @@
       "source": "github",
       "id": "914708046"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.5",
@@ -6097,7 +5729,6 @@
         "id": "c3123664-33b3-4f29-bc08-40b88300f57c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6111,9 +5742,7 @@
       "source": "github",
       "id": "897595329"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.12.3",
@@ -6138,7 +5767,6 @@
         "id": "377dba9b-63cc-4ca9-bb39-97f5e12497b4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:49Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6152,9 +5780,7 @@
       "source": "github",
       "id": "898062517"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -6169,7 +5795,6 @@
         "id": "0e517488-6e73-41c3-a297-7602f5937079",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:52Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6183,9 +5808,7 @@
       "source": "github",
       "id": "898108083"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.3",
@@ -6232,7 +5855,6 @@
         "id": "e3053bd5-1a4d-473c-a41b-f83ab1a46174",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6246,9 +5868,7 @@
       "source": "github",
       "id": "949213032"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -6269,7 +5889,6 @@
         "id": "a0db598f-81d1-44d6-9008-e9a71e742cd3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6283,9 +5902,7 @@
       "source": "github",
       "id": "951621343"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.1",
@@ -6322,7 +5939,6 @@
         "id": "4a33ebab-f5cf-48b3-adb3-3f7094ea706c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:03:59Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6336,9 +5952,7 @@
       "source": "github",
       "id": "944414751"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.3",
@@ -6371,7 +5985,6 @@
         "id": "fd341719-247e-45e8-a911-ad7c336eb163",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6385,9 +5998,7 @@
       "source": "github",
       "id": "939073414"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.3",
@@ -6402,7 +6013,6 @@
         "id": "b9bf1c69-4a64-47ec-a781-fb81d1922695",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:03Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6416,9 +6026,7 @@
       "source": "github",
       "id": "943806192"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -6479,7 +6087,6 @@
         "id": "27b05d20-fd9c-437d-a86c-923629491ff5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6493,9 +6100,7 @@
       "source": "github",
       "id": "949735444"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.12",
@@ -6510,7 +6115,6 @@
         "id": "36156772-6775-4b79-b560-b72ccaaca085",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6524,9 +6128,7 @@
       "source": "github",
       "id": "951246115"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -6541,7 +6143,6 @@
         "id": "87cf029b-441f-439a-aae9-9ef27ddd4322",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:11Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6555,9 +6156,7 @@
       "source": "github",
       "id": "906271992"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.5.0",
@@ -6592,7 +6191,6 @@
         "id": "9fcb3e74-e8af-4b55-9bfc-808fa2560148",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6606,9 +6204,7 @@
       "source": "github",
       "id": "896905855"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -6634,7 +6230,6 @@
         "id": "16fc441d-0d72-4b14-afd7-d5c9dd25c909",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:17Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6648,9 +6243,7 @@
       "source": "github",
       "id": "898004429"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -6671,7 +6264,6 @@
         "id": "196a8cbd-8234-4336-a4d7-f6dda870bcfb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:19Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6685,9 +6277,7 @@
       "source": "github",
       "id": "956967521"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -6723,7 +6313,6 @@
         "id": "12ca72e6-3bbf-4c79-94d5-91016543f8ca",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6737,9 +6326,7 @@
       "source": "github",
       "id": "909977348"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -6775,7 +6362,6 @@
         "id": "4b637a92-c1af-463d-afc1-e0ce65d7c057",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:24Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6789,9 +6375,7 @@
       "source": "github",
       "id": "913146173"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -6827,7 +6411,6 @@
         "id": "3b404956-9bad-4bd9-89a9-17534b4bd22e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6841,9 +6424,7 @@
       "source": "github",
       "id": "930539984"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.7.2",
@@ -6876,7 +6457,6 @@
         "id": "34b93e72-0fa8-4dbe-ae9b-82a9e40de735",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6890,9 +6470,7 @@
       "source": "github",
       "id": "913564273"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.3",
@@ -6932,7 +6510,6 @@
         "id": "7baddfbe-3618-41d8-befe-40fc2aabcd8e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6946,9 +6523,7 @@
       "source": "github",
       "id": "928420039"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -6974,7 +6549,6 @@
         "id": "0cdfed38-6495-42a3-a837-3788f35aadd3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:37Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -6988,9 +6562,7 @@
       "source": "github",
       "id": "969129017"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -7005,7 +6577,6 @@
         "id": "a9fe34f1-7c82-4f7d-8fbe-20bb8ca29e7b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:42Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7019,9 +6590,7 @@
       "source": "github",
       "id": "679343504"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.40",
@@ -7036,7 +6605,6 @@
         "id": "ae9ce022-800d-4a10-a452-5bc396d25430",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:43Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7050,9 +6618,7 @@
       "source": "github",
       "id": "903449956"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -7085,7 +6651,6 @@
         "id": "28fc08e1-1afc-42cb-8eca-0b500e23c73e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7099,9 +6664,7 @@
       "source": "github",
       "id": "952163210"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.3.7",
@@ -7116,7 +6679,6 @@
         "id": "7e3a17ce-fbbd-48cb-b29f-34a4b8c6ca55",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7130,9 +6692,7 @@
       "source": "github",
       "id": "952732612"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -7198,7 +6758,6 @@
         "id": "5e32ec37-7a46-4e84-9f19-845cd6b151f4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:52Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7212,9 +6771,7 @@
       "source": "github",
       "id": "898628964"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.14.0",
@@ -7251,7 +6808,6 @@
         "id": "347d6881-c509-4dca-9ece-95e25098436b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7265,9 +6821,7 @@
       "source": "github",
       "id": "948974664"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -7282,7 +6836,6 @@
         "id": "45ee52ba-1e4c-48a5-9eef-de7a234997db",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:04:59Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7296,9 +6849,7 @@
       "source": "github",
       "id": "953321792"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -7330,7 +6881,6 @@
         "id": "0852caec-a861-4f9c-9e94-a7c8b67a1641",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:01Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7344,9 +6894,7 @@
       "source": "github",
       "id": "953543740"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -7367,7 +6915,6 @@
         "id": "bb7a2190-2e72-4ccf-9603-226e0fde174c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7381,9 +6928,7 @@
       "source": "github",
       "id": "946301386"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -7398,7 +6943,6 @@
         "id": "91f75500-0051-4d05-a5b2-9a87aa52ec3a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:05Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7412,9 +6956,7 @@
       "source": "github",
       "id": "923666627"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.2",
@@ -7435,7 +6977,6 @@
         "id": "58b5f6c8-1ad7-4378-9921-7b9b7982c84c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:08Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7449,9 +6990,7 @@
       "source": "github",
       "id": "960104719"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.8",
@@ -7518,7 +7057,6 @@
         "id": "24f2d280-583d-4511-af0c-47910fc52c4d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7532,9 +7070,7 @@
       "source": "github",
       "id": "899661027"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.6",
@@ -7549,7 +7085,6 @@
         "id": "14074b80-f3a7-4b45-97ba-7204c92c5f6e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7563,9 +7098,7 @@
       "source": "github",
       "id": "950355259"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -7580,7 +7113,6 @@
         "id": "59a6acf5-d65f-4884-a9b8-ae7d2c9f6728",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:18Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7594,9 +7126,7 @@
       "source": "github",
       "id": "911084198"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -7621,7 +7151,6 @@
         "id": "200d7310-6d18-4b22-98b3-68ae63ea985a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7635,9 +7164,7 @@
       "source": "github",
       "id": "954456943"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -7721,7 +7248,6 @@
         "id": "ec2849c6-e8ed-46b1-8e57-646fd2e8be93",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7735,9 +7261,7 @@
       "source": "github",
       "id": "953282616"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -7752,7 +7276,6 @@
         "id": "79f72036-83ee-4420-9767-980e27590e6f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7766,9 +7289,7 @@
       "source": "github",
       "id": "920179950"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.1",
@@ -7789,7 +7310,6 @@
         "id": "345bf964-02ce-4814-b37f-52c2e73ab395",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7803,9 +7323,7 @@
       "source": "github",
       "id": "927737184"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -7826,7 +7344,6 @@
         "id": "a2015046-780d-421a-999f-c52c808236fa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:36Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7840,9 +7357,7 @@
       "source": "github",
       "id": "931883120"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.2",
@@ -7867,7 +7382,6 @@
         "id": "883a7c72-e6ca-41cb-91e9-e65436a58729",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7881,9 +7395,7 @@
       "source": "github",
       "id": "921929368"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -7908,7 +7420,6 @@
         "id": "bac14e5d-08c4-4b69-8e40-b845632d26ed",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:41Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7922,9 +7433,7 @@
       "source": "github",
       "id": "906414289"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -7939,7 +7448,6 @@
         "id": "8b17658e-2a1b-4ca7-a1ae-583e7b190bce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:43Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -7953,9 +7461,7 @@
       "source": "github",
       "id": "946779028"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -8000,7 +7506,6 @@
         "id": "c83f2ca0-ca97-43cf-8288-5ff4a0771e29",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8014,9 +7519,7 @@
       "source": "github",
       "id": "908244326"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -8062,7 +7565,6 @@
         "id": "5f64133c-70f4-4044-ac82-dcb2e7758c8c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:51Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8076,9 +7578,7 @@
       "source": "github",
       "id": "919856605"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -8093,7 +7593,6 @@
         "id": "361ed7f4-8df4-4a8e-931f-edfb380e0019",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:53Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8107,9 +7606,7 @@
       "source": "github",
       "id": "948723723"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -8141,7 +7638,6 @@
         "id": "ae4c8106-9947-4577-924e-c7106256dd69",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:56Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8155,9 +7651,7 @@
       "source": "github",
       "id": "946264788"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.2",
@@ -8186,7 +7680,6 @@
         "id": "dedc68af-03ef-49ce-a331-e4717b96f693",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:05:59Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8200,9 +7693,7 @@
       "source": "github",
       "id": "899787279"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -8217,7 +7708,6 @@
         "id": "d2aacd5b-0642-4832-8629-58272a922e4b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:01Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8231,9 +7721,7 @@
       "source": "github",
       "id": "940314682"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.0",
@@ -8248,7 +7736,6 @@
         "id": "5a9955bc-6c28-4ebd-974e-73226eb3e58f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:03Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8262,9 +7749,7 @@
       "source": "github",
       "id": "900629184"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -8279,7 +7764,6 @@
         "id": "7902d399-3080-4926-afb8-4f98c3a7d870",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:05Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8293,9 +7777,7 @@
       "source": "github",
       "id": "949262442"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -8310,7 +7792,6 @@
         "id": "2d851046-40f2-4088-95df-d6c0f93c2f0a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8324,9 +7805,7 @@
       "source": "github",
       "id": "954390434"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.9",
@@ -8341,7 +7820,6 @@
         "id": "f97607ba-eb50-4258-b46c-ce9fc6587fa9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8355,9 +7833,7 @@
       "source": "github",
       "id": "918664127"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.8.29",
@@ -8372,7 +7848,6 @@
         "id": "995ac56a-5ec7-4411-a86c-4ebfef9c9605",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:11Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8386,9 +7861,7 @@
       "source": "github",
       "id": "906473152"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -8454,7 +7927,6 @@
         "id": "1d89482a-a7de-4d3b-a7cb-1b7be49939ec",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8468,9 +7940,7 @@
       "source": "github",
       "id": "953349763"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -8485,7 +7955,6 @@
         "id": "c0a64e6c-2ff2-4a2f-afe6-f52119a020a0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8499,9 +7968,7 @@
       "source": "github",
       "id": "915645627"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.2",
@@ -8516,7 +7983,6 @@
         "id": "35e1e1a0-30c9-4857-a9e0-5c64f7e29fa9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:25Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8530,9 +7996,7 @@
       "source": "github",
       "id": "945212492"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.3",
@@ -8553,7 +8017,6 @@
         "id": "e944c7a9-9eb0-495a-8bee-d8da751240e7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:27Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8567,9 +8030,7 @@
       "source": "github",
       "id": "903415597"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.1",
@@ -8611,7 +8072,6 @@
         "id": "c6f8403f-30d0-45d2-b7c3-95a6cb61c4b4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8625,9 +8085,7 @@
       "source": "github",
       "id": "931365873"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -8654,7 +8112,6 @@
         "id": "2a5c04e4-0526-492b-aa98-49896e033b74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:33Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8668,9 +8125,7 @@
       "source": "github",
       "id": "948676369"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.4",
@@ -8685,7 +8140,6 @@
         "id": "f1da402e-a006-4364-a100-5131eb05b579",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:35Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8699,9 +8153,7 @@
       "source": "github",
       "id": "950266465"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -8726,7 +8178,6 @@
         "id": "3d7c6822-88bd-4569-a099-1e58b9b365b0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8740,9 +8191,7 @@
       "source": "github",
       "id": "981791515"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.3",
@@ -8763,7 +8212,6 @@
         "id": "2382172a-b26a-40fc-adee-f82132b56edc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:41Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8777,9 +8225,7 @@
       "source": "github",
       "id": "905004409"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -8794,7 +8240,6 @@
         "id": "c2f4ab61-b279-4cb9-932d-5f60bcd1534a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:44Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8808,9 +8253,7 @@
       "source": "github",
       "id": "931892749"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.2",
@@ -8846,7 +8289,6 @@
         "id": "e61c643c-ec01-483c-a586-20f87ab6280e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:47Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8860,9 +8302,7 @@
       "source": "github",
       "id": "945181573"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.4.9",
@@ -8877,7 +8317,6 @@
         "id": "d7a1d303-082e-477d-8ab5-9d65dc0117d9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:49Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8891,9 +8330,7 @@
       "source": "github",
       "id": "899407931"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.9.0",
@@ -8908,7 +8345,6 @@
         "id": "3947e186-beb0-4372-8f74-045047dacebd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:52Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8922,9 +8358,7 @@
       "source": "github",
       "id": "903070998"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -8949,7 +8383,6 @@
         "id": "50b7ab52-c3d0-40bc-b342-38fa93da54ff",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8963,9 +8396,7 @@
       "source": "github",
       "id": "954056822"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -8980,7 +8411,6 @@
         "id": "573c235f-93d7-45a3-9f23-b1166a660c97",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -8994,9 +8424,7 @@
       "source": "github",
       "id": "930747221"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9025,7 +8453,6 @@
         "id": "e4927319-b643-498e-935f-51bad4e30381",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:06:59Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9039,9 +8466,7 @@
       "source": "github",
       "id": "951937740"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9073,7 +8498,6 @@
         "id": "fa6d267b-a797-42b7-9510-5abc3c518f3e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9087,9 +8511,7 @@
       "source": "github",
       "id": "953844812"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.3.0",
@@ -9114,7 +8536,6 @@
         "id": "cc190d52-686a-4286-812d-c4542161203d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9128,9 +8549,7 @@
       "source": "github",
       "id": "908415894"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.9",
@@ -9145,7 +8564,6 @@
         "id": "36ad8cdb-408e-4110-827b-8d6a0a0f94bb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:11Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9159,9 +8577,7 @@
       "source": "github",
       "id": "951719324"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9223,7 +8639,6 @@
         "id": "83932f7e-8c4d-475b-b03b-f30bc31793d3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9237,9 +8652,7 @@
       "source": "github",
       "id": "911416763"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.3",
@@ -9254,7 +8667,6 @@
         "id": "21242e10-3373-40a3-9119-e4d075b7c27e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:18Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9268,9 +8680,7 @@
       "source": "github",
       "id": "894659403"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9285,7 +8695,6 @@
         "id": "6e61849a-2312-4c76-a9d0-0a4b84a7795e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9299,9 +8708,7 @@
       "source": "github",
       "id": "939648665"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9322,7 +8729,6 @@
         "id": "8663db3e-ad80-4805-8032-11a3f303b5fc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9336,9 +8742,7 @@
       "source": "github",
       "id": "895547074"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -9373,7 +8777,6 @@
         "id": "93c84b33-4392-41b2-85be-764e5f39da74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:25Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9387,9 +8790,7 @@
       "source": "github",
       "id": "950810099"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9435,7 +8836,6 @@
         "id": "91c0fc60-7dc9-4095-a05a-9f816738df67",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:29Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9449,9 +8849,7 @@
       "source": "github",
       "id": "906921955"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -9466,7 +8864,6 @@
         "id": "165ef95f-bfb3-4b08-b523-d17748fdfe31",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:31Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9480,9 +8877,7 @@
       "source": "github",
       "id": "903584784"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.0",
@@ -9497,7 +8892,6 @@
         "id": "6543c44a-7ad6-4f9e-bf7e-9f8f969934bf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:33Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9511,9 +8905,7 @@
       "source": "github",
       "id": "925498825"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -9528,7 +8920,6 @@
         "id": "d5076249-cb9d-4c5e-ae2e-544779ec1a04",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9542,9 +8933,7 @@
       "source": "github",
       "id": "952831973"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -9580,7 +8969,6 @@
         "id": "69ae0fdb-713d-4f8e-bf8e-d214e79fa295",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9594,9 +8982,7 @@
       "source": "github",
       "id": "975908174"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -9622,7 +9008,6 @@
         "id": "b1051584-3b09-49af-a97f-a92b47861ed1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:40Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9636,9 +9021,7 @@
       "source": "github",
       "id": "934580342"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9653,7 +9036,6 @@
         "id": "07ccf835-680a-42b4-bf0b-db28367519ee",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:44Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9667,9 +9049,7 @@
       "source": "github",
       "id": "947826694"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -9695,7 +9075,6 @@
         "id": "7461c9c2-108f-46c1-8f35-6206ec509267",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9709,9 +9088,7 @@
       "source": "github",
       "id": "947522686"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -9736,7 +9113,6 @@
         "id": "0f4331b9-9229-49c4-b41c-5c254b610daa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9750,9 +9126,7 @@
       "source": "github",
       "id": "948277357"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9767,7 +9141,6 @@
         "id": "97174daf-db12-40ac-bab2-1c4255ce1741",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:51Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9781,9 +9154,7 @@
       "source": "github",
       "id": "897068154"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9804,7 +9175,6 @@
         "id": "27c761f6-dc25-4c35-9912-2dc2bbdeaadd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:53Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9818,9 +9188,7 @@
       "source": "github",
       "id": "915876793"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -9845,7 +9213,6 @@
         "id": "fffcda50-ddc1-4357-a9bf-b7022f86c582",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9859,9 +9226,7 @@
       "source": "github",
       "id": "902220777"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9876,7 +9241,6 @@
         "id": "b87405fe-1aae-4a7a-a4d7-cd0b5f267ad8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:07:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9890,9 +9254,7 @@
       "source": "github",
       "id": "949564493"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -9966,7 +9328,6 @@
         "id": "67c71178-8632-4d67-abad-c28f6e58c87f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:01Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -9980,9 +9341,7 @@
       "source": "github",
       "id": "908899631"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -10047,7 +9406,6 @@
         "id": "aef75131-e237-4b91-a2b8-c0f416d3618f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10061,9 +9419,7 @@
       "source": "github",
       "id": "898049335"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.5.4",
@@ -10127,7 +9483,6 @@
         "id": "532d7690-7a65-470f-81da-2ba3042bee05",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10141,9 +9496,7 @@
       "source": "github",
       "id": "943734921"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -10158,7 +9511,6 @@
         "id": "0d57edf7-3fbb-42b4-aa9e-b255e7d6f8fa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:12Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10172,9 +9524,7 @@
       "source": "github",
       "id": "973785828"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -10239,7 +9589,6 @@
         "id": "b51467a7-698f-4a33-9598-db5aaf4e07b3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:17Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10253,9 +9602,7 @@
       "source": "github",
       "id": "953998052"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -10297,7 +9644,6 @@
         "id": "6a9b532e-61df-4d4d-a898-25d66aa60315",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10311,9 +9657,7 @@
       "source": "github",
       "id": "937552153"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -10338,7 +9682,6 @@
         "id": "5bf6d045-dc83-4b51-858f-eb9c3403087f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10352,9 +9695,7 @@
       "source": "github",
       "id": "946415795"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -10383,7 +9724,6 @@
         "id": "d78df157-559d-4e87-af1f-0dcbfe703a23",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:24Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10397,9 +9737,7 @@
       "source": "github",
       "id": "896936323"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -10414,7 +9752,6 @@
         "id": "601ee7e9-e0db-470e-80e5-f1509cddf6d7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:26Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10428,9 +9765,7 @@
       "source": "github",
       "id": "945565923"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -10451,7 +9786,6 @@
         "id": "1967f4e6-f229-4d5f-a648-9bdc67d39da8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10465,9 +9799,7 @@
       "source": "github",
       "id": "950568971"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -10482,7 +9814,6 @@
         "id": "b9fa6e10-c6f4-424d-b289-469d49decaaf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10496,9 +9827,7 @@
       "source": "github",
       "id": "914173426"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.2.5",
@@ -10513,7 +9842,6 @@
         "id": "dcac9b0e-b18c-4570-947c-7a6d351b02df",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10527,9 +9855,7 @@
       "source": "github",
       "id": "953500133"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.4",
@@ -10544,7 +9870,6 @@
         "id": "add3f73d-394b-4b99-b255-8d9d89db84c2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10558,9 +9883,7 @@
       "source": "github",
       "id": "956608147"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -10585,7 +9908,6 @@
         "id": "d0f30dc9-bc11-43f8-9b61-034e2bec78d5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:39Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10599,9 +9921,7 @@
       "source": "github",
       "id": "907849216"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.3",
@@ -10616,7 +9936,6 @@
         "id": "7e73a81a-e914-4cf7-aff2-482d0047e8dd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:41Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10630,9 +9949,7 @@
       "source": "github",
       "id": "952976727"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -10668,7 +9985,6 @@
         "id": "243a8c0e-4bb7-4932-9d7c-8e8229306295",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:44Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10682,9 +9998,7 @@
       "source": "github",
       "id": "951687178"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -10699,7 +10013,6 @@
         "id": "e80eb5ed-497b-4bcf-8cc3-f7f2c5eed889",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:47Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10713,9 +10026,7 @@
       "source": "github",
       "id": "912825504"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.2",
@@ -10755,7 +10066,6 @@
         "id": "ac8e4d2b-da97-4a40-934b-1c516b4250fe",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:50Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10769,9 +10079,7 @@
       "source": "github",
       "id": "925867194"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.0",
@@ -10844,7 +10152,6 @@
         "id": "984ee65a-dec0-4a75-b21b-2efbcd9600bd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10858,9 +10165,7 @@
       "source": "github",
       "id": "944084760"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -10885,7 +10190,6 @@
         "id": "86a12728-3ab9-4a69-a447-bcb67957a5f7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:08:59Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10899,9 +10203,7 @@
       "source": "github",
       "id": "900130551"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.6.2",
@@ -10916,7 +10218,6 @@
         "id": "6a4d324e-7d12-495c-b72c-fe5803363af1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:01Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10930,9 +10231,7 @@
       "source": "github",
       "id": "937522079"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -10953,7 +10252,6 @@
         "id": "3c265bda-03e4-4e46-bceb-437a1b02f431",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10967,9 +10265,7 @@
       "source": "github",
       "id": "955286262"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -10984,7 +10280,6 @@
         "id": "39843dbb-856d-46d9-92c4-74b5041c4444",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:08Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -10998,9 +10293,7 @@
       "source": "github",
       "id": "910751536"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.11",
@@ -11025,7 +10318,6 @@
         "id": "17c2c7f2-20f2-424f-8466-b164ed19ddef",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11039,9 +10331,7 @@
       "source": "github",
       "id": "952869992"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -11068,7 +10358,6 @@
         "id": "32f876df-1f34-40d7-aed8-0431b32d5091",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:12Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11082,9 +10371,7 @@
       "source": "github",
       "id": "953530564"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.9",
@@ -11105,7 +10392,6 @@
         "id": "a4a1013a-5789-4020-9a16-eda6c453aba7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11119,9 +10405,7 @@
       "source": "github",
       "id": "898106797"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -11142,7 +10426,6 @@
         "id": "a0e6ce8a-15eb-4776-b9de-a4bb3c7e4730",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:17Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11156,9 +10439,7 @@
       "source": "github",
       "id": "898328533"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -11225,7 +10506,6 @@
         "id": "6cfb4c39-82bb-4b43-94a5-1f50ebd10c71",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:25Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11239,9 +10519,7 @@
       "source": "github",
       "id": "789457378"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.2",
@@ -11268,7 +10546,6 @@
         "id": "b9f04c6e-0d22-4f17-af83-ccde8b03e4e8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11282,9 +10559,7 @@
       "source": "github",
       "id": "947677712"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.6.6",
@@ -11299,7 +10574,6 @@
         "id": "e7e51609-0d23-4d96-8063-d136bd993c93",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11313,9 +10587,7 @@
       "source": "github",
       "id": "934896960"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -11373,7 +10645,6 @@
         "id": "8197c60c-08c6-4d90-9d63-e64bf48ab6e4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:39Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11387,9 +10658,7 @@
       "source": "github",
       "id": "908868990"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.7",
@@ -11404,7 +10673,6 @@
         "id": "e4578522-e426-44f4-818c-68784f2a3038",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:43Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11418,9 +10686,7 @@
       "source": "github",
       "id": "945265954"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -11435,7 +10701,6 @@
         "id": "84bda3c9-65ce-45f2-898f-6e370718b43d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:45Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11449,9 +10714,7 @@
       "source": "github",
       "id": "894640711"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.5.0",
@@ -11466,7 +10729,6 @@
         "id": "9f5885d3-fe18-483d-b7b2-f507b2f37ccb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:47Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11480,9 +10742,7 @@
       "source": "github",
       "id": "896738164"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -11527,7 +10787,6 @@
         "id": "a59a162f-d811-4344-bf53-606a74bb50c6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:50Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11541,9 +10800,7 @@
       "source": "github",
       "id": "947802631"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -11579,7 +10836,6 @@
         "id": "93be69a3-6dbf-4e3c-aa47-a4d5a15f0588",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11593,9 +10849,7 @@
       "source": "github",
       "id": "908734690"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.6.0",
@@ -11610,7 +10864,6 @@
         "id": "5b01e888-7245-46a6-8747-d6f9ca374c43",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:56Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11624,9 +10877,7 @@
       "source": "github",
       "id": "955698123"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -11653,7 +10904,6 @@
         "id": "9ad8f293-3ea1-4f0d-8c9f-a24945851bb6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:09:58Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11667,9 +10917,7 @@
       "source": "github",
       "id": "957204688"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -11684,7 +10932,6 @@
         "id": "3ec2249d-2ed3-45d2-8b52-185abfa918ac",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:00Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11698,9 +10945,7 @@
       "source": "github",
       "id": "934683195"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -11715,7 +10960,6 @@
         "id": "4f189cdd-04a5-47f6-b87b-7d38cc82e625",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11729,9 +10973,7 @@
       "source": "github",
       "id": "957747274"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -11781,7 +11023,6 @@
         "id": "819f0338-1101-475c-9915-65a8727a8dc5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11795,9 +11036,7 @@
       "source": "github",
       "id": "963828488"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.8",
@@ -11844,7 +11083,6 @@
         "id": "b3dbb84c-3e48-4cbc-a581-bb9ebe133cb4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11858,9 +11096,7 @@
       "source": "github",
       "id": "967888435"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.0",
@@ -11885,7 +11121,6 @@
         "id": "091ef217-8e6d-4e06-8cb9-bc5ffe5467b1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:11Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11899,9 +11134,7 @@
       "source": "github",
       "id": "924542723"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -11959,7 +11192,6 @@
         "id": "53290776-f4aa-488d-a10f-135a17645b02",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:15Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -11973,9 +11205,7 @@
       "source": "github",
       "id": "905450127"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -11990,7 +11220,6 @@
         "id": "4365781f-28ff-4865-aa7d-909678f6dbb4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:21Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12004,9 +11233,7 @@
       "source": "github",
       "id": "950628723"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.4",
@@ -12027,7 +11254,6 @@
         "id": "71120aef-743c-47ee-bb7d-3b215c7f22a7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:23Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12041,9 +11267,7 @@
       "source": "github",
       "id": "982172059"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.6",
@@ -12100,7 +11324,6 @@
         "id": "5ebda83c-f2b3-4b14-ba72-13d940fa940a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12114,9 +11337,7 @@
       "source": "github",
       "id": "951261036"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -12152,7 +11373,6 @@
         "id": "7f9416dd-34cf-4f0d-bcfb-c87cbee3abf6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:31Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12166,9 +11386,7 @@
       "source": "github",
       "id": "956657893"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.17",
@@ -12183,7 +11401,6 @@
         "id": "6fefc93f-3f03-47b0-9f42-21d5a5841490",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:36Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12197,9 +11414,7 @@
       "source": "github",
       "id": "898654014"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.3.0",
@@ -12225,7 +11440,6 @@
         "id": "b61a2d2e-db6c-47b4-9437-7edc8525d063",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12239,9 +11453,7 @@
       "source": "github",
       "id": "945309383"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "9.1.4",
@@ -12256,7 +11468,6 @@
         "id": "b4970e5b-1259-4ff9-a40a-c570f27d0930",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:40Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12270,9 +11481,7 @@
       "source": "github",
       "id": "936547010"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.9",
@@ -12287,7 +11496,6 @@
         "id": "ac665c5c-e1de-4686-9012-5ac101186a31",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:42Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12301,9 +11509,7 @@
       "source": "github",
       "id": "940456029"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -12318,7 +11524,6 @@
         "id": "55ba52cd-8e0a-4bcb-9a96-1658f2d713e0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12332,9 +11537,7 @@
       "source": "github",
       "id": "954021177"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -12349,7 +11552,6 @@
         "id": "abcce212-b3e1-4741-a8b3-86c95c276fb1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:47Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12363,9 +11565,7 @@
       "source": "github",
       "id": "900806525"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "2.0.0",
@@ -12413,7 +11613,6 @@
         "id": "22fbb4c3-d5fd-4191-af7a-c78686cc6123",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:51Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12427,9 +11626,7 @@
       "source": "github",
       "id": "898128804"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.2",
@@ -12487,7 +11684,6 @@
         "id": "56577627-939e-4f31-8c96-654586538eb5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12501,9 +11697,7 @@
       "source": "github",
       "id": "947387660"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -12539,7 +11733,6 @@
         "id": "309e2634-8163-47c9-951e-1cfec85e701b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:10:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12553,9 +11746,7 @@
       "source": "github",
       "id": "943596518"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.12",
@@ -12632,7 +11823,6 @@
         "id": "6a44b030-46c7-4390-adf2-2a75652dee27",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:01Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12646,9 +11836,7 @@
       "source": "github",
       "id": "957599131"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -12675,7 +11863,6 @@
         "id": "9326c18e-b2fb-4012-a170-cdd5753f0b1e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:03Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12689,9 +11876,7 @@
       "source": "github",
       "id": "951713109"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -12712,7 +11897,6 @@
         "id": "010904ec-6e39-4bdc-878a-75a6e79d0500",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:05Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12726,9 +11910,7 @@
       "source": "github",
       "id": "951863489"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.5",
@@ -12743,7 +11925,6 @@
         "id": "f10c234b-cf64-4dc2-9e38-5f57e53aeecb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12757,9 +11938,7 @@
       "source": "github",
       "id": "971505657"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -12774,7 +11953,6 @@
         "id": "9c7c309a-fb3c-4099-b461-0ca725c9083b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12788,9 +11966,7 @@
       "source": "github",
       "id": "898429869"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.6",
@@ -12822,7 +11998,6 @@
         "id": "afcff9a2-a4ed-457f-80fb-8bdd1948771a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:12Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12836,9 +12011,7 @@
       "source": "github",
       "id": "912380178"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -12867,7 +12040,6 @@
         "id": "b4c38c39-7381-49fa-b7b4-75e2604ed93d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12881,9 +12053,7 @@
       "source": "github",
       "id": "907120691"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.2",
@@ -12908,7 +12078,6 @@
         "id": "d9d7e246-d3f4-4214-aa79-fe1981c73c2e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -12922,9 +12091,7 @@
       "source": "github",
       "id": "969499680"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -12988,7 +12155,6 @@
         "id": "6ebc1c16-ea8d-44eb-958c-74f3f0531058",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13002,9 +12168,7 @@
       "source": "github",
       "id": "896417211"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.2.4",
@@ -13040,7 +12204,6 @@
         "id": "e9a5215c-6485-462f-b086-6e97f0466b30",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13054,9 +12217,7 @@
       "source": "github",
       "id": "904087475"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -13077,7 +12238,6 @@
         "id": "1455eb68-3cf0-4cc3-a8ee-fd729a00acd3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:24Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13091,9 +12251,7 @@
       "source": "github",
       "id": "950853704"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -13125,7 +12283,6 @@
         "id": "dd3f5299-5869-43ec-89a8-77e25e6a157e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:27Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13139,9 +12296,7 @@
       "source": "github",
       "id": "964136538"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.3.3",
@@ -13162,7 +12317,6 @@
         "id": "ba368d1c-d64d-4ecd-9bde-72304d69c4d1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:29Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13176,9 +12330,7 @@
       "source": "github",
       "id": "895882011"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -13204,7 +12356,6 @@
         "id": "ab58cca1-94ad-42d8-be13-980556ac552b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:33Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13218,9 +12369,7 @@
       "source": "github",
       "id": "906827503"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.6",
@@ -13255,7 +12404,6 @@
         "id": "752ef535-2865-4d95-bcc5-647a7be83f74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:35Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13269,9 +12417,7 @@
       "source": "github",
       "id": "943079798"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -13318,7 +12464,6 @@
         "id": "b71bb3e0-0871-4ca6-9336-3c731607d3ad",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:39Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13332,9 +12477,7 @@
       "source": "github",
       "id": "954558050"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -13370,7 +12513,6 @@
         "id": "d3194c4f-b73a-40b2-9170-0e6e8ee713c0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:42Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13384,9 +12526,7 @@
       "source": "github",
       "id": "954434732"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.3",
@@ -13411,7 +12551,6 @@
         "id": "4d3dba83-9775-4b5a-9de7-f18f7263460c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:44Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13425,9 +12564,7 @@
       "source": "github",
       "id": "932923739"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -13452,7 +12589,6 @@
         "id": "618671cb-8783-47c7-a81c-164f5f9e2cc1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13466,9 +12602,7 @@
       "source": "github",
       "id": "947082641"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.0",
@@ -13501,7 +12635,6 @@
         "id": "531956a8-df6a-4edd-bb72-36c284c1d7c8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:51Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13515,9 +12648,7 @@
       "source": "github",
       "id": "900049352"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "2.0.3",
@@ -13532,7 +12663,6 @@
         "id": "47685d63-d574-4311-b823-c0ddc29d8514",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:53Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13546,9 +12676,7 @@
       "source": "github",
       "id": "929659341"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -13622,7 +12750,6 @@
         "id": "c52271b3-e48e-4896-b5a2-2ff93189b339",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:11:58Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13636,9 +12763,7 @@
       "source": "github",
       "id": "947937745"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -13664,7 +12789,6 @@
         "id": "7d68a487-bc40-4783-a2eb-1c9107fc26a4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:00Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13678,9 +12802,7 @@
       "source": "github",
       "id": "909539706"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -13716,7 +12838,6 @@
         "id": "c01d9a66-7a37-4f66-870d-38829c0047ea",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13730,9 +12851,7 @@
       "source": "github",
       "id": "941719334"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -13777,7 +12896,6 @@
         "id": "a81b1d9e-c1a5-4848-a3f5-350ea2872ae3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13791,9 +12909,7 @@
       "source": "github",
       "id": "897678596"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -13808,7 +12924,6 @@
         "id": "9c804dd3-4283-4a5b-a34e-6f1c7065b671",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:08Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13822,9 +12937,7 @@
       "source": "github",
       "id": "917730483"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -13851,7 +12964,6 @@
         "id": "0d8b287c-6023-4809-a5ba-963c5612efa2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13865,9 +12977,7 @@
       "source": "github",
       "id": "953087223"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.2",
@@ -13882,7 +12992,6 @@
         "id": "d6801d4f-2f27-4e67-8b70-10754b48ff0d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13896,9 +13005,7 @@
       "source": "github",
       "id": "949792903"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -13940,7 +13047,6 @@
         "id": "925a5d1d-ab12-44bd-9297-a20bdde6ec68",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:19Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13954,9 +13060,7 @@
       "source": "github",
       "id": "900427746"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.3",
@@ -13971,7 +13075,6 @@
         "id": "a0f6fd01-5eb2-4aca-b4a6-c67eb6e0c5da",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:21Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -13985,9 +13088,7 @@
       "source": "github",
       "id": "944258239"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -14043,7 +13144,6 @@
         "id": "038a3024-c319-4a07-bd7f-9cf699cfebf1",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:24Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14057,9 +13157,7 @@
       "source": "github",
       "id": "923899029"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -14074,7 +13172,6 @@
         "id": "dd586d17-4a7e-4658-92df-8cf6b58bff4d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:29Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14088,9 +13185,7 @@
       "source": "github",
       "id": "900184645"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.8",
@@ -14127,7 +13222,6 @@
         "id": "23b81af0-3e03-47b8-a310-c9b07bebd547",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14141,9 +13235,7 @@
       "source": "github",
       "id": "915853970"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.7.0",
@@ -14158,7 +13250,6 @@
         "id": "cfe44c73-8b61-48c9-9d7f-b28e98d23b5b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14172,9 +13263,7 @@
       "source": "github",
       "id": "953147035"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -14189,7 +13278,6 @@
         "id": "dd8073c5-c7c4-42c1-a0d7-cad8089de750",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:36Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14203,9 +13291,7 @@
       "source": "github",
       "id": "898077246"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.5",
@@ -14220,7 +13306,6 @@
         "id": "328e3069-005e-4179-add1-c13b18db4102",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14234,9 +13319,7 @@
       "source": "github",
       "id": "910565083"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.2",
@@ -14251,7 +13334,6 @@
         "id": "503a5c73-c147-4b2c-90d3-292378268706",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:40Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14265,9 +13347,7 @@
       "source": "github",
       "id": "956317848"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -14282,7 +13362,6 @@
         "id": "94872987-6992-4fec-ab4b-9ef5311b3108",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:42Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14296,9 +13375,7 @@
       "source": "github",
       "id": "939104710"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -14319,7 +13396,6 @@
         "id": "00613acb-73e2-4f93-8b96-296df17316c8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:44Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14333,9 +13409,7 @@
       "source": "github",
       "id": "951416232"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -14416,7 +13490,6 @@
         "id": "cf42caa8-50d1-489d-aa3c-3e8432efe9e2",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:49Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14430,9 +13503,7 @@
       "source": "github",
       "id": "955038120"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.5",
@@ -14447,7 +13518,6 @@
         "id": "68966508-9094-4eb5-9588-ff7456d6c1ce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:51Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14461,9 +13531,7 @@
       "source": "github",
       "id": "951615631"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -14535,7 +13603,6 @@
         "id": "4f9043b6-e17a-494e-89d4-52c3f39999ac",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14549,9 +13616,7 @@
       "source": "github",
       "id": "982891249"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -14566,7 +13631,6 @@
         "id": "7997496a-c366-4949-9ca7-6741bcfdf2a0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14580,9 +13644,7 @@
       "source": "github",
       "id": "943326406"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -14628,7 +13690,6 @@
         "id": "61ffe82e-5288-4af8-a45f-9a0907c941de",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:12:59Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14642,9 +13703,7 @@
       "source": "github",
       "id": "947538862"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -14680,7 +13739,6 @@
         "id": "2e9aa092-56fc-4adb-93ba-e9c9d9919440",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:03Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14694,9 +13752,7 @@
       "source": "github",
       "id": "937569492"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.6",
@@ -14711,7 +13767,6 @@
         "id": "904d15ba-e312-4dec-88b6-f52c1077bc96",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14725,9 +13780,7 @@
       "source": "github",
       "id": "927217229"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -14748,7 +13801,6 @@
         "id": "92c66a82-172a-45e6-92a4-ee6a053e95e6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:07Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14762,9 +13814,7 @@
       "source": "github",
       "id": "910977229"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "2.0.0",
@@ -14850,7 +13900,6 @@
         "id": "edf43b88-36a4-4f07-9d46-cab08bd418aa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:12Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14864,9 +13913,7 @@
       "source": "github",
       "id": "899577906"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -14881,7 +13928,6 @@
         "id": "abcd869f-0159-408c-8965-9dbcc8c2d001",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14895,9 +13941,7 @@
       "source": "github",
       "id": "914932138"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -14929,7 +13973,6 @@
         "id": "ddfb0c36-c116-4333-a62e-c9447d699b6e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:17Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14943,9 +13986,7 @@
       "source": "github",
       "id": "917958763"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -14960,7 +14001,6 @@
         "id": "c214300b-5fcc-48fb-ad3a-bb2d14b0403d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:19Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -14974,9 +14014,7 @@
       "source": "github",
       "id": "907849235"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -15011,7 +14049,6 @@
         "id": "01129bff-3d65-4e3d-8e82-6f2f269f818c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:21Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15025,9 +14062,7 @@
       "source": "github",
       "id": "925879641"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -15042,7 +14077,6 @@
         "id": "8f234bf9-d65f-4406-bed6-f8217adee4c9",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:24Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15056,9 +14090,7 @@
       "source": "github",
       "id": "901090359"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.5",
@@ -15079,7 +14111,6 @@
         "id": "b5ee338d-655b-4067-9e17-f1bfc442a1eb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:26Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15093,9 +14124,7 @@
       "source": "github",
       "id": "913589706"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -15116,7 +14145,6 @@
         "id": "ab0a0d85-7031-4eb0-bd01-5db69fb8c667",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:28Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15130,9 +14158,7 @@
       "source": "github",
       "id": "950863558"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.13",
@@ -15147,7 +14173,6 @@
         "id": "0c43f128-7589-4ce6-9382-5399ba24bebd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15161,9 +14186,7 @@
       "source": "github",
       "id": "907496920"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.4",
@@ -15184,7 +14207,6 @@
         "id": "6a64a548-c36c-400f-b43c-4d977aa1e482",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15198,9 +14220,7 @@
       "source": "github",
       "id": "967790464"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -15215,7 +14235,6 @@
         "id": "87e2c1e7-4fdb-436f-b52c-af683f63fb1b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:34Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15229,9 +14248,7 @@
       "source": "github",
       "id": "904538810"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -15246,7 +14263,6 @@
         "id": "0e45cb5a-5b45-47f3-8b5e-12bdf88d176a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:41Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15260,9 +14276,7 @@
       "source": "github",
       "id": "910698593"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -15277,7 +14291,6 @@
         "id": "f43b2576-74d3-4b79-b9d0-0c5816835369",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:43Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15291,9 +14304,7 @@
       "source": "github",
       "id": "947737843"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.6",
@@ -15308,7 +14319,6 @@
         "id": "874336ad-3dfa-467f-8356-3de7d8b2b93d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:45Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15322,9 +14332,7 @@
       "source": "github",
       "id": "907172461"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.6",
@@ -15377,7 +14385,6 @@
         "id": "02cdb980-1dcd-4345-a8d1-d3f3f522d04b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15391,9 +14398,7 @@
       "source": "github",
       "id": "958733763"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.1",
@@ -15408,7 +14413,6 @@
         "id": "8d526532-7125-4b3c-b180-901914ead390",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:50Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15422,9 +14426,7 @@
       "source": "github",
       "id": "941149907"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -15468,7 +14470,6 @@
         "id": "3f9a95e0-3a22-4ff8-8c92-60d89d847f5c",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:53Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15482,9 +14483,7 @@
       "source": "github",
       "id": "958329576"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.5",
@@ -15521,7 +14520,6 @@
         "id": "fcde90d4-5b99-4262-8101-7a507bf05915",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:55Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15535,9 +14533,7 @@
       "source": "github",
       "id": "938652536"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -15552,7 +14548,6 @@
         "id": "fbef362d-ba4b-4708-8579-332d2a57582d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:13:57Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15566,9 +14561,7 @@
       "source": "github",
       "id": "903050511"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.4.0",
@@ -15614,7 +14607,6 @@
         "id": "61942e80-99c9-4856-90c8-5a11ac76ade5",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15628,9 +14620,7 @@
       "source": "github",
       "id": "903561149"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "3.2.0",
@@ -15645,7 +14635,6 @@
         "id": "523175e8-6767-4387-af85-a46f256a6390",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15659,9 +14648,7 @@
       "source": "github",
       "id": "966702385"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -15676,7 +14663,6 @@
         "id": "387ef1e6-0e4c-43ea-9416-bf3b399a3c76",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:08Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15690,9 +14676,7 @@
       "source": "github",
       "id": "889798967"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "2.0.3",
@@ -15707,7 +14691,6 @@
         "id": "f25f6cdb-0623-4a04-bac2-f1b26331b432",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15721,9 +14704,7 @@
       "source": "github",
       "id": "896675928"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -15773,7 +14754,6 @@
         "id": "20c38c50-831e-478a-9f52-064d3ad8a6ce",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:13Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15787,9 +14767,7 @@
       "source": "github",
       "id": "961429605"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -15804,7 +14782,6 @@
         "id": "09a2ecf8-1774-490e-8542-2b25a6445a58",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:17Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15818,9 +14795,7 @@
       "source": "github",
       "id": "928410809"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -15847,7 +14822,6 @@
         "id": "e532ff07-269a-47fb-98ad-6315d7081ccb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15861,9 +14835,7 @@
       "source": "github",
       "id": "958998300"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -15914,7 +14886,6 @@
         "id": "0b245c5f-ba2b-4e8d-b9db-26681b0fa2e3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:23Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15928,9 +14899,7 @@
       "source": "github",
       "id": "949523404"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.1",
@@ -15945,7 +14914,6 @@
         "id": "9826cb7a-bc6f-41d9-b9b7-f76f781c1eca",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:25Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15959,9 +14927,7 @@
       "source": "github",
       "id": "901420381"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -15982,7 +14948,6 @@
         "id": "ff2b0e88-9426-4aa1-bfb1-165cc810344f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:27Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -15996,9 +14961,7 @@
       "source": "github",
       "id": "896967375"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.8",
@@ -16031,7 +14994,6 @@
         "id": "bdeb1cca-49ce-476a-87a2-f27c30b086bd",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16045,9 +15007,7 @@
       "source": "github",
       "id": "970353793"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -16062,7 +15022,6 @@
         "id": "cb9e2dc2-e335-4271-8e8d-5aff43cd389b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:36Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16076,9 +15035,7 @@
       "source": "github",
       "id": "938867662"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.8",
@@ -16105,7 +15062,6 @@
         "id": "6275eefc-3f97-4a30-85ca-9678de62bdcf",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16119,9 +15075,7 @@
       "source": "github",
       "id": "957763921"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.3",
@@ -16168,7 +15122,6 @@
         "id": "1aa1e801-80d9-4ea1-80c2-e7d037ce98e3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:41Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16182,9 +15135,7 @@
       "source": "github",
       "id": "952738950"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -16226,7 +15177,6 @@
         "id": "ea41dc54-96fd-41db-90ec-92a1a45e7151",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16240,9 +15190,7 @@
       "source": "github",
       "id": "918433694"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.5",
@@ -16263,7 +15211,6 @@
         "id": "7f7268e0-670a-4630-83da-acc1090264c3",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:48Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16277,9 +15224,7 @@
       "source": "github",
       "id": "957668156"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.9",
@@ -16369,7 +15314,6 @@
         "id": "5c1709d9-3f57-4dbd-a727-5ce383a59c32",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:54Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16383,9 +15327,7 @@
       "source": "github",
       "id": "898075293"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -16406,7 +15348,6 @@
         "id": "f79220af-20c6-4d21-b4f6-13f176b7f1d8",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:56Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16420,9 +15361,7 @@
       "source": "github",
       "id": "951336068"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -16458,7 +15397,6 @@
         "id": "10bb9deb-9384-4e4d-935e-9d830015a43e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:14:59Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16472,9 +15410,7 @@
       "source": "github",
       "id": "956577908"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -16499,7 +15435,6 @@
         "id": "4bd856fc-761e-43e3-9236-7b996b6b7ec7",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:01Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16513,9 +15448,7 @@
       "source": "github",
       "id": "940089654"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -16572,7 +15505,6 @@
         "id": "a038d159-c51e-49ef-aa02-c794e8a5cb94",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16586,9 +15518,7 @@
       "source": "github",
       "id": "907849260"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -16609,7 +15539,6 @@
         "id": "7d8aa739-c9c6-4afd-991b-cf425be475db",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16623,9 +15552,7 @@
       "source": "github",
       "id": "950939450"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -16656,7 +15583,6 @@
         "id": "1ff3b09d-5c19-4254-849f-34244dc6ee88",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:09Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16670,9 +15596,7 @@
       "source": "github",
       "id": "952312114"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -16708,7 +15632,6 @@
         "id": "1dd6d7a5-ba98-4fce-b4a4-d0541df84569",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:12Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16722,9 +15645,7 @@
       "source": "github",
       "id": "926414362"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -16789,7 +15710,6 @@
         "id": "51d74701-2a57-476f-a5ed-75a93be58f42",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:16Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16803,9 +15723,7 @@
       "source": "github",
       "id": "948148972"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.2",
@@ -16820,7 +15738,6 @@
         "id": "3cccaee3-1b35-4a97-bc23-d1a8603aa366",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:18Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16834,9 +15751,7 @@
       "source": "github",
       "id": "950083186"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -16857,7 +15772,6 @@
         "id": "162d7f33-0f96-47d7-980b-361fb0ddc381",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16871,9 +15785,7 @@
       "source": "github",
       "id": "902526658"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.1",
@@ -16888,7 +15800,6 @@
         "id": "aa301cee-889b-4606-b66b-fd9dc1e77817",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16902,9 +15813,7 @@
       "source": "github",
       "id": "898031405"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.25",
@@ -16955,7 +15864,6 @@
         "id": "6b136dc5-ffcf-41b0-bf5f-e5dff5d47981",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:26Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -16969,9 +15877,7 @@
       "source": "github",
       "id": "956274853"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -17036,7 +15942,6 @@
         "id": "cbc3c68c-82c8-4a9f-86b9-78e3893df494",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:30Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17050,9 +15955,7 @@
       "source": "github",
       "id": "911417007"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.77",
@@ -17085,7 +15988,6 @@
         "id": "8b5bb45d-a025-4e7b-a185-dbb5e349af32",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:32Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17099,9 +16001,7 @@
       "source": "github",
       "id": "947289080"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -17162,7 +16062,6 @@
         "id": "5f14d558-f478-43b5-8dde-20c9997f196a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:36Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17176,9 +16075,7 @@
       "source": "github",
       "id": "925674818"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -17199,7 +16096,6 @@
         "id": "f3285cc9-1d33-472f-aa28-0b9d7723f877",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:38Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17213,9 +16109,7 @@
       "source": "github",
       "id": "935070409"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -17247,7 +16141,6 @@
         "id": "c7876b07-1fe3-4006-a104-93ef9f9e1669",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:40Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17261,9 +16154,7 @@
       "source": "github",
       "id": "948027955"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -17284,7 +16175,6 @@
         "id": "e69c8abd-6964-48b1-a7cb-89c926932c47",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:42Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17298,9 +16188,7 @@
       "source": "github",
       "id": "943452732"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -17315,7 +16203,6 @@
         "id": "5f5a497c-673d-4988-b86b-c3bcaaf1a317",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:47Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17329,9 +16216,7 @@
       "source": "github",
       "id": "959274715"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -17346,7 +16231,6 @@
         "id": "02b79b89-cce8-4401-aa1f-255b01587266",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:49Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17360,9 +16244,7 @@
       "source": "github",
       "id": "898475770"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.0",
@@ -17377,7 +16259,6 @@
         "id": "a8a08cbd-074f-49ba-8f98-3ef8583cc93b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:52Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17391,9 +16272,7 @@
       "source": "github",
       "id": "911984754"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -17429,7 +16308,6 @@
         "id": "4e6fc5a4-eecb-46e4-a3ce-4310cbb8c3f4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:56Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17443,9 +16321,7 @@
       "source": "github",
       "id": "901627660"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -17478,7 +16354,6 @@
         "id": "ccb9aa0c-bbf5-46e6-a5f0-a5b4c11d519a",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:15:58Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17492,9 +16367,7 @@
       "source": "github",
       "id": "898698501"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -17537,7 +16410,6 @@
         "id": "a24e506b-b16b-412d-b806-fcf7e39b4549",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17551,9 +16423,7 @@
       "source": "github",
       "id": "941391898"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.10.0",
@@ -17568,7 +16438,6 @@
         "id": "bce1c06f-6325-418a-91e2-0ff2f6cf8ffc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17582,9 +16451,7 @@
       "source": "github",
       "id": "950380608"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.3.0",
@@ -17613,7 +16480,6 @@
         "id": "aeca0d6b-ed78-4634-a29a-6d08f71de2b6",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17627,9 +16493,7 @@
       "source": "github",
       "id": "947753431"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.5",
@@ -17650,7 +16514,6 @@
         "id": "a33de229-5e89-468d-aa2a-570b0f6e3dfa",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:08Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17664,9 +16527,7 @@
       "source": "github",
       "id": "902421970"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.1.1",
@@ -17692,7 +16553,6 @@
         "id": "cd63d589-6f0e-4d2d-8c9c-b6857f48cc62",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:10Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17706,9 +16566,7 @@
       "source": "github",
       "id": "982820266"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.0",
@@ -17723,7 +16581,6 @@
         "id": "c859bceb-143a-43dc-84e6-8ad8f707fcb0",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:12Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17737,9 +16594,7 @@
       "source": "github",
       "id": "909607678"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -17760,7 +16615,6 @@
         "id": "0278fd92-a009-4a47-a6df-5f77db37e6ab",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:14Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17774,9 +16628,7 @@
       "source": "github",
       "id": "978843359"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -17805,7 +16657,6 @@
         "id": "be45349a-793d-44d9-b2c6-6d4a30785a18",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:17Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17819,9 +16670,7 @@
       "source": "github",
       "id": "949740349"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.1",
@@ -17836,7 +16685,6 @@
         "id": "17829ab3-ae45-4fdd-95dc-4bb82a75752d",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:18Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17850,9 +16698,7 @@
       "source": "github",
       "id": "908705399"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.1",
@@ -17867,7 +16713,6 @@
         "id": "c636fa7e-796e-40a3-bdfc-52d7f4b82db4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:20Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17881,9 +16726,7 @@
       "source": "github",
       "id": "944976593"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.3.3",
@@ -17898,7 +16741,6 @@
         "id": "9297bbe7-81bc-4a7c-97ba-fcaaf8c7a626",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:22Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17912,9 +16754,7 @@
       "source": "github",
       "id": "908799323"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.0.0",
@@ -17946,7 +16786,6 @@
         "id": "c978017d-b94a-4d0c-a46e-5395cb94a67e",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:25Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -17960,9 +16799,7 @@
       "source": "github",
       "id": "946258129"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "2.0.1",
@@ -18000,7 +16837,6 @@
         "id": "816a9400-2e2b-4697-8fbb-2a22fd81de74",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:33Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18014,9 +16850,7 @@
       "source": "github",
       "id": "914149601"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.2",
@@ -18037,7 +16871,6 @@
         "id": "bdcb0c25-b41c-4e61-ad25-89e5ddb35dcc",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:36Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18051,9 +16884,7 @@
       "source": "github",
       "id": "961291556"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -18079,7 +16910,6 @@
         "id": "2a679bdd-d106-4510-99ea-b4802070d30f",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:46Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18093,9 +16923,7 @@
       "source": "github",
       "id": "952939763"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.0.0",
@@ -18126,7 +16954,6 @@
         "id": "d0568ded-6678-4940-b344-9644e04e6d7b",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:50Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18140,9 +16967,7 @@
       "source": "github",
       "id": "898806068"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "1.10.0",
@@ -18157,7 +16982,6 @@
         "id": "29cf2977-4a42-44f0-8e62-f92ca8391412",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:16:56Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18171,9 +16995,7 @@
       "source": "github",
       "id": "952463457"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "",
@@ -18188,7 +17010,6 @@
         "id": "963aac9c-4999-4ce6-93c9-43d4b2de16bb",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:17:00Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18202,9 +17023,7 @@
       "source": "github",
       "id": "900260982"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.9",
@@ -18219,7 +17038,6 @@
         "id": "3288499d-b820-45c9-8abf-60c050c5c741",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:17:02Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18233,9 +17051,7 @@
       "source": "github",
       "id": "898806615"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.2.1",
@@ -18250,7 +17066,6 @@
         "id": "9f38c975-9a2a-484f-8173-562153f515e4",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:17:04Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }
@@ -18264,9 +17079,7 @@
       "source": "github",
       "id": "899309258"
     },
-    "version_detail": {
-      "version": "0.0.1-seed"
-    },
+    "version": "0.0.1-seed",
     "packages": [
       {
         "version": "0.1.0",
@@ -18281,7 +17094,6 @@
         "id": "53bef572-b137-447a-bb2f-9fdd37926619",
         "is_latest": true,
         "published_at": "0001-01-01T00:00:00Z",
-        "release_date": "2025-05-16T19:17:06Z",
         "updated_at": "0001-01-01T00:00:00Z"
       }
     }

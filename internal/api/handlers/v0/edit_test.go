@@ -34,9 +34,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			Source: "github",
 			ID:     "domdomegg/test-server",
 		},
-		VersionDetail: model.VersionDetail{
-			Version: "1.0.0",
-		},
+		Version: "1.0.0",
 	}
 	published, err := registryService.Publish(testServer)
 	assert.NoError(t, err)
@@ -56,9 +54,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			Source: "github",
 			ID:     "other/test-server",
 		},
-		VersionDetail: model.VersionDetail{
-			Version: "1.0.0",
-		},
+		Version: "1.0.0",
 	}
 	otherPublished, err := registryService.Publish(otherServer)
 	assert.NoError(t, err)
@@ -78,9 +74,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			Source: "github",
 			ID:     "domdomegg/deleted-server",
 		},
-		VersionDetail: model.VersionDetail{
-			Version: "1.0.0",
-		},
+		Version: "1.0.0",
 	}
 	deletedPublished, err := registryService.Publish(deletedServer)
 	assert.NoError(t, err)
@@ -120,9 +114,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Source: "github",
 					ID:     "domdomegg/test-server",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.1",
-				},
+				Version: "1.0.1",
 			},
 			serverID:       testServerID,
 			expectedStatus: http.StatusOK,
@@ -141,7 +133,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:          "io.github.domdomegg/test-server",
 				Description:   "Test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				Version: "1.0.0",
 			},
 			serverID:       testServerID,
 			expectedStatus: http.StatusUnauthorized,
@@ -153,7 +145,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:          "io.github.domdomegg/test-server",
 				Description:   "Test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				Version: "1.0.0",
 			},
 			serverID:       testServerID,
 			expectedStatus: http.StatusUnauthorized,
@@ -175,7 +167,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:          "io.github.domdomegg/test-server",
 				Description:   "Updated test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				Version: "1.0.0",
 			},
 			serverID:       testServerID,
 			expectedStatus: http.StatusForbidden,
@@ -197,7 +189,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:          "io.github.other/test-server",
 				Description:   "Updated test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				Version: "1.0.0",
 			},
 			serverID:       otherServerID,
 			expectedStatus: http.StatusForbidden,
@@ -219,7 +211,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:          "io.github.domdomegg/nonexistent-server",
 				Description:   "Updated test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				Version: "1.0.0",
 			},
 			serverID:       "550e8400-e29b-41d4-a716-446655440999", // Non-existent ID
 			expectedStatus: http.StatusNotFound,
@@ -241,7 +233,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:          "invalid-name-format", // Missing namespace/name format
 				Description:   "Test server",
-				VersionDetail: model.VersionDetail{Version: "1.0.0"},
+				Version: "1.0.0",
 			},
 			serverID:       testServerID,
 			expectedStatus: http.StatusBadRequest,
@@ -269,9 +261,7 @@ func TestEditServerEndpoint(t *testing.T) {
 					Source: "github",
 					ID:     "domdomegg/deleted-server",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.1",
-				},
+				Version: "1.0.1",
 			},
 			serverID:       deletedServerID,
 			expectedStatus: http.StatusBadRequest,

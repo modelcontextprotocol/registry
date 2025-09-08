@@ -29,9 +29,7 @@ func TestImportService_LocalFile(t *testing.T) {
 				Source: "github",
 				ID:     "123",
 			},
-			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
-			},
+			Version: "1.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
 					ID:          "test-id-1",
@@ -75,9 +73,7 @@ func TestImportService_HTTPFile(t *testing.T) {
 				Source: "github",
 				ID:     "123",
 			},
-			VersionDetail: model.VersionDetail{
-				Version: "2.0.0",
-			},
+			Version: "2.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
 					ID:          "test-id-2",
@@ -120,9 +116,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 				Source: "github",
 				ID:     "123",
 			},
-			VersionDetail: model.VersionDetail{
-				Version: "1.0.0",
-			},
+			Version: "1.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
 					ID:          "api-test-id-1",
@@ -140,9 +134,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 				Source: "github",
 				ID:     "456",
 			},
-			VersionDetail: model.VersionDetail{
-				Version: "2.0.0",
-			},
+			Version: "2.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
 					ID:          "api-test-id-2",

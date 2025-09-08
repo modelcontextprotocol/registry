@@ -27,9 +27,7 @@ func TestValidate(t *testing.T) {
 					Source: "github",
 					ID:     "owner/repo",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:      "test-package",
@@ -58,9 +56,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://bitbucket.org/owner/repo",
 					Source: "bitbucket", // Not in validSources
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidRepositoryURL.Error(),
 		},
@@ -73,9 +69,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner", // Missing repo name
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidRepositoryURL.Error(),
 		},
@@ -88,9 +82,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://gitlab.com", // Missing owner and repo
 					Source: "gitlab",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidRepositoryURL.Error(),
 		},
@@ -104,9 +96,7 @@ func TestValidate(t *testing.T) {
 					Source:    "github",
 					Subfolder: "servers/my-server",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: "",
 		},
@@ -120,9 +110,7 @@ func TestValidate(t *testing.T) {
 					Source:    "github",
 					Subfolder: "../parent/folder",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidSubfolderPath.Error(),
 		},
@@ -136,9 +124,7 @@ func TestValidate(t *testing.T) {
 					Source:    "github",
 					Subfolder: "/absolute/path",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidSubfolderPath.Error(),
 		},
@@ -152,9 +138,7 @@ func TestValidate(t *testing.T) {
 					Source:    "github",
 					Subfolder: "servers/my-server/",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidSubfolderPath.Error(),
 		},
@@ -168,9 +152,7 @@ func TestValidate(t *testing.T) {
 					Source:    "github",
 					Subfolder: "servers/my server",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidSubfolderPath.Error(),
 		},
@@ -184,9 +166,7 @@ func TestValidate(t *testing.T) {
 					Source:    "github",
 					Subfolder: "servers//my-server",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidSubfolderPath.Error(),
 		},
@@ -199,9 +179,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:      "test package with spaces",
@@ -224,9 +202,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:      "valid-package",
@@ -257,9 +233,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -278,9 +252,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -299,9 +271,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -320,9 +290,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -341,9 +309,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -366,9 +332,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: nil,
 				Remotes:  nil,
 			},
@@ -383,9 +347,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{},
 				Remotes:  []model.Transport{},
 			},
@@ -836,9 +798,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -856,9 +816,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -878,9 +836,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -899,9 +855,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -924,9 +878,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -944,9 +896,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -967,9 +917,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -988,9 +936,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1009,9 +955,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1030,9 +974,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -1047,9 +989,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -1064,9 +1004,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "sse",
@@ -1081,9 +1019,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "sse",
@@ -1098,9 +1034,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "stdio",
@@ -1114,9 +1048,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "websocket",
@@ -1132,9 +1064,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1153,9 +1083,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -1232,9 +1160,7 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 					Source: "github",
 					ID:     "owner/repo",
 				},
-				VersionDetail: model.VersionDetail{
-					Version: "1.0.0",
-				},
+				Version: "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:      tc.identifier,
@@ -1270,9 +1196,7 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 			Source: "github",
 			ID:     "owner/repo",
 		},
-		VersionDetail: model.VersionDetail{
-			Version: "1.0.0",
-		},
+		Version: "1.0.0",
 		Packages: []model.Package{
 			{
 				Identifier:      "test-package",

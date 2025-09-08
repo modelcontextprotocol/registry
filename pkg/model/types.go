@@ -90,8 +90,3 @@ type Argument struct {
 	IsRepeated         bool         `json:"is_repeated,omitempty"`
 	ValueHint          string       `json:"value_hint,omitempty"`
 }
-
-// VersionDetail represents the version details of a server (pure MCP spec, no registry metadata)
-type VersionDetail struct {
-	Version string `json:"version" minLength:"1"`
-}

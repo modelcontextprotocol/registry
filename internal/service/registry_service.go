@@ -102,8 +102,8 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 
 	// Check this isn't a duplicate version
 	for _, server := range existingServerVersions {
-		existingVersion := server.VersionDetail.Version
-		if existingVersion == serverJSON.VersionDetail.Version {
+		existingVersion := server.Version
+		if existingVersion == serverJSON.Version {
 			return nil, database.ErrInvalidVersion
 		}
 	}
@@ -117,8 +117,8 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 			existingPublishedAt = existingLatest.Meta.Official.PublishedAt
 		}
 		isNewLatest = CompareVersions(
-			serverJSON.VersionDetail.Version,
-			existingLatest.VersionDetail.Version,
+			serverJSON.Version,
+			existingLatest.Version,
 			publishTime,
 			existingPublishedAt,
 		) > 0
@@ -138,7 +138,6 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		PublishedAt: publishTime,
 		UpdatedAt:   publishTime,
 		IsLatest:    isNewLatest,
-		ReleaseDate: publishTime.Format(time.RFC3339),
 	}
 
 	// Create server in database
