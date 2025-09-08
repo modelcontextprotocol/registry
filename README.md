@@ -70,6 +70,9 @@ Pre-built Docker images are automatically published to GitHub Container Registry
 # Run latest stable release
 docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:latest
 
+# Run latest from main branch (continuous deployment)
+docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main
+
 # Run specific release version
 docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:v1.0.0
 
@@ -79,7 +82,8 @@ docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main-20250906-abc1
 
 **Available tags:** 
 - **Releases**: `latest`, `v1.0.0`, `v1.1.0`, etc.
-- **Development**: `main-<date>-<sha>` (from main branch commits)
+- **Continuous**: `main` (latest main branch build)
+- **Development**: `main-<date>-<sha>` (specific commit builds)
 
 </details>
 
