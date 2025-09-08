@@ -330,6 +330,7 @@
       ]
     },
     "Argument": {
+      "description": "Warning: Arguments construct command-line parameters that may contain user-provided input. This creates potential command injection risks if clients execute commands in a shell environment. For example, a malicious argument value like ';rm -rf ~/Development' could execute dangerous commands. Clients should prefer non-shell execution methods (e.g., posix_spawn) when possible to eliminate injection risks entirely. Where not possible, clients should obtain consent from users or agents to run the resolved command before execution.",
       "anyOf": [
         {
           "$ref": "#/$defs/PositionalArgument"
