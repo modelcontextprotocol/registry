@@ -17,18 +17,51 @@ By the end of this tutorial, you'll have:
 
 ## Step 1: Install the Publisher CLI
 
-<!-- TODO: update once #358 solved -->
+You can either download a pre-built binary or build from source.
 
-Download and build the MCP publisher tool:
+### Option A: Download Pre-built Binary (Recommended)
+
+Download the latest release for your platform:
 
 ```bash
-# Clone the registry repository (requires Go 1.24+)
+# macOS Apple Silicon (M1/M2/M3)
+curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_darwin_arm64.tar.gz | tar xz
+
+# macOS Intel
+curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_darwin_amd64.tar.gz | tar xz
+
+# Linux x86_64
+curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_linux_amd64.tar.gz | tar xz
+
+# Linux ARM64
+curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_linux_arm64.tar.gz | tar xz
+
+# Windows x86_64 (PowerShell)
+Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_windows_amd64.tar.gz" -OutFile "mcp-publisher.tar.gz"
+tar xf mcp-publisher.tar.gz
+
+# Windows ARM64 (PowerShell)
+Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_windows_arm64.tar.gz" -OutFile "mcp-publisher.tar.gz"
+tar xf mcp-publisher.tar.gz
+
+# Add to PATH (macOS/Linux)
+chmod +x mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
+
+# Add to PATH (Windows): Move mcp-publisher.exe to a directory in your PATH
+```
+
+### Option B: Build from Source
+
+If you prefer to build from source (requires Go 1.24+):
+
+```bash
+# Clone the registry repository
 git clone https://github.com/modelcontextprotocol/registry
 cd registry
 make publisher
 
-# The binary will be at cmd/publisher/bin/mcp-publisher
-export PATH=$PATH:$(pwd)/cmd/publisher/bin
+# The binary will be at bin/mcp-publisher
+export PATH=$PATH:$(pwd)/bin
 ```
 
 ## Step 2: Initialize Your server.json
