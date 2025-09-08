@@ -83,7 +83,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:            pulumi.String("mcp-registry"),
-							Image:           pulumi.String("ghcr.io/modelcontextprotocol/registry:latest"),
+							Image:           pulumi.String("ghcr.io/modelcontextprotocol/registry:main"),
 							ImagePullPolicy: pulumi.String("Always"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{

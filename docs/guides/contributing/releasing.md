@@ -16,8 +16,19 @@ The release workflow will automatically:
 
 ## After Release
 
-- Docker images will be available at `ghcr.io/modelcontextprotocol/registry:latest`
+- Docker images will be available at:
+  - `ghcr.io/modelcontextprotocol/registry:latest` - Latest stable release
+  - `ghcr.io/modelcontextprotocol/registry:vX.Y.Z` - Specific release version
 - Binaries can be downloaded from the GitHub release page
+
+## Docker Image Tags
+
+The registry publishes different Docker image tags for different use cases:
+
+- **`:latest`** - Latest stable release (updated only on releases)
+- **`:vX.Y.Z`** - Specific release versions (e.g., `:v1.0.0`)
+- **`:main`** - Rolling tag updated on every push to main branch (continuous deployment)
+- **`:main-YYYYMMDD-sha`** - Specific development builds from main branch
 
 ## Versioning
 
