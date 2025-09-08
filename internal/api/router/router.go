@@ -94,8 +94,8 @@ func WithSkipPaths(paths ...string) MiddlewareOption {
 // NewHumaAPI creates a new Huma API with all routes registered
 func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.ServeMux, metrics *telemetry.Metrics) huma.API {
 	// Create Huma API configuration
-	humaConfig := huma.DefaultConfig("MCP Registry API", "1.0.0")
-	humaConfig.Info.Description = "A community driven registry service for Model Context Protocol (MCP) servers."
+	humaConfig := huma.DefaultConfig("Official MCP Registry", "1.0.0")
+	humaConfig.Info.Description = "A community driven registry service for Model Context Protocol (MCP) servers.\n\n[GitHub repository](https://github.com/modelcontextprotocol/registry) | [Documentation](https://github.com/modelcontextprotocol/registry/tree/main/docs)"
 	// Disable $schema property in responses: https://github.com/danielgtaylor/huma/issues/230
 	humaConfig.CreateHooks = []func(huma.Config) huma.Config{}
 
@@ -113,10 +113,10 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 	// Add /metrics for Prometheus metrics using promhttp
 	mux.Handle("/metrics", metrics.PrometheusHandler())
 
-	// Add redirect from / to /docs
+	// Add redirect from / to docs
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			http.Redirect(w, r, "/docs", http.StatusMovedPermanently)
+			http.Redirect(w, r, "https://github.com/modelcontextprotocol/registry/tree/main/docs", http.StatusTemporaryRedirect)
 		}
 	})
 
