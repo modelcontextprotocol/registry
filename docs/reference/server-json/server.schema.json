@@ -115,7 +115,8 @@
         },
         "file_sha256": {
           "type": "string",
-          "description": "SHA-256 hash of the package file for integrity verification.",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash of the package file for integrity verification. Required for MCPB packages and optional for other package types. Authors are responsible for generating correct SHA-256 hashes when creating server.json. If present, MCP clients must validate the downloaded file matches the hash before running packages to ensure file integrity.",
           "example": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
         },
         "runtime_hint": {

@@ -222,6 +222,7 @@ func TestPublishEndpoint(t *testing.T) {
 						RegistryType: model.RegistryTypeMCPB,
 						Identifier:   "https://github.com/example/server/releases/download/v1.0.0/server.tar.gz",
 						Version:      "1.0.0",
+						FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
 						Transport: model.Transport{
 							Type: model.TransportTypeStdio,
 						},

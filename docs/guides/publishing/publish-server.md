@@ -219,6 +219,15 @@ The official MCP registry currently only supports the official Docker registry (
 ### Requirements
 **MCP reference** - MCPB package URLs must contain "mcp" somewhere within them, to ensure the correct artifact has been uploaded. This may be with the `.mcpb` extension or in the name of your repository.
 
+**File integrity** - MCPB packages must include a SHA-256 hash for file integrity verification. This is required at publish time and MCP clients will validate this hash before installation.
+
+### How to Generate File Hashes
+Calculate the SHA-256 hash of your MCPB file:
+
+```bash
+openssl dgst -sha256 server.mcpb
+```
+
 ### Example server.json
 ```json
 {
@@ -226,11 +235,18 @@ The official MCP registry currently only supports the official Docker registry (
   "packages": [
     {
       "registry_type": "mcpb",
-      "identifier": "https://github.com/you/your-repo/releases/download/v1.0.0/server.mcpb"
+      "identifier": "https://github.com/you/your-repo/releases/download/v1.0.0/server.mcpb",
+      "file_sha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
     }
   ]
 }
 ```
+
+### File Hash Validation
+- **Authors** are responsible for generating correct SHA-256 hashes when creating server.json
+- **MCP clients** validate the hash before installing packages to ensure file integrity
+- **The official registry** stores hashes but does not validate them
+- **Subregistries** may choose to implement their own validation. This enables them to perform security scanning on MCPB files, and ensure clients get the same security scanned content.
 
 The official MCP registry currently only supports artifacts hosted on GitHub or GitLab releases.
 

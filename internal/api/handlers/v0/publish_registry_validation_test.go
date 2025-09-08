@@ -98,6 +98,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 					Version:      "0.0.36",
+					FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
 					Transport: model.Transport{
 						Type: model.TransportTypeStdio,
 					},
@@ -149,6 +150,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 					Version:      "1.0.0",
+					FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
 					Transport: model.Transport{
 						Type: model.TransportTypeStdio,
 					},
@@ -209,6 +211,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 					RegistryType: model.RegistryTypeMCPB,
 					Identifier:   "https://github.com/microsoft/playwright-mcp/releases/download/v0.0.36/playwright-mcp-extension-v0.0.36.zip",
 					Version:      "1.0.0",
+					FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
 					Transport: model.Transport{
 						Type: model.TransportTypeStdio,
 					},
