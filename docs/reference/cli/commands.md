@@ -6,15 +6,10 @@ See the [publishing guide](../../guides/publishing/publish-server.md) for a walk
 
 ## Installation
 
-<!-- TODO: update once #358 solved -->
+Install via Homebrew (macOS/Linux):
 
 ```bash
-# Build from source (from repository root)
-make publisher
-# Binary created at ./cmd/publisher/bin/mcp-publisher
-
-# Install globally (optional)
-cp ./cmd/publisher/bin/mcp-publisher /usr/local/bin/
+$ brew install mcp-publisher
 ```
 
 ## Global Options

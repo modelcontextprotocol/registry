@@ -50,7 +50,15 @@ chmod +x mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
 # Add to PATH (Windows): Move mcp-publisher.exe to a directory in your PATH
 ```
 
-### Option B: Build from Source
+### Option B: Install with Homebrew (macOS/Linux)
+
+Install via Homebrew (macOS/Linux):
+
+```bash
+$ brew install mcp-publisher
+```
+
+### Option C: Build from Source
 
 If you prefer to build from source (requires Go 1.24+):
 
