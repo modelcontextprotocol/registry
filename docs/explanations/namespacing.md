@@ -22,7 +22,7 @@ Publishing to a namespace requires proving you control the corresponding identit
 - OIDC tokens in GitHub Actions workflows
 
 **Domain namespaces** (`com.company.*`):
-- DNS verification: TXT record at `_mcp-registry.company.com`
+- DNS verification: TXT record at `company.com`
 - HTTP verification: File at `https://company.com/.well-known/mcp-registry-auth`
 
 ## Namespace Scoping
