@@ -17,7 +17,7 @@ type RegistryExtensions struct {
 // ServerListResponse represents the paginated server list response
 type ServerListResponse struct {
 	Servers  []ServerJSON `json:"servers"`
-	Metadata *Metadata    `json:"metadata,omitempty"`
+	Metadata Metadata     `json:"metadata"`
 }
 
 // ServerMeta represents the structured metadata with known extension fields
@@ -42,6 +42,5 @@ type ServerJSON struct {
 // Metadata represents pagination metadata
 type Metadata struct {
 	NextCursor string `json:"next_cursor,omitempty"`
-	Count      int    `json:"count,omitempty"`
-	Total      int    `json:"total,omitempty"`
+	Count      int    `json:"count"`
 }

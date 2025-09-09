@@ -12,13 +12,6 @@ import (
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
-// Metadata contains pagination metadata
-type Metadata struct {
-	NextCursor string `json:"next_cursor,omitempty"`
-	Count      int    `json:"count,omitempty"`
-	Total      int    `json:"total,omitempty"`
-}
-
 // ListServersInput represents the input for listing servers
 type ListServersInput struct {
 	Cursor       string `query:"cursor" doc:"Pagination cursor (UUID)" format:"uuid" required:"false" example:"550e8400-e29b-41d4-a716-446655440000"`
@@ -26,12 +19,6 @@ type ListServersInput struct {
 	UpdatedSince string `query:"updated_since" doc:"Filter servers updated since timestamp (RFC3339 datetime)" required:"false" example:"2025-08-07T13:15:04.280Z"`
 	Search       string `query:"search" doc:"Search servers by name (substring match)" required:"false" example:"filesystem"`
 	Version      string `query:"version" doc:"Filter by version ('latest' for latest version, or an exact version like '1.2.3')" required:"false" example:"latest"`
-}
-
-// ListServersBody represents the paginated server list response body
-type ListServersBody struct {
-	Servers  []apiv0.ServerJSON `json:"servers" doc:"List of MCP servers with extensions"`
-	Metadata *Metadata          `json:"metadata,omitempty" doc:"Pagination metadata"`
 }
 
 // ServerDetailInput represents the input for getting server details
@@ -49,7 +36,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "List MCP servers",
 		Description: "Get a paginated list of MCP servers from the registry",
 		Tags:        []string{"servers"},
-	}, func(_ context.Context, input *ListServersInput) (*Response[ListServersBody], error) {
+	}, func(_ context.Context, input *ListServersInput) (*Response[apiv0.ServerListResponse], error) {
 		// Validate cursor if provided
 		if input.Cursor != "" {
 			_, err := uuid.Parse(input.Cursor)
@@ -94,21 +81,14 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get registry list", err)
 		}
 
-		// Build response body
-		body := ListServersBody{
-			Servers: servers,
-		}
-
-		// Add metadata if there's a next cursor
-		if nextCursor != "" {
-			body.Metadata = &Metadata{
-				NextCursor: nextCursor,
-				Count:      len(servers),
-			}
-		}
-
-		return &Response[ListServersBody]{
-			Body: body,
+		return &Response[apiv0.ServerListResponse]{
+			Body: apiv0.ServerListResponse{
+				Servers: servers,
+				Metadata: apiv0.Metadata{
+					NextCursor: nextCursor,
+					Count:      len(servers),
+				},
+			},
 		}, nil
 	})
 
