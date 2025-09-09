@@ -231,6 +231,15 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 	}
 
 	// Marshal updated server
+	// keep the id invariant: the json meta id must match the primary key id
+	if server.Meta == nil {
+		server.Meta = &apiv0.ServerMeta{}
+	}
+	if server.Meta.Official == nil {
+		server.Meta.Official = &apiv0.RegistryExtensions{}
+	}
+	server.Meta.Official.ID = id
+
 	valueJSON, err := json.Marshal(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal updated server: %w", err)
