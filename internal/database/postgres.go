@@ -230,22 +230,12 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 		return nil, ctx.Err()
 	}
 
-	// Marshal updated server
-	// fail fast if a request attempts to change the id in the json payload
-	if server.Meta != nil && server.Meta.Official != nil && server.Meta.Official.ID != "" && server.Meta.Official.ID != id {
-		return nil, fmt.Errorf("%w: meta.official.id (%s) must match path id (%s)", ErrInvalidInput, server.Meta.Official.ID, id)
-	}
-	// ensure json meta exists and set id if missing (but do not overwrite if present)
-	if server.Meta == nil {
-		server.Meta = &apiv0.ServerMeta{}
-	}
-	if server.Meta.Official == nil {
-		server.Meta.Official = &apiv0.RegistryExtensions{}
-	}
-	if server.Meta.Official.ID == "" {
-		server.Meta.Official.ID = id
+	// Validate that meta structure exists and ID matches path
+	if server.Meta == nil || server.Meta.Official == nil || server.Meta.Official.ID != id {
+		return nil, fmt.Errorf("%w: io.modelcontextprotocol.registry/official.id must match path id (%s)", ErrInvalidInput, id)
 	}
 
+	// Marshal updated server
 	valueJSON, err := json.Marshal(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal updated server: %w", err)
