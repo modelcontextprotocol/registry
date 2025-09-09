@@ -94,15 +94,15 @@ func (db *PostgreSQL) List(
 		}
 	}
 
-    // Add cursor pagination using primary key ID
-    if cursor != "" {
-        if _, err := uuid.Parse(cursor); err != nil {
-            return nil, "", fmt.Errorf("invalid cursor format: %w", err)
-        }
-        whereConditions = append(whereConditions, fmt.Sprintf("id > $%d", argIndex))
-        args = append(args, cursor)
-        argIndex++
-    }
+	// Add cursor pagination using primary key ID
+	if cursor != "" {
+		if _, err := uuid.Parse(cursor); err != nil {
+			return nil, "", fmt.Errorf("invalid cursor format: %w", err)
+		}
+		whereConditions = append(whereConditions, fmt.Sprintf("id > $%d", argIndex))
+		args = append(args, cursor)
+		argIndex++
+	}
 
 	// Build the WHERE clause
 	whereClause := ""
@@ -111,7 +111,7 @@ func (db *PostgreSQL) List(
 	}
 
 	// Simple query on servers table
-    query := fmt.Sprintf(`
+	query := fmt.Sprintf(`
         SELECT value
         FROM servers
         %s
