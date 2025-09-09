@@ -17,29 +17,30 @@ By the end of this tutorial, you'll have:
 
 ## Step 1: Install the Publisher CLI
 
-**macOS/Linux/WSL:**
+<details>
+<summary><strong>🍺 macOS/Linux/WSL: With Homebrew (recommended)</strong></summary>
 
-```bash
-curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
-```
-
-**Install with Homebrew (macOS/Linux):**
+Requires [Homebrew](https://brew.sh):
 
 ```bash
 brew install mcp-publisher
 ```
 
-**Windows (PowerShell):**
-
-```powershell
-$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq "Arm64") { "arm64" } else { "amd64" }; Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_windows_$arch.tar.gz" -OutFile "mcp-publisher.tar.gz"; tar xf mcp-publisher.tar.gz mcp-publisher.exe; rm mcp-publisher.tar.gz
-# Move mcp-publisher.exe to a directory in your PATH
-```
+</details>
 
 <details>
-<summary>Alternative: Build from Source</summary>
+<summary><strong>⬇️ macOS/Linux/WSL: Pre-built binaries</strong></summary>
 
-If you prefer to build from source (requires Git, Make and Go 1.24+):
+```bash
+curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
+```
+
+</details>
+
+<details>
+<summary><strong>🏗️ macOS/Linux/WSL: From source</strong></summary>
+
+Requires Git, Make and Go 1.24+:
 
 ```bash
 # Clone the registry repository
@@ -49,6 +50,16 @@ make publisher
 
 # The binary will be at bin/mcp-publisher
 export PATH=$PATH:$(pwd)/bin
+```
+
+</details>
+
+<details>
+<summary><strong>🪟 Windows PowerShell: Pre-built binaries</strong></summary>
+
+```powershell
+$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq "Arm64") { "arm64" } else { "amd64" }; Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_windows_$arch.tar.gz" -OutFile "mcp-publisher.tar.gz"; tar xf mcp-publisher.tar.gz mcp-publisher.exe; rm mcp-publisher.tar.gz
+# Move mcp-publisher.exe to a directory in your PATH
 ```
 
 </details>
