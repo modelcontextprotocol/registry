@@ -17,42 +17,23 @@ By the end of this tutorial, you'll have:
 
 ## Step 1: Install the Publisher CLI
 
-You can either download a pre-built binary or build from source.
-
-### Option A: Download Pre-built Binary (Recommended)
-
-Download the latest release for your platform:
+**macOS/Linux/WSL:**
 
 ```bash
-# macOS Apple Silicon (M1/M2/M3)
-curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_darwin_arm64.tar.gz | tar xz
-
-# macOS Intel
-curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_darwin_amd64.tar.gz | tar xz
-
-# Linux x86_64
-curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_linux_amd64.tar.gz | tar xz
-
-# Linux ARM64
-curl -L https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_linux_arm64.tar.gz | tar xz
-
-# Windows x86_64 (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_windows_amd64.tar.gz" -OutFile "mcp-publisher.tar.gz"
-tar xf mcp-publisher.tar.gz
-
-# Windows ARM64 (PowerShell)
-Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_windows_arm64.tar.gz" -OutFile "mcp-publisher.tar.gz"
-tar xf mcp-publisher.tar.gz
-
-# Add to PATH (macOS/Linux)
-chmod +x mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
-
-# Add to PATH (Windows): Move mcp-publisher.exe to a directory in your PATH
+curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz && sudo mv mcp-publisher /usr/local/bin/
 ```
 
-### Option B: Build from Source
+**Windows (PowerShell):**
 
-If you prefer to build from source (requires Go 1.24+):
+```powershell
+$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq "Arm64") { "arm64" } else { "amd64" }; Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_windows_$arch.tar.gz" -OutFile "mcp-publisher.tar.gz"; tar xf mcp-publisher.tar.gz
+# Move mcp-publisher.exe to a directory in your PATH
+```
+
+<details>
+<summary>Alternative: Build from Source</summary>
+
+If you prefer to build from source (requires Git, Make and Go 1.24+):
 
 ```bash
 # Clone the registry repository
@@ -63,6 +44,8 @@ make publisher
 # The binary will be at bin/mcp-publisher
 export PATH=$PATH:$(pwd)/bin
 ```
+
+</details>
 
 ## Step 2: Initialize Your server.json
 
