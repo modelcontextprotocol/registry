@@ -46,8 +46,8 @@ type Metadata struct {
 }
 
 func (s *ServerJSON) GetID() string {
-	if s.Meta != nil && s.Meta.IOModelContextProtocolRegistry != nil {
-		return s.Meta.IOModelContextProtocolRegistry.ID
+	if s.Meta != nil && s.Meta.Official != nil {
+		return s.Meta.Official.ID
 	}
 	return ""
 }
