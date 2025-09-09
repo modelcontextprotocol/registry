@@ -91,7 +91,7 @@ openssl genpkey -algorithm Ed25519 -out key.pem
 openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64
 
 # Add DNS TXT record:
-# _mcp-registry.example.com. IN TXT "v=MCPv1; k=ed25519; p=PUBLIC_KEY"
+# example.com. IN TXT "v=MCPv1; k=ed25519; p=PUBLIC_KEY"
 
 # Extract private key for login
 openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n'

@@ -302,7 +302,7 @@ This opens your browser for OAuth authentication.
 openssl genpkey -algorithm Ed25519 -out key.pem
 
 # Get public key for DNS record
-echo "_mcp-registry.yourcompany.com. IN TXT \"v=MCPv1; k=ed25519; p=$(openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64)\""
+echo "yourcompany.com. IN TXT \"v=MCPv1; k=ed25519; p=$(openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64)\""
 
 # Add the TXT record to your DNS, then login
 mcp-publisher login dns --domain yourcompany.com --private-key $(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')
