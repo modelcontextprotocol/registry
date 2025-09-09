@@ -26,7 +26,7 @@ func TestServersListEndpoint(t *testing.T) {
 		setupRegistryService func(service.RegistryService)
 		expectedStatus       int
 		expectedServers      []apiv0.ServerJSON
-		expectedMeta         *v0.Metadata
+		expectedMeta         *apiv0.Metadata
 		expectedError        string
 	}{
 		{
@@ -268,10 +268,7 @@ func TestServersListEndpoint(t *testing.T) {
 				assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 
 				// Parse response body
-				var resp struct {
-					Servers  []apiv0.ServerJSON `json:"servers"`
-					Metadata *v0.Metadata       `json:"metadata,omitempty"`
-				}
+				var resp apiv0.ServerListResponse
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				assert.NoError(t, err)
 
@@ -297,7 +294,7 @@ func TestServersListEndpoint(t *testing.T) {
 					default:
 						assert.NotEmpty(t, resp.Servers, "Expected at least one server")
 					}
-					
+
 					// General structure validation
 					for _, server := range resp.Servers {
 						assert.NotEmpty(t, server.Name)
@@ -311,11 +308,9 @@ func TestServersListEndpoint(t *testing.T) {
 				// Check metadata if expected
 				if tc.expectedMeta != nil {
 					assert.NotNil(t, resp.Metadata, "Expected metadata to be present")
-					if resp.Metadata != nil {
-						assert.Equal(t, tc.expectedMeta.Count, resp.Metadata.Count)
-						if tc.expectedMeta.NextCursor != "" {
-							assert.NotEmpty(t, resp.Metadata.NextCursor)
-						}
+					assert.Equal(t, tc.expectedMeta.Count, resp.Metadata.Count)
+					if tc.expectedMeta.NextCursor != "" {
+						assert.NotEmpty(t, resp.Metadata.NextCursor)
 					}
 				}
 			} else if tc.expectedError != "" {
@@ -336,7 +331,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 	testServer, err := registryService.Publish(apiv0.ServerJSON{
 		Name:        "com.example/test-server",
 		Description: "A test server",
-		Version: "1.0.0",
+		Version:     "1.0.0",
 	})
 	assert.NoError(t, err)
 
@@ -466,9 +461,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 		// Parse response body
-		var listResp struct {
-			Servers []apiv0.ServerJSON `json:"servers"`
-		}
+		var listResp apiv0.ServerListResponse
 		err = json.NewDecoder(resp.Body).Decode(&listResp)
 		assert.NoError(t, err)
 
