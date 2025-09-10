@@ -27,11 +27,7 @@ No. The MCP Registry stores metadata about MCP servers and references to where t
 
 ### Who should use the MCP Registry directly?
 
-The registry is designed for programmatic consumption by:
-
-- MCP client applications (Claude Desktop, Cline, etc.)
-- Server aggregators (Smithery, PulseMCP, Docker Hub, etc.)
-- NOT individual end-users (they should use MCP clients or aggregator UIs)
+The registry is primarily designed for programmatic consumption by subregistries (Smithery, PulseMCP, Docker Hub, Anthropic, GitHub, etc.). It is NOT currently intended for individual clients or end-users (they should use subregistries).
 
 ### Will there be feature X?
 
