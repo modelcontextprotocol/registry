@@ -84,18 +84,9 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 			errorMessage: "missing required annotation", // Image exists but lacks MCP annotation
 			registryURL:  model.RegistryURLGHCR,
 		},
-		// TODO: Add a test case with expectError: false when an MCP server with proper
-		// io.modelcontextprotocol.server.name annotation is published to GHCR.
+		// Note: A test case with expectError: false would be added when an MCP server
+		// with proper io.modelcontextprotocol.server.name annotation is published to GHCR.
 		// The ecosystem is still new and such images may not exist yet.
-		// Example test case would be:
-		// {
-		//     name:        "GHCR image with correct MCP annotation should pass",
-		//     packageName: "someuser/mcp-server-with-annotation",
-		//     version:     "latest", 
-		//     serverName:  "io.github.someuser/mcp-server-name",
-		//     expectError: false,
-		//     registryURL: model.RegistryURLGHCR,
-		// },
 	}
 
 	for _, tt := range tests {
