@@ -84,6 +84,18 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 			errorMessage: "missing required annotation", // Image exists but lacks MCP annotation
 			registryURL:  model.RegistryURLGHCR,
 		},
+		// TODO: Add a test case with expectError: false when an MCP server with proper
+		// io.modelcontextprotocol.server.name annotation is published to GHCR.
+		// The ecosystem is still new and such images may not exist yet.
+		// Example test case would be:
+		// {
+		//     name:        "GHCR image with correct MCP annotation should pass",
+		//     packageName: "someuser/mcp-server-with-annotation",
+		//     version:     "latest", 
+		//     serverName:  "io.github.someuser/mcp-server-name",
+		//     expectError: false,
+		//     registryURL: model.RegistryURLGHCR,
+		// },
 	}
 
 	for _, tt := range tests {
@@ -160,7 +172,10 @@ func TestValidateOCI_GHCR_Integration(t *testing.T) {
 	})
 	
 	t.Run("GHCR with github MCP server image", func(t *testing.T) {
-		// Test the real GitHub MCP server image
+		// Test the real GitHub MCP server image - this proves GHCR integration works
+		// Note: This image doesn't have the MCP annotation yet, but that's expected
+		// since the MCP ecosystem is still new. The important thing is that we can
+		// authenticate with GHCR, fetch the image, and validate the annotation logic.
 		pkg := model.Package{
 			RegistryType:    model.RegistryTypeOCI,
 			RegistryBaseURL: model.RegistryURLGHCR,
