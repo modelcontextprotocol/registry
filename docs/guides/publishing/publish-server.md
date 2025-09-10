@@ -238,7 +238,9 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ```
 
 ### How It Works
-- Registry authenticates with container registries using token-based authentication
+- Registry authenticates with container registries using token-based authentication:
+  - **Docker Hub**: Uses `auth.docker.io` token service
+  - **GitHub Container Registry**: Uses `ghcr.io` token service  
 - Fetches image manifest using Docker Registry v2 API
 - Checks that `io.modelcontextprotocol.server.name` annotation matches your server name
 - Fails if annotation is missing or doesn't match
