@@ -152,7 +152,7 @@ Include your server name in your package README file using this format:
 
 **MCP name format**: `mcp-name: io.github.username/server-name`
 
-Add it to your README.md file (which becomes the package description on PyPI).
+Add it to your README.md file (which becomes the package description on PyPI). This can be in a comment if you want to hide it from display elsewhere.
 
 ### How It Works
 - Registry fetches `https://pypi.org/pypi/your-package/json`
@@ -184,7 +184,7 @@ Include your server name in your package's README using this format:
 
 **MCP name format**: `mcp-name: io.github.username/server-name`
 
-Add a README file to your NuGet package that includes the server name.
+Add a README file to your NuGet package that includes the server name. This can be in a comment if you want to hide it from display elsewhere.
 
 ### How It Works
 - Registry fetches README from `https://api.nuget.org/v3-flatcontainer/{id}/{version}/readme`
