@@ -24,8 +24,8 @@ func TrailingSlashMiddleware(next http.Handler) http.Handler {
 			newURL := *r.URL
 			newURL.Path = strings.TrimSuffix(r.URL.Path, "/")
 			
-			// Use 301 Moved Permanently to indicate the canonical URL
-			http.Redirect(w, r, newURL.String(), http.StatusMovedPermanently)
+			// Use 308 Permanent Redirect to preserve the request method
+			http.Redirect(w, r, newURL.String(), http.StatusPermanentRedirect)
 			return
 		}
 		
