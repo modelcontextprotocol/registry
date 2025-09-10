@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -20,8 +21,20 @@ type PostgreSQL struct {
 
 // NewPostgreSQL creates a new instance of the PostgreSQL database
 func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, error) {
-	// Create connection pool
-	pool, err := pgxpool.New(ctx, connectionURI)
+	// Parse connection config for pool settings
+	config, err := pgxpool.ParseConfig(connectionURI)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse PostgreSQL config: %w", err)
+	}
+
+	// Configure pool for stability-focused defaults
+	config.MaxConns = 30                      // Handle good concurrent load
+	config.MinConns = 5                       // Keep connections warm for fast response
+	config.MaxConnIdleTime = 30 * time.Minute // Keep connections available for bursts
+	config.MaxConnLifetime = 2 * time.Hour    // Refresh connections regularly for stability
+
+	// Create connection pool with configured settings
+	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create PostgreSQL pool: %w", err)
 	}
