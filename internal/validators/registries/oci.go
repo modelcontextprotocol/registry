@@ -26,6 +26,7 @@ type OCIAuthResponse struct {
 type RegistryConfig struct {
 	APIBaseURL string
 	AuthURL    string
+	Service    string
 	Scope      string
 }
 
@@ -36,13 +37,15 @@ func getRegistryConfig(registryBaseURL, namespace, repo string) *RegistryConfig 
 		return &RegistryConfig{
 			APIBaseURL: dockerIoAPIBaseURL,
 			AuthURL:    "https://auth.docker.io/token",
+			Service:    "registry.docker.io",
 			Scope:      fmt.Sprintf("repository:%s/%s:pull", namespace, repo),
 		}
 	case model.RegistryURLGHCR:
 		return &RegistryConfig{
 			APIBaseURL: ghcrAPIBaseURL,
-			AuthURL:    "", // GHCR supports anonymous access
-			Scope:      "",
+			AuthURL:    "https://ghcr.io/token",
+			Service:    "ghcr.io",
+			Scope:      fmt.Sprintf("repository:%s/%s:pull", namespace, repo),
 		}
 	default:
 		return nil
@@ -139,7 +142,7 @@ func fetchImageManifest(ctx context.Context, client *http.Client, registryConfig
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
-	req.Header.Set("Accept", "application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json")
+	req.Header.Set("Accept", "application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.docker.distribution.manifest.v2+json,application/vnd.oci.image.manifest.v1+json")
 	req.Header.Set("User-Agent", "MCP-Registry-Validator/1.0")
 
 	resp, err := client.Do(req)
@@ -225,7 +228,7 @@ func getRegistryAuthToken(ctx context.Context, client *http.Client, config *Regi
 		return "", nil // No auth required
 	}
 
-	authURL := fmt.Sprintf("%s?service=registry.docker.io&scope=%s", config.AuthURL, config.Scope)
+	authURL := fmt.Sprintf("%s?service=%s&scope=%s", config.AuthURL, config.Service, config.Scope)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, authURL, nil)
 	if err != nil {

@@ -2,6 +2,7 @@ package registries_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators/registries"
@@ -67,11 +68,20 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 		},
 		{
 			name:         "GHCR image without MCP annotation should fail",
-			packageName:  "hello-world", // Simple test image (may not exist on GHCR)
+			packageName:  "actions/runner", // GitHub's action runner image (real image without MCP annotation)
 			version:      "latest",
 			serverName:   "com.example/test",
 			expectError:  true,
-			errorMessage: "not found", // Likely to fail due to image not existing
+			errorMessage: "missing required annotation",
+			registryURL:  model.RegistryURLGHCR,
+		},
+		{
+			name:         "real GHCR image without MCP annotation should fail",
+			packageName:  "github/github-mcp-server", // Real GitHub MCP server image
+			version:      "main",
+			serverName:   "io.github.github/github-mcp-server",
+			expectError:  true,
+			errorMessage: "missing required annotation", // Image exists but lacks MCP annotation
 			registryURL:  model.RegistryURLGHCR,
 		},
 	}
@@ -118,6 +128,59 @@ func TestValidateOCI_UnsupportedRegistry(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "registry type and base URL do not match")
 	assert.Contains(t, err.Error(), "Expected: https://docker.io or https://ghcr.io")
+}
+
+func TestValidateOCI_GHCR_Integration(t *testing.T) {
+	ctx := context.Background()
+	
+	// Test that GHCR registry is properly configured and accessible
+	t.Run("GHCR registry configuration", func(t *testing.T) {
+		pkg := model.Package{
+			RegistryType:    model.RegistryTypeOCI,
+			RegistryBaseURL: model.RegistryURLGHCR,
+			Identifier:      "testuser/testimage",
+			Version:         "latest",
+		}
+
+		// This should fail due to image not existing, but NOT due to registry validation
+		err := registries.ValidateOCI(ctx, pkg, "com.example/test")
+		assert.Error(t, err)
+		
+		// Should NOT contain registry validation errors
+		assert.NotContains(t, err.Error(), "registry type and base URL do not match")
+		assert.NotContains(t, err.Error(), "unsupported registry")
+		
+		// Should contain image-not-found or similar error (proving we reached GHCR)
+		errStr := err.Error()
+		hasValidGHCRError := strings.Contains(errStr, "not found") || 
+		                    strings.Contains(errStr, "401") || 
+		                    strings.Contains(errStr, "403") ||
+		                    strings.Contains(errStr, "missing required annotation")
+		assert.True(t, hasValidGHCRError, "Expected GHCR-related error, got: %s", errStr)
+	})
+	
+	t.Run("GHCR with github MCP server image", func(t *testing.T) {
+		// Test the real GitHub MCP server image
+		pkg := model.Package{
+			RegistryType:    model.RegistryTypeOCI,
+			RegistryBaseURL: model.RegistryURLGHCR,
+			Identifier:      "github/github-mcp-server", // Correct GHCR identifier format
+			Version:         "main",
+		}
+
+		err := registries.ValidateOCI(ctx, pkg, "io.github.github/github-mcp-server")
+		
+		// We expect this to fail due to missing MCP annotation, but that proves GHCR works
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "missing required annotation")
+		
+		// Should NOT fail due to registry connectivity issues
+		assert.NotContains(t, err.Error(), "registry type and base URL do not match")
+		assert.NotContains(t, err.Error(), "unsupported registry")
+		assert.NotContains(t, err.Error(), "not found")
+		
+		t.Log("GHCR integration working - successfully validated image but found missing MCP annotation")
+	})
 }
 
 func TestValidateOCI_SupportedRegistries(t *testing.T) {
