@@ -9,7 +9,7 @@ Integration patterns and best practices for building applications that consume M
 **Authentication**: Not required for read-only access
 
 - **`GET /v0/servers`** - List all servers with pagination
-- **`GET /v0/servers/{id}`** - Get full server details including packages and configuration
+- **`GET /v0/servers/{id}`** - Get server details by UUID
 
 See the [interactive API documentation](https://registry.modelcontextprotocol.io/docs) for complete request/response schemas.
 

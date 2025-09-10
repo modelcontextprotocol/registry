@@ -15,7 +15,7 @@ The official registry has some more endpoints and restrictions on top of this. S
 
 ### Core Endpoints
 - **`GET /v0/servers`** - List all servers with pagination
-- **`GET /v0/servers/{id}`** - Get detailed server information by ID  
+- **`GET /v0/servers/{id}`** - Get server details by UUID
 - **`POST /v0/publish`** - Publish new server (optional, registry-specific authentication)
 
 ### Authentication

@@ -318,24 +318,18 @@ mcp-publisher publish
 
 You'll see output like:
 ```
-✓ Validating server.json
-✓ Checking package ownership
-✓ Publishing to registry
-✓ Server published successfully!
-
-Your server is now available at:
-https://registry.modelcontextprotocol.io/servers/io.github.yourname/weather-server
+✓ Successfully published
 ```
 
 ## Step 6: Verify Publication
 
-Check that your server appears in the registry:
+Check that your server appears in the registry by searching for it:
 
 ```bash
-curl https://registry.modelcontextprotocol.io/servers/io.github.yourname/weather-server
+curl "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.yourname/weather-server"
 ```
 
-You should see your server metadata returned as JSON.
+You should see your server metadata returned in the JSON response.
 
 ## Troubleshooting
 
