@@ -50,7 +50,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 
 		// Verify that the token has permission to publish the server
 		if !jwtManager.HasPermission(input.Body.Name, auth.PermissionActionPublish, claims.Permissions) {
-			return nil, huma.Error403Forbidden("You do not have permission to publish this server")
+			return nil, huma.Error403Forbidden(buildPermissionErrorMessage(input.Body.Name, claims.Permissions))
 		}
 
 		// Publish the server with extensions
@@ -64,4 +64,25 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 			Body: *publishedServer,
 		}, nil
 	})
+}
+
+// buildPermissionErrorMessage creates a detailed error message showing what permissions
+// the user has and what they're trying to publish
+func buildPermissionErrorMessage(attemptedResource string, permissions []auth.Permission) string {
+	var permissionStrs []string
+	for _, perm := range permissions {
+		if perm.Action == auth.PermissionActionPublish {
+			permissionStrs = append(permissionStrs, perm.ResourcePattern)
+		}
+	}
+	
+	errorMsg := "You do not have permission to publish this server"
+	if len(permissionStrs) > 0 {
+		errorMsg += ". You have permission to publish: " + strings.Join(permissionStrs, ", ")
+	} else {
+		errorMsg += ". You do not have any publish permissions"
+	}
+	errorMsg += ". Attempting to publish: " + attemptedResource
+	
+	return errorMsg
 }
