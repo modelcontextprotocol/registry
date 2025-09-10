@@ -330,6 +330,8 @@ func TestServersListEndpoint(t *testing.T) {
 				case "combined search and updated_since filter":
 					assert.Len(t, resp.Servers, 1, "Expected one server matching both filters")
 					assert.Contains(t, resp.Servers[0].Name, "combined", "Server name should contain search term")
+				case "empty registry returns success":
+					assert.Empty(t, resp.Servers, "Expected empty server list for empty registry")
 				case "comprehensive query with all parameters":
 					// Should return only latest versions of servers matching "filesystem" search term
 					// Expected: 2 servers (filesystem-server v2.0.0 and filesystem-tools v3.0.0)
