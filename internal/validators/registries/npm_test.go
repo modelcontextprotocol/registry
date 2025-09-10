@@ -21,6 +21,30 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 		errorMessage string
 	}{
 		{
+			name:         "empty package identifier should fail",
+			packageName:  "",
+			version:      "1.0.0",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package identifier is required for NPM packages",
+		},
+		{
+			name:         "empty package version should fail",
+			packageName:  "test-package",
+			version:      "",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package version is required for NPM packages",
+		},
+		{
+			name:         "both empty identifier and version should fail with identifier error first",
+			packageName:  "",
+			version:      "",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package identifier is required for NPM packages",
+		},
+		{
 			name:         "non-existent package should fail",
 			packageName:  generateRandomPackageName(),
 			version:      "1.0.0",
