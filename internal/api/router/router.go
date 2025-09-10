@@ -3,6 +3,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -96,36 +97,33 @@ func WithSkipPaths(paths ...string) MiddlewareOption {
 func handle404(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(http.StatusNotFound)
-	
+
 	path := r.URL.Path
-	var detail string
-	
+	detail := "Endpoint not found. See /docs for the API documentation."
+
 	// Provide suggestions for common API endpoint mistakes
-	switch {
-	case strings.HasPrefix(path, "/v1") || strings.HasPrefix(path, "/v2"):
-		detail = "API version not supported. Currently only '/v0' endpoints are available."
-	case strings.HasSuffix(path, "/servers"):
-		detail = "Endpoint not found. Did you mean '/v0/servers'? All API endpoints are versioned under '/v0'."
-	case strings.HasSuffix(path, "/health"):
-		detail = "Endpoint not found. Did you mean '/v0/health'?"
-	case strings.HasSuffix(path, "/ping"):
-		detail = "Endpoint not found. Did you mean '/v0/ping'?"
-	default:
-		detail = "Endpoint not found. All API endpoints are versioned under '/v0'. See documentation for available endpoints."
+	if !strings.HasPrefix(path, "/v0/") {
+		detail = fmt.Sprintf(
+			"Endpoint not found. Did you mean '%s'? See /docs for the API documentation.",
+			"/v0"+path,
+		)
 	}
-	
+
 	errorBody := map[string]interface{}{
 		"title":  "Not Found",
 		"status": 404,
 		"detail": detail,
 	}
-	
+
 	// Use JSON marshal to ensure consistent formatting
-	if jsonData, err := json.Marshal(errorBody); err == nil {
-		w.Write(jsonData)
-	} else {
-		// Fallback if JSON marshal fails
-		w.Write([]byte(`{"title":"Not Found","status":404,"detail":"Endpoint not found"}`))
+	jsonData, err := json.Marshal(errorBody)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(jsonData)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -157,7 +155,7 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 			http.Redirect(w, r, "https://github.com/modelcontextprotocol/registry/tree/main/docs", http.StatusTemporaryRedirect)
 			return
 		}
-		
+
 		// Handle 404 for all other routes
 		handle404(w, r)
 	})
