@@ -19,45 +19,60 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 		serverName   string
 		expectError  bool
 		errorMessage string
+		registryURL  string
 	}{
 		{
-			name:         "non-existent image should fail",
+			name:         "non-existent image should fail (Docker Hub)",
 			packageName:  generateRandomImageName(),
 			version:      "latest",
 			serverName:   "com.example/test",
 			expectError:  true,
 			errorMessage: "not found",
+			registryURL:  model.RegistryURLDocker,
 		},
 		{
-			name:         "real image without MCP annotation should fail",
+			name:         "real image without MCP annotation should fail (Docker Hub)",
 			packageName:  "nginx", // Popular image without MCP annotation
 			version:      "latest",
 			serverName:   "com.example/test",
 			expectError:  true,
 			errorMessage: "missing required annotation",
+			registryURL:  model.RegistryURLDocker,
 		},
 		{
-			name:         "real image with specific tag without MCP annotation should fail",
+			name:         "real image with specific tag without MCP annotation should fail (Docker Hub)",
 			packageName:  "redis",
 			version:      "7-alpine", // Specific tag
 			serverName:   "com.example/test",
 			expectError:  true,
 			errorMessage: "missing required annotation",
+			registryURL:  model.RegistryURLDocker,
 		},
 		{
-			name:         "namespaced image without MCP annotation should fail",
+			name:         "namespaced image without MCP annotation should fail (Docker Hub)",
 			packageName:  "hello-world", // Simple image for testing
 			version:      "latest",
 			serverName:   "com.example/test",
 			expectError:  true,
 			errorMessage: "missing required annotation",
+			registryURL:  model.RegistryURLDocker,
 		},
 		{
-			name:        "real image with correct MCP annotation should pass",
+			name:        "real image with correct MCP annotation should pass (Docker Hub)",
 			packageName: "domdomegg/airtable-mcp-server",
 			version:     "1.7.2",
 			serverName:  "io.github.domdomegg/airtable-mcp-server", // This should match the annotation
 			expectError: false,
+			registryURL: model.RegistryURLDocker,
+		},
+		{
+			name:         "GHCR image without MCP annotation should fail",
+			packageName:  "hello-world", // Simple test image (may not exist on GHCR)
+			version:      "latest",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "not found", // Likely to fail due to image not existing
+			registryURL:  model.RegistryURLGHCR,
 		},
 	}
 
@@ -65,10 +80,16 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Skip("Skipping OCI registry tests because we keep hitting DockerHub rate limits")
 
+			registryURL := tt.registryURL
+			if registryURL == "" {
+				registryURL = model.RegistryURLDocker // default to Docker Hub for backward compatibility
+			}
+
 			pkg := model.Package{
-				RegistryType: model.RegistryTypeOCI,
-				Identifier:   tt.packageName,
-				Version:      tt.version,
+				RegistryType:    model.RegistryTypeOCI,
+				RegistryBaseURL: registryURL,
+				Identifier:      tt.packageName,
+				Version:         tt.version,
 			}
 
 			err := registries.ValidateOCI(ctx, pkg, tt.serverName)
@@ -78,6 +99,71 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.errorMessage)
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateOCI_UnsupportedRegistry(t *testing.T) {
+	ctx := context.Background()
+
+	pkg := model.Package{
+		RegistryType:    model.RegistryTypeOCI,
+		RegistryBaseURL: "https://unsupported-registry.com",
+		Identifier:      "test/image",
+		Version:         "latest",
+	}
+
+	err := registries.ValidateOCI(ctx, pkg, "com.example/test")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "registry type and base URL do not match")
+	assert.Contains(t, err.Error(), "Expected: https://docker.io or https://ghcr.io")
+}
+
+func TestValidateOCI_SupportedRegistries(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name        string
+		registryURL string
+		expected    bool
+	}{
+		{
+			name:        "Docker Hub should be supported",
+			registryURL: model.RegistryURLDocker,
+			expected:    true,
+		},
+		{
+			name:        "GHCR should be supported",
+			registryURL: model.RegistryURLGHCR,
+			expected:    true,
+		},
+		{
+			name:        "Unsupported registry should fail",
+			registryURL: "https://quay.io",
+			expected:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pkg := model.Package{
+				RegistryType:    model.RegistryTypeOCI,
+				RegistryBaseURL: tt.registryURL,
+				Identifier:      "test/image",
+				Version:         "latest",
+			}
+
+			err := registries.ValidateOCI(ctx, pkg, "com.example/test")
+			if tt.expected {
+				// Should not fail immediately on registry validation
+				// (may fail later due to network/image not found, but not due to unsupported registry)
+				if err != nil {
+					assert.NotContains(t, err.Error(), "registry type and base URL do not match")
+				}
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "registry type and base URL do not match")
 			}
 		})
 	}
