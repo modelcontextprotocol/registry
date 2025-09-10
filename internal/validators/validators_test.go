@@ -194,6 +194,30 @@ func TestValidate(t *testing.T) {
 			expectedError: validators.ErrPackageNameHasSpaces.Error(),
 		},
 		{
+			name: "package with reserved version 'latest'",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Packages: []model.Package{
+					{
+						Identifier:      "test-package",
+						RegistryType:    "npm",
+						RegistryBaseURL: "https://registry.npmjs.org",
+						Version:         "latest",
+						Transport: model.Transport{
+							Type: "stdio",
+						},
+					},
+				},
+			},
+			expectedError: validators.ErrReservedVersionString.Error(),
+		},
+		{
 			name: "multiple packages with one invalid",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",

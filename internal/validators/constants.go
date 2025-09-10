@@ -10,6 +10,7 @@ var (
 
 	// Package validation errors
 	ErrPackageNameHasSpaces = errors.New("package name cannot contain spaces")
+	ErrReservedVersionString = errors.New("version string 'latest' is reserved and cannot be used")
 
 	// Remote validation errors
 	ErrInvalidRemoteURL = errors.New("invalid remote URL")
