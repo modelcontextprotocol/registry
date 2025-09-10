@@ -2,6 +2,7 @@
 package router
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -91,6 +92,43 @@ func WithSkipPaths(paths ...string) MiddlewareOption {
 	}
 }
 
+// handle404 returns a helpful 404 error with suggestions for common mistakes
+func handle404(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(http.StatusNotFound)
+	
+	path := r.URL.Path
+	var detail string
+	
+	// Provide suggestions for common API endpoint mistakes
+	switch {
+	case strings.HasPrefix(path, "/v1") || strings.HasPrefix(path, "/v2"):
+		detail = "API version not supported. Currently only '/v0' endpoints are available."
+	case strings.HasSuffix(path, "/servers"):
+		detail = "Endpoint not found. Did you mean '/v0/servers'? All API endpoints are versioned under '/v0'."
+	case strings.HasSuffix(path, "/health"):
+		detail = "Endpoint not found. Did you mean '/v0/health'?"
+	case strings.HasSuffix(path, "/ping"):
+		detail = "Endpoint not found. Did you mean '/v0/ping'?"
+	default:
+		detail = "Endpoint not found. All API endpoints are versioned under '/v0'. See documentation for available endpoints."
+	}
+	
+	errorBody := map[string]interface{}{
+		"title":  "Not Found",
+		"status": 404,
+		"detail": detail,
+	}
+	
+	// Use JSON marshal to ensure consistent formatting
+	if jsonData, err := json.Marshal(errorBody); err == nil {
+		w.Write(jsonData)
+	} else {
+		// Fallback if JSON marshal fails
+		w.Write([]byte(`{"title":"Not Found","status":404,"detail":"Endpoint not found"}`))
+	}
+}
+
 // NewHumaAPI creates a new Huma API with all routes registered
 func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.ServeMux, metrics *telemetry.Metrics) huma.API {
 	// Create Huma API configuration
@@ -113,11 +151,15 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 	// Add /metrics for Prometheus metrics using promhttp
 	mux.Handle("/metrics", metrics.PrometheusHandler())
 
-	// Add redirect from / to docs
+	// Add redirect from / to docs and 404 handler for all other routes
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			http.Redirect(w, r, "https://github.com/modelcontextprotocol/registry/tree/main/docs", http.StatusTemporaryRedirect)
+			return
 		}
+		
+		// Handle 404 for all other routes
+		handle404(w, r)
 	})
 
 	return api
