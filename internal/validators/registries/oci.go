@@ -74,9 +74,8 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	}
 
 	// Validate that the registry base URL is supported
-	if pkg.RegistryBaseURL != model.RegistryURLDocker && pkg.RegistryBaseURL != model.RegistryURLGHCR {
-		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s or %s",
-			pkg.RegistryBaseURL, model.RegistryTypeOCI, model.RegistryURLDocker, model.RegistryURLGHCR)
+	if err := validateRegistryURL(pkg.RegistryBaseURL); err != nil {
+		return err
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
@@ -92,20 +91,50 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	if registryConfig == nil {
 		return fmt.Errorf("unsupported registry: %s", pkg.RegistryBaseURL)
 	}
-	apiBaseURL := registryConfig.APIBaseURL
 
-	tag := pkg.Version
-	manifestURL := fmt.Sprintf("%s/v2/%s/%s/manifests/%s", apiBaseURL, namespace, repo, tag)
+	// Get the image manifest
+	manifest, err := fetchImageManifest(ctx, client, registryConfig, namespace, repo, pkg.Version)
+	if err != nil {
+		return err
+	}
+
+	// Get config digest from manifest
+	configDigest, err := getConfigDigestFromManifest(ctx, client, registryConfig, namespace, repo, manifest)
+	if err != nil {
+		return err
+	}
+
+	if configDigest == "" {
+		// Rate limited case, skip validation
+		return nil
+	}
+
+	// Validate server name annotation
+	return validateServerNameAnnotation(ctx, client, registryConfig, namespace, repo, pkg.Version, configDigest, serverName)
+}
+
+// validateRegistryURL validates that the registry base URL is supported
+func validateRegistryURL(registryURL string) error {
+	if registryURL != model.RegistryURLDocker && registryURL != model.RegistryURLGHCR {
+		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s or %s",
+			registryURL, model.RegistryTypeOCI, model.RegistryURLDocker, model.RegistryURLGHCR)
+	}
+	return nil
+}
+
+// fetchImageManifest fetches the OCI manifest for an image
+func fetchImageManifest(ctx context.Context, client *http.Client, registryConfig *RegistryConfig, namespace, repo, tag string) (*OCIManifest, error) {
+	manifestURL := fmt.Sprintf("%s/v2/%s/%s/manifests/%s", registryConfig.APIBaseURL, namespace, repo, tag)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, manifestURL, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create manifest request: %w", err)
+		return nil, fmt.Errorf("failed to create manifest request: %w", err)
 	}
 
 	// Get auth token if registry requires it
 	if registryConfig.AuthURL != "" {
 		token, err := getRegistryAuthToken(ctx, client, registryConfig)
 		if err != nil {
-			return fmt.Errorf("failed to authenticate with registry: %w", err)
+			return nil, fmt.Errorf("failed to authenticate with registry: %w", err)
 		}
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
@@ -115,44 +144,51 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to fetch OCI manifest: %w", err)
+		return nil, fmt.Errorf("failed to fetch OCI manifest: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusUnauthorized {
-		return fmt.Errorf("OCI image '%s/%s:%s' not found (status: %d)", namespace, repo, tag, resp.StatusCode)
+		return nil, fmt.Errorf("OCI image '%s/%s:%s' not found (status: %d)", namespace, repo, tag, resp.StatusCode)
 	}
 	if resp.StatusCode == http.StatusTooManyRequests {
 		// Rate limited, skip validation for now
 		log.Printf("Warning: Rate limited when accessing OCI image '%s/%s:%s'. Skipping validation.", namespace, repo, tag)
-		return nil
+		return &OCIManifest{}, nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to fetch OCI manifest (status: %d)", resp.StatusCode)
+		return nil, fmt.Errorf("failed to fetch OCI manifest (status: %d)", resp.StatusCode)
 	}
 
 	var manifest OCIManifest
 	if err := json.NewDecoder(resp.Body).Decode(&manifest); err != nil {
-		return fmt.Errorf("failed to parse OCI manifest: %w", err)
+		return nil, fmt.Errorf("failed to parse OCI manifest: %w", err)
+	}
+
+	return &manifest, nil
+}
+
+// getConfigDigestFromManifest extracts the config digest from an OCI manifest
+func getConfigDigestFromManifest(ctx context.Context, client *http.Client, registryConfig *RegistryConfig, namespace, repo string, manifest *OCIManifest) (string, error) {
+	// Handle rate limited case (empty manifest)
+	if len(manifest.Manifests) == 0 && manifest.Config.Digest == "" {
+		return "", nil // Rate limited case, skip validation
 	}
 
 	// Handle multi-arch images by using first manifest
-	var configDigest string
 	if len(manifest.Manifests) > 0 {
 		// This is a multi-arch image, get the specific manifest
 		specificManifest, err := getSpecificManifest(ctx, client, registryConfig, namespace, repo, manifest.Manifests[0].Digest)
 		if err != nil {
-			return fmt.Errorf("failed to get specific manifest: %w", err)
+			return "", fmt.Errorf("failed to get specific manifest: %w", err)
 		}
-		configDigest = specificManifest.Config.Digest
-	} else {
-		configDigest = manifest.Config.Digest
+		return specificManifest.Config.Digest, nil
 	}
+	return manifest.Config.Digest, nil
+}
 
-	if configDigest == "" {
-		return fmt.Errorf("unable to determine image config digest for '%s/%s:%s'", namespace, repo, tag)
-	}
-
+// validateServerNameAnnotation validates the MCP server name annotation in the image config
+func validateServerNameAnnotation(ctx context.Context, client *http.Client, registryConfig *RegistryConfig, namespace, repo, tag, configDigest, serverName string) error {
 	// Get image config (contains labels)
 	config, err := getImageConfig(ctx, client, registryConfig, namespace, repo, configDigest)
 	if err != nil {
@@ -214,14 +250,6 @@ func getRegistryAuthToken(ctx context.Context, client *http.Client, config *Regi
 	return authResp.Token, nil
 }
 
-// getDockerIoAuthToken retrieves an authentication token from Docker Hub (kept for backward compatibility)
-func getDockerIoAuthToken(ctx context.Context, client *http.Client, namespace, repo string) (string, error) {
-	config := &RegistryConfig{
-		AuthURL: "https://auth.docker.io/token",
-		Scope:   fmt.Sprintf("repository:%s/%s:pull", namespace, repo),
-	}
-	return getRegistryAuthToken(ctx, client, config)
-}
 
 // getSpecificManifest retrieves a specific manifest for multi-arch images
 func getSpecificManifest(ctx context.Context, client *http.Client, registryConfig *RegistryConfig, namespace, repo, digest string) (*OCIManifest, error) {
