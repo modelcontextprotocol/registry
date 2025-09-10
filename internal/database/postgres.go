@@ -9,34 +9,42 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 }
 
 // NewPostgreSQL creates a new instance of the PostgreSQL database
 func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, error) {
-	conn, err := pgx.Connect(ctx, connectionURI)
+	// Create connection pool
+	pool, err := pgxpool.New(ctx, connectionURI)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)
+		return nil, fmt.Errorf("failed to create PostgreSQL pool: %w", err)
 	}
 
 	// Test the connection
-	if err = conn.Ping(ctx); err != nil {
+	if err = pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping PostgreSQL: %w", err)
 	}
 
-	// Run migrations
-	migrator := NewMigrator(conn)
+	// Run migrations using a single connection from the pool
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to acquire connection for migrations: %w", err)
+	}
+	defer conn.Release()
+	
+	migrator := NewMigrator(conn.Conn())
 	if err := migrator.Migrate(ctx); err != nil {
 		return nil, fmt.Errorf("failed to run database migrations: %w", err)
 	}
 
 	return &PostgreSQL{
-		conn: conn,
+		pool: pool,
 	}, nil
 }
 
@@ -120,7 +128,7 @@ func (db *PostgreSQL) List(
     `, whereClause, argIndex)
 	args = append(args, limit)
 
-	rows, err := db.conn.Query(ctx, query, args...)
+	rows, err := db.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to query servers: %w", err)
 	}
@@ -173,7 +181,7 @@ func (db *PostgreSQL) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON
 
 	var valueJSON []byte
 
-	err := db.conn.QueryRow(ctx, query, id).Scan(&valueJSON)
+	err := db.pool.QueryRow(ctx, query, id).Scan(&valueJSON)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -216,7 +224,7 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON
 		VALUES ($1, $2)
 	`
 
-	_, err = db.conn.Exec(ctx, query, id, valueJSON)
+	_, err = db.pool.Exec(ctx, query, id, valueJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
 	}
@@ -248,7 +256,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 		WHERE id = $2
 	`
 
-	result, err := db.conn.Exec(ctx, query, valueJSON, id)
+	result, err := db.pool.Exec(ctx, query, valueJSON, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
@@ -262,5 +270,6 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
-	return db.conn.Close(context.Background())
+	db.pool.Close()
+	return nil
 }
