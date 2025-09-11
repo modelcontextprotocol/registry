@@ -25,7 +25,6 @@ func TestServersListEndpoint(t *testing.T) {
 		queryParams          string
 		setupRegistryService func(service.RegistryService)
 		expectedStatus       int
-		expectedServers      []apiv0.ServerJSON
 		expectedMeta         *apiv0.Metadata
 		expectedError        string
 	}{
@@ -56,8 +55,7 @@ func TestServersListEndpoint(t *testing.T) {
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2)
 			},
-			expectedStatus:  http.StatusOK,
-			expectedServers: nil, // Will be verified differently since IDs are dynamic
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:        "successful list with cursor and limit",
@@ -75,8 +73,7 @@ func TestServersListEndpoint(t *testing.T) {
 				}
 				_, _ = registry.Publish(server)
 			},
-			expectedStatus:  http.StatusOK,
-			expectedServers: nil, // Will be verified differently since IDs are dynamic
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:                 "successful list with limit capping at 100",
@@ -118,8 +115,7 @@ func TestServersListEndpoint(t *testing.T) {
 			setupRegistryService: func(_ service.RegistryService) {
 				// Test empty registry - empty setup
 			},
-			expectedStatus:  http.StatusOK,
-			expectedServers: []apiv0.ServerJSON{},
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:        "successful search by name substring",
@@ -148,8 +144,7 @@ func TestServersListEndpoint(t *testing.T) {
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2)
 			},
-			expectedStatus:  http.StatusOK,
-			expectedServers: nil, // Will verify in test that only matching server is returned
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:        "successful updated_since filter with RFC3339",
@@ -167,8 +162,7 @@ func TestServersListEndpoint(t *testing.T) {
 				}
 				_, _ = registry.Publish(server)
 			},
-			expectedStatus:  http.StatusOK,
-			expectedServers: nil, // Will verify server is returned since it was updated after 2020
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:        "successful version=latest filter",
@@ -197,8 +191,7 @@ func TestServersListEndpoint(t *testing.T) {
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2) // This will be marked as latest
 			},
-			expectedStatus:  http.StatusOK,
-			expectedServers: nil, // Will verify only latest server is returned
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:        "combined search and updated_since filter",
@@ -227,8 +220,7 @@ func TestServersListEndpoint(t *testing.T) {
 				_, _ = registry.Publish(server1)
 				_, _ = registry.Publish(server2)
 			},
-			expectedStatus:  http.StatusOK,
-			expectedServers: nil, // Will verify only matching server is returned
+			expectedStatus: http.StatusOK,
 		},
 		{
 			name:                 "invalid updated_since format",
@@ -236,6 +228,58 @@ func TestServersListEndpoint(t *testing.T) {
 			setupRegistryService: func(_ service.RegistryService) {},
 			expectedStatus:       http.StatusBadRequest,
 			expectedError:        "Invalid updated_since format: expected RFC3339",
+		},
+		{
+			name:        "comprehensive query with all parameters",
+			queryParams: "?search=filesystem&updated_since=2020-01-01T00:00:00Z&version=latest&limit=50&cursor=",
+			setupRegistryService: func(registry service.RegistryService) {
+				// Create multiple versions of servers with different names
+				server1v1 := apiv0.ServerJSON{
+					Name:        "io.example/filesystem-server",
+					Description: "Filesystem operations server v1",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/filesystem",
+						Source: "github",
+						ID:     "example/filesystem",
+					},
+					Version: "1.0.0",
+				}
+				server1v2 := apiv0.ServerJSON{
+					Name:        "io.example/filesystem-server",
+					Description: "Filesystem operations server v2 (latest)",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/filesystem",
+						Source: "github",
+						ID:     "example/filesystem",
+					},
+					Version: "2.0.0",
+				}
+				server2 := apiv0.ServerJSON{
+					Name:        "com.example/database-server",
+					Description: "Database operations server",
+					Repository: model.Repository{
+						URL:    "https://github.com/example/database",
+						Source: "github",
+						ID:     "example/database",
+					},
+					Version: "1.0.0",
+				}
+				server3 := apiv0.ServerJSON{
+					Name:        "org.another/filesystem-tools",
+					Description: "Filesystem tools and utilities",
+					Repository: model.Repository{
+						URL:    "https://github.com/another/filesystem-tools",
+						Source: "github",
+						ID:     "another/filesystem-tools",
+					},
+					Version: "3.0.0",
+				}
+				_, _ = registry.Publish(server1v1)
+				_, _ = registry.Publish(server1v2)
+				_, _ = registry.Publish(server2)
+				_, _ = registry.Publish(server3)
+			},
+			expectedStatus: http.StatusOK,
 		},
 	}
 
@@ -273,36 +317,44 @@ func TestServersListEndpoint(t *testing.T) {
 				assert.NoError(t, err)
 
 				// Check the response data
-				if tc.expectedServers != nil {
-					assert.Equal(t, tc.expectedServers, resp.Servers)
-				} else {
-					// For tests with dynamic data, check structure and count
-					// Special handling for filter test cases
-					switch tc.name {
-					case "successful search by name substring":
-						assert.Len(t, resp.Servers, 1, "Expected exactly one matching server")
-						assert.Contains(t, resp.Servers[0].Name, "test-server", "Server name should contain search term")
-					case "successful updated_since filter with RFC3339":
-						assert.Len(t, resp.Servers, 1, "Expected one server updated after 2020")
-						assert.Contains(t, resp.Servers[0].Name, "recent-server")
-					case "successful version=latest filter":
-						assert.Len(t, resp.Servers, 1, "Expected one latest server")
-						assert.Contains(t, resp.Servers[0].Description, "latest")
-					case "combined search and updated_since filter":
-						assert.Len(t, resp.Servers, 1, "Expected one server matching both filters")
-						assert.Contains(t, resp.Servers[0].Name, "combined", "Server name should contain search term")
-					default:
-						assert.NotEmpty(t, resp.Servers, "Expected at least one server")
-					}
-
-					// General structure validation
+				switch tc.name {
+				case "successful search by name substring":
+					assert.Len(t, resp.Servers, 1, "Expected exactly one matching server")
+					assert.Contains(t, resp.Servers[0].Name, "test-server", "Server name should contain search term")
+				case "successful updated_since filter with RFC3339":
+					assert.Len(t, resp.Servers, 1, "Expected one server updated after 2020")
+					assert.Contains(t, resp.Servers[0].Name, "recent-server")
+				case "successful version=latest filter":
+					assert.Len(t, resp.Servers, 1, "Expected one latest server")
+					assert.Contains(t, resp.Servers[0].Description, "latest")
+				case "combined search and updated_since filter":
+					assert.Len(t, resp.Servers, 1, "Expected one server matching both filters")
+					assert.Contains(t, resp.Servers[0].Name, "combined", "Server name should contain search term")
+				case "empty registry returns success":
+					assert.Empty(t, resp.Servers, "Expected empty server list for empty registry")
+				case "comprehensive query with all parameters":
+					// Should return only latest versions of servers matching "filesystem" search term
+					// Expected: 2 servers (filesystem-server v2.0.0 and filesystem-tools v3.0.0)
+					assert.Len(t, resp.Servers, 2, "Expected two servers matching all filters")
 					for _, server := range resp.Servers {
-						assert.NotEmpty(t, server.Name)
-						assert.NotEmpty(t, server.Description)
-						assert.NotNil(t, server.Meta)
-						assert.NotNil(t, server.Meta.Official)
-						assert.NotEmpty(t, server.Meta.Official.ID)
+						assert.Contains(t, server.Name, "filesystem", "Server name should contain 'filesystem'")
 					}
+					// Verify the limit parameter worked (should be at most 50, but we only have 2)
+					assert.LessOrEqual(t, len(resp.Servers), 50, "Should respect limit parameter")
+					// Verify response includes metadata
+					assert.NotNil(t, resp.Metadata, "Expected metadata to be present")
+					assert.Equal(t, 2, resp.Metadata.Count, "Metadata count should match returned servers")
+				default:
+					assert.NotEmpty(t, resp.Servers, "Expected at least one server")
+				}
+
+				// General structure validation
+				for _, server := range resp.Servers {
+					assert.NotEmpty(t, server.Name)
+					assert.NotEmpty(t, server.Description)
+					assert.NotNil(t, server.Meta)
+					assert.NotNil(t, server.Meta.Official)
+					assert.NotEmpty(t, server.Meta.Official.ID)
 				}
 
 				// Check metadata if expected
