@@ -1,164 +1,53 @@
-// Package router contains API routing logic
 package router
 
 import (
-	"encoding/json"
-	"fmt"
+	"database/sql"
+	"html/template"
+	"log/slog"
 	"net/http"
-	"strings"
-	"time"
 
-	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
-
-	"github.com/modelcontextprotocol/registry/internal/config"
-	"github.com/modelcontextprotocol/registry/internal/service"
-	"github.com/modelcontextprotocol/registry/internal/telemetry"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/modelcontextprotocol/registry/internal/api/handler"
 )
 
-// Middleware configuration options
-type middlewareConfig struct {
-	skipPaths map[string]bool
-}
+const indexHTML = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Model Context Registry</title>
+</head>
+<body>
+    <h1>Model Context Registry</h1>
+    <p>Welcome to the Model Context Registry. This is a server for managing and distributing model contexts.</p>
+    <p>For more information, see the <a href="https://github.com/modelcontextprotocol/registry">GitHub repository</a>.</p>
+</body>
+</html>`
 
-type MiddlewareOption func(*middlewareConfig)
+// Parse the template once at startup.
+var indexTmpl = template.Must(template.New("index").Parse(indexHTML))
 
-// getRoutePath extracts the route pattern from the context
-func getRoutePath(ctx huma.Context) string {
-	// Try to get the operation from context
-	if op := ctx.Operation().Path; op != "" {
-		return ctx.Operation().Path
-	}
+func New(db *sql.DB, s3Client *s3.Client, s3Bucket string) http.Handler {
+	h := handler.New(db, s3Client, s3Bucket)
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
-	// Fallback to URL path (less ideal for metrics as it includes path parameters)
-	return ctx.URL().Path
-}
-
-func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...MiddlewareOption) func(huma.Context, func(huma.Context)) {
-	config := &middlewareConfig{
-		skipPaths: make(map[string]bool),
-	}
-
-	for _, opt := range options {
-		opt(config)
-	}
-
-	return func(ctx huma.Context, next func(huma.Context)) {
-		path := ctx.URL().Path
-
-		// Skip instrumentation for specified paths
-		// extract the last part of the path to match against skipPaths
-		pathParts := strings.Split(path, "/")
-		pathToMatch := "/" + pathParts[len(pathParts)-1]
-		if config.skipPaths[pathToMatch] || config.skipPaths[path] {
-			next(ctx)
-			return
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		err := indexTmpl.Execute(w, nil)
+		if err != nil {
+			slog.Error("failed to execute index template", "err", err)
 		}
-
-		start := time.Now()
-		method := ctx.Method()
-		routePath := getRoutePath(ctx)
-
-		next(ctx)
-
-		duration := time.Since(start).Seconds()
-		statusCode := ctx.Status()
-
-		// Combine common and custom attributes
-		attrs := []attribute.KeyValue{
-			attribute.String("method", method),
-			attribute.String("path", routePath),
-			attribute.Int("status_code", statusCode),
-		}
-
-		// Record metrics
-		metrics.Requests.Add(ctx.Context(), 1, metric.WithAttributes(attrs...))
-
-		if statusCode >= 400 {
-			metrics.ErrorCount.Add(ctx.Context(), 1, metric.WithAttributes(attrs...))
-		}
-
-		metrics.RequestDuration.Record(ctx.Context(), duration, metric.WithAttributes(attrs...))
-	}
-}
-
-// WithSkipPaths allows skipping instrumentation for specific paths
-func WithSkipPaths(paths ...string) MiddlewareOption {
-	return func(c *middlewareConfig) {
-		for _, path := range paths {
-			c.skipPaths[path] = true
-		}
-	}
-}
-
-// handle404 returns a helpful 404 error with suggestions for common mistakes
-func handle404(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/problem+json")
-	w.WriteHeader(http.StatusNotFound)
-
-	path := r.URL.Path
-	detail := "Endpoint not found. See /docs for the API documentation."
-
-	// Provide suggestions for common API endpoint mistakes
-	if !strings.HasPrefix(path, "/v0/") {
-		detail = fmt.Sprintf(
-			"Endpoint not found. Did you mean '%s'? See /docs for the API documentation.",
-			"/v0"+path,
-		)
-	}
-
-	errorBody := map[string]interface{}{
-		"title":  "Not Found",
-		"status": 404,
-		"detail": detail,
-	}
-
-	// Use JSON marshal to ensure consistent formatting
-	jsonData, err := json.Marshal(errorBody)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	_, err = w.Write(jsonData)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-// NewHumaAPI creates a new Huma API with all routes registered
-func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.ServeMux, metrics *telemetry.Metrics) huma.API {
-	// Create Huma API configuration
-	humaConfig := huma.DefaultConfig("Official MCP Registry", "1.0.0")
-	humaConfig.Info.Description = "A community driven registry service for Model Context Protocol (MCP) servers.\n\n[GitHub repository](https://github.com/modelcontextprotocol/registry) | [Documentation](https://github.com/modelcontextprotocol/registry/tree/main/docs)"
-	// Disable $schema property in responses: https://github.com/danielgtaylor/huma/issues/230
-	humaConfig.CreateHooks = []func(huma.Config) huma.Config{}
-
-	// Create a new API using humago adapter for standard library
-	api := humago.New(mux, humaConfig)
-
-	// Add metrics middleware with options
-	api.UseMiddleware(MetricTelemetryMiddleware(metrics,
-		WithSkipPaths("/health", "/metrics", "/ping", "/docs"),
-	))
-
-	// Register routes for all API versions
-	RegisterV0Routes(api, cfg, registry, metrics)
-
-	// Add /metrics for Prometheus metrics using promhttp
-	mux.Handle("/metrics", metrics.PrometheusHandler())
-
-	// Add redirect from / to docs and 404 handler for all other routes
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			http.Redirect(w, r, "https://github.com/modelcontextprotocol/registry/tree/main/docs", http.StatusTemporaryRedirect)
-			return
-		}
-
-		// Handle 404 for all other routes
-		handle404(w, r)
 	})
 
-	return api
+	r.Route("/v1", func(r chi.Router) {
+		r.Get("/contexts/{namespace}/{name}", h.GetContextHandler)
+		r.Get("/contexts/{namespace}/{name}/blobs/{digest}", h.GetBlobHandler)
+		r.Head("/contexts/{namespace}/{name}/blobs/{digest}", h.HeadBlobHandler)
+		r.Post("/contexts/{namespace}/{name}/blobs", h.PostBlobHandler)
+		r.Put("/contexts/{namespace}/{name}/manifests/{reference}", h.PutManifestHandler)
+	})
+
+	return r
 }
