@@ -23,9 +23,10 @@ The official registry has some more restrictions on top of this. See the [offici
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "io.modelcontextprotocol/brave-search",
+  "name": "io.modelcontextprotocol.anonymous/brave-search",
   "description": "MCP server for Brave Search API integration",
   "status": "active",
+  "website_url": "https://anonymous.modelcontextprotocol.io/examples",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github"
@@ -651,6 +652,21 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
       ]
     }
   ]
+}
+```
+
+### Server with Custom Installation Path
+
+For MCP servers that follow a custom installation path or are embedded in applications without standalone packages, use the `website_url` field to direct users to setup documentation:
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.modelcontextprotocol.anonymous/embedded-mcp",
+  "description": "MCP server embedded in a Desktop app",
+  "status": "active",
+  "website_url": "https://anonymous.modelcontextprotocol.io/embedded-mcp-guide",
+  "version": "0.1.0"
 }
 ```
 

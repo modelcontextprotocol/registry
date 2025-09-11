@@ -233,6 +233,11 @@ components:
           type: string
           example: "1.0.2"
           description: "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification."
+        website_url:
+          type: string
+          format: uri
+          description: "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements."
+          example: "https://modelcontextprotocol.io/examples"
         created_at:
           type: string
           format: date-time

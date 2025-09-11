@@ -22,6 +22,18 @@ func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) erro
 		pkg.RegistryBaseURL = model.RegistryURLNPM
 	}
 
+	if pkg.Identifier == "" {
+		return fmt.Errorf("package identifier is required for NPM packages")
+	}
+
+	// we need version to look up the package metadata
+	// not providing version will return all the versions
+	// and we won't be able to validate the mcpName field
+	// against the server name
+	if pkg.Version == "" {
+		return fmt.Errorf("package version is required for NPM packages")
+	}
+
 	// Validate that the registry base URL matches NPM exactly
 	if pkg.RegistryBaseURL != model.RegistryURLNPM {
 		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",

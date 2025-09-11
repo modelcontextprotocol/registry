@@ -24,6 +24,11 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 		return err
 	}
 
+	// Validate website URL if provided
+	if err := validateWebsiteURL(serverJSON.WebsiteURL); err != nil {
+		return err
+	}
+
 	// Validate all packages (basic field validation)
 	// Detailed package validation (including registry checks) is done during publish
 	for _, pkg := range serverJSON.Packages {
@@ -41,6 +46,11 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 
 	// Validate reverse-DNS namespace matching for remote URLs
 	if err := validateRemoteNamespaceMatch(*serverJSON); err != nil {
+		return err
+	}
+
+	// Validate reverse-DNS namespace matching for website URL
+	if err := validateWebsiteURLNamespaceMatch(*serverJSON); err != nil {
 		return err
 	}
 
@@ -62,6 +72,31 @@ func validateRepository(obj *model.Repository) error {
 	// validate subfolder if present
 	if obj.Subfolder != "" && !IsValidSubfolderPath(obj.Subfolder) {
 		return fmt.Errorf("%w: %s", ErrInvalidSubfolderPath, obj.Subfolder)
+	}
+
+	return nil
+}
+
+func validateWebsiteURL(websiteURL string) error {
+	// Skip validation if website URL is not provided (optional field)
+	if websiteURL == "" {
+		return nil
+	}
+
+	// Parse the URL to ensure it's valid
+	parsedURL, err := url.Parse(websiteURL)
+	if err != nil {
+		return fmt.Errorf("invalid website URL: %w", err)
+	}
+
+	// Ensure it's an absolute URL with valid scheme
+	if !parsedURL.IsAbs() {
+		return fmt.Errorf("website URL must be absolute (include scheme): %s", websiteURL)
+	}
+
+	// Only allow HTTP/HTTPS schemes for security
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return fmt.Errorf("website URL must use http or https scheme: %s", websiteURL)
 	}
 
 	return nil
@@ -314,6 +349,21 @@ func validateRemoteNamespaceMatch(serverJSON apiv0.ServerJSON) error {
 		if err := validateRemoteURLMatchesNamespace(remote.URL, namespace); err != nil {
 			return fmt.Errorf("remote URL %s does not match namespace %s: %w", remote.URL, namespace, err)
 		}
+	}
+
+	return nil
+}
+
+// validateWebsiteURLNamespaceMatch validates that website URL matches the reverse-DNS namespace
+func validateWebsiteURLNamespaceMatch(serverJSON apiv0.ServerJSON) error {
+	// Skip validation if website URL is not provided
+	if serverJSON.WebsiteURL == "" {
+		return nil
+	}
+
+	namespace := serverJSON.Name
+	if err := validateRemoteURLMatchesNamespace(serverJSON.WebsiteURL, namespace); err != nil {
+		return fmt.Errorf("website URL %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err)
 	}
 
 	return nil

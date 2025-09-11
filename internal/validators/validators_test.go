@@ -27,7 +27,8 @@ func TestValidate(t *testing.T) {
 					Source: "github",
 					ID:     "owner/repo",
 				},
-				Version: "1.0.0",
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/docs",
 				Packages: []model.Package{
 					{
 						Identifier:      "test-package",
@@ -169,6 +170,104 @@ func TestValidate(t *testing.T) {
 				Version: "1.0.0",
 			},
 			expectedError: validators.ErrInvalidSubfolderPath.Error(),
+		},
+		{
+			name: "server with valid website URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/docs",
+			},
+			expectedError: "",
+		},
+		{
+			name: "server with invalid website URL - no scheme",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "example.com/docs",
+			},
+			expectedError: "website URL must be absolute (include scheme): example.com/docs",
+		},
+		{
+			name: "server with invalid website URL - invalid scheme",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "ftp://example.com/docs",
+			},
+			expectedError: "website URL must use http or https scheme: ftp://example.com/docs",
+		},
+		{
+			name: "server with malformed website URL",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "ht tp://example.com/docs",
+			},
+			expectedError: "invalid website URL:",
+		},
+		{
+			name: "server with website URL that matches namespace domain",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/docs",
+			},
+			expectedError: "",
+		},
+		{
+			name: "server with website URL subdomain that matches namespace",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://docs.example.com/mcp",
+			},
+			expectedError: "",
+		},
+		{
+			name: "server with website URL that does not match namespace",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://different.com/docs",
+			},
+			expectedError: "website URL https://different.com/docs does not match namespace com.example/test-server",
 		},
 		{
 			name: "package with spaces in name",
