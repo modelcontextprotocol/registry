@@ -13,7 +13,27 @@ By the end of this tutorial, you'll have:
 ## Prerequisites
 
 - An MCP server you've already built ([follow this guide if you don't have one already](https://modelcontextprotocol.io/quickstart/server))
-- Your server published to a package registry (npm, PyPI, Docker Hub, etc.)
+
+## Deployment Options
+
+There are multiple ways to make your MCP server available:
+
+### 📦 Package Deployment
+- Published to a package registry (npm, PyPI, Docker Hub, etc.)
+- Downloaded and run locally by MCP clients
+- Most common deployment method
+
+### 🌐 Remote Deployment  
+- Hosted as a web service accessible via URL
+- MCP clients connect directly to your hosted service
+- Good for servers requiring specialized infrastructure or shared resources
+
+### 🔄 Hybrid Deployment
+- **Both packages AND remotes**: A single server can offer multiple installation options
+- Gives users flexibility to choose local or remote access
+- Common for servers that work well in both scenarios
+
+**This guide covers all deployment options.** You can use packages, remotes, or both together.
 
 ## Step 1: Install the Publisher CLI
 
@@ -102,9 +122,13 @@ The `name` field determines authentication requirements:
 - **`io.github.yourname/*`** - Requires GitHub authentication
 - **`com.yourcompany/*`** - Requires DNS or HTTP domain verification
 
-### Add Package Validation
+### Configure Deployment Methods
 
-Your package must include validation metadata to prove ownership.
+Configure your server to support packages, remotes, or both:
+
+#### Package Deployment
+
+Add package validation metadata to prove ownership of your packages.
 
 
 <details>
@@ -283,6 +307,85 @@ The official MCP registry currently only supports artifacts hosted on GitHub or 
 
 </details>
 
+#### Remote Deployment
+
+Add the `remotes` field to your `server.json` (can coexist with `packages`):
+
+<details>
+<summary><strong>🌐 Remote Server Configuration</strong></summary>
+
+### Requirements
+
+- **Service endpoint**: Your MCP server must be accessible at the specified URL
+- **Transport protocol**: Choose from `sse` (Server-Sent Events) or `streamable-http`
+- **URL validation**: For domain namespaces only (see URL requirements below)
+
+### Example server.json
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "com.yourcompany/api-server",
+  "description": "Cloud-hosted MCP server for API operations",
+  "version": "2.0.0",
+  "remotes": [
+    {
+      "type": "sse",
+      "url": "https://mcp.yourcompany.com/sse"
+    }
+  ]
+}
+```
+
+### Multiple Transport Options
+
+You can offer multiple connection methods:
+
+```json
+{
+  "remotes": [
+    {
+      "type": "sse",
+      "url": "https://mcp.yourcompany.com/sse"
+    },
+    {
+      "type": "streamable-http", 
+      "url": "https://mcp.yourcompany.com/http"
+    }
+  ]
+}
+```
+
+### URL Validation Requirements
+
+- For `com.yourcompany/*` namespaces: URLs must be on `yourcompany.com` or its subdomains
+- For `io.github.username/*` namespaces: No URL restrictions (but you must authenticate via GitHub)
+
+### Authentication Headers (Optional)
+
+Configure headers that clients should send when connecting:
+
+```json
+{
+  "remotes": [
+    {
+      "type": "sse",
+      "url": "https://mcp.yourcompany.com/sse",
+      "headers": [
+        {
+          "name": "X-API-Key", 
+          "description": "API key for authentication",
+          "is_required": true,
+          "is_secret": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+</details>
+
 ## Step 4: Authenticate
 
 Choose your authentication method based on your namespace:
@@ -344,6 +447,7 @@ You should see your server metadata returned in the JSON response.
 - **Update your server**: Publish new versions with updated server.json files
 - **Set up CI/CD**: Automate publishing with [GitHub Actions](github-actions.md)
 - **Learn more**: Understand [server.json format](../../reference/server-json/generic-server-json.md) in depth
+- **More examples**: See [remote server configurations](../../reference/server-json/generic-server-json.md#remote-server-example) and [hybrid deployments](../../reference/server-json/generic-server-json.md#server-with-remote-and-package-options) in the schema documentation
 
 ## What You've Accomplished
 
