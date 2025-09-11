@@ -38,7 +38,7 @@ Only trusted public registries are supported. Private registries and alternative
 - **NPM**: `https://registry.npmjs.org` only
 - **PyPI**: `https://pypi.org` only  
 - **NuGet**: `https://api.nuget.org` only
-- **Docker/OCI**: `https://docker.io` only
+- **Docker/OCI**: `https://docker.io` and `https://ghcr.io` only
 - **MCPB**: `https://github.com` releases and `https://gitlab.com` releases only
 
 ## `_meta` Namespace Restrictions
