@@ -72,7 +72,7 @@
           "type": "string",
           "maxLength": 255,
           "example": "1.0.2",
-          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably."
+          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
         },
         "website_url": {
           "type": "string",
@@ -105,7 +105,8 @@
           "type": "string",
           "description": "Package version",
           "example": "1.0.2",
-          "minLength": 1
+          "minLength": 1,
+          "remarks": "Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
         },
         "file_sha256": {
           "type": "string",

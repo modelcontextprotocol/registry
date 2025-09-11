@@ -80,7 +80,7 @@ The registry accepts any version string up to 255 characters, but we recommend:
 - **SHOULD align with package versions** to reduce confusion
 - **MAY use prerelease labels** (e.g., "1.0.0-1") for registry-specific versions
 
-The registry attempts to parse versions as semantic versions for proper ordering. Non-semantic versions are allowed but will be ordered by publication timestamp. See the [versioning guide](../explanations/versioning.md) for detailed guidance.
+The registry attempts to parse versions as semantic versions for proper ordering. Non-semantic versions are allowed but will be ordered by publication timestamp. Version ranges (e.g., `^1.2.3`, `~1.2.3`, `>=1.2.3`, `1.x`, `1.*`) are rejected; publish a specific version instead. See the [versioning guide](../explanations/versioning.md) for detailed guidance.
 
 ### Can I add custom metadata when publishing?
 
