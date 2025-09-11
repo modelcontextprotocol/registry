@@ -2,7 +2,7 @@ config:
   mcp-registry:environment: local
   mcp-registry:provider: local
   mcp-registry:githubClientId: Iv23licy3GSiM9Km5jtd
-  mcp-registry:githubClientSecret: 0e8db54879b02c29adef51795586f3c510a9341d
+# TODO: Use "pulumi config set --secret <key> <value>" to set sensitive values
   mcp-registry:jwtPrivateKey: bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c
   mcp-registry:googleOauthClientSecret:
     secure: v1:DUSCqfRvRSVmSihj:JIYznEU+T1vbmVF8MkdSUtqUM50498sxBWsfwNaS1r5jkF/+gtltWfJoKWb1OLgcX8lb
