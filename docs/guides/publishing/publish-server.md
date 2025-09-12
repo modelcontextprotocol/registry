@@ -345,6 +345,13 @@ You should see your server metadata returned in the JSON response.
 
 **"Namespace not authorized"** - Your authentication method doesn't match your chosen namespace format.
 
+## Examples
+
+See these real-world examples of published servers:
+- [NPM, Docker and MCPB example](https://github.com/domdomegg/airtable-mcp-server)
+- [NuGet example](https://github.com/domdomegg/time-mcp-nuget)
+- [PyPI example](https://github.com/domdomegg/time-mcp-pypi)
+
 ## Next Steps
 
 - **Update your server**: Publish new versions with updated server.json files

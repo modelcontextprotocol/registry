@@ -118,6 +118,13 @@ For custom domain namespaces (`com.yourcompany/*`):
 
 Add your Ed25519 private key as `MCP_PRIVATE_KEY` secret.
 
+## Examples
+
+See these real-world examples of automated publishing workflows:
+- [NPM, Docker and MCPB](https://github.com/domdomegg/airtable-mcp-server)
+- [NuGet](https://github.com/domdomegg/time-mcp-nuget)
+- [PyPI](https://github.com/domdomegg/time-mcp-pypi)
+
 ## Tips
 
 You can keep your package version and server.json version in sync automatically with something like:
