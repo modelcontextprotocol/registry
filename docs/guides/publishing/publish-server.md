@@ -2,6 +2,12 @@
 
 Complete guide to publishing an MCP server to the registry.
 
+> [!TIP]
+> Using an agentic AI coding assistant? Just use this prompt:
+> ```
+> Read https://raw.githubusercontent.com/modelcontextprotocol/registry/refs/heads/main/docs/guides/publishing/publish-server.md and https://raw.githubusercontent.com/modelcontextprotocol/registry/refs/heads/main/docs/guides/publishing/github-actions.md. Evaluate the best way to publish this server to the registry (prefer automated CI flows over manual flows where possible), and implement that. If possible, validate the server.json against the $schema before telling the user you are done, using a proper json schema library or tool available on the user's machine. If you get stuck, guide the user through the parts of the publishing process they need to do (e.g. logging into the publisher CLI if doing manual pubishing).
+> ```
+
 ## What You'll Learn
 
 By the end of this tutorial, you'll have:
