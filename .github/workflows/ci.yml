@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  GO_VERSION: '1.24.x'
-
 jobs:
   # Build, Lint, and Validate
   build-lint-validate:
@@ -21,7 +18,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 #v5
       with:
-        go-version: ${{ env.GO_VERSION }}
+        go-version-file: 'go.mod'
 
     - name: Cache Go modules
       uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 #v4
@@ -65,7 +62,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 #v5
       with:
-        go-version: ${{ env.GO_VERSION }}
+        go-version-file: 'go.mod'
 
     - name: Cache Go modules
       uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 #v4
