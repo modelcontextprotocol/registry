@@ -18,13 +18,13 @@ jobs:
       packages: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 #v3
 
       - name: Log in to Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 #v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -32,7 +32,7 @@ jobs:
 
       - name: Extract metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f #v5
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -40,7 +40,7 @@ jobs:
             type=raw,value=main,enable={{is_default_branch}}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 #v5
         with:
           context: .
           file: ./Dockerfile
@@ -61,25 +61,25 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v4
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 #v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Setup Pulumi
-        uses: pulumi/actions@v6
+        uses: pulumi/actions@cc7494be991dba0978f7ffafaf995b0449a0998e #v6
         with:
           pulumi-version: ${{ env.PULUMI_VERSION }}
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 #v2
         with:
           credentials_json: ${{ secrets.GCP_STAGING_SERVICE_ACCOUNT_KEY }}
 
       - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db #v2
         with:
           project_id: mcp-registry-staging
           install_components: gke-gcloud-auth-plugin
@@ -100,25 +100,25 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v4
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 #v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Setup Pulumi
-        uses: pulumi/actions@v6
+        uses: pulumi/actions@cc7494be991dba0978f7ffafaf995b0449a0998e #v6
         with:
           pulumi-version: ${{ env.PULUMI_VERSION }}
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 #v2
         with:
           credentials_json: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT_KEY }}
 
       - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db #v2
         with:
           project_id: mcp-registry-prod
           install_components: gke-gcloud-auth-plugin

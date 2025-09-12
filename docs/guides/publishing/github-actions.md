@@ -85,30 +85,18 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The workflow will:
+The workflow runs tests, builds your package, publishes to npm, and publishes to the MCP Registry.
 
-1. Run tests
-2. Build your package
-3. Publish to npm
-4. Automatically authenticate with the MCP Registry
-5. Publish updated server.json
+## Authentication Methods
 
-## Authentication Methods by CI Platform
-
-### GitHub Actions - OIDC (Recommended)
+### GitHub Actions OIDC (Recommended)
 
 ```yaml
 - name: Login to MCP Registry
   run: mcp-publisher login github-oidc
 ```
 
-**Advantages:**
-
-- No secrets to manage
-- Automatically scoped to your repository
-- Most secure option
-
-### GitHub Actions - Personal Access Token
+### GitHub Personal Access Token
 
 ```yaml
 - name: Login to MCP Registry
@@ -119,7 +107,7 @@ The workflow will:
 
 Add `MCP_GITHUB_TOKEN` secret with a GitHub PAT that has repo access.
 
-### DNS Authentication (Any CI)
+### DNS Authentication
 
 For custom domain namespaces (`com.yourcompany/*`):
 
@@ -132,150 +120,22 @@ For custom domain namespaces (`com.yourcompany/*`):
 
 Add your Ed25519 private key as `MCP_PRIVATE_KEY` secret.
 
-## Language-Specific Examples
+## Examples
 
-### Python Project
+See these real-world examples of automated publishing workflows:
+- [NPM, Docker and MCPB](https://github.com/domdomegg/airtable-mcp-server)
+- [NuGet](https://github.com/domdomegg/time-mcp-nuget)
+- [PyPI](https://github.com/domdomegg/time-mcp-pypi)
 
+## Tips
+
+You can keep your package version and server.json version in sync automatically with something like:
 ```yaml
-name: Publish Python MCP Server
-
-on:
-  push:
-    tags: ["v*"]
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Install Poetry
-        run: pipx install poetry
-
-      - name: Build package
-        run: poetry build
-
-      - name: Publish to PyPI
-        run: poetry publish
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-
-      - name: Install MCP Publisher
-        run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
-
-      - name: Publish to MCP Registry
-        run: |
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
-```
-
-### Docker Project
-
-```yaml
-name: Publish Docker MCP Server
-
-on:
-  push:
-    tags: ["v*"]
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Extract version
-        id: version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: yourname/your-server:${{ steps.version.outputs.version }}
-          labels: |
-            io.modelcontextprotocol.server.name=io.github.yourname/your-server
-
-      - name: Install MCP Publisher
-        run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
-
-      - name: Publish to MCP Registry
-        run: |
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
-```
-
-## Best Practices
-
-### 1. Version Alignment
-
-Keep your package version and server.json version in sync:
-```yaml
-- name: Update server.json version
-  run: |
+- run: |
     VERSION=${GITHUB_REF#refs/tags/v}
-    jq --arg version "$VERSION" '.version = $version' server.json > tmp.json
-    mv tmp.json server.json
-```
-
-### 2. Conditional Publishing
-
-Only publish to registry after package publishing succeeds:
-
-```yaml
-- name: Publish to npm
-  run: npm publish
-  id: npm-publish
-
-- name: Publish to MCP Registry
-  if: steps.npm-publish.outcome == 'success'
-  run: ./mcp-publisher publish
+    jq --arg v "$VERSION" '.version = $v' server.json > tmp && mv tmp server.json
 ```
 
 ## Troubleshooting
-
-**"Publisher binary not found"** - Ensure you download the correct binary for your CI platform (linux/mac/windows).
-
-**"Authentication failed"** - For GitHub OIDC, verify `id-token: write` permission is set. For other methods, check secret configuration.
-
-**"Package validation failed"** - Ensure your package was published successfully before MCP Registry publishing runs.
-
-**"Version already exists"** - Each server.json version must be unique. Consider using build numbers: `1.0.0-build.123`.
-
-## What You've Accomplished
-
-You now have automated MCP server publishing that:
-
-- Triggers on version tags
-- Runs tests before publishing
-- Publishes to package registry first
-- Automatically publishes to MCP Registry
-- Handles authentication securely
-- Provides failure notifications
-
-Your MCP server publishing is now fully automated - just tag a release and everything happens automatically!
+- **"Authentication failed"**: Ensure `id-token: write` permission is set for OIDC, or check secrets
+- **"Package validation failed"**: Verify your package published to your registry (NPM, PyPi etc.) successfully first, and that you have done the necessary validation steps in the [Publishing Tutorial](publish-server.md)
