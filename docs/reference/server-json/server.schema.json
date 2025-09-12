@@ -110,13 +110,12 @@
         },
         "version": {
           "type": "string",
-          "description": "Package version",
+          "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*').",
           "not": {
             "const": "latest"
           },
           "example": "1.0.2",
-          "minLength": 1,
-          "remarks": "Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
+          "minLength": 1
         },
         "file_sha256": {
           "type": "string",
