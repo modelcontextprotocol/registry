@@ -3,6 +3,7 @@ package registries
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,6 +17,9 @@ const (
 	dockerIoAPIBaseURL = "https://registry-1.docker.io"
 	ghcrAPIBaseURL     = "https://ghcr.io"
 )
+
+// ErrRateLimited is returned when a registry rate limits our requests
+var ErrRateLimited = errors.New("rate limited by registry")
 
 // OCIAuthResponse represents an OCI registry authentication response
 type OCIAuthResponse struct {
@@ -98,6 +102,11 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	// Get the image manifest
 	manifest, err := fetchImageManifest(ctx, client, registryConfig, namespace, repo, pkg.Version)
 	if err != nil {
+		// Handle rate limiting explicitly - skip validation
+		if errors.Is(err, ErrRateLimited) {
+			log.Printf("Skipping OCI validation for %s/%s:%s due to rate limiting", namespace, repo, pkg.Version)
+			return nil
+		}
 		return err
 	}
 
@@ -105,11 +114,6 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	configDigest, err := getConfigDigestFromManifest(ctx, client, registryConfig, namespace, repo, manifest)
 	if err != nil {
 		return err
-	}
-
-	if configDigest == "" {
-		// Rate limited case, skip validation
-		return nil
 	}
 
 	// Validate server name annotation
@@ -155,9 +159,9 @@ func fetchImageManifest(ctx context.Context, client *http.Client, registryConfig
 		return nil, fmt.Errorf("OCI image '%s/%s:%s' not found (status: %d)", namespace, repo, tag, resp.StatusCode)
 	}
 	if resp.StatusCode == http.StatusTooManyRequests {
-		// Rate limited, skip validation for now
-		log.Printf("Warning: Rate limited when accessing OCI image '%s/%s:%s'. Skipping validation.", namespace, repo, tag)
-		return &OCIManifest{}, nil
+		// Rate limited, return explicit error
+		log.Printf("Rate limited when accessing OCI image '%s/%s:%s'", namespace, repo, tag)
+		return nil, fmt.Errorf("%w: %s/%s:%s", ErrRateLimited, namespace, repo, tag)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to fetch OCI manifest (status: %d)", resp.StatusCode)
@@ -173,11 +177,6 @@ func fetchImageManifest(ctx context.Context, client *http.Client, registryConfig
 
 // getConfigDigestFromManifest extracts the config digest from an OCI manifest
 func getConfigDigestFromManifest(ctx context.Context, client *http.Client, registryConfig *RegistryConfig, namespace, repo string, manifest *OCIManifest) (string, error) {
-	// Handle rate limited case (empty manifest)
-	if len(manifest.Manifests) == 0 && manifest.Config.Digest == "" {
-		return "", nil // Rate limited case, skip validation
-	}
-
 	// Handle multi-arch images by using first manifest
 	if len(manifest.Manifests) > 0 {
 		// This is a multi-arch image, get the specific manifest
@@ -187,6 +186,12 @@ func getConfigDigestFromManifest(ctx context.Context, client *http.Client, regis
 		}
 		return specificManifest.Config.Digest, nil
 	}
+
+	// For single-arch images, validate we have a config digest
+	if manifest.Config.Digest == "" {
+		return "", fmt.Errorf("manifest missing config digest - invalid or corrupted manifest")
+	}
+
 	return manifest.Config.Digest, nil
 }
 
