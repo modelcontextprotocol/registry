@@ -1,9 +1,9 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "title": "MCP Server Detail",
-  "$ref": "#/$defs/ServerDetail",
-  "$defs": {
+  "$ref": "#/definitions/ServerDetail",
+  "definitions": {
     "Repository": {
       "type": "object",
       "description": "Repository metadata for the MCP server source code. Enables users and security experts to inspect the code, improving transparency.",
@@ -65,14 +65,14 @@
           "description": "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage. 'deleted' indicates the server should never be installed and existing installations should be uninstalled - this is rare, and usually indicates malware or a legal takedown."
         },
         "repository": {
-          "$ref": "#/$defs/Repository",
+          "$ref": "#/definitions/Repository",
           "description": "Optional repository metadata for the MCP server source code. Recommended for transparency and security inspection."
         },
         "version": {
           "type": "string",
           "maxLength": 255,
           "example": "1.0.2",
-          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably."
+          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
         },
         "website_url": {
           "type": "string",
@@ -84,6 +84,13 @@
     },
     "Package": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "registry_type",
+        "identifier",
+        "version",
+        "transport"
+      ],
       "properties": {
         "registry_type": {
           "type": "string",
@@ -103,7 +110,10 @@
         },
         "version": {
           "type": "string",
-          "description": "Package version",
+          "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*').",
+          "not": {
+            "const": "latest"
+          },
           "example": "1.0.2",
           "minLength": 1
         },
@@ -126,13 +136,13 @@
         "transport": {
           "anyOf": [
             {
-              "$ref": "#/$defs/StdioTransport"
+              "$ref": "#/definitions/StdioTransport"
             },
             {
-              "$ref": "#/$defs/StreamableHttpTransport"
+              "$ref": "#/definitions/StreamableHttpTransport"
             },
             {
-              "$ref": "#/$defs/SseTransport"
+              "$ref": "#/definitions/SseTransport"
             }
           ],
           "description": "Transport protocol configuration for the package"
@@ -141,21 +151,21 @@
           "type": "array",
           "description": "A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.",
           "items": {
-            "$ref": "#/$defs/Argument"
+            "$ref": "#/definitions/Argument"
           }
         },
         "package_arguments": {
           "type": "array",
           "description": "A list of arguments to be passed to the package's binary.",
           "items": {
-            "$ref": "#/$defs/Argument"
+            "$ref": "#/definitions/Argument"
           }
         },
         "environment_variables": {
           "type": "array",
           "description": "A mapping of environment variables to be set when running the package.",
           "items": {
-            "$ref": "#/$defs/KeyValueInput"
+            "$ref": "#/definitions/KeyValueInput"
           }
         }
       }
@@ -208,7 +218,7 @@
     "InputWithVariables": {
       "allOf": [
         {
-          "$ref": "#/$defs/Input"
+          "$ref": "#/definitions/Input"
         },
         {
           "type": "object",
@@ -217,7 +227,7 @@
               "type": "object",
               "description": "A map of variable names to their values. Keys in the input `value` that are wrapped in `{curly_braces}` will be replaced with the corresponding variable values.",
               "additionalProperties": {
-                "$ref": "#/$defs/Input"
+                "$ref": "#/definitions/Input"
               }
             }
           }
@@ -228,7 +238,7 @@
       "description": "A positional input is a value inserted verbatim into the command line.",
       "allOf": [
         {
-          "$ref": "#/$defs/InputWithVariables"
+          "$ref": "#/definitions/InputWithVariables"
         },
         {
           "type": "object",
@@ -273,7 +283,7 @@
       "description": "A command-line `--flag={value}`.",
       "allOf": [
         {
-          "$ref": "#/$defs/InputWithVariables"
+          "$ref": "#/definitions/InputWithVariables"
         },
         {
           "type": "object",
@@ -306,7 +316,7 @@
     "KeyValueInput": {
       "allOf": [
         {
-          "$ref": "#/$defs/InputWithVariables"
+          "$ref": "#/definitions/InputWithVariables"
         },
         {
           "type": "object",
@@ -327,10 +337,10 @@
       "description": "Warning: Arguments construct command-line parameters that may contain user-provided input. This creates potential command injection risks if clients execute commands in a shell environment. For example, a malicious argument value like ';rm -rf ~/Development' could execute dangerous commands. Clients should prefer non-shell execution methods (e.g., posix_spawn) when possible to eliminate injection risks entirely. Where not possible, clients should obtain consent from users or agents to run the resolved command before execution.",
       "anyOf": [
         {
-          "$ref": "#/$defs/PositionalArgument"
+          "$ref": "#/definitions/PositionalArgument"
         },
         {
-          "$ref": "#/$defs/NamedArgument"
+          "$ref": "#/definitions/NamedArgument"
         }
       ]
     },
@@ -374,7 +384,7 @@
           "type": "array",
           "description": "HTTP headers to include",
           "items": {
-            "$ref": "#/$defs/KeyValueInput"
+            "$ref": "#/definitions/KeyValueInput"
           }
         }
       }
@@ -404,7 +414,7 @@
           "type": "array",
           "description": "HTTP headers to include",
           "items": {
-            "$ref": "#/$defs/KeyValueInput"
+            "$ref": "#/definitions/KeyValueInput"
           }
         }
       }
@@ -413,7 +423,7 @@
       "description": "Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.",
       "allOf": [
         {
-          "$ref": "#/$defs/Server"
+          "$ref": "#/definitions/Server"
         },
         {
           "type": "object",
@@ -427,7 +437,7 @@
             "packages": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/Package"
+                "$ref": "#/definitions/Package"
               }
             },
             "remotes": {
@@ -435,10 +445,10 @@
               "items": {
                 "anyOf": [
                   {
-                    "$ref": "#/$defs/StreamableHttpTransport"
+                    "$ref": "#/definitions/StreamableHttpTransport"
                   },
                   {
-                    "$ref": "#/$defs/SseTransport"
+                    "$ref": "#/definitions/SseTransport"
                   }
                 ]
               }

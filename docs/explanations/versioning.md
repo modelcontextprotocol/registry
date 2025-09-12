@@ -98,8 +98,22 @@ Registry clients SHOULD:
 ```javascript
 "v1.0"           // Version with prefix
 "2021.03.15"     // Date-based versioning
-"snapshot"       // Development snapshots
-"latest"         // Custom versioning scheme
+```
+
+### Not Allowed: Version Ranges
+The registry requires specific versions for both the top-level `version` and any `packages[].version`. Version ranges or wildcard versions are rejected during publish, including but not limited to:
+
+```javascript
+"^1.2.3"
+"~1.2.3"
+">=1.2.3"
+"<=1.2.3"
+">1.2.3"
+"<1.2.3"
+"1.x"
+"1.2.*"
+"1 - 2"
+"1.2 || 1.3"
 ```
 
 ### Alignment Examples

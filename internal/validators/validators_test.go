@@ -18,6 +18,160 @@ func TestValidate(t *testing.T) {
 		expectedError string
 	}{
 		{
+			name: "Version rejects top-level version ranges",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "^1.2.3",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
+			name: "rejects package version ranges",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: model.RegistryTypeNPM,
+						Version:      ">=1.2.3",
+						Transport:    model.Transport{Type: "stdio"},
+					},
+				},
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
+			name: "Version allows specific versions (semver)",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.2.3",
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: model.RegistryTypeNPM,
+						Version:      "1.2.3-alpha.1",
+						Transport:    model.Transport{Type: "stdio"},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Version allows specific non-semver versions",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "2021.03.15",
+				Packages: []model.Package{
+					{
+						Identifier:   "test-package",
+						RegistryType: model.RegistryTypeNPM,
+						Version:      "snapshot",
+						Transport:    model.Transport{Type: "stdio"},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Version rejects wildcard and x-range",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.x",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
+			name: "Version rejects wildcard *",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.*",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
+			name: "Version allows freeform version with hyphen not a range",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "snapshot - 2025.09",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Version rejects hyphen range of two versions",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.2.3 - 2.0.0",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
+			name: "Version rejects OR range with two versions",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.2 || 1.3",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
+			name: "Version rejects comparator with space",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: ">= 1.2.3",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
 			name: "valid server detail with all fields",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
@@ -455,7 +609,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				Version: "1.0.0",
+				Version:  "1.0.0",
 				Packages: nil,
 				Remotes:  nil,
 			},
@@ -470,7 +624,7 @@ func TestValidate(t *testing.T) {
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
-				Version: "1.0.0",
+				Version:  "1.0.0",
 				Packages: []model.Package{},
 				Remotes:  []model.Transport{},
 			},
@@ -921,7 +1075,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -939,7 +1093,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -959,7 +1113,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -978,7 +1132,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1001,7 +1155,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1019,7 +1173,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1040,7 +1194,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1059,7 +1213,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1078,7 +1232,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1097,7 +1251,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -1112,7 +1266,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -1127,7 +1281,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "sse",
@@ -1142,7 +1296,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "sse",
@@ -1157,7 +1311,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "stdio",
@@ -1171,7 +1325,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "websocket",
@@ -1187,7 +1341,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						Identifier:   "test-package",
@@ -1206,7 +1360,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",

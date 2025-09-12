@@ -9,8 +9,9 @@ var (
 	ErrInvalidSubfolderPath = errors.New("invalid subfolder path")
 
 	// Package validation errors
-	ErrPackageNameHasSpaces = errors.New("package name cannot contain spaces")
+	ErrPackageNameHasSpaces  = errors.New("package name cannot contain spaces")
 	ErrReservedVersionString = errors.New("version string 'latest' is reserved and cannot be used")
+	ErrVersionLooksLikeRange = errors.New("version must be a specific version, not a range")
 
 	// Remote validation errors
 	ErrInvalidRemoteURL = errors.New("invalid remote URL")
