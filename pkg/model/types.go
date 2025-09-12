@@ -35,8 +35,8 @@ type Package struct {
 
 // Repository represents a source code repository as defined in the spec
 type Repository struct {
-	URL       string `json:"url"`
-	Source    string `json:"source"`
+	URL       string `json:"url,omitempty"`
+	Source    string `json:"source,omitempty"`
 	ID        string `json:"id,omitempty"`
 	Subfolder string `json:"subfolder,omitempty"`
 }
