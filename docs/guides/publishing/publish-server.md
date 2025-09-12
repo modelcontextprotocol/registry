@@ -16,24 +16,13 @@ By the end of this tutorial, you'll have:
 
 ## Deployment Options
 
-There are multiple ways to make your MCP server available:
+You can make your MCP server available in multiple ways:
 
-### 📦 Package Deployment
-- Published to a package registry (npm, PyPI, Docker Hub, etc.)
-- Downloaded and run locally by MCP clients
-- Most common deployment method
+- **📦 Package deployment**: Published to registries (npm, PyPI, Docker Hub, etc.) and run locally by clients
+- **🌐 Remote deployment**: Hosted as a web service that clients connect to directly  
+- **🔄 Hybrid deployment**: Offer both package and remote options for maximum flexibility
 
-### 🌐 Remote Deployment  
-- Hosted as a web service accessible via URL
-- MCP clients connect directly to your hosted service
-- Good for servers requiring specialized infrastructure or shared resources
-
-### 🔄 Hybrid Deployment
-- **Both packages AND remotes**: A single server can offer multiple installation options
-- Gives users flexibility to choose local or remote access
-- Common for servers that work well in both scenarios
-
-**This guide covers all deployment options.** You can use packages, remotes, or both together.
+Learn more about [MCP server architecture](https://modelcontextprotocol.io/docs/concepts/servers) in the official docs.
 
 ## Step 1: Install the Publisher CLI
 
