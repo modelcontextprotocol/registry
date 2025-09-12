@@ -118,51 +118,6 @@ For custom domain namespaces (`com.yourcompany/*`):
 
 Add your Ed25519 private key as `MCP_PRIVATE_KEY` secret.
 
-## Language-Specific Examples
-
-### Python Example
-
-```yaml
-- name: Setup Python
-  uses: actions/setup-python@v4
-  with:
-    python-version: '3.11'
-
-- name: Build and publish to PyPI
-  run: |
-    pipx install poetry
-    poetry build
-    poetry publish
-  env:
-    POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-
-- name: Install MCP Publisher
-  run: curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.0.0/mcp-publisher_1.0.0_linux_amd64.tar.gz" | tar xz mcp-publisher
-
-- name: Publish to MCP Registry
-  run: |
-    ./mcp-publisher login github-oidc
-    ./mcp-publisher publish
-```
-
-### Docker Example
-
-```yaml
-- name: Login to Docker Hub
-  uses: docker/login-action@v3
-  with:
-    username: ${{ secrets.DOCKER_USERNAME }}
-    password: ${{ secrets.DOCKER_PASSWORD }}
-
-- name: Build and push
-  uses: docker/build-push-action@v5
-  with:
-    push: true
-    tags: yourname/server:${{ github.ref_name }}
-    labels: io.modelcontextprotocol.server.name=io.github.yourname/server
-```
-
-
 ## Tips
 
 You can keep your package version and server.json version in sync automatically with something like:
