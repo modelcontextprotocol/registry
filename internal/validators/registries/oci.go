@@ -43,7 +43,7 @@ func getRegistryConfig(registryBaseURL, namespace, repo string) *RegistryConfig 
 	case model.RegistryURLGHCR:
 		return &RegistryConfig{
 			APIBaseURL: ghcrAPIBaseURL,
-			AuthURL:    "https://ghcr.io/token",
+			AuthURL:    fmt.Sprintf("%s/token", ghcrAPIBaseURL),
 			Service:    "ghcr.io",
 			Scope:      fmt.Sprintf("repository:%s/%s:pull", namespace, repo),
 		}
