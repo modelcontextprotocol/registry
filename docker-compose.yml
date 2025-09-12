@@ -1,6 +1,7 @@
 services:
   registry:
-    image: registry
+    image: modelcontextprotocol/registry:dev
+    pull_policy: never
     container_name: registry
     build:
       dockerfile: Dockerfile

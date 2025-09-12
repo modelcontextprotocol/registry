@@ -5,6 +5,7 @@ Set up automated MCP server publishing using GitHub Actions.
 ## What You'll Learn
 
 By the end of this tutorial, you'll have:
+
 - A GitHub Actions workflow that automatically publishes your server
 - Understanding of GitHub OIDC authentication
 - Knowledge of best practices for automated publishing
@@ -28,52 +29,52 @@ name: Publish to MCP Registry
 
 on:
   push:
-    tags: ['v*']  # Triggers on version tags like v1.0.0
+    tags: ["v*"] # Triggers on version tags like v1.0.0
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Required for OIDC authentication
+      id-token: write # Required for OIDC authentication
       contents: read
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Setup Node.js  # Adjust for your language
+
+      - name: Setup Node.js # Adjust for your language
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
-      
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run tests
         run: npm test
-      
-      - name: Build package  
+
+      - name: Build package
         run: npm run build
-      
+
       - name: Publish to npm
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
+
       - name: Install MCP Publisher
         run: |
           # Build publisher from source (requires Go)
           git clone https://github.com/modelcontextprotocol/registry publisher-repo
           cd publisher-repo
           make publisher
-          cp cmd/publisher/bin/mcp-publisher ../mcp-publisher
+          cp bin/mcp-publisher ../mcp-publisher
           cd ..
           chmod +x mcp-publisher
-      
+
       - name: Login to MCP Registry
         run: ./mcp-publisher login github-oidc
-      
+
       - name: Publish to MCP Registry
         run: ./mcp-publisher publish
 ```
@@ -97,8 +98,9 @@ git push origin v1.0.0
 ```
 
 The workflow will:
+
 1. Run tests
-2. Build your package  
+2. Build your package
 3. Publish to npm
 4. Automatically authenticate with the MCP Registry
 5. Publish updated server.json
@@ -112,7 +114,8 @@ The workflow will:
   run: mcp-publisher login github-oidc
 ```
 
-**Advantages:** 
+**Advantages:**
+
 - No secrets to manage
 - Automatically scoped to your repository
 - Most secure option
@@ -150,7 +153,7 @@ name: Publish Python MCP Server
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 jobs:
   publish:
@@ -158,32 +161,32 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
-      
+          python-version: "3.11"
+
       - name: Install Poetry
         run: pipx install poetry
-      
+
       - name: Build package
         run: poetry build
-      
+
       - name: Publish to PyPI
         run: poetry publish
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-      
+
       - name: Install MCP Publisher
         run: |
           git clone https://github.com/modelcontextprotocol/registry publisher-repo
           cd publisher-repo && make publisher && cd ..
-          cp publisher-repo/cmd/publisher/bin/mcp-publisher mcp-publisher
-      
+          cp publisher-repo/bin/mcp-publisher mcp-publisher
+
       - name: Publish to MCP Registry
         run: |
           ./mcp-publisher login github-oidc
@@ -197,7 +200,7 @@ name: Publish Docker MCP Server
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 jobs:
   publish:
@@ -205,23 +208,23 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
+
       - name: Extract version
         id: version
         run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-      
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -230,19 +233,18 @@ jobs:
           tags: yourname/your-server:${{ steps.version.outputs.version }}
           labels: |
             io.modelcontextprotocol.server.name=io.github.yourname/your-server
-      
+
       - name: Install MCP Publisher
         run: |
           git clone https://github.com/modelcontextprotocol/registry publisher-repo
           cd publisher-repo && make publisher && cd ..
-          cp publisher-repo/cmd/publisher/bin/mcp-publisher mcp-publisher
-      
+          cp publisher-repo/bin/mcp-publisher mcp-publisher
+
       - name: Publish to MCP Registry
         run: |
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
 ```
-
 
 ## Best Practices
 
@@ -272,7 +274,6 @@ Only publish to registry after package publishing succeeds:
   run: ./mcp-publisher publish
 ```
 
-
 ## Troubleshooting
 
 **"Publisher binary not found"** - Ensure you download the correct binary for your CI platform (linux/mac/windows).
@@ -286,6 +287,7 @@ Only publish to registry after package publishing succeeds:
 ## What You've Accomplished
 
 You now have automated MCP server publishing that:
+
 - Triggers on version tags
 - Runs tests before publishing
 - Publishes to package registry first
