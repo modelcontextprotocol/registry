@@ -160,7 +160,7 @@ func extractExamples(path string) ([]example, error) {
 
 	// Regex to match JSON code blocks in markdown
 	// Captures everything between ```json and ```
-	re := regexp.MustCompile("(?s)```json\n(.*?)\n```")
+	re := regexp.MustCompile("(?s)```json\r?\n(.*?)\r?\n```")
 	matches := re.FindAllStringSubmatchIndex(content, -1)
 
 	var examples []example

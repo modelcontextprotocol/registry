@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -42,8 +43,8 @@ func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) erro
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	url := pkg.RegistryBaseURL + "/" + pkg.Identifier + "/" + pkg.Version
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	requestURL := pkg.RegistryBaseURL + "/" + url.PathEscape(pkg.Identifier) + "/" + url.PathEscape(pkg.Version)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

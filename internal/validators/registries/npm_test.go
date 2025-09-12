@@ -91,6 +91,29 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 			serverName:  "io.github.domdomegg/airtable-mcp-server",
 			expectError: false,
 		},
+		{
+			name:         "scoped package that doesn't exist should fail",
+			packageName:  "@nonexistent-scope/nonexistent-package",
+			version:      "1.0.0",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "not found",
+		},
+		{
+			name:         "scoped package without mcpName should fail",
+			packageName:  "@types/node",
+			version:      "20.0.0",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "missing required 'mcpName' field",
+		},
+		{
+			name:        "scoped package with mcpName should pass",
+			packageName: "@hellocoop/admin-mcp",
+			version:     "1.5.7",
+			serverName:  "io.github.hellocoop/admin-mcp",
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {

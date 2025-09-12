@@ -272,41 +272,6 @@ Only publish to registry after package publishing succeeds:
   run: ./mcp-publisher publish
 ```
 
-### 3. Test Before Publishing
-
-Include validation in your workflow:
-
-```yaml
-- name: Validate server.json
-  run: |
-    # Validate against schema
-    curl -s https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json | \
-    jq . > schema.json
-    npx ajv-cli validate -s schema.json -d server.json
-    
-    # Test with publisher
-    ./mcp-publisher init --validate-only
-```
-
-### 4. Notification Setup
-
-Get notified of publishing status:
-
-```yaml
-- name: Notify on success
-  if: success()
-  run: |
-    curl -X POST "${{ secrets.WEBHOOK_URL }}" \
-         -H "Content-Type: application/json" \
-         -d '{"text": "✅ MCP server ${{ github.repository }} published successfully"}'
-
-- name: Notify on failure  
-  if: failure()
-  run: |
-    curl -X POST "${{ secrets.WEBHOOK_URL }}" \
-         -H "Content-Type: application/json" \
-         -d '{"text": "❌ MCP server ${{ github.repository }} publishing failed"}'
-```
 
 ## Troubleshooting
 

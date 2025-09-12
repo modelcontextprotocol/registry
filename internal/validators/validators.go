@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -13,9 +14,40 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+// Regexes to detect semver range syntaxes
+var (
+	// Case 1: comparator ranges
+	// - "^1.2.3",
+	// - "~1.2.3",
+	// - ">=1.0.0",
+	// - "<=1.0.0",
+	// - ">1.0.0",
+	// - "<1.0.0",
+	// - "=1.0.0",
+	comparatorRangeRe = regexp.MustCompile(`^\s*(?:\^|~|>=|<=|>|<|=)\s*v?\d+(?:\.\d+){0,3}(?:-[0-9A-Za-z.-]+)?\s*$`)
+	// Case 2: hyphen ranges
+	// - "1.2.3 - 2.0.0",
+	hyphenRangeRe = regexp.MustCompile(`^\s*v?\d+(?:\.\d+){0,3}(?:-[0-9A-Za-z.-]+)?\s-\s*v?\d+(?:\.\d+){0,3}(?:-[0-9A-Za-z.-]+)?\s*$`)
+	// Case 3: OR ranges
+	// - "1.2 || 1.3",
+	orRangeRe = regexp.MustCompile(`^\s*(?:v?\d+(?:\.\d+){0,3}(?:-[0-9A-Za-z.-]+)?\s*)(?:\|\|\s*v?\d+(?:\.\d+){0,3}(?:-[0-9A-Za-z.-]+)?\s*)+$`)
+	// Case 4: dotted version wildcards
+	// - "1.2.*",
+	// - "1.2.x",
+	// - "1.2.X",
+	// - "1.x",
+	// etc.
+	dottedVersionLikeRe = regexp.MustCompile(`^\s*(?:v?\d+|x|X|\*)(?:\.(?:\d+|x|X|\*)){1,2}(?:-[0-9A-Za-z.-]+)?\s*$`)
+)
+
 func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	// Validate server name exists and format
 	if _, err := parseServerName(*serverJSON); err != nil {
+		return err
+	}
+
+	// Validate top-level server version is a specific version (not a range) & not "latest"
+	if err := validateVersion(serverJSON.Version); err != nil {
 		return err
 	}
 
@@ -135,14 +167,51 @@ func validatePackageField(obj *model.Package) error {
 	return nil
 }
 
-// validateVersion validates the version string
+// validateVersion validates the version string.
 // NB: we decided that we would not enforce strict semver for version strings
 func validateVersion(version string) error {
 	if version == "latest" {
 		return ErrReservedVersionString
 	}
 
+	// Reject semver range-like inputs
+	if looksLikeVersionRange(version) {
+		return fmt.Errorf("%w: %q", ErrVersionLooksLikeRange, version)
+	}
+
 	return nil
+}
+
+// looksLikeVersionRange detects common semver range syntaxes and wildcard patterns.
+// that indicate the value is not a single, specific version.
+// Examples that should return true:
+// - "^1.2.3",
+// - "~1.2.3",
+// - ">=1.0.0",
+// - "1.x",
+// - "1.2.*",
+// - "1 - 2",
+// - "1.2 || 1.3"
+func looksLikeVersionRange(version string) bool {
+	trimmed := strings.TrimSpace(version)
+	if trimmed == "" {
+		return false
+	}
+
+	if comparatorRangeRe.MatchString(trimmed) {
+		return true
+	}
+	if hyphenRangeRe.MatchString(trimmed) {
+		return true
+	}
+	if orRangeRe.MatchString(trimmed) {
+		return true
+	}
+	if dottedVersionLikeRe.MatchString(trimmed) {
+		// wildcard in a dotted version (x/X/*) implies range-like intent
+		return strings.Contains(trimmed, "x") || strings.Contains(trimmed, "X") || strings.Contains(trimmed, "*")
+	}
+	return false
 }
 
 // validateArgument validates argument details
