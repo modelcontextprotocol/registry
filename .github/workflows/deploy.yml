@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 env:
   PULUMI_VERSION: "3.188.0"
 
@@ -53,8 +56,6 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     environment: staging
     needs: docker-push
     concurrency:
@@ -94,8 +95,6 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     environment: production
     needs: deploy-staging
     concurrency:
