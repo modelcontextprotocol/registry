@@ -143,7 +143,7 @@ Add an `mcpName` field to your `package.json`:
 ### How It Works
 - Registry fetches `https://registry.npmjs.org/your-npm-package`
 - Checks that `mcpName` field matches your server name
-- Update the version to be the version of your published npm package
+- Checks that `version` field matches the `version` in your published npm package
 - Fails if field is missing or doesn't match
 
 ### Example server.json
