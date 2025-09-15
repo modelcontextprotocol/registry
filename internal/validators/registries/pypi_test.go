@@ -21,6 +21,22 @@ func TestValidatePyPI_RealPackages(t *testing.T) {
 		errorMessage string
 	}{
 		{
+			name:         "empty package identifier should fail",
+			packageName:  "",
+			version:      "1.0.0",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package identifier is required for PyPI packages",
+		},
+		{
+			name:         "empty package version should fail",
+			packageName:  "mcp-server-example",
+			version:      "",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package version is required for PyPI packages",
+		},
+		{
 			name:         "non-existent package should fail",
 			packageName:  generateRandomPackageName(),
 			version:      "1.0.0",
@@ -47,7 +63,7 @@ func TestValidatePyPI_RealPackages(t *testing.T) {
 		{
 			name:        "real package with server name in README should pass",
 			packageName: "time-mcp-pypi",
-			version:     "1.0.0",
+			version:     "1.0.6",
 			serverName:  "io.github.domdomegg/time-mcp-pypi",
 			expectError: false,
 		},

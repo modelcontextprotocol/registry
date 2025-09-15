@@ -22,6 +22,30 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 		registryURL  string
 	}{
 		{
+			name:         "empty package identifier should fail",
+			packageName:  "",
+			version:      "latest",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package identifier is required for OCI packages",
+		},
+		{
+			name:         "empty package version should fail",
+			packageName:  "test-image",
+			version:      "",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package version is required for OCI packages",
+		},
+		{
+			name:         "both empty identifier and version should fail with identifier error first",
+			packageName:  "",
+			version:      "",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package identifier is required for OCI packages",
+		},
+		{
 			name:         "non-existent image should fail",
 			packageName:  generateRandomImageName(),
 			version:      "latest",

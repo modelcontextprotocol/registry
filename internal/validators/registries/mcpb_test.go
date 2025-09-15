@@ -21,6 +21,30 @@ func TestValidateMCPB(t *testing.T) {
 		errorMessage string
 	}{
 		{
+			name:         "empty package identifier should fail",
+			packageName:  "",
+			serverName:   "com.example/test",
+			fileSHA256:   "abc123ef4567890abcdef1234567890abcdef1234567890abcdef1234567890",
+			expectError:  true,
+			errorMessage: "package identifier is required for MCPB packages",
+		},
+		{
+			name:         "empty file SHA256 should fail",
+			packageName:  "https://github.com/example/server/releases/download/v1.0.0/server.mcpb",
+			serverName:   "com.example/test",
+			fileSHA256:   "",
+			expectError:  true,
+			errorMessage: "must include a fileSha256 hash for integrity verification",
+		},
+		{
+			name:         "both empty identifier and file SHA256 should fail with file SHA256 error first",
+			packageName:  "",
+			serverName:   "com.example/test",
+			fileSHA256:   "",
+			expectError:  true,
+			errorMessage: "must include a fileSha256 hash for integrity verification",
+		},
+		{
 			name:        "valid MCPB package should pass",
 			packageName: "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
 			serverName:  "io.github.domdomegg/airtable-mcp-server",
