@@ -24,7 +24,7 @@ By the end of this tutorial, you'll have:
 
 You can make your MCP server available in multiple ways:
 
-- **📦 Package deployment**: Published to registries (npm, PyPI, Docker Hub, etc.) and run locally by clients
+- **📦 Package deployment**: Published to registries (npm, PyPI, NuGet, Docker Hub, etc.) and run locally by clients
 - **🌐 Remote deployment**: Hosted as a web service that clients connect to directly  
 - **🔄 Hybrid deployment**: Offer both package and remote options for maximum flexibility
 
