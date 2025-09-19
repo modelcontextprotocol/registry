@@ -7,7 +7,6 @@ import (
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
-
 // This test focuses on validating preliminary logic for ghcr base URL acceptance and token lookup.
 // Network calls are not performed (we use an obviously invalid identifier so validation should fail
 // before HTTP fetch when base URL mismatch would have happened previously). We check that the
@@ -48,6 +47,7 @@ func TestLookupOCIAuthTokenMapping(t *testing.T) {
 	}
 }
 
+
 // contains is a tiny helper to avoid importing strings (keep scope minimal for test file)
 func contains(haystack, needle string) bool {
 	return len(needle) == 0 || (len(haystack) >= len(needle) && index(haystack, needle) >= 0)
@@ -61,4 +61,69 @@ func index(s, substr string) int {
 		}
 	}
 	return -1
+}
+
+func TestValidateOCI_UnsupportedRegistry(t *testing.T) {
+	ctx := context.Background()
+
+	pkg := model.Package{
+		RegistryType:    model.RegistryTypeOCI,
+		RegistryBaseURL: "https://unsupported-registry.com",
+		Identifier:      "test/image",
+		Version:         "latest",
+	}
+
+	err := registries.ValidateOCI(ctx, pkg, "com.example/test")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "registry type and base URL do not match")
+	assert.Contains(t, err.Error(), "Expected: https://docker.io or https://ghcr.io")
+}
+
+func TestValidateOCI_SupportedRegistries(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name        string
+		registryURL string
+		expected    bool
+	}{
+		{
+			name:        "Docker Hub should be supported",
+			registryURL: model.RegistryURLDocker,
+			expected:    true,
+		},
+		{
+			name:        "GHCR should be supported",
+			registryURL: model.RegistryURLGHCR,
+			expected:    true,
+		},
+		{
+			name:        "Unsupported registry should fail",
+			registryURL: "https://quay.io",
+			expected:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pkg := model.Package{
+				RegistryType:    model.RegistryTypeOCI,
+				RegistryBaseURL: tt.registryURL,
+				Identifier:      "test/image",
+				Version:         "latest",
+			}
+
+			err := registries.ValidateOCI(ctx, pkg, "com.example/test")
+			if tt.expected {
+				// Should not fail immediately on registry validation
+				// (may fail later due to network/image not found, but not due to unsupported registry)
+				if err != nil {
+					assert.NotContains(t, err.Error(), "registry type and base URL do not match")
+				}
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "registry type and base URL do not match")
+			}
+		})
+	}
 }

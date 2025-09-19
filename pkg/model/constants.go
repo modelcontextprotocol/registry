@@ -14,9 +14,6 @@ const (
 	RegistryURLNPM    = "https://registry.npmjs.org"
 	RegistryURLPyPI   = "https://pypi.org"
 	RegistryURLDocker = "https://docker.io"
-	// RegistryURLGHCR represents GitHub Container Registry base hostname. We purposely use the https form
-	// to be consistent with other base URLs. Validation logic treats docker.io and ghcr.io as valid
-	// OCI registry base URLs. ghcr.io follows the standard OCI API semantics (no custom auth base needed).
 	RegistryURLGHCR  = "https://ghcr.io"
 	RegistryURLNuGet  = "https://api.nuget.org"
 	RegistryURLGitHub = "https://github.com"
