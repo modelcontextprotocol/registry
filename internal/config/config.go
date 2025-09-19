@@ -2,6 +2,7 @@ package config
 
 import (
 	env "github.com/caarlos0/env/v11"
+	"strings"
 )
 
 type DatabaseType string
@@ -25,6 +26,10 @@ type Config struct {
 	EnableAnonymousAuth      bool         `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 	EnableRegistryValidation bool         `env:"ENABLE_REGISTRY_VALIDATION" envDefault:"true"`
 
+	// OCI registry auth: comma separated list of host=token pairs used for validating private images
+	// Example: "ghcr.io=ghp_xxx,docker.io=abcdef"
+	OCIRegistryAuth string `env:"OCI_REGISTRY_AUTH" envDefault:""` // Added for parsing OCI registry auth tokens
+
 	// OIDC Configuration
 	OIDCEnabled      bool   `env:"OIDC_ENABLED" envDefault:"false"`
 	OIDCIssuer       string `env:"OIDC_ISSUER" envDefault:""`
@@ -45,4 +50,30 @@ func NewConfig() *Config {
 		panic(err)
 	}
 	return &cfg
+}
+
+// ParseOCIRegistryAuth converts OCIRegistryAuth string into map[host]token
+// Format: "host=token,otherhost=othertoken". Whitespace is trimmed. Invalid entries are ignored.
+func (c *Config) ParseOCIRegistryAuth() map[string]string {
+	authMap := make(map[string]string)
+	if c == nil || c.OCIRegistryAuth == "" {
+		return authMap
+	}
+	items := strings.Split(c.OCIRegistryAuth, ",")
+	for _, item := range items {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		parts := strings.SplitN(item, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		host := strings.TrimSpace(parts[0])
+		token := strings.TrimSpace(parts[1])
+		if host != "" && token != "" {
+			authMap[host] = token
+		}
+	}
+	return authMap
 }

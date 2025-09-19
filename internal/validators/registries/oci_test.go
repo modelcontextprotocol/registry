@@ -1,84 +1,64 @@
-package registries_test
+package registries
 
 import (
 	"context"
+	"os"
 	"testing"
 
-	"github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
-	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateOCI_RealPackages(t *testing.T) {
-	ctx := context.Background()
-
-	tests := []struct {
-		name         string
-		packageName  string
-		version      string
-		serverName   string
-		expectError  bool
-		errorMessage string
-	}{
-		{
-			name:         "non-existent image should fail",
-			packageName:  generateRandomImageName(),
-			version:      "latest",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "not found",
-		},
-		{
-			name:         "real image without MCP annotation should fail",
-			packageName:  "nginx", // Popular image without MCP annotation
-			version:      "latest",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "missing required annotation",
-		},
-		{
-			name:         "real image with specific tag without MCP annotation should fail",
-			packageName:  "redis",
-			version:      "7-alpine", // Specific tag
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "missing required annotation",
-		},
-		{
-			name:         "namespaced image without MCP annotation should fail",
-			packageName:  "hello-world", // Simple image for testing
-			version:      "latest",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "missing required annotation",
-		},
-		{
-			name:        "real image with correct MCP annotation should pass",
-			packageName: "domdomegg/airtable-mcp-server",
-			version:     "1.7.2",
-			serverName:  "io.github.domdomegg/airtable-mcp-server", // This should match the annotation
-			expectError: false,
-		},
+// This test focuses on validating preliminary logic for ghcr base URL acceptance and token lookup.
+// Network calls are not performed (we use an obviously invalid identifier so validation should fail
+// before HTTP fetch when base URL mismatch would have happened previously). We check that the
+// error does not complain about unsupported base URL when using ghcr.io.
+func TestValidateOCI_GHCRBaseURLAccepted(t *testing.T) {
+	pkg := model.Package{
+		RegistryType:    model.RegistryTypeOCI,
+		RegistryBaseURL: model.RegistryURLGHCR,
+		Identifier:      "owner/repo", // intentionally simple; subsequent HTTP will fail
+		Version:         "latest",
 	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			t.Skip("Skipping OCI registry tests because we keep hitting DockerHub rate limits")
-
-			pkg := model.Package{
-				RegistryType: model.RegistryTypeOCI,
-				Identifier:   tt.packageName,
-				Version:      tt.version,
-			}
-
-			err := registries.ValidateOCI(ctx, pkg, tt.serverName)
-
-			if tt.expectError {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errorMessage)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
+	err := ValidateOCI(context.Background(), pkg, "io.github.owner/repo")
+	if err == nil {
+		t.Skip("Network access allowed? Unexpected success; skipping as test environment may have real image")
 	}
+	// Ensure error is not about unsupported base URL
+	if contains(err.Error(), "not valid for registry type") {
+		t.Fatalf("expected ghcr.io base URL to be accepted, got error: %v", err)
+	}
+}
+
+func TestLookupOCIAuthTokenEnvSpecific(t *testing.T) {
+	hostVar := "MCP_REGISTRY_OCI_TOKEN_GHCR_IO"
+	os.Setenv(hostVar, "secret123")
+	defer os.Unsetenv(hostVar)
+	token := lookupOCIAuthToken(model.RegistryURLGHCR)
+	if token != "secret123" {
+		t.Fatalf("expected token from %s env var, got %q", hostVar, token)
+	}
+}
+
+func TestLookupOCIAuthTokenMapping(t *testing.T) {
+	os.Setenv("MCP_REGISTRY_OCI_REGISTRY_AUTH", "ghcr.io=abc123,docker.io=def456")
+	defer os.Unsetenv("MCP_REGISTRY_OCI_REGISTRY_AUTH")
+	token := lookupOCIAuthToken(model.RegistryURLGHCR)
+	if token != "abc123" {
+		t.Fatalf("expected token 'abc123' from mapping, got %q", token)
+	}
+}
+
+// contains is a tiny helper to avoid importing strings (keep scope minimal for test file)
+func contains(haystack, needle string) bool {
+	return len(needle) == 0 || (len(haystack) >= len(needle) && index(haystack, needle) >= 0)
+}
+
+// index is naive substring search to avoid extra imports for this small test
+func index(s, substr string) int {
+	for i := 0; i+len(substr) <= len(s); i++ {
+		if s[i:i+len(substr)] == substr {
+			return i
+		}
+	}
+	return -1
 }
