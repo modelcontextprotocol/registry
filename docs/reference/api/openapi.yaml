@@ -439,12 +439,12 @@ components:
     Remote:
       type: object
       required:
-        - transport_type
+        - type
         - url
       properties:
-        transport_type:
+        type:
           type: string
-          enum: [streamable, sse]
+          enum: [streamable-http, sse]
           description: Transport protocol type
           example: "sse"
         url:
