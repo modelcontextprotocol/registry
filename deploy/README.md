@@ -160,6 +160,20 @@ Backups are encrypted using Restic. To access the backup data:
 
 ## Troubleshooting
 
+To configure kubectl to access an existing GKE cluster:
+
+```bash
+# Login
+gcloud auth login
+gcloud auth application-default login
+
+# For production
+gcloud container clusters get-credentials mcp-registry-prod --zone us-central1-b --project mcp-registry-prod
+
+# For staging
+gcloud container clusters get-credentials mcp-registry-staging --zone us-central1-b --project mcp-registry-staging
+```
+
 ### Check Status
 
 ```bash
