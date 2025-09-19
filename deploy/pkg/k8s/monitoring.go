@@ -150,7 +150,7 @@ func deployVictoriaLogs(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns
 				},
 			},
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, pulumi.Provider(cluster.Provider), pulumi.ReplaceOnChanges([]string{"*"}))
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 				},
 			},
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, pulumi.Provider(cluster.Provider), pulumi.ReplaceOnChanges([]string{"*"}))
 	if err != nil {
 		return err
 	}
