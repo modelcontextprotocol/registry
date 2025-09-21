@@ -35,7 +35,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerList'
+                $ref: '#/components/schemas/ServerListResponse'
   /v0/servers/{server_id}:
     get:
       summary: Get MCP server details
@@ -59,7 +59,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerDetail'
+                $ref: '#/components/schemas/ServerResponse'
         '404':
           description: Server not found
           content:
@@ -88,7 +88,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerList'
+                $ref: '#/components/schemas/ServerListResponse'
         '404':
           description: Server not found
           content:
@@ -115,14 +115,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServerDetail'
+              $ref: '#/components/schemas/ServerJSON'
             examples:
               basic_server:
                 summary: Basic server with NPM package
                 value:
                   name: "io.modelcontextprotocol/filesystem"
                   description: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-                  status: "active"
                   repository:
                     url: "https://github.com/modelcontextprotocol/servers"
                     source: "github"
@@ -144,7 +143,6 @@ paths:
                 value:
                   name: "com.example/demo-server"
                   description: "Example MCP server demonstrating publisher extensions."
-                  status: "active"
                   repository:
                     url: "https://github.com/example/mcp-demo"
                     source: "github"
@@ -171,7 +169,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerDetail'
+                $ref: '#/components/schemas/ServerResponse'
         '401':
           description: Unauthorized - Invalid or missing authentication token
           content:
@@ -202,6 +200,53 @@ paths:
                   error:
                     type: string
                     example: "Failed to publish server"
+  /v0/servers/{server_id}/status:
+    patch:
+      summary: Update server status
+      description: |
+        Update the lifecycle status of an MCP server. Only publishers and registry admins can modify server status.
+
+        **Note**: Deleted servers cannot be restored - status changes from 'deleted' to any other status are not permitted.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: server_id
+          in: path
+          required: true
+          description: Unique server ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServerStatusRequest'
+      responses:
+        '200':
+          description: Server status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+        '400':
+          description: Bad Request - Invalid status transition
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Cannot change status of deleted server. Deleted servers cannot be restored."
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden - Insufficient permissions
+        '404':
+          description: Server not found
+
 components:
   securitySchemes:
     bearerAuth:
@@ -250,12 +295,6 @@ components:
           type: string
           description: "Human-readable description of the server's functionality"
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-        status:
-          type: string
-          enum: [active, deprecated]
-          default: active
-          description: "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage."
-          example: "active"
         repository:
           $ref: '#/components/schemas/Repository'
         version:
@@ -275,15 +314,16 @@ components:
           format: date-time
 
 
-    ServerList:
+    ServerListResponse:
       type: object
       required:
         - servers
+        - metadata
       properties:
         servers:
           type: array
           items:
-            $ref: '#/components/schemas/ServerDetail'
+            $ref: '#/components/schemas/ServerResponse'
         metadata:
           type: object
           properties:
@@ -487,7 +527,70 @@ components:
           items:
             $ref: '#/components/schemas/KeyValueInput'
 
-    ServerDetail:
+    ServerResponse:
+      description: Registry response containing server data and registry metadata
+      type: object
+      required:
+        - server
+        - _meta
+      properties:
+        server:
+          $ref: '#/components/schemas/ServerJSON'
+        _meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    ResponseMeta:
+      description: Registry metadata extensions
+      type: object
+      properties:
+        io.modelcontextprotocol.registry/official:
+          $ref: '#/components/schemas/RegistryExtensions'
+
+    RegistryExtensions:
+      description: Official registry metadata
+      type: object
+      required:
+        - serverId
+        - versionId
+        - status
+      properties:
+        serverId:
+          type: string
+          format: uuid
+          description: Unique server identifier (consistent across versions)
+        versionId:
+          type: string
+          format: uuid
+          description: Unique version identifier
+        status:
+          type: string
+          enum: ["active", "deprecated", "deleted"]
+          description: Server lifecycle status
+        publishedAt:
+          type: string
+          format: date-time
+          description: When this version was published
+        updatedAt:
+          type: string
+          format: date-time
+          description: When this version was last updated
+        isLatest:
+          type: boolean
+          description: Whether this is the latest version
+
+    UpdateServerStatusRequest:
+      description: Request body for updating server status
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: ["active", "deprecated", "deleted"]
+          description: New status for the server
+          example: "deprecated"
+
+    ServerJSON:
       description: Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.
       allOf:
         - $ref: '#/components/schemas/Server'

@@ -58,12 +58,6 @@
           "minLength": 1,
           "maxLength": 100
         },
-        "status": {
-          "type": "string",
-          "enum": ["active", "deprecated", "deleted"],
-          "default": "active",
-          "description": "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage. 'deleted' indicates the server should never be installed and existing installations should be uninstalled - this is rare, and usually indicates malware or a legal takedown."
-        },
         "repository": {
           "$ref": "#/definitions/Repository",
           "description": "Optional repository metadata for the MCP server source code. Recommended for transparency and security inspection."
@@ -461,11 +455,6 @@
                 "io.modelcontextprotocol.registry/publisher-provided": {
                   "type": "object",
                   "description": "Publisher-provided metadata for downstream registries",
-                  "additionalProperties": true
-                },
-                "io.modelcontextprotocol.registry/official": {
-                  "type": "object",
-                  "description": "Official MCP registry metadata (read-only, added by registry)",
                   "additionalProperties": true
                 }
               }
