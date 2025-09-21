@@ -107,9 +107,9 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "Get MCP server details",
 		Description: "Get detailed information about a specific MCP server. Returns the latest version by default, or a specific version if the 'version' query parameter is provided.",
 		Tags:        []string{"servers"},
-	}, func(_ context.Context, input *ServerDetailInput) (*Response[apiv0.ServerJSON], error) {
+	}, func(_ context.Context, input *ServerDetailInput) (*Response[apiv0.ServerResponse], error) {
 		// Get the server details from the registry service
-		var serverDetail *apiv0.ServerJSON
+		var serverDetail *apiv0.ServerResponse
 		var err error
 
 		if input.Version != "" {
@@ -127,7 +127,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
 		}
 
-		return &Response[apiv0.ServerJSON]{
+		return &Response[apiv0.ServerResponse]{
 			Body: *serverDetail,
 		}, nil
 	})

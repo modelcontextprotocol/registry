@@ -38,7 +38,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *EditServerInput) (*Response[apiv0.ServerJSON], error) {
+	}, func(ctx context.Context, input *EditServerInput) (*Response[apiv0.ServerResponse], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -64,17 +64,17 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// Verify edit permissions for this server using the existing server name
-		if !jwtManager.HasPermission(currentServer.Name, auth.PermissionActionEdit, claims.Permissions) {
+		if !jwtManager.HasPermission(currentServer.Server.Name, auth.PermissionActionEdit, claims.Permissions) {
 			return nil, huma.Error403Forbidden("You do not have edit permissions for this server")
 		}
 
 		// Prevent renaming servers
-		if currentServer.Name != input.Body.Name {
+		if currentServer.Server.Name != input.Body.Name {
 			return nil, huma.Error400BadRequest("Cannot rename server")
 		}
 
 		// Prevent undeleting servers - once deleted, they stay deleted
-		if currentServer.Status == model.StatusDeleted && input.Body.Status != model.StatusDeleted {
+		if currentServer.GetStatus() == model.StatusDeleted && input.Body.Status != model.StatusDeleted {
 			return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
 		}
 
@@ -92,7 +92,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest("Failed to edit server", err)
 		}
 
-		return &Response[apiv0.ServerJSON]{
+		return &Response[apiv0.ServerResponse]{
 			Body: *updatedServer,
 		}, nil
 	})
