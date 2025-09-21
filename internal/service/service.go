@@ -8,17 +8,17 @@ import (
 // RegistryService defines the interface for registry operations
 type RegistryService interface {
 	// Retrieve all servers with optional filtering
-	List(filter *database.ServerFilter, cursor string, limit int) ([]apiv0.ServerJSON, string, error)
+	List(filter *database.ServerFilter, cursor string, limit int) ([]apiv0.ServerResponse, string, error)
 	// Retrieve a single server by registry metadata version ID
-	GetByVersionID(versionID string) (*apiv0.ServerJSON, error)
+	GetByVersionID(versionID string) (*apiv0.ServerResponse, error)
 	// Retrieve latest version of a server by server ID
-	GetByServerID(serverID string) (*apiv0.ServerJSON, error)
+	GetByServerID(serverID string) (*apiv0.ServerResponse, error)
 	// Retrieve specific version of a server by server ID and version
-	GetByServerIDAndVersion(serverID string, version string) (*apiv0.ServerJSON, error)
+	GetByServerIDAndVersion(serverID string, version string) (*apiv0.ServerResponse, error)
 	// Retrieve all versions of a server by server ID
-	GetAllVersionsByServerID(serverID string) ([]apiv0.ServerJSON, error)
-	// Publish a server
-	Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, error)
-	// Update an existing server
-	EditServer(id string, req apiv0.ServerJSON) (*apiv0.ServerJSON, error)
+	GetAllVersionsByServerID(serverID string) ([]apiv0.ServerResponse, error)
+	// Publish a server (input is still ServerJSON, output is ServerResponse)
+	Publish(req apiv0.ServerJSON) (*apiv0.ServerResponse, error)
+	// Update an existing server (input is still ServerJSON, output is ServerResponse)
+	EditServer(id string, req apiv0.ServerJSON) (*apiv0.ServerResponse, error)
 }

@@ -30,7 +30,7 @@ func NewRegistryService(db database.Database, cfg *config.Config) RegistryServic
 }
 
 // List returns registry entries with cursor-based pagination and optional filtering
-func (s *registryServiceImpl) List(filter *database.ServerFilter, cursor string, limit int) ([]apiv0.ServerJSON, string, error) {
+func (s *registryServiceImpl) List(filter *database.ServerFilter, cursor string, limit int) ([]apiv0.ServerResponse, string, error) {
 	// Create a timeout context for the database operation
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -46,8 +46,8 @@ func (s *registryServiceImpl) List(filter *database.ServerFilter, cursor string,
 		return nil, "", err
 	}
 
-	// Return ServerJSONs directly
-	result := make([]apiv0.ServerJSON, len(serverRecords))
+	// Return ServerResponses directly from database
+	result := make([]apiv0.ServerResponse, len(serverRecords))
 	for i, record := range serverRecords {
 		result[i] = *record
 	}

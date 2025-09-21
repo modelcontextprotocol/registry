@@ -31,19 +31,19 @@ type ServerFilter struct {
 // Database defines the interface for database operations
 type Database interface {
 	// Retrieve server entries with optional filtering
-	List(ctx context.Context, filter *ServerFilter, cursor string, limit int) ([]*apiv0.ServerJSON, string, error)
+	List(ctx context.Context, filter *ServerFilter, cursor string, limit int) ([]*apiv0.ServerResponse, string, error)
 	// Retrieve a single server by its version ID
-	GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerJSON, error)
+	GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerResponse, error)
 	// Retrieve latest version of a server by server ID
-	GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerJSON, error)
+	GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerResponse, error)
 	// Retrieve specific version of a server by server ID and version
-	GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerJSON, error)
+	GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerResponse, error)
 	// Retrieve all versions of a server by server ID
-	GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerJSON, error)
-	// CreateServer adds a new server to the database
-	CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
-	// UpdateServer updates an existing server record
-	UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
+	GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerResponse, error)
+	// CreateServer adds a new server to the database (input ServerJSON, output ServerResponse)
+	CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
+	// UpdateServer updates an existing server record (input ServerJSON, output ServerResponse)
+	UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
 	// Close closes the database connection
 	Close() error
 }
