@@ -32,8 +32,14 @@ type ServerFilter struct {
 type Database interface {
 	// Retrieve server entries with optional filtering
 	List(ctx context.Context, filter *ServerFilter, cursor string, limit int) ([]*apiv0.ServerJSON, string, error)
-	// Retrieve a single server by its ID
-	GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, error)
+	// Retrieve a single server by its version ID
+	GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerJSON, error)
+	// Retrieve latest version of a server by server ID
+	GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerJSON, error)
+	// Retrieve specific version of a server by server ID and version
+	GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerJSON, error)
+	// Retrieve all versions of a server by server ID
+	GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerJSON, error)
 	// CreateServer adds a new server to the database
 	CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
 	// UpdateServer updates an existing server record

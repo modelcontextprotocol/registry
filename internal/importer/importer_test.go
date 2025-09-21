@@ -32,7 +32,8 @@ func TestImportService_LocalFile(t *testing.T) {
 			Version: "1.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
-					ID:          "test-id-1",
+					ServerID:    "server-id-1",
+					VersionID:   "test-id-1",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
 					IsLatest:    true,
@@ -76,7 +77,8 @@ func TestImportService_HTTPFile(t *testing.T) {
 			Version: "2.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
-					ID:          "test-id-2",
+					ServerID:    "server-id-test",
+					VersionID:   "test-id-2",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
 					IsLatest:    true,
@@ -119,7 +121,8 @@ func TestImportService_RegistryAPI(t *testing.T) {
 			Version: "1.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
-					ID:          "api-test-id-1",
+					ServerID:    "server-id-test",
+					VersionID:   "api-test-id-1",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
 					IsLatest:    true,
@@ -137,7 +140,8 @@ func TestImportService_RegistryAPI(t *testing.T) {
 			Version: "2.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
-					ID:          "api-test-id-2",
+					ServerID:    "server-id-test",
+					VersionID:   "api-test-id-2",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
 					IsLatest:    true,

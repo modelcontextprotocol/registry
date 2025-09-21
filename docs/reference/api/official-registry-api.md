@@ -58,4 +58,4 @@ Example: `GET /v0/servers?search=filesystem&updated_since=2025-08-01T00:00:00Z&v
 #### Admin endpoints
 - GET `/metrics` - Prometheus metrics endpoint
 - GET `/v0/health` - Basic health check endpoint
-- PUT `/v0/servers/{id}` - Edit existing server
+- PUT `/v0/servers/{server_id}?version=X.X.X` - Edit specific server version (version parameter required)

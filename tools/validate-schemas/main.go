@@ -80,7 +80,7 @@ func validateSchema(path string) error {
 		}
 
 		// Add the base schema to the compiler with the expected URL
-		if err := compiler.AddResource("https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json", bytes.NewReader(baseData)); err != nil {
+		if err := compiler.AddResource("https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json", bytes.NewReader(baseData)); err != nil {
 			return fmt.Errorf("failed to add base schema resource: %w", err)
 		}
 	}

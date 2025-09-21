@@ -18,7 +18,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		"existing1": {
 			Name:        "com.example/existing-server",
 			Description: "An existing server",
-			Version: "1.0.0",
+			Version:     "1.0.0",
 			Remotes: []model.Transport{
 				{Type: "streamable-http", URL: "https://api.example.com/mcp"},
 				{Type: "sse", URL: "https://webhook.example.com/sse"},
@@ -27,7 +27,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		"existing2": {
 			Name:        "com.microsoft/another-server",
 			Description: "Another existing server",
-			Version: "1.0.0",
+			Version:     "1.0.0",
 			Remotes: []model.Transport{
 				{Type: "streamable-http", URL: "https://api.microsoft.com/mcp"},
 			},
@@ -55,8 +55,8 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/new-server",
 				Description: "A new server with no remotes",
-				Version: "1.0.0",
-				Remotes: []model.Transport{},
+				Version:     "1.0.0",
+				Remotes:     []model.Transport{},
 			},
 			expectError: false,
 		},
@@ -65,7 +65,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/new-server",
 				Description: "A new server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{Type: "streamable-http", URL: "https://new.example.com/mcp"},
 					{Type: "sse", URL: "https://unique.example.com/sse"},
@@ -78,7 +78,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/new-server",
 				Description: "A new server with duplicate URL",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Remotes: []model.Transport{
 					{Type: "streamable-http", URL: "https://api.example.com/mcp"}, // This URL already exists
 				},
@@ -91,7 +91,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/existing-server", // Same name as existing
 				Description: "Updated existing server",
-				Version: "1.1.0",
+				Version:     "1.1.0",
 				Remotes: []model.Transport{
 					{Type: "streamable-http", URL: "https://api.example.com/mcp"}, // Same URL as before
 				},
@@ -112,6 +112,267 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				assert.Contains(t, err.Error(), tt.errorMsg)
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestGetByServerID(t *testing.T) {
+	memDB := database.NewMemoryDB()
+	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+
+	// Publish multiple versions of the same server
+	server1, err := service.Publish(apiv0.ServerJSON{
+		Name:        "com.example/test-server",
+		Description: "Test server v1",
+		Version:     "1.0.0",
+	})
+	assert.NoError(t, err)
+
+	_, err = service.Publish(apiv0.ServerJSON{
+		Name:        "com.example/test-server",
+		Description: "Test server v2",
+		Version:     "2.0.0",
+	})
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name        string
+		serverID    string
+		expectError bool
+		errorMsg    string
+		checkResult func(*testing.T, *apiv0.ServerJSON)
+	}{
+		{
+			name:        "get latest version by server ID",
+			serverID:    server1.Meta.Official.ServerID,
+			expectError: false,
+			checkResult: func(t *testing.T, result *apiv0.ServerJSON) {
+				t.Helper()
+				assert.Equal(t, "2.0.0", result.Version) // Should get latest version
+				assert.Equal(t, "Test server v2", result.Description)
+				assert.True(t, result.Meta.Official.IsLatest)
+			},
+		},
+		{
+			name:        "server not found",
+			serverID:    "00000000-0000-0000-0000-000000000000",
+			expectError: true,
+			errorMsg:    "record not found",
+		},
+		{
+			name:        "invalid server ID format",
+			serverID:    "invalid-uuid",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := service.GetByServerID(tt.serverID)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				if tt.checkResult != nil {
+					tt.checkResult(t, result)
+				}
+			}
+		})
+	}
+}
+
+func TestGetByServerIDAndVersion(t *testing.T) {
+	memDB := database.NewMemoryDB()
+	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+
+	// Publish multiple versions of the same server
+	server1, err := service.Publish(apiv0.ServerJSON{
+		Name:        "com.example/versioned-server",
+		Description: "Versioned server v1",
+		Version:     "1.0.0",
+	})
+	assert.NoError(t, err)
+
+	_, err = service.Publish(apiv0.ServerJSON{
+		Name:        "com.example/versioned-server",
+		Description: "Versioned server v2",
+		Version:     "2.0.0",
+	})
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name        string
+		serverID    string
+		version     string
+		expectError bool
+		errorMsg    string
+		checkResult func(*testing.T, *apiv0.ServerJSON)
+	}{
+		{
+			name:        "get specific version 1.0.0",
+			serverID:    server1.Meta.Official.ServerID,
+			version:     "1.0.0",
+			expectError: false,
+			checkResult: func(t *testing.T, result *apiv0.ServerJSON) {
+				t.Helper()
+				assert.Equal(t, "1.0.0", result.Version)
+				assert.Equal(t, "Versioned server v1", result.Description)
+				assert.False(t, result.Meta.Official.IsLatest)
+			},
+		},
+		{
+			name:        "get specific version 2.0.0",
+			serverID:    server1.Meta.Official.ServerID,
+			version:     "2.0.0",
+			expectError: false,
+			checkResult: func(t *testing.T, result *apiv0.ServerJSON) {
+				t.Helper()
+				assert.Equal(t, "2.0.0", result.Version)
+				assert.Equal(t, "Versioned server v2", result.Description)
+				assert.True(t, result.Meta.Official.IsLatest)
+			},
+		},
+		{
+			name:        "version not found",
+			serverID:    server1.Meta.Official.ServerID,
+			version:     "3.0.0",
+			expectError: true,
+			errorMsg:    "record not found",
+		},
+		{
+			name:        "server not found",
+			serverID:    "00000000-0000-0000-0000-000000000000",
+			version:     "1.0.0",
+			expectError: true,
+			errorMsg:    "record not found",
+		},
+		{
+			name:        "invalid server ID format",
+			serverID:    "invalid-uuid",
+			version:     "1.0.0",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := service.GetByServerIDAndVersion(tt.serverID, tt.version)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				if tt.checkResult != nil {
+					tt.checkResult(t, result)
+				}
+			}
+		})
+	}
+}
+
+func TestGetAllVersionsByServerID(t *testing.T) {
+	memDB := database.NewMemoryDB()
+	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+
+	// Publish multiple versions of the same server
+	server1, err := service.Publish(apiv0.ServerJSON{
+		Name:        "com.example/multi-version-server",
+		Description: "Multi-version server v1",
+		Version:     "1.0.0",
+	})
+	assert.NoError(t, err)
+
+	_, err = service.Publish(apiv0.ServerJSON{
+		Name:        "com.example/multi-version-server",
+		Description: "Multi-version server v2",
+		Version:     "2.0.0",
+	})
+	assert.NoError(t, err)
+
+	_, err = service.Publish(apiv0.ServerJSON{
+		Name:        "com.example/multi-version-server",
+		Description: "Multi-version server v2.1",
+		Version:     "2.1.0",
+	})
+	assert.NoError(t, err)
+
+	tests := []struct {
+		name        string
+		serverID    string
+		expectError bool
+		errorMsg    string
+		checkResult func(*testing.T, []apiv0.ServerJSON)
+	}{
+		{
+			name:        "get all versions of server",
+			serverID:    server1.Meta.Official.ServerID,
+			expectError: false,
+			checkResult: func(t *testing.T, result []apiv0.ServerJSON) {
+				t.Helper()
+				assert.Len(t, result, 3)
+
+				// Collect versions
+				versions := make([]string, 0, len(result))
+				latestCount := 0
+				for _, server := range result {
+					versions = append(versions, server.Version)
+					assert.Equal(t, server1.Meta.Official.ServerID, server.Meta.Official.ServerID)
+					assert.Equal(t, "com.example/multi-version-server", server.Name)
+					if server.Meta.Official.IsLatest {
+						latestCount++
+					}
+				}
+
+				// Verify all versions are present
+				assert.Contains(t, versions, "1.0.0")
+				assert.Contains(t, versions, "2.0.0")
+				assert.Contains(t, versions, "2.1.0")
+
+				// Only one should be marked as latest
+				assert.Equal(t, 1, latestCount)
+			},
+		},
+		{
+			name:        "server not found",
+			serverID:    "00000000-0000-0000-0000-000000000000",
+			expectError: true,
+			errorMsg:    "record not found",
+		},
+		{
+			name:        "invalid server ID format",
+			serverID:    "invalid-uuid",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := service.GetAllVersionsByServerID(tt.serverID)
+
+			if tt.expectError {
+				assert.Error(t, err)
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
+				assert.Empty(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, result)
+				if tt.checkResult != nil {
+					tt.checkResult(t, result)
+				}
 			}
 		})
 	}

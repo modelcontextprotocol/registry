@@ -12,7 +12,7 @@ import (
 
 // MemoryDB is an in-memory implementation of the Database interface
 type MemoryDB struct {
-	entries map[string]*apiv0.ServerJSON // maps registry metadata ID to ServerJSON
+	entries map[string]*apiv0.ServerJSON // maps registry metadata version_id to ServerJSON
 	mu      sync.RWMutex
 }
 
@@ -80,7 +80,7 @@ func (db *MemoryDB) List(
 	return result, nextCursor, nil
 }
 
-func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, error) {
+func (db *MemoryDB) GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -88,8 +88,8 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, 
 	db.mu.RLock()
 	defer db.mu.RUnlock()
 
-	// Find entry by registry metadata ID
-	if entry, exists := db.entries[id]; exists {
+	// Find entry by registry metadata version_id
+	if entry, exists := db.entries[versionID]; exists {
 		// Return a copy of the ServerRecord
 		entryCopy := *entry
 		return &entryCopy, nil
@@ -98,23 +98,112 @@ func (db *MemoryDB) GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, 
 	return nil, ErrNotFound
 }
 
+// GetByServerID retrieves the latest version of a server by server ID
+func (db *MemoryDB) GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerJSON, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	// Find the latest version with the given server ID
+	var latestEntry *apiv0.ServerJSON
+	for _, entry := range db.entries {
+		if entry.Meta != nil && entry.Meta.Official != nil &&
+			entry.Meta.Official.ServerID == serverID &&
+			entry.Meta.Official.IsLatest {
+			latestEntry = entry
+			break
+		}
+	}
+
+	if latestEntry == nil {
+		return nil, ErrNotFound
+	}
+
+	// Return a copy
+	entryCopy := *latestEntry
+	return &entryCopy, nil
+}
+
+// GetByServerIDAndVersion retrieves a specific version of a server by server ID and version
+func (db *MemoryDB) GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerJSON, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	// Find the entry with matching server ID and version
+	for _, entry := range db.entries {
+		if entry.Meta != nil && entry.Meta.Official != nil &&
+			entry.Meta.Official.ServerID == serverID &&
+			entry.Version == version {
+			// Return a copy
+			entryCopy := *entry
+			return &entryCopy, nil
+		}
+	}
+
+	return nil, ErrNotFound
+}
+
+// GetAllVersionsByServerID retrieves all versions of a server by server ID
+func (db *MemoryDB) GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerJSON, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	db.mu.RLock()
+	defer db.mu.RUnlock()
+
+	var results []*apiv0.ServerJSON
+	for _, entry := range db.entries {
+		if entry.Meta != nil && entry.Meta.Official != nil &&
+			entry.Meta.Official.ServerID == serverID {
+			// Add a copy
+			entryCopy := *entry
+			results = append(results, &entryCopy)
+		}
+	}
+
+	if len(results) == 0 {
+		return nil, ErrNotFound
+	}
+
+	// Sort by published date, latest first
+	sort.Slice(results, func(i, j int) bool {
+		iTime := results[i].Meta.Official.PublishedAt
+		jTime := results[j].Meta.Official.PublishedAt
+		return iTime.After(jTime)
+	})
+
+	return results, nil
+}
+
 func (db *MemoryDB) CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	// Get the ID from the registry metadata
+	// Get the VersionID from the registry metadata
 	if server.Meta == nil || server.Meta.Official == nil {
-		return nil, fmt.Errorf("server must have registry metadata with ID")
+		return nil, fmt.Errorf("server must have registry metadata with ServerID and VersionID")
 	}
 
-	id := server.Meta.Official.ID
+	versionID := server.Meta.Official.VersionID
+
+	if versionID == "" {
+		return nil, fmt.Errorf("server must have VersionID in registry metadata")
+	}
 
 	db.mu.Lock()
 	defer db.mu.Unlock()
 
-	// Store the record using registry metadata ID
-	db.entries[id] = server
+	// Store the record using registry metadata VersionID
+	db.entries[versionID] = server
 
 	return server, nil
 }
@@ -122,6 +211,11 @@ func (db *MemoryDB) CreateServer(ctx context.Context, server *apiv0.ServerJSON) 
 func (db *MemoryDB) UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
+	}
+
+	// Validate that meta structure exists and VersionID matches path (consistent with PostgreSQL implementation)
+	if server.Meta == nil || server.Meta.Official == nil || server.Meta.Official.VersionID != id {
+		return nil, fmt.Errorf("%w: io.modelcontextprotocol.registry/official.version_id must match path id (%s)", ErrInvalidInput, id)
 	}
 
 	db.mu.Lock()
@@ -165,6 +259,7 @@ func (db *MemoryDB) filterAndSort(allEntries []*apiv0.ServerJSON, filter *Server
 }
 
 // matchesFilter checks if an entry matches the provided filter
+//
 //nolint:cyclop // Filter matching logic is inherently complex but clear
 func (db *MemoryDB) matchesFilter(entry *apiv0.ServerJSON, filter *ServerFilter) bool {
 	if filter == nil {
@@ -218,7 +313,7 @@ func (db *MemoryDB) matchesFilter(entry *apiv0.ServerJSON, filter *ServerFilter)
 		}
 	}
 
-	// Check is_latest filter
+	// Check isLatest filter
 	if filter.IsLatest != nil {
 		if entry.Meta == nil || entry.Meta.Official == nil {
 			return false
@@ -231,10 +326,10 @@ func (db *MemoryDB) matchesFilter(entry *apiv0.ServerJSON, filter *ServerFilter)
 	return true
 }
 
-// getRegistryID safely extracts the registry ID from an entry
+// getRegistryID safely extracts the registry version ID from an entry
 func (db *MemoryDB) getRegistryID(entry *apiv0.ServerJSON) string {
 	if entry.Meta != nil && entry.Meta.Official != nil {
-		return entry.Meta.Official.ID
+		return entry.Meta.Official.VersionID
 	}
 	return ""
 }

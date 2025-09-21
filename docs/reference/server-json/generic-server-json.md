@@ -8,7 +8,7 @@ Also see:
 
 ## Browse the Complete Schema
 
-**📋 View the full specification interactively**: Open [server.schema.json](./server.schema.json) in a schema viewer like [json-schema.app](https://json-schema.app/view/%23?url=https%3A%2F%2Fstatic.modelcontextprotocol.io%2Fschemas%2F2025-07-09%2Fserver.schema.json).
+**📋 View the full specification interactively**: Open [server.schema.json](./server.schema.json) in a schema viewer like [json-schema.app](https://json-schema.app/view/%23?url=https%3A%2F%2Fstatic.modelcontextprotocol.io%2Fschemas%2F2025-09-16%2Fserver.schema.json).
 
 The schema contains all field definitions, validation rules, examples, and detailed descriptions.
 
@@ -22,11 +22,11 @@ The official registry has some more restrictions on top of this. See the [offici
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/brave-search",
   "description": "MCP server for Brave Search API integration",
   "status": "active",
-  "website_url": "https://anonymous.modelcontextprotocol.io/examples",
+  "websiteUrl": "https://anonymous.modelcontextprotocol.io/examples",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github"
@@ -34,19 +34,19 @@ The official registry has some more restrictions on top of this. See the [offici
   "version": "1.0.2",
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@modelcontextprotocol/server-brave-search",
       "version": "1.0.2",
       "transport": {
         "type": "stdio"
       },
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "BRAVE_API_KEY",
           "description": "Brave Search API Key",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         }
       ]
     }
@@ -69,7 +69,7 @@ For MCP servers located within a subdirectory of a larger repository (monorepo s
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.modelcontextprotocol/everything",
   "description": "MCP server that exercises all the features of the MCP protocol",
   "status": "active",
@@ -81,8 +81,8 @@ For MCP servers located within a subdirectory of a larger repository (monorepo s
   "version": "0.6.2",
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@modelcontextprotocol/everything",
       "version": "0.6.2",
       "transport": {
@@ -113,14 +113,14 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
   "version": "0.4.0-beta",
   "packages": [
     {
-      "registry_type": "nuget",
-      "registry_base_url": "https://api.nuget.org",
+      "registryType": "nuget",
+      "registryBaseUrl": "https://api.nuget.org",
       "identifier": "Knapcode.SampleMcpServer",
       "version": "0.4.0-beta",
       "transport": {
         "type": "stdio"
       },
-      "package_arguments": [
+      "packageArguments": [
         {
           "type": "positional",
           "value": "mcp"
@@ -145,13 +145,13 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
 }
 ```
 
-This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcpServer@0.4.0-beta -- mcp start` instead of the default `dnx Knapcode.SampleMcpServer@0.4.0-beta` (when no `package_arguments` are provided).
+This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcpServer@0.4.0-beta -- mcp start` instead of the default `dnx Knapcode.SampleMcpServer@0.4.0-beta` (when no `packageArguments` are provided).
 
 ### Filesystem Server with Multiple Packages
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
   "status": "active",
@@ -163,24 +163,24 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
   "version": "1.0.2",
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@modelcontextprotocol/server-filesystem",
       "version": "1.0.2",
       "transport": {
         "type": "stdio"
       },
-      "package_arguments": [
+      "packageArguments": [
         {
           "type": "positional",
-          "value_hint": "target_dir",
+          "valueHint": "target_dir",
           "description": "Path to access",
           "default": "/Users/username/Desktop",
-          "is_required": true,
-          "is_repeated": true
+          "isRequired": true,
+          "isRepeated": true
         }
       ],
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
@@ -189,43 +189,43 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
       ]
     },
     {
-      "registry_type": "oci",
-      "registry_base_url": "https://docker.io",
+      "registryType": "oci",
+      "registryBaseUrl": "https://docker.io",
       "identifier": "mcp/filesystem",
       "version": "1.0.2",
       "transport": {
         "type": "stdio"
       },
-      "runtime_arguments": [
+      "runtimeArguments": [
         {
           "type": "named",
           "description": "Mount a volume into the container",
           "name": "--mount",
           "value": "type=bind,src={source_path},dst={target_path}",
-          "is_required": true,
-          "is_repeated": true,
+          "isRequired": true,
+          "isRepeated": true,
           "variables": {
             "source_path": {
               "description": "Source path on host",
               "format": "filepath",
-              "is_required": true
+              "isRequired": true
             },
             "target_path": {
               "description": "Path to mount in the container. It should be rooted in `/project` directory.",
-              "is_required": true,
+              "isRequired": true,
               "default": "/project"
             }
           }
         }
       ],
-      "package_arguments": [
+      "packageArguments": [
         {
           "type": "positional",
-          "value_hint": "target_dir",
+          "valueHint": "target_dir",
           "value": "/project"
         }
       ],
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "LOG_LEVEL",
           "description": "Logging level (debug, info, warn, error)",
@@ -296,20 +296,20 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
   "version": "0.5.0",
   "packages": [
     {
-      "registry_type": "pypi",
-      "registry_base_url": "https://pypi.org",
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
       "identifier": "weather-mcp-server",
       "version": "0.5.0",
-      "runtime_hint": "uvx",
+      "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
       },
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "WEATHER_API_KEY",
           "description": "API key for weather service",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         },
         {
           "name": "WEATHER_UNITS",
@@ -350,20 +350,20 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "version": "0.5.0",
   "packages": [
     {
-      "registry_type": "nuget",
-      "registry_base_url": "https://api.nuget.org",
+      "registryType": "nuget",
+      "registryBaseUrl": "https://api.nuget.org",
       "identifier": "Knapcode.SampleMcpServer",
       "version": "0.5.0",
-      "runtime_hint": "dnx",
+      "runtimeHint": "dnx",
       "transport": {
         "type": "stdio"
       },
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "WEATHER_CHOICES",
           "description": "Comma separated list of weather descriptions to randomly select.",
-          "is_required": true,
-          "is_secret": false
+          "isRequired": true,
+          "isSecret": false
         }
       ]
     }
@@ -398,14 +398,14 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "version": "3.1.0",
   "packages": [
     {
-      "registry_type": "oci",
-      "registry_base_url": "https://docker.io",
+      "registryType": "oci",
+      "registryBaseUrl": "https://docker.io",
       "identifier": "example/database-manager-mcp",
       "version": "3.1.0",
       "transport": {
         "type": "stdio"
       },
-      "runtime_arguments": [
+      "runtimeArguments": [
         {
           "type": "named",
           "name": "--network",
@@ -417,7 +417,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
           "name": "-e",
           "value": "DB_TYPE={db_type}",
           "description": "Database type to connect to",
-          "is_repeated": true,
+          "isRepeated": true,
           "variables": {
             "db_type": {
               "description": "Type of database",
@@ -427,18 +427,18 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
                 "mongodb",
                 "redis"
               ],
-              "is_required": true
+              "isRequired": true
             }
           }
         }
       ],
-      "package_arguments": [
+      "packageArguments": [
         {
           "type": "named",
           "name": "--host",
           "description": "Database host",
           "default": "localhost",
-          "is_required": true
+          "isRequired": true
         },
         {
           "type": "named",
@@ -448,22 +448,22 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
         },
         {
           "type": "positional",
-          "value_hint": "database_name",
+          "valueHint": "database_name",
           "description": "Name of the database to connect to",
-          "is_required": true
+          "isRequired": true
         }
       ],
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "DB_USERNAME",
           "description": "Database username",
-          "is_required": true
+          "isRequired": true
         },
         {
           "name": "DB_PASSWORD",
           "description": "Database password",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         },
         {
           "name": "SSL_MODE",
@@ -498,7 +498,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/hybrid-mcp",
   "description": "MCP server available as both local package and remote service",
   "repository": {
@@ -509,15 +509,15 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "version": "1.5.0",
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@example/hybrid-mcp-server",
       "version": "1.5.0",
-      "runtime_hint": "npx",
+      "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
       },
-      "package_arguments": [
+      "packageArguments": [
         {
           "type": "named",
           "name": "--mode",
@@ -540,8 +540,8 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
         {
           "name": "X-API-Key",
           "description": "API key for authentication",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         },
         {
           "name": "X-Region",
@@ -592,11 +592,11 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "version": "1.0.2",
   "packages": [
     {
-      "registry_type": "mcpb",
-      "registry_base_url": "https://github.com",
+      "registryType": "mcpb",
+      "registryBaseUrl": "https://github.com",
       "identifier": "https://github.com/modelcontextprotocol/text-editor-mcpb/releases/download/v1.0.2/text-editor.mcpb",
       "version": "1.0.2",
-      "file_sha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+      "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
       "transport": {
         "type": "stdio"
       }
@@ -622,25 +622,25 @@ This example shows an MCPB (MCP Bundle) package that:
 
 ### Embedded MCP inside a CLI tool
 
-Some CLI tools bundle an MCP server, without a standalone MCP package or a public repository. In these cases, reuse the existing `packages` shape by pointing at the host CLI package and supplying the `package_arguments` and `runtime_hint` if needed to start the MCP server.
+Some CLI tools bundle an MCP server, without a standalone MCP package or a public repository. In these cases, reuse the existing `packages` shape by pointing at the host CLI package and supplying the `packageArguments` and `runtimeHint` if needed to start the MCP server.
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.snyk/cli-mcp",
   "description": "MCP server provided by the Snyk CLI",
   "status": "active",
   "version": "1.1298.0",
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "snyk",
       "version": "1.1298.0",
       "transport": {
         "type": "stdio"
       },
-      "package_arguments": [
+      "packageArguments": [
         { "type": "positional", "value": "mcp" },
         {
           "type": "named",
@@ -657,15 +657,15 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
 
 ### Server with Custom Installation Path
 
-For MCP servers that follow a custom installation path or are embedded in applications without standalone packages, use the `website_url` field to direct users to setup documentation:
+For MCP servers that follow a custom installation path or are embedded in applications without standalone packages, use the `websiteUrl` field to direct users to setup documentation:
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/embedded-mcp",
   "description": "MCP server embedded in a Desktop app",
   "status": "active",
-  "website_url": "https://anonymous.modelcontextprotocol.io/embedded-mcp-guide",
+  "websiteUrl": "https://anonymous.modelcontextprotocol.io/embedded-mcp-guide",
   "version": "0.1.0"
 }
 ```
@@ -685,19 +685,19 @@ For MCP servers that follow a custom installation path or are embedded in applic
   "version": "0.9.5",
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@legacy/old-weather-server",
       "version": "0.9.5",
       "transport": {
         "type": "stdio"
       },
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "WEATHER_API_KEY",
           "description": "Weather API key",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         }
       ]
     }
