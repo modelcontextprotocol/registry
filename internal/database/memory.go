@@ -34,50 +34,64 @@ func (db *MemoryDB) List(
 	var results []*apiv0.ServerResponse
 
 	for _, entry := range db.entries {
-		// Apply RemoteURL filter for duplicate URL detection
-		if filter != nil && filter.RemoteURL != nil {
-			found := false
-			for _, remote := range entry.Server.Remotes {
-				if remote.URL == *filter.RemoteURL {
-					found = true
-					break
-				}
-			}
-			if !found {
-				continue
-			}
+		if db.matchesFilter(entry, filter) {
+			results = append(results, entry)
 		}
-
-		// Apply exact Name filter
-		if filter != nil && filter.Name != nil && entry.Server.Name != *filter.Name {
-			continue
-		}
-
-		// Apply SubstringName filter (for search functionality)
-		if filter != nil && filter.SubstringName != nil {
-			if !strings.Contains(strings.ToLower(entry.Server.Name), strings.ToLower(*filter.SubstringName)) {
-				continue
-			}
-		}
-
-		// Apply IsLatest filter (for version=latest)
-		if filter != nil && filter.IsLatest != nil && *filter.IsLatest {
-			if entry.Meta.Official == nil || !entry.Meta.Official.IsLatest {
-				continue
-			}
-		}
-
-		// Apply UpdatedSince filter (for incremental sync)
-		if filter != nil && filter.UpdatedSince != nil {
-			if entry.Meta.Official == nil || entry.Meta.Official.UpdatedAt.Before(*filter.UpdatedSince) {
-				continue
-			}
-		}
-
-		results = append(results, entry)
 	}
 
 	return results, "", nil
+}
+
+// matchesFilter checks if a server entry matches the given filter criteria
+func (db *MemoryDB) matchesFilter(entry *apiv0.ServerResponse, filter *ServerFilter) bool {
+	if filter == nil {
+		return true
+	}
+
+	// Apply RemoteURL filter for duplicate URL detection
+	if filter.RemoteURL != nil {
+		if !db.hasRemoteURL(entry, *filter.RemoteURL) {
+			return false
+		}
+	}
+
+	// Apply exact Name filter
+	if filter.Name != nil && entry.Server.Name != *filter.Name {
+		return false
+	}
+
+	// Apply SubstringName filter (for search functionality)
+	if filter.SubstringName != nil {
+		if !strings.Contains(strings.ToLower(entry.Server.Name), strings.ToLower(*filter.SubstringName)) {
+			return false
+		}
+	}
+
+	// Apply IsLatest filter (for version=latest)
+	if filter.IsLatest != nil && *filter.IsLatest {
+		if entry.Meta.Official == nil || !entry.Meta.Official.IsLatest {
+			return false
+		}
+	}
+
+	// Apply UpdatedSince filter (for incremental sync)
+	if filter.UpdatedSince != nil {
+		if entry.Meta.Official == nil || entry.Meta.Official.UpdatedAt.Before(*filter.UpdatedSince) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// hasRemoteURL checks if the entry has a remote with the specified URL
+func (db *MemoryDB) hasRemoteURL(entry *apiv0.ServerResponse, url string) bool {
+	for _, remote := range entry.Server.Remotes {
+		if remote.URL == url {
+			return true
+		}
+	}
+	return false
 }
 
 func (db *MemoryDB) GetByVersionID(_ context.Context, versionID string) (*apiv0.ServerResponse, error) {
