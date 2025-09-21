@@ -131,76 +131,84 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		return nil, err
 	}
 
-	publishTime := time.Now()
-	serverJSON := req
+	// Acquire advisory lock for this server name to prevent race conditions
+	result, err := database.WithPublishLockT(ctx, s.db, req.Name, func(lockCtx context.Context) (*apiv0.ServerJSON, error) {
+		publishTime := time.Now()
+		serverJSON := req
 
-	// Check for duplicate remote URLs
-	if err := s.validateNoDuplicateRemoteURLs(ctx, serverJSON); err != nil {
-		return nil, err
-	}
-
-	filter := &database.ServerFilter{Name: &serverJSON.Name}
-	existingServerVersions, _, err := s.db.List(ctx, filter, "", maxServerVersionsPerServer)
-	if err != nil && !errors.Is(err, database.ErrNotFound) {
-		return nil, err
-	}
-
-	// Check we haven't exceeded the maximum versions allowed for a server
-	if len(existingServerVersions) >= maxServerVersionsPerServer {
-		return nil, database.ErrMaxServersReached
-	}
-
-	// Check this isn't a duplicate version
-	for _, server := range existingServerVersions {
-		existingVersion := server.Version
-		if existingVersion == serverJSON.Version {
-			return nil, database.ErrInvalidVersion
+		// Check for duplicate remote URLs
+		if err := s.validateNoDuplicateRemoteURLs(lockCtx, serverJSON); err != nil {
+			return nil, err
 		}
-	}
 
-	// Determine if this version should be marked as latest
-	existingLatest := s.getCurrentLatestVersion(existingServerVersions)
-	isNewLatest := true
-	if existingLatest != nil {
-		var existingPublishedAt time.Time
-		if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
-			existingPublishedAt = existingLatest.Meta.Official.PublishedAt
+		filter := &database.ServerFilter{Name: &serverJSON.Name}
+		existingServerVersions, _, err := s.db.List(lockCtx, filter, "", maxServerVersionsPerServer)
+		if err != nil && !errors.Is(err, database.ErrNotFound) {
+			return nil, err
 		}
-		isNewLatest = CompareVersions(
-			serverJSON.Version,
-			existingLatest.Version,
-			publishTime,
-			existingPublishedAt,
-		) > 0
-	}
 
-	// Create complete server with metadata
-	server := s.createServerWithMetadata(serverJSON, existingServerVersions, publishTime, isNewLatest)
+		// Check we haven't exceeded the maximum versions allowed for a server
+		if len(existingServerVersions) >= maxServerVersionsPerServer {
+			return nil, database.ErrMaxServersReached
+		}
 
-	// Create server in database
-	serverRecord, err := s.db.CreateServer(ctx, &server)
+		// Check this isn't a duplicate version
+		for _, server := range existingServerVersions {
+			existingVersion := server.Version
+			if existingVersion == serverJSON.Version {
+				return nil, database.ErrInvalidVersion
+			}
+		}
+
+		// Determine if this version should be marked as latest
+		existingLatest := s.getCurrentLatestVersion(existingServerVersions)
+		isNewLatest := true
+		if existingLatest != nil {
+			var existingPublishedAt time.Time
+			if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
+				existingPublishedAt = existingLatest.Meta.Official.PublishedAt
+			}
+			isNewLatest = CompareVersions(
+				serverJSON.Version,
+				existingLatest.Version,
+				publishTime,
+				existingPublishedAt,
+			) > 0
+		}
+
+		// Create complete server with metadata
+		server := s.createServerWithMetadata(serverJSON, existingServerVersions, publishTime, isNewLatest)
+
+		// Create server in database
+		serverRecord, err := s.db.CreateServer(lockCtx, &server)
+		if err != nil {
+			return nil, err
+		}
+
+		// Mark previous latest as no longer latest
+		if isNewLatest && existingLatest != nil {
+			var existingLatestVersionID string
+			if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
+				existingLatestVersionID = existingLatest.Meta.Official.VersionID
+			}
+			if existingLatestVersionID != "" {
+				// Update the existing server to set isLatest = false
+				existingLatest.Meta.Official.IsLatest = false
+				existingLatest.Meta.Official.UpdatedAt = time.Now()
+				if _, err := s.db.UpdateServer(lockCtx, existingLatestVersionID, existingLatest); err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		return serverRecord, nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	// Mark previous latest as no longer latest
-	if isNewLatest && existingLatest != nil {
-		var existingLatestVersionID string
-		if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
-			existingLatestVersionID = existingLatest.Meta.Official.VersionID
-		}
-		if existingLatestVersionID != "" {
-			// Update the existing server to set isLatest = false
-			existingLatest.Meta.Official.IsLatest = false
-			existingLatest.Meta.Official.UpdatedAt = time.Now()
-			if _, err := s.db.UpdateServer(ctx, existingLatestVersionID, existingLatest); err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	// Return the server record directly
-	return serverRecord, nil
+	return result, nil
 }
 
 // createServerWithMetadata creates a server with proper metadata including server_id and version_id

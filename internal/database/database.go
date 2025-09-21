@@ -44,8 +44,32 @@ type Database interface {
 	CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
 	// UpdateServer updates an existing server record
 	UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
+	// WithPublishLock executes a function with an exclusive lock for publishing a server
+	// This prevents race conditions when multiple versions are published concurrently
+	WithPublishLock(ctx context.Context, serverName string, fn func(ctx context.Context) error) error
 	// Close closes the database connection
 	Close() error
+}
+
+// WithPublishLockT is a generic helper that wraps WithPublishLock for functions returning a value
+// This exists because Go does not support generic methods on interfaces - only the Database interface
+// method WithPublishLock (without generics) can exist, so we provide this generic wrapper function.
+// This is a common pattern in Go for working around this language limitation.
+func WithPublishLockT[T any](ctx context.Context, db Database, serverName string, fn func(ctx context.Context) (T, error)) (T, error) {
+	var result T
+	var fnErr error
+
+	err := db.WithPublishLock(ctx, serverName, func(lockCtx context.Context) error {
+		result, fnErr = fn(lockCtx)
+		return fnErr
+	})
+
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return result, nil
 }
 
 // ConnectionType represents the type of database connection

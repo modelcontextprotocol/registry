@@ -402,6 +402,61 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 	return server, nil
 }
 
+// WithPublishLock executes a function with an exclusive advisory lock for publishing a server
+// This prevents race conditions when multiple versions are published concurrently
+func (db *PostgreSQL) WithPublishLock(ctx context.Context, serverName string, fn func(ctx context.Context) error) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	// Begin a transaction
+	tx, err := db.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	// Acquire advisory lock based on server name hash
+	// Using pg_advisory_xact_lock which auto-releases on transaction end
+	lockID := hashServerName(serverName)
+	_, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", lockID)
+	if err != nil {
+		return fmt.Errorf("failed to acquire publish lock: %w", err)
+	}
+
+	// Execute the function
+	if err := fn(ctx); err != nil {
+		return err
+	}
+
+	// Commit the transaction (which also releases the lock)
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// hashServerName creates a consistent hash of the server name for advisory locking
+// We use FNV-1a hash and mask to 63 bits to fit in PostgreSQL's bigint range
+func hashServerName(name string) int64 {
+	// FNV-1a 64-bit hash
+	const (
+		offset64 = 14695981039346656037
+		prime64  = 1099511628211
+	)
+	hash := uint64(offset64)
+	for i := 0; i < len(name); i++ {
+		hash ^= uint64(name[i])
+		hash *= prime64
+	}
+	// Use only 63 bits to ensure positive int64
+	//nolint:gosec // Intentional conversion with masking to 63 bits
+	return int64(hash & 0x7FFFFFFFFFFFFFFF)
+}
+
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
 	db.pool.Close()

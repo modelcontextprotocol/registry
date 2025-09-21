@@ -12,15 +12,18 @@ import (
 
 // MemoryDB is an in-memory implementation of the Database interface
 type MemoryDB struct {
-	entries map[string]*apiv0.ServerJSON // maps registry metadata version_id to ServerJSON
-	mu      sync.RWMutex
+	entries     map[string]*apiv0.ServerJSON // maps registry metadata version_id to ServerJSON
+	mu          sync.RWMutex
+	publishLocks map[string]*sync.Mutex       // per-server-name locks for publish operations
+	locksMu      sync.Mutex                   // protects publishLocks map
 }
 
 func NewMemoryDB() *MemoryDB {
 	// Convert input ServerJSON entries to have proper metadata
 	serverRecords := make(map[string]*apiv0.ServerJSON)
 	return &MemoryDB{
-		entries: serverRecords,
+		entries:      serverRecords,
+		publishLocks: make(map[string]*sync.Mutex),
 	}
 }
 
@@ -231,6 +234,27 @@ func (db *MemoryDB) UpdateServer(ctx context.Context, id string, server *apiv0.S
 
 	// Return the updated record
 	return server, nil
+}
+
+func (db *MemoryDB) WithPublishLock(ctx context.Context, serverName string, fn func(ctx context.Context) error) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	// Get or create a lock for this specific server name
+	db.locksMu.Lock()
+	lock, exists := db.publishLocks[serverName]
+	if !exists {
+		lock = &sync.Mutex{}
+		db.publishLocks[serverName] = lock
+	}
+	db.locksMu.Unlock()
+
+	// Acquire the server-specific lock
+	lock.Lock()
+	defer lock.Unlock()
+
+	return fn(ctx)
 }
 
 // For an in-memory database, this is a no-op

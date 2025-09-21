@@ -3,6 +3,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
@@ -376,4 +378,53 @@ func TestGetAllVersionsByServerID(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPublishConcurrentVersionsNoRace(t *testing.T) {
+	memDB := database.NewMemoryDB()
+	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+
+	const concurrency = 100
+	results := make([]*apiv0.ServerJSON, concurrency)
+	errors := make([]error, concurrency)
+
+	var wg sync.WaitGroup
+	for i := range concurrency {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			result, err := service.Publish(apiv0.ServerJSON{
+				Name:        "com.example/test-concurrent",
+				Description: fmt.Sprintf("Version %d", idx),
+				Version:     fmt.Sprintf("1.0.%d", idx),
+			})
+			results[idx] = result
+			errors[idx] = err
+		}(i)
+	}
+	wg.Wait()
+
+	for i, err := range errors {
+		assert.NoError(t, err, "publish %d failed", i)
+	}
+
+	var sharedServerID string
+	for i, result := range results {
+		if result != nil && result.Meta != nil && result.Meta.Official != nil {
+			if sharedServerID == "" {
+				sharedServerID = result.Meta.Official.ServerID
+			}
+			assert.Equal(t, sharedServerID, result.Meta.Official.ServerID,
+				"version %d has different serverID", i)
+		}
+	}
+
+	latestCount := 0
+	for _, result := range results {
+		if result != nil && result.Meta != nil && result.Meta.Official != nil &&
+			result.Meta.Official.IsLatest {
+			latestCount++
+		}
+	}
+	assert.Equal(t, 1, latestCount, "should have exactly one latest version")
 }
