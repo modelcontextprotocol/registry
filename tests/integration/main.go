@@ -223,7 +223,7 @@ func findServerIDByName(serverName string) (string, error) {
 	// Find the server with matching name
 	var foundServers []string
 	for _, server := range serverList.Servers {
-		if server.Name == serverName {
+		if server.Server.Name == serverName {
 			foundServers = append(foundServers, fmt.Sprintf("ServerID:%s VersionID:%s IsLatest:%t", server.Meta.Official.ServerID, server.Meta.Official.VersionID, server.Meta.Official.IsLatest))
 			if server.Meta.Official.IsLatest {
 				return server.Meta.Official.ServerID, nil
@@ -258,12 +258,15 @@ func verifyPublishedServer(id string, expected *apiv0.ServerJSON) error {
 		return fmt.Errorf("registry responded %d: %s", res.StatusCode, string(content))
 	}
 
-	var actual *apiv0.ServerJSON
-	if err := json.Unmarshal(content, &actual); err != nil {
+	var actualResponse *apiv0.ServerResponse
+	if err := json.Unmarshal(content, &actualResponse); err != nil {
 		return fmt.Errorf("failed to unmarshal registry response: %w", err)
 	}
 
-	if err := compareServerJSON(expected, actual); err != nil {
+	// Extract the server.json from the response for comparison
+	actual := &actualResponse.Server
+
+	if err := compareServerJSON(expected, actual, actualResponse); err != nil {
 		return fmt.Errorf(`example "%s": %w`, expected.Name, err)
 	}
 	return nil
@@ -304,7 +307,7 @@ func getExamples(path string) ([]example, error) {
 	return examples, nil
 }
 
-func compareServerJSON(expected, actual *apiv0.ServerJSON) error {
+func compareServerJSON(expected, actual *apiv0.ServerJSON, actualResponse *apiv0.ServerResponse) error {
 	// Compare core fields (ignore Meta as it contains registry-generated data)
 	if expected.Name != actual.Name {
 		return fmt.Errorf("name mismatch: expected %q, got %q", expected.Name, actual.Name)
@@ -312,9 +315,16 @@ func compareServerJSON(expected, actual *apiv0.ServerJSON) error {
 	if expected.Description != actual.Description {
 		return fmt.Errorf("description mismatch: expected %q, got %q", expected.Description, actual.Description)
 	}
-	if expected.Status != actual.Status {
-		return fmt.Errorf("status mismatch: expected %q, got %q", expected.Status, actual.Status)
+
+	// Status is now in registry metadata, not in server.json
+	var actualStatus string
+	if actualResponse.Meta.Official != nil {
+		actualStatus = string(actualResponse.Meta.Official.Status)
 	}
+	if expected.Status != "" && string(expected.Status) != actualStatus {
+		return fmt.Errorf("status mismatch: expected %q, got %q", expected.Status, actualStatus)
+	}
+
 	if expected.Version != actual.Version {
 		return fmt.Errorf("version mismatch: expected %+v, got %+v", expected.Version, actual.Version)
 	}
