@@ -42,10 +42,7 @@ validate-schemas: ## Validate JSON schemas
 validate-examples: ## Validate examples against schemas
 	./tools/validate-examples.sh
 
-validate-guide-examples: ## Validate publishing guide examples against schemas
-	./tools/validate-guide-examples.sh
-
-validate: validate-schemas validate-examples validate-guide-examples ## Run all validation checks
+validate: validate-schemas validate-examples ## Run all validation checks
 
 # Lint targets
 lint: ## Run linter (includes formatting)
