@@ -40,10 +40,12 @@ type Database interface {
 	GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerResponse, error)
 	// Retrieve all versions of a server by server ID
 	GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerResponse, error)
-	// CreateServer adds a new server to the database (input ServerJSON, output ServerResponse)
-	CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
+	// CreateServer adds a new server to the database (input ServerJSON with metadata, output ServerResponse)
+	CreateServer(ctx context.Context, server *apiv0.ServerJSON, serverID, versionID string, isLatest bool) (*apiv0.ServerResponse, error)
 	// UpdateServer updates an existing server record (input ServerJSON, output ServerResponse)
 	UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
+	// UpdateServerStatus updates only the status field of a server record
+	UpdateServerStatus(ctx context.Context, versionID string, status string) (*apiv0.ServerResponse, error)
 	// Close closes the database connection
 	Close() error
 }

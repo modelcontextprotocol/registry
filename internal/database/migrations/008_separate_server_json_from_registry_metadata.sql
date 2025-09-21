@@ -38,10 +38,10 @@ INSERT INTO servers_new (
     server_json
 )
 SELECT
-    id as version_id,
+    version_id,
     COALESCE(
         value->'_meta'->'io.modelcontextprotocol.registry/official'->>'serverId',
-        id  -- fallback to version_id if serverId missing
+        version_id  -- fallback to version_id if serverId missing
     ) as server_id,
     COALESCE(
         value->'_meta'->'io.modelcontextprotocol.registry/official'->>'status',

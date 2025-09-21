@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/importer"
@@ -30,15 +29,7 @@ func TestImportService_LocalFile(t *testing.T) {
 				ID:     "123",
 			},
 			Version: "1.0.0",
-			Meta: &apiv0.ServerMeta{
-				Official: &apiv0.RegistryExtensions{
-					ServerID:    "server-id-1",
-					VersionID:   "test-id-1",
-					PublishedAt: time.Now(),
-					UpdatedAt:   time.Now(),
-					IsLatest:    true,
-				},
-			},
+			// Meta field no longer contains Official - registry metadata handled separately
 		},
 	}
 
@@ -60,7 +51,7 @@ func TestImportService_LocalFile(t *testing.T) {
 	servers, _, err := memDB.List(context.Background(), nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 1)
-	assert.Equal(t, "io.github.test/test-server-1", servers[0].Name)
+	assert.Equal(t, "io.github.test/test-server-1", servers[0].Server.Name)
 }
 
 func TestImportService_HTTPFile(t *testing.T) {
@@ -75,15 +66,7 @@ func TestImportService_HTTPFile(t *testing.T) {
 				ID:     "123",
 			},
 			Version: "2.0.0",
-			Meta: &apiv0.ServerMeta{
-				Official: &apiv0.RegistryExtensions{
-					ServerID:    "server-id-test",
-					VersionID:   "test-id-2",
-					PublishedAt: time.Now(),
-					UpdatedAt:   time.Now(),
-					IsLatest:    true,
-				},
-			},
+			// Meta field no longer contains Official - registry metadata handled separately
 		},
 	}
 
@@ -104,7 +87,7 @@ func TestImportService_HTTPFile(t *testing.T) {
 	servers, _, err := memDB.List(context.Background(), nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 1)
-	assert.Equal(t, "io.github.test/http-test-server", servers[0].Name)
+	assert.Equal(t, "io.github.test/http-test-server", servers[0].Server.Name)
 }
 
 func TestImportService_RegistryAPI(t *testing.T) {
@@ -119,15 +102,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 				ID:     "123",
 			},
 			Version: "1.0.0",
-			Meta: &apiv0.ServerMeta{
-				Official: &apiv0.RegistryExtensions{
-					ServerID:    "server-id-test",
-					VersionID:   "api-test-id-1",
-					PublishedAt: time.Now(),
-					UpdatedAt:   time.Now(),
-					IsLatest:    true,
-				},
-			},
+			// Meta field no longer contains Official - registry metadata handled separately
 		},
 		{
 			Name:        "io.github.test/api-server-2",
@@ -138,15 +113,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 				ID:     "456",
 			},
 			Version: "2.0.0",
-			Meta: &apiv0.ServerMeta{
-				Official: &apiv0.RegistryExtensions{
-					ServerID:    "server-id-test",
-					VersionID:   "api-test-id-2",
-					PublishedAt: time.Now(),
-					UpdatedAt:   time.Now(),
-					IsLatest:    true,
-				},
-			},
+			// Meta field no longer contains Official - registry metadata handled separately
 		},
 	}
 
@@ -154,23 +121,22 @@ func TestImportService_RegistryAPI(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cursor := r.URL.Query().Get("cursor")
 
-		var response struct {
-			Servers  []apiv0.ServerJSON `json:"servers"`
-			Metadata *struct {
-				NextCursor string `json:"next_cursor,omitempty"`
-			} `json:"metadata,omitempty"`
+		response := apiv0.ServerListResponse{
+			Metadata: apiv0.Metadata{},
 		}
 
 		switch cursor {
 		case "":
-			// First page
-			response.Servers = []apiv0.ServerJSON{testServers[0]}
-			response.Metadata = &struct {
-				NextCursor string `json:"next_cursor,omitempty"`
-			}{NextCursor: "page2"}
+			// First page - wrap ServerJSON in ServerResponse
+			response.Servers = []apiv0.ServerResponse{
+				{Server: testServers[0], Meta: apiv0.ResponseMeta{}},
+			}
+			response.Metadata.NextCursor = "page2"
 		case "page2":
-			// Second page
-			response.Servers = []apiv0.ServerJSON{testServers[1]}
+			// Second page - wrap ServerJSON in ServerResponse
+			response.Servers = []apiv0.ServerResponse{
+				{Server: testServers[1], Meta: apiv0.ResponseMeta{}},
+			}
 			// No next cursor means end of results
 		}
 
@@ -191,7 +157,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, servers, 2)
 
-	names := []string{servers[0].Name, servers[1].Name}
+	names := []string{servers[0].Server.Name, servers[1].Server.Name}
 	assert.Contains(t, names, "io.github.test/api-server-1")
 	assert.Contains(t, names, "io.github.test/api-server-2")
 }

@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
@@ -37,7 +38,11 @@ func (s *Service) ImportFromPath(ctx context.Context, path string) error {
 
 	// Import each server using CreateServer
 	for _, server := range servers {
-		_, err := s.db.CreateServer(ctx, server)
+		serverID := uuid.New().String()
+		versionID := uuid.New().String()
+		isLatest := true // Imported servers are marked as latest by default
+
+		_, err := s.db.CreateServer(ctx, server, serverID, versionID, isLatest)
 		if err != nil {
 			return fmt.Errorf("failed to import server %s: %w", server.Name, err)
 		}
@@ -93,9 +98,8 @@ func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error)
 			continue
 		}
 
-		// Convert valid ServerJSON to ServerRecord
-		record := convertServerResponseToRecord(response)
-		validRecords = append(validRecords, record)
+		// Add valid ServerJSON to records
+		validRecords = append(validRecords, &response)
 	}
 
 	// Print summary of validation results
@@ -150,25 +154,21 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerJ
 			return nil, fmt.Errorf("failed to fetch page from registry API: %w", err)
 		}
 
-		var response struct {
-			Servers  []apiv0.ServerJSON `json:"servers"`
-			Metadata *struct {
-				NextCursor string `json:"next_cursor,omitempty"`
-			} `json:"metadata,omitempty"`
-		}
+		var response apiv0.ServerListResponse
 
 		if err := json.Unmarshal(data, &response); err != nil {
 			return nil, fmt.Errorf("failed to parse registry API response: %w", err)
 		}
 
-		// Convert and add servers
+		// Convert and add servers (extract ServerJSON from ServerResponse)
 		for _, serverResponse := range response.Servers {
-			record := convertServerResponseToRecord(serverResponse)
+			// Extract the ServerJSON from the ServerResponse
+			record := &serverResponse.Server
 			allRecords = append(allRecords, record)
 		}
 
 		// Check if there's a next page
-		if response.Metadata == nil || response.Metadata.NextCursor == "" {
+		if response.Metadata.NextCursor == "" {
 			break
 		}
 		cursor = response.Metadata.NextCursor
@@ -177,8 +177,3 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerJ
 	return allRecords, nil
 }
 
-func convertServerResponseToRecord(response apiv0.ServerJSON) *apiv0.ServerJSON {
-	// The response is already in the correct flattened format
-	// Just return a pointer to it
-	return &response
-}

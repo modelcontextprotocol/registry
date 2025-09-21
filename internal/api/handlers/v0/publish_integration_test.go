@@ -90,12 +90,12 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response apiv0.ServerJSON
+		var response apiv0.ServerResponse
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.Name, response.Name)
-		assert.Equal(t, publishReq.Version, response.Version)
+		assert.Equal(t, publishReq.Name, response.Server.Name)
+		assert.Equal(t, publishReq.Version, response.Server.Version)
 	})
 
 	t.Run("successful publish with none auth (no prefix)", func(t *testing.T) {
@@ -132,11 +132,11 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response apiv0.ServerJSON
+		var response apiv0.ServerResponse
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.Name, response.Name)
+		assert.Equal(t, publishReq.Name, response.Server.Name)
 	})
 
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {
@@ -220,7 +220,7 @@ func TestPublishIntegration(t *testing.T) {
 			Name:        "io.github.domdomegg/airtable-mcp-server",
 			Description: "A test server with MCPB package",
 			Version: "1.7.2",
-			Status: model.StatusActive,
+			// Status field removed - now managed by registry metadata
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,
@@ -256,13 +256,13 @@ func TestPublishIntegration(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, rr.Code)
 
-		var response apiv0.ServerJSON
+		var response apiv0.ServerResponse
 		err = json.Unmarshal(rr.Body.Bytes(), &response)
 		require.NoError(t, err)
 
-		assert.Equal(t, publishReq.Name, response.Name)
-		assert.Equal(t, publishReq.Version, response.Version)
-		assert.Len(t, response.Packages, 1)
-		assert.Equal(t, model.RegistryTypeMCPB, response.Packages[0].RegistryType)
+		assert.Equal(t, publishReq.Name, response.Server.Name)
+		assert.Equal(t, publishReq.Version, response.Server.Version)
+		assert.Len(t, response.Server.Packages, 1)
+		assert.Equal(t, model.RegistryTypeMCPB, response.Server.Packages[0].RegistryType)
 	})
 }

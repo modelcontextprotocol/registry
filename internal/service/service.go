@@ -21,4 +21,6 @@ type RegistryService interface {
 	Publish(req apiv0.ServerJSON) (*apiv0.ServerResponse, error)
 	// Update an existing server (input is still ServerJSON, output is ServerResponse)
 	EditServer(id string, req apiv0.ServerJSON) (*apiv0.ServerResponse, error)
+	// Update server status in registry metadata
+	UpdateServerStatus(serverID string, status string) (*apiv0.ServerResponse, error)
 }

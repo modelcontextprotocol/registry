@@ -69,7 +69,6 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
-				Status:      model.StatusActive,
 				Repository: model.Repository{
 					URL:    "https://github.com/example/test",
 					Source: "github",

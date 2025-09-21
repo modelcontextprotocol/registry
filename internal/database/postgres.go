@@ -63,7 +63,6 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	}, nil
 }
 
-//nolint:cyclop // Database filtering logic is inherently complex but clear
 func (db *PostgreSQL) List(
 	ctx context.Context,
 	filter *ServerFilter,
@@ -199,20 +198,23 @@ func (db *PostgreSQL) List(
 	return results, nextCursor, nil
 }
 
-func (db *PostgreSQL) GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
 	query := `
-		SELECT value
+		SELECT version_id, server_id, status, published_at, updated_at, is_latest, server_json
 		FROM servers
 		WHERE version_id = $1
 	`
 
-	var valueJSON []byte
+	var serverID, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
+	var serverJSONBytes []byte
 
-	err := db.pool.QueryRow(ctx, query, versionID).Scan(&valueJSON)
+	err := db.pool.QueryRow(ctx, query, versionID).Scan(&versionID, &serverID, &status, &publishedAt, &updatedAt, &isLatest, &serverJSONBytes)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -221,32 +223,50 @@ func (db *PostgreSQL) GetByVersionID(ctx context.Context, versionID string) (*ap
 		return nil, fmt.Errorf("failed to get server by ID: %w", err)
 	}
 
-	// Parse the complete ServerJSON from JSONB
+	// Parse the immutable server.json
 	var serverJSON apiv0.ServerJSON
-	if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
+	if err := json.Unmarshal(serverJSONBytes, &serverJSON); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
 	}
 
-	return &serverJSON, nil
+	// Construct the response with separated concerns
+	response := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    serverID,
+				VersionID:   versionID,
+				Status:      model.Status(status),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return response, nil
 }
 
 // GetByServerID retrieves the latest version of a server by server ID
-func (db *PostgreSQL) GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
 	query := `
-		SELECT value
+		SELECT version_id, server_id, status, published_at, updated_at, is_latest, server_json
 		FROM servers
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'serverId') = $1 AND (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'isLatest')::boolean = true
-		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'publishedAt')::timestamp DESC
+		WHERE server_id = $1 AND is_latest = true
+		ORDER BY published_at DESC
 		LIMIT 1
 	`
 
-	var valueJSON []byte
+	var versionID, returnedServerID, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
+	var serverJSONBytes []byte
 
-	err := db.pool.QueryRow(ctx, query, serverID).Scan(&valueJSON)
+	err := db.pool.QueryRow(ctx, query, serverID).Scan(&versionID, &returnedServerID, &status, &publishedAt, &updatedAt, &isLatest, &serverJSONBytes)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -255,31 +275,49 @@ func (db *PostgreSQL) GetByServerID(ctx context.Context, serverID string) (*apiv
 		return nil, fmt.Errorf("failed to get server by server ID: %w", err)
 	}
 
-	// Parse the complete ServerJSON from JSONB
+	// Parse the immutable server.json
 	var serverJSON apiv0.ServerJSON
-	if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
+	if err := json.Unmarshal(serverJSONBytes, &serverJSON); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
 	}
 
-	return &serverJSON, nil
+	// Construct the response with separated concerns
+	response := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    returnedServerID,
+				VersionID:   versionID,
+				Status:      model.Status(status),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return response, nil
 }
 
 // GetByServerIDAndVersion retrieves a specific version of a server by server ID and version
-func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
 	query := `
-		SELECT value
+		SELECT version_id, server_id, status, published_at, updated_at, is_latest, server_json
 		FROM servers
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'serverId') = $1 AND value->>'version' = $2
+		WHERE server_id = $1 AND server_json->>'version' = $2
 		LIMIT 1
 	`
 
-	var valueJSON []byte
+	var versionID, returnedServerID, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
+	var serverJSONBytes []byte
 
-	err := db.pool.QueryRow(ctx, query, serverID, version).Scan(&valueJSON)
+	err := db.pool.QueryRow(ctx, query, serverID, version).Scan(&versionID, &returnedServerID, &status, &publishedAt, &updatedAt, &isLatest, &serverJSONBytes)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -288,26 +326,41 @@ func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, serverID stri
 		return nil, fmt.Errorf("failed to get server by server ID and version: %w", err)
 	}
 
-	// Parse the complete ServerJSON from JSONB
+	// Parse the immutable server.json
 	var serverJSON apiv0.ServerJSON
-	if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
+	if err := json.Unmarshal(serverJSONBytes, &serverJSON); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
 	}
 
-	return &serverJSON, nil
+	// Construct the response with separated concerns
+	response := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    returnedServerID,
+				VersionID:   versionID,
+				Status:      model.Status(status),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return response, nil
 }
 
 // GetAllVersionsByServerID retrieves all versions of a server by server ID
-func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
 	query := `
-		SELECT value
+		SELECT version_id, server_id, status, published_at, updated_at, is_latest, server_json
 		FROM servers
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'serverId') = $1
-		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'publishedAt')::timestamp DESC
+		WHERE server_id = $1
+		ORDER BY published_at DESC
 	`
 
 	rows, err := db.pool.Query(ctx, query, serverID)
@@ -316,22 +369,40 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, serverID str
 	}
 	defer rows.Close()
 
-	var results []*apiv0.ServerJSON
+	var results []*apiv0.ServerResponse
 	for rows.Next() {
-		var valueJSON []byte
+		var versionID, returnedServerID, status string
+		var publishedAt, updatedAt time.Time
+		var isLatest bool
+		var serverJSONBytes []byte
 
-		err := rows.Scan(&valueJSON)
+		err := rows.Scan(&versionID, &returnedServerID, &status, &publishedAt, &updatedAt, &isLatest, &serverJSONBytes)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan server row: %w", err)
 		}
 
-		// Parse the complete ServerJSON from JSONB
+		// Parse the immutable server.json
 		var serverJSON apiv0.ServerJSON
-		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
+		if err := json.Unmarshal(serverJSONBytes, &serverJSON); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
 		}
 
-		results = append(results, &serverJSON)
+		// Construct the response with separated concerns
+		response := &apiv0.ServerResponse{
+			Server: serverJSON,
+			Meta: apiv0.ResponseMeta{
+				Official: &apiv0.RegistryExtensions{
+					ServerID:    returnedServerID,
+					VersionID:   versionID,
+					Status:      model.Status(status),
+					PublishedAt: publishedAt,
+					UpdatedAt:   updatedAt,
+					IsLatest:    isLatest,
+				},
+			},
+		}
+
+		results = append(results, response)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -345,78 +416,146 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, serverID str
 	return results, nil
 }
 
-// CreateServer adds a new server to the database
-func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+// CreateServer adds a new server to the database with new separated schema
+func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON, serverID, versionID string, isLatest bool) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	// Get the IDs from the registry metadata
-	if server.Meta == nil || server.Meta.Official == nil {
-		return nil, fmt.Errorf("server must have registry metadata with ServerID and VersionID")
-	}
-
-	serverID := server.Meta.Official.ServerID
-	versionID := server.Meta.Official.VersionID
-
-	if serverID == "" || versionID == "" {
-		return nil, fmt.Errorf("server must have both ServerID and VersionID in registry metadata")
-	}
-
-	// Marshal the complete server to JSONB
-	valueJSON, err := json.Marshal(server)
+	// Marshal only the immutable server.json
+	serverJSON, err := json.Marshal(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal server JSON: %w", err)
 	}
 
-	// Insert into servers table with new schema (only version_id column, serverId is in JSON)
+	// Insert into servers table with new separated schema
 	query := `
-		INSERT INTO servers (version_id, value)
-		VALUES ($1, $2)
+		INSERT INTO servers (version_id, server_id, status, published_at, updated_at, is_latest, server_json)
+		VALUES ($1, $2, $3, NOW(), NOW(), $4, $5)
+		RETURNING published_at, updated_at
 	`
 
-	_, err = db.pool.Exec(ctx, query, versionID, valueJSON)
+	var publishedAt, updatedAt time.Time
+	err = db.pool.QueryRow(ctx, query, versionID, serverID, "active", isLatest, serverJSON).Scan(&publishedAt, &updatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
 	}
 
-	return server, nil
+	// Return the ServerResponse format
+	response := &apiv0.ServerResponse{
+		Server: *server,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    serverID,
+				VersionID:   versionID,
+				Status:      model.StatusActive,
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return response, nil
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	// Validate that meta structure exists and VersionID matches path
-	if server.Meta == nil || server.Meta.Official == nil || server.Meta.Official.VersionID != id {
-		return nil, fmt.Errorf("%w: io.modelcontextprotocol.registry/official.version_id must match path id (%s)", ErrInvalidInput, id)
-	}
-
-	// Marshal updated server
-	valueJSON, err := json.Marshal(server)
+	// Marshal updated server.json
+	serverJSON, err := json.Marshal(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal updated server: %w", err)
 	}
 
-	// Update the complete server record using version_id
+	// Update using new separated schema
 	query := `
-		UPDATE servers 
-		SET value = $1
+		UPDATE servers
+		SET server_json = $1, updated_at = NOW()
 		WHERE version_id = $2
+		RETURNING server_id, status, published_at, updated_at, is_latest
 	`
 
-	result, err := db.pool.Exec(ctx, query, valueJSON, id)
+	var serverID, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
+
+	err = db.pool.QueryRow(ctx, query, serverJSON, id).Scan(&serverID, &status, &publishedAt, &updatedAt, &isLatest)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
 
-	if result.RowsAffected() == 0 {
-		return nil, ErrNotFound
+	// Return the ServerResponse format
+	response := &apiv0.ServerResponse{
+		Server: *server,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    serverID,
+				VersionID:   id,
+				Status:      model.Status(status),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
 	}
 
-	return server, nil
+	return response, nil
+}
+
+// UpdateServerStatus updates only the status field of a server record
+func (db *PostgreSQL) UpdateServerStatus(ctx context.Context, versionID string, status string) (*apiv0.ServerResponse, error) {
+	query := `
+		UPDATE servers
+		SET status = $1, updated_at = NOW()
+		WHERE version_id = $2
+		RETURNING version_id, server_id, status, published_at, updated_at, is_latest, server_json
+	`
+
+	var serverID, returnedStatus string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
+	var serverJSONBytes []byte
+
+	err := db.pool.QueryRow(ctx, query, status, versionID).Scan(
+		&versionID, &serverID, &returnedStatus, &publishedAt, &updatedAt, &isLatest, &serverJSONBytes,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to update server status: %w", err)
+	}
+
+	// Parse the server JSON
+	var serverJSON apiv0.ServerJSON
+	if err := json.Unmarshal(serverJSONBytes, &serverJSON); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
+	}
+
+	// Return the ServerResponse format
+	response := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    serverID,
+				VersionID:   versionID,
+				Status:      model.Status(returnedStatus),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return response, nil
 }
 
 // Close closes the database connection

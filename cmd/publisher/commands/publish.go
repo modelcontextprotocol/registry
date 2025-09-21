@@ -83,13 +83,13 @@ Migrate to the current schema format for new servers.
 
 	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully published")
 	if serverID := response.GetServerID(); serverID != "" {
-		_, _ = fmt.Fprintf(os.Stdout, "✓ Server Id %s version %s\n", serverID, response.Version)
+		_, _ = fmt.Fprintf(os.Stdout, "✓ Server Id %s version %s\n", serverID, response.Server.Version)
 	}
 
 	return nil
 }
 
-func publishToRegistry(registryURL string, serverData []byte, token string) (*apiv0.ServerJSON, error) {
+func publishToRegistry(registryURL string, serverData []byte, token string) (*apiv0.ServerResponse, error) {
 	// Parse the server JSON data
 	var serverJSON apiv0.ServerJSON
 	err := json.Unmarshal(serverData, &serverJSON)
@@ -134,9 +134,11 @@ func publishToRegistry(registryURL string, serverData []byte, token string) (*ap
 		return nil, fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
 	}
 
-	if err := json.Unmarshal(body, &serverJSON); err != nil {
+	// Parse the ServerResponse from the API
+	var serverResponse apiv0.ServerResponse
+	if err := json.Unmarshal(body, &serverResponse); err != nil {
 		return nil, err
 	}
 
-	return &serverJSON, nil
+	return &serverResponse, nil
 }

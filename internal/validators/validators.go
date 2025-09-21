@@ -354,8 +354,8 @@ func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
 		return err
 	}
 
-	// Validate registry ownership for all packages if validation is enabled and server is not deleted
-	if cfg.EnableRegistryValidation && req.Status != model.StatusDeleted {
+	// Validate registry ownership for all packages if validation is enabled (status is now in registry metadata, so always validate unless explicitly disabled)
+	if cfg.EnableRegistryValidation {
 		ctx := context.Background()
 		for i, pkg := range req.Packages {
 			if err := ValidatePackage(ctx, pkg, req.Name); err != nil {
@@ -381,12 +381,7 @@ func validatePublisherExtensions(req apiv0.ServerJSON) error {
 		}
 	}
 
-	if req.Meta != nil {
-		// Validate that only publisher-provided data is allowed in _meta during publish (no official registry metadata should be present)
-		if req.Meta.Official != nil {
-			return fmt.Errorf("official registry metadata '_meta.io.modelcontextprotocol.registry/official' is not allowed during publish")
-		}
-	}
+	// Note: The new ServerMeta struct only contains PublisherProvided, so no need to check for Official field
 
 	return nil
 }

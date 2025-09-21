@@ -320,16 +320,16 @@ func TestServersListEndpoint(t *testing.T) {
 				switch tc.name {
 				case "successful search by name substring":
 					assert.Len(t, resp.Servers, 1, "Expected exactly one matching server")
-					assert.Contains(t, resp.Servers[0].Name, "test-server", "Server name should contain search term")
+					assert.Contains(t, resp.Servers[0].Server.Name, "test-server", "Server name should contain search term")
 				case "successful updated_since filter with RFC3339":
 					assert.Len(t, resp.Servers, 1, "Expected one server updated after 2020")
-					assert.Contains(t, resp.Servers[0].Name, "recent-server")
+					assert.Contains(t, resp.Servers[0].Server.Name, "recent-server")
 				case "successful version=latest filter":
 					assert.Len(t, resp.Servers, 1, "Expected one latest server")
-					assert.Contains(t, resp.Servers[0].Description, "latest")
+					assert.Contains(t, resp.Servers[0].Server.Description, "latest")
 				case "combined search and updated_since filter":
 					assert.Len(t, resp.Servers, 1, "Expected one server matching both filters")
-					assert.Contains(t, resp.Servers[0].Name, "combined", "Server name should contain search term")
+					assert.Contains(t, resp.Servers[0].Server.Name, "combined", "Server name should contain search term")
 				case "empty registry returns success":
 					assert.Empty(t, resp.Servers, "Expected empty server list for empty registry")
 				case "comprehensive query with all parameters":
@@ -337,7 +337,7 @@ func TestServersListEndpoint(t *testing.T) {
 					// Expected: 2 servers (filesystem-server v2.0.0 and filesystem-tools v3.0.0)
 					assert.Len(t, resp.Servers, 2, "Expected two servers matching all filters")
 					for _, server := range resp.Servers {
-						assert.Contains(t, server.Name, "filesystem", "Server name should contain 'filesystem'")
+						assert.Contains(t, server.Server.Name, "filesystem", "Server name should contain 'filesystem'")
 					}
 					// Verify the limit parameter worked (should be at most 50, but we only have 2)
 					assert.LessOrEqual(t, len(resp.Servers), 50, "Should respect limit parameter")
@@ -350,9 +350,8 @@ func TestServersListEndpoint(t *testing.T) {
 
 				// General structure validation
 				for _, server := range resp.Servers {
-					assert.NotEmpty(t, server.Name)
-					assert.NotEmpty(t, server.Description)
-					assert.NotNil(t, server.Meta)
+					assert.NotEmpty(t, server.Server.Name)
+					assert.NotEmpty(t, server.Server.Description)
 					assert.NotNil(t, server.Meta.Official)
 					assert.NotEmpty(t, server.Meta.Official.VersionID)
 				}
@@ -469,12 +468,12 @@ func TestServersDetailEndpoint(t *testing.T) {
 				assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 
 				// Parse response body
-				var serverDetailResp apiv0.ServerJSON
+				var serverDetailResp apiv0.ServerResponse
 				err := json.NewDecoder(w.Body).Decode(&serverDetailResp)
 				assert.NoError(t, err)
 
 				// Check that we got a valid response
-				assert.NotEmpty(t, serverDetailResp.Name)
+				assert.NotEmpty(t, serverDetailResp.Server.Name)
 			} else if tc.expectedError != "" {
 				// Check error message for non-200 responses
 				assert.Contains(t, w.Body.String(), tc.expectedError)
@@ -575,14 +574,14 @@ func TestServersVersionsEndpoint(t *testing.T) {
 				// Verify all returned servers have the same server ID but different versions
 				for _, server := range versionsResp.Servers {
 					assert.Equal(t, tc.serverID, server.Meta.Official.ServerID)
-					assert.NotEmpty(t, server.Version)
-					assert.Equal(t, "com.example/versioned-server", server.Name)
+					assert.NotEmpty(t, server.Server.Version)
+					assert.Equal(t, "com.example/versioned-server", server.Server.Name)
 				}
 
 				// Verify versions are included (should have 1.0.0, 2.0.0, 2.1.0)
 				versions := make([]string, 0, len(versionsResp.Servers))
 				for _, server := range versionsResp.Servers {
-					versions = append(versions, server.Version)
+					versions = append(versions, server.Server.Version)
 				}
 				assert.Contains(t, versions, "1.0.0")
 				assert.Contains(t, versions, "2.0.0")
@@ -617,7 +616,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 	assert.NotNil(t, published)
 
 	serverID := published.Meta.Official.ServerID
-	servers := []apiv0.ServerJSON{*published}
+	servers := []apiv0.ServerResponse{*published}
 	serverDetail := published
 
 	// Create a new test API
@@ -660,10 +659,10 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		// Check the response data (excluding timestamps which will be different)
 		assert.Len(t, listResp.Servers, len(servers))
 		if len(listResp.Servers) > 0 {
-			assert.Equal(t, servers[0].Name, listResp.Servers[0].Name)
-			assert.Equal(t, servers[0].Description, listResp.Servers[0].Description)
-			assert.Equal(t, servers[0].Repository, listResp.Servers[0].Repository)
-			assert.Equal(t, servers[0].Version, listResp.Servers[0].Version)
+			assert.Equal(t, servers[0].Server.Name, listResp.Servers[0].Server.Name)
+			assert.Equal(t, servers[0].Server.Description, listResp.Servers[0].Server.Description)
+			assert.Equal(t, servers[0].Server.Repository, listResp.Servers[0].Server.Repository)
+			assert.Equal(t, servers[0].Server.Version, listResp.Servers[0].Server.Version)
 		}
 	})
 
@@ -689,15 +688,15 @@ func TestServersEndpointsIntegration(t *testing.T) {
 		assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
 
 		// Parse response body
-		var serverDetailResp apiv0.ServerJSON
+		var serverDetailResp apiv0.ServerResponse
 		err = json.NewDecoder(resp.Body).Decode(&serverDetailResp)
 		assert.NoError(t, err)
 
 		// Check the response data (excluding timestamps which will be different)
-		assert.Equal(t, serverDetail.Name, serverDetailResp.Name)
-		assert.Equal(t, serverDetail.Description, serverDetailResp.Description)
-		assert.Equal(t, serverDetail.Repository, serverDetailResp.Repository)
-		assert.Equal(t, serverDetail.Version, serverDetailResp.Version)
+		assert.Equal(t, serverDetail.Server.Name, serverDetailResp.Server.Name)
+		assert.Equal(t, serverDetail.Server.Description, serverDetailResp.Server.Description)
+		assert.Equal(t, serverDetail.Server.Repository, serverDetailResp.Server.Repository)
+		assert.Equal(t, serverDetail.Server.Version, serverDetailResp.Server.Version)
 	})
 
 	// Verify mock expectations
