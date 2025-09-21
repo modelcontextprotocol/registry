@@ -29,7 +29,6 @@ type Config struct {
 	OIDCEnabled      bool   `env:"OIDC_ENABLED" envDefault:"false"`
 	OIDCIssuer       string `env:"OIDC_ISSUER" envDefault:""`
 	OIDCClientID     string `env:"OIDC_CLIENT_ID" envDefault:""`
-	OIDCClientSecret string `env:"OIDC_CLIENT_SECRET" envDefault:""`
 	OIDCExtraClaims  string `env:"OIDC_EXTRA_CLAIMS" envDefault:""`
 	OIDCEditPerms    string `env:"OIDC_EDIT_PERMISSIONS" envDefault:""`
 	OIDCPublishPerms string `env:"OIDC_PUBLISH_PERMISSIONS" envDefault:""`
