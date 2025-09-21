@@ -13,9 +13,7 @@ import (
 
 // MockGenericOIDCValidator for testing
 type MockGenericOIDCValidator struct {
-	validateFunc     func(ctx context.Context, token string) (*auth.OIDCClaims, error)
-	authURLFunc      func(state, nonce, redirectURI string) string
-	exchangeCodeFunc func(ctx context.Context, code, redirectURI string) (string, error)
+	validateFunc func(ctx context.Context, token string) (*auth.OIDCClaims, error)
 }
 
 func (m *MockGenericOIDCValidator) ValidateToken(ctx context.Context, token string) (*auth.OIDCClaims, error) {
@@ -23,20 +21,6 @@ func (m *MockGenericOIDCValidator) ValidateToken(ctx context.Context, token stri
 		return m.validateFunc(ctx, token)
 	}
 	return nil, fmt.Errorf("not implemented")
-}
-
-func (m *MockGenericOIDCValidator) GetAuthorizationURL(state, nonce, redirectURI string) string {
-	if m.authURLFunc != nil {
-		return m.authURLFunc(state, nonce, redirectURI)
-	}
-	return ""
-}
-
-func (m *MockGenericOIDCValidator) ExchangeCodeForToken(ctx context.Context, code, redirectURI string) (string, error) {
-	if m.exchangeCodeFunc != nil {
-		return m.exchangeCodeFunc(ctx, code, redirectURI)
-	}
-	return "", fmt.Errorf("not implemented")
 }
 
 func TestOIDCHandler_ExchangeToken(t *testing.T) {
@@ -121,34 +105,3 @@ func TestOIDCHandler_ExchangeToken(t *testing.T) {
 		})
 	}
 }
-
-func TestOIDCHandler_StartAuth(t *testing.T) {
-	config := &config.Config{
-		OIDCEnabled:      true,
-		OIDCIssuer:       "https://accounts.google.com",
-		OIDCClientID:     "test-client-id",
-		OIDCClientSecret: "test-secret",
-		JWTPrivateKey:    "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-	}
-
-	mockValidator := &MockGenericOIDCValidator{
-		authURLFunc: func(state, nonce, redirectURI string) string {
-			return fmt.Sprintf("https://accounts.google.com/oauth/authorize?client_id=%s&state=%s&nonce=%s&redirect_uri=%s",
-				config.OIDCClientID, state, nonce, redirectURI)
-		},
-	}
-
-	handler := auth.NewOIDCHandler(config)
-	handler.SetValidator(mockValidator)
-
-	ctx := context.Background()
-	authURL, err := handler.StartAuth(ctx, "http://localhost:3000/callback")
-
-	require.NoError(t, err)
-	assert.Contains(t, authURL, "https://accounts.google.com/oauth/authorize")
-	assert.Contains(t, authURL, "client_id=test-client-id")
-	assert.Contains(t, authURL, "state=")
-	assert.Contains(t, authURL, "nonce=")
-}
-
-// Note: validateExtraClaims and buildPermissions are tested through ExchangeToken integration tests

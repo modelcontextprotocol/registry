@@ -2,20 +2,16 @@ package auth
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/danielgtaylor/huma/v2"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
-	"golang.org/x/oauth2"
 )
 
 // OIDCTokenExchangeInput represents the input for OIDC token exchange
@@ -23,17 +19,6 @@ type OIDCTokenExchangeInput struct {
 	Body struct {
 		OIDCToken string `json:"oidc_token" doc:"OIDC ID token from any provider" required:"true"`
 	}
-}
-
-// OIDCStartInput represents the input for OIDC authorization start
-type OIDCStartInput struct {
-	RedirectURI string `query:"redirect_uri" doc:"Optional redirect URI after authentication"`
-}
-
-// OIDCCallbackInput represents the input for OIDC callback
-type OIDCCallbackInput struct {
-	Code  string `query:"code" doc:"Authorization code from OIDC provider" required:"true"`
-	State string `query:"state" doc:"State parameter for CSRF protection" required:"true"`
 }
 
 // OIDCClaims represents the claims we extract from any OIDC token
@@ -47,19 +32,16 @@ type OIDCClaims struct {
 // GenericOIDCValidator defines the interface for validating OIDC tokens from any provider
 type GenericOIDCValidator interface {
 	ValidateToken(ctx context.Context, token string) (*OIDCClaims, error)
-	GetAuthorizationURL(state, nonce string, redirectURI string) string
-	ExchangeCodeForToken(ctx context.Context, code string, redirectURI string) (string, error)
 }
 
 // StandardOIDCValidator validates OIDC tokens using go-oidc library
 type StandardOIDCValidator struct {
-	provider     *oidc.Provider
-	verifier     *oidc.IDTokenVerifier
-	oauth2Config *oauth2.Config
+	provider *oidc.Provider
+	verifier *oidc.IDTokenVerifier
 }
 
 // NewStandardOIDCValidator creates a new standard OIDC validator using go-oidc
-func NewStandardOIDCValidator(issuer, clientID, clientSecret string) (*StandardOIDCValidator, error) {
+func NewStandardOIDCValidator(issuer, clientID string) (*StandardOIDCValidator, error) {
 	ctx := context.Background()
 
 	// Initialize the OIDC provider
@@ -74,18 +56,9 @@ func NewStandardOIDCValidator(issuer, clientID, clientSecret string) (*StandardO
 	}
 	verifier := provider.Verifier(verifierConfig)
 
-	// Create OAuth2 config for authorization flow
-	oauth2Config := &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-		Endpoint:     provider.Endpoint(),
-		Scopes:       []string{oidc.ScopeOpenID, "email", "profile"},
-	}
-
 	return &StandardOIDCValidator{
-		provider:     provider,
-		verifier:     verifier,
-		oauth2Config: oauth2Config,
+		provider: provider,
+		verifier: verifier,
 	}, nil
 }
 
@@ -138,52 +111,11 @@ func (v *StandardOIDCValidator) ValidateToken(ctx context.Context, tokenString s
 	return oidcClaims, nil
 }
 
-// GetAuthorizationURL constructs the OIDC authorization URL using oauth2
-func (v *StandardOIDCValidator) GetAuthorizationURL(state, nonce string, redirectURI string) string {
-	// Update redirect URI for this request
-	config := *v.oauth2Config
-	config.RedirectURL = redirectURI
-
-	// Add nonce as additional parameter
-	authURL := config.AuthCodeURL(state, oauth2.SetAuthURLParam("nonce", nonce))
-	return authURL
-}
-
-// ExchangeCodeForToken exchanges authorization code for ID token using oauth2
-func (v *StandardOIDCValidator) ExchangeCodeForToken(ctx context.Context, code string, redirectURI string) (string, error) {
-	// Update redirect URI for this exchange
-	config := *v.oauth2Config
-	config.RedirectURL = redirectURI
-
-	// Exchange authorization code for token
-	token, err := config.Exchange(ctx, code)
-	if err != nil {
-		return "", fmt.Errorf("failed to exchange code for token: %w", err)
-	}
-
-	// Extract ID token from OAuth2 token
-	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		return "", fmt.Errorf("no ID token found in OAuth2 response")
-	}
-
-	return rawIDToken, nil
-}
-
 // OIDCHandler handles configurable OIDC authentication
 type OIDCHandler struct {
 	config     *config.Config
 	jwtManager *auth.JWTManager
 	validator  GenericOIDCValidator
-	sessions   map[string]OIDCSession // In-memory state storage for now
-}
-
-// OIDCSession stores OIDC flow state
-type OIDCSession struct {
-	State       string
-	Nonce       string
-	RedirectURI string
-	CreatedAt   time.Time
 }
 
 // NewOIDCHandler creates a new OIDC handler
@@ -195,7 +127,7 @@ func NewOIDCHandler(cfg *config.Config) *OIDCHandler {
 		panic("OIDC issuer is required when OIDC is enabled")
 	}
 
-	validator, err := NewStandardOIDCValidator(cfg.OIDCIssuer, cfg.OIDCClientID, cfg.OIDCClientSecret)
+	validator, err := NewStandardOIDCValidator(cfg.OIDCIssuer, cfg.OIDCClientID)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to initialize OIDC validator: %v", err))
 	}
@@ -204,7 +136,6 @@ func NewOIDCHandler(cfg *config.Config) *OIDCHandler {
 		config:     cfg,
 		jwtManager: auth.NewJWTManager(cfg),
 		validator:  validator,
-		sessions:   make(map[string]OIDCSession),
 	}
 }
 
@@ -233,47 +164,6 @@ func RegisterOIDCEndpoints(api huma.API, cfg *config.Config) {
 		response, err := handler.ExchangeToken(ctx, input.Body.OIDCToken)
 		if err != nil {
 			return nil, huma.Error401Unauthorized("Token exchange failed", err)
-		}
-
-		return &v0.Response[auth.TokenResponse]{
-			Body: *response,
-		}, nil
-	})
-
-	// Authorization start endpoint
-	huma.Register(api, huma.Operation{
-		OperationID: "oidc-auth-start",
-		Method:      http.MethodGet,
-		Path:        "/v0/auth/oidc/start",
-		Summary:     "Start OIDC authorization flow",
-		Description: "Redirects user to OIDC provider for authentication",
-		Tags:        []string{"auth"},
-	}, func(ctx context.Context, input *OIDCStartInput) (*v0.Response[map[string]string], error) {
-		authURL, err := handler.StartAuth(ctx, input.RedirectURI)
-		if err != nil {
-			return nil, huma.Error400BadRequest("Failed to start OIDC flow", err)
-		}
-
-		return &v0.Response[map[string]string]{
-			Body: map[string]string{
-				"authorization_url": authURL,
-				"message":           "Visit the authorization URL to complete authentication",
-			},
-		}, nil
-	})
-
-	// Authorization callback endpoint
-	huma.Register(api, huma.Operation{
-		OperationID: "oidc-auth-callback",
-		Method:      http.MethodGet,
-		Path:        "/v0/auth/oidc/callback",
-		Summary:     "Handle OIDC authorization callback",
-		Description: "Handles the callback from OIDC provider after user authorization",
-		Tags:        []string{"auth"},
-	}, func(ctx context.Context, input *OIDCCallbackInput) (*v0.Response[auth.TokenResponse], error) {
-		response, err := handler.HandleCallback(ctx, input.Code, input.State)
-		if err != nil {
-			return nil, huma.Error400BadRequest("Failed to handle OIDC callback", err)
 		}
 
 		return &v0.Response[auth.TokenResponse]{
@@ -312,63 +202,6 @@ func (h *OIDCHandler) ExchangeToken(ctx context.Context, oidcToken string) (*aut
 	}
 
 	return tokenResponse, nil
-}
-
-// StartAuth initiates the OIDC authorization flow
-func (h *OIDCHandler) StartAuth(_ context.Context, redirectURI string) (string, error) {
-	// Generate state and nonce for security
-	state, err := generateRandomString(32)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate state: %w", err)
-	}
-
-	nonce, err := generateRandomString(32)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate nonce: %w", err)
-	}
-
-	// Store session for callback validation
-	session := OIDCSession{
-		State:       state,
-		Nonce:       nonce,
-		RedirectURI: redirectURI,
-		CreatedAt:   time.Now(),
-	}
-	h.sessions[state] = session
-
-	// Build callback URI - use configured base URL or default
-	callbackURI := "/v0/auth/oidc/callback"
-
-	// Get authorization URL
-	authURL := h.validator.GetAuthorizationURL(state, nonce, callbackURI)
-
-	return authURL, nil
-}
-
-// HandleCallback handles the OIDC callback
-func (h *OIDCHandler) HandleCallback(ctx context.Context, code, state string) (*auth.TokenResponse, error) {
-	// Validate state and retrieve session
-	session, exists := h.sessions[state]
-	if !exists {
-		return nil, fmt.Errorf("invalid state parameter")
-	}
-
-	// Clean up session
-	delete(h.sessions, state)
-
-	// Check session expiry (5 minutes)
-	if time.Since(session.CreatedAt) > 5*time.Minute {
-		return nil, fmt.Errorf("authentication session expired")
-	}
-
-	// Exchange authorization code for tokens
-	idToken, err := h.validator.ExchangeCodeForToken(ctx, code, "/v0/auth/oidc/callback")
-	if err != nil {
-		return nil, fmt.Errorf("failed to exchange code for token: %w", err)
-	}
-
-	// Now validate the ID token and generate registry token
-	return h.ExchangeToken(ctx, idToken)
 }
 
 // validateExtraClaims validates additional claims based on configuration
@@ -430,13 +263,4 @@ func (h *OIDCHandler) buildPermissions(_ *OIDCClaims) []auth.Permission {
 	}
 
 	return permissions
-}
-
-// generateRandomString generates a cryptographically secure random string
-func generateRandomString(length int) (string, error) {
-	bytes := make([]byte, length)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return base64.URLEncoding.EncodeToString(bytes)[:length], nil
 }
