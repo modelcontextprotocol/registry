@@ -33,12 +33,12 @@ func main() {
 
 func runValidation() error {
 	// Define what we validate and how
-	expectedServerJsonCount := 13
+	expectedServerJSONCount := 13
 	targets := []validationTarget{
 		{
 			path:          filepath.Join("docs", "reference", "server-json", "generic-server-json.md"),
 			requireSchema: false,
-			expectedCount: &expectedServerJsonCount,
+			expectedCount: &expectedServerJSONCount,
 		},
 		{
 			path:          filepath.Join("docs", "guides", "publishing", "publish-server.md"),
