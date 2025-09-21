@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
@@ -68,7 +69,7 @@ func (db *PostgreSQL) List(
 	filter *ServerFilter,
 	cursor string,
 	limit int,
-) ([]*apiv0.ServerJSON, string, error) {
+) ([]*apiv0.ServerResponse, string, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -82,35 +83,35 @@ func (db *PostgreSQL) List(
 	args := []any{}
 	argIndex := 1
 
-	// Add filters using JSON operators
+	// Add filters using new schema columns
 	if filter != nil {
 		if filter.Name != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("value->>'name' = $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("server_json->>'name' = $%d", argIndex))
 			args = append(args, *filter.Name)
 			argIndex++
 		}
 		if filter.RemoteURL != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("EXISTS (SELECT 1 FROM jsonb_array_elements(value->'remotes') AS remote WHERE remote->>'url' = $%d)", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("EXISTS (SELECT 1 FROM jsonb_array_elements(server_json->'remotes') AS remote WHERE remote->>'url' = $%d)", argIndex))
 			args = append(args, *filter.RemoteURL)
 			argIndex++
 		}
 		if filter.UpdatedSince != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry/official'->>'updatedAt')::timestamp > $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("updated_at > $%d", argIndex))
 			args = append(args, *filter.UpdatedSince)
 			argIndex++
 		}
 		if filter.SubstringName != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("value->>'name' ILIKE $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("server_json->>'name' ILIKE $%d", argIndex))
 			args = append(args, "%"+*filter.SubstringName+"%")
 			argIndex++
 		}
 		if filter.Version != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("(value->'version_detail'->>'version') = $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("server_json->>'version' = $%d", argIndex))
 			args = append(args, *filter.Version)
 			argIndex++
 		}
 		if filter.IsLatest != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry/official'->>'isLatest')::boolean = $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("is_latest = $%d", argIndex))
 			args = append(args, *filter.IsLatest)
 			argIndex++
 		}
@@ -132,9 +133,9 @@ func (db *PostgreSQL) List(
 		whereClause = "WHERE " + strings.Join(whereConditions, " AND ")
 	}
 
-	// Simple query on servers table
+	// Query using new separated schema
 	query := fmt.Sprintf(`
-        SELECT value
+        SELECT version_id, server_id, status, published_at, updated_at, is_latest, server_json
         FROM servers
         %s
         ORDER BY version_id
@@ -148,35 +149,51 @@ func (db *PostgreSQL) List(
 	}
 	defer rows.Close()
 
-	var results []*apiv0.ServerJSON
+	var results []*apiv0.ServerResponse
 	for rows.Next() {
-		var valueJSON []byte
+		var versionID, serverID, status string
+		var publishedAt, updatedAt time.Time
+		var isLatest bool
+		var serverJSONBytes []byte
 
-		err := rows.Scan(&valueJSON)
+		err := rows.Scan(&versionID, &serverID, &status, &publishedAt, &updatedAt, &isLatest, &serverJSONBytes)
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to scan server row: %w", err)
 		}
 
-		// Parse the complete ServerJSON from JSONB
+		// Parse the immutable server.json
 		var serverJSON apiv0.ServerJSON
-		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
+		if err := json.Unmarshal(serverJSONBytes, &serverJSON); err != nil {
 			return nil, "", fmt.Errorf("failed to unmarshal server JSON: %w", err)
 		}
 
-		results = append(results, &serverJSON)
+		// Construct the response with separated concerns
+		response := &apiv0.ServerResponse{
+			Server: serverJSON,
+			Meta: apiv0.ResponseMeta{
+				Official: &apiv0.RegistryExtensions{
+					ServerID:    serverID,
+					VersionID:   versionID,
+					Status:      model.Status(status),
+					PublishedAt: publishedAt,
+					UpdatedAt:   updatedAt,
+					IsLatest:    isLatest,
+				},
+			},
+		}
+
+		results = append(results, response)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, "", fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	// Determine next cursor using registry metadata VersionID
+	// Determine next cursor using version_id
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
 		lastResult := results[len(results)-1]
-		if lastResult.Meta != nil && lastResult.Meta.Official != nil {
-			nextCursor = lastResult.Meta.Official.VersionID
-		}
+		nextCursor = lastResult.Meta.Official.VersionID
 	}
 
 	return results, nextCursor, nil
