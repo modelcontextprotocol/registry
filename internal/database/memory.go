@@ -241,6 +241,37 @@ func (db *MemoryDB) UpdateServerStatus(_ context.Context, versionID string, stat
 	return response, nil
 }
 
+func (db *MemoryDB) UpdateIsLatest(_ context.Context, versionID string, isLatest bool) (*apiv0.ServerResponse, error) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+
+	// Find existing entry by versionID
+	existing, exists := db.entries[versionID]
+	if !exists {
+		return nil, ErrNotFound
+	}
+
+	// Create updated response, preserving existing data but updating isLatest and timestamp
+	response := &apiv0.ServerResponse{
+		Server: existing.Server, // Keep the server content unchanged
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    existing.Meta.Official.ServerID,
+				VersionID:   versionID,
+				Status:      existing.Meta.Official.Status,
+				PublishedAt: existing.Meta.Official.PublishedAt,
+				UpdatedAt:   time.Now(), // Update the timestamp
+				IsLatest:    isLatest,   // Update the isLatest flag
+			},
+		},
+	}
+
+	// Store the updated entry
+	db.entries[versionID] = response
+
+	return response, nil
+}
+
 func (db *MemoryDB) Close() error {
 	return nil
 }

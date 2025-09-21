@@ -46,6 +46,8 @@ type Database interface {
 	UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
 	// UpdateServerStatus updates only the status field of a server record
 	UpdateServerStatus(ctx context.Context, versionID string, status string) (*apiv0.ServerResponse, error)
+	// UpdateIsLatest updates only the isLatest flag of a server record
+	UpdateIsLatest(ctx context.Context, versionID string, isLatest bool) (*apiv0.ServerResponse, error)
 	// Close closes the database connection
 	Close() error
 }

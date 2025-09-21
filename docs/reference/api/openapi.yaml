@@ -132,12 +132,11 @@ paths:
                       identifier: "@modelcontextprotocol/server-filesystem"
                       version: "1.0.2"
                   _meta:
-                    io.modelcontextprotocol.registry/publisher-provided:
+                    publisher.example.com/build-info:
                       tool: "publisher-cli"
                       version: "1.2.3"
-                      build_info:
-                        commit: "abc123def456"
-                        timestamp: "2023-12-01T10:30:00Z"
+                      commit: "abc123def456"
+                      timestamp: "2023-12-01T10:30:00Z"
               example_org_server:
                 summary: Server with example.com organization extensions
                 value:
@@ -153,8 +152,8 @@ paths:
                       identifier: "@example/mcp-demo-server"
                       version: "1.0.0"
                   _meta:
-                    io.modelcontextprotocol.registry/publisher-provided:
-                      contact_email: "maintainer@example.com"
+                    publisher.example.com/contact:
+                      email: "maintainer@example.com"
                       build_metadata:
                         commit: "abc123"
                         timestamp: "2024-01-15T10:30:00Z"
@@ -540,43 +539,17 @@ components:
           $ref: '#/components/schemas/ResponseMeta'
 
     ResponseMeta:
-      description: Registry metadata extensions
+      description: Registry metadata extensions using reverse DNS namespacing for vendor-specific data
       type: object
-      properties:
-        io.modelcontextprotocol.registry/official:
-          $ref: '#/components/schemas/RegistryExtensions'
-
-    RegistryExtensions:
-      description: Official registry metadata
-      type: object
-      required:
-        - serverId
-        - versionId
-        - status
-      properties:
-        serverId:
-          type: string
-          format: uuid
-          description: Unique server identifier (consistent across versions)
-        versionId:
-          type: string
-          format: uuid
-          description: Unique version identifier
-        status:
-          type: string
-          enum: ["active", "deprecated", "deleted"]
-          description: Server lifecycle status
-        publishedAt:
-          type: string
-          format: date-time
-          description: When this version was published
-        updatedAt:
-          type: string
-          format: date-time
-          description: When this version was last updated
-        isLatest:
-          type: boolean
-          description: Whether this is the latest version
+      additionalProperties: true
+      example:
+        registry.example.com/official:
+          serverId: "550e8400-e29b-41d4-a716-446655440000"
+          versionId: "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+          status: "active"
+          publishedAt: "2023-12-01T10:30:00Z"
+          updatedAt: "2023-12-01T10:35:00Z"
+          isLatest: true
 
     UpdateServerStatusRequest:
       description: Request body for updating server status
@@ -611,52 +584,5 @@ components:
                 $ref: '#/components/schemas/Remote'
             _meta:
               type: object
-              description: Extension metadata using reverse DNS namespacing
-              properties:
-                io.modelcontextprotocol.registry/publisher-provided:
-                  type: object
-                  description: Publisher-specific metadata and build information
-                  additionalProperties: true
-                  example:
-                    tool: "publisher-cli"
-                    version: "1.2.3"
-                    build_info:
-                      commit: "abc123def456"
-                      timestamp: "2023-12-01T10:30:00Z"
-                      pipeline_id: "build-789"
-                io.modelcontextprotocol.registry/official:
-                  type: object
-                  description: Registry-specific metadata managed by the MCP registry system
-                  required:
-                    - serverId
-                    - versionId
-                    - published_at
-                    - updated_at
-                    - is_latest
-                  properties:
-                    serverId:
-                      type: string
-                      format: uuid
-                      description: Consistent ID across all versions of a server
-                      example: "550e8400-e29b-41d4-a716-446655440000"
-                    versionId:
-                      type: string
-                      format: uuid
-                      description: Unique ID for this specific version
-                      example: "773f9b2e-1a47-4c8d-b5e6-2f8d9c4a7b3e"
-                    published_at:
-                      type: string
-                      format: date-time
-                      description: Timestamp when the server was first published to the registry
-                      example: "2023-12-01T10:30:00Z"
-                    updated_at:
-                      type: string
-                      format: date-time
-                      description: Timestamp when the server entry was last updated
-                      example: "2023-12-01T11:00:00Z"
-                    is_latest:
-                      type: boolean
-                      description: Whether this is the latest version of the server
-                      example: true
-                  additionalProperties: false
+              description: Extension metadata using reverse DNS namespacing for vendor-specific data
               additionalProperties: true

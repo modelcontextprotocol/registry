@@ -558,6 +558,52 @@ func (db *PostgreSQL) UpdateServerStatus(ctx context.Context, versionID string, 
 	return response, nil
 }
 
+func (db *PostgreSQL) UpdateIsLatest(ctx context.Context, versionID string, isLatest bool) (*apiv0.ServerResponse, error) {
+	query := `
+		UPDATE servers
+		SET is_latest = $1, updated_at = NOW()
+		WHERE version_id = $2
+		RETURNING version_id, server_id, status, published_at, updated_at, is_latest, server_json
+	`
+	var serverID, returnedStatus string
+	var publishedAt, updatedAt time.Time
+	var returnedIsLatest bool
+	var serverJSONBytes []byte
+
+	err := db.pool.QueryRow(ctx, query, isLatest, versionID).Scan(
+		&versionID, &serverID, &returnedStatus, &publishedAt, &updatedAt, &returnedIsLatest, &serverJSONBytes,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to update isLatest flag: %w", err)
+	}
+
+	// Parse the server JSON
+	var serverJSON apiv0.ServerJSON
+	if err := json.Unmarshal(serverJSONBytes, &serverJSON); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
+	}
+
+	// Construct the response with updated metadata
+	response := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				ServerID:    serverID,
+				VersionID:   versionID,
+				Status:      model.Status(returnedStatus),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    returnedIsLatest,
+			},
+		},
+	}
+
+	return response, nil
+}
+
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
 	db.pool.Close()
