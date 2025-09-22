@@ -37,6 +37,8 @@ func main() {
 		err = commands.LogoutCommand()
 	case "publish":
 		err = commands.PublishCommand(os.Args[2:])
+	case "edit":
+		err = commands.EditCommand(os.Args[2:])
 	case "--version", "-v", "version":
 		log.Printf("mcp-publisher %s (commit: %s, built: %s)", Version, GitCommit, BuildTime)
 		return
@@ -65,6 +67,7 @@ func printUsage() {
 	_, _ = fmt.Fprintln(os.Stdout, "  login         Authenticate with the registry")
 	_, _ = fmt.Fprintln(os.Stdout, "  logout        Clear saved authentication")
 	_, _ = fmt.Fprintln(os.Stdout, "  publish       Publish server.json to the registry")
+	_, _ = fmt.Fprintln(os.Stdout, "  edit          Edit properties of a published server")
 	_, _ = fmt.Fprintln(os.Stdout)
 	_, _ = fmt.Fprintln(os.Stdout, "Use 'mcp-publisher <command> --help' for more information about a command.")
 }

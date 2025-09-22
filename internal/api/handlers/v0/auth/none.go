@@ -61,6 +61,10 @@ func (h *NoneHandler) GetAnonymousToken(ctx context.Context) (*auth.TokenRespons
 			Action:          auth.PermissionActionPublish,
 			ResourcePattern: "io.modelcontextprotocol.anonymous/*",
 		},
+		{
+			Action:          auth.PermissionActionEdit,
+			ResourcePattern: "io.modelcontextprotocol.anonymous/*",
+		},
 	}
 
 	// Create JWT claims for anonymous user
