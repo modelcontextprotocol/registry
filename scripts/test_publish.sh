@@ -89,35 +89,38 @@ cat > "$PAYLOAD_FILE" << EOF
   "version": "1.0.$(date +%s)",
   "packages": [
     {
-      "package_type": "javascript",
-      "registry_name": "npm",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "test-mcp-server",
       "version": "1.0.$(date +%s)",
-      "runtime_hint": "node",
-      "runtime_arguments": [
+      "runtimeHint": "node",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeArguments": [
         {
           "type": "positional",
           "name": "config",
           "description": "Configuration file path",
           "format": "file_path",
-          "is_required": false,
+          "isRequired": false,
           "default": "./config.json"
         }
       ],
-      "environment_variables": [
+      "environmentVariables": [
         {
           "name": "PORT",
           "description": "Port to run the server on",
           "format": "number",
-          "is_required": false,
+          "isRequired": false,
           "default": "3000"
         },
         {
           "name": "API_KEY",
           "description": "API key for external service",
           "format": "string",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         }
       ]
     }

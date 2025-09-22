@@ -18,7 +18,8 @@ import (
 // EditServerInput represents the input for editing a server
 type EditServerInput struct {
 	Authorization string           `header:"Authorization" doc:"Registry JWT token with edit permissions" required:"true"`
-	ID            string           `path:"id" doc:"Server ID (UUID)" format:"uuid"`
+	ServerID      string           `path:"server_id" doc:"Server ID (UUID)" format:"uuid"`
+	Version       string           `query:"version" doc:"Version to edit (e.g., '1.0.0')" required:"true" example:"1.0.0"`
 	Body          apiv0.ServerJSON `body:""`
 }
 
@@ -30,9 +31,9 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 	huma.Register(api, huma.Operation{
 		OperationID: "edit-server",
 		Method:      http.MethodPut,
-		Path:        "/v0/servers/{id}",
+		Path:        "/v0/servers/{server_id}",
 		Summary:     "Edit MCP server",
-		Description: "Update an existing MCP server (admin only)",
+		Description: "Update an existing MCP server (admin only). Requires version query parameter to specify which version to edit.",
 		Tags:        []string{"admin"},
 		Security: []map[string][]string{
 			{"bearer": {}},
@@ -53,7 +54,8 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// Get current server to check permissions against existing name
-		currentServer, err := registry.GetByID(input.ID)
+		currentServer, err := registry.GetByServerIDAndVersion(input.ServerID, input.Version)
+
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
@@ -76,8 +78,13 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
 		}
 
-		// Edit the server
-		updatedServer, err := registry.EditServer(input.ID, input.Body)
+		// Edit the server using the version_id from the current server
+		versionID := currentServer.GetVersionID()
+		if versionID == "" {
+			return nil, huma.Error500InternalServerError("Server version ID not found in metadata", nil)
+		}
+
+		updatedServer, err := registry.EditServer(versionID, input.Body)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")

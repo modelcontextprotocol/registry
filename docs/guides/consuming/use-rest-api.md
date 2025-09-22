@@ -9,7 +9,9 @@ Integration patterns and best practices for building applications that consume M
 **Authentication**: Not required for read-only access
 
 - **`GET /v0/servers`** - List all servers with pagination
-- **`GET /v0/servers/{id}`** - Get server details by UUID
+- **`GET /v0/servers/{server_id}`** - Get latest version of server by server ID
+- **`GET /v0/servers/{server_id}?version=X.X.X`** - Get specific version of server
+- **`GET /v0/servers/{server_id}/versions`** - List all versions of a server
 
 See the [interactive API documentation](https://registry.modelcontextprotocol.io/docs) for complete request/response schemas.
 
@@ -18,7 +20,7 @@ See the [interactive API documentation](https://registry.modelcontextprotocol.io
 ## Building a subregistry  
 **Create enhanced registries** - ETL official registry data and add your own metadata like ratings, security scans, or compatibility info.
 
-For now we recommend scraping the `GET /v0/servers` endpoint on some regular basis. In the future we might provide a filter for updated_at ([#291](https://github.com/modelcontextprotocol/registry/issues/291)) to get only recently changed servers.
+For now we recommend scraping the `GET /v0/servers` endpoint on some regular basis. In the future we might provide a filter for updatedAt ([#291](https://github.com/modelcontextprotocol/registry/issues/291)) to get only recently changed servers.
 
 Servers are generally immutable, except for the `status` field which can be updated to `deleted` (among other states). For these packages, we recommend you also update the status field to `deleted` or remove the package from your registry quickly. This is because this status generally indicates it has violated our permissive [moderation guidelines](../administration/moderation-guidelines.md), suggesting it is illegal, malware or spam.
 
@@ -30,14 +32,14 @@ You can also add custom metadata to servers using the `_meta` field. For example
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.yourname/weather-server",
   "description": "MCP server for weather data access",
   "status": "active",
   "version": "1.0.0",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "weather-mcp-server",
       "version": "1.0.0"
     }

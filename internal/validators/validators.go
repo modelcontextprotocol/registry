@@ -118,17 +118,17 @@ func validateWebsiteURL(websiteURL string) error {
 	// Parse the URL to ensure it's valid
 	parsedURL, err := url.Parse(websiteURL)
 	if err != nil {
-		return fmt.Errorf("invalid website URL: %w", err)
+		return fmt.Errorf("invalid websiteUrl: %w", err)
 	}
 
 	// Ensure it's an absolute URL with valid scheme
 	if !parsedURL.IsAbs() {
-		return fmt.Errorf("website URL must be absolute (include scheme): %s", websiteURL)
+		return fmt.Errorf("websiteUrl must be absolute (include scheme): %s", websiteURL)
 	}
 
 	// Only allow HTTP/HTTPS schemes for security
 	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
-		return fmt.Errorf("website URL must use http or https scheme: %s", websiteURL)
+		return fmt.Errorf("websiteUrl must use http or https scheme: %s", websiteURL)
 	}
 
 	return nil
@@ -438,7 +438,7 @@ func validateWebsiteURLNamespaceMatch(serverJSON apiv0.ServerJSON) error {
 
 	namespace := serverJSON.Name
 	if err := validateRemoteURLMatchesNamespace(serverJSON.WebsiteURL, namespace); err != nil {
-		return fmt.Errorf("website URL %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err)
+		return fmt.Errorf("websiteUrl %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err)
 	}
 
 	return nil

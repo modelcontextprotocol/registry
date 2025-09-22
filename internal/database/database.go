@@ -32,14 +32,44 @@ type ServerFilter struct {
 type Database interface {
 	// Retrieve server entries with optional filtering
 	List(ctx context.Context, filter *ServerFilter, cursor string, limit int) ([]*apiv0.ServerJSON, string, error)
-	// Retrieve a single server by its ID
-	GetByID(ctx context.Context, id string) (*apiv0.ServerJSON, error)
+	// Retrieve a single server by its version ID
+	GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerJSON, error)
+	// Retrieve latest version of a server by server ID
+	GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerJSON, error)
+	// Retrieve specific version of a server by server ID and version
+	GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerJSON, error)
+	// Retrieve all versions of a server by server ID
+	GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerJSON, error)
 	// CreateServer adds a new server to the database
 	CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
 	// UpdateServer updates an existing server record
 	UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
+	// WithPublishLock executes a function with an exclusive lock for publishing a server
+	// This prevents race conditions when multiple versions are published concurrently
+	WithPublishLock(ctx context.Context, serverName string, fn func(ctx context.Context) error) error
 	// Close closes the database connection
 	Close() error
+}
+
+// WithPublishLockT is a generic helper that wraps WithPublishLock for functions returning a value
+// This exists because Go does not support generic methods on interfaces - only the Database interface
+// method WithPublishLock (without generics) can exist, so we provide this generic wrapper function.
+// This is a common pattern in Go for working around this language limitation.
+func WithPublishLockT[T any](ctx context.Context, db Database, serverName string, fn func(ctx context.Context) (T, error)) (T, error) {
+	var result T
+	var fnErr error
+
+	err := db.WithPublishLock(ctx, serverName, func(lockCtx context.Context) error {
+		result, fnErr = fn(lockCtx)
+		return fnErr
+	})
+
+	if err != nil {
+		var zero T
+		return zero, err
+	}
+
+	return result, nil
 }
 
 // ConnectionType represents the type of database connection

@@ -19,18 +19,18 @@ type Transport struct {
 // Package represents a package configuration
 type Package struct {
 	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "mcpb")
-	RegistryType string `json:"registry_type" minLength:"1"`
+	RegistryType string `json:"registryType" minLength:"1"`
 	// RegistryBaseURL is the base URL of the package registry
-	RegistryBaseURL string `json:"registry_base_url,omitempty"`
+	RegistryBaseURL string `json:"registryBaseUrl,omitempty"`
 	// Identifier is the package identifier - either a package name (for registries) or URL (for direct downloads)
 	Identifier           string          `json:"identifier" minLength:"1"`
 	Version              string          `json:"version" minLength:"1"`
-	FileSHA256           string          `json:"file_sha256,omitempty"`
-	RunTimeHint          string          `json:"runtime_hint,omitempty"`
+	FileSHA256           string          `json:"fileSha256,omitempty"`
+	RunTimeHint          string          `json:"runtimeHint,omitempty"`
 	Transport            Transport       `json:"transport,omitempty"`
-	RuntimeArguments     []Argument      `json:"runtime_arguments,omitempty"`
-	PackageArguments     []Argument      `json:"package_arguments,omitempty"`
-	EnvironmentVariables []KeyValueInput `json:"environment_variables,omitempty"`
+	RuntimeArguments     []Argument      `json:"runtimeArguments,omitempty"`
+	PackageArguments     []Argument      `json:"packageArguments,omitempty"`
+	EnvironmentVariables []KeyValueInput `json:"environmentVariables,omitempty"`
 }
 
 // Repository represents a source code repository as defined in the spec
@@ -54,10 +54,10 @@ const (
 // Input represents a configuration input
 type Input struct {
 	Description string   `json:"description,omitempty"`
-	IsRequired  bool     `json:"is_required,omitempty"`
+	IsRequired  bool     `json:"isRequired,omitempty"`
 	Format      Format   `json:"format,omitempty"`
 	Value       string   `json:"value,omitempty"`
-	IsSecret    bool     `json:"is_secret,omitempty"`
+	IsSecret    bool     `json:"isSecret,omitempty"`
 	Default     string   `json:"default,omitempty"`
 	Choices     []string `json:"choices,omitempty"`
 }
@@ -87,6 +87,6 @@ type Argument struct {
 	InputWithVariables `json:",inline"`
 	Type               ArgumentType `json:"type"`
 	Name               string       `json:"name,omitempty"`
-	IsRepeated         bool         `json:"is_repeated,omitempty"`
-	ValueHint          string       `json:"value_hint,omitempty"`
+	IsRepeated         bool         `json:"isRepeated,omitempty"`
+	ValueHint          string       `json:"valueHint,omitempty"`
 }

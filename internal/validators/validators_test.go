@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestValidate(t *testing.T) {
@@ -345,7 +346,7 @@ func TestValidate(t *testing.T) {
 			expectedError: validators.ErrInvalidSubfolderPath.Error(),
 		},
 		{
-			name: "server with valid website URL",
+			name: "server with valid websiteUrl",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -359,7 +360,7 @@ func TestValidate(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name: "server with invalid website URL - no scheme",
+			name: "server with invalid websiteUrl - no scheme",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -370,10 +371,10 @@ func TestValidate(t *testing.T) {
 				Version:    "1.0.0",
 				WebsiteURL: "example.com/docs",
 			},
-			expectedError: "website URL must be absolute (include scheme): example.com/docs",
+			expectedError: "websiteUrl must be absolute (include scheme): example.com/docs",
 		},
 		{
-			name: "server with invalid website URL - invalid scheme",
+			name: "server with invalid websiteUrl - invalid scheme",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -384,10 +385,10 @@ func TestValidate(t *testing.T) {
 				Version:    "1.0.0",
 				WebsiteURL: "ftp://example.com/docs",
 			},
-			expectedError: "website URL must use http or https scheme: ftp://example.com/docs",
+			expectedError: "websiteUrl must use http or https scheme: ftp://example.com/docs",
 		},
 		{
-			name: "server with malformed website URL",
+			name: "server with malformed websiteUrl",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -398,10 +399,10 @@ func TestValidate(t *testing.T) {
 				Version:    "1.0.0",
 				WebsiteURL: "ht tp://example.com/docs",
 			},
-			expectedError: "invalid website URL:",
+			expectedError: "invalid websiteUrl:",
 		},
 		{
-			name: "server with website URL that matches namespace domain",
+			name: "server with websiteUrl that matches namespace domain",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -415,7 +416,7 @@ func TestValidate(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name: "server with website URL subdomain that matches namespace",
+			name: "server with websiteUrl subdomain that matches namespace",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -429,7 +430,7 @@ func TestValidate(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name: "server with website URL that does not match namespace",
+			name: "server with websiteUrl that does not match namespace",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -440,7 +441,7 @@ func TestValidate(t *testing.T) {
 				Version:    "1.0.0",
 				WebsiteURL: "https://different.com/docs",
 			},
-			expectedError: "website URL https://different.com/docs does not match namespace com.example/test-server",
+			expectedError: "websiteUrl https://different.com/docs does not match namespace com.example/test-server",
 		},
 		{
 			name: "package with spaces in name",

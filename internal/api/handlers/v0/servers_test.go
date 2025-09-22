@@ -354,7 +354,7 @@ func TestServersListEndpoint(t *testing.T) {
 					assert.NotEmpty(t, server.Description)
 					assert.NotNil(t, server.Meta)
 					assert.NotNil(t, server.Meta.Official)
-					assert.NotEmpty(t, server.Meta.Official.ID)
+					assert.NotEmpty(t, server.Meta.Official.VersionID)
 				}
 
 				// Check metadata if expected
@@ -380,24 +380,52 @@ func TestServersDetailEndpoint(t *testing.T) {
 	// Create mock registry service
 	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
 
-	testServer, err := registryService.Publish(apiv0.ServerJSON{
+	// Publish multiple versions of the same server
+	testServer1, err := registryService.Publish(apiv0.ServerJSON{
 		Name:        "com.example/test-server",
 		Description: "A test server",
 		Version:     "1.0.0",
 	})
 	assert.NoError(t, err)
 
+	_, err = registryService.Publish(apiv0.ServerJSON{
+		Name:        "com.example/test-server",
+		Description: "A test server updated",
+		Version:     "2.0.0",
+	})
+	assert.NoError(t, err)
+
 	testCases := []struct {
 		name           string
 		serverID       string
+		version        string
 		expectedStatus int
 		expectedServer *apiv0.ServerJSON
 		expectedError  string
 	}{
 		{
-			name:           "successful get server detail",
-			serverID:       testServer.Meta.Official.ID,
+			name:           "successful get server detail (latest)",
+			serverID:       testServer1.Meta.Official.ServerID,
 			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "successful get server detail with specific version",
+			serverID:       testServer1.Meta.Official.ServerID,
+			version:        "1.0.0",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "successful get server detail with latest version",
+			serverID:       testServer1.Meta.Official.ServerID,
+			version:        "2.0.0",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "version not found for server",
+			serverID:       testServer1.Meta.Official.ServerID,
+			version:        "3.0.0",
+			expectedStatus: http.StatusNotFound,
+			expectedError:  "Server not found",
 		},
 		{
 			name:           "invalid server ID format",
@@ -424,6 +452,9 @@ func TestServersDetailEndpoint(t *testing.T) {
 
 			// Create request
 			url := "/v0/servers/" + tc.serverID
+			if tc.version != "" {
+				url += "?version=" + tc.version
+			}
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 			w := httptest.NewRecorder()
 
@@ -455,6 +486,115 @@ func TestServersDetailEndpoint(t *testing.T) {
 	}
 }
 
+func TestServersVersionsEndpoint(t *testing.T) {
+	// Create mock registry service
+	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+
+	// Publish multiple versions of the same server
+	testServer1, err := registryService.Publish(apiv0.ServerJSON{
+		Name:        "com.example/versioned-server",
+		Description: "A versioned test server",
+		Version:     "1.0.0",
+	})
+	assert.NoError(t, err)
+
+	_, err = registryService.Publish(apiv0.ServerJSON{
+		Name:        "com.example/versioned-server",
+		Description: "A versioned test server updated",
+		Version:     "2.0.0",
+	})
+	assert.NoError(t, err)
+
+	_, err = registryService.Publish(apiv0.ServerJSON{
+		Name:        "com.example/versioned-server",
+		Description: "A versioned test server latest",
+		Version:     "2.1.0",
+	})
+	assert.NoError(t, err)
+
+	testCases := []struct {
+		name           string
+		serverID       string
+		expectedStatus int
+		expectedCount  int
+		expectedError  string
+	}{
+		{
+			name:           "successful get all versions",
+			serverID:       testServer1.Meta.Official.ServerID,
+			expectedStatus: http.StatusOK,
+			expectedCount:  3,
+		},
+		{
+			name:           "invalid server ID format",
+			serverID:       "invalid-uuid",
+			expectedStatus: http.StatusUnprocessableEntity,
+			expectedError:  "validation failed",
+		},
+		{
+			name:           "server not found",
+			serverID:       uuid.New().String(),
+			expectedStatus: http.StatusNotFound,
+			expectedError:  "Server not found",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create a new test API
+			mux := http.NewServeMux()
+			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
+
+			// Register the servers endpoints
+			v0.RegisterServersEndpoints(api, registryService)
+
+			// Create request
+			url := "/v0/servers/" + tc.serverID + "/versions"
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+			w := httptest.NewRecorder()
+
+			// Serve the request
+			mux.ServeHTTP(w, req)
+
+			// Check status code
+			assert.Equal(t, tc.expectedStatus, w.Code)
+
+			if tc.expectedStatus == http.StatusOK {
+				// Check content type
+				assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+
+				// Parse response body
+				var versionsResp apiv0.ServerListResponse
+				err := json.NewDecoder(w.Body).Decode(&versionsResp)
+				assert.NoError(t, err)
+
+				// Check the response data
+				assert.Len(t, versionsResp.Servers, tc.expectedCount)
+				assert.Equal(t, tc.expectedCount, versionsResp.Metadata.Count)
+
+				// Verify all returned servers have the same server ID but different versions
+				for _, server := range versionsResp.Servers {
+					assert.Equal(t, tc.serverID, server.Meta.Official.ServerID)
+					assert.NotEmpty(t, server.Version)
+					assert.Equal(t, "com.example/versioned-server", server.Name)
+				}
+
+				// Verify versions are included (should have 1.0.0, 2.0.0, 2.1.0)
+				versions := make([]string, 0, len(versionsResp.Servers))
+				for _, server := range versionsResp.Servers {
+					versions = append(versions, server.Version)
+				}
+				assert.Contains(t, versions, "1.0.0")
+				assert.Contains(t, versions, "2.0.0")
+				assert.Contains(t, versions, "2.1.0")
+			} else if tc.expectedError != "" {
+				// Check error message for non-200 responses
+				assert.Contains(t, w.Body.String(), tc.expectedError)
+			}
+		})
+	}
+}
+
 // TestServersEndpointsIntegration tests the servers endpoints with actual HTTP requests
 func TestServersEndpointsIntegration(t *testing.T) {
 	// Create mock registry service
@@ -476,7 +616,7 @@ func TestServersEndpointsIntegration(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, published)
 
-	serverID := published.Meta.Official.ID
+	serverID := published.Meta.Official.ServerID
 	servers := []apiv0.ServerJSON{*published}
 	serverDetail := published
 

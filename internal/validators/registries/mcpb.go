@@ -15,7 +15,7 @@ import (
 func ValidateMCPB(ctx context.Context, pkg model.Package, _ string) error {
 	// MCPB packages must include a file hash for integrity verification
 	if pkg.FileSHA256 == "" {
-		return fmt.Errorf("MCPB package must include a file_sha256 hash for integrity verification")
+		return fmt.Errorf("MCPB package must include a fileSha256 hash for integrity verification")
 	}
 
 	err := validateMCPBUrl(pkg.Identifier)

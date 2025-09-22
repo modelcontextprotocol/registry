@@ -58,14 +58,14 @@ If server authors expect to have multiple registry versions for the same package
 ### For Semantic Versions
 The registry attempts to parse versions as semantic versions. If successful, it uses semantic version comparison rules to determine:
 - Version ordering in lists
-- Which version is marked as `is_latest`
+- Which version is marked as `isLatest`
 
 ### For Non-Semantic Versions
 If version parsing as semantic version fails:
 - The registry will always mark the version as latest (overriding any previous version)
 - Clients should fall back to using publish timestamp for ordering
 
-**Important Note**: This behavior means that for servers with mixed semantic and non-semantic versions, the `is_latest` flag may not align with the total ordering. A non-semantic version published after semantic versions will be marked as latest, even if semantic versions are considered "higher" in the ordering.
+**Important Note**: This behavior means that for servers with mixed semantic and non-semantic versions, the `isLatest` flag may not align with the total ordering. A non-semantic version published after semantic versions will be marked as latest, even if semantic versions are considered "higher" in the ordering.
 
 ## Implementation Details
 
@@ -73,13 +73,13 @@ If version parsing as semantic version fails:
 1. **Validation**: Versions are validated for uniqueness within a server name
 2. **Parsing**: The registry attempts to parse each version as semantic version
 3. **Comparison**: Uses semantic version rules when possible, falls back to timestamp
-4. **Latest Flag**: The `is_latest` field is set based on the comparison results
+4. **Latest Flag**: The `isLatest` field is set based on the comparison results
 
 ### Client Recommendations  
 Registry clients SHOULD:
 1. Attempt to interpret versions as semantic versions when possible
 2. Use the following ordering rules:
-   - If one version is marked as is_latest: it is later
+   - If one version is marked as isLatest: it is later
    - If both versions are valid semver: use semver comparison
    - If neither are valid semver: use publish timestamp  
    - If one is semver and one is not: semver version is considered higher
@@ -145,7 +145,7 @@ Existing servers with non-semantic versions will continue to work without change
   "version": "1.2.3",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "@myorg/server",
       "version": "1.2.3"
     }
@@ -160,7 +160,7 @@ Existing servers with non-semantic versions will continue to work without change
   "version": "1.2.3-1",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "@myorg/server", 
       "version": "1.2.3"
     }
@@ -196,12 +196,12 @@ Version strategy options:
   "version": "1.3.0",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "@myorg/server",
       "version": "1.3.0"
     },
     {
-      "registry_type": "oci",
+      "registryType": "oci",
       "identifier": "myorg/server",
       "version": "1.2.5"
     }

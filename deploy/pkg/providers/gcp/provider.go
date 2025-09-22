@@ -129,7 +129,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		// Node pool configuration
 		NodeCount: pulumi.Int(2),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
-			MachineType: pulumi.String("e2-small"),
+			MachineType: pulumi.String("e2-standard-2"),
 			DiskSizeGb:  pulumi.Int(20),
 			DiskType:    pulumi.String("pd-standard"),
 		},

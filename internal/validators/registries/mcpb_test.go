@@ -40,7 +40,7 @@ func TestValidateMCPB(t *testing.T) {
 			serverName:   "com.example/test",
 			fileSHA256:   "",
 			expectError:  true,
-			errorMessage: "must include a file_sha256 hash for integrity verification",
+			errorMessage: "must include a fileSha256 hash for integrity verification",
 		},
 		{
 			name:         "non-existent .mcpb package should fail accessibility check",

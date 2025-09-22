@@ -224,9 +224,9 @@ func findServerIDByName(serverName string) (string, error) {
 	var foundServers []string
 	for _, server := range serverList.Servers {
 		if server.Name == serverName {
-			foundServers = append(foundServers, fmt.Sprintf("ID:%s IsLatest:%t", server.Meta.Official.ID, server.Meta.Official.IsLatest))
+			foundServers = append(foundServers, fmt.Sprintf("ServerID:%s VersionID:%s IsLatest:%t", server.Meta.Official.ServerID, server.Meta.Official.VersionID, server.Meta.Official.IsLatest))
 			if server.Meta.Official.IsLatest {
-				return server.Meta.Official.ID, nil
+				return server.Meta.Official.ServerID, nil
 			}
 		}
 	}

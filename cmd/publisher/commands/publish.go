@@ -37,6 +37,17 @@ func PublishCommand(args []string) error {
 		return fmt.Errorf("invalid server.json: %w", err)
 	}
 
+	// Check for deprecated schema and recommend migration
+	// Allow empty schema (will use default) but reject old schemas
+	if serverJSON.Schema != "" && !strings.Contains(serverJSON.Schema, "2025-09-16") {
+		return fmt.Errorf(`deprecated schema detected :%s.
+
+Migrate to the current schema format for new servers.
+
+📋 Migration checklist: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md#migration-checklist-for-publishers
+📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema)
+	}
+
 	// Load saved token
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -71,8 +82,8 @@ func PublishCommand(args []string) error {
 	}
 
 	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully published")
-	if serverID := response.GetID(); serverID != "" {
-		_, _ = fmt.Fprintf(os.Stdout, "✓ Server Id %s", serverID)
+	if serverID := response.GetServerID(); serverID != "" {
+		_, _ = fmt.Fprintf(os.Stdout, "✓ Server Id %s version %s\n", serverID, response.Version)
 	}
 
 	return nil
