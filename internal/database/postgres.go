@@ -356,6 +356,7 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON
 	query := `
 		INSERT INTO servers (version_id, value)
 		VALUES ($1, $2)
+		ON CONFLICT (version_id) DO NOTHING
 	`
 
 	_, err = db.pool.Exec(ctx, query, versionID, valueJSON)
@@ -385,7 +386,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 
 	// Update the complete server record using version_id
 	query := `
-		UPDATE servers 
+		UPDATE servers
 		SET value = $1
 		WHERE version_id = $2
 	`
