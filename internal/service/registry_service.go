@@ -176,16 +176,8 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 			) > 0
 		}
 
-		// Create complete server with metadata
-		server := s.createServerWithMetadata(serverJSON, existingServerVersions, publishTime, isNewLatest)
-
-		// Create server in database
-		serverRecord, err := s.db.CreateServer(lockCtx, &server)
-		if err != nil {
-			return nil, err
-		}
-
-		// Mark previous latest as no longer latest
+		// Mark previous latest as no longer latest BEFORE creating new version
+		// This prevents violating the unique constraint on isLatest
 		if isNewLatest && existingLatest != nil {
 			var existingLatestVersionID string
 			if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
@@ -199,6 +191,15 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 					return nil, err
 				}
 			}
+		}
+
+		// Create complete server with metadata
+		server := s.createServerWithMetadata(serverJSON, existingServerVersions, publishTime, isNewLatest)
+
+		// Create server in database
+		serverRecord, err := s.db.CreateServer(lockCtx, &server)
+		if err != nil {
+			return nil, err
 		}
 
 		return serverRecord, nil
