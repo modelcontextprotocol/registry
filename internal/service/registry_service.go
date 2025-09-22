@@ -265,8 +265,14 @@ func (s *registryServiceImpl) EditServer(versionID string, req apiv0.ServerJSON)
 		return nil, err
 	}
 
-	// Validate the request
-	if err := validators.ValidatePublishRequest(req, s.cfg); err != nil {
+	// Get current server status for validation
+	var currentStatus string
+	if currentServer.Meta.Official != nil {
+		currentStatus = string(currentServer.Meta.Official.Status)
+	}
+
+	// Validate the request, skipping registry validation for deleted servers
+	if err := validators.ValidatePublishRequestWithStatus(req, s.cfg, currentStatus); err != nil {
 		return nil, err
 	}
 

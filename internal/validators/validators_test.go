@@ -1592,3 +1592,51 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 		},
 	}
 }
+
+func TestValidatePublishRequestWithStatus_DeletedServerSkipsRegistryValidation(t *testing.T) {
+	// Create a server with an invalid package that would normally fail registry validation
+	serverJSON := apiv0.ServerJSON{
+		Name:        "com.example/test-server",
+		Description: "A test server with broken package",
+		Repository: model.Repository{
+			URL:    "https://github.com/owner/repo",
+			Source: "github",
+		},
+		Version: "1.0.0",
+		Packages: []model.Package{
+			{
+				Identifier:      "non-existent-package-that-would-fail-validation",
+				RegistryType:    model.RegistryTypeNPM,
+				RegistryBaseURL: "https://registry.npmjs.org",
+				Version:         "1.0.0",
+				Transport: model.Transport{
+					Type: "stdio",
+				},
+			},
+		},
+	}
+
+	cfg := &config.Config{
+		EnableRegistryValidation: true,
+	}
+
+	t.Run("active server should fail registry validation", func(t *testing.T) {
+		// This should fail because registry validation is enabled and the package doesn't exist
+		err := validators.ValidatePublishRequestWithStatus(serverJSON, cfg, "active")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "registry validation failed")
+	})
+
+	t.Run("deleted server should skip registry validation", func(t *testing.T) {
+		// This should pass because deleted servers skip registry validation
+		err := validators.ValidatePublishRequestWithStatus(serverJSON, cfg, "deleted")
+		assert.NoError(t, err)
+	})
+
+	t.Run("empty status defaults to normal validation", func(t *testing.T) {
+		// This should fail because empty status means normal validation
+		err := validators.ValidatePublishRequestWithStatus(serverJSON, cfg, "")
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "registry validation failed")
+	})
+}

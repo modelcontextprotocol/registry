@@ -344,6 +344,12 @@ func validateRemoteTransport(obj *model.Transport) error {
 
 // ValidatePublishRequest validates a complete publish request including extensions
 func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
+	return ValidatePublishRequestWithStatus(req, cfg, "")
+}
+
+// ValidatePublishRequestWithStatus validates a complete publish request including extensions
+// Skips registry validation if serverStatus is "deleted"
+func ValidatePublishRequestWithStatus(req apiv0.ServerJSON, cfg *config.Config, serverStatus string) error {
 	// Validate publisher extensions in _meta
 	if err := validatePublisherExtensions(req); err != nil {
 		return err
@@ -354,7 +360,12 @@ func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
 		return err
 	}
 
-	// Validate registry ownership for all packages if validation is enabled (status is now in registry metadata, so always validate unless explicitly disabled)
+	// Skip registry validation for deleted servers to allow admin cleanup
+	if serverStatus == "deleted" {
+		return nil
+	}
+
+	// Validate registry ownership for all packages if validation is enabled
 	if cfg.EnableRegistryValidation {
 		ctx := context.Background()
 		for i, pkg := range req.Packages {
