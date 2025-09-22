@@ -100,7 +100,10 @@ This creates a `server.json` with auto-detected values. You'll see something lik
     {
       "registryType": "npm",
       "identifier": "your-package-name",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
@@ -148,12 +151,18 @@ Add an `mcpName` field to your `package.json`:
 ### Example server.json
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.username/server-name",
+  "description": "A server that provides npm package functionality",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "your-npm-package",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
@@ -180,12 +189,18 @@ Add it to your README.md file (which becomes the package description on PyPI). T
 ### Example server.json
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.username/server-name",
+  "description": "A server that provides PyPI package functionality",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "pypi",
       "identifier": "your-pypi-package",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
@@ -212,12 +227,18 @@ Add a README file to your NuGet package that includes the server name. This can 
 ### Example server.json
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.username/server-name",
+  "description": "A server that provides NuGet package functionality",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "nuget",
       "identifier": "Your.NuGet.Package",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
@@ -248,13 +269,19 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ### Example server.json (Docker Hub)
 ```json
 {
-  "name": "io.github.username/server-name", 
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "name": "io.github.username/server-name",
+  "description": "A server that provides Docker container functionality",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "oci",
       "registryBaseUrl": "https://docker.io",
       "identifier": "yourusername/your-mcp-server",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
@@ -263,13 +290,19 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ### Example server.json (GitHub Container Registry)
 ```json
 {
-  "name": "io.github.username/server-name", 
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "name": "io.github.username/server-name",
+  "description": "A server that provides GitHub container functionality",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "oci",
       "registryBaseUrl": "https://ghcr.io",
       "identifier": "yourusername/your-mcp-server",
-      "version": "1.0.0"
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }
@@ -299,12 +332,19 @@ openssl dgst -sha256 server.mcpb
 ### Example server.json
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.username/server-name",
+  "description": "A server that provides MCPB package functionality",
+  "version": "1.0.0",
   "packages": [
     {
       "registryType": "mcpb",
       "identifier": "https://github.com/you/your-repo/releases/download/v1.0.0/server.mcpb",
-      "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
+      "version": "1.0.0",
+      "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+      "transport": {
+        "type": "stdio"
+      }
     }
   ]
 }

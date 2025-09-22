@@ -267,12 +267,6 @@ components:
           format: uri
           description: "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements."
           example: "https://modelcontextprotocol.io/examples"
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
 
 
     ServerList:
@@ -527,9 +521,9 @@ components:
                   required:
                     - serverId
                     - versionId
-                    - published_at
-                    - updated_at
-                    - is_latest
+                    - publishedAt
+                    - updatedAt
+                    - isLatest
                   properties:
                     serverId:
                       type: string
@@ -541,17 +535,17 @@ components:
                       format: uuid
                       description: Unique ID for this specific version
                       example: "773f9b2e-1a47-4c8d-b5e6-2f8d9c4a7b3e"
-                    published_at:
+                    publishedAt:
                       type: string
                       format: date-time
                       description: Timestamp when the server was first published to the registry
                       example: "2023-12-01T10:30:00Z"
-                    updated_at:
+                    updatedAt:
                       type: string
                       format: date-time
                       description: Timestamp when the server entry was last updated
                       example: "2023-12-01T11:00:00Z"
-                    is_latest:
+                    isLatest:
                       type: boolean
                       description: Whether this is the latest version of the server
                       example: true

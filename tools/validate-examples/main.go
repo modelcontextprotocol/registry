@@ -1,7 +1,5 @@
-// validate-examples validates JSON examples in docs/server-json/examples.md
-// against both schema.json and registry-schema.json.
-//
-// For more information, see docs/server-json/README.md
+// validate-examples validates JSON examples in documentation files
+// against both schema.json and Go validators.
 package main
 
 import (
@@ -19,12 +17,11 @@ import (
 	jsonschema "github.com/santhosh-tekuri/jsonschema/v5"
 )
 
-const (
-	// expectedExampleCount is the number of JSON examples we expect to find in generic-server-json.md
-	// IMPORTANT: Only change this count if you have intentionally added or removed examples. This
-	// check prevents accidental formatting changes from causing examples to be skipped during validation.
-	expectedExampleCount = 13
-)
+type validationTarget struct {
+	path           string
+	requireSchema  bool
+	expectedCount  *int
+}
 
 func main() {
 	log.SetFlags(0) // Remove timestamp from logs
@@ -35,34 +32,61 @@ func main() {
 }
 
 func runValidation() error {
-	basePath := filepath.Join("docs", "reference", "server-json")
-
-	examplesPath := filepath.Join(basePath, "generic-server-json.md")
-	schemaPath := filepath.Join(basePath, "server.schema.json")
-
-	examples, err := extractExamples(examplesPath)
-	if err != nil {
-		return fmt.Errorf("failed to extract examples: %w", err)
+	// Define what we validate and how
+	expectedServerJSONCount := 13
+	targets := []validationTarget{
+		{
+			path:          filepath.Join("docs", "reference", "server-json", "generic-server-json.md"),
+			requireSchema: false,
+			expectedCount: &expectedServerJSONCount,
+		},
+		{
+			path:          filepath.Join("docs", "guides", "publishing", "publish-server.md"),
+			requireSchema: true,
+			expectedCount: nil, // No count validation for guide
+		},
 	}
 
-	log.Printf("Found %d examples in examples.md\n", len(examples))
-
-	if len(examples) != expectedExampleCount {
-		return fmt.Errorf("expected %d examples but found %d - if this is intentional, update expectedExampleCount in %s",
-			expectedExampleCount, len(examples), "tools/validate-examples/main.go")
-	}
-
-	log.Println()
-
+	schemaPath := filepath.Join("docs", "reference", "server-json", "server.schema.json")
 	baseSchema, err := compileSchema(schemaPath)
 	if err != nil {
 		return fmt.Errorf("failed to compile server.schema.json: %w", err)
 	}
 
-	validatedCount := 0
+	for _, target := range targets {
+		if err := validateFile(target, baseSchema); err != nil {
+			return err
+		}
+		log.Println()
+	}
 
+	log.Println("All validations passed!")
+	return nil
+}
+
+func validateFile(target validationTarget, baseSchema *jsonschema.Schema) error {
+	examples, err := extractExamples(target.path, target.requireSchema)
+	if err != nil {
+		return fmt.Errorf("failed to extract examples from %s: %w", target.path, err)
+	}
+
+	log.Printf("Validating %s: found %d examples\n", target.path, len(examples))
+
+	if target.expectedCount != nil && len(examples) != *target.expectedCount {
+		return fmt.Errorf("expected %d examples in %s but found %d - if this is intentional, update expectedCount in tools/validate-examples/main.go",
+			*target.expectedCount, target.path, len(examples))
+	}
+
+	if len(examples) == 0 {
+		log.Println("  No examples to validate")
+		return nil
+	}
+
+	log.Println()
+
+	validatedCount := 0
 	for i, example := range examples {
-		log.Printf("Example %d:", i+1)
+		log.Printf("  Example %d (line %d):", i+1, example.line)
 
 		if validateExample(example, baseSchema) {
 			validatedCount++
@@ -71,19 +95,18 @@ func runValidation() error {
 		log.Println()
 	}
 
-	if validatedCount != expectedExampleCount {
-		return fmt.Errorf("validation failed: expected %d examples to pass all validations but only %d did",
-			expectedExampleCount, validatedCount)
+	if validatedCount != len(examples) {
+		return fmt.Errorf("validation failed for %s: expected %d examples to pass but only %d did",
+			target.path, len(examples), validatedCount)
 	}
 
-	log.Printf("Successfully validated all %d examples!", validatedCount)
 	return nil
 }
 
 func validateExample(ex example, baseSchema *jsonschema.Schema) bool {
 	var data any
 	if err := json.Unmarshal([]byte(ex.content), &data); err != nil {
-		log.Printf("  ❌ Invalid JSON: %v", err)
+		log.Printf("    ❌ Invalid JSON: %v", err)
 		return false
 	}
 
@@ -95,7 +118,7 @@ func validateExample(ex example, baseSchema *jsonschema.Schema) bool {
 			// This is a PublishRequest format - validate only expected properties exist
 			for key := range dataMap {
 				if key != "server" && key != "x-publisher" {
-					log.Printf("  Invalid PublishRequest property: ❌ %s (only 'server' and optional 'x-publisher' are allowed)", key)
+					log.Printf("    Invalid PublishRequest property: ❌ %s (only 'server' and optional 'x-publisher' are allowed)", key)
 					publishRequestValid = false
 				}
 			}
@@ -112,11 +135,11 @@ func validateExample(ex example, baseSchema *jsonschema.Schema) bool {
 
 func validateAgainstSchema(data any, schema *jsonschema.Schema, schemaName string) bool {
 	if err := schema.Validate(data); err != nil {
-		log.Printf("  Validating against %s: ❌", schemaName)
-		log.Printf("    Error: %v", err)
+		log.Printf("    Validating against %s: ❌", schemaName)
+		log.Printf("      Error: %v", err)
 		return false
 	}
-	log.Printf("  Validating against %s: ✅", schemaName)
+	log.Printf("    Validating against %s: ✅", schemaName)
 	return true
 }
 
@@ -124,24 +147,24 @@ func validateWithObjectValidator(serverData any) bool {
 	var serverDetail apiv0.ServerJSON
 	serverDataBytes, err := json.Marshal(serverData)
 	if err != nil {
-		log.Printf("  Validating with Go Validator: ❌")
-		log.Printf("    Error marshaling server data: %v", err)
+		log.Printf("    Validating with Go Validator: ❌")
+		log.Printf("      Error marshaling server data: %v", err)
 		return false
 	}
 
 	if err := json.Unmarshal(serverDataBytes, &serverDetail); err != nil {
-		log.Printf("  Validating with Go Validator: ❌")
-		log.Printf("    Error unmarshaling to ServerDetail: %v", err)
+		log.Printf("    Validating with Go Validator: ❌")
+		log.Printf("      Error unmarshaling to ServerDetail: %v", err)
 		return false
 	}
 
 	if err := validators.ValidateServerJSON(&serverDetail); err != nil {
-		log.Printf("  Validating with Go Validator: ❌")
-		log.Printf("    Error: %v", err)
+		log.Printf("    Validating with Go Validator: ❌")
+		log.Printf("      Error: %v", err)
 		return false
 	}
 
-	log.Printf("  Validating with Go Validator: ✅")
+	log.Printf("    Validating with Go Validator: ✅")
 	return true
 }
 
@@ -150,7 +173,7 @@ type example struct {
 	line    int
 }
 
-func extractExamples(path string) ([]example, error) {
+func extractExamples(path string, requireSchema bool) ([]example, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -159,21 +182,25 @@ func extractExamples(path string) ([]example, error) {
 	content := string(data)
 
 	// Regex to match JSON code blocks in markdown
-	// Captures everything between ```json and ```
 	re := regexp.MustCompile("(?s)```json\r?\n(.*?)\r?\n```")
 	matches := re.FindAllStringSubmatchIndex(content, -1)
 
 	var examples []example
 	for _, match := range matches {
 		if len(match) < 4 {
-			// should never happen
 			return nil, fmt.Errorf("invalid match - expected at least 4 indices but got %d", len(match))
 		}
 		start, end := match[2], match[3]
-		// line numbers start at 1
+		jsonContent := content[start:end]
+
+		// Filter by $schema if required
+		if requireSchema && !strings.Contains(jsonContent, "$schema") {
+			continue
+		}
+
 		line := 1 + strings.Count(content[:start], "\n")
 		examples = append(examples, example{
-			content: content[start:end],
+			content: jsonContent,
 			line:    line,
 		})
 	}
