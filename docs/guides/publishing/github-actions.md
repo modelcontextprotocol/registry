@@ -123,6 +123,7 @@ Add your Ed25519 private key as `MCP_PRIVATE_KEY` secret.
 ## Examples
 
 See these real-world examples of automated publishing workflows:
+
 - [NPM, Docker and MCPB](https://github.com/domdomegg/airtable-mcp-server)
 - [NuGet](https://github.com/domdomegg/time-mcp-nuget)
 - [PyPI](https://github.com/domdomegg/time-mcp-pypi)
@@ -130,6 +131,7 @@ See these real-world examples of automated publishing workflows:
 ## Tips
 
 You can keep your package version and server.json version in sync automatically with something like:
+
 ```yaml
 - run: |
     VERSION=${GITHUB_REF#refs/tags/v}
@@ -137,5 +139,42 @@ You can keep your package version and server.json version in sync automatically 
 ```
 
 ## Troubleshooting
+
 - **"Authentication failed"**: Ensure `id-token: write` permission is set for OIDC, or check secrets
 - **"Package validation failed"**: Verify your package published to your registry (NPM, PyPi etc.) successfully first, and that you have done the necessary validation steps in the [Publishing Tutorial](publish-server.md)
+
+## Container Registry Auth Matrix
+
+When validating Docker/OCI images, the MCP Registry uses the Docker Registry v2 API. For private images, you can provide credentials via environment variables. The validator supports both Docker Hub and GitHub Container Registry (GHCR).
+
+Supported registries:
+
+- Docker Hub: <https://docker.io> (API host <https://registry-1.docker.io>)
+- GHCR: <https://ghcr.io>
+
+Environment variables (highest precedence first):
+
+- Per-registry host token
+  - Docker Hub: `MCP_REGISTRY_OCI_TOKEN_DOCKER_IO="<token>"`
+  - GHCR: `MCP_REGISTRY_OCI_TOKEN_GHCR_IO="<token>"`
+
+- Mapping variable (comma-separated list of `host=token`)
+  - `MCP_REGISTRY_OCI_REGISTRY_AUTH="ghcr.io=<token>,docker.io=<token>"`
+
+- GitHub Actions convenience (GHCR only)
+  - `GITHUB_TOKEN` (ephemeral), used automatically for `ghcr.io` if present
+
+GHCR username for PAT Basic exchange (optional):
+
+- `MCP_REGISTRY_OCI_GHCR_USERNAME="<github-username>"`
+
+Notes:
+
+- For GHCR, if you set `MCP_REGISTRY_OCI_GHCR_USERNAME` and provide a GitHub PAT as token, the validator first exchanges it for a repository-scoped Bearer token. Otherwise the provided token is used directly as Bearer.
+- For Docker Hub public images, the validator automatically performs an anonymous token flow; no env vars required.
+- For Docker Hub, mapping keys and per-host env variables use the base host `docker.io` (the validator internally talks to the API host `registry-1.docker.io`).
+
+Debugging:
+
+- Set `MCP_REGISTRY_OCI_DEBUG=1` to print non-sensitive debug messages about which auth path is being used (e.g. mapping vs. per-host var, GHCR token exchange, Docker Hub anonymous token).
+- To skip label validation during testing, set `MCP_REGISTRY_OCI_SKIP_LABEL_VALIDATION=1`.
