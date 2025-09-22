@@ -58,8 +58,6 @@ func main() {
 
 	// Initialize services based on environment
 	switch cfg.DatabaseType {
-	case config.DatabaseTypeMemory:
-		db = database.NewMemoryDB()
 	case config.DatabaseTypePostgreSQL:
 		// Use PostgreSQL for real registry service
 		// Create a context with timeout for PostgreSQL connection
@@ -82,7 +80,7 @@ func main() {
 			}
 		}()
 	default:
-		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypePostgreSQL)
+		log.Printf("Invalid database type: %s; supported types: %s", cfg.DatabaseType, config.DatabaseTypePostgreSQL)
 		return
 	}
 

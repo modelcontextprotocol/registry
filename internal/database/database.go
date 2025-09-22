@@ -76,8 +76,6 @@ func WithPublishLockT[T any](ctx context.Context, db Database, serverName string
 type ConnectionType string
 
 const (
-	// ConnectionTypeMemory represents an in-memory database connection
-	ConnectionTypeMemory ConnectionType = "memory"
 	// ConnectionTypePostgreSQL represents a PostgreSQL database connection
 	ConnectionTypePostgreSQL ConnectionType = "postgresql"
 )

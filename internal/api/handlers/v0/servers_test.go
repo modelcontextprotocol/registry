@@ -286,7 +286,7 @@ func TestServersListEndpoint(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Create mock registry service
-			registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+			registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 			tc.setupRegistryService(registryService)
 
 			// Create a new test API
@@ -378,7 +378,7 @@ func TestServersListEndpoint(t *testing.T) {
 
 func TestServersDetailEndpoint(t *testing.T) {
 	// Create mock registry service
-	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 
 	// Publish multiple versions of the same server
 	testServer1, err := registryService.Publish(apiv0.ServerJSON{
@@ -488,7 +488,7 @@ func TestServersDetailEndpoint(t *testing.T) {
 
 func TestServersVersionsEndpoint(t *testing.T) {
 	// Create mock registry service
-	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 
 	// Publish multiple versions of the same server
 	testServer1, err := registryService.Publish(apiv0.ServerJSON{
@@ -598,7 +598,7 @@ func TestServersVersionsEndpoint(t *testing.T) {
 // TestServersEndpointsIntegration tests the servers endpoints with actual HTTP requests
 func TestServersEndpointsIntegration(t *testing.T) {
 	// Create mock registry service
-	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 
 	// Test data - publish a server and get its actual ID
 	testServer := apiv0.ServerJSON{

@@ -49,15 +49,15 @@ func TestImportService_LocalFile(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(tempFile)
 
-	memDB := database.NewMemoryDB()
+	testDB := database.NewTestDB(t)
 
 	// Create importer service and test import
-	service := importer.NewService(memDB)
+	service := importer.NewService(testDB)
 	err = service.ImportFromPath(context.Background(), tempFile)
 	require.NoError(t, err)
 
 	// Verify the server was imported
-	servers, _, err := memDB.List(context.Background(), nil, "", 10)
+	servers, _, err := testDB.List(context.Background(), nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 1)
 	assert.Equal(t, "io.github.test/test-server-1", servers[0].Name)
@@ -93,15 +93,15 @@ func TestImportService_HTTPFile(t *testing.T) {
 	}))
 	defer server.Close()
 
-	memDB := database.NewMemoryDB()
+	testDB := database.NewTestDB(t)
 
 	// Create importer service and test import
-	service := importer.NewService(memDB)
+	service := importer.NewService(testDB)
 	err := service.ImportFromPath(context.Background(), server.URL+"/seed.json")
 	require.NoError(t, err)
 
 	// Verify the server was imported
-	servers, _, err := memDB.List(context.Background(), nil, "", 10)
+	servers, _, err := testDB.List(context.Background(), nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 1)
 	assert.Equal(t, "io.github.test/http-test-server", servers[0].Name)
@@ -121,7 +121,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 			Version: "1.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
-					ServerID:    "server-id-test",
+					ServerID:    "server-id-test-1",
 					VersionID:   "api-test-id-1",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
@@ -140,7 +140,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 			Version: "2.0.0",
 			Meta: &apiv0.ServerMeta{
 				Official: &apiv0.RegistryExtensions{
-					ServerID:    "server-id-test",
+					ServerID:    "server-id-test-2",
 					VersionID:   "api-test-id-2",
 					PublishedAt: time.Now(),
 					UpdatedAt:   time.Now(),
@@ -179,15 +179,15 @@ func TestImportService_RegistryAPI(t *testing.T) {
 	}))
 	defer server.Close()
 
-	memDB := database.NewMemoryDB()
+	testDB := database.NewTestDB(t)
 
 	// Create importer service and test import
-	service := importer.NewService(memDB)
+	service := importer.NewService(testDB)
 	err := service.ImportFromPath(context.Background(), server.URL+"/v0/servers")
 	require.NoError(t, err)
 
 	// Verify both servers were imported
-	servers, _, err := memDB.List(context.Background(), nil, "", 10)
+	servers, _, err := testDB.List(context.Background(), nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 2)
 

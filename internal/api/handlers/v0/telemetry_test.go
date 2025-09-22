@@ -21,7 +21,7 @@ import (
 )
 
 func TestPrometheusHandler(t *testing.T) {
-	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 	server, err := registryService.Publish(apiv0.ServerJSON{
 		Name:        "io.github.example/test-server",
 		Description: "Test server detail",

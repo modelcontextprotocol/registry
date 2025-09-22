@@ -22,7 +22,7 @@ import (
 
 func TestEditServerEndpoint(t *testing.T) {
 	// Create registry service and insert a common test server
-	registryService := service.NewRegistryService(database.NewMemoryDB(), config.NewConfig())
+	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 
 	// Publish a test server that will be used across test cases
 	testServer := apiv0.ServerJSON{

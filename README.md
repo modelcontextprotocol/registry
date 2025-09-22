@@ -125,7 +125,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   ├── api/                 # HTTP handlers and routing
 │   ├── auth/                # Authentication (GitHub OAuth, JWT, namespace blocking)
 │   ├── config/              # Configuration management
-│   ├── database/            # Data persistence (PostgreSQL, in-memory)
+│   ├── database/            # Data persistence (PostgreSQL)
 │   ├── service/             # Business logic
 │   ├── telemetry/           # Metrics and monitoring
 │   └── validators/          # Input validation
