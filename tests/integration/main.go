@@ -307,7 +307,7 @@ func getExamples(path string) ([]example, error) {
 	return examples, nil
 }
 
-func compareServerJSON(expected, actual *apiv0.ServerJSON, _ *apiv0.ServerResponse) error {
+func compareServerJSON(expected, actual *apiv0.ServerJSON, actualResponse *apiv0.ServerResponse) error {
 	// Compare core fields (ignore Meta as it contains registry-generated data)
 	if expected.Name != actual.Name {
 		return fmt.Errorf("name mismatch: expected %q, got %q", expected.Name, actual.Name)
@@ -316,7 +316,10 @@ func compareServerJSON(expected, actual *apiv0.ServerJSON, _ *apiv0.ServerRespon
 		return fmt.Errorf("description mismatch: expected %q, got %q", expected.Description, actual.Description)
 	}
 
-	// Status is now in registry metadata, not in server.json - skip status check for now since examples may not have status
+	// Status is in registry metadata - new servers should default to "active"
+	if actualResponse.GetStatus() != "active" {
+		return fmt.Errorf("status mismatch: expected %q, got %q", "active", actualResponse.GetStatus())
+	}
 
 	if expected.Version != actual.Version {
 		return fmt.Errorf("version mismatch: expected %+v, got %+v", expected.Version, actual.Version)
