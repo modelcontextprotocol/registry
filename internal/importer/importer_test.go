@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -19,7 +20,8 @@ import (
 
 func TestImportService_LocalFile(t *testing.T) {
 	// Create a temporary seed file
-	tempFile := "/tmp/test_import_seed.json"
+	tempDir := t.TempDir()
+	tempFile := filepath.Join(tempDir, "test_import_seed.json")
 	seedData := []apiv0.ServerJSON{
 		{
 			Name:        "io.github.test/test-server-1",
@@ -46,7 +48,7 @@ func TestImportService_LocalFile(t *testing.T) {
 
 	err = os.WriteFile(tempFile, jsonData, 0600)
 	require.NoError(t, err)
-	defer os.Remove(tempFile)
+	// no need to remove; t.TempDir handles cleanup
 
 	memDB := database.NewMemoryDB()
 

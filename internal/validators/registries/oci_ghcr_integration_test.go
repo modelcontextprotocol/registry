@@ -1,4 +1,4 @@
-package registries
+package registries_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	registries "github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
@@ -39,7 +40,7 @@ func TestValidateOCI_GHCR_Integration(t *testing.T) {
 		Version:         tag,
 	}
 
-	if err := ValidateOCI(context.Background(), pkg, server); err != nil {
+	if err := registries.ValidateOCI(context.Background(), pkg, server); err != nil {
 		// If unauthorized and no token provided, skip instead of failing
 		unauthorized := errors.New("")
 		_ = unauthorized // placeholder to avoid unused warning pre-Go1.20

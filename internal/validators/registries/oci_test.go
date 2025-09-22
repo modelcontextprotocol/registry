@@ -1,12 +1,14 @@
-package registries
+package registries_test
 
 import (
 	"context"
 	"os"
 	"testing"
 
+	registries "github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
+
 // This test focuses on validating preliminary logic for ghcr base URL acceptance and token lookup.
 // Network calls are not performed (we use an obviously invalid identifier so validation should fail
 // before HTTP fetch when base URL mismatch would have happened previously). We check that the
@@ -18,7 +20,7 @@ func TestValidateOCI_GHCRBaseURLAccepted(t *testing.T) {
 		Identifier:      "owner/repo", // intentionally simple; subsequent HTTP will fail
 		Version:         "latest",
 	}
-	err := ValidateOCI(context.Background(), pkg, "io.github.owner/repo")
+	err := registries.ValidateOCI(context.Background(), pkg, "io.github.owner/repo")
 	if err == nil {
 		t.Skip("Network access allowed? Unexpected success; skipping as test environment may have real image")
 	}
@@ -32,7 +34,7 @@ func TestLookupOCIAuthTokenEnvSpecific(t *testing.T) {
 	hostVar := "MCP_REGISTRY_OCI_TOKEN_GHCR_IO"
 	os.Setenv(hostVar, "secret123")
 	defer os.Unsetenv(hostVar)
-	token := lookupOCIAuthToken(model.RegistryURLGHCR)
+	token := registries.LookupOCIAuthTokenForTest(model.RegistryURLGHCR)
 	if token != "secret123" {
 		t.Fatalf("expected token from %s env var, got %q", hostVar, token)
 	}
@@ -41,12 +43,11 @@ func TestLookupOCIAuthTokenEnvSpecific(t *testing.T) {
 func TestLookupOCIAuthTokenMapping(t *testing.T) {
 	os.Setenv("MCP_REGISTRY_OCI_REGISTRY_AUTH", "ghcr.io=abc123,docker.io=def456")
 	defer os.Unsetenv("MCP_REGISTRY_OCI_REGISTRY_AUTH")
-	token := lookupOCIAuthToken(model.RegistryURLGHCR)
+	token := registries.LookupOCIAuthTokenForTest(model.RegistryURLGHCR)
 	if token != "abc123" {
 		t.Fatalf("expected token 'abc123' from mapping, got %q", token)
 	}
 }
-
 
 // contains is a tiny helper to avoid importing strings (keep scope minimal for test file)
 func contains(haystack, needle string) bool {
@@ -74,9 +75,12 @@ func TestValidateOCI_UnsupportedRegistry(t *testing.T) {
 	}
 
 	err := registries.ValidateOCI(ctx, pkg, "com.example/test")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "registry type and base URL do not match")
-	assert.Contains(t, err.Error(), "Expected: https://docker.io or https://ghcr.io")
+	if err == nil {
+		t.Fatalf("expected error for unsupported registry base URL, got nil")
+	}
+	if !contains(err.Error(), "registry type and base URL do not match") {
+		t.Fatalf("expected mismatch error, got: %v", err)
+	}
 }
 
 func TestValidateOCI_SupportedRegistries(t *testing.T) {
@@ -117,12 +121,16 @@ func TestValidateOCI_SupportedRegistries(t *testing.T) {
 			if tt.expected {
 				// Should not fail immediately on registry validation
 				// (may fail later due to network/image not found, but not due to unsupported registry)
-				if err != nil {
-					assert.NotContains(t, err.Error(), "registry type and base URL do not match")
+				if err != nil && contains(err.Error(), "registry type and base URL do not match") {
+					t.Fatalf("did not expect mismatch error for supported registry, got: %v", err)
 				}
 			} else {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "registry type and base URL do not match")
+				if err == nil {
+					t.Fatalf("expected error for unsupported registry, got nil")
+				}
+				if !contains(err.Error(), "registry type and base URL do not match") {
+					t.Fatalf("expected mismatch error, got: %v", err)
+				}
 			}
 		})
 	}

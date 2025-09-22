@@ -1,4 +1,4 @@
-package registries
+package registries_test
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	registries "github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
@@ -45,7 +46,7 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 		Identifier:      image,
 		Version:         tag,
 	}
-	if err := ValidateOCI(context.Background(), pkg, server); err != nil {
+	if err := registries.ValidateOCI(context.Background(), pkg, server); err != nil {
 		// If unauthorized and no token provided, skip instead of failing
 		if os.Getenv("MCP_REGISTRY_OCI_TOKEN_GHCR_IO") == "" && os.Getenv("MCP_REGISTRY_OCI_REGISTRY_AUTH") == "" && os.Getenv("GITHUB_TOKEN") == "" {
 			if err != nil && (strings.Contains(err.Error(), "status: 401") || strings.Contains(err.Error(), "unauthorized")) {
@@ -59,7 +60,7 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("Skipping E2E: docker CLI not found in PATH")
 	}
-	if out, err := runCmd(context.Background(), 15*time.Second, "docker", "info"); err != nil {
+	if out, err := runDocker(context.Background(), 15*time.Second, "info"); err != nil {
 		t.Skipf("Skipping E2E: docker daemon not available: %v (%s)", err, out)
 	}
 
@@ -67,17 +68,17 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 	user := os.Getenv("MCP_REGISTRY_OCI_GHCR_USERNAME")
 	token := os.Getenv("MCP_REGISTRY_OCI_TOKEN_GHCR_IO")
 	if user != "" && token != "" {
-		if out, err := runCmdWithInput(context.Background(), 15*time.Second, token, "docker", "login", "ghcr.io", "-u", user, "--password-stdin"); err != nil {
+		if out, err := runDockerWithInput(context.Background(), 15*time.Second, token, "login", "ghcr.io", "-u", user, "--password-stdin"); err != nil {
 			t.Fatalf("docker login failed: %v (%s)", err, out)
 		}
 		defer func() {
-			_, _ = runCmd(context.Background(), 10*time.Second, "docker", "logout", "ghcr.io")
+			_, _ = runDocker(context.Background(), 10*time.Second, "logout", "ghcr.io")
 		}()
 	}
 
 	// 4) docker pull image
 	fullRef := fmt.Sprintf("ghcr.io/%s:%s", image, tag)
-	if out, err := runCmd(context.Background(), 2*time.Minute, "docker", "pull", fullRef); err != nil {
+	if out, err := runDocker(context.Background(), 2*time.Minute, "pull", fullRef); err != nil {
 		// If forbidden/unauthorized, skip rather than fail hard when creds absent/mis-scoped
 		if strings.Contains(strings.ToLower(out), "unauthorized") || strings.Contains(strings.ToLower(out), "forbidden") {
 			t.Skipf("Skipping E2E pull; unauthorized/forbidden: %s", out)
@@ -93,7 +94,7 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 	args = append(args, fullRef)
 	args = append(args, cmdArgs...)
 
-	runOut, runErr := runCmd(context.Background(), 1*time.Minute, "docker", args...)
+	runOut, runErr := runDocker(context.Background(), 1*time.Minute, args...)
 	if runErr != nil {
 		t.Fatalf("docker run failed: %v (%s)", runErr, runOut)
 	}
@@ -102,47 +103,46 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 	if startedID == "" {
 		startedID = name
 	}
-	defer func() { _, _ = runCmd(context.Background(), 15*time.Second, "docker", "rm", "-f", name) }()
+	defer func() { _, _ = runDocker(context.Background(), 15*time.Second, "rm", "-f", name) }()
 
 	// Give it a brief moment to start
 	time.Sleep(2 * time.Second)
 
 	// Check if running
-	if out, err := runCmd(context.Background(), 15*time.Second, "docker", "inspect", "-f", "{{.State.Running}}", name); err != nil {
+	if out, err := runDocker(context.Background(), 15*time.Second, "inspect", "-f", "{{.State.Running}}", name); err != nil {
 		lower := strings.ToLower(out)
 		if strings.Contains(lower, "no such object") {
-			logs, _ := runCmd(context.Background(), 10*time.Second, "docker", "logs", startedID)
+			logs, _ := runDocker(context.Background(), 10*time.Second, "logs", startedID)
 			t.Skipf("Container exited immediately and was not found. Provide OCI_E2E_CMD to keep it alive (e.g. 'sleep 5'). Logs: %s", logs)
 		}
 		t.Fatalf("docker inspect failed: %v (%s)", err, out)
-	} else {
-		if !strings.Contains(out, "true") {
-			// Fetch logs for context; if it exited instantly, skip with guidance
-			logs, _ := runCmd(context.Background(), 10*time.Second, "docker", "logs", name)
-			t.Skipf("Container not running (probably exited immediately). Set OCI_E2E_CMD to keep it alive. inspect=%q logs=%q", out, logs)
-		}
+	} else if !strings.Contains(out, "true") {
+		// Fetch logs for context; if it exited instantly, skip with guidance
+		logs, _ := runDocker(context.Background(), 10*time.Second, "logs", name)
+		t.Skipf("Container not running (probably exited immediately). Set OCI_E2E_CMD to keep it alive. inspect=%q logs=%q", out, logs)
 	}
 
 	// Exec inside the container to print system info and verify Ubuntu base
 	// Try bash first; fall back to sh if bash is unavailable
-	osr, err1 := runCmd(context.Background(), 10*time.Second, "docker", "exec", name, "bash", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
+	osr, err1 := runDocker(context.Background(), 10*time.Second, "exec", name, "bash", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
 	if err1 != nil {
-		osr, _ = runCmd(context.Background(), 10*time.Second, "docker", "exec", name, "sh", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
+		osr, _ = runDocker(context.Background(), 10*time.Second, "exec", name, "sh", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
 	}
 	// Also capture uname output for diagnostics
-	uname, _ := runCmd(context.Background(), 10*time.Second, "docker", "exec", name, "sh", "-lc", "uname -a || true")
+	uname, _ := runDocker(context.Background(), 10*time.Second, "exec", name, "sh", "-lc", "uname -a || true")
 
 	// Print exec results for visibility in test output
 	t.Logf("/etc/os-release (or fallback):\n%s", strings.TrimSpace(osr))
 	t.Logf("uname -a:\n%s", strings.TrimSpace(uname))
 
 	// Basic Ubuntu detection
-	if !(strings.Contains(strings.ToLower(osr), "id=ubuntu") || strings.Contains(osr, "Ubuntu")) {
+	lower := strings.ToLower(osr)
+	if !strings.Contains(lower, "id=ubuntu") && !strings.Contains(osr, "Ubuntu") {
 		t.Fatalf("Container did not report Ubuntu base. os-release=\n%s\n\n uname=\n%s\n", osr, uname)
 	}
 
 	// Stop the container
-	if out, err := runCmd(context.Background(), 20*time.Second, "docker", "stop", name); err != nil {
+	if out, err := runDocker(context.Background(), 20*time.Second, "stop", name); err != nil {
 		// Not fatal if it's already exited; treat only non-existence differently
 		if !strings.Contains(strings.ToLower(out), "no such container") {
 			t.Fatalf("docker stop failed: %v (%s)", err, out)
@@ -150,11 +150,11 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 	}
 }
 
-// runCmd executes a command with a timeout and returns combined output and error.
-func runCmd(ctx context.Context, timeout time.Duration, name string, args ...string) (string, error) {
+// runDocker executes `docker` with a timeout and returns combined output and error.
+func runDocker(ctx context.Context, timeout time.Duration, args ...string) (string, error) {
 	cctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	cmd := exec.CommandContext(cctx, name, args...)
+	cmd := exec.CommandContext(cctx, "docker", args...)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
@@ -162,16 +162,16 @@ func runCmd(ctx context.Context, timeout time.Duration, name string, args ...str
 	out := buf.String()
 	// If context deadline exceeded, wrap a more descriptive error
 	if cctx.Err() != nil && errors.Is(cctx.Err(), context.DeadlineExceeded) {
-		return out, fmt.Errorf("command timed out: %s %s", name, strings.Join(args, " "))
+		return out, fmt.Errorf("command timed out: docker %s", strings.Join(args, " "))
 	}
 	return out, err
 }
 
-// runCmdWithInput is like runCmd but writes 'input' to stdin (useful for docker login --password-stdin).
-func runCmdWithInput(ctx context.Context, timeout time.Duration, input string, name string, args ...string) (string, error) {
+// runDockerWithInput is like runDocker but writes 'input' to stdin (for docker login --password-stdin).
+func runDockerWithInput(ctx context.Context, timeout time.Duration, input string, args ...string) (string, error) {
 	cctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	cmd := exec.CommandContext(cctx, name, args...)
+	cmd := exec.CommandContext(cctx, "docker", args...)
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
@@ -179,7 +179,7 @@ func runCmdWithInput(ctx context.Context, timeout time.Duration, input string, n
 	err := cmd.Run()
 	out := buf.String()
 	if cctx.Err() != nil && errors.Is(cctx.Err(), context.DeadlineExceeded) {
-		return out, fmt.Errorf("command timed out: %s %s", name, strings.Join(args, " "))
+		return out, fmt.Errorf("command timed out: docker %s", strings.Join(args, " "))
 	}
 	return out, err
 }

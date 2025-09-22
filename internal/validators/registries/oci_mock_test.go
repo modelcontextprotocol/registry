@@ -1,4 +1,4 @@
-package registries
+package registries_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	registries "github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
@@ -39,11 +40,11 @@ func TestValidateOCI_WithMockedRegistry_SingleArchWithAuth(t *testing.T) {
 
 	var authHeaderSeen string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case r.URL.Path == "/v2/owner/repo/manifests/latest":
+		switch r.URL.Path {
+		case "/v2/owner/repo/manifests/latest":
 			authHeaderSeen = r.Header.Get("Authorization")
 			_ = json.NewEncoder(w).Encode(manifest)
-		case r.URL.Path == "/v2/owner/repo/blobs/"+cfgDigest:
+		case "/v2/owner/repo/blobs/" + cfgDigest:
 			_ = json.NewEncoder(w).Encode(img)
 		default:
 			http.NotFound(w, r)
@@ -62,7 +63,7 @@ func TestValidateOCI_WithMockedRegistry_SingleArchWithAuth(t *testing.T) {
 	}
 
 	// Act
-	err := ValidateOCI(context.Background(), pkg, "io.github.owner/repo")
+	err := registries.ValidateOCI(context.Background(), pkg, "io.github.owner/repo")
 
 	// Assert
 	if err != nil {
@@ -113,7 +114,7 @@ func TestValidateOCI_WithMockedRegistry_MultiArch(t *testing.T) {
 		Version:         "latest",
 	}
 
-	if err := ValidateOCI(context.Background(), pkg, "io.github.owner/repo"); err != nil {
+	if err := registries.ValidateOCI(context.Background(), pkg, "io.github.owner/repo"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -139,6 +140,8 @@ func TestValidateOCI_WithMockedRegistry_MissingLabel(t *testing.T) {
 	defer srv.Close()
 
 	t.Setenv("MCP_REGISTRY_OCI_TEST_BASE_URL", srv.URL)
+	// Ensure label validation is enforced for this test
+	t.Setenv("MCP_REGISTRY_OCI_SKIP_LABEL_VALIDATION", "0")
 
 	pkg := model.Package{
 		RegistryType:    model.RegistryTypeOCI,
@@ -147,7 +150,7 @@ func TestValidateOCI_WithMockedRegistry_MissingLabel(t *testing.T) {
 		Version:         "v1",
 	}
 
-	if err := ValidateOCI(context.Background(), pkg, "io.github.owner/repo"); err == nil {
+	if err := registries.ValidateOCI(context.Background(), pkg, "io.github.owner/repo"); err == nil {
 		t.Fatalf("expected error due to missing label")
 	}
 }
