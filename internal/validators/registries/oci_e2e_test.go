@@ -49,6 +49,7 @@ type e2eParams struct {
 }
 
 func loadE2EParamsOrSkip(t *testing.T) e2eParams {
+	t.Helper()
 	image := os.Getenv("GHCR_TEST_IMAGE")
 	tag := os.Getenv("GHCR_TEST_TAG")
 	server := os.Getenv("GHCR_TEST_SERVER_NAME")
@@ -67,6 +68,7 @@ func loadE2EParamsOrSkip(t *testing.T) e2eParams {
 }
 
 func validateOCIOrSkip(t *testing.T, p e2eParams) {
+	t.Helper()
 	pkg := model.Package{
 		RegistryType:    model.RegistryTypeOCI,
 		RegistryBaseURL: model.RegistryURLGHCR,
@@ -85,6 +87,7 @@ func validateOCIOrSkip(t *testing.T, p e2eParams) {
 }
 
 func ensureDockerOrSkip(t *testing.T) {
+	t.Helper()
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("Skipping E2E: docker CLI not found in PATH")
 	}
@@ -94,6 +97,7 @@ func ensureDockerOrSkip(t *testing.T) {
 }
 
 func dockerLoginIfNeeded(t *testing.T) {
+	t.Helper()
 	user := os.Getenv("MCP_REGISTRY_OCI_GHCR_USERNAME")
 	token := os.Getenv("MCP_REGISTRY_OCI_TOKEN_GHCR_IO")
 	if user == "" || token == "" {
@@ -108,6 +112,7 @@ func dockerLoginIfNeeded(t *testing.T) {
 }
 
 func dockerPullOrSkip(t *testing.T, fullRef string) {
+	t.Helper()
 	if out, err := runDocker(context.Background(), 2*time.Minute, "pull", fullRef); err != nil {
 		lower := strings.ToLower(out)
 		if strings.Contains(lower, "unauthorized") || strings.Contains(lower, "forbidden") {
@@ -118,6 +123,7 @@ func dockerPullOrSkip(t *testing.T, fullRef string) {
 }
 
 func dockerRunContainer(t *testing.T, fullRef string) (string, string) {
+	t.Helper()
 	name := fmt.Sprintf("mcp_e2e_%d", time.Now().UnixNano())
 	runArgs := fieldsAllowEmpty(os.Getenv("OCI_E2E_RUN_ARGS"))
 	cmdArgs := fieldsAllowEmpty(os.Getenv("OCI_E2E_CMD"))
@@ -139,6 +145,7 @@ func dockerRunContainer(t *testing.T, fullRef string) (string, string) {
 func waitBriefly() { time.Sleep(2 * time.Second) }
 
 func ensureRunningOrSkip(t *testing.T, name, startedID string) {
+	t.Helper()
 	if out, err := runDocker(context.Background(), 15*time.Second, "inspect", "-f", "{{.State.Running}}", name); err != nil {
 		lower := strings.ToLower(out)
 		if strings.Contains(lower, "no such object") {
@@ -153,6 +160,7 @@ func ensureRunningOrSkip(t *testing.T, name, startedID string) {
 }
 
 func execSystemInfoAndAssertUbuntu(t *testing.T, name string) {
+	t.Helper()
 	osr, err1 := runDocker(context.Background(), 10*time.Second, "exec", name, "bash", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
 	if err1 != nil {
 		osr, _ = runDocker(context.Background(), 10*time.Second, "exec", name, "sh", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
@@ -170,6 +178,7 @@ func execSystemInfoAndAssertUbuntu(t *testing.T, name string) {
 }
 
 func stopContainerIgnoreMissing(t *testing.T, name string) {
+	t.Helper()
 	if out, err := runDocker(context.Background(), 20*time.Second, "stop", name); err != nil {
 		if !strings.Contains(strings.ToLower(out), "no such container") {
 			t.Fatalf("docker stop failed: %v (%s)", err, out)
