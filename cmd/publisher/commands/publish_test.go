@@ -44,8 +44,8 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 			errorSubstr: "deprecated schema detected",
 		},
 		{
-			name:        "current 2025-09-16 schema should pass validation",
-			schema:      "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+			name:        "current 2025-09-22 schema should pass validation",
+			schema:      "https://static.modelcontextprotocol.io/schemas/2025-09-22/server.schema.json",
 			expectError: false,
 		},
 		{

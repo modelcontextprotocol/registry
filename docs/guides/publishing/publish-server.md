@@ -92,7 +92,7 @@ This creates a `server.json` with auto-detected values. You'll see something lik
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-22/server.schema.json",
   "name": "io.github.yourname/your-server",
   "description": "A description of your MCP server",
   "version": "1.0.0",
@@ -337,7 +337,7 @@ Add the `remotes` field to your `server.json` (can coexist with `packages`):
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-22/server.schema.json",
   "name": "com.yourcompany/api-server",
   "description": "Cloud-hosted MCP server for API operations",
   "version": "2.0.0",
