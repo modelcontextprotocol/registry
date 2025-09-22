@@ -1,9 +1,9 @@
 openapi: 3.1.0
 jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
-$id: https://modelcontextprotocol.io/schemas/draft/2025-07-09/server-registry-openapi
+$id: https://modelcontextprotocol.io/schemas/draft/2025-09-16/server-registry-openapi
 info:
   title: MCP Server Registry API
-  version: "2025-07-09"
+  version: "2025-09-16"
   summary: API for discovering and accessing MCP server metadata
   description: |
     Specification for a theoretical REST API that serves up metadata about MCP servers.
@@ -36,21 +36,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
-  /v0/servers/{id}:
+  /v0/servers/{server_id}:
     get:
       summary: Get MCP server details
-      description: Returns detailed information about a specific MCP server
+      description: Returns detailed information about a specific MCP server. Returns latest version by default, or specific version if version query parameter is provided.
       parameters:
-        - name: id
+        - name: server_id
           in: path
           required: true
-          description: Unique ID of the server
+          description: Unique server ID (consistent across all versions)
           schema:
             type: string
             format: uuid
         - name: version
           in: query
-          description: Desired MCP server version
+          description: Specific version to retrieve (e.g., "1.0.0"). If not provided, returns latest version.
           schema:
             type: string
       responses:
@@ -60,6 +60,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerDetail'
+        '404':
+          description: Server not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server not found"
+  /v0/servers/{server_id}/versions:
+    get:
+      summary: List all versions of an MCP server
+      description: Returns all available versions for a specific MCP server, ordered by publication date (newest first)
+      parameters:
+        - name: server_id
+          in: path
+          required: true
+          description: Unique server ID (consistent across all versions)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A list of all versions for the server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerList'
         '404':
           description: Server not found
           content:
@@ -99,8 +128,8 @@ paths:
                     source: "github"
                   version: "1.0.2"
                   packages:
-                    - registry_type: "npm"
-                      registry_base_url: "https://registry.npmjs.org"
+                    - registryType: "npm"
+                      registryBaseUrl: "https://registry.npmjs.org"
                       identifier: "@modelcontextprotocol/server-filesystem"
                       version: "1.0.2"
                   _meta:
@@ -121,8 +150,8 @@ paths:
                     source: "github"
                   version: "1.0.0"
                   packages:
-                    - registry_type: "npm"
-                      registry_base_url: "https://registry.npmjs.org"
+                    - registryType: "npm"
+                      registryBaseUrl: "https://registry.npmjs.org"
                       identifier: "@example/mcp-demo-server"
                       version: "1.0.0"
                   _meta:
@@ -233,7 +262,7 @@ components:
           type: string
           example: "1.0.2"
           description: "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification."
-        website_url:
+        websiteUrl:
           type: string
           format: uri
           description: "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements."
@@ -269,7 +298,7 @@ components:
     Package:
       type: object
       properties:
-        registry_type:
+        registryType:
           type: string
           description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')
           examples:
@@ -278,7 +307,7 @@ components:
             - "oci"
             - "nuget"
             - "mcpb"
-        registry_base_url:
+        registryBaseUrl:
           type: string
           format: uri
           description: Base URL of the package registry
@@ -299,25 +328,25 @@ components:
           type: string
           description: Package version
           example: "1.0.2"
-        file_sha256:
+        fileSha256:
           type: string
           description: SHA-256 hash of the package file for integrity verification.
           example: "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
-        runtime_hint:
+        runtimeHint:
           type: string
-          description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtime_arguments` are present.
+          description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.
           examples: [npx, uvx, dnx]
-        runtime_arguments:
+        runtimeArguments:
           type: array
-          description: A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtime_hint` field should be provided when `runtime_arguments` are present.
+          description: A list of arguments to be passed to the package's runtime command (such as docker or npx). The `runtimeHint` field should be provided when `runtimeArguments` are present.
           items:
             $ref: '#/components/schemas/Argument'
-        package_arguments:
+        packageArguments:
           type: array
           description: A list of arguments to be passed to the package's binary.
           items:
             $ref: '#/components/schemas/Argument'
-        environment_variables:
+        environmentVariables:
           type: array
           description: A mapping of environment variables to be set when running the package.
           items:
@@ -329,7 +358,7 @@ components:
         description:
           description: A description of the input, which clients can use to provide context to the user.
           type: string
-        is_required:
+        isRequired:
           type: boolean
           default: false
         format:
@@ -346,7 +375,7 @@ components:
             The default value for the input. If this is not set, the user may be prompted to provide a value. If a value is set, it should not be configurable by end users.
 
             Identifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged.
-        is_secret:
+        isSecret:
           type: boolean
           description: Indicates whether the input is a secret value (e.g., password, token). If true, clients should handle the value securely.
           default: false
@@ -383,11 +412,11 @@ components:
               type: string
               enum: [positional]
               example: "positional"
-            value_hint:
+            valueHint:
               type: string
               description: An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users.
               example: file_path
-            is_repeated:
+            isRepeated:
               type: boolean
               description: Whether the argument can be repeated multiple times in the command line.
               default: false
@@ -395,7 +424,7 @@ components:
             - required:
                 - value
             - required:
-                - value_hint
+                - valueHint
 
     NamedArgument:
       description: A command-line `--flag={value}`.
@@ -414,7 +443,7 @@ components:
               type: string
               description: The flag name, including any leading dashes.
               example: "--port"
-            is_repeated:
+            isRepeated:
               type: boolean
               description: Whether the argument can be repeated multiple times.
               default: false
@@ -439,12 +468,12 @@ components:
     Remote:
       type: object
       required:
-        - transport_type
+        - type
         - url
       properties:
-        transport_type:
+        type:
           type: string
-          enum: [streamable, sse]
+          enum: [streamable-http, sse]
           description: Transport protocol type
           example: "sse"
         url:
@@ -468,7 +497,7 @@ components:
               type: string
               format: uri
               description: JSON Schema URI for this server.json format
-              example: "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json"
+              example: "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json"
             packages:
               type: array
               items:
@@ -496,16 +525,22 @@ components:
                   type: object
                   description: Registry-specific metadata managed by the MCP registry system
                   required:
-                    - id
+                    - serverId
+                    - versionId
                     - published_at
                     - updated_at
                     - is_latest
                   properties:
-                    id:
+                    serverId:
                       type: string
                       format: uuid
-                      description: Unique registry identifier for this server entry
+                      description: Consistent ID across all versions of a server
                       example: "550e8400-e29b-41d4-a716-446655440000"
+                    versionId:
+                      type: string
+                      format: uuid
+                      description: Unique ID for this specific version
+                      example: "773f9b2e-1a47-4c8d-b5e6-2f8d9c4a7b3e"
                     published_at:
                       type: string
                       format: date-time

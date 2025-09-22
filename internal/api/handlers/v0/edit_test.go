@@ -42,7 +42,7 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NotNil(t, published.Meta)
 	assert.NotNil(t, published.Meta.Official)
 
-	testServerID := published.Meta.Official.ID
+	testServerID := published.Meta.Official.ServerID
 
 	// Publish a second server for permission testing
 	otherServer := apiv0.ServerJSON{
@@ -62,7 +62,7 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NotNil(t, otherPublished.Meta)
 	assert.NotNil(t, otherPublished.Meta.Official)
 
-	otherServerID := otherPublished.Meta.Official.ID
+	otherServerID := otherPublished.Meta.Official.ServerID
 
 	// Publish a deleted server for undelete testing
 	deletedServer := apiv0.ServerJSON{
@@ -82,13 +82,14 @@ func TestEditServerEndpoint(t *testing.T) {
 	assert.NotNil(t, deletedPublished.Meta)
 	assert.NotNil(t, deletedPublished.Meta.Official)
 
-	deletedServerID := deletedPublished.Meta.Official.ID
+	deletedServerID := deletedPublished.Meta.Official.ServerID
 
 	testCases := []struct {
 		name           string
 		authHeader     string
 		requestBody    interface{}
 		serverID       string
+		version        string
 		expectedStatus int
 		expectedError  string
 	}{
@@ -114,9 +115,10 @@ func TestEditServerEndpoint(t *testing.T) {
 					Source: "github",
 					ID:     "domdomegg/test-server",
 				},
-				Version: "1.0.1",
+				Version: "1.0.0",
 			},
 			serverID:       testServerID,
+			version:        "1.0.0",
 			expectedStatus: http.StatusOK,
 		},
 		{
@@ -124,6 +126,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			authHeader:     "",
 			requestBody:    apiv0.ServerJSON{},
 			serverID:       testServerID,
+			version:        "1.0.0",
 			expectedStatus: 422,
 			expectedError:  "required header parameter is missing",
 		},
@@ -131,11 +134,12 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:       "invalid authorization header format",
 			authHeader: "InvalidFormat token123",
 			requestBody: apiv0.ServerJSON{
-				Name:          "io.github.domdomegg/test-server",
-				Description:   "Test server",
-				Version: "1.0.0",
+				Name:        "io.github.domdomegg/test-server",
+				Description: "Test server",
+				Version:     "1.0.0",
 			},
 			serverID:       testServerID,
+			version:        "1.0.0",
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
 		},
@@ -143,11 +147,12 @@ func TestEditServerEndpoint(t *testing.T) {
 			name:       "invalid token",
 			authHeader: "Bearer invalid-token",
 			requestBody: apiv0.ServerJSON{
-				Name:          "io.github.domdomegg/test-server",
-				Description:   "Test server",
-				Version: "1.0.0",
+				Name:        "io.github.domdomegg/test-server",
+				Description: "Test server",
+				Version:     "1.0.0",
 			},
 			serverID:       testServerID,
+			version:        "1.0.0",
 			expectedStatus: http.StatusUnauthorized,
 			expectedError:  "Unauthorized",
 		},
@@ -165,11 +170,12 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv0.ServerJSON{
-				Name:          "io.github.domdomegg/test-server",
-				Description:   "Updated test server",
-				Version: "1.0.0",
+				Name:        "io.github.domdomegg/test-server",
+				Description: "Updated test server",
+				Version:     "1.0.0",
 			},
 			serverID:       testServerID,
+			version:        "1.0.0",
 			expectedStatus: http.StatusForbidden,
 			expectedError:  "Forbidden",
 		},
@@ -187,11 +193,12 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv0.ServerJSON{
-				Name:          "io.github.other/test-server",
-				Description:   "Updated test server",
-				Version: "1.0.0",
+				Name:        "io.github.other/test-server",
+				Description: "Updated test server",
+				Version:     "1.0.0",
 			},
 			serverID:       otherServerID,
+			version:        "1.0.0",
 			expectedStatus: http.StatusForbidden,
 			expectedError:  "Forbidden",
 		},
@@ -209,11 +216,12 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv0.ServerJSON{
-				Name:          "io.github.domdomegg/nonexistent-server",
-				Description:   "Updated test server",
-				Version: "1.0.0",
+				Name:        "io.github.domdomegg/nonexistent-server",
+				Description: "Updated test server",
+				Version:     "1.0.0",
 			},
 			serverID:       "550e8400-e29b-41d4-a716-446655440999", // Non-existent ID
+			version:        "1.0.0",
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "Not Found",
 		},
@@ -231,11 +239,12 @@ func TestEditServerEndpoint(t *testing.T) {
 				return "Bearer " + token
 			}(),
 			requestBody: apiv0.ServerJSON{
-				Name:          "invalid-name-format", // Missing namespace/name format
-				Description:   "Test server",
-				Version: "1.0.0",
+				Name:        "invalid-name-format", // Missing namespace/name format
+				Description: "Test server",
+				Version:     "1.0.0",
 			},
 			serverID:       testServerID,
+			version:        "1.0.0",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Bad Request",
 		},
@@ -264,6 +273,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				Version: "1.0.1",
 			},
 			serverID:       deletedServerID,
+			version:        "1.0.0",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Cannot change status of deleted server",
 		},
@@ -293,7 +303,11 @@ func TestEditServerEndpoint(t *testing.T) {
 			}
 
 			// Create request
-			req := httptest.NewRequest(http.MethodPut, "/v0/servers/"+tc.serverID, bytes.NewReader(requestBody))
+			url := "/v0/servers/" + tc.serverID
+			if tc.version != "" {
+				url += "?version=" + tc.version
+			}
+			req := httptest.NewRequest(http.MethodPut, url, bytes.NewReader(requestBody))
 			req.Header.Set("Content-Type", "application/json")
 			if tc.authHeader != "" {
 				req.Header.Set("Authorization", tc.authHeader)

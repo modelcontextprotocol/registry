@@ -43,7 +43,7 @@ mcp-publisher init [options]
   "version": "1.0.0",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "detected-package-name",
       "version": "1.0.0"
     }

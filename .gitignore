@@ -1,5 +1,6 @@
 build/
 bin/
+tmp/
 
 .db
 .env
@@ -14,3 +15,4 @@ deploy/infra/infra
 registry
 .github/instructions*
 .vscode/mcp*
+

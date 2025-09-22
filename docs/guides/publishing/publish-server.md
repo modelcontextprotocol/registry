@@ -92,13 +92,13 @@ This creates a `server.json` with auto-detected values. You'll see something lik
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.yourname/your-server",
   "description": "A description of your MCP server",
   "version": "1.0.0",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "your-package-name",
       "version": "1.0.0"
     }
@@ -151,7 +151,7 @@ Add an `mcpName` field to your `package.json`:
   "name": "io.github.username/server-name",
   "packages": [
     {
-      "registry_type": "npm",
+      "registryType": "npm",
       "identifier": "your-npm-package",
       "version": "1.0.0"
     }
@@ -183,7 +183,7 @@ Add it to your README.md file (which becomes the package description on PyPI). T
   "name": "io.github.username/server-name",
   "packages": [
     {
-      "registry_type": "pypi",
+      "registryType": "pypi",
       "identifier": "your-pypi-package",
       "version": "1.0.0"
     }
@@ -215,7 +215,7 @@ Add a README file to your NuGet package that includes the server name. This can 
   "name": "io.github.username/server-name",
   "packages": [
     {
-      "registry_type": "nuget",
+      "registryType": "nuget",
       "identifier": "Your.NuGet.Package",
       "version": "1.0.0"
     }
@@ -251,8 +251,8 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
   "name": "io.github.username/server-name", 
   "packages": [
     {
-      "registry_type": "oci",
-      "registry_base_url": "https://docker.io",
+      "registryType": "oci",
+      "registryBaseUrl": "https://docker.io",
       "identifier": "yourusername/your-mcp-server",
       "version": "1.0.0"
     }
@@ -266,8 +266,8 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
   "name": "io.github.username/server-name", 
   "packages": [
     {
-      "registry_type": "oci",
-      "registry_base_url": "https://ghcr.io",
+      "registryType": "oci",
+      "registryBaseUrl": "https://ghcr.io",
       "identifier": "yourusername/your-mcp-server",
       "version": "1.0.0"
     }
@@ -302,9 +302,9 @@ openssl dgst -sha256 server.mcpb
   "name": "io.github.username/server-name",
   "packages": [
     {
-      "registry_type": "mcpb",
+      "registryType": "mcpb",
       "identifier": "https://github.com/you/your-repo/releases/download/v1.0.0/server.mcpb",
-      "file_sha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
+      "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
     }
   ]
 }
@@ -337,7 +337,7 @@ Add the `remotes` field to your `server.json` (can coexist with `packages`):
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "com.yourcompany/api-server",
   "description": "Cloud-hosted MCP server for API operations",
   "version": "2.0.0",
@@ -388,8 +388,8 @@ Configure headers that clients should send when connecting:
         {
           "name": "X-API-Key", 
           "description": "API key for authentication",
-          "is_required": true,
-          "is_secret": true
+          "isRequired": true,
+          "isSecret": true
         }
       ]
     }
