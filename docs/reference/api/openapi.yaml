@@ -199,52 +199,6 @@ paths:
                   error:
                     type: string
                     example: "Failed to publish server"
-  /v0/servers/{server_id}/status:
-    patch:
-      summary: Update server status
-      description: |
-        Update the lifecycle status of an MCP server. Only publishers and registry admins can modify server status.
-
-        **Note**: Deleted servers cannot be restored - status changes from 'deleted' to any other status are not permitted.
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: server_id
-          in: path
-          required: true
-          description: Unique server ID
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateServerStatusRequest'
-      responses:
-        '200':
-          description: Server status updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServerResponse'
-        '400':
-          description: Bad Request - Invalid status transition
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Cannot change status of deleted server. Deleted servers cannot be restored."
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden - Insufficient permissions
-        '404':
-          description: Server not found
 
 components:
   securitySchemes:
@@ -550,18 +504,6 @@ components:
           publishedAt: "2023-12-01T10:30:00Z"
           updatedAt: "2023-12-01T10:35:00Z"
           isLatest: true
-
-    UpdateServerStatusRequest:
-      description: Request body for updating server status
-      type: object
-      required:
-        - status
-      properties:
-        status:
-          type: string
-          enum: ["active", "deprecated", "deleted"]
-          description: New status for the server
-          example: "deprecated"
 
     ServerJSON:
       description: Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.

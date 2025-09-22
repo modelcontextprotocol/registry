@@ -16,7 +16,6 @@ Server.json now contains only immutable publisher-provided data. Registry-manage
 
 **What this means:**
 - Publishers can no longer set `status` in their server.json
-- Status is now managed through the registry API (`PATCH /v0/servers/{id}/status`)
 - Server.json contains only the data that publishers control
 - Registry-specific metadata is handled separately by the registry
 
