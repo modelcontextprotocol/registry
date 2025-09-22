@@ -24,6 +24,31 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 		t.Skip("Skipping E2E container run; set OCI_E2E_RUN=1 to enable")
 	}
 
+	params := loadE2EParamsOrSkip(t)
+	validateOCIOrSkip(t, params)
+	ensureDockerOrSkip(t)
+	dockerLoginIfNeeded(t)
+
+	fullRef := fmt.Sprintf("ghcr.io/%s:%s", params.image, params.tag)
+	dockerPullOrSkip(t, fullRef)
+
+	name, startedID := dockerRunContainer(t, fullRef)
+	defer func() { _, _ = runDocker(context.Background(), 15*time.Second, "rm", "-f", name) }()
+
+	waitBriefly()
+	ensureRunningOrSkip(t, name, startedID)
+	execSystemInfoAndAssertUbuntu(t, name)
+	stopContainerIgnoreMissing(t, name)
+}
+
+type e2eParams struct {
+	image     string
+	tag       string
+	server    string
+	skipLabel bool
+}
+
+func loadE2EParamsOrSkip(t *testing.T) e2eParams {
 	image := os.Getenv("GHCR_TEST_IMAGE")
 	tag := os.Getenv("GHCR_TEST_TAG")
 	server := os.Getenv("GHCR_TEST_SERVER_NAME")
@@ -38,15 +63,17 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 	if skipLabel && server == "" {
 		server = "ignored-when-skipping"
 	}
+	return e2eParams{image: image, tag: tag, server: server, skipLabel: skipLabel}
+}
 
-	// 1) Validate labels/config through our validator first
+func validateOCIOrSkip(t *testing.T, p e2eParams) {
 	pkg := model.Package{
 		RegistryType:    model.RegistryTypeOCI,
 		RegistryBaseURL: model.RegistryURLGHCR,
-		Identifier:      image,
-		Version:         tag,
+		Identifier:      p.image,
+		Version:         p.tag,
 	}
-	if err := registries.ValidateOCI(context.Background(), pkg, server); err != nil {
+	if err := registries.ValidateOCI(context.Background(), pkg, p.server); err != nil {
 		// If unauthorized and no token provided, skip instead of failing
 		if os.Getenv("MCP_REGISTRY_OCI_TOKEN_GHCR_IO") == "" && os.Getenv("MCP_REGISTRY_OCI_REGISTRY_AUTH") == "" && os.Getenv("GITHUB_TOKEN") == "" {
 			if err != nil && (strings.Contains(err.Error(), "status: 401") || strings.Contains(err.Error(), "unauthorized")) {
@@ -55,38 +82,42 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 		}
 		t.Fatalf("E2E validation (manifest/config) failed: %v", err)
 	}
+}
 
-	// 2) Ensure docker is available
+func ensureDockerOrSkip(t *testing.T) {
 	if _, err := exec.LookPath("docker"); err != nil {
 		t.Skip("Skipping E2E: docker CLI not found in PATH")
 	}
 	if out, err := runDocker(context.Background(), 15*time.Second, "info"); err != nil {
 		t.Skipf("Skipping E2E: docker daemon not available: %v (%s)", err, out)
 	}
+}
 
-	// 3) docker login if we have creds
+func dockerLoginIfNeeded(t *testing.T) {
 	user := os.Getenv("MCP_REGISTRY_OCI_GHCR_USERNAME")
 	token := os.Getenv("MCP_REGISTRY_OCI_TOKEN_GHCR_IO")
-	if user != "" && token != "" {
-		if out, err := runDockerWithInput(context.Background(), 15*time.Second, token, "login", "ghcr.io", "-u", user, "--password-stdin"); err != nil {
-			t.Fatalf("docker login failed: %v (%s)", err, out)
-		}
-		defer func() {
-			_, _ = runDocker(context.Background(), 10*time.Second, "logout", "ghcr.io")
-		}()
+	if user == "" || token == "" {
+		return
 	}
+	if out, err := runDockerWithInput(context.Background(), 15*time.Second, token, "login", "ghcr.io", "-u", user, "--password-stdin"); err != nil {
+		t.Fatalf("docker login failed: %v (%s)", err, out)
+	}
+	t.Cleanup(func() {
+		_, _ = runDocker(context.Background(), 10*time.Second, "logout", "ghcr.io")
+	})
+}
 
-	// 4) docker pull image
-	fullRef := fmt.Sprintf("ghcr.io/%s:%s", image, tag)
+func dockerPullOrSkip(t *testing.T, fullRef string) {
 	if out, err := runDocker(context.Background(), 2*time.Minute, "pull", fullRef); err != nil {
-		// If forbidden/unauthorized, skip rather than fail hard when creds absent/mis-scoped
-		if strings.Contains(strings.ToLower(out), "unauthorized") || strings.Contains(strings.ToLower(out), "forbidden") {
+		lower := strings.ToLower(out)
+		if strings.Contains(lower, "unauthorized") || strings.Contains(lower, "forbidden") {
 			t.Skipf("Skipping E2E pull; unauthorized/forbidden: %s", out)
 		}
 		t.Fatalf("docker pull failed: %v (%s)", err, out)
 	}
+}
 
-	// 5) docker run -d (no --rm so we can inspect even if it exits quickly), verify running, then stop
+func dockerRunContainer(t *testing.T, fullRef string) (string, string) {
 	name := fmt.Sprintf("mcp_e2e_%d", time.Now().UnixNano())
 	runArgs := fieldsAllowEmpty(os.Getenv("OCI_E2E_RUN_ARGS"))
 	cmdArgs := fieldsAllowEmpty(os.Getenv("OCI_E2E_CMD"))
@@ -98,17 +129,16 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 	if runErr != nil {
 		t.Fatalf("docker run failed: %v (%s)", runErr, runOut)
 	}
-	// Capture container ID output (first line)
 	startedID := strings.TrimSpace(runOut)
 	if startedID == "" {
 		startedID = name
 	}
-	defer func() { _, _ = runDocker(context.Background(), 15*time.Second, "rm", "-f", name) }()
+	return name, startedID
+}
 
-	// Give it a brief moment to start
-	time.Sleep(2 * time.Second)
+func waitBriefly() { time.Sleep(2 * time.Second) }
 
-	// Check if running
+func ensureRunningOrSkip(t *testing.T, name, startedID string) {
 	if out, err := runDocker(context.Background(), 15*time.Second, "inspect", "-f", "{{.State.Running}}", name); err != nil {
 		lower := strings.ToLower(out)
 		if strings.Contains(lower, "no such object") {
@@ -117,33 +147,30 @@ func TestOCI_E2E_RunContainer_GHCR(t *testing.T) {
 		}
 		t.Fatalf("docker inspect failed: %v (%s)", err, out)
 	} else if !strings.Contains(out, "true") {
-		// Fetch logs for context; if it exited instantly, skip with guidance
 		logs, _ := runDocker(context.Background(), 10*time.Second, "logs", name)
 		t.Skipf("Container not running (probably exited immediately). Set OCI_E2E_CMD to keep it alive. inspect=%q logs=%q", out, logs)
 	}
+}
 
-	// Exec inside the container to print system info and verify Ubuntu base
-	// Try bash first; fall back to sh if bash is unavailable
+func execSystemInfoAndAssertUbuntu(t *testing.T, name string) {
 	osr, err1 := runDocker(context.Background(), 10*time.Second, "exec", name, "bash", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
 	if err1 != nil {
 		osr, _ = runDocker(context.Background(), 10*time.Second, "exec", name, "sh", "-lc", "cat /etc/os-release || cat /usr/lib/os-release || true")
 	}
-	// Also capture uname output for diagnostics
 	uname, _ := runDocker(context.Background(), 10*time.Second, "exec", name, "sh", "-lc", "uname -a || true")
 
 	// Print exec results for visibility in test output
 	t.Logf("/etc/os-release (or fallback):\n%s", strings.TrimSpace(osr))
 	t.Logf("uname -a:\n%s", strings.TrimSpace(uname))
 
-	// Basic Ubuntu detection
 	lower := strings.ToLower(osr)
 	if !strings.Contains(lower, "id=ubuntu") && !strings.Contains(osr, "Ubuntu") {
 		t.Fatalf("Container did not report Ubuntu base. os-release=\n%s\n\n uname=\n%s\n", osr, uname)
 	}
+}
 
-	// Stop the container
+func stopContainerIgnoreMissing(t *testing.T, name string) {
 	if out, err := runDocker(context.Background(), 20*time.Second, "stop", name); err != nil {
-		// Not fatal if it's already exited; treat only non-existence differently
 		if !strings.Contains(strings.ToLower(out), "no such container") {
 			t.Fatalf("docker stop failed: %v (%s)", err, out)
 		}
