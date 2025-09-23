@@ -34,9 +34,9 @@ func ensureTemplateDB(ctx context.Context, adminConn *pgx.Conn) error {
 	// Create template database
 	_, err = adminConn.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", templateDBName))
 	if err != nil {
-		// Ignore duplicate error - another process created it concurrently
+		// Ignore duplicate database name error - another process created it concurrently
 		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == "pg_database_datname_index" {
 			return nil
 		}
 		return fmt.Errorf("failed to create template database: %w", err)
