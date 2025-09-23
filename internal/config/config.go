@@ -8,7 +8,6 @@ type DatabaseType string
 
 const (
 	DatabaseTypePostgreSQL DatabaseType = "postgresql"
-	DatabaseTypeMemory     DatabaseType = "memory"
 )
 
 // Config holds the application configuration

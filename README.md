@@ -39,24 +39,9 @@ Often (but not always) ideas flow through this pipeline:
 make dev-compose
 ```
 
-This starts the registry at [`localhost:8080`](http://localhost:8080) with PostgreSQL and seed data. It can be configured with environment variables in [docker-compose.yml](./docker-compose.yml) - see [.env.example](./.env.example) for a reference.
+This starts the registry at [`localhost:8080`](http://localhost:8080) with PostgreSQL and seed data. The database uses ephemeral storage and is reset each time you restart the containers, ensuring a clean state for development and testing.
 
-<details>
-<summary>Alternative: Local setup without Docker</summary>
-
-**Prerequisites:**
-- PostgreSQL running locally
-- Go 1.24.x installed
-
-```bash
-# Build and run locally
-make build
-make dev-local
-```
-
-The service runs on [`localhost:8080`](http://localhost:8080) by default. This can be configured with environment variables in `.env` - see [.env.example](./.env.example) for a reference.
-
-</details>
+The setup can be configured with environment variables in [docker-compose.yml](./docker-compose.yml) - see [.env.example](./.env.example) for a reference.
 
 <details>
 <summary>Alternative: Running a pre-built Docker image</summary>
@@ -125,7 +110,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   ├── api/                 # HTTP handlers and routing
 │   ├── auth/                # Authentication (GitHub OAuth, JWT, namespace blocking)
 │   ├── config/              # Configuration management
-│   ├── database/            # Data persistence (PostgreSQL, in-memory)
+│   ├── database/            # Data persistence (PostgreSQL)
 │   ├── service/             # Business logic
 │   ├── telemetry/           # Metrics and monitoring
 │   └── validators/          # Input validation

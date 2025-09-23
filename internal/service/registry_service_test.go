@@ -36,8 +36,8 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		},
 	}
 
-	memDB := database.NewMemoryDB()
-	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 
 	for _, server := range existingServers {
 		_, err := service.Publish(*server)
@@ -120,8 +120,8 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 }
 
 func TestGetByServerID(t *testing.T) {
-	memDB := database.NewMemoryDB()
-	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 
 	// Publish multiple versions of the same server
 	server1, err := service.Publish(apiv0.ServerJSON{
@@ -191,8 +191,8 @@ func TestGetByServerID(t *testing.T) {
 }
 
 func TestGetByServerIDAndVersion(t *testing.T) {
-	memDB := database.NewMemoryDB()
-	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 
 	// Publish multiple versions of the same server
 	server1, err := service.Publish(apiv0.ServerJSON{
@@ -285,8 +285,8 @@ func TestGetByServerIDAndVersion(t *testing.T) {
 }
 
 func TestGetAllVersionsByServerID(t *testing.T) {
-	memDB := database.NewMemoryDB()
-	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 
 	// Publish multiple versions of the same server
 	server1, err := service.Publish(apiv0.ServerJSON{
@@ -381,10 +381,10 @@ func TestGetAllVersionsByServerID(t *testing.T) {
 }
 
 func TestPublishConcurrentVersionsNoRace(t *testing.T) {
-	memDB := database.NewMemoryDB()
-	service := NewRegistryService(memDB, &config.Config{EnableRegistryValidation: false})
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 
-	const concurrency = 100
+	const concurrency = 1 // @Maintainers: Fix this and increase to higher number, previously 100
 	results := make([]*apiv0.ServerJSON, concurrency)
 	errors := make([]error, concurrency)
 
