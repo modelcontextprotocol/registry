@@ -3,10 +3,17 @@ package database
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	// testDBMutex ensures only one test modifies the database at a time
+	// This prevents parallel tests from interfering with each other
+	testDBMutex sync.Mutex
 )
 
 const (
@@ -20,6 +27,12 @@ const (
 // Requires PostgreSQL to be running on localhost:5432 (e.g., via docker-compose).
 func NewTestDB(t *testing.T) Database {
 	t.Helper()
+
+	// Acquire mutex to prevent parallel test interference
+	testDBMutex.Lock()
+	t.Cleanup(func() {
+		testDBMutex.Unlock()
+	})
 
 	// Create context with timeout for database operations
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
