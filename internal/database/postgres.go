@@ -21,6 +21,21 @@ type PostgreSQL struct {
 	pool *pgxpool.Pool
 }
 
+// Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
+type Executor interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
+// getExecutor returns the appropriate executor (transaction or pool)
+func (db *PostgreSQL) getExecutor(tx Tx) Executor {
+	if tx != nil {
+		return tx
+	}
+	return db.pool
+}
+
 // NewPostgreSQL creates a new instance of the PostgreSQL database
 func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, error) {
 	// Parse connection config for pool settings
@@ -144,14 +159,7 @@ func (db *PostgreSQL) List(
     `, whereClause, argIndex)
 	args = append(args, limit)
 
-	// Use provided transaction or pool
-	var rows pgx.Rows
-	var err error
-	if tx != nil {
-		rows, err = tx.Query(ctx, query, args...)
-	} else {
-		rows, err = db.pool.Query(ctx, query, args...)
-	}
+	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to query servers: %w", err)
 	}
@@ -203,13 +211,7 @@ func (db *PostgreSQL) GetByVersionID(ctx context.Context, tx Tx, versionID strin
 	`
 
 	var valueJSON []byte
-	var err error
-
-	if tx != nil {
-		err = tx.QueryRow(ctx, query, versionID).Scan(&valueJSON)
-	} else {
-		err = db.pool.QueryRow(ctx, query, versionID).Scan(&valueJSON)
-	}
+	err := db.getExecutor(tx).QueryRow(ctx, query, versionID).Scan(&valueJSON)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -242,13 +244,7 @@ func (db *PostgreSQL) GetByServerID(ctx context.Context, tx Tx, serverID string)
 	`
 
 	var valueJSON []byte
-	var err error
-
-	if tx != nil {
-		err = tx.QueryRow(ctx, query, serverID).Scan(&valueJSON)
-	} else {
-		err = db.pool.QueryRow(ctx, query, serverID).Scan(&valueJSON)
-	}
+	err := db.getExecutor(tx).QueryRow(ctx, query, serverID).Scan(&valueJSON)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -280,13 +276,7 @@ func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, tx Tx, server
 	`
 
 	var valueJSON []byte
-	var err error
-
-	if tx != nil {
-		err = tx.QueryRow(ctx, query, serverID, version).Scan(&valueJSON)
-	} else {
-		err = db.pool.QueryRow(ctx, query, serverID, version).Scan(&valueJSON)
-	}
+	err := db.getExecutor(tx).QueryRow(ctx, query, serverID, version).Scan(&valueJSON)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -317,13 +307,7 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx Tx, serve
 		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'publishedAt')::timestamp DESC
 	`
 
-	var rows pgx.Rows
-	var err error
-	if tx != nil {
-		rows, err = tx.Query(ctx, query, serverID)
-	} else {
-		rows, err = db.pool.Query(ctx, query, serverID)
-	}
+	rows, err := db.getExecutor(tx).Query(ctx, query, serverID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query server versions: %w", err)
 	}
@@ -358,9 +342,8 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx Tx, serve
 	return results, nil
 }
 
-// CreateServer atomically publishes a new server version, optionally unmarking a previous latest version
-// Must be called within WithPublishLock to ensure proper serialization
-func (db *PostgreSQL) CreateServer(ctx context.Context, tx Tx, server *apiv0.ServerJSON, oldLatestVersionID *string) (*apiv0.ServerJSON, error) {
+// CreateServer inserts a new server version
+func (db *PostgreSQL) CreateServer(ctx context.Context, tx Tx, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -370,45 +353,9 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx Tx, server *apiv0.Ser
 		return nil, fmt.Errorf("server must have registry metadata with ServerID and VersionID")
 	}
 
-	serverID := server.Meta.Official.ServerID
 	versionID := server.Meta.Official.VersionID
-
-	if serverID == "" || versionID == "" {
-		return nil, fmt.Errorf("server must have both ServerID and VersionID in registry metadata")
-	}
-
-	// Use provided transaction or create a new one
-	ownTx := false
-	var localTx pgx.Tx
-	var err error
-	if tx == nil {
-		localTx, err = db.pool.Begin(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to begin transaction: %w", err)
-		}
-		defer func() {
-			_ = localTx.Rollback(ctx)
-		}()
-		ownTx = true
-	} else {
-		localTx = tx
-	}
-
-	// If there's a previous latest version, unmark it
-	if oldLatestVersionID != nil && *oldLatestVersionID != "" {
-		updateQuery := `
-			UPDATE servers
-			SET value = jsonb_set(
-				value,
-				'{_meta,io.modelcontextprotocol.registry/official,isLatest}',
-				'false'::jsonb
-			)
-			WHERE version_id = $1
-		`
-		_, err := localTx.Exec(ctx, updateQuery, *oldLatestVersionID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmark previous latest version: %w", err)
-		}
+	if versionID == "" {
+		return nil, fmt.Errorf("server must have VersionID in registry metadata")
 	}
 
 	// Marshal the complete server to JSONB
@@ -422,16 +369,11 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx Tx, server *apiv0.Ser
 		INSERT INTO servers (version_id, value)
 		VALUES ($1, $2)
 	`
-	_, err = localTx.Exec(ctx, insertQuery, versionID, valueJSON)
+
+	_, err = db.getExecutor(tx).Exec(ctx, insertQuery, versionID, valueJSON)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
-	}
-
-	// Only commit if we created our own transaction
-	if ownTx {
-		if err := localTx.Commit(ctx); err != nil {
-			return nil, fmt.Errorf("failed to commit transaction: %w", err)
-		}
 	}
 
 	return server, nil
@@ -461,12 +403,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx Tx, id string, server
 		WHERE version_id = $2
 	`
 
-	var result pgconn.CommandTag
-	if tx != nil {
-		result, err = tx.Exec(ctx, query, valueJSON, id)
-	} else {
-		result, err = db.pool.Exec(ctx, query, valueJSON, id)
-	}
+	result, err := db.getExecutor(tx).Exec(ctx, query, valueJSON, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
@@ -478,14 +415,12 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx Tx, id string, server
 	return server, nil
 }
 
-// WithPublishLock executes a function with an exclusive advisory lock for publishing a server
-// This prevents race conditions when multiple versions are published concurrently
-func (db *PostgreSQL) WithPublishLock(ctx context.Context, serverName string, fn func(ctx context.Context, tx Tx) error) error {
+// InTransaction executes a function within a database transaction
+func (db *PostgreSQL) InTransaction(ctx context.Context, fn func(ctx context.Context, tx Tx) error) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
 
-	// Begin a transaction
 	tx, err := db.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -494,22 +429,29 @@ func (db *PostgreSQL) WithPublishLock(ctx context.Context, serverName string, fn
 		_ = tx.Rollback(ctx)
 	}()
 
-	// Acquire advisory lock based on server name hash
-	// Using pg_advisory_xact_lock which auto-releases on transaction end
-	lockID := hashServerName(serverName)
-	_, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", lockID)
-	if err != nil {
-		return fmt.Errorf("failed to acquire publish lock: %w", err)
-	}
-
-	// Execute the function
 	if err := fn(ctx, tx); err != nil {
 		return err
 	}
 
-	// Commit the transaction (which also releases the lock)
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// AcquirePublishLock acquires an exclusive advisory lock for publishing a server
+// This prevents race conditions when multiple versions are published concurrently
+// Using pg_advisory_xact_lock which auto-releases on transaction end
+func (db *PostgreSQL) AcquirePublishLock(ctx context.Context, tx Tx, serverName string) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	lockID := hashServerName(serverName)
+
+	if _, err := db.getExecutor(tx).Exec(ctx, "SELECT pg_advisory_xact_lock($1)", lockID); err != nil {
+		return fmt.Errorf("failed to acquire publish lock: %w", err)
 	}
 
 	return nil
@@ -518,7 +460,6 @@ func (db *PostgreSQL) WithPublishLock(ctx context.Context, serverName string, fn
 // hashServerName creates a consistent hash of the server name for advisory locking
 // We use FNV-1a hash and mask to 63 bits to fit in PostgreSQL's bigint range
 func hashServerName(name string) int64 {
-	// FNV-1a 64-bit hash
 	const (
 		offset64 = 14695981039346656037
 		prime64  = 1099511628211
@@ -528,7 +469,6 @@ func hashServerName(name string) int64 {
 		hash ^= uint64(name[i])
 		hash *= prime64
 	}
-	// Use only 63 bits to ensure positive int64
 	//nolint:gosec // Intentional conversion with masking to 63 bits
 	return int64(hash & 0x7FFFFFFFFFFFFFFF)
 }

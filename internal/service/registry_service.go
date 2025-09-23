@@ -131,18 +131,22 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		return nil, err
 	}
 
-	// Acquire advisory lock for this server name to prevent race conditions
-	result, err := database.WithPublishLockT(ctx, s.db, req.Name, func(lockCtx context.Context, tx database.Tx) (*apiv0.ServerJSON, error) {
+	result, err := database.InTransactionT(ctx, s.db, func(txCtx context.Context, tx database.Tx) (*apiv0.ServerJSON, error) {
 		publishTime := time.Now()
 		serverJSON := req
 
+		// Acquire advisory lock to prevent concurrent publishes of the same server
+		if err := s.db.AcquirePublishLock(txCtx, tx, serverJSON.Name); err != nil {
+			return nil, err
+		}
+
 		// Check for duplicate remote URLs
-		if err := s.validateNoDuplicateRemoteURLs(lockCtx, serverJSON); err != nil {
+		if err := s.validateNoDuplicateRemoteURLs(txCtx, tx, serverJSON); err != nil {
 			return nil, err
 		}
 
 		filter := &database.ServerFilter{Name: &serverJSON.Name}
-		existingServerVersions, _, err := s.db.List(lockCtx, tx, filter, "", maxServerVersionsPerServer)
+		existingServerVersions, _, err := s.db.List(txCtx, tx, filter, "", maxServerVersionsPerServer)
 		if err != nil && !errors.Is(err, database.ErrNotFound) {
 			return nil, err
 		}
@@ -176,13 +180,12 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 			) > 0
 		}
 
-		// Prepare the old latest version ID if we need to unmark it
-		var oldLatestVersionID *string
+		// Unmark old latest version if needed
 		if isNewLatest && existingLatest != nil {
 			if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
-				versionID := existingLatest.Meta.Official.VersionID
-				if versionID != "" {
-					oldLatestVersionID = &versionID
+				existingLatest.Meta.Official.IsLatest = false
+				if _, err := s.db.UpdateServer(txCtx, tx, existingLatest.Meta.Official.VersionID, existingLatest); err != nil {
+					return nil, err
 				}
 			}
 		}
@@ -190,8 +193,8 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		// Create complete server with metadata
 		server := s.createServerWithMetadata(serverJSON, existingServerVersions, publishTime, isNewLatest)
 
-		// Publish server version atomically (unmarks old latest and creates new version in one transaction)
-		return s.db.CreateServer(lockCtx, tx, &server, oldLatestVersionID)
+		// Insert new server version
+		return s.db.CreateServer(txCtx, tx, &server)
 	})
 
 	if err != nil {
@@ -242,13 +245,13 @@ func (s *registryServiceImpl) createServerWithMetadata(
 }
 
 // validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
-func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, serverDetail apiv0.ServerJSON) error {
+func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, tx database.Tx, serverDetail apiv0.ServerJSON) error {
 	// Check each remote URL in the new server for conflicts
 	for _, remote := range serverDetail.Remotes {
 		// Use filter to find servers with this remote URL
 		filter := &database.ServerFilter{RemoteURL: &remote.URL}
 
-		conflictingServers, _, err := s.db.List(ctx, nil, filter, "", 1000)
+		conflictingServers, _, err := s.db.List(ctx, tx, filter, "", 1000)
 		if err != nil {
 			return fmt.Errorf("failed to check remote URL conflict: %w", err)
 		}
@@ -309,7 +312,7 @@ func (s *registryServiceImpl) EditServer(versionID string, req apiv0.ServerJSON)
 	}
 
 	// Check for duplicate remote URLs using the updated server
-	if err := s.validateNoDuplicateRemoteURLs(ctx, updatedServer); err != nil {
+	if err := s.validateNoDuplicateRemoteURLs(ctx, nil, updatedServer); err != nil {
 		return nil, err
 	}
 

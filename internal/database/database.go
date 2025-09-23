@@ -44,29 +44,29 @@ type Database interface {
 	GetByServerIDAndVersion(ctx context.Context, tx Tx, serverID string, version string) (*apiv0.ServerJSON, error)
 	// Retrieve all versions of a server by server ID
 	GetAllVersionsByServerID(ctx context.Context, tx Tx, serverID string) ([]*apiv0.ServerJSON, error)
-	// CreateServer atomically publishes a new server version, optionally unmarking a previous latest version
-	// If oldLatestVersionID is provided, it will be updated to set IsLatest=false before creating the new version
-	CreateServer(ctx context.Context, tx Tx, newServer *apiv0.ServerJSON, oldLatestVersionID *string) (*apiv0.ServerJSON, error)
+	// CreateServer inserts a new server version
+	CreateServer(ctx context.Context, tx Tx, newServer *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
 	// UpdateServer updates an existing server record
 	UpdateServer(ctx context.Context, tx Tx, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error)
-	// WithPublishLock executes a function with an exclusive lock for publishing a server
+	// AcquirePublishLock acquires an exclusive advisory lock for publishing a server
 	// This prevents race conditions when multiple versions are published concurrently
-	// The transaction is passed to the callback function for use in database operations
-	WithPublishLock(ctx context.Context, serverName string, fn func(ctx context.Context, tx Tx) error) error
+	AcquirePublishLock(ctx context.Context, tx Tx, serverName string) error
+	// InTransaction executes a function within a database transaction
+	InTransaction(ctx context.Context, fn func(ctx context.Context, tx Tx) error) error
 	// Close closes the database connection
 	Close() error
 }
 
-// WithPublishLockT is a generic helper that wraps WithPublishLock for functions returning a value
+// InTransactionT is a generic helper that wraps InTransaction for functions returning a value
 // This exists because Go does not support generic methods on interfaces - only the Database interface
-// method WithPublishLock (without generics) can exist, so we provide this generic wrapper function.
+// method InTransaction (without generics) can exist, so we provide this generic wrapper function.
 // This is a common pattern in Go for working around this language limitation.
-func WithPublishLockT[T any](ctx context.Context, db Database, serverName string, fn func(ctx context.Context, tx Tx) (T, error)) (T, error) {
+func InTransactionT[T any](ctx context.Context, db Database, fn func(ctx context.Context, tx Tx) (T, error)) (T, error) {
 	var result T
 	var fnErr error
 
-	err := db.WithPublishLock(ctx, serverName, func(lockCtx context.Context, tx Tx) error {
-		result, fnErr = fn(lockCtx, tx)
+	err := db.InTransaction(ctx, func(txCtx context.Context, tx Tx) error {
+		result, fnErr = fn(txCtx, tx)
 		return fnErr
 	})
 

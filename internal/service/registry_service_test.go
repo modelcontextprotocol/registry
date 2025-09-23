@@ -107,7 +107,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			ctx := context.Background()
 			impl := service.(*registryServiceImpl)
 
-			err := impl.validateNoDuplicateRemoteURLs(ctx, tt.serverDetail)
+			err := impl.validateNoDuplicateRemoteURLs(ctx, nil, tt.serverDetail)
 
 			if tt.expectError {
 				assert.Error(t, err)
