@@ -11,6 +11,7 @@ The MCP registry provides MCP clients with a list of MCP servers, like an app st
 
 ## Documentation Index
 
+- 📜 [Cheat Sheet](./cheatsheet/cheatsheet.pdf)
 - 🛠️ [How-To Guides: Task-focused instructions](./guides/)
 - 💡 [Explanations: Understanding-oriented content](./explanations/)
 - 📖 [Reference: Technical specifications and lookup material](./reference/)

@@ -1,0 +1,256 @@
+\documentclass[twocolumn]{article}
+\usepackage{geometry}
+\geometry{legalpaper, left=1cm, right=1cm, top=1cm, bottom=1cm, landscape}
+\setlength\columnseprule{1pt}
+\setlength\columnsep{2cm}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{shapes.geometric}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{fontawesome5}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily, language=bash}
+\newcommand{\ICON}{\fontsize{28}{0}\selectfont}
+\usepackage{tabularray}
+\usepackage{threeparttable}
+
+% Figure position configuration
+\newcommand{\FigureCenterX}{7.5}
+\newcommand{\FigureCenterY}{-10.5}
+
+\tikzset{
+    every picture/.style={
+        line width=1.5pt,
+    },
+    conn/.style = {
+        shorten >=5pt,
+        shorten <=5pt,
+        ->
+    },
+    connaux/.style = {
+        shorten >=5pt,
+        shorten <=5pt,
+        dashed,
+        ->
+    },
+}
+
+\tikzset{
+    pics/.cd,
+    pic user/.style={code={
+        \coordinate (head-center) at (0,0);
+        \coordinate (top) at ([yshift=-2mm]head-center);
+        \coordinate (left) at ([yshift=-10mm,xshift=-7mm]head-center);
+        \coordinate (right) at ([yshift=-10mm,xshift=7mm]head-center);
+        \draw [rounded corners=1.5mm] 
+              (top) to [out=-10,in=100] 
+              (right) to [bend left=15]
+              (left) to [out=80,in=190]
+              (top);
+        \draw [fill=white,opacity=1] (head-center) circle (0.41);
+    }},
+    pic doc/.style={code={
+        \node [draw, fill=white, minimum height=1.3cm, minimum width=1cm]
+              (docpage) at (0,0) {};
+        \draw [white, fill=white]
+              ($(docpage.north east)+(-3mm,0)$)
+              --++ (3mm,0) --++ (0,-3mm) -- cycle;
+        \fill [black]
+              ($(docpage.north east)+(0,-3mm)$)
+              --++ (0,-1mm) --++ (-4mm,0) --++ (0,4mm) --++ (1mm,0) -- cycle;
+        \node at (0, -0.15) {\LARGE \faServer};
+    }},
+    pic docs/.style={code={
+        \pic at (0,0) {pic doc};
+        \pic at (-0.5,-0.25) {pic doc};
+        \pic at (-1,-0.5) {pic doc};
+    }},
+    pic randomdocs/.style={code={
+        \pic at (0,0) {pic doc};
+        \pic at (-0.5,-0.3) {pic doc};
+        \pic at (0.4,-0.9) {pic doc};
+    }},
+}
+
+\begin{document}
+\pagestyle{empty}
+\sffamily
+
+\begin{tikzpicture}[remember picture]
+    % Title
+    \node at (7.5,-0.8) {\Huge MCP Registry Cheat Sheet};
+    
+    % Registry
+    \node (reg) [regular polygon,
+        regular polygon sides = 6,
+        inner sep = 1.3cm,
+        shape border rotate=30,
+        draw] at (\FigureCenterX, \FigureCenterY)
+        {};
+    \pic at ($ (reg) + (1,-0.3) $) {pic docs};
+    \node at ($ (reg) + (0,1.1) $) {\Large Registry};
+
+    % Borders
+    \draw [dotted] (reg) -- ++(0,8);
+    \draw [dotted] (reg) -- ++(-7,-4);
+    \draw [dotted] (reg) -- ++(7,-4);
+
+    % Server user
+    \pic [local bounding box=serveruser]
+         at ($ (reg) + (-5.5,5.5) $) {pic user};
+    \node (serverusert) at ($ (serveruser) + (0,-1.1) $) {MCP Server User};
+    \pic [local bounding box=userjson]
+         at ($ (reg) + (-1.5,5.5) $) {pic doc};
+    \pic [local bounding box=userjsons]
+         at ($ (reg) + (-5.5,0.5) $) {pic randomdocs};
+    \draw [conn] (serveruser) to[out=-10,in=115]
+          node[midway, sloped, below] {Get} (reg);
+    \draw [connaux] (reg) to[out=115,in=-90] (userjson);
+    \draw [conn] (serverusert) to[out=-75,in=160]
+          node[midway, sloped, above] {List/Search} (reg);
+    \draw [connaux] (reg) to[out=160,in=30] (userjsons);
+    
+    % Server developer
+    \pic [local bounding box=serverdev]
+         at ($ (reg) + (6.5,4) $) {pic user};
+    \node (serverdevt) at ($ (serverdev) + (0,-1.1) $) {MCP Server Developer};
+    \pic [local bounding box=serverjsondev]
+         at ($ (reg) + (2.5,6.5) $) {pic doc};
+    \node (devgithub)
+          at ($ (reg) + (3.5,1.4) $) {\ICON \faGithub};
+    \node (devdomain)
+          at ($ (reg) + (5.8,-1.2) $) {\ICON \faGlobe};
+    \draw [conn] (serverdev) to[out=70,in=50]
+          node[midway, sloped, above] {Create} (serverjsondev);
+    \draw [conn] (serverdev) to[out=110,in=10]
+          node[midway, sloped, below] {Edit} (serverjsondev);
+    \draw [connaux] (serverjsondev) to[out=-90,in=70] (reg);
+    \draw [conn] (serverdev) to[out=170,in=70]
+          node[midway, sloped, below] {Publish} (reg);
+    \draw [conn] (serverdevt) to[out=-80,in=-10]
+          node[midway, sloped, above] {Login} (reg);
+    \draw [connaux] (devgithub) to[out=-90,in=-10] (reg);
+    \draw [connaux] (serverdevt) to[out=-80,in=60]
+          node[midway, sloped, below] {Public Key} (devdomain);
+    \draw [connaux] (devdomain) to[out=190,in=-10] (reg);
+    
+    % Registry admin
+    \pic [local bounding box=regadmin]
+         at ($ (reg) + (0,-6) $) {pic user};
+    \node (regadmint) at ($ (regadmin) + (0,-1.1) $) {MCP Registry Admin};
+    \node (admintoken)
+          at ($ (reg) + (-1,-6.5) $) {\ICON \faTicket*};
+    \pic [local bounding box=adminjson]
+         at ($ (reg) + (3.8,-4) $) {pic doc};
+    \draw [conn] (regadmin) to[out=150,in=-130]
+          node[midway, sloped, above] {Auth} (reg);
+    \draw [conn] (regadmin) to[out=115,in=-110]
+          node[midway, sloped, above] {Setup} (reg);
+    \draw [connaux] (reg) to[out=-130,in=160] (admintoken);
+    \draw [conn] (regadmin) to[out=60,in=-70]
+          node[midway, sloped, above] {Takedown} (reg);
+    \draw [conn] (regadmin) to[out=30,in=-50]
+          node[midway, sloped, above] {Update} (reg);
+    \draw [connaux] (adminjson) to[out=160,in=-50] (reg);
+
+    % Not using overlay mode; no automatic bounding box drawing
+    % This enanbles pic naming/reference
+    \pgfresetboundingbox
+\end{tikzpicture}
+
+\pagebreak
+
+\begin{threeparttable}
+    \vspace{3mm}
+    \hspace{-3mm}
+    \begin{tblr}{
+        width=\linewidth,
+        colspec={l l},
+    }
+        GitHub Repository & https://github.com/modelcontextprotocol/registry \\       
+        RESTful API Spec & https://registry.modelcontextprotocol.io/docs \\
+    \end{tblr}
+\end{threeparttable}
+
+\section*{MCP Server User}
+
+\begin{threeparttable}
+    \begin{tblr}{
+        width=\linewidth,
+        hline{1,Z} = {1pt},
+        hline{2} = {dashed},
+        row{1} = {font=\bfseries},
+        colspec={l l l l X[,l]},
+    }
+        Action & API & Endpoint & Arguments\tnote{1} & Description \\
+        List/Search & GET & \texttt{/v0/servers} & search/limit/cursor & Searching for servers with pagination \\
+        Get & GET & \texttt{/v0/servers/\{id\}} & server UUID & Retrieving spec for specified server \\
+    \end{tblr}
+    \begin{tablenotes}
+        \item[1] Full argument list detailed in API specification
+    \end{tablenotes}
+\end{threeparttable}
+
+\section*{MCP Server Developer}
+
+\begin{threeparttable}
+    \begin{tblr}{
+        width=\linewidth,
+        hline{1,Z} = {1pt},
+        hline{2} = {dashed},
+        row{1} = {font=\bfseries},
+        colspec={l l l X[,l]},
+    }
+        Action & API & Command\tnote{1} & Description \\
+        Create & & \lstinline{mcp-publisher init} & Creating \lstinline{server.json}\tnote{2} file from template \\
+        Login & POST & \lstinline{mcp-publisher login <method>} & Login through select authentication method\tnote{3} \\
+        Publish & POST & \lstinline{mcp-publisher publish} & Publishing \lstinline{server.json} file to registry \\
+    \end{tblr}
+    \begin{tablenotes}
+        \item[1] Installation: \lstinline{brew install mcp-publisher} 
+        \item[2] \lstinline{server.json} specification: \{registry\_repo\}/docs/reference/server-json/generic-server-json.md
+        \item[3] JWT token of login session stored at \lstinline{$HOME/.mcp_publisher_token}
+    \end{tablenotes}
+\end{threeparttable}
+
+\vspace{3mm}
+\begin{threeparttable}
+    \begin{tblr}{
+        width=\linewidth,
+        hline{1,Z} = {1pt},
+        hline{2} = {dashed},
+        row{1} = {font=\bfseries},
+        colspec={l l l X[,l]},
+    }
+        Login Method & \SetCell[c=2]{l}  Publishable MCP Server Namespaces & & Description \\
+        github & \lstinline{io.github.<owner>/*} & \lstinline{io.github.<org>/*} & Repos at owner and owner's orgs \\
+        github-oidc & \lstinline{io.github.<entity>/*} & & For GitHub Actions use \\
+        dns & \lstinline{com.<company>/*} & \lstinline{com.<company>.*} & Domain and subdomains \\
+        http & \lstinline{com.<company>/*} & & Domain (no subdomain) \\
+    \end{tblr}
+\end{threeparttable}
+
+\section*{MCP Registry Admin}
+
+\begin{threeparttable}
+    \begin{tblr}{
+        width=\linewidth,
+        hline{1,Z} = {1pt},
+        hline{2} = {dashed},
+        row{1} = {font=\bfseries},
+        colspec={l l l X[,l]},
+    }
+        Action & API & Script\tnote{1} & Description \\
+        Setup & & & Setup local/docker/k8s development or deployment\tnote{2} subregistry \\
+        Auth & POST & \lstinline{auth.sh} & Exchanging OIDC token for registry admin JWT token \\
+        Update & PUT & & Overwriting specified server specification in the registry \\
+        Takedown & PUT & \lstinline{takedown.sh} & An update action assigning: \lstinline{server.status = "deleted"} \\
+    \end{tblr}
+    \begin{tablenotes}
+        \item[1] \{registry\_repo\}/tools/admin/
+        \item[2] \{registry\_repo\}/deploy/
+    \end{tablenotes}
+\end{threeparttable}
+
+\end{document}

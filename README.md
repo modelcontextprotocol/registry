@@ -2,7 +2,7 @@
 
 The MCP registry provides MCP clients with a list of MCP servers, like an app store for MCP servers.
 
-[**📤 Publish my MCP server**](docs/guides/publishing/publish-server.md) | [**⚡️ Live API docs**](https://registry.modelcontextprotocol.io/docs) | [**👀 Ecosystem vision**](docs/explanations/ecosystem-vision.md) | 📖 **[Full documentation](./docs)**
+[**📤 Publish my MCP server**](docs/guides/publishing/publish-server.md) | [**⚡️ Live API docs**](https://registry.modelcontextprotocol.io/docs) | [**👀 Ecosystem vision**](docs/explanations/ecosystem-vision.md) | [**📖 Full documentation**](./docs) | [**📜 Cheat Sheet**](./docs/cheatsheet/cheatsheet.pdf)
 
 ## Development Status
 
