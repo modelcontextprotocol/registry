@@ -29,7 +29,7 @@ type Executor interface {
 }
 
 // getExecutor returns the appropriate executor (transaction or pool)
-func (db *PostgreSQL) getExecutor(tx Tx) Executor {
+func (db *PostgreSQL) getExecutor(tx pgx.Tx) Executor {
 	if tx != nil {
 		return tx
 	}
@@ -81,7 +81,7 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 //nolint:cyclop // Database filtering logic is inherently complex but clear
 func (db *PostgreSQL) List(
 	ctx context.Context,
-	tx Tx,
+	tx pgx.Tx,
 	filter *ServerFilter,
 	cursor string,
 	limit int,
@@ -199,7 +199,7 @@ func (db *PostgreSQL) List(
 	return results, nextCursor, nil
 }
 
-func (db *PostgreSQL) GetByVersionID(ctx context.Context, tx Tx, versionID string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByVersionID(ctx context.Context, tx pgx.Tx, versionID string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -230,7 +230,7 @@ func (db *PostgreSQL) GetByVersionID(ctx context.Context, tx Tx, versionID strin
 }
 
 // GetByServerID retrieves the latest version of a server by server ID
-func (db *PostgreSQL) GetByServerID(ctx context.Context, tx Tx, serverID string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByServerID(ctx context.Context, tx pgx.Tx, serverID string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -263,7 +263,7 @@ func (db *PostgreSQL) GetByServerID(ctx context.Context, tx Tx, serverID string)
 }
 
 // GetByServerIDAndVersion retrieves a specific version of a server by server ID and version
-func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, tx Tx, serverID string, version string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, tx pgx.Tx, serverID string, version string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -295,7 +295,7 @@ func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, tx Tx, server
 }
 
 // GetAllVersionsByServerID retrieves all versions of a server by server ID
-func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx Tx, serverID string) ([]*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx pgx.Tx, serverID string) ([]*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -343,7 +343,7 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx Tx, serve
 }
 
 // CreateServer inserts a new server version
-func (db *PostgreSQL) CreateServer(ctx context.Context, tx Tx, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -380,7 +380,7 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx Tx, server *apiv0.Ser
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, tx Tx, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -416,7 +416,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx Tx, id string, server
 }
 
 // InTransaction executes a function within a database transaction
-func (db *PostgreSQL) InTransaction(ctx context.Context, fn func(ctx context.Context, tx Tx) error) error {
+func (db *PostgreSQL) InTransaction(ctx context.Context, fn func(ctx context.Context, tx pgx.Tx) error) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
@@ -443,7 +443,7 @@ func (db *PostgreSQL) InTransaction(ctx context.Context, fn func(ctx context.Con
 // AcquirePublishLock acquires an exclusive advisory lock for publishing a server
 // This prevents race conditions when multiple versions are published concurrently
 // Using pg_advisory_xact_lock which auto-releases on transaction end
-func (db *PostgreSQL) AcquirePublishLock(ctx context.Context, tx Tx, serverName string) error {
+func (db *PostgreSQL) AcquirePublishLock(ctx context.Context, tx pgx.Tx, serverName string) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
