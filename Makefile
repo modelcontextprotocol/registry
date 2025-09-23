@@ -17,7 +17,7 @@ publisher: ## Build the publisher tool with version info
 # Test targets
 test-unit: ## Run unit tests with coverage (requires PostgreSQL)
 	@echo "Starting PostgreSQL for unit tests..."
-	@docker-compose up -d postgres
+	@docker compose up -d postgres
 	@echo "Waiting for PostgreSQL to be ready..."
 	@sleep 3
 	@echo "Running unit tests..."
@@ -25,7 +25,7 @@ test-unit: ## Run unit tests with coverage (requires PostgreSQL)
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 	@echo "Stopping PostgreSQL..."
-	@docker-compose down postgres
+	@docker compose down postgres
 
 test: ## Run unit tests (use 'make test-all' to run all tests)
 	@echo "⚠️  Running unit tests only. Use 'make test-all' to run both unit and integration tests."
