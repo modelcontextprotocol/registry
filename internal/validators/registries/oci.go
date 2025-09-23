@@ -13,6 +13,11 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+var (
+	ErrMissingIdentifierForOCI = errors.New("package identifier is required for OCI packages")
+	ErrMissingVersionForOCI    = errors.New("package version is required for OCI packages")
+)
+
 const (
 	dockerIoAPIBaseURL = "https://registry-1.docker.io"
 	ghcrAPIBaseURL     = "https://ghcr.io"
@@ -78,6 +83,15 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	// Set default registry base URL if empty
 	if pkg.RegistryBaseURL == "" {
 		pkg.RegistryBaseURL = model.RegistryURLDocker
+	}
+
+	if pkg.Identifier == "" {
+		return ErrMissingIdentifierForOCI
+	}
+
+	// we need version (tag) to look up the image manifest
+	if pkg.Version == "" {
+		return ErrMissingVersionForOCI
 	}
 
 	// Validate that the registry base URL is supported
@@ -257,7 +271,6 @@ func getRegistryAuthToken(ctx context.Context, client *http.Client, config *Regi
 
 	return authResp.Token, nil
 }
-
 
 // getSpecificManifest retrieves a specific manifest for multi-arch images
 func getSpecificManifest(ctx context.Context, client *http.Client, registryConfig *RegistryConfig, namespace, repo, digest string) (*OCIManifest, error) {

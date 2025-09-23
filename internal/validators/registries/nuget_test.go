@@ -21,6 +21,30 @@ func TestValidateNuGet_RealPackages(t *testing.T) {
 		errorMessage string
 	}{
 		{
+			name:         "empty package identifier should fail",
+			packageName:  "",
+			version:      "1.0.0",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package identifier is required for NuGet packages",
+		},
+		{
+			name:         "empty package version should fail",
+			packageName:  "test-package",
+			version:      "",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package version is required for NuGet packages",
+		},
+		{
+			name:         "both empty identifier and version should fail with identifier error first",
+			packageName:  "",
+			version:      "",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "package identifier is required for NuGet packages",
+		},
+		{
 			name:         "non-existent package should fail",
 			packageName:  generateRandomNuGetPackageName(),
 			version:      "1.0.0",
@@ -34,7 +58,7 @@ func TestValidateNuGet_RealPackages(t *testing.T) {
 			version:      "", // No version provided
 			serverName:   "com.example/test",
 			expectError:  true,
-			errorMessage: "requires a specific version",
+			errorMessage: "package version is required for NuGet packages",
 		},
 		{
 			name:         "real package with non-existent version should fail",
