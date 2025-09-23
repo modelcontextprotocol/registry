@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-local dev-compose clean publisher
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher
 
 # Default target
 help: ## Show this help message
@@ -65,9 +65,6 @@ check: lint validate test-all ## Run all checks (lint, validate, unit tests)
 # Development targets
 dev-compose: ## Start development environment with Docker Compose (builds image automatically)
 	docker compose up --build
-
-dev-local: ## Run registry locally
-	go run ./cmd/registry
 
 # Cleanup
 clean: ## Clean build artifacts and coverage files

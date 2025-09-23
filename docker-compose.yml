@@ -36,8 +36,6 @@ services:
       POSTGRES_USER: mcpregistry
       POSTGRES_PASSWORD: mcpregistry
       PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - './.db:/var/lib/postgresql/data'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mcpregistry -d mcp-registry"]
       interval: 1s
