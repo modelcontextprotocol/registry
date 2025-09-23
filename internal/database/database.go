@@ -72,10 +72,3 @@ func WithPublishLockT[T any](ctx context.Context, db Database, serverName string
 	return result, nil
 }
 
-// ConnectionType represents the type of database connection
-type ConnectionType string
-
-const (
-	// ConnectionTypePostgreSQL represents a PostgreSQL database connection
-	ConnectionTypePostgreSQL ConnectionType = "postgresql"
-)
