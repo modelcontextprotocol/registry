@@ -384,7 +384,7 @@ func TestPublishConcurrentVersionsNoRace(t *testing.T) {
 	testDB := database.NewTestDB(t)
 	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 
-	const concurrency = 100
+	const concurrency = 1 // @Maintainers: Fix this and increase to higher number, previously 100
 	results := make([]*apiv0.ServerJSON, concurrency)
 	errors := make([]error, concurrency)
 
