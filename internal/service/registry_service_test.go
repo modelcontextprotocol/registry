@@ -384,7 +384,7 @@ func TestPublishConcurrentVersionsNoRace(t *testing.T) {
 	testDB := database.NewTestDB(t)
 	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 
-	const concurrency = 1 // @Maintainers: Fix this and increase to higher number, previously 100
+	const concurrency = 100
 	results := make([]*apiv0.ServerJSON, concurrency)
 	errors := make([]error, concurrency)
 
@@ -419,12 +419,25 @@ func TestPublishConcurrentVersionsNoRace(t *testing.T) {
 		}
 	}
 
+	// Query database to check the final state after all publishes complete
+	// This is necessary because the returned results reflect state at publish time,
+	// but concurrent publishes may have updated the latest flag since then
+	filter := &database.ServerFilter{Name: strPtr("com.example/test-concurrent")}
+	dbResults, _, err := testDB.List(context.Background(), nil, filter, "", 1000)
+	assert.NoError(t, err, "failed to query database")
+
 	latestCount := 0
-	for _, result := range results {
-		if result != nil && result.Meta != nil && result.Meta.Official != nil &&
-			result.Meta.Official.IsLatest {
+	var latestVersion string
+	for _, r := range dbResults {
+		if r.Meta != nil && r.Meta.Official != nil && r.Meta.Official.IsLatest {
 			latestCount++
+			latestVersion = r.Version
 		}
 	}
-	assert.Equal(t, 1, latestCount, "should have exactly one latest version")
+
+	assert.Equal(t, 1, latestCount, "should have exactly one latest version in database, found version: %s", latestVersion)
+}
+
+func strPtr(s string) *string {
+	return &s
 }

@@ -57,7 +57,7 @@ func TestImportService_LocalFile(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify the server was imported
-	servers, _, err := testDB.List(context.Background(), nil, "", 10)
+	servers, _, err := testDB.List(context.Background(), nil, nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 1)
 	assert.Equal(t, "io.github.test/test-server-1", servers[0].Name)
@@ -101,7 +101,7 @@ func TestImportService_HTTPFile(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify the server was imported
-	servers, _, err := testDB.List(context.Background(), nil, "", 10)
+	servers, _, err := testDB.List(context.Background(), nil, nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 1)
 	assert.Equal(t, "io.github.test/http-test-server", servers[0].Name)
@@ -187,7 +187,7 @@ func TestImportService_RegistryAPI(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify both servers were imported
-	servers, _, err := testDB.List(context.Background(), nil, "", 10)
+	servers, _, err := testDB.List(context.Background(), nil, nil, "", 10)
 	require.NoError(t, err)
 	assert.Len(t, servers, 2)
 

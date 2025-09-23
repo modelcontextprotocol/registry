@@ -41,7 +41,7 @@ func (s *registryServiceImpl) List(filter *database.ServerFilter, cursor string,
 	}
 
 	// Use the database's ListServers method with pagination and filtering
-	serverRecords, nextCursor, err := s.db.List(ctx, filter, cursor, limit)
+	serverRecords, nextCursor, err := s.db.List(ctx, nil, filter, cursor, limit)
 	if err != nil {
 		return nil, "", err
 	}
@@ -61,7 +61,7 @@ func (s *registryServiceImpl) GetByVersionID(versionID string) (*apiv0.ServerJSO
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	serverRecord, err := s.db.GetByVersionID(ctx, versionID)
+	serverRecord, err := s.db.GetByVersionID(ctx, nil, versionID)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (s *registryServiceImpl) GetByServerID(serverID string) (*apiv0.ServerJSON,
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	serverRecord, err := s.db.GetByServerID(ctx, serverID)
+	serverRecord, err := s.db.GetByServerID(ctx, nil, serverID)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (s *registryServiceImpl) GetByServerIDAndVersion(serverID string, version s
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	serverRecord, err := s.db.GetByServerIDAndVersion(ctx, serverID, version)
+	serverRecord, err := s.db.GetByServerIDAndVersion(ctx, nil, serverID, version)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (s *registryServiceImpl) GetAllVersionsByServerID(serverID string) ([]apiv0
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	serverRecords, err := s.db.GetAllVersionsByServerID(ctx, serverID)
+	serverRecords, err := s.db.GetAllVersionsByServerID(ctx, nil, serverID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 	}
 
 	// Acquire advisory lock for this server name to prevent race conditions
-	result, err := database.WithPublishLockT(ctx, s.db, req.Name, func(lockCtx context.Context) (*apiv0.ServerJSON, error) {
+	result, err := database.WithPublishLockT(ctx, s.db, req.Name, func(lockCtx context.Context, tx database.Tx) (*apiv0.ServerJSON, error) {
 		publishTime := time.Now()
 		serverJSON := req
 
@@ -142,7 +142,7 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		}
 
 		filter := &database.ServerFilter{Name: &serverJSON.Name}
-		existingServerVersions, _, err := s.db.List(lockCtx, filter, "", maxServerVersionsPerServer)
+		existingServerVersions, _, err := s.db.List(lockCtx, tx, filter, "", maxServerVersionsPerServer)
 		if err != nil && !errors.Is(err, database.ErrNotFound) {
 			return nil, err
 		}
@@ -191,7 +191,7 @@ func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, 
 		server := s.createServerWithMetadata(serverJSON, existingServerVersions, publishTime, isNewLatest)
 
 		// Publish server version atomically (unmarks old latest and creates new version in one transaction)
-		return s.db.CreateServer(lockCtx, &server, oldLatestVersionID)
+		return s.db.CreateServer(lockCtx, tx, &server, oldLatestVersionID)
 	})
 
 	if err != nil {
@@ -248,7 +248,7 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 		// Use filter to find servers with this remote URL
 		filter := &database.ServerFilter{RemoteURL: &remote.URL}
 
-		conflictingServers, _, err := s.db.List(ctx, filter, "", 1000)
+		conflictingServers, _, err := s.db.List(ctx, nil, filter, "", 1000)
 		if err != nil {
 			return fmt.Errorf("failed to check remote URL conflict: %w", err)
 		}
@@ -281,7 +281,7 @@ func (s *registryServiceImpl) EditServer(versionID string, req apiv0.ServerJSON)
 	defer cancel()
 
 	// First get the current server to preserve metadata
-	currentServer, err := s.db.GetByVersionID(ctx, versionID)
+	currentServer, err := s.db.GetByVersionID(ctx, nil, versionID)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +314,7 @@ func (s *registryServiceImpl) EditServer(versionID string, req apiv0.ServerJSON)
 	}
 
 	// Update server in database
-	serverRecord, err := s.db.UpdateServer(ctx, versionID, &updatedServer)
+	serverRecord, err := s.db.UpdateServer(ctx, nil, versionID, &updatedServer)
 	if err != nil {
 		return nil, err
 	}
