@@ -3,16 +3,16 @@ package database
 import (
 	"context"
 	"fmt"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	testSchemaInitOnce sync.Once
-	errTestSchemaInit  error
+const (
+	// Advisory lock key for database schema initialization
+	// Using a fixed key ensures all test processes coordinate on the same lock
+	testSchemaLockKey = 123456789
 )
 
 // NewTestDB creates a new PostgreSQL database connection for testing.
@@ -30,11 +30,9 @@ func NewTestDB(t *testing.T) Database {
 	db, err := NewPostgreSQL(ctx, connectionURI)
 	require.NoError(t, err, "Failed to connect to test PostgreSQL database. Make sure PostgreSQL is running via: docker-compose up -d postgres")
 
-	// Initialize schema once per test suite run
-	testSchemaInitOnce.Do(func() {
-		errTestSchemaInit = initializeTestSchema(db)
-	})
-	require.NoError(t, errTestSchemaInit, "Failed to initialize test database schema")
+	// Initialize schema once per test suite run using advisory locks for cross-process coordination
+	err = initializeTestSchemaWithLock(db)
+	require.NoError(t, err, "Failed to initialize test database schema")
 
 	// Clear data for this specific test
 	clearTestData(t, db)
@@ -49,8 +47,46 @@ func NewTestDB(t *testing.T) Database {
 	return db
 }
 
+// initializeTestSchemaWithLock sets up a fresh database schema with all migrations applied
+// Uses PostgreSQL advisory locks to ensure only one process initializes the schema
+func initializeTestSchemaWithLock(db Database) error {
+	// Cast to PostgreSQL to access the connection pool
+	pgDB, ok := db.(*PostgreSQL)
+	if !ok {
+		return fmt.Errorf("expected PostgreSQL database instance")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Acquire advisory lock to coordinate schema initialization across processes
+	_, err := pgDB.pool.Exec(ctx, "SELECT pg_advisory_lock($1)", testSchemaLockKey)
+	if err != nil {
+		return fmt.Errorf("failed to acquire advisory lock: %w", err)
+	}
+	defer func() {
+		// Always release the advisory lock
+		_, _ = pgDB.pool.Exec(context.Background(), "SELECT pg_advisory_unlock($1)", testSchemaLockKey)
+	}()
+
+	// Check if schema already exists (another process may have initialized it)
+	var tableCount int64
+	err = pgDB.pool.QueryRow(ctx, "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'servers'").Scan(&tableCount)
+	if err != nil {
+		return fmt.Errorf("failed to check if schema exists: %w", err)
+	}
+
+	if tableCount > 0 {
+		// Schema already exists, nothing to do
+		return nil
+	}
+
+	// Initialize the schema
+	return initializeTestSchema(db)
+}
+
 // initializeTestSchema sets up a fresh database schema with all migrations applied
-// This runs only once per test suite execution
+// This should only be called from initializeTestSchemaWithLock
 func initializeTestSchema(db Database) error {
 	// Cast to PostgreSQL to access the connection pool
 	pgDB, ok := db.(*PostgreSQL)
