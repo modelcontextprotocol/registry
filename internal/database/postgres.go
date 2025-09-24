@@ -426,6 +426,7 @@ func (db *PostgreSQL) InTransaction(ctx context.Context, fn func(ctx context.Con
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+	//nolint:contextcheck // Intentionally using separate context for rollback to ensure cleanup even if request is cancelled
 	defer func() {
 		rollbackCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
