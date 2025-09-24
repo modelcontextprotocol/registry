@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -426,7 +427,11 @@ func (db *PostgreSQL) InTransaction(ctx context.Context, fn func(ctx context.Con
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() {
-		_ = tx.Rollback(ctx)
+		rollbackCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+		if rbErr := tx.Rollback(rollbackCtx); rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			log.Printf("failed to rollback transaction: %v", rbErr)
+		}
 	}()
 
 	if err := fn(ctx, tx); err != nil {
