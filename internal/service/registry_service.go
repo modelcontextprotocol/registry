@@ -284,45 +284,46 @@ func (s *registryServiceImpl) EditServer(versionID string, req apiv0.ServerJSON)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// First get the current server to preserve metadata
-	currentServer, err := s.db.GetByVersionID(ctx, nil, versionID)
-	if err != nil {
-		return nil, err
-	}
-
 	// Validate the request
 	if err := validators.ValidatePublishRequest(req, s.cfg); err != nil {
 		return nil, err
 	}
 
-	// Merge the request with the current server, preserving metadata
-	updatedServer := *currentServer // Copy the current server with all metadata
+	return database.InTransactionT(ctx, s.db, func(txCtx context.Context, tx pgx.Tx) (*apiv0.ServerJSON, error) {
+		// Get the current server to preserve metadata
+		currentServer, err := s.db.GetByVersionID(txCtx, tx, versionID)
+		if err != nil {
+			return nil, err
+		}
 
-	// Update only the user-modifiable fields from the request
-	updatedServer.Name = req.Name
-	updatedServer.Description = req.Description
-	updatedServer.Version = req.Version
-	updatedServer.Status = req.Status
-	updatedServer.Repository = req.Repository
-	updatedServer.Remotes = req.Remotes
-	updatedServer.Packages = req.Packages
+		// Acquire advisory lock to prevent concurrent edits of servers with same name
+		if err := s.db.AcquirePublishLock(txCtx, tx, currentServer.Name); err != nil {
+			return nil, err
+		}
 
-	// Update the UpdatedAt timestamp in metadata
-	if updatedServer.Meta != nil && updatedServer.Meta.Official != nil {
-		updatedServer.Meta.Official.UpdatedAt = time.Now()
-	}
+		// Merge the request with the current server, preserving metadata
+		updatedServer := *currentServer
 
-	// Check for duplicate remote URLs using the updated server
-	if err := s.validateNoDuplicateRemoteURLs(ctx, nil, updatedServer); err != nil {
-		return nil, err
-	}
+		// Update only the user-modifiable fields from the request
+		updatedServer.Name = req.Name
+		updatedServer.Description = req.Description
+		updatedServer.Version = req.Version
+		updatedServer.Status = req.Status
+		updatedServer.Repository = req.Repository
+		updatedServer.Remotes = req.Remotes
+		updatedServer.Packages = req.Packages
 
-	// Update server in database
-	serverRecord, err := s.db.UpdateServer(ctx, nil, versionID, &updatedServer)
-	if err != nil {
-		return nil, err
-	}
+		// Update the UpdatedAt timestamp in metadata
+		if updatedServer.Meta != nil && updatedServer.Meta.Official != nil {
+			updatedServer.Meta.Official.UpdatedAt = time.Now()
+		}
 
-	// Return the server record directly
-	return serverRecord, nil
+		// Check for duplicate remote URLs using the updated server
+		if err := s.validateNoDuplicateRemoteURLs(txCtx, tx, updatedServer); err != nil {
+			return nil, err
+		}
+
+		// Update server in database
+		return s.db.UpdateServer(txCtx, tx, versionID, &updatedServer)
+	})
 }
