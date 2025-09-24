@@ -4,17 +4,10 @@ import (
 	env "github.com/caarlos0/env/v11"
 )
 
-type DatabaseType string
-
-const (
-	DatabaseTypePostgreSQL DatabaseType = "postgresql"
-)
-
 // Config holds the application configuration
 // See .env.example for more documentation
 type Config struct {
 	ServerAddress            string       `env:"SERVER_ADDRESS" envDefault:":8080"`
-	DatabaseType             DatabaseType `env:"DATABASE_TYPE" envDefault:"postgresql"`
 	DatabaseURL              string       `env:"DATABASE_URL" envDefault:"postgres://localhost:5432/mcp-registry?sslmode=disable"`
 	SeedFrom                 string       `env:"SEED_FROM" envDefault:""`
 	Version                  string       `env:"VERSION" envDefault:"dev"`

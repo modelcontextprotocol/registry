@@ -2,6 +2,7 @@ package registries
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,11 +12,20 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+var (
+	ErrMissingIdentifierForNuget = errors.New("package identifier is required for NuGet packages")
+	ErrMissingVersionForNuget    = errors.New("package version is required for NuGet packages")
+)
+
 // ValidateNuGet validates that a NuGet package contains the correct MCP server name
 func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) error {
 	// Set default registry base URL if empty
 	if pkg.RegistryBaseURL == "" {
 		pkg.RegistryBaseURL = model.RegistryURLNuGet
+	}
+
+	if pkg.Identifier == "" {
+		return ErrMissingIdentifierForNuget
 	}
 
 	// Validate that the registry base URL matches NuGet exactly
@@ -29,7 +39,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 	lowerID := strings.ToLower(pkg.Identifier)
 	lowerVersion := strings.ToLower(pkg.Version)
 	if lowerVersion == "" {
-		return fmt.Errorf("NuGet package validation requires a specific version, but none was provided")
+		return ErrMissingVersionForNuget
 	}
 
 	// Try to get README from the package

@@ -2,8 +2,6 @@
 
 set -e
 
-# No persistent state with ephemeral database
-
 cleanup() {
     echo "========== registry logs =========="
     docker logs registry || true
