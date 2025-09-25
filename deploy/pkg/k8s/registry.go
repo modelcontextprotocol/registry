@@ -32,6 +32,12 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	conf := config.New(ctx, "mcp-registry")
 	githubClientId := conf.Require("githubClientId")
 
+	// Determine Docker image tag based on environment
+	imageTag := "main" // Default for staging
+	if environment == "prod" {
+		imageTag = "latest" // Use latest release for production
+	}
+
 	// Create Secret with sensitive configuration
 	secret, err := corev1.NewSecret(ctx, "mcp-registry-secrets", &corev1.SecretArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -83,7 +89,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:            pulumi.String("mcp-registry"),
-							Image:           pulumi.String("ghcr.io/modelcontextprotocol/registry:main"),
+							Image:           pulumi.Sprintf("ghcr.io/modelcontextprotocol/registry:%s", imageTag),
 							ImagePullPolicy: pulumi.String("Always"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{
