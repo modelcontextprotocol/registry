@@ -291,6 +291,10 @@ components:
 
     Package:
       type: object
+      required:
+        - registryType
+        - identifier
+        - version
       properties:
         registryType:
           type: string
