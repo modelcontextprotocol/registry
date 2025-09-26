@@ -82,13 +82,9 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		return ErrMissingVersionForOCI
 	}
 
-	// Validate that the registry base URL is supported
-	if err := validateRegistryURL(pkg.RegistryBaseURL); err != nil {
-		return err
-	}
-  req, err := buildManifestRequest(ctx, rc)
+  	req, err := buildManifestRequest(ctx, rc)
 	if err != nil {
-    return err
+    	return err
 	}
   
 	resp, err := client.Do(req)
