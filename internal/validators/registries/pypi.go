@@ -3,12 +3,18 @@ package registries
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
+)
+
+var (
+	ErrMissingIdentifierForPyPI = errors.New("package identifier is required for PyPI packages")
+	ErrMissingVersionForPyPi    = errors.New("package version is required for PyPI packages")
 )
 
 // PyPIPackageResponse represents the structure returned by the PyPI JSON API
@@ -25,6 +31,14 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 		pkg.RegistryBaseURL = model.RegistryURLPyPI
 	}
 
+	if pkg.Identifier == "" {
+		return ErrMissingIdentifierForPyPI
+	}
+
+	if pkg.Version == "" {
+		return ErrMissingVersionForPyPi
+	}
+
 	// Validate that the registry base URL matches PyPI exactly
 	if pkg.RegistryBaseURL != model.RegistryURLPyPI {
 		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",
@@ -33,7 +47,7 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	url := fmt.Sprintf("%s/pypi/%s/json", pkg.RegistryBaseURL, pkg.Identifier)
+	url := fmt.Sprintf("%s/pypi/%s/%s/json", pkg.RegistryBaseURL, pkg.Identifier, pkg.Version)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

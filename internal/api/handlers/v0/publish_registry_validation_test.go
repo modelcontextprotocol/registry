@@ -34,7 +34,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 	}
 
 	// Setup fake service
-	registryService := service.NewRegistryService(database.NewMemoryDB(), testConfig)
+	registryService := service.NewRegistryService(database.NewTestDB(t), testConfig)
 
 	// Create a new ServeMux and Huma API
 	mux := http.NewServeMux()

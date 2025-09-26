@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
@@ -18,6 +20,21 @@ import (
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
 	pool *pgxpool.Pool
+}
+
+// Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
+type Executor interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
+// getExecutor returns the appropriate executor (transaction or pool)
+func (db *PostgreSQL) getExecutor(tx pgx.Tx) Executor {
+	if tx != nil {
+		return tx
+	}
+	return db.pool
 }
 
 // NewPostgreSQL creates a new instance of the PostgreSQL database
@@ -65,6 +82,7 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 //nolint:cyclop // Database filtering logic is inherently complex but clear
 func (db *PostgreSQL) List(
 	ctx context.Context,
+	tx pgx.Tx,
 	filter *ServerFilter,
 	cursor string,
 	limit int,
@@ -142,7 +160,7 @@ func (db *PostgreSQL) List(
     `, whereClause, argIndex)
 	args = append(args, limit)
 
-	rows, err := db.pool.Query(ctx, query, args...)
+	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to query servers: %w", err)
 	}
@@ -182,7 +200,7 @@ func (db *PostgreSQL) List(
 	return results, nextCursor, nil
 }
 
-func (db *PostgreSQL) GetByVersionID(ctx context.Context, versionID string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByVersionID(ctx context.Context, tx pgx.Tx, versionID string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -194,8 +212,7 @@ func (db *PostgreSQL) GetByVersionID(ctx context.Context, versionID string) (*ap
 	`
 
 	var valueJSON []byte
-
-	err := db.pool.QueryRow(ctx, query, versionID).Scan(&valueJSON)
+	err := db.getExecutor(tx).QueryRow(ctx, query, versionID).Scan(&valueJSON)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -214,7 +231,7 @@ func (db *PostgreSQL) GetByVersionID(ctx context.Context, versionID string) (*ap
 }
 
 // GetByServerID retrieves the latest version of a server by server ID
-func (db *PostgreSQL) GetByServerID(ctx context.Context, serverID string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByServerID(ctx context.Context, tx pgx.Tx, serverID string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -228,8 +245,7 @@ func (db *PostgreSQL) GetByServerID(ctx context.Context, serverID string) (*apiv
 	`
 
 	var valueJSON []byte
-
-	err := db.pool.QueryRow(ctx, query, serverID).Scan(&valueJSON)
+	err := db.getExecutor(tx).QueryRow(ctx, query, serverID).Scan(&valueJSON)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -248,7 +264,7 @@ func (db *PostgreSQL) GetByServerID(ctx context.Context, serverID string) (*apiv
 }
 
 // GetByServerIDAndVersion retrieves a specific version of a server by server ID and version
-func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, serverID string, version string) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, tx pgx.Tx, serverID string, version string) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -261,8 +277,7 @@ func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, serverID stri
 	`
 
 	var valueJSON []byte
-
-	err := db.pool.QueryRow(ctx, query, serverID, version).Scan(&valueJSON)
+	err := db.getExecutor(tx).QueryRow(ctx, query, serverID, version).Scan(&valueJSON)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -281,7 +296,7 @@ func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, serverID stri
 }
 
 // GetAllVersionsByServerID retrieves all versions of a server by server ID
-func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, serverID string) ([]*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx pgx.Tx, serverID string) ([]*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -293,7 +308,7 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, serverID str
 		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'publishedAt')::timestamp DESC
 	`
 
-	rows, err := db.pool.Query(ctx, query, serverID)
+	rows, err := db.getExecutor(tx).Query(ctx, query, serverID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query server versions: %w", err)
 	}
@@ -328,8 +343,8 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, serverID str
 	return results, nil
 }
 
-// CreateServer adds a new server to the database
-func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+// CreateServer inserts a new server version
+func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -339,11 +354,9 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON
 		return nil, fmt.Errorf("server must have registry metadata with ServerID and VersionID")
 	}
 
-	serverID := server.Meta.Official.ServerID
 	versionID := server.Meta.Official.VersionID
-
-	if serverID == "" || versionID == "" {
-		return nil, fmt.Errorf("server must have both ServerID and VersionID in registry metadata")
+	if versionID == "" {
+		return nil, fmt.Errorf("server must have VersionID in registry metadata")
 	}
 
 	// Marshal the complete server to JSONB
@@ -352,13 +365,14 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON
 		return nil, fmt.Errorf("failed to marshal server JSON: %w", err)
 	}
 
-	// Insert into servers table with new schema (only version_id column, serverId is in JSON)
-	query := `
+	// Insert the new version
+	insertQuery := `
 		INSERT INTO servers (version_id, value)
 		VALUES ($1, $2)
 	`
 
-	_, err = db.pool.Exec(ctx, query, versionID, valueJSON)
+	_, err = db.getExecutor(tx).Exec(ctx, insertQuery, versionID, valueJSON)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
 	}
@@ -367,7 +381,7 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, server *apiv0.ServerJSON
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -390,7 +404,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 		WHERE version_id = $2
 	`
 
-	result, err := db.pool.Exec(ctx, query, valueJSON, id)
+	result, err := db.getExecutor(tx).Exec(ctx, query, valueJSON, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
@@ -402,38 +416,48 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, id string, server *apiv0
 	return server, nil
 }
 
-// WithPublishLock executes a function with an exclusive advisory lock for publishing a server
-// This prevents race conditions when multiple versions are published concurrently
-func (db *PostgreSQL) WithPublishLock(ctx context.Context, serverName string, fn func(ctx context.Context) error) error {
+// InTransaction executes a function within a database transaction
+func (db *PostgreSQL) InTransaction(ctx context.Context, fn func(ctx context.Context, tx pgx.Tx) error) error {
 	if ctx.Err() != nil {
 		return ctx.Err()
 	}
 
-	// Begin a transaction
 	tx, err := db.pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+	//nolint:contextcheck // Intentionally using separate context for rollback to ensure cleanup even if request is cancelled
 	defer func() {
-		_ = tx.Rollback(ctx)
+		rollbackCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+		if rbErr := tx.Rollback(rollbackCtx); rbErr != nil && !errors.Is(rbErr, pgx.ErrTxClosed) {
+			log.Printf("failed to rollback transaction: %v", rbErr)
+		}
 	}()
 
-	// Acquire advisory lock based on server name hash
-	// Using pg_advisory_xact_lock which auto-releases on transaction end
-	lockID := hashServerName(serverName)
-	_, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock($1)", lockID)
-	if err != nil {
-		return fmt.Errorf("failed to acquire publish lock: %w", err)
-	}
-
-	// Execute the function
-	if err := fn(ctx); err != nil {
+	if err := fn(ctx, tx); err != nil {
 		return err
 	}
 
-	// Commit the transaction (which also releases the lock)
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
+// AcquirePublishLock acquires an exclusive advisory lock for publishing a server
+// This prevents race conditions when multiple versions are published concurrently
+// Using pg_advisory_xact_lock which auto-releases on transaction end
+func (db *PostgreSQL) AcquirePublishLock(ctx context.Context, tx pgx.Tx, serverName string) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	lockID := hashServerName(serverName)
+
+	if _, err := db.getExecutor(tx).Exec(ctx, "SELECT pg_advisory_xact_lock($1)", lockID); err != nil {
+		return fmt.Errorf("failed to acquire publish lock: %w", err)
 	}
 
 	return nil
@@ -442,7 +466,6 @@ func (db *PostgreSQL) WithPublishLock(ctx context.Context, serverName string, fn
 // hashServerName creates a consistent hash of the server name for advisory locking
 // We use FNV-1a hash and mask to 63 bits to fit in PostgreSQL's bigint range
 func hashServerName(name string) int64 {
-	// FNV-1a 64-bit hash
 	const (
 		offset64 = 14695981039346656037
 		prime64  = 1099511628211
@@ -452,7 +475,6 @@ func hashServerName(name string) int64 {
 		hash ^= uint64(name[i])
 		hash *= prime64
 	}
-	// Use only 63 bits to ensure positive int64
 	//nolint:gosec // Intentional conversion with masking to 63 bits
 	return int64(hash & 0x7FFFFFFFFFFFFFFF)
 }

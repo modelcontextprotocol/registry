@@ -37,7 +37,7 @@ func (s *Service) ImportFromPath(ctx context.Context, path string) error {
 
 	// Import each server using CreateServer
 	for _, server := range servers {
-		_, err := s.db.CreateServer(ctx, server)
+		_, err := s.db.CreateServer(ctx, nil, server)
 		if err != nil {
 			return fmt.Errorf("failed to import server %s: %w", server.Name, err)
 		}

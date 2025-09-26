@@ -12,10 +12,19 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+var (
+	ErrMissingIdentifierForMCPB = fmt.Errorf("package identifier is required for MCPB packages")
+	ErrMissingFileSHA256ForMCPB = fmt.Errorf("must include a fileSha256 hash for integrity verification")
+)
+
 func ValidateMCPB(ctx context.Context, pkg model.Package, _ string) error {
 	// MCPB packages must include a file hash for integrity verification
 	if pkg.FileSHA256 == "" {
-		return fmt.Errorf("MCPB package must include a fileSha256 hash for integrity verification")
+		return ErrMissingFileSHA256ForMCPB
+	}
+
+	if pkg.Identifier == "" {
+		return ErrMissingIdentifierForMCPB
 	}
 
 	err := validateMCPBUrl(pkg.Identifier)

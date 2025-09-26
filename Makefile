@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-local dev-compose clean publisher
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher
 
 # Default target
 help: ## Show this help message
@@ -15,10 +15,17 @@ publisher: ## Build the publisher tool with version info
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
 
 # Test targets
-test-unit: ## Run unit tests with coverage
-	go test -v -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./internal/... ./internal/...
+test-unit: ## Run unit tests with coverage (requires PostgreSQL)
+	@echo "Starting PostgreSQL for unit tests..."
+	@docker compose up -d postgres
+	@echo "Waiting for PostgreSQL to be ready..."
+	@sleep 3
+	@echo "Running unit tests..."
+	go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
+	@echo "Stopping PostgreSQL..."
+	@docker compose down postgres
 
 test: ## Run unit tests (use 'make test-all' to run all tests)
 	@echo "⚠️  Running unit tests only. Use 'make test-all' to run both unit and integration tests."
@@ -58,9 +65,6 @@ check: lint validate test-all ## Run all checks (lint, validate, unit tests)
 # Development targets
 dev-compose: ## Start development environment with Docker Compose (builds image automatically)
 	docker compose up --build
-
-dev-local: ## Run registry locally
-	go run ./cmd/registry
 
 # Cleanup
 clean: ## Clean build artifacts and coverage files

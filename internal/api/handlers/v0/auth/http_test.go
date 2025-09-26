@@ -1,11 +1,16 @@
 package auth_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/ed25519"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -17,6 +22,26 @@ import (
 	intauth "github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
+
+const wellKnownPath = "/.well-known/mcp-registry-auth"
+
+func newClientForTLSServer(t *testing.T, srv *httptest.Server) *http.Client {
+	t.Helper()
+
+	dialAddr := srv.Listener.Addr().String()
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // testing only
+		DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			d := &net.Dialer{}
+			return d.DialContext(ctx, network, dialAddr)
+		},
+		ForceAttemptHTTP2:   false,
+		MaxIdleConns:        10,
+		IdleConnTimeout:     30 * time.Second,
+		TLSHandshakeTimeout: 5 * time.Second,
+	}
+	return &http.Client{Transport: transport, Timeout: 10 * time.Second}
+}
 
 // MockHTTPKeyFetcher for testing
 type MockHTTPKeyFetcher struct {
@@ -240,4 +265,122 @@ func TestDefaultHTTPKeyFetcher_FetchKey(t *testing.T) {
 	// (This will fail with network error, which is expected)
 	_, err := fetcher.FetchKey(context.Background(), "nonexistent-test-domain-12345.com")
 	assert.Error(t, err)
+}
+
+func TestDefaultHTTPKeyFetcher(t *testing.T) {
+	tests := []struct {
+		name         string
+		handler      http.HandlerFunc
+		wantErrSub   string
+		customClient *http.Client
+		expectOK     bool
+		wantBody     string
+	}{
+		{
+			name: "oversized body",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != wellKnownPath {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+				w.Header().Set("Content-Type", "text/plain")
+				_, _ = w.Write(bytes.Repeat([]byte("A"), 6000))
+			},
+			wantErrSub: "too large",
+		},
+		{
+			name: "non-OK status",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == wellKnownPath {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.WriteHeader(http.StatusNotFound)
+			},
+			wantErrSub: "HTTP 500",
+		},
+		{
+			name:    "connection failure",
+			handler: nil,
+			customClient: &http.Client{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // testing only
+					DialContext: func(context.Context, string, string) (net.Conn, error) {
+						return nil, fmt.Errorf("dial blocked")
+					},
+				},
+				Timeout: 5 * time.Second,
+			},
+			wantErrSub: "failed to fetch key",
+		},
+		{
+			name: "response body failure",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != wellKnownPath {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				w.Header().Set("Content-Type", "text/plain")
+				w.Header().Set("Content-Length", "100")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte("PARTIAL"))
+			},
+			wantErrSub: "failed to read response body",
+		},
+		{
+			name: "success",
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path != wellKnownPath {
+					w.WriteHeader(http.StatusNotFound)
+					return
+				}
+				w.Header().Set("Content-Type", "text/plain")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte("response"))
+			},
+			expectOK: true,
+			wantBody: "response",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.handler != nil {
+				srv := httptest.NewTLSServer(tt.handler)
+				defer srv.Close()
+				c := newClientForTLSServer(t, srv)
+				f := auth.NewDefaultHTTPKeyFetcherWithClient(c)
+				got, err := f.FetchKey(context.Background(), "example.com")
+				if tt.expectOK {
+					if err != nil {
+						t.Fatalf("unexpected error: %v", err)
+					}
+					if got != tt.wantBody {
+						t.Fatalf("unexpected body: got %q want %q", got, tt.wantBody)
+					}
+					return
+				}
+				if err == nil || !strings.Contains(err.Error(), tt.wantErrSub) {
+					t.Fatalf("got err=%v, want substring %q", err, tt.wantErrSub)
+				}
+				return
+			}
+
+			f := auth.NewDefaultHTTPKeyFetcherWithClient(tt.customClient)
+			got, err := f.FetchKey(context.Background(), "example.com")
+			if tt.expectOK {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if got != tt.wantBody {
+					t.Fatalf("unexpected body: got %q want %q", got, tt.wantBody)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tt.wantErrSub) {
+				t.Fatalf("got err=%v, want substring %q", err, tt.wantErrSub)
+			}
+		})
+	}
 }

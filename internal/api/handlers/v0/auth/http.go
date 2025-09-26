@@ -18,6 +18,9 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
 
+// MaxKeyResponseSize is the maximum size of the response body from the HTTP endpoint.
+const MaxKeyResponseSize = 4096
+
 // HTTPTokenExchangeInput represents the input for HTTP-based authentication
 type HTTPTokenExchangeInput struct {
 	Body struct {
@@ -51,6 +54,12 @@ func NewDefaultHTTPKeyFetcher() *DefaultHTTPKeyFetcher {
 	}
 }
 
+// NewDefaultHTTPKeyFetcherWithClient creates a new HTTP key fetcher with a custom HTTP client.
+// This is primarily useful in tests to inject transports or TLS settings.
+func NewDefaultHTTPKeyFetcherWithClient(client *http.Client) *DefaultHTTPKeyFetcher {
+	return &DefaultHTTPKeyFetcher{client: client}
+}
+
 // FetchKey fetches the public key from the well-known HTTP endpoint
 func (f *DefaultHTTPKeyFetcher) FetchKey(ctx context.Context, domain string) (string, error) {
 	url := fmt.Sprintf("https://%s/.well-known/mcp-registry-auth", domain)
@@ -73,12 +82,15 @@ func (f *DefaultHTTPKeyFetcher) FetchKey(ctx context.Context, domain string) (st
 		return "", fmt.Errorf("HTTP %d: failed to fetch key from %s", resp.StatusCode, url)
 	}
 
-	// Limit response size to prevent DoS attacks
-	resp.Body = http.MaxBytesReader(nil, resp.Body, 4096)
-
-	body, err := io.ReadAll(resp.Body)
+	// Limit response size to prevent DoS attacks.
+	// Read up to MaxKeyResponseSize+1 and error if exceeded.
+	limited := io.LimitReader(resp.Body, MaxKeyResponseSize+1)
+	body, err := io.ReadAll(limited)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
+	}
+	if len(body) > MaxKeyResponseSize {
+		return "", fmt.Errorf("HTTP auth key response too large")
 	}
 
 	return strings.TrimSpace(string(body)), nil

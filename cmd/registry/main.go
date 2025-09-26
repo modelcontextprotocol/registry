@@ -56,35 +56,25 @@ func main() {
 	// Initialize configuration
 	cfg := config.NewConfig()
 
-	// Initialize services based on environment
-	switch cfg.DatabaseType {
-	case config.DatabaseTypeMemory:
-		db = database.NewMemoryDB()
-	case config.DatabaseTypePostgreSQL:
-		// Use PostgreSQL for real registry service
-		// Create a context with timeout for PostgreSQL connection
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+	// Create a context with timeout for PostgreSQL connection
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-		// Connect to PostgreSQL
-		db, err = database.NewPostgreSQL(ctx, cfg.DatabaseURL)
-		if err != nil {
-			log.Printf("Failed to connect to PostgreSQL: %v", err)
-			return
-		}
-
-		// Store the PostgreSQL instance for later cleanup
-		defer func() {
-			if err := db.Close(); err != nil {
-				log.Printf("Error closing PostgreSQL connection: %v", err)
-			} else {
-				log.Println("PostgreSQL connection closed successfully")
-			}
-		}()
-	default:
-		log.Printf("Invalid database type: %s; supported types: %s, %s", cfg.DatabaseType, config.DatabaseTypeMemory, config.DatabaseTypePostgreSQL)
+	// Connect to PostgreSQL
+	db, err = database.NewPostgreSQL(ctx, cfg.DatabaseURL)
+	if err != nil {
+		log.Printf("Failed to connect to PostgreSQL: %v", err)
 		return
 	}
+
+	// Store the PostgreSQL instance for later cleanup
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("Error closing PostgreSQL connection: %v", err)
+		} else {
+			log.Println("PostgreSQL connection closed successfully")
+		}
+	}()
 
 	registryService = service.NewRegistryService(db, cfg)
 

@@ -3,12 +3,18 @@ package registries
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
+)
+
+var (
+	ErrMissingIdentifierForNPM = errors.New("package identifier is required for NPM packages")
+	ErrMissingVersionForNPM    = errors.New("package version is required for NPM packages")
 )
 
 // NPMPackageResponse represents the structure returned by the NPM registry API
@@ -24,7 +30,7 @@ func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) erro
 	}
 
 	if pkg.Identifier == "" {
-		return fmt.Errorf("package identifier is required for NPM packages")
+		return ErrMissingIdentifierForNPM
 	}
 
 	// we need version to look up the package metadata
@@ -32,7 +38,7 @@ func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) erro
 	// and we won't be able to validate the mcpName field
 	// against the server name
 	if pkg.Version == "" {
-		return fmt.Errorf("package version is required for NPM packages")
+		return ErrMissingVersionForNPM
 	}
 
 	// Validate that the registry base URL matches NPM exactly

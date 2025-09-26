@@ -8,7 +8,6 @@ import (
 	registries "github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
-
 // This test focuses on validating preliminary logic for ghcr base URL acceptance and token lookup.
 // Network calls are not performed (we use an obviously invalid identifier so validation should fail
 // before HTTP fetch when base URL mismatch would have happened previously). We check that the

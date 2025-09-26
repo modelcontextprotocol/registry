@@ -16,6 +16,11 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+var (
+	ErrMissingIdentifierForOCI = errors.New("package identifier is required for OCI packages")
+	ErrMissingVersionForOCI    = errors.New("package version is required for OCI packages")
+)
+
 const (
 	dockerIoAPIBaseURL = "https://registry-1.docker.io"
 	ghcrAPIBaseURL     = "https://ghcr.io"
@@ -67,11 +72,25 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		return err
 	}
 
-	req, err := buildManifestRequest(ctx, rc)
-	if err != nil {
-		return err
+
+	if pkg.Identifier == "" {
+		return ErrMissingIdentifierForOCI
 	}
 
+	// we need version (tag) to look up the image manifest
+	if pkg.Version == "" {
+		return ErrMissingVersionForOCI
+	}
+
+	// Validate that the registry base URL is supported
+	if err := validateRegistryURL(pkg.RegistryBaseURL); err != nil {
+		return err
+	}
+  req, err := buildManifestRequest(ctx, rc)
+	if err != nil {
+    return err
+	}
+  
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to fetch OCI manifest: %w", err)
