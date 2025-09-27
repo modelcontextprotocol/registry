@@ -346,34 +346,50 @@ func (db *PostgreSQL) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx,
 	}
 
 	query := `
-		SELECT value
+		SELECT server_name, version, status, published_at, updated_at, is_latest, value
 		FROM servers
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'serverId') = $1
-		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'publishedAt')::timestamp DESC
+		WHERE server_name = $1
+		ORDER BY published_at DESC
 	`
 
-	rows, err := db.getExecutor(tx).Query(ctx, query, serverID)
+	rows, err := db.getExecutor(tx).Query(ctx, query, serverName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query server versions: %w", err)
 	}
 	defer rows.Close()
 
-	var results []*apiv0.ServerJSON
+	var results []*apiv0.ServerResponse
 	for rows.Next() {
+		var name, version, status string
+		var publishedAt, updatedAt time.Time
+		var isLatest bool
 		var valueJSON []byte
 
-		err := rows.Scan(&valueJSON)
+		err := rows.Scan(&name, &version, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan server row: %w", err)
 		}
 
-		// Parse the complete ServerJSON from JSONB
+		// Parse the ServerJSON from JSONB
 		var serverJSON apiv0.ServerJSON
 		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
 		}
 
-		results = append(results, &serverJSON)
+		// Build ServerResponse with separated metadata
+		serverResponse := &apiv0.ServerResponse{
+			Server: serverJSON,
+			Meta: apiv0.ResponseMeta{
+				Official: &apiv0.RegistryExtensions{
+					Status:      model.Status(status),
+					PublishedAt: publishedAt,
+					UpdatedAt:   updatedAt,
+					IsLatest:    isLatest,
+				},
+			},
+		}
+
+		results = append(results, serverResponse)
 	}
 
 	if err := rows.Err(); err != nil {
