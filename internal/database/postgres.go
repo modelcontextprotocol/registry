@@ -298,29 +298,45 @@ func (db *PostgreSQL) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, 
 	}
 
 	query := `
-		SELECT value
+		SELECT server_name, version, status, published_at, updated_at, is_latest, value
 		FROM servers
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'serverId') = $1 AND value->>'version' = $2
+		WHERE server_name = $1 AND version = $2
 		LIMIT 1
 	`
 
+	var name, vers, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
 	var valueJSON []byte
-	err := db.getExecutor(tx).QueryRow(ctx, query, serverID, version).Scan(&valueJSON)
 
+	err := db.getExecutor(tx).QueryRow(ctx, query, serverName, version).Scan(&name, &vers, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
-		return nil, fmt.Errorf("failed to get server by server ID and version: %w", err)
+		return nil, fmt.Errorf("failed to get server by name and version: %w", err)
 	}
 
-	// Parse the complete ServerJSON from JSONB
+	// Parse the ServerJSON from JSONB
 	var serverJSON apiv0.ServerJSON
 	if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
 	}
 
-	return &serverJSON, nil
+	// Build ServerResponse with separated metadata
+	serverResponse := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				Status:      model.Status(status),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return serverResponse, nil
 }
 
 // GetAllVersionsByServerName retrieves all versions of a server by server name
