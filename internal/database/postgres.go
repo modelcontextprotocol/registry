@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -461,34 +460,56 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 		return nil, ctx.Err()
 	}
 
-	// Validate that meta structure exists and VersionID matches path
-	if server.Meta == nil || server.Meta.Official == nil || server.Meta.Official.VersionID != id {
-		return nil, fmt.Errorf("%w: io.modelcontextprotocol.registry/official.version_id must match path id (%s)", ErrInvalidInput, id)
+	// Validate inputs
+	if serverJSON == nil {
+		return nil, fmt.Errorf("serverJSON is required")
 	}
 
-	// Marshal updated server
-	valueJSON, err := json.Marshal(server)
+	// Ensure the serverJSON matches the provided serverName and version
+	if serverJSON.Name != serverName || serverJSON.Version != version {
+		return nil, fmt.Errorf("%w: server name and version in JSON must match parameters", ErrInvalidInput)
+	}
+
+	// Marshal updated ServerJSON
+	valueJSON, err := json.Marshal(serverJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal updated server: %w", err)
 	}
 
-	// Update the complete server record using version_id
+	// Update only the JSON data (keep existing metadata columns)
 	query := `
-		UPDATE servers 
-		SET value = $1
-		WHERE version_id = $2
+		UPDATE servers
+		SET value = $1, updated_at = NOW()
+		WHERE server_name = $2 AND version = $3
+		RETURNING server_name, version, status, published_at, updated_at, is_latest
 	`
 
-	result, err := db.getExecutor(tx).Exec(ctx, query, valueJSON, id)
+	var name, vers, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
+
+	err = db.getExecutor(tx).QueryRow(ctx, query, valueJSON, serverName, version).Scan(&name, &vers, &status, &publishedAt, &updatedAt, &isLatest)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, fmt.Errorf("failed to update server: %w", err)
 	}
 
-	if result.RowsAffected() == 0 {
-		return nil, ErrNotFound
+	// Return the updated ServerResponse
+	serverResponse := &apiv0.ServerResponse{
+		Server: *serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				Status:      model.Status(status),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
 	}
 
-	return server, nil
+	return serverResponse, nil
 }
 
 // InTransaction executes a function within a database transaction
