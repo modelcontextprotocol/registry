@@ -1,5 +1,6 @@
 services:
   registry:
+    container_name: registry-integration-test
     environment:
       - MCP_REGISTRY_SEED_FROM=
       - MCP_REGISTRY_ENABLE_REGISTRY_VALIDATION=false
@@ -9,6 +10,7 @@ services:
       retries: 60
       timeout: 1s
   postgres:
+    container_name: postgres-integration-test
     volumes: !reset []
     tmpfs:
       - /var/lib/postgresql/data:size=50m

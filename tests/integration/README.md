@@ -30,3 +30,5 @@ This directory contains an end-to-end test for publishing to the registry.
 ```sh
 ./tests/integration/run.sh
 ```
+
+**Note**: Integration tests use isolated container names (`registry-integration-test`, `postgres-integration-test`) to prevent conflicts with development containers from `make dev-compose`.
