@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
@@ -80,13 +81,13 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 }
 
 //nolint:cyclop // Database filtering logic is inherently complex but clear
-func (db *PostgreSQL) List(
+func (db *PostgreSQL) ListServers(
 	ctx context.Context,
 	tx pgx.Tx,
 	filter *ServerFilter,
 	cursor string,
 	limit int,
-) ([]*apiv0.ServerJSON, string, error) {
+) ([]*apiv0.ServerResponse, string, error) {
 	if limit <= 0 {
 		limit = 10
 	}
@@ -230,8 +231,8 @@ func (db *PostgreSQL) GetByVersionID(ctx context.Context, tx pgx.Tx, versionID s
 	return &serverJSON, nil
 }
 
-// GetByServerID retrieves the latest version of a server by server ID
-func (db *PostgreSQL) GetByServerID(ctx context.Context, tx pgx.Tx, serverID string) (*apiv0.ServerJSON, error) {
+// GetServerByName retrieves the latest version of a server by server name
+func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -263,8 +264,8 @@ func (db *PostgreSQL) GetByServerID(ctx context.Context, tx pgx.Tx, serverID str
 	return &serverJSON, nil
 }
 
-// GetByServerIDAndVersion retrieves a specific version of a server by server ID and version
-func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, tx pgx.Tx, serverID string, version string) (*apiv0.ServerJSON, error) {
+// GetServerByNameAndVersion retrieves a specific version of a server by server name and version
+func (db *PostgreSQL) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -295,8 +296,8 @@ func (db *PostgreSQL) GetByServerIDAndVersion(ctx context.Context, tx pgx.Tx, se
 	return &serverJSON, nil
 }
 
-// GetAllVersionsByServerID retrieves all versions of a server by server ID
-func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx pgx.Tx, serverID string) ([]*apiv0.ServerJSON, error) {
+// GetAllVersionsByServerName retrieves all versions of a server by server name
+func (db *PostgreSQL) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string) ([]*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -343,8 +344,8 @@ func (db *PostgreSQL) GetAllVersionsByServerID(ctx context.Context, tx pgx.Tx, s
 	return results, nil
 }
 
-// CreateServer inserts a new server version
-func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+// CreateServer inserts a new server version with official metadata
+func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, serverJSON *apiv0.ServerJSON, officialMeta *apiv0.RegistryExtensions) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -381,7 +382,7 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, server *apiv0
 }
 
 // UpdateServer updates an existing server record with new server details
-func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, id string, server *apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
+func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, version string, serverJSON *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
