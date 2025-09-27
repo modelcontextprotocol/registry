@@ -409,35 +409,50 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, serverJSON *a
 		return nil, ctx.Err()
 	}
 
-	// Get the IDs from the registry metadata
-	if server.Meta == nil || server.Meta.Official == nil {
-		return nil, fmt.Errorf("server must have registry metadata with ServerID and VersionID")
+	// Validate inputs
+	if serverJSON == nil || officialMeta == nil {
+		return nil, fmt.Errorf("serverJSON and officialMeta are required")
 	}
 
-	versionID := server.Meta.Official.VersionID
-	if versionID == "" {
-		return nil, fmt.Errorf("server must have VersionID in registry metadata")
+	if serverJSON.Name == "" || serverJSON.Version == "" {
+		return nil, fmt.Errorf("server name and version are required")
 	}
 
-	// Marshal the complete server to JSONB
-	valueJSON, err := json.Marshal(server)
+	// Marshal the ServerJSON to JSONB
+	valueJSON, err := json.Marshal(serverJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal server JSON: %w", err)
 	}
 
-	// Insert the new version
+	// Insert the new server version using composite primary key
 	insertQuery := `
-		INSERT INTO servers (version_id, value)
-		VALUES ($1, $2)
+		INSERT INTO servers (server_name, version, status, published_at, updated_at, is_latest, value)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
-	_, err = db.getExecutor(tx).Exec(ctx, insertQuery, versionID, valueJSON)
+	_, err = db.getExecutor(tx).Exec(ctx, insertQuery,
+		serverJSON.Name,
+		serverJSON.Version,
+		string(officialMeta.Status),
+		officialMeta.PublishedAt,
+		officialMeta.UpdatedAt,
+		officialMeta.IsLatest,
+		valueJSON,
+	)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
 	}
 
-	return server, nil
+	// Return the complete ServerResponse
+	serverResponse := &apiv0.ServerResponse{
+		Server: *serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: officialMeta,
+		},
+	}
+
+	return serverResponse, nil
 }
 
 // UpdateServer updates an existing server record with new server details
