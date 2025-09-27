@@ -249,30 +249,46 @@ func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName
 	}
 
 	query := `
-		SELECT value
+		SELECT server_name, version, status, published_at, updated_at, is_latest, value
 		FROM servers
-		WHERE (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'serverId') = $1 AND (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'isLatest')::boolean = true
-		ORDER BY (value->'_meta'->'io.modelcontextprotocol.registry/official'->>'publishedAt')::timestamp DESC
+		WHERE server_name = $1 AND is_latest = true
+		ORDER BY published_at DESC
 		LIMIT 1
 	`
 
+	var name, version, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
 	var valueJSON []byte
-	err := db.getExecutor(tx).QueryRow(ctx, query, serverID).Scan(&valueJSON)
 
+	err := db.getExecutor(tx).QueryRow(ctx, query, serverName).Scan(&name, &version, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
-		return nil, fmt.Errorf("failed to get server by server ID: %w", err)
+		return nil, fmt.Errorf("failed to get server by name: %w", err)
 	}
 
-	// Parse the complete ServerJSON from JSONB
+	// Parse the ServerJSON from JSONB
 	var serverJSON apiv0.ServerJSON
 	if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
 	}
 
-	return &serverJSON, nil
+	// Build ServerResponse with separated metadata
+	serverResponse := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				Status:      model.Status(status),
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return serverResponse, nil
 }
 
 // GetServerByNameAndVersion retrieves a specific version of a server by server name and version
