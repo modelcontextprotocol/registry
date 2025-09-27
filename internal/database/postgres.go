@@ -96,15 +96,15 @@ func (db *PostgreSQL) ListServers(
 		return nil, "", ctx.Err()
 	}
 
-	// Build WHERE clause for filtering
+	// Build WHERE clause for filtering using dedicated columns
 	var whereConditions []string
 	args := []any{}
 	argIndex := 1
 
-	// Add filters using JSON operators
+	// Add filters using dedicated columns for better performance
 	if filter != nil {
 		if filter.Name != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("value->>'name' = $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("server_name = $%d", argIndex))
 			args = append(args, *filter.Name)
 			argIndex++
 		}
@@ -114,33 +114,30 @@ func (db *PostgreSQL) ListServers(
 			argIndex++
 		}
 		if filter.UpdatedSince != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry/official'->>'updatedAt')::timestamp > $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("updated_at > $%d", argIndex))
 			args = append(args, *filter.UpdatedSince)
 			argIndex++
 		}
 		if filter.SubstringName != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("value->>'name' ILIKE $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("server_name ILIKE $%d", argIndex))
 			args = append(args, "%"+*filter.SubstringName+"%")
 			argIndex++
 		}
 		if filter.Version != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("(value->'version_detail'->>'version') = $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("version = $%d", argIndex))
 			args = append(args, *filter.Version)
 			argIndex++
 		}
 		if filter.IsLatest != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("(value->'_meta'->'io.modelcontextprotocol.registry/official'->>'isLatest')::boolean = $%d", argIndex))
+			whereConditions = append(whereConditions, fmt.Sprintf("is_latest = $%d", argIndex))
 			args = append(args, *filter.IsLatest)
 			argIndex++
 		}
 	}
 
-	// Add cursor pagination using primary key version_id
+	// Add cursor pagination using server_name as cursor
 	if cursor != "" {
-		if _, err := uuid.Parse(cursor); err != nil {
-			return nil, "", fmt.Errorf("invalid cursor format: %w", err)
-		}
-		whereConditions = append(whereConditions, fmt.Sprintf("version_id > $%d", argIndex))
+		whereConditions = append(whereConditions, fmt.Sprintf("server_name > $%d", argIndex))
 		args = append(args, cursor)
 		argIndex++
 	}
@@ -151,12 +148,12 @@ func (db *PostgreSQL) ListServers(
 		whereClause = "WHERE " + strings.Join(whereConditions, " AND ")
 	}
 
-	// Simple query on servers table
+	// Query servers table with hybrid column/JSON data
 	query := fmt.Sprintf(`
-        SELECT value
+        SELECT server_name, version, status, published_at, updated_at, is_latest, value
         FROM servers
         %s
-        ORDER BY version_id
+        ORDER BY server_name, version
         LIMIT $%d
     `, whereClause, argIndex)
 	args = append(args, limit)
@@ -167,35 +164,49 @@ func (db *PostgreSQL) ListServers(
 	}
 	defer rows.Close()
 
-	var results []*apiv0.ServerJSON
+	var results []*apiv0.ServerResponse
 	for rows.Next() {
+		var serverName, version, status string
+		var publishedAt, updatedAt time.Time
+		var isLatest bool
 		var valueJSON []byte
 
-		err := rows.Scan(&valueJSON)
+		err := rows.Scan(&serverName, &version, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to scan server row: %w", err)
 		}
 
-		// Parse the complete ServerJSON from JSONB
+		// Parse the ServerJSON from JSONB
 		var serverJSON apiv0.ServerJSON
 		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
 			return nil, "", fmt.Errorf("failed to unmarshal server JSON: %w", err)
 		}
 
-		results = append(results, &serverJSON)
+		// Build ServerResponse with separated metadata
+		serverResponse := &apiv0.ServerResponse{
+			Server: serverJSON,
+			Meta: apiv0.ResponseMeta{
+				Official: &apiv0.RegistryExtensions{
+					Status:      model.Status(status),
+					PublishedAt: publishedAt,
+					UpdatedAt:   updatedAt,
+					IsLatest:    isLatest,
+				},
+			},
+		}
+
+		results = append(results, serverResponse)
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, "", fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	// Determine next cursor using registry metadata VersionID
+	// Determine next cursor using server_name
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
 		lastResult := results[len(results)-1]
-		if lastResult.Meta != nil && lastResult.Meta.Official != nil {
-			nextCursor = lastResult.Meta.Official.VersionID
-		}
+		nextCursor = lastResult.Server.Name
 	}
 
 	return results, nextCursor, nil
