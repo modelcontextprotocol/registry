@@ -304,7 +304,6 @@ func createServerJSON(
 		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
 		Name:        name,
 		Description: description,
-		Status:      model.StatusActive,
 		Repository: model.Repository{
 			URL:    repoURL,
 			Source: repoSource,
