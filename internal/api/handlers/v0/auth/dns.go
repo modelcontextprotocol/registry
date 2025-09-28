@@ -40,6 +40,12 @@ func (r *DefaultDNSResolver) LookupTXT(ctx context.Context, name string) ([]stri
 	return (&net.Resolver{}).LookupTXT(ctx, name)
 }
 
+// DNSAuthRecord represents a DNS TXT authentication record with optional name pattern
+type DNSAuthRecord struct {
+	PublicKey   ed25519.PublicKey
+	NamePattern string // Defaults to "*" for wildcard access
+}
+
 // DNSAuthHandler handles DNS-based authentication
 type DNSAuthHandler struct {
 	config     *config.Config
@@ -120,29 +126,34 @@ func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, s
 		return nil, fmt.Errorf("failed to lookup DNS TXT records: %w", err)
 	}
 
-	// Parse public keys from TXT records
-	publicKeys := h.parsePublicKeysFromTXT(txtRecords)
+	// Parse auth records from TXT records
+	authRecords := h.parseAuthRecordsFromTXT(txtRecords)
 
-	if len(publicKeys) == 0 {
+	if len(authRecords) == 0 {
 		return nil, fmt.Errorf("no valid MCP public keys found in DNS TXT records")
 	}
 
-	// Verify signature with any of the public keys
+	// Verify signature and collect all valid records
 	messageBytes := []byte(timestamp)
-	signatureValid := false
-	for _, publicKey := range publicKeys {
-		if ed25519.Verify(publicKey, messageBytes, signature) {
-			signatureValid = true
-			break
+	var validRecords []DNSAuthRecord
+	for _, record := range authRecords {
+		if ed25519.Verify(record.PublicKey, messageBytes, signature) {
+			validRecords = append(validRecords, record)
 		}
 	}
 
-	if !signatureValid {
+	if len(validRecords) == 0 {
 		return nil, fmt.Errorf("signature verification failed")
 	}
 
-	// Build permissions for domain and subdomains
-	permissions := h.buildPermissions(domain)
+	// Build permissions from all valid records
+	var permissions []auth.Permission
+	for _, record := range validRecords {
+		permissions = append(permissions, h.buildPermissions(domain, record.NamePattern)...)
+	}
+	if len(permissions) == 0 {
+		return nil, fmt.Errorf("no valid permissions found for the given name pattern")
+	}
 
 	// Create JWT claims
 	jwtClaims := auth.JWTClaims{
@@ -160,14 +171,16 @@ func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, s
 	return tokenResponse, nil
 }
 
-// parsePublicKeysFromTXT parses Ed25519 public keys from DNS TXT records
-func (h *DNSAuthHandler) parsePublicKeysFromTXT(txtRecords []string) []ed25519.PublicKey {
-	var publicKeys []ed25519.PublicKey
-	mcpPattern := regexp.MustCompile(`v=MCPv1;\s*k=ed25519;\s*p=([A-Za-z0-9+/=]+)`)
+// parseAuthRecordsFromTXT parses DNS authentication records from TXT records
+// Supports optional n=<pattern> parameter for name scoping
+func (h *DNSAuthHandler) parseAuthRecordsFromTXT(txtRecords []string) []DNSAuthRecord {
+	var authRecords []DNSAuthRecord
+	// Updated pattern to capture optional n=<pattern> parameter
+	mcpPattern := regexp.MustCompile(`v=MCPv1;\s*k=ed25519;\s*p=([A-Za-z0-9+/=]+)(?:;\s*n=([^;]+))?`)
 
 	for _, record := range txtRecords {
 		matches := mcpPattern.FindStringSubmatch(record)
-		if len(matches) == 2 {
+		if len(matches) >= 2 {
 			// Decode base64 public key
 			publicKeyBytes, err := base64.StdEncoding.DecodeString(matches[1])
 			if err != nil {
@@ -178,29 +191,79 @@ func (h *DNSAuthHandler) parsePublicKeysFromTXT(txtRecords []string) []ed25519.P
 				continue // Skip invalid key sizes
 			}
 
-			publicKeys = append(publicKeys, ed25519.PublicKey(publicKeyBytes))
+			// Extract name pattern or default to wildcard
+			namePattern := "*"
+			if len(matches) > 2 && matches[2] != "" {
+				namePattern = strings.TrimSpace(matches[2])
+			}
+
+			authRecords = append(authRecords, DNSAuthRecord{
+				PublicKey:   ed25519.PublicKey(publicKeyBytes),
+				NamePattern: namePattern,
+			})
 		}
 	}
 
-	return publicKeys
+	return authRecords
 }
 
-// buildPermissions builds permissions for a domain and its subdomains using reverse DNS notation
-func (h *DNSAuthHandler) buildPermissions(domain string) []auth.Permission {
+// buildPermissions builds permissions based on domain and name pattern
+// namePattern defaults to "*" for wildcard access (backward compatible)
+func (h *DNSAuthHandler) buildPermissions(domain string, namePattern string) []auth.Permission {
 	reverseDomain := reverseString(domain)
 
+	// If namePattern is "*", grant traditional wildcard permissions
+	if namePattern == "*" {
+		permissions := []auth.Permission{
+			// Grant permissions for the exact domain (e.g., com.example/*)
+			{
+				Action:          auth.PermissionActionPublish,
+				ResourcePattern: fmt.Sprintf("%s/*", reverseDomain),
+			},
+			// DNS implies a hierarchy where subdomains are treated as part of the parent domain,
+			// therefore we grant permissions for all subdomains (e.g., com.example.*)
+			// This is in line with other DNS-based authentication methods e.g. ACME DNS-01 challenges
+			{
+				Action:          auth.PermissionActionPublish,
+				ResourcePattern: fmt.Sprintf("%s.*", reverseDomain),
+			},
+		}
+		return permissions
+	}
+
+	// For specific name patterns, grant permission only for the specified pattern
+	// This allows DNS controllers to scope permissions to specific prefixes
+	// The name pattern MUST be scoped to the domain it is on.
+	// We need to ensure proper delimiter checking to prevent prefix attacks
+	// e.g., micro.com should not be able to claim com.microsoft/*
+	if !strings.HasPrefix(namePattern, reverseDomain) {
+		return []auth.Permission{}
+	}
+
+	// Check that after the reverse domain, there's either:
+	// - nothing (exact match)
+	// - a '.' (subdomain like com.example.api)
+	// - a '/' (path like com.example/foo)
+	if len(namePattern) > len(reverseDomain) {
+		delimiter := namePattern[len(reverseDomain)]
+		if delimiter != '.' && delimiter != '/' {
+			// Invalid pattern - doesn't have proper delimiter after domain
+			return []auth.Permission{}
+		}
+	}
+
+	// Validate server name format: should have exactly one slash
+	// This aligns with PR #476 requirements
+	slashCount := strings.Count(namePattern, "/")
+	if slashCount > 1 {
+		// Invalid pattern - multiple slashes not allowed in server names
+		return []auth.Permission{}
+	}
+
 	permissions := []auth.Permission{
-		// Grant permissions for the exact domain (e.g., com.example/*)
 		{
 			Action:          auth.PermissionActionPublish,
-			ResourcePattern: fmt.Sprintf("%s/*", reverseDomain),
-		},
-		// DNS implies a hierarchy where subdomains are treated as part of the parent domain,
-		// therefore we grant permissions for all subdomains (e.g., com.example.*)
-		// This is in line with other DNS-based authentication methods e.g. ACME DNS-01 challenges
-		{
-			Action:          auth.PermissionActionPublish,
-			ResourcePattern: fmt.Sprintf("%s.*", reverseDomain),
+			ResourcePattern: namePattern,
 		},
 	}
 
