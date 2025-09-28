@@ -46,20 +46,6 @@ func (s *registryServiceImpl) ListServers(ctx context.Context, tx pgx.Tx, filter
 	return serverRecords, nextCursor, nil
 }
 
-// GetByVersionID retrieves a specific server by its registry metadata version ID
-func (s *registryServiceImpl) GetByVersionID(versionID string) (*apiv0.ServerJSON, error) {
-	// Create a timeout context for the database operation
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	serverRecord, err := s.db.GetByVersionID(ctx, nil, versionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Return the server record directly
-	return serverRecord, nil
-}
 
 // GetByServerID retrieves the latest version of a server by its server ID
 func (s *registryServiceImpl) GetByServerID(serverID string) (*apiv0.ServerJSON, error) {
