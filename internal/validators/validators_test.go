@@ -1,6 +1,7 @@
 package validators_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -1551,7 +1552,7 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 				},
 			}
 
-			err := validators.ValidatePublishRequest(serverJSON, &config.Config{
+			err := validators.ValidatePublishRequest(context.Background(), serverJSON, &config.Config{
 				EnableRegistryValidation: true,
 			})
 			if tc.expectError {

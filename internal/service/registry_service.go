@@ -87,7 +87,7 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 // createServerInTransaction contains the actual CreateServer logic within a transaction
 func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
 	// Validate the request
-	if err := validators.ValidatePublishRequest(*req, s.cfg); err != nil {
+	if err := validators.ValidatePublishRequest(ctx, *req, s.cfg); err != nil {
 		return nil, err
 	}
 
@@ -196,7 +196,7 @@ func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, vers
 // updateServerInTransaction contains the actual UpdateServer logic within a transaction
 func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON, newStatus *string) (*apiv0.ServerResponse, error) {
 	// Validate the request
-	if err := validators.ValidatePublishRequest(*req, s.cfg); err != nil {
+	if err := validators.ValidatePublishRequest(ctx, *req, s.cfg); err != nil {
 		return nil, err
 	}
 

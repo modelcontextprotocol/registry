@@ -98,25 +98,25 @@ test_servers() {
     echo "Response Summary:"
     echo "$http_response" | jq '.servers | length' | xargs echo "Total registries:"
     
-    # Display a prettier formatted summary - fixed to use lowercase property name
-    echo "servers Names:"
-    echo "$http_response" | jq -r '.servers[].name'
+    # Display a prettier formatted summary
+    echo "Server Names:"
+    echo "$http_response" | jq -r '.servers[].server.name'
     
     # Show the metadata with next cursor if available
     echo -e "\nPagination Metadata:"
     echo "$http_response" | jq '.metadata'
     
     # Show more detailed output with all fields
-    echo -e "\nservers Details:"
+    echo -e "\nServer Details:"
     echo "$http_response" | jq '.'
-    
-    echo "servers request successful"
+
+    echo "Servers request successful"
     echo "-------------------------------------"
     return 0
   else
     echo "Response:"
     echo "$http_response" | jq '.' 2>/dev/null || echo "$http_response"
-    echo "servers request failed"
+    echo "Servers request failed"
     echo "-------------------------------------"
     return 1
   fi
@@ -135,37 +135,37 @@ test_servers_with_limit() {
   
   if [[ $status_code == 2* ]]; then
     # Verify the response contains the right number of items (or not more than the limit)
-    item_count=$(echo "$http_response" | jq '.data | length')
+    item_count=$(echo "$http_response" | jq '.servers | length')
     echo "Response has $item_count items (requested limit: $limit)"
-    
+
     # Verify we're not exceeding the limit
     if [[ $item_count -gt $limit ]]; then
       echo "ERROR: Response contains more items ($item_count) than the requested limit ($limit)"
       return 1
     fi
-    
+
     # Parse and display JSON with jq
     echo "Response Summary:"
-    
+
     # Display a prettier formatted summary
-    echo "servers Names:"
-    echo "$http_response" | jq -r '.data[].name'
+    echo "Server Names:"
+    echo "$http_response" | jq -r '.servers[].server.name'
     
     # Show the metadata with next cursor if available
     echo -e "\nPagination Metadata:"
     echo "$http_response" | jq '.metadata'
     
     # Show more detailed output with all fields
-    echo -e "\nservers Details:"
+    echo -e "\nServer Details:"
     echo "$http_response" | jq '.'
-    
-    echo "servers request with limit successful"
+
+    echo "Servers request with limit successful"
     echo "-------------------------------------"
     return 0
   else
     echo "Response:"
     echo "$http_response" | jq '.' 2>/dev/null || echo "$http_response"
-    echo "servers request with limit failed"
+    echo "Servers request with limit failed"
     echo "-------------------------------------"
     return 1
   fi

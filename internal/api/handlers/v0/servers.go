@@ -13,6 +13,8 @@ import (
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
+const errRecordNotFound = "record not found"
+
 // ListServersInput represents the input for listing servers
 type ListServersInput struct {
 	Cursor       string `query:"cursor" doc:"Pagination cursor" required:"false" example:"server-cursor-123"`
@@ -39,6 +41,7 @@ type ServerVersionsInput struct {
 }
 
 // RegisterServersEndpoints registers all server-related endpoints
+//nolint:cyclop // Multiple endpoint registrations are inherently complex
 func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 	// List servers endpoint
 	huma.Register(api, huma.Operation{
@@ -120,7 +123,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		// Get latest version by server name
 		serverResponse, err := registry.GetServerByName(ctx, serverName)
 		if err != nil {
-			if err.Error() == "record not found" || errors.Is(err, database.ErrNotFound) {
+			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
@@ -149,7 +152,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		// Get specific version by server name and version
 		serverResponse, err := registry.GetServerByNameAndVersion(ctx, serverName, input.Version)
 		if err != nil {
-			if err.Error() == "record not found" || errors.Is(err, database.ErrNotFound) {
+			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
@@ -178,7 +181,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		// Get all versions for this server
 		servers, err := registry.GetAllVersionsByServerName(ctx, serverName)
 		if err != nil {
-			if err.Error() == "record not found" || errors.Is(err, database.ErrNotFound) {
+			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
 			return nil, huma.Error500InternalServerError("Failed to get server versions", err)

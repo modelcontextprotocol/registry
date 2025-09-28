@@ -343,7 +343,7 @@ func validateRemoteTransport(obj *model.Transport) error {
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions
-func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
+func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
 	// Validate publisher extensions in _meta
 	if err := validatePublisherExtensions(req); err != nil {
 		return err
@@ -356,7 +356,6 @@ func ValidatePublishRequest(req apiv0.ServerJSON, cfg *config.Config) error {
 
 	// Validate registry ownership for all packages if validation is enabled
 	if cfg.EnableRegistryValidation {
-		ctx := context.Background()
 		for i, pkg := range req.Packages {
 			if err := ValidatePackage(ctx, pkg, req.Name); err != nil {
 				return fmt.Errorf("registry validation failed for package %d (%s): %w", i, pkg.Identifier, err)

@@ -92,7 +92,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			}
 
 			// For now, only allow status changes for admins
-			// TODO: Implement logic to allow server authors to change active <-> deprecated
+			// Future: Implement logic to allow server authors to change active <-> deprecated
 			// but only admins can set to deleted
 		}
 

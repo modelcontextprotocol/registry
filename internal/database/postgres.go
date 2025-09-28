@@ -79,7 +79,6 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	}, nil
 }
 
-//nolint:cyclop // Database filtering logic is inherently complex but clear
 func (db *PostgreSQL) ListServers(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -210,7 +209,6 @@ func (db *PostgreSQL) ListServers(
 
 	return results, nextCursor, nil
 }
-
 
 // GetServerByName retrieves the latest version of a server by server name
 func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error) {

@@ -1,11 +1,13 @@
-package database
+package database_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/modelcontextprotocol/registry/internal/database"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +15,7 @@ import (
 )
 
 func TestPostgreSQL_CreateServer(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	tests := []struct {
@@ -90,7 +92,7 @@ func TestPostgreSQL_CreateServer(t *testing.T) {
 }
 
 func TestPostgreSQL_GetServerByName(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	// Setup test data
@@ -124,7 +126,7 @@ func TestPostgreSQL_GetServerByName(t *testing.T) {
 			name:        "get non-existent server",
 			serverName:  "com.example/non-existent",
 			expectError: true,
-			errorType:   ErrNotFound,
+			errorType:   database.ErrNotFound,
 		},
 	}
 
@@ -149,7 +151,7 @@ func TestPostgreSQL_GetServerByName(t *testing.T) {
 }
 
 func TestPostgreSQL_GetServerByNameAndVersion(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	// Setup test data with multiple versions
@@ -190,14 +192,14 @@ func TestPostgreSQL_GetServerByNameAndVersion(t *testing.T) {
 			serverName:  serverName,
 			version:     "3.0.0",
 			expectError: true,
-			errorType:   ErrNotFound,
+			errorType:   database.ErrNotFound,
 		},
 		{
 			name:        "get non-existent server",
 			serverName:  "com.example/non-existent",
 			version:     "1.0.0",
 			expectError: true,
-			errorType:   ErrNotFound,
+			errorType:   database.ErrNotFound,
 		},
 	}
 
@@ -223,7 +225,7 @@ func TestPostgreSQL_GetServerByNameAndVersion(t *testing.T) {
 }
 
 func TestPostgreSQL_ListServers(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	// Setup test data
@@ -284,7 +286,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		filter         *ServerFilter
+		filter         *database.ServerFilter
 		cursor         string
 		limit          int
 		expectedCount  int
@@ -300,7 +302,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 		},
 		{
 			name: "filter by name",
-			filter: &ServerFilter{
+			filter: &database.ServerFilter{
 				Name: stringPtr("com.example/server-a"),
 			},
 			limit:         10,
@@ -309,7 +311,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 		},
 		{
 			name: "filter by remote URL",
-			filter: &ServerFilter{
+			filter: &database.ServerFilter{
 				RemoteURL: stringPtr("https://api-b.example.com/mcp"),
 			},
 			limit:         10,
@@ -318,7 +320,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 		},
 		{
 			name: "filter by substring name",
-			filter: &ServerFilter{
+			filter: &database.ServerFilter{
 				SubstringName: stringPtr("server-"),
 			},
 			limit:         10,
@@ -326,7 +328,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 		},
 		{
 			name: "filter by version",
-			filter: &ServerFilter{
+			filter: &database.ServerFilter{
 				Version: stringPtr("1.0.0"),
 			},
 			limit:         10,
@@ -334,7 +336,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 		},
 		{
 			name: "filter by isLatest",
-			filter: &ServerFilter{
+			filter: &database.ServerFilter{
 				IsLatest: boolPtr(true),
 			},
 			limit:         10,
@@ -342,7 +344,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 		},
 		{
 			name: "filter by updatedSince",
-			filter: &ServerFilter{
+			filter: &database.ServerFilter{
 				UpdatedSince: timePtr(time.Now().Add(-45 * time.Minute)),
 			},
 			limit:         10,
@@ -394,7 +396,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 }
 
 func TestPostgreSQL_UpdateServer(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	// Setup test data
@@ -446,7 +448,7 @@ func TestPostgreSQL_UpdateServer(t *testing.T) {
 				Version:     "1.0.0",
 			},
 			expectError: true,
-			errorType:   ErrNotFound,
+			errorType:   database.ErrNotFound,
 		},
 	}
 
@@ -472,7 +474,7 @@ func TestPostgreSQL_UpdateServer(t *testing.T) {
 }
 
 func TestPostgreSQL_SetServerStatus(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	// Setup test data
@@ -517,10 +519,10 @@ func TestPostgreSQL_SetServerStatus(t *testing.T) {
 		{
 			name:        "non-existent server",
 			serverName:  "com.example/non-existent",
-			version:     "1.0.0",
+			version:     "1.0.1",
 			newStatus:   string(model.StatusDeprecated),
 			expectError: true,
-			errorType:   ErrNotFound,
+			errorType:   database.ErrNotFound,
 		},
 	}
 
@@ -545,7 +547,7 @@ func TestPostgreSQL_SetServerStatus(t *testing.T) {
 }
 
 func TestPostgreSQL_TransactionHandling(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	t.Run("successful transaction", func(t *testing.T) {
@@ -603,13 +605,13 @@ func TestPostgreSQL_TransactionHandling(t *testing.T) {
 		// Verify server was NOT created due to rollback
 		result, err := db.GetServerByName(ctx, nil, "com.example/transaction-rollback")
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, ErrNotFound)
+		assert.ErrorIs(t, err, database.ErrNotFound)
 		assert.Nil(t, result)
 	})
 }
 
 func TestPostgreSQL_ConcurrencyAndLocking(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	serverName := "com.example/concurrent-server"
@@ -677,7 +679,7 @@ func TestPostgreSQL_ConcurrencyAndLocking(t *testing.T) {
 }
 
 func TestPostgreSQL_HelperMethods(t *testing.T) {
-	db := NewTestDB(t)
+	db := database.NewTestDB(t)
 	ctx := context.Background()
 
 	serverName := "com.example/helper-test-server"
@@ -752,8 +754,204 @@ func TestPostgreSQL_HelperMethods(t *testing.T) {
 		// Verify no version is marked as latest
 		latest, err := db.GetCurrentLatestVersion(ctx, nil, serverName)
 		assert.Error(t, err)
-		assert.ErrorIs(t, err, ErrNotFound)
+		assert.ErrorIs(t, err, database.ErrNotFound)
 		assert.Nil(t, latest)
+	})
+}
+
+func TestPostgreSQL_EdgeCases(t *testing.T) {
+	db := database.NewTestDB(t)
+	ctx := context.Background()
+
+	t.Run("input validation", func(t *testing.T) {
+		// Test nil inputs
+		_, err := db.CreateServer(ctx, nil, nil, nil)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "serverJSON and officialMeta are required")
+
+		// Test empty required fields
+		_, err = db.CreateServer(ctx, nil, &apiv0.ServerJSON{}, &apiv0.RegistryExtensions{})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "server name and version are required")
+	})
+
+	t.Run("database constraints", func(t *testing.T) {
+		// Test server name format constraint (should be caught by database constraint)
+		invalidServer := &apiv0.ServerJSON{
+			Name:        "invalid-name-format", // Missing namespace/name format
+			Description: "Invalid server",
+			Version:     "1.0.0",
+		}
+		officialMeta := &apiv0.RegistryExtensions{
+			Status:      model.StatusActive,
+			PublishedAt: time.Now(),
+			UpdatedAt:   time.Now(),
+			IsLatest:    true,
+		}
+
+		_, err := db.CreateServer(ctx, nil, invalidServer, officialMeta)
+		assert.Error(t, err, "Should fail due to server name format constraint")
+	})
+
+	t.Run("pagination edge cases", func(t *testing.T) {
+		// Test pagination with no results
+		results, cursor, err := db.ListServers(ctx, nil, &database.ServerFilter{
+			Name: stringPtr("com.example/non-existent-server"),
+		}, "", 10)
+		assert.NoError(t, err)
+		assert.Empty(t, results)
+		assert.Empty(t, cursor)
+
+		// Test pagination with limit 0 (should use default)
+		_, _, err = db.ListServers(ctx, nil, nil, "", 0)
+		assert.NoError(t, err)
+		// Should still work with default limit
+	})
+
+	t.Run("complex filtering", func(t *testing.T) {
+		// Setup test data
+		serverName := "com.example/complex-filter-server"
+		testTime := time.Now().Add(-1 * time.Hour)
+
+		_, err := db.CreateServer(ctx, nil, &apiv0.ServerJSON{
+			Name:        serverName,
+			Description: "Complex filter test server",
+			Version:     "1.0.0",
+			Remotes: []model.Transport{
+				{Type: "streamable-http", URL: "https://complex.example.com/mcp"},
+			},
+		}, &apiv0.RegistryExtensions{
+			Status:      model.StatusActive,
+			PublishedAt: testTime,
+			UpdatedAt:   testTime,
+			IsLatest:    true,
+		})
+		require.NoError(t, err)
+
+		// Test multiple filters combined
+		filter := &database.ServerFilter{
+			SubstringName: stringPtr("complex"),
+			UpdatedSince:  timePtr(testTime.Add(-30 * time.Minute)),
+			IsLatest:      boolPtr(true),
+			Version:       stringPtr("1.0.0"),
+		}
+
+		results, _, err := db.ListServers(ctx, nil, filter, "", 10)
+		assert.NoError(t, err)
+		assert.Len(t, results, 1)
+		assert.Equal(t, serverName, results[0].Server.Name)
+	})
+
+	t.Run("status transitions", func(t *testing.T) {
+		serverName := "com.example/status-transition-server"
+		version := "1.0.2"
+
+		// Create server
+		_, err := db.CreateServer(ctx, nil, &apiv0.ServerJSON{
+			Name:        serverName,
+			Description: "Status transition test",
+			Version:     version,
+		}, &apiv0.RegistryExtensions{
+			Status:      model.StatusActive,
+			PublishedAt: time.Now(),
+			UpdatedAt:   time.Now(),
+			IsLatest:    true,
+		})
+		require.NoError(t, err)
+
+		// Test all valid status transitions
+		statuses := []string{
+			string(model.StatusDeprecated),
+			string(model.StatusDeleted),
+			string(model.StatusActive), // Can transition back
+		}
+
+		for _, status := range statuses {
+			result, err := db.SetServerStatus(ctx, nil, serverName, version, status)
+			assert.NoError(t, err, "Should allow transition to %s", status)
+			assert.Equal(t, model.Status(status), result.Meta.Official.Status)
+		}
+	})
+}
+
+func TestPostgreSQL_PerformanceScenarios(t *testing.T) {
+	db := database.NewTestDB(t)
+	ctx := context.Background()
+
+	t.Run("many versions management", func(t *testing.T) {
+		serverName := "com.example/many-versions-server"
+
+		// Create many versions (but stay under the limit)
+		versionCount := 50
+		for i := 0; i < versionCount; i++ {
+			_, err := db.CreateServer(ctx, nil, &apiv0.ServerJSON{
+				Name:        serverName,
+				Description: fmt.Sprintf("Version %d", i),
+				Version:     fmt.Sprintf("1.0.%d", i),
+			}, &apiv0.RegistryExtensions{
+				Status:      model.StatusActive,
+				PublishedAt: time.Now(),
+				UpdatedAt:   time.Now(),
+				IsLatest:    i == versionCount-1, // Only last one is latest
+			})
+			require.NoError(t, err)
+		}
+
+		// Test counting versions
+		count, err := db.CountServerVersions(ctx, nil, serverName)
+		assert.NoError(t, err)
+		assert.Equal(t, versionCount, count)
+
+		// Test getting all versions
+		allVersions, err := db.GetAllVersionsByServerName(ctx, nil, serverName)
+		assert.NoError(t, err)
+		assert.Len(t, allVersions, versionCount)
+
+		// Test only one is marked as latest
+		latestCount := 0
+		for _, version := range allVersions {
+			if version.Meta.Official.IsLatest {
+				latestCount++
+			}
+		}
+		assert.Equal(t, 1, latestCount)
+	})
+
+	t.Run("large result pagination", func(t *testing.T) {
+		// Create multiple servers for pagination testing
+		serverCount := 25
+		for i := 0; i < serverCount; i++ {
+			_, err := db.CreateServer(ctx, nil, &apiv0.ServerJSON{
+				Name:        fmt.Sprintf("com.example/pagination-server-%02d", i),
+				Description: "Pagination test server",
+				Version:     "1.0.0",
+			}, &apiv0.RegistryExtensions{
+				Status:      model.StatusActive,
+				PublishedAt: time.Now(),
+				UpdatedAt:   time.Now(),
+				IsLatest:    true,
+			})
+			require.NoError(t, err)
+		}
+
+		// Test paginated retrieval
+		allResults := []*apiv0.ServerResponse{}
+		cursor := ""
+		pageSize := 10
+
+		for {
+			results, nextCursor, err := db.ListServers(ctx, nil, nil, cursor, pageSize)
+			assert.NoError(t, err)
+			allResults = append(allResults, results...)
+
+			if nextCursor == "" || len(results) < pageSize {
+				break
+			}
+			cursor = nextCursor
+		}
+
+		// Should have retrieved all servers including the ones we just created
+		assert.GreaterOrEqual(t, len(allResults), serverCount)
 	})
 }
 
