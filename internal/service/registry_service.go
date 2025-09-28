@@ -77,128 +77,81 @@ func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, tx
 	return serverRecords, nil
 }
 
-// Publish publishes a server with flattened _meta extensions
-func (s *registryServiceImpl) Publish(req apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
-	// Create a timeout context for the database operation
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+// CreateServer creates a new server version
+func (s *registryServiceImpl) CreateServer(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
 	// Validate the request
-	if err := validators.ValidatePublishRequest(req, s.cfg); err != nil {
+	if err := validators.ValidatePublishRequest(*req, s.cfg); err != nil {
 		return nil, err
 	}
 
-	result, err := database.InTransactionT(ctx, s.db, func(txCtx context.Context, tx pgx.Tx) (*apiv0.ServerJSON, error) {
-		publishTime := time.Now()
-		serverJSON := req
+	publishTime := time.Now()
+	serverJSON := *req
 
-		// Acquire advisory lock to prevent concurrent publishes of the same server
-		if err := s.db.AcquirePublishLock(txCtx, tx, serverJSON.Name); err != nil {
-			return nil, err
-		}
+	// Acquire advisory lock to prevent concurrent publishes of the same server
+	if err := s.db.AcquirePublishLock(ctx, tx, serverJSON.Name); err != nil {
+		return nil, err
+	}
 
-		// Check for duplicate remote URLs
-		if err := s.validateNoDuplicateRemoteURLs(txCtx, tx, serverJSON); err != nil {
-			return nil, err
-		}
+	// Check for duplicate remote URLs
+	if err := s.validateNoDuplicateRemoteURLs(ctx, tx, serverJSON); err != nil {
+		return nil, err
+	}
 
-		filter := &database.ServerFilter{Name: &serverJSON.Name}
-		existingServerVersions, _, err := s.db.List(txCtx, tx, filter, "", maxServerVersionsPerServer)
-		if err != nil && !errors.Is(err, database.ErrNotFound) {
-			return nil, err
-		}
+	// Check we haven't exceeded the maximum versions allowed for a server
+	versionCount, err := s.db.CountServerVersions(ctx, tx, serverJSON.Name)
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		return nil, err
+	}
+	if versionCount >= maxServerVersionsPerServer {
+		return nil, database.ErrMaxServersReached
+	}
 
-		// Check we haven't exceeded the maximum versions allowed for a server
-		if len(existingServerVersions) >= maxServerVersionsPerServer {
-			return nil, database.ErrMaxServersReached
-		}
-
-		// Check this isn't a duplicate version
-		for _, server := range existingServerVersions {
-			existingVersion := server.Version
-			if existingVersion == serverJSON.Version {
-				return nil, database.ErrInvalidVersion
-			}
-		}
-
-		// Determine if this version should be marked as latest
-		existingLatest := s.getCurrentLatestVersion(existingServerVersions)
-		isNewLatest := true
-		if existingLatest != nil {
-			var existingPublishedAt time.Time
-			if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
-				existingPublishedAt = existingLatest.Meta.Official.PublishedAt
-			}
-			isNewLatest = CompareVersions(
-				serverJSON.Version,
-				existingLatest.Version,
-				publishTime,
-				existingPublishedAt,
-			) > 0
-		}
-
-		// Unmark old latest version if needed
-		if isNewLatest && existingLatest != nil {
-			if existingLatest.Meta != nil && existingLatest.Meta.Official != nil {
-				existingLatest.Meta.Official.IsLatest = false
-				if _, err := s.db.UpdateServer(txCtx, tx, existingLatest.Meta.Official.VersionID, existingLatest); err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		// Create complete server with metadata
-		server := s.createServerWithMetadata(serverJSON, existingServerVersions, publishTime, isNewLatest)
-
-		// Insert new server version
-		return s.db.CreateServer(txCtx, tx, &server)
-	})
-
+	// Check this isn't a duplicate version
+	versionExists, err := s.db.CheckVersionExists(ctx, tx, serverJSON.Name, serverJSON.Version)
 	if err != nil {
 		return nil, err
 	}
-
-	return result, nil
-}
-
-// createServerWithMetadata creates a server with proper metadata including server_id and version_id
-func (s *registryServiceImpl) createServerWithMetadata(
-	serverJSON apiv0.ServerJSON,
-	existingServerVersions []*apiv0.ServerJSON,
-	publishTime time.Time,
-	isNewLatest bool,
-) apiv0.ServerJSON {
-	server := serverJSON // Copy the input
-
-	// Initialize meta if not present
-	if server.Meta == nil {
-		server.Meta = &apiv0.ServerMeta{}
+	if versionExists {
+		return nil, database.ErrInvalidVersion
 	}
 
-	// Determine server_id - either from existing versions or generate new one
-	var serverID string
-	if len(existingServerVersions) > 0 {
-		// Use existing server_id from any existing version
-		firstExisting := existingServerVersions[0]
-		if firstExisting.Meta != nil && firstExisting.Meta.Official != nil {
-			serverID = firstExisting.Meta.Official.ServerID
+	// Get current latest version to determine if new version should be latest
+	currentLatest, err := s.db.GetCurrentLatestVersion(ctx, tx, serverJSON.Name)
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		return nil, err
+	}
+
+	// Determine if this version should be marked as latest
+	isNewLatest := true
+	if currentLatest != nil {
+		var existingPublishedAt time.Time
+		if currentLatest.Meta.Official != nil {
+			existingPublishedAt = currentLatest.Meta.Official.PublishedAt
+		}
+		isNewLatest = CompareVersions(
+			serverJSON.Version,
+			currentLatest.Server.Version,
+			publishTime,
+			existingPublishedAt,
+		) > 0
+	}
+
+	// Unmark old latest version if needed
+	if isNewLatest && currentLatest != nil {
+		if err := s.db.UnmarkAsLatest(ctx, tx, serverJSON.Name); err != nil {
+			return nil, err
 		}
 	}
-	if serverID == "" {
-		// This is the first version of a new server
-		serverID = uuid.New().String()
-	}
 
-	// Set registry metadata
-	server.Meta.Official = &apiv0.RegistryExtensions{
-		ServerID:    serverID,
-		VersionID:   uuid.New().String(),
+	// Create metadata for the new server
+	officialMeta := &apiv0.RegistryExtensions{
 		PublishedAt: publishTime,
 		UpdatedAt:   publishTime,
 		IsLatest:    isNewLatest,
 	}
 
-	return server
+	// Insert new server version
+	return s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
 }
 
 // validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
@@ -208,15 +161,15 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 		// Use filter to find servers with this remote URL
 		filter := &database.ServerFilter{RemoteURL: &remote.URL}
 
-		conflictingServers, _, err := s.db.List(ctx, tx, filter, "", 1000)
+		conflictingServers, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
 		if err != nil {
 			return fmt.Errorf("failed to check remote URL conflict: %w", err)
 		}
 
 		// Check if any conflicting server has a different name
 		for _, conflictingServer := range conflictingServers {
-			if conflictingServer.Name != serverDetail.Name {
-				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.Name)
+			if conflictingServer.Server.Name != serverDetail.Name {
+				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.Server.Name)
 			}
 		}
 	}
@@ -224,16 +177,6 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 	return nil
 }
 
-// getCurrentLatestVersion finds the current latest version from existing server versions
-func (s *registryServiceImpl) getCurrentLatestVersion(existingServerVersions []*apiv0.ServerJSON) *apiv0.ServerJSON {
-	for _, server := range existingServerVersions {
-		if server.Meta != nil && server.Meta.Official != nil &&
-			server.Meta.Official.IsLatest {
-			return server
-		}
-	}
-	return nil
-}
 
 // EditServer updates an existing server with new details (admin operation)
 func (s *registryServiceImpl) EditServer(versionID string, req apiv0.ServerJSON) (*apiv0.ServerJSON, error) {

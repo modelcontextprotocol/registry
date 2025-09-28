@@ -43,6 +43,14 @@ type Database interface {
 	GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string) (*apiv0.ServerResponse, error)
 	// GetAllVersionsByServerName retrieve all versions of a server by server name
 	GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string) ([]*apiv0.ServerResponse, error)
+	// GetCurrentLatestVersion retrieve the current latest version of a server by server name
+	GetCurrentLatestVersion(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error)
+	// CountServerVersions count the number of versions for a server
+	CountServerVersions(ctx context.Context, tx pgx.Tx, serverName string) (int, error)
+	// CheckVersionExists check if a specific version exists for a server
+	CheckVersionExists(ctx context.Context, tx pgx.Tx, serverName, version string) (bool, error)
+	// UnmarkAsLatest marks the current latest version of a server as no longer latest
+	UnmarkAsLatest(ctx context.Context, tx pgx.Tx, serverName string) error
 	// AcquirePublishLock acquires an exclusive advisory lock for publishing a server
 	// This prevents race conditions when multiple versions are published concurrently
 	AcquirePublishLock(ctx context.Context, tx pgx.Tx, serverName string) error
