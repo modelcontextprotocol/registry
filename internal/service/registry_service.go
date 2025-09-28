@@ -178,51 +178,36 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 }
 
 
-// EditServer updates an existing server with new details (admin operation)
-func (s *registryServiceImpl) EditServer(versionID string, req apiv0.ServerJSON) (*apiv0.ServerJSON, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+// UpdateServer updates an existing server with new details
+func (s *registryServiceImpl) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
 	// Validate the request
-	if err := validators.ValidatePublishRequest(req, s.cfg); err != nil {
+	if err := validators.ValidatePublishRequest(*req, s.cfg); err != nil {
 		return nil, err
 	}
 
-	return database.InTransactionT(ctx, s.db, func(txCtx context.Context, tx pgx.Tx) (*apiv0.ServerJSON, error) {
-		// Get the current server to preserve metadata
-		currentServer, err := s.db.GetByVersionID(txCtx, tx, versionID)
-		if err != nil {
-			return nil, err
-		}
+	// Get the current server to preserve metadata
+	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version)
+	if err != nil {
+		return nil, err
+	}
 
-		// Acquire advisory lock to prevent concurrent edits of servers with same name
-		if err := s.db.AcquirePublishLock(txCtx, tx, currentServer.Name); err != nil {
-			return nil, err
-		}
+	// Acquire advisory lock to prevent concurrent edits of servers with same name
+	if err := s.db.AcquirePublishLock(ctx, tx, serverName); err != nil {
+		return nil, err
+	}
 
-		// Merge the request with the current server, preserving metadata
-		updatedServer := *currentServer
+	// Merge the request with the current server, preserving metadata
+	updatedServer := *req
 
-		// Update only the user-modifiable fields from the request
-		updatedServer.Name = req.Name
-		updatedServer.Description = req.Description
-		updatedServer.Version = req.Version
-		updatedServer.Status = req.Status
-		updatedServer.Repository = req.Repository
-		updatedServer.Remotes = req.Remotes
-		updatedServer.Packages = req.Packages
+	// Update the UpdatedAt timestamp
+	// Note: Since we're moving away from ServerID/VersionID, we just update the timestamp
+	// The IsLatest and other metadata will be preserved by the database layer
 
-		// Update the UpdatedAt timestamp in metadata
-		if updatedServer.Meta != nil && updatedServer.Meta.Official != nil {
-			updatedServer.Meta.Official.UpdatedAt = time.Now()
-		}
+	// Check for duplicate remote URLs using the updated server
+	if err := s.validateNoDuplicateRemoteURLs(ctx, tx, updatedServer); err != nil {
+		return nil, err
+	}
 
-		// Check for duplicate remote URLs using the updated server
-		if err := s.validateNoDuplicateRemoteURLs(txCtx, tx, updatedServer); err != nil {
-			return nil, err
-		}
-
-		// Update server in database
-		return s.db.UpdateServer(txCtx, tx, versionID, &updatedServer)
-	})
+	// Update server in database
+	return s.db.UpdateServer(ctx, tx, serverName, version, &updatedServer)
 }
