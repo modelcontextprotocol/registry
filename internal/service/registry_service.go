@@ -31,14 +31,14 @@ func NewRegistryService(db database.Database, cfg *config.Config) RegistryServic
 }
 
 // ListServers returns registry entries with cursor-based pagination and optional filtering
-func (s *registryServiceImpl) ListServers(ctx context.Context, tx pgx.Tx, filter *database.ServerFilter, cursor string, limit int) ([]*apiv0.ServerResponse, string, error) {
+func (s *registryServiceImpl) ListServers(ctx context.Context, filter *database.ServerFilter, cursor string, limit int) ([]*apiv0.ServerResponse, string, error) {
 	// If limit is not set or negative, use a default limit
 	if limit <= 0 {
 		limit = 30
 	}
 
 	// Use the database's ListServers method with pagination and filtering
-	serverRecords, nextCursor, err := s.db.ListServers(ctx, tx, filter, cursor, limit)
+	serverRecords, nextCursor, err := s.db.ListServers(ctx, nil, filter, cursor, limit)
 	if err != nil {
 		return nil, "", err
 	}
@@ -48,8 +48,8 @@ func (s *registryServiceImpl) ListServers(ctx context.Context, tx pgx.Tx, filter
 
 
 // GetServerByName retrieves the latest version of a server by its server name
-func (s *registryServiceImpl) GetServerByName(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error) {
-	serverRecord, err := s.db.GetServerByName(ctx, tx, serverName)
+func (s *registryServiceImpl) GetServerByName(ctx context.Context, serverName string) (*apiv0.ServerResponse, error) {
+	serverRecord, err := s.db.GetServerByName(ctx, nil, serverName)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +58,8 @@ func (s *registryServiceImpl) GetServerByName(ctx context.Context, tx pgx.Tx, se
 }
 
 // GetServerByNameAndVersion retrieves a specific version of a server by server name and version
-func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string) (*apiv0.ServerResponse, error) {
-	serverRecord, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version)
+func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, serverName string, version string) (*apiv0.ServerResponse, error) {
+	serverRecord, err := s.db.GetServerByNameAndVersion(ctx, nil, serverName, version)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +68,8 @@ func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, tx 
 }
 
 // GetAllVersionsByServerName retrieves all versions of a server by server name
-func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string) ([]*apiv0.ServerResponse, error) {
-	serverRecords, err := s.db.GetAllVersionsByServerName(ctx, tx, serverName)
+func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, serverName string) ([]*apiv0.ServerResponse, error) {
+	serverRecords, err := s.db.GetAllVersionsByServerName(ctx, nil, serverName)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,15 @@ func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, tx
 }
 
 // CreateServer creates a new server version
-func (s *registryServiceImpl) CreateServer(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
+func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
+	// Wrap the entire operation in a transaction
+	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
+		return s.createServerInTransaction(ctx, tx, req)
+	})
+}
+
+// createServerInTransaction contains the actual CreateServer logic within a transaction
+func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
 	// Validate the request
 	if err := validators.ValidatePublishRequest(*req, s.cfg); err != nil {
 		return nil, err
@@ -179,7 +187,15 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 
 
 // UpdateServer updates an existing server with new details
-func (s *registryServiceImpl) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
+func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
+	// Wrap the entire operation in a transaction
+	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
+		return s.updateServerInTransaction(ctx, tx, serverName, version, req)
+	})
+}
+
+// updateServerInTransaction contains the actual UpdateServer logic within a transaction
+func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
 	// Validate the request
 	if err := validators.ValidatePublishRequest(*req, s.cfg); err != nil {
 		return nil, err
