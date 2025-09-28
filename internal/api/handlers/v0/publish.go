@@ -33,7 +33,7 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv0.ServerJSON], error) {
+	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv0.ServerResponse], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -54,13 +54,13 @@ func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg
 		}
 
 		// Publish the server with extensions
-		publishedServer, err := registry.Publish(input.Body)
+		publishedServer, err := registry.CreateServer(ctx, &input.Body)
 		if err != nil {
 			return nil, huma.Error400BadRequest("Failed to publish server", err)
 		}
 
-		// Return the published server in flattened format
-		return &Response[apiv0.ServerJSON]{
+		// Return the published server response with metadata
+		return &Response[apiv0.ServerResponse]{
 			Body: *publishedServer,
 		}, nil
 	})

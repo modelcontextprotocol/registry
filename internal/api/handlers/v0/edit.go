@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -18,8 +19,8 @@ import (
 // EditServerInput represents the input for editing a server
 type EditServerInput struct {
 	Authorization string           `header:"Authorization" doc:"Registry JWT token with edit permissions" required:"true"`
-	ServerID      string           `path:"server_id" doc:"Server ID (UUID)" format:"uuid"`
-	Version       string           `query:"version" doc:"Version to edit (e.g., '1.0.0')" required:"true" example:"1.0.0"`
+	ServerName    string           `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
+	Version       string           `path:"version" doc:"Version to edit" example:"1.0.0"`
 	Body          apiv0.ServerJSON `body:""`
 }
 
@@ -31,14 +32,14 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 	huma.Register(api, huma.Operation{
 		OperationID: "edit-server",
 		Method:      http.MethodPut,
-		Path:        "/v0/servers/{server_id}",
+		Path:        "/v0/servers/{server_name}/versions/{version}",
 		Summary:     "Edit MCP server",
-		Description: "Update an existing MCP server (admin only). Requires version query parameter to specify which version to edit.",
+		Description: "Update a specific version of an existing MCP server (admin only)."
 		Tags:        []string{"admin"},
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
-	}, func(ctx context.Context, input *EditServerInput) (*Response[apiv0.ServerJSON], error) {
+	}, func(ctx context.Context, input *EditServerInput) (*Response[apiv0.ServerResponse], error) {
 		// Extract bearer token
 		const bearerPrefix = "Bearer "
 		authHeader := input.Authorization
@@ -53,9 +54,14 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error401Unauthorized("Invalid or expired Registry JWT token", err)
 		}
 
-		// Get current server to check permissions against existing name
-		currentServer, err := registry.GetByServerIDAndVersion(input.ServerID, input.Version)
+		// URL-decode the server name
+		serverName, err := url.QueryUnescape(input.ServerName)
+		if err != nil {
+			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
+		}
 
+		// Get current server to check permissions against existing name
+		currentServer, err := registry.GetServerByNameAndVersion(ctx, serverName, input.Version)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
@@ -64,27 +70,22 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// Verify edit permissions for this server using the existing server name
-		if !jwtManager.HasPermission(currentServer.Name, auth.PermissionActionEdit, claims.Permissions) {
+		if !jwtManager.HasPermission(currentServer.Server.Name, auth.PermissionActionEdit, claims.Permissions) {
 			return nil, huma.Error403Forbidden("You do not have edit permissions for this server")
 		}
 
 		// Prevent renaming servers
-		if currentServer.Name != input.Body.Name {
+		if currentServer.Server.Name != input.Body.Name {
 			return nil, huma.Error400BadRequest("Cannot rename server")
 		}
 
 		// Prevent undeleting servers - once deleted, they stay deleted
-		if currentServer.Status == model.StatusDeleted && input.Body.Status != model.StatusDeleted {
+		if currentServer.Server.Status == model.StatusDeleted && input.Body.Status != model.StatusDeleted {
 			return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
 		}
 
-		// Edit the server using the version_id from the current server
-		versionID := currentServer.GetVersionID()
-		if versionID == "" {
-			return nil, huma.Error500InternalServerError("Server version ID not found in metadata", nil)
-		}
-
-		updatedServer, err := registry.EditServer(versionID, input.Body)
+		// Update the server using the service
+		updatedServer, err := registry.UpdateServer(ctx, serverName, input.Version, &input.Body)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
@@ -92,7 +93,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest("Failed to edit server", err)
 		}
 
-		return &Response[apiv0.ServerJSON]{
+		return &Response[apiv0.ServerResponse]{
 			Body: *updatedServer,
 		}, nil
 	})
