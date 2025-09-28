@@ -30,30 +30,20 @@ func NewRegistryService(db database.Database, cfg *config.Config) RegistryServic
 	}
 }
 
-// List returns registry entries with cursor-based pagination and optional filtering
-func (s *registryServiceImpl) List(filter *database.ServerFilter, cursor string, limit int) ([]apiv0.ServerJSON, string, error) {
-	// Create a timeout context for the database operation
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+// ListServers returns registry entries with cursor-based pagination and optional filtering
+func (s *registryServiceImpl) ListServers(ctx context.Context, tx pgx.Tx, filter *database.ServerFilter, cursor string, limit int) ([]*apiv0.ServerResponse, string, error) {
 	// If limit is not set or negative, use a default limit
 	if limit <= 0 {
 		limit = 30
 	}
 
 	// Use the database's ListServers method with pagination and filtering
-	serverRecords, nextCursor, err := s.db.List(ctx, nil, filter, cursor, limit)
+	serverRecords, nextCursor, err := s.db.ListServers(ctx, tx, filter, cursor, limit)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// Return ServerJSONs directly
-	result := make([]apiv0.ServerJSON, len(serverRecords))
-	for i, record := range serverRecords {
-		result[i] = *record
-	}
-
-	return result, nextCursor, nil
+	return serverRecords, nextCursor, nil
 }
 
 // GetByVersionID retrieves a specific server by its registry metadata version ID
