@@ -110,7 +110,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "Get MCP server details",
 		Description: "Get detailed information about the latest version of a specific MCP server.",
 		Tags:        []string{"servers"},
-	}, func(ctx context.Context, input *ServerDetailInput) (*Response[apiv0.ServerJSON], error) {
+	}, func(ctx context.Context, input *ServerDetailInput) (*Response[apiv0.ServerResponse], error) {
 		// URL-decode the server name
 		serverName, err := url.QueryUnescape(input.ServerName)
 		if err != nil {
@@ -126,8 +126,8 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
 		}
 
-		return &Response[apiv0.ServerJSON]{
-			Body: serverResponse.Server,
+		return &Response[apiv0.ServerResponse]{
+			Body: *serverResponse,
 		}, nil
 	})
 
@@ -139,7 +139,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Summary:     "Get specific MCP server version",
 		Description: "Get detailed information about a specific version of an MCP server.",
 		Tags:        []string{"servers"},
-	}, func(ctx context.Context, input *ServerVersionDetailInput) (*Response[apiv0.ServerJSON], error) {
+	}, func(ctx context.Context, input *ServerVersionDetailInput) (*Response[apiv0.ServerResponse], error) {
 		// URL-decode the server name
 		serverName, err := url.QueryUnescape(input.ServerName)
 		if err != nil {
@@ -155,8 +155,8 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get server details", err)
 		}
 
-		return &Response[apiv0.ServerJSON]{
-			Body: serverResponse.Server,
+		return &Response[apiv0.ServerResponse]{
+			Body: *serverResponse,
 		}, nil
 	})
 
