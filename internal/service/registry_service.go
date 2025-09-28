@@ -11,6 +11,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 const maxServerVersionsPerServer = 10000
@@ -151,6 +152,7 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 
 	// Create metadata for the new server
 	officialMeta := &apiv0.RegistryExtensions{
+		Status:      model.StatusActive,
 		PublishedAt: publishTime,
 		UpdatedAt:   publishTime,
 		IsLatest:    isNewLatest,
