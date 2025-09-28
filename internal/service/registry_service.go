@@ -47,54 +47,34 @@ func (s *registryServiceImpl) ListServers(ctx context.Context, tx pgx.Tx, filter
 }
 
 
-// GetByServerID retrieves the latest version of a server by its server ID
-func (s *registryServiceImpl) GetByServerID(serverID string) (*apiv0.ServerJSON, error) {
-	// Create a timeout context for the database operation
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	serverRecord, err := s.db.GetByServerID(ctx, nil, serverID)
+// GetServerByName retrieves the latest version of a server by its server name
+func (s *registryServiceImpl) GetServerByName(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error) {
+	serverRecord, err := s.db.GetServerByName(ctx, tx, serverName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return the server record directly
 	return serverRecord, nil
 }
 
-// GetByServerIDAndVersion retrieves a specific version of a server by server ID and version
-func (s *registryServiceImpl) GetByServerIDAndVersion(serverID string, version string) (*apiv0.ServerJSON, error) {
-	// Create a timeout context for the database operation
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	serverRecord, err := s.db.GetByServerIDAndVersion(ctx, nil, serverID, version)
+// GetServerByNameAndVersion retrieves a specific version of a server by server name and version
+func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string) (*apiv0.ServerResponse, error) {
+	serverRecord, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return the server record directly
 	return serverRecord, nil
 }
 
-// GetAllVersionsByServerID retrieves all versions of a server by server ID
-func (s *registryServiceImpl) GetAllVersionsByServerID(serverID string) ([]apiv0.ServerJSON, error) {
-	// Create a timeout context for the database operation
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	serverRecords, err := s.db.GetAllVersionsByServerID(ctx, nil, serverID)
+// GetAllVersionsByServerName retrieves all versions of a server by server name
+func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string) ([]*apiv0.ServerResponse, error) {
+	serverRecords, err := s.db.GetAllVersionsByServerName(ctx, tx, serverName)
 	if err != nil {
 		return nil, err
 	}
 
-	// Return ServerJSONs directly
-	result := make([]apiv0.ServerJSON, len(serverRecords))
-	for i, record := range serverRecords {
-		result[i] = *record
-	}
-
-	return result, nil
+	return serverRecords, nil
 }
 
 // Publish publishes a server with flattened _meta extensions
