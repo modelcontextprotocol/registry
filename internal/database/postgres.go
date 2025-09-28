@@ -211,35 +211,6 @@ func (db *PostgreSQL) ListServers(
 	return results, nextCursor, nil
 }
 
-func (db *PostgreSQL) GetByVersionID(ctx context.Context, tx pgx.Tx, versionID string) (*apiv0.ServerJSON, error) {
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
-	}
-
-	query := `
-		SELECT value
-		FROM servers
-		WHERE version_id = $1
-	`
-
-	var valueJSON []byte
-	err := db.getExecutor(tx).QueryRow(ctx, query, versionID).Scan(&valueJSON)
-
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
-		}
-		return nil, fmt.Errorf("failed to get server by ID: %w", err)
-	}
-
-	// Parse the complete ServerJSON from JSONB
-	var serverJSON apiv0.ServerJSON
-	if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
-	}
-
-	return &serverJSON, nil
-}
 
 // GetServerByName retrieves the latest version of a server by server name
 func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error) {
