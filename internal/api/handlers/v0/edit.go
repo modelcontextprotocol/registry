@@ -21,6 +21,7 @@ type EditServerInput struct {
 	Authorization string           `header:"Authorization" doc:"Registry JWT token with edit permissions" required:"true"`
 	ServerName    string           `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 	Version       string           `path:"version" doc:"Version to edit" example:"1.0.0"`
+	Status        *string          `query:"status" doc:"New status for the server (active, deprecated, deleted)" required:"false" enum:"active,deprecated,deleted"`
 	Body          apiv0.ServerJSON `body:""`
 }
 
@@ -34,7 +35,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		Method:      http.MethodPut,
 		Path:        "/v0/servers/{server_name}/versions/{version}",
 		Summary:     "Edit MCP server",
-		Description: "Update a specific version of an existing MCP server (admin only)."
+		Description: "Update a specific version of an existing MCP server (admin only).",
 		Tags:        []string{"admin"},
 		Security: []map[string][]string{
 			{"bearer": {}},
@@ -79,13 +80,24 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest("Cannot rename server")
 		}
 
-		// Prevent undeleting servers - once deleted, they stay deleted
-		if currentServer.Server.Status == model.StatusDeleted && input.Body.Status != model.StatusDeleted {
-			return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
+		// Handle status changes with proper permission validation
+		if input.Status != nil {
+			newStatus := model.Status(*input.Status)
+
+			// Prevent undeleting servers - once deleted, they stay deleted
+			if currentServer.Meta.Official != nil &&
+			   currentServer.Meta.Official.Status == model.StatusDeleted &&
+			   newStatus != model.StatusDeleted {
+				return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
+			}
+
+			// For now, only allow status changes for admins
+			// TODO: Implement logic to allow server authors to change active <-> deprecated
+			// but only admins can set to deleted
 		}
 
 		// Update the server using the service
-		updatedServer, err := registry.UpdateServer(ctx, serverName, input.Version, &input.Body)
+		updatedServer, err := registry.UpdateServer(ctx, serverName, input.Version, &input.Body, input.Status)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")

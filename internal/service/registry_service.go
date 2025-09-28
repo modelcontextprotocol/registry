@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
@@ -45,7 +44,6 @@ func (s *registryServiceImpl) ListServers(ctx context.Context, filter *database.
 
 	return serverRecords, nextCursor, nil
 }
-
 
 // GetServerByName retrieves the latest version of a server by its server name
 func (s *registryServiceImpl) GetServerByName(ctx context.Context, serverName string) (*apiv0.ServerResponse, error) {
@@ -185,25 +183,18 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 	return nil
 }
 
-
 // UpdateServer updates an existing server with new details
-func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
+func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON, newStatus *string) (*apiv0.ServerResponse, error) {
 	// Wrap the entire operation in a transaction
 	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
-		return s.updateServerInTransaction(ctx, tx, serverName, version, req)
+		return s.updateServerInTransaction(ctx, tx, serverName, version, req, newStatus)
 	})
 }
 
 // updateServerInTransaction contains the actual UpdateServer logic within a transaction
-func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
+func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON, newStatus *string) (*apiv0.ServerResponse, error) {
 	// Validate the request
 	if err := validators.ValidatePublishRequest(*req, s.cfg); err != nil {
-		return nil, err
-	}
-
-	// Get the current server to preserve metadata
-	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version)
-	if err != nil {
 		return nil, err
 	}
 
@@ -215,15 +206,25 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	// Merge the request with the current server, preserving metadata
 	updatedServer := *req
 
-	// Update the UpdatedAt timestamp
-	// Note: Since we're moving away from ServerID/VersionID, we just update the timestamp
-	// The IsLatest and other metadata will be preserved by the database layer
-
 	// Check for duplicate remote URLs using the updated server
 	if err := s.validateNoDuplicateRemoteURLs(ctx, tx, updatedServer); err != nil {
 		return nil, err
 	}
 
 	// Update server in database
-	return s.db.UpdateServer(ctx, tx, serverName, version, &updatedServer)
+	updatedServerResponse, err := s.db.UpdateServer(ctx, tx, serverName, version, &updatedServer)
+	if err != nil {
+		return nil, err
+	}
+
+	// Handle status change if provided
+	if newStatus != nil {
+		updatedWithStatus, err := s.db.SetServerStatus(ctx, tx, serverName, version, *newStatus)
+		if err != nil {
+			return nil, err
+		}
+		return updatedWithStatus, nil
+	}
+
+	return updatedServerResponse, nil
 }

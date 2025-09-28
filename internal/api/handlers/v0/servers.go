@@ -85,9 +85,15 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get registry list", err)
 		}
 
+		// Convert []*ServerResponse to []ServerResponse
+		serverValues := make([]apiv0.ServerResponse, len(servers))
+		for i, server := range servers {
+			serverValues[i] = *server
+		}
+
 		return &Response[apiv0.ServerListResponse]{
 			Body: apiv0.ServerListResponse{
-				Servers: servers,
+				Servers: serverValues,
 				Metadata: apiv0.Metadata{
 					NextCursor: nextCursor,
 					Count:      len(servers),
@@ -178,9 +184,15 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error500InternalServerError("Failed to get server versions", err)
 		}
 
+		// Convert []*ServerResponse to []ServerResponse
+		serverValues := make([]apiv0.ServerResponse, len(servers))
+		for i, server := range servers {
+			serverValues[i] = *server
+		}
+
 		return &Response[apiv0.ServerListResponse]{
 			Body: apiv0.ServerListResponse{
-				Servers: servers,
+				Servers: serverValues,
 				Metadata: apiv0.Metadata{
 					Count: len(servers),
 				},
