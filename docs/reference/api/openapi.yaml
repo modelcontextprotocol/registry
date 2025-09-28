@@ -36,30 +36,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
-  /v0/servers/{server_id}:
+  /v0/servers/{server_name}:
     get:
       summary: Get MCP server details
-      description: Returns detailed information about a specific MCP server. Returns latest version by default, or specific version if version query parameter is provided.
+      description: Returns detailed information about the latest version of a specific MCP server.
       parameters:
-        - name: server_id
+        - name: server_name
           in: path
           required: true
-          description: Unique server ID (consistent across all versions)
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
           schema:
             type: string
-            format: uuid
-        - name: version
-          in: query
-          description: Specific version to retrieve (e.g., "1.0.0"). If not provided, returns latest version.
-          schema:
-            type: string
+            example: "com.example%2Fmy-server"
       responses:
         '200':
           description: Detailed server information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerDetail'
+                $ref: '#/components/schemas/ServerResponse'
         '404':
           description: Server not found
           content:
@@ -70,18 +65,18 @@ paths:
                   error:
                     type: string
                     example: "Server not found"
-  /v0/servers/{server_id}/versions:
+  /v0/servers/{server_name}/versions:
     get:
       summary: List all versions of an MCP server
       description: Returns all available versions for a specific MCP server, ordered by publication date (newest first)
       parameters:
-        - name: server_id
+        - name: server_name
           in: path
           required: true
-          description: Unique server ID (consistent across all versions)
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
           schema:
             type: string
-            format: uuid
+            example: "com.example%2Fmy-server"
       responses:
         '200':
           description: A list of all versions for the server
@@ -89,6 +84,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
+        '404':
+          description: Server not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server not found"
+  /v0/servers/{server_name}/versions/{version}:
+    get:
+      summary: Get specific MCP server version
+      description: Returns detailed information about a specific version of an MCP server.
+      parameters:
+        - name: server_name
+          in: path
+          required: true
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
+          schema:
+            type: string
+            example: "com.example%2Fmy-server"
+        - name: version
+          in: path
+          required: true
+          description: Specific version to retrieve (e.g., "1.0.0")
+          schema:
+            type: string
+            example: "1.0.0"
+      responses:
+        '200':
+          description: Detailed server information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+        '404':
+          description: Server or version not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server not found"
+    put:
+      summary: Edit MCP server version
+      description: Update a specific version of an existing MCP server (admin only).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: server_name
+          in: path
+          required: true
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
+          schema:
+            type: string
+            example: "com.example%2Fmy-server"
+        - name: version
+          in: path
+          required: true
+          description: Version to edit (e.g., "1.0.0")
+          schema:
+            type: string
+            example: "1.0.0"
+        - name: status
+          in: query
+          description: New status for the server (active, deprecated, deleted)
+          required: false
+          schema:
+            type: string
+            enum: ["active", "deprecated", "deleted"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerDetail'
+      responses:
+        '200':
+          description: Successfully updated server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired Registry JWT token"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have edit permissions for this server"
         '404':
           description: Server not found
           content:
@@ -122,7 +223,6 @@ paths:
                 value:
                   name: "io.modelcontextprotocol/filesystem"
                   description: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-                  status: "active"
                   repository:
                     url: "https://github.com/modelcontextprotocol/servers"
                     source: "github"
@@ -144,7 +244,6 @@ paths:
                 value:
                   name: "com.example/demo-server"
                   description: "Example MCP server demonstrating publisher extensions."
-                  status: "active"
                   repository:
                     url: "https://github.com/example/mcp-demo"
                     source: "github"
@@ -171,7 +270,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerDetail'
+                $ref: '#/components/schemas/ServerResponse'
         '401':
           description: Unauthorized - Invalid or missing authentication token
           content:
@@ -250,12 +349,6 @@ components:
           type: string
           description: "Human-readable description of the server's functionality"
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-        status:
-          type: string
-          enum: [active, deprecated]
-          default: active
-          description: "Server lifecycle status. 'deprecated' indicates the server is no longer recommended for new usage."
-          example: "active"
         repository:
           $ref: '#/components/schemas/Repository'
         version:
@@ -277,7 +370,7 @@ components:
         servers:
           type: array
           items:
-            $ref: '#/components/schemas/ServerDetail'
+            $ref: '#/components/schemas/ServerResponse'
         metadata:
           type: object
           properties:
@@ -515,39 +608,42 @@ components:
                       commit: "abc123def456"
                       timestamp: "2023-12-01T10:30:00Z"
                       pipeline_id: "build-789"
-                io.modelcontextprotocol.registry/official:
-                  type: object
-                  description: Registry-specific metadata managed by the MCP registry system
-                  required:
-                    - serverId
-                    - versionId
-                    - publishedAt
-                    - updatedAt
-                    - isLatest
-                  properties:
-                    serverId:
-                      type: string
-                      format: uuid
-                      description: Consistent ID across all versions of a server
-                      example: "550e8400-e29b-41d4-a716-446655440000"
-                    versionId:
-                      type: string
-                      format: uuid
-                      description: Unique ID for this specific version
-                      example: "773f9b2e-1a47-4c8d-b5e6-2f8d9c4a7b3e"
-                    publishedAt:
-                      type: string
-                      format: date-time
-                      description: Timestamp when the server was first published to the registry
-                      example: "2023-12-01T10:30:00Z"
-                    updatedAt:
-                      type: string
-                      format: date-time
-                      description: Timestamp when the server entry was last updated
-                      example: "2023-12-01T11:00:00Z"
-                    isLatest:
-                      type: boolean
-                      description: Whether this is the latest version of the server
-                      example: true
-                  additionalProperties: false
-              additionalProperties: true
+
+    ServerResponse:
+      description: API response format with separated server data and registry metadata
+      type: object
+      required:
+        - server
+        - _meta
+      properties:
+        server:
+          $ref: '#/components/schemas/ServerDetail'
+        _meta:
+          type: object
+          description: Registry-managed metadata
+          properties:
+            io.modelcontextprotocol.registry/official:
+              type: object
+              description: Official MCP registry metadata
+              properties:
+                status:
+                  type: string
+                  enum: ["active", "deprecated", "deleted"]
+                  description: Server lifecycle status
+                  example: "active"
+                publishedAt:
+                  type: string
+                  format: date-time
+                  description: Timestamp when the server was first published to the registry
+                  example: "2023-12-01T10:30:00Z"
+                updatedAt:
+                  type: string
+                  format: date-time
+                  description: Timestamp when the server entry was last updated
+                  example: "2023-12-01T11:00:00Z"
+                isLatest:
+                  type: boolean
+                  description: Whether this is the latest version of the server
+                  example: true
+              additionalProperties: false
+          additionalProperties: true
