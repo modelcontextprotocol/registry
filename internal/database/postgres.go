@@ -575,6 +575,112 @@ func hashServerName(name string) int64 {
 	return int64(hash & 0x7FFFFFFFFFFFFFFF)
 }
 
+// GetCurrentLatestVersion retrieves the current latest version of a server by server name
+func (db *PostgreSQL) GetCurrentLatestVersion(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	executor := db.getExecutor(tx)
+
+	query := `
+		SELECT server_name, version, status, value, published_at, updated_at, is_latest
+		FROM servers
+		WHERE server_name = $1 AND is_latest = true
+	`
+
+	row := executor.QueryRow(ctx, query, serverName)
+
+	var name, version, status string
+	var publishedAt, updatedAt time.Time
+	var isLatest bool
+	var jsonValue []byte
+
+	err := row.Scan(&name, &version, &status, &jsonValue, &publishedAt, &updatedAt, &isLatest)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("failed to scan server row: %w", err)
+	}
+
+	// Parse the JSON value to get the server details
+	var serverJSON apiv0.ServerJSON
+	if err := json.Unmarshal(jsonValue, &serverJSON); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
+	}
+
+	// Build ServerResponse with separated metadata
+	serverResponse := &apiv0.ServerResponse{
+		Server: serverJSON,
+		Meta: apiv0.ResponseMeta{
+			Official: &apiv0.RegistryExtensions{
+				PublishedAt: publishedAt,
+				UpdatedAt:   updatedAt,
+				IsLatest:    isLatest,
+			},
+		},
+	}
+
+	return serverResponse, nil
+}
+
+// CountServerVersions counts the number of versions for a server
+func (db *PostgreSQL) CountServerVersions(ctx context.Context, tx pgx.Tx, serverName string) (int, error) {
+	if ctx.Err() != nil {
+		return 0, ctx.Err()
+	}
+
+	executor := db.getExecutor(tx)
+
+	query := `SELECT COUNT(*) FROM servers WHERE server_name = $1`
+
+	var count int
+	err := executor.QueryRow(ctx, query, serverName).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count server versions: %w", err)
+	}
+
+	return count, nil
+}
+
+// CheckVersionExists checks if a specific version exists for a server
+func (db *PostgreSQL) CheckVersionExists(ctx context.Context, tx pgx.Tx, serverName, version string) (bool, error) {
+	if ctx.Err() != nil {
+		return false, ctx.Err()
+	}
+
+	executor := db.getExecutor(tx)
+
+	query := `SELECT EXISTS(SELECT 1 FROM servers WHERE server_name = $1 AND version = $2)`
+
+	var exists bool
+	err := executor.QueryRow(ctx, query, serverName, version).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check version existence: %w", err)
+	}
+
+	return exists, nil
+}
+
+// UnmarkAsLatest marks the current latest version of a server as no longer latest
+func (db *PostgreSQL) UnmarkAsLatest(ctx context.Context, tx pgx.Tx, serverName string) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	executor := db.getExecutor(tx)
+
+	query := `UPDATE servers SET is_latest = false WHERE server_name = $1 AND is_latest = true`
+
+	_, err := executor.Exec(ctx, query, serverName)
+	if err != nil {
+		return fmt.Errorf("failed to unmark latest version: %w", err)
+	}
+
+	return nil
+}
+
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
 	db.pool.Close()
