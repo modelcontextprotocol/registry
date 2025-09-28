@@ -10,24 +10,24 @@ import (
 	"os"
 	"strings"
 
-	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
 // Service handles importing seed data into the registry
 type Service struct {
-	db database.Database
+	registry service.RegistryService
 }
 
 // NewService creates a new importer service
-func NewService(db database.Database) *Service {
-	return &Service{db: db}
+func NewService(registry service.RegistryService) *Service {
+	return &Service{registry: registry}
 }
 
 // ImportFromPath imports seed data from various sources:
-// 1. Local file paths (*.json files) - expects extension wrapper format
-// 2. Direct HTTP URLs to seed.json files - expects extension wrapper format
+// 1. Local file paths (*.json files) - expects ServerJSON array format
+// 2. Direct HTTP URLs to seed.json files - expects ServerJSON array format
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
 func (s *Service) ImportFromPath(ctx context.Context, path string) error {
 	servers, err := readSeedFile(ctx, path)
@@ -35,9 +35,9 @@ func (s *Service) ImportFromPath(ctx context.Context, path string) error {
 		return fmt.Errorf("failed to read seed data: %w", err)
 	}
 
-	// Import each server using CreateServer
+	// Import each server using registry service CreateServer
 	for _, server := range servers {
-		_, err := s.db.CreateServer(ctx, nil, server)
+		_, err := s.registry.CreateServer(ctx, server)
 		if err != nil {
 			return fmt.Errorf("failed to import server %s: %w", server.Name, err)
 		}
@@ -69,10 +69,10 @@ func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error)
 		return nil, fmt.Errorf("failed to read seed data from %s: %w", path, err)
 	}
 
-	// Parse extension wrapper format (only supported format)
+	// Parse ServerJSON array format
 	var serverResponses []apiv0.ServerJSON
 	if err := json.Unmarshal(data, &serverResponses); err != nil {
-		return nil, fmt.Errorf("failed to parse seed data as extension wrapper format: %w", err)
+		return nil, fmt.Errorf("failed to parse seed data as ServerJSON array format: %w", err)
 	}
 
 	if len(serverResponses) == 0 {
@@ -93,9 +93,8 @@ func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error)
 			continue
 		}
 
-		// Convert valid ServerJSON to ServerRecord
-		record := convertServerResponseToRecord(response)
-		validRecords = append(validRecords, record)
+		// Add valid ServerJSON to records
+		validRecords = append(validRecords, &response)
 	}
 
 	// Print summary of validation results
@@ -151,7 +150,7 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerJ
 		}
 
 		var response struct {
-			Servers  []apiv0.ServerJSON `json:"servers"`
+			Servers  []apiv0.ServerResponse `json:"servers"`
 			Metadata *struct {
 				NextCursor string `json:"next_cursor,omitempty"`
 			} `json:"metadata,omitempty"`
@@ -161,10 +160,9 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerJ
 			return nil, fmt.Errorf("failed to parse registry API response: %w", err)
 		}
 
-		// Convert and add servers
+		// Extract ServerJSON from each ServerResponse
 		for _, serverResponse := range response.Servers {
-			record := convertServerResponseToRecord(serverResponse)
-			allRecords = append(allRecords, record)
+			allRecords = append(allRecords, &serverResponse.Server)
 		}
 
 		// Check if there's a next page
@@ -177,8 +175,3 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerJ
 	return allRecords, nil
 }
 
-func convertServerResponseToRecord(response apiv0.ServerJSON) *apiv0.ServerJSON {
-	// The response is already in the correct flattened format
-	// Just return a pointer to it
-	return &response
-}

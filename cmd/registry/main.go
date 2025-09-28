@@ -84,7 +84,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
-		importerService := importer.NewService(db)
+		importerService := importer.NewService(registryService)
 		if err := importerService.ImportFromPath(ctx, cfg.SeedFrom); err != nil {
 			log.Printf("Failed to import seed data: %v", err)
 		} else {
