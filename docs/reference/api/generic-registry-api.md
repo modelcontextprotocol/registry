@@ -30,11 +30,6 @@ All requests and responses use `application/json`
 ### Pagination
 List endpoints use cursor-based pagination for efficient, stable results.
 
-#### Cursor Format
-Pagination cursors use the format: `{serverName}:{version}`
-
-**Example cursor**: `"com.example/my-server:1.0.0"`
-
 #### Usage
 1. **Initial request**: Omit the `cursor` parameter
 2. **Subsequent requests**: Use the `nextCursor` value from the previous response
