@@ -86,6 +86,11 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 			return nil, huma.Error400BadRequest("Cannot rename server")
 		}
 
+		// Validate that the version in the body matches the URL parameter
+		if input.Body.Version != version {
+			return nil, huma.Error400BadRequest("Version in request body must match URL path parameter")
+		}
+
 		// Handle status changes with proper permission validation
 		if input.Status != "" {
 			newStatus := model.Status(input.Status)

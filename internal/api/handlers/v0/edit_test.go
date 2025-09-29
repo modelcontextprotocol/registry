@@ -279,6 +279,25 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedError:  "Cannot rename server",
 		},
 		{
+			name:       "version in body must match URL parameter",
+			serverName: "io.github.testuser/editable-server",
+			version:    "1.0.0",
+			authClaims: &auth.JWTClaims{
+				AuthMethod:        auth.MethodGitHubAT,
+				AuthMethodSubject: "testuser",
+				Permissions: []auth.Permission{
+					{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.testuser/*"},
+				},
+			},
+			requestBody: apiv0.ServerJSON{
+				Name:        "io.github.testuser/editable-server",
+				Description: "Version mismatch test",
+				Version:     "2.0.0", // Different version from URL
+			},
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "Version in request body must match URL path parameter",
+		},
+		{
 			name:       "attempt to undelete server should fail",
 			serverName: "io.github.testuser/deleted-server",
 			version:    "1.0.0",
