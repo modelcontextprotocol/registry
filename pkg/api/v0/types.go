@@ -51,6 +51,6 @@ type ServerJSON struct {
 
 // Metadata represents pagination metadata
 type Metadata struct {
-	NextCursor string `json:"next_cursor,omitempty"`
+	NextCursor string `json:"nextCursor,omitempty"`
 	Count      int    `json:"count"`
 }

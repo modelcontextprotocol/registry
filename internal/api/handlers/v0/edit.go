@@ -19,7 +19,7 @@ import (
 // EditServerInput represents the input for editing a server
 type EditServerInput struct {
 	Authorization string           `header:"Authorization" doc:"Registry JWT token with edit permissions" required:"true"`
-	ServerName    string           `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
+	ServerName    string           `path:"serverName" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 	Version       string           `path:"version" doc:"URL-encoded version to edit" example:"1.0.0"`
 	Status        string           `query:"status" doc:"New status for the server (active, deprecated, deleted)" required:"false" enum:"active,deprecated,deleted"`
 	Body          apiv0.ServerJSON `body:""`
@@ -33,7 +33,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 	huma.Register(api, huma.Operation{
 		OperationID: "edit-server",
 		Method:      http.MethodPut,
-		Path:        "/v0/servers/{server_name}/versions/{version}",
+		Path:        "/v0/servers/{serverName}/versions/{version}",
 		Summary:     "Edit MCP server",
 		Description: "Update a specific version of an existing MCP server (admin only).",
 		Tags:        []string{"admin"},

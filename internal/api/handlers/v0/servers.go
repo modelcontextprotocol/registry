@@ -26,18 +26,18 @@ type ListServersInput struct {
 
 // ServerDetailInput represents the input for getting server details
 type ServerDetailInput struct {
-	ServerName string `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
+	ServerName string `path:"serverName" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 }
 
 // ServerVersionDetailInput represents the input for getting a specific version
 type ServerVersionDetailInput struct {
-	ServerName string `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
+	ServerName string `path:"serverName" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 	Version    string `path:"version" doc:"URL-encoded server version" example:"1.0.0"`
 }
 
 // ServerVersionsInput represents the input for listing all versions of a server
 type ServerVersionsInput struct {
-	ServerName string `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
+	ServerName string `path:"serverName" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 }
 
 // RegisterServersEndpoints registers all server-related endpoints
@@ -109,7 +109,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 	huma.Register(api, huma.Operation{
 		OperationID: "get-server",
 		Method:      http.MethodGet,
-		Path:        "/v0/servers/{server_name}",
+		Path:        "/v0/servers/{serverName}",
 		Summary:     "Get MCP server details",
 		Description: "Get detailed information about the latest version of a specific MCP server.",
 		Tags:        []string{"servers"},
@@ -138,7 +138,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 	huma.Register(api, huma.Operation{
 		OperationID: "get-server-version",
 		Method:      http.MethodGet,
-		Path:        "/v0/servers/{server_name}/versions/{version}",
+		Path:        "/v0/servers/{serverName}/versions/{version}",
 		Summary:     "Get specific MCP server version",
 		Description: "Get detailed information about a specific version of an MCP server.",
 		Tags:        []string{"servers"},
@@ -173,7 +173,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 	huma.Register(api, huma.Operation{
 		OperationID: "get-server-versions",
 		Method:      http.MethodGet,
-		Path:        "/v0/servers/{server_name}/versions",
+		Path:        "/v0/servers/{serverName}/versions",
 		Summary:     "Get all versions of an MCP server",
 		Description: "Get all available versions for a specific MCP server",
 		Tags:        []string{"servers"},

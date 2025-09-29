@@ -167,7 +167,7 @@ func fetchFromRegistryAPI(ctx context.Context, baseURL string) ([]*apiv0.ServerJ
 		var response struct {
 			Servers  []apiv0.ServerResponse `json:"servers"`
 			Metadata *struct {
-				NextCursor string `json:"next_cursor,omitempty"`
+				NextCursor string `json:"nextCursor,omitempty"`
 			} `json:"metadata,omitempty"`
 		}
 
