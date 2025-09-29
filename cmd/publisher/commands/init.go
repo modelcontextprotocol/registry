@@ -159,24 +159,10 @@ func getNameFromPackageJSON() string {
 func detectServerName(subfolder string) string {
 	// Try to get from git remote
 	repoURL := detectRepoURL()
-	if repoURL != "" {
-		// Extract owner/repo from GitHub URL
-		if strings.Contains(repoURL, "github.com") {
-			parts := strings.Split(repoURL, "/")
-			if len(parts) >= 5 {
-				owner := parts[3]
-				repo := strings.TrimSuffix(parts[4], ".git")
-
-				// If we're in a subdirectory, use the current folder name
-				if subfolder != "" {
-					if cwd, err := os.Getwd(); err == nil {
-						folderName := filepath.Base(cwd)
-						return fmt.Sprintf("io.github.%s/%s", owner, folderName)
-					}
-				}
-
-				return fmt.Sprintf("io.github.%s/%s", owner, repo)
-			}
+	if repoURL != "" && strings.Contains(repoURL, "github.com") {
+		name := buildGitHubServerName(repoURL, subfolder)
+		if name != "" {
+			return name
 		}
 	}
 
@@ -192,6 +178,26 @@ func detectServerName(subfolder string) string {
 	}
 
 	return "com.example/my-mcp-server"
+}
+
+func buildGitHubServerName(repoURL, subfolder string) string {
+	parts := strings.Split(repoURL, "/")
+	if len(parts) < 5 {
+		return ""
+	}
+
+	owner := parts[3]
+	repo := strings.TrimSuffix(parts[4], ".git")
+
+	// If we're in a subdirectory, use the current folder name
+	if subfolder != "" {
+		if cwd, err := os.Getwd(); err == nil {
+			folderName := filepath.Base(cwd)
+			return fmt.Sprintf("io.github.%s/%s", owner, folderName)
+		}
+	}
+
+	return fmt.Sprintf("io.github.%s/%s", owner, repo)
 }
 
 func detectDescription() string {
