@@ -59,12 +59,15 @@ lint-fix: ## Run linter with auto-fix (includes formatting)
 	golangci-lint run --fix --timeout=5m
 
 # Combined targets
-check: lint validate test-all ## Run all checks (lint, validate, unit tests)
+check: dev-down lint validate test-all ## Run all checks (lint, validate, unit tests) and ensure dev environment is down
 	@echo "All checks passed!"
 
 # Development targets
 dev-compose: ## Start development environment with Docker Compose (builds image automatically)
 	docker compose up --build
+
+dev-down: ## Stop development environment
+	docker compose down
 
 # Cleanup
 clean: ## Clean build artifacts and coverage files
