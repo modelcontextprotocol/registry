@@ -18,9 +18,9 @@ import (
 )
 
 type validationTarget struct {
-	path           string
-	requireSchema  bool
-	expectedCount  *int
+	path          string
+	requireSchema bool
+	expectedCount *int
 }
 
 func main() {
@@ -33,7 +33,7 @@ func main() {
 
 func runValidation() error {
 	// Define what we validate and how
-	expectedServerJSONCount := 13
+	expectedServerJSONCount := 12
 	targets := []validationTarget{
 		{
 			path:          filepath.Join("docs", "reference", "server-json", "generic-server-json.md"),

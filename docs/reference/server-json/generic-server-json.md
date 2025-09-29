@@ -25,7 +25,6 @@ The official registry has some more restrictions on top of this. See the [offici
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/brave-search",
   "description": "MCP server for Brave Search API integration",
-  "status": "active",
   "websiteUrl": "https://anonymous.modelcontextprotocol.io/examples",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
@@ -72,7 +71,6 @@ For MCP servers located within a subdirectory of a larger repository (monorepo s
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol/everything",
   "description": "MCP server that exercises all the features of the MCP protocol",
-  "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -154,7 +152,6 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
-  "status": "active",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -629,7 +626,6 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.snyk/cli-mcp",
   "description": "MCP server provided by the Snyk CLI",
-  "status": "active",
   "version": "1.1298.0",
   "packages": [
     {
@@ -664,55 +660,8 @@ For MCP servers that follow a custom installation path or are embedded in applic
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/embedded-mcp",
   "description": "MCP server embedded in a Desktop app",
-  "status": "active",
   "websiteUrl": "https://anonymous.modelcontextprotocol.io/embedded-mcp-guide",
   "version": "0.1.0"
 }
 ```
 
-### Deprecated Server Example
-
-```json
-{
-  "name": "io.github.example/old-weather",
-  "description": "Legacy weather server - DEPRECATED: Use weather-v2 instead for new projects",
-  "status": "deprecated",
-  "repository": {
-    "url": "https://github.com/example/old-weather",
-    "source": "github",
-    "id": "legacy-abc123-def456-789012-345678-901234567890"
-  },
-  "version": "0.9.5",
-  "packages": [
-    {
-      "registryType": "npm",
-      "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "@legacy/old-weather-server",
-      "version": "0.9.5",
-      "transport": {
-        "type": "stdio"
-      },
-      "environmentVariables": [
-        {
-          "name": "WEATHER_API_KEY",
-          "description": "Weather API key",
-          "isRequired": true,
-          "isSecret": true
-        }
-      ]
-    }
-  ],
-  "_meta": {
-    "io.modelcontextprotocol.registry/publisher-provided": {
-      "tool": "legacy-publisher",
-      "version": "0.8.1",
-      "build_info": {
-        "timestamp": "2023-06-15T09:30:00Z",
-        "deprecation_notice": "This publisher is deprecated. Use npm-publisher v2.0+ for new projects.",
-        "maintenance_mode": true,
-        "final_version": true
-      }
-    }
-  }
-}
-```
