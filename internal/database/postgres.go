@@ -133,11 +133,24 @@ func (db *PostgreSQL) ListServers(
 		}
 	}
 
-	// Add cursor pagination using server_name as cursor
+	// Add cursor pagination using compound server_name:version cursor
 	if cursor != "" {
-		whereConditions = append(whereConditions, fmt.Sprintf("server_name > $%d", argIndex))
-		args = append(args, cursor)
-		argIndex++
+		// Parse cursor format: "server_name:version"
+		parts := strings.SplitN(cursor, ":", 2)
+		if len(parts) == 2 {
+			cursorServerName := parts[0]
+			cursorVersion := parts[1]
+
+			// Use compound condition: (server_name > cursor_name) OR (server_name = cursor_name AND version > cursor_version)
+			whereConditions = append(whereConditions, fmt.Sprintf("(server_name > $%d OR (server_name = $%d AND version > $%d))", argIndex, argIndex+1, argIndex+2))
+			args = append(args, cursorServerName, cursorServerName, cursorVersion)
+			argIndex += 3
+		} else {
+			// Fallback for malformed cursor - treat as server name only for backwards compatibility
+			whereConditions = append(whereConditions, fmt.Sprintf("server_name > $%d", argIndex))
+			args = append(args, cursor)
+			argIndex++
+		}
 	}
 
 	// Build the WHERE clause
@@ -200,11 +213,11 @@ func (db *PostgreSQL) ListServers(
 		return nil, "", fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	// Determine next cursor using server_name
+	// Determine next cursor using compound server_name:version format
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
 		lastResult := results[len(results)-1]
-		nextCursor = lastResult.Server.Name
+		nextCursor = lastResult.Server.Name + ":" + lastResult.Server.Version
 	}
 
 	return results, nextCursor, nil
