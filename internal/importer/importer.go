@@ -36,13 +36,28 @@ func (s *Service) ImportFromPath(ctx context.Context, path string) error {
 	}
 
 	// Import each server using registry service CreateServer
+	var successfullyCreated []string
+	var failedCreations []string
+
 	for _, server := range servers {
 		_, err := s.registry.CreateServer(ctx, server)
 		if err != nil {
-			return fmt.Errorf("failed to import server %s: %w", server.Name, err)
+			failedCreations = append(failedCreations, fmt.Sprintf("%s: %v", server.Name, err))
+			log.Printf("Failed to create server %s: %v", server.Name, err)
+		} else {
+			successfullyCreated = append(successfullyCreated, server.Name)
 		}
 	}
 
+	// Report import results after actual creation attempts
+	if len(failedCreations) > 0 {
+		log.Printf("Import completed with errors: %d servers created successfully, %d servers failed",
+			len(successfullyCreated), len(failedCreations))
+		log.Printf("Failed servers: %v", failedCreations)
+		return fmt.Errorf("failed to import %d servers", len(failedCreations))
+	}
+
+	log.Printf("Import completed successfully: all %d servers created", len(successfullyCreated))
 	return nil
 }
 
@@ -99,13 +114,13 @@ func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error)
 
 	// Print summary of validation results
 	if len(invalidServers) > 0 {
-		log.Printf("Import summary: %d valid servers imported, %d invalid servers skipped", len(validRecords), len(invalidServers))
+		log.Printf("Validation summary: %d servers passed validation, %d invalid servers skipped", len(validRecords), len(invalidServers))
 		log.Printf("Invalid servers: %v", invalidServers)
 		for _, failure := range validationFailures {
 			log.Printf("  - %s", failure)
 		}
 	} else {
-		log.Printf("Import summary: All %d servers imported successfully", len(validRecords))
+		log.Printf("Validation summary: All %d servers passed validation", len(validRecords))
 	}
 
 	return validRecords, nil
