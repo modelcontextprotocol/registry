@@ -5,6 +5,7 @@ The following is a list of notable community-driven projects in the ecosystem re
 ## Featured Projects
 
 - [TeamSparkAI: Tool Catalog](https://github.com/TeamSparkAI/ToolCatalog) - Browse and discover servers from the official MCP Registry
+- [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - Add your project here!
 
 ## Adding Your Project
