@@ -152,7 +152,7 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 
 	// Create metadata for the new server
 	officialMeta := &apiv0.RegistryExtensions{
-		Status:      model.StatusActive,
+		Status:      model.StatusActive, /* New versions are active by default */
 		PublishedAt: publishTime,
 		UpdatedAt:   publishTime,
 		IsLatest:    isNewLatest,
@@ -195,8 +195,21 @@ func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, vers
 
 // updateServerInTransaction contains the actual UpdateServer logic within a transaction
 func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON, newStatus *string) (*apiv0.ServerResponse, error) {
-	// Validate the request
-	if err := validators.ValidatePublishRequest(ctx, *req, s.cfg); err != nil {
+	// Get current server to check if it's deleted or being deleted
+	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version)
+	if err != nil {
+		return nil, err
+	}
+
+	// Skip registry validation if:
+	// 1. Server is currently deleted, OR
+	// 2. Server is being set to deleted status
+	currentlyDeleted := currentServer.Meta.Official != nil && currentServer.Meta.Official.Status == model.StatusDeleted
+	beingDeleted := newStatus != nil && *newStatus == string(model.StatusDeleted)
+	skipRegistryValidation := currentlyDeleted || beingDeleted
+
+	// Validate the request, potentially skipping registry validation for deleted servers
+	if err := s.validateUpdateRequest(ctx, *req, skipRegistryValidation); err != nil {
 		return nil, err
 	}
 
@@ -229,4 +242,26 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	}
 
 	return updatedServerResponse, nil
+}
+
+// validateUpdateRequest validates an update request with optional registry validation skipping
+func (s *registryServiceImpl) validateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, skipRegistryValidation bool) error {
+	// Always validate the server JSON structure
+	if err := validators.ValidateServerJSON(&req); err != nil {
+		return err
+	}
+
+	// Skip registry validation if requested (for deleted servers)
+	if skipRegistryValidation || !s.cfg.EnableRegistryValidation {
+		return nil
+	}
+
+	// Perform registry validation for all packages
+	for i, pkg := range req.Packages {
+		if err := validators.ValidatePackage(ctx, pkg, req.Name); err != nil {
+			return fmt.Errorf("registry validation failed for package %d (%s): %w", i, pkg.Identifier, err)
+		}
+	}
+
+	return nil
 }

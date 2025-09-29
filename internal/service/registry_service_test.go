@@ -529,6 +529,98 @@ func TestUpdateServer(t *testing.T) {
 	}
 }
 
+func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	// Enable registry validation to test that it gets skipped for deleted servers
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: true})
+
+	serverName := "com.example/validation-skip-test"
+	version := "1.0.0"
+
+	// Create server with invalid package configuration (this would fail registry validation)
+	invalidServer := &apiv0.ServerJSON{
+		Name:        serverName,
+		Description: "Server with invalid package for testing validation skip",
+		Version:     version,
+		Packages: []model.Package{
+			{
+				RegistryType: "npm",
+				Identifier:   "non-existent-package-for-validation-test",
+				Version:      "1.0.0",
+				Transport:    model.Transport{Type: "stdio"},
+			},
+		},
+	}
+
+	// Create initial server (validation disabled for creation in this test)
+	originalConfig := service.(*registryServiceImpl).cfg.EnableRegistryValidation
+	service.(*registryServiceImpl).cfg.EnableRegistryValidation = false
+	_, err := service.CreateServer(ctx, invalidServer)
+	require.NoError(t, err, "failed to create server with validation disabled")
+	service.(*registryServiceImpl).cfg.EnableRegistryValidation = originalConfig
+
+	// First, set server to deleted status
+	deletedStatus := string(model.StatusDeleted)
+	_, err = service.UpdateServer(ctx, serverName, version, invalidServer, &deletedStatus)
+	require.NoError(t, err, "should be able to set server to deleted (validation should be skipped)")
+
+	// Verify server is now deleted
+	updatedServer, err := service.GetServerByNameAndVersion(ctx, serverName, version)
+	require.NoError(t, err)
+	assert.Equal(t, model.StatusDeleted, updatedServer.Meta.Official.Status)
+
+	// Now try to update a deleted server - validation should be skipped
+	updatedInvalidServer := &apiv0.ServerJSON{
+		Name:        serverName,
+		Description: "Updated description for deleted server",
+		Version:     version,
+		Packages: []model.Package{
+			{
+				RegistryType: "npm",
+				Identifier:   "another-non-existent-package-for-validation-test",
+				Version:      "2.0.0",
+				Transport:    model.Transport{Type: "stdio"},
+			},
+		},
+	}
+
+	// This should succeed despite invalid packages because server is deleted
+	result, err := service.UpdateServer(ctx, serverName, version, updatedInvalidServer, nil)
+	assert.NoError(t, err, "updating deleted server should skip registry validation")
+	assert.NotNil(t, result)
+	assert.Equal(t, "Updated description for deleted server", result.Server.Description)
+	assert.Equal(t, model.StatusDeleted, result.Meta.Official.Status)
+
+	// Test updating a server being set to deleted status
+	activeServer := &apiv0.ServerJSON{
+		Name:        "com.example/being-deleted-test",
+		Description: "Server being deleted",
+		Version:     "1.0.0",
+		Packages: []model.Package{
+			{
+				RegistryType: "npm",
+				Identifier:   "yet-another-non-existent-package",
+				Version:      "1.0.0",
+				Transport:    model.Transport{Type: "stdio"},
+			},
+		},
+	}
+
+	// Create active server (with validation disabled)
+	service.(*registryServiceImpl).cfg.EnableRegistryValidation = false
+	_, err = service.CreateServer(ctx, activeServer)
+	require.NoError(t, err)
+	service.(*registryServiceImpl).cfg.EnableRegistryValidation = originalConfig
+
+	// Update server and set to deleted in same operation - should skip validation
+	newDeletedStatus := string(model.StatusDeleted)
+	result2, err := service.UpdateServer(ctx, "com.example/being-deleted-test", "1.0.0", activeServer, &newDeletedStatus)
+	assert.NoError(t, err, "updating server being set to deleted should skip registry validation")
+	assert.NotNil(t, result2)
+	assert.Equal(t, model.StatusDeleted, result2.Meta.Official.Status)
+}
+
 func TestListServers(t *testing.T) {
 	ctx := context.Background()
 	testDB := database.NewTestDB(t)
