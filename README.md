@@ -136,6 +136,10 @@ The registry validates namespace ownership when publishing. E.g. to publish...:
 - `io.github.domdomegg/my-cool-mcp` you must login to GitHub as `domdomegg`, or be in a GitHub Action on domdomegg's repos
 - `me.adamjones/my-cool-mcp` you must prove ownership of `adamjones.me` via DNS or HTTP challenge
 
+## Community Projects
+
+Check out [community projects](docs/community-projects.md) to explore notable registry-related work created by the community.
+
 ## More documentation
 
 See the [documentation](./docs) for more details if your question has not been answered here!
