@@ -47,7 +47,13 @@ See the [publisher README](../../cmd/publisher/README.md)
 
 ### Is open source required?
 
-No. While open source code is encouraged, it is not required for either locally or remotely run servers.
+No. The registry supports both open source and closed source servers, as long as they are publicly accessible.
+
+**Closed source servers are welcome** - you can publish proprietary MCP servers to the registry as long as:
+- The server itself is publicly accessible (not restricted to private networks)
+- The installation method is publicly available (e.g., npm package, Docker image on public registries)
+
+This applies to both locally-run and remote servers.
 
 ### What package registries are supported?
 
@@ -97,6 +103,22 @@ Private servers are those that are only accessible to a narrow set of users. For
 These are generally not supported on the official MCP registry, which is designed for publicly accessible MCP servers.
 
 If you want to publish private servers we recommend you host your own MCP subregistry, and add them there.
+
+### What's the difference between closed source and private servers?
+
+**Closed source servers** have proprietary code but are **publicly accessible**:
+- ✅ **Supported**: Can be published to the registry
+- ✅ Source code can be proprietary/closed source
+- ✅ Installation via public package registries (npm, PyPI, Docker Hub, etc.)
+- ✅ Remote servers hosted on public URLs
+
+**Private servers** are **access-restricted** regardless of source code:
+- ❌ **Not supported**: Cannot be published to the official registry
+- ❌ Only accessible to specific users/organizations
+- ❌ Installation requires private credentials or network access
+- ❌ Remote servers on private networks or behind authentication
+
+**Example**: A commercial MCP server distributed as a paid npm package is closed source but publicly accessible, so it's welcome in the registry. A server only available on your company's internal network is private and not supported.
 
 ## Security & Trust
 

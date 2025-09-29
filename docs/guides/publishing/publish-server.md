@@ -19,6 +19,7 @@ By the end of this tutorial, you'll have:
 ## Prerequisites
 
 - An MCP server you've already built ([follow this guide if you don't have one already](https://modelcontextprotocol.io/quickstart/server))
+- Your server must be publicly accessible (closed source servers are welcome, but private/internal servers are not supported)
 
 ## Deployment Options
 
