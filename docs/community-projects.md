@@ -6,6 +6,9 @@ The following is a list of notable community-driven projects in the ecosystem re
 
 - [TeamSparkAI: Tool Catalog](https://github.com/TeamSparkAI/ToolCatalog) - Browse and discover servers from the official MCP Registry
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
+- [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
+- [mcp-insights](https://github.com/joelverhagen/mcp-insights/) - Analytics and insights for the MCP Registry
+- [Open Chat MCP Registry Client](https://github.com/cameronapak/open-chat/blob/main/apps/server/src/lib/mcp-registry/index.ts) - TypeScript client for the MCP Registry
 - Add your project here!
 
 ## Adding Your Project
