@@ -43,8 +43,14 @@ func TestNoneHandler_GetAnonymousToken(t *testing.T) {
 	assert.Equal(t, auth.MethodNone, claims.AuthMethod)
 	assert.Equal(t, "anonymous", claims.AuthMethodSubject)
 
-	// Check permissions
-	require.Len(t, claims.Permissions, 1)
+	// Check permissions - should have both publish and edit permissions
+	require.Len(t, claims.Permissions, 2)
+
+	// Check publish permission
 	assert.Equal(t, auth.PermissionActionPublish, claims.Permissions[0].Action)
 	assert.Equal(t, "io.modelcontextprotocol.anonymous/*", claims.Permissions[0].ResourcePattern)
+
+	// Check edit permission
+	assert.Equal(t, auth.PermissionActionEdit, claims.Permissions[1].Action)
+	assert.Equal(t, "io.modelcontextprotocol.anonymous/*", claims.Permissions[1].ResourcePattern)
 }

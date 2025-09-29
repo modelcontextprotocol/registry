@@ -39,7 +39,7 @@ func RegisterNoneEndpoint(api huma.API, cfg *config.Config) {
 		Method:      http.MethodPost,
 		Path:        "/v0/auth/none",
 		Summary:     "Get anonymous Registry JWT",
-		Description: "Get a short-lived Registry JWT token for publishing to io.modelcontextprotocol.anonymous/* namespace",
+		Description: "Get a short-lived Registry JWT token for publishing and editing servers in the io.modelcontextprotocol.anonymous/* namespace",
 		Tags:        []string{"auth"},
 	}, func(ctx context.Context, _ *struct{}) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.GetAnonymousToken(ctx)
@@ -59,6 +59,10 @@ func (h *NoneHandler) GetAnonymousToken(ctx context.Context) (*auth.TokenRespons
 	permissions := []auth.Permission{
 		{
 			Action:          auth.PermissionActionPublish,
+			ResourcePattern: "io.modelcontextprotocol.anonymous/*",
+		},
+		{
+			Action:          auth.PermissionActionEdit,
 			ResourcePattern: "io.modelcontextprotocol.anonymous/*",
 		},
 	}
