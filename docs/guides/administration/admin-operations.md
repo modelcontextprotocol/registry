@@ -23,14 +23,17 @@ Use this when you need to modify details of a specific version (e.g., fix descri
 ### Step 1: Download Specific Version
 
 ```bash
-export SERVER_ID="<server-uuid>"    # This is the server ID (consistent across versions)
-export VERSION="<version-string>"   # e.g., "1.0.0" (optional, defaults to latest)
+export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
+export VERSION="<version-string>"     # e.g., "1.0.0" (optional, defaults to latest)
+
+# URL encode the server name (replace / with %2F)
+ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
 
 # Get specific version
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${SERVER_ID}?version=${VERSION}" > server.json
+curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}" > server.json
 
-# Or get latest version (omit version parameter)
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${SERVER_ID}" > server.json
+# Or get latest version (omit /versions/VERSION)
+curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}" > server.json
 ```
 
 ### Step 2: Make Changes
@@ -41,7 +44,7 @@ Open `server.json` and edit the specific version details. You cannot change the 
 
 ```bash
 # Update specific version
-curl -X PUT "https://registry.modelcontextprotocol.io/v0/servers/${SERVER_ID}?version=${VERSION}" \
+curl -X PUT "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}" \
   -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
   -H "Content-Type: application/json" \
   -d "$(cat server.json)"
@@ -55,36 +58,35 @@ Use this when you need to apply changes across all versions of a server (e.g., m
 ### Step 1: List All Versions
 
 ```bash
-export SERVER_ID="<server-uuid>"    # This is the server ID (consistent across versions)
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${SERVER_ID}/versions" > all_versions.json
+export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
+ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
+
+curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions" > all_versions.json
 ```
 
-### Step 2: Extract Version IDs
+### Step 2: Extract Versions
 
 ```bash
-# Extract all version IDs from the server
-jq -r '.servers[]._meta."io.modelcontextprotocol.registry/official".version_id' all_versions.json > version_ids.txt
+# Extract all versions from the server
+jq -r '.servers[].server.version' all_versions.json > versions.txt
 ```
 
 ### Step 3: Apply Changes to All Versions
 
 ```bash
-# For each version, download, modify, and update
-while read VERSION_ID; do
-  echo "Processing version: $VERSION_ID"
-  curl -s "https://registry.modelcontextprotocol.io/v0/servers/${VERSION_ID}" > temp_version.json
-  
+# For each version, apply changes using the edit endpoint
+while read VERSION; do
+  echo "Processing version: $VERSION"
+
   # Apply your changes here (e.g., set status to "deleted")
-  jq '.status = "deleted"' temp_version.json > modified_version.json
-  
-  curl -X PUT "https://registry.modelcontextprotocol.io/v0/servers/${VERSION_ID}" \
+  curl -X PUT "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}?status=deleted" \
     -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
-    -H "Content-Type: application/json" \
-    -d "{\"server\": $(cat modified_version.json)}"
-done < version_ids.txt
+    -H "Content-Type: application/json"
+
+done < versions.txt
 
 # Clean up temporary files
-rm temp_version.json modified_version.json version_ids.txt all_versions.json
+rm versions.txt all_versions.json
 ```
 
 ## Quick Operations
@@ -92,29 +94,47 @@ rm temp_version.json modified_version.json version_ids.txt all_versions.json
 ### Get Latest Version of a Server
 
 ```bash
-export SERVER_ID="<server-uuid>"
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${SERVER_ID}" > latest_version.json
-export VERSION_ID=$(jq -r '._meta."io.modelcontextprotocol.registry/official".version_id' latest_version.json)
-echo "Latest version ID: $VERSION_ID"
+export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
+ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
+
+curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}" > latest_version.json
+export VERSION=$(jq -r '.server.version' latest_version.json)
+echo "Latest version: $VERSION"
 ```
 
 ### Takedown a Specific Version
 
 ```bash
-export VERSION_ID="<version-uuid>"
-./tools/admin/takedown.sh
+export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
+export VERSION="<version-string>"     # e.g., "1.0.0"
+export REGISTRY_TOKEN="<your-token>"
+
+REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" VERSION="$VERSION" ./tools/admin/takedown.sh
 ```
 
-### Takedown an Entire Server (All Versions)
+### Takedown Latest Version (Entire Server)
 
 ```bash
-export SERVER_ID="<server-uuid>"
-# Get all version IDs and takedown each one
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${SERVER_ID}/versions" | \
-  jq -r '.servers[]._meta."io.modelcontextprotocol.registry/official".version_id' | \
-  while read VERSION_ID; do
-    echo "Taking down version: $VERSION_ID"
-    ./tools/admin/takedown.sh "$VERSION_ID"
+export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
+export REGISTRY_TOKEN="<your-token>"
+
+# This marks the latest version as deleted
+REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" ./tools/admin/takedown.sh
+```
+
+### Takedown All Versions of a Server
+
+```bash
+export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
+export REGISTRY_TOKEN="<your-token>"
+ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
+
+# Get all versions and takedown each one
+curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions" | \
+  jq -r '.servers[].server.version' | \
+  while read VERSION; do
+    echo "Taking down version: $VERSION"
+    REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" VERSION="$VERSION" ./tools/admin/takedown.sh
   done
 ```
 
