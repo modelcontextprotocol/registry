@@ -169,9 +169,9 @@ if [[ "${status_code:0:1}" == "2" ]]; then
   echo "Response:"
   echo "$http_response" | jq '.' 2>/dev/null || echo "$http_response"
   
-  # Check for server added message and extract UUID
+  # Check for server added message and extract server name
   message=$(echo "$http_response" | jq -r '.message // empty' 2>/dev/null)
-  server_id=$(echo "$http_response" | jq -r '.id // .server_id // empty' 2>/dev/null)
+  server_name=$(echo "$http_response" | jq -r '.server.name // .name // empty' 2>/dev/null)
   
   # Validate the response contains success indicators
   success_indicators=0
@@ -184,28 +184,28 @@ if [[ "${status_code:0:1}" == "2" ]]; then
     fi
   fi
   
-  if [[ ! -z "$server_id" && "$server_id" != "null" && "$server_id" != "empty" ]]; then
-    echo "✓ Server UUID received: $server_id"
-    # Validate UUID format (basic check for UUID pattern)
-    if [[ "$server_id" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+  if [[ ! -z "$server_name" && "$server_name" != "null" && "$server_name" != "empty" ]]; then
+    echo "✓ Server name received: $server_name"
+    # Validate server name format (should contain a namespace like 'domain/name')
+    if [[ "$server_name" == *"/"* ]]; then
       ((success_indicators++))
-      echo "✓ Server ID appears to be a valid UUID format"
+      echo "✓ Server name appears to be a valid namespaced format"
     else
-      echo "⚠ Server ID format may not be a standard UUID: $server_id"
-      ((success_indicators++)) # Still count as success if we got an ID
+      echo "⚠ Server name format may not contain namespace: $server_name"
+      ((success_indicators++)) # Still count as success if we got a name
     fi
   fi
   
   if [[ $success_indicators -ge 2 ]]; then
     echo ""
     echo "🎉 PUBLISH TEST PASSED!"
-    echo "   ✓ Server successfully published with ID: $server_id"
+    echo "   ✓ Server successfully published with name: $server_name"
     echo "   ✓ Success message: $message"
   else
     echo ""
     echo "❌ PUBLISH TEST FAILED!"
-    echo "   Expected: Success message about server being added AND a server UUID"
-    echo "   Received: message='$message', id='$server_id'"
+    echo "   Expected: Success message about server being added AND a server name"
+    echo "   Received: message='$message', name='$server_name'"
     exit 1
   fi
   
