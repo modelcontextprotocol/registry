@@ -109,7 +109,7 @@ paths:
         - name: version
           in: path
           required: true
-          description: Specific version to retrieve (e.g., "1.0.0")
+          description: URL-encoded version to retrieve (e.g., "1.0.0" or "1.0.0%2B20130313144700" for versions with build metadata)
           schema:
             type: string
             example: "1.0.0"
@@ -146,7 +146,7 @@ paths:
         - name: version
           in: path
           required: true
-          description: Version to edit (e.g., "1.0.0")
+          description: URL-encoded version to edit (e.g., "1.0.0" or "1.0.0%2B20130313144700" for versions with build metadata)
           schema:
             type: string
             example: "1.0.0"

@@ -20,7 +20,7 @@ import (
 type EditServerInput struct {
 	Authorization string           `header:"Authorization" doc:"Registry JWT token with edit permissions" required:"true"`
 	ServerName    string           `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
-	Version       string           `path:"version" doc:"Version to edit" example:"1.0.0"`
+	Version       string           `path:"version" doc:"URL-encoded version to edit" example:"1.0.0"`
 	Status        string           `query:"status" doc:"New status for the server (active, deprecated, deleted)" required:"false" enum:"active,deprecated,deleted"`
 	Body          apiv0.ServerJSON `body:""`
 }
@@ -56,13 +56,19 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		}
 
 		// URL-decode the server name
-		serverName, err := url.QueryUnescape(input.ServerName)
+		serverName, err := url.PathUnescape(input.ServerName)
 		if err != nil {
 			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
 		}
 
+		// URL-decode the version
+		version, err := url.PathUnescape(input.Version)
+		if err != nil {
+			return nil, huma.Error400BadRequest("Invalid version encoding", err)
+		}
+
 		// Get current server to check permissions against existing name
-		currentServer, err := registry.GetServerByNameAndVersion(ctx, serverName, input.Version)
+		currentServer, err := registry.GetServerByNameAndVersion(ctx, serverName, version)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
@@ -101,7 +107,7 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 		if input.Status != "" {
 			statusPtr = &input.Status
 		}
-		updatedServer, err := registry.UpdateServer(ctx, serverName, input.Version, &input.Body, statusPtr)
+		updatedServer, err := registry.UpdateServer(ctx, serverName, version, &input.Body, statusPtr)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")

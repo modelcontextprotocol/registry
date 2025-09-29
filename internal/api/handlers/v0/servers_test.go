@@ -193,6 +193,14 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// Add version with build metadata for URL encoding test
+	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Name:        serverName,
+		Description: "Version test server with build metadata",
+		Version:     "1.0.0+20130313144700",
+	})
+	require.NoError(t, err)
+
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
@@ -243,13 +251,25 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "Server not found",
 		},
+		{
+			name:           "get version with build metadata (URL encoded)",
+			serverName:     serverName,
+			version:        "1.0.0+20130313144700",
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, resp *apiv0.ServerResponse) {
+				t.Helper()
+				assert.Equal(t, "1.0.0+20130313144700", resp.Server.Version)
+				assert.Equal(t, "Version test server with build metadata", resp.Server.Description)
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// URL encode the server name
+			// URL encode the server name and version
 			encodedName := url.PathEscape(tt.serverName)
-			req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName+"/versions/"+tt.version, nil)
+			encodedVersion := url.PathEscape(tt.version)
+			req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName+"/versions/"+encodedVersion, nil)
 			w := httptest.NewRecorder()
 
 			mux.ServeHTTP(w, req)

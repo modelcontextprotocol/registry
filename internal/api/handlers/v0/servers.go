@@ -32,7 +32,7 @@ type ServerDetailInput struct {
 // ServerVersionDetailInput represents the input for getting a specific version
 type ServerVersionDetailInput struct {
 	ServerName string `path:"server_name" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
-	Version    string `path:"version" doc:"Server version" example:"1.0.0"`
+	Version    string `path:"version" doc:"URL-encoded server version" example:"1.0.0"`
 }
 
 // ServerVersionsInput represents the input for listing all versions of a server
@@ -115,7 +115,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Tags:        []string{"servers"},
 	}, func(ctx context.Context, input *ServerDetailInput) (*Response[apiv0.ServerResponse], error) {
 		// URL-decode the server name
-		serverName, err := url.QueryUnescape(input.ServerName)
+		serverName, err := url.PathUnescape(input.ServerName)
 		if err != nil {
 			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
 		}
@@ -144,13 +144,19 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Tags:        []string{"servers"},
 	}, func(ctx context.Context, input *ServerVersionDetailInput) (*Response[apiv0.ServerResponse], error) {
 		// URL-decode the server name
-		serverName, err := url.QueryUnescape(input.ServerName)
+		serverName, err := url.PathUnescape(input.ServerName)
 		if err != nil {
 			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
 		}
 
+		// URL-decode the version
+		version, err := url.PathUnescape(input.Version)
+		if err != nil {
+			return nil, huma.Error400BadRequest("Invalid version encoding", err)
+		}
+
 		// Get specific version by server name and version
-		serverResponse, err := registry.GetServerByNameAndVersion(ctx, serverName, input.Version)
+		serverResponse, err := registry.GetServerByNameAndVersion(ctx, serverName, version)
 		if err != nil {
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
@@ -173,7 +179,7 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		Tags:        []string{"servers"},
 	}, func(ctx context.Context, input *ServerVersionsInput) (*Response[apiv0.ServerListResponse], error) {
 		// URL-decode the server name
-		serverName, err := url.QueryUnescape(input.ServerName)
+		serverName, err := url.PathUnescape(input.ServerName)
 		if err != nil {
 			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
 		}

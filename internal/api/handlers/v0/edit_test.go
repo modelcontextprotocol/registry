@@ -87,6 +87,20 @@ func TestEditServerEndpoint(t *testing.T) {
 	_, err = registryService.UpdateServer(context.Background(), deletedServer.Name, deletedServer.Version, deletedServer, stringPtr(string(model.StatusDeleted)))
 	require.NoError(t, err)
 
+	// Create a server with build metadata for URL encoding test
+	buildMetadataServer := &apiv0.ServerJSON{
+		Name:        "io.github.testuser/build-metadata-server",
+		Description: "Server with build metadata version",
+		Version:     "1.0.0+20130313144700",
+		Repository: model.Repository{
+			URL:    "https://github.com/testuser/build-metadata-server",
+			Source: "github",
+			ID:     "testuser/build-metadata-server",
+		},
+	}
+	_, err = registryService.CreateServer(context.Background(), buildMetadataServer)
+	require.NoError(t, err)
+
 	testCases := []struct {
 		name           string
 		serverName     string
@@ -284,6 +298,36 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "Cannot change status of deleted server",
 		},
+		{
+			name:       "successful edit of version with build metadata (URL encoded)",
+			serverName: "io.github.testuser/build-metadata-server",
+			version:    "1.0.0+20130313144700",
+			authClaims: &auth.JWTClaims{
+				AuthMethod:        auth.MethodGitHubAT,
+				AuthMethodSubject: "testuser",
+				Permissions: []auth.Permission{
+					{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.testuser/*"},
+				},
+			},
+			requestBody: apiv0.ServerJSON{
+				Name:        "io.github.testuser/build-metadata-server",
+				Description: "Updated server with build metadata",
+				Version:     "1.0.0+20130313144700",
+				Repository: model.Repository{
+					URL:    "https://github.com/testuser/build-metadata-server",
+					Source: "github",
+					ID:     "testuser/build-metadata-server",
+				},
+			},
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, resp *apiv0.ServerResponse) {
+				t.Helper()
+				assert.Equal(t, "Updated server with build metadata", resp.Server.Description)
+				assert.Equal(t, "io.github.testuser/build-metadata-server", resp.Server.Name)
+				assert.Equal(t, "1.0.0+20130313144700", resp.Server.Version)
+				assert.NotNil(t, resp.Meta.Official)
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -301,7 +345,8 @@ func TestEditServerEndpoint(t *testing.T) {
 
 			// Create request URL with proper encoding
 			encodedServerName := url.PathEscape(tc.serverName)
-			requestURL := "/v0/servers/" + encodedServerName + "/versions/" + tc.version
+			encodedVersion := url.PathEscape(tc.version)
+			requestURL := "/v0/servers/" + encodedServerName + "/versions/" + encodedVersion
 			if tc.statusParam != "" {
 				requestURL += "?status=" + tc.statusParam
 			}
