@@ -133,9 +133,9 @@ func (db *PostgreSQL) ListServers(
 		}
 	}
 
-	// Add cursor pagination using compound server_name:version cursor
+	// Add cursor pagination using compound serverName:version cursor
 	if cursor != "" {
-		// Parse cursor format: "server_name:version"
+		// Parse cursor format: "serverName:version"
 		parts := strings.SplitN(cursor, ":", 2)
 		if len(parts) == 2 {
 			cursorServerName := parts[0]
@@ -213,7 +213,7 @@ func (db *PostgreSQL) ListServers(
 		return nil, "", fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	// Determine next cursor using compound server_name:version format
+	// Determine next cursor using compound serverName:version format
 	nextCursor := ""
 	if len(results) > 0 && len(results) >= limit {
 		lastResult := results[len(results)-1]

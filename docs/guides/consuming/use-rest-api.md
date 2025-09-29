@@ -9,9 +9,9 @@ Integration patterns and best practices for building applications that consume M
 **Authentication**: Not required for read-only access
 
 - **`GET /v0/servers`** - List all servers with pagination
-- **`GET /v0/servers/{server_id}`** - Get latest version of server by server ID
-- **`GET /v0/servers/{server_id}?version=X.X.X`** - Get specific version of server
-- **`GET /v0/servers/{server_id}/versions`** - List all versions of a server
+- **`GET /v0/servers/{serverName}`** - Get latest version of server by server name (URL-encoded)
+- **`GET /v0/servers/{serverName}/versions/{version}`** - Get specific version of server
+- **`GET /v0/servers/{serverName}/versions`** - List all versions of a server
 
 See the [interactive API documentation](https://registry.modelcontextprotocol.io/docs) for complete request/response schemas.
 
@@ -21,6 +21,32 @@ See the [interactive API documentation](https://registry.modelcontextprotocol.io
 **Create enhanced registries** - ETL official registry data and add your own metadata like ratings, security scans, or compatibility info.
 
 For now we recommend scraping the `GET /v0/servers` endpoint on some regular basis. In the future we might provide a filter for updatedAt ([#291](https://github.com/modelcontextprotocol/registry/issues/291)) to get only recently changed servers.
+
+### Pagination Example
+
+The API uses cursor-based pagination. Here's how to fetch all servers:
+
+```bash
+# Initial request
+curl "https://registry.modelcontextprotocol.io/v0/servers?limit=100"
+```
+
+```json
+{
+  "servers": [...],
+  "metadata": {
+    "count": 100,
+    "nextCursor": "com.example/my-server:1.0.0"
+  }
+}
+```
+
+```bash
+# Next page using cursor
+curl "https://registry.modelcontextprotocol.io/v0/servers?limit=100&cursor=com.example%2Fmy-server%3A1.0.0"
+```
+
+**Important**: Always URL-encode cursor values when using them in query parameters.
 
 Servers are generally immutable, except for the `status` field which can be updated to `deleted` (among other states). For these packages, we recommend you also update the status field to `deleted` or remove the package from your registry quickly. This is because this status generally indicates it has violated our permissive [moderation guidelines](../administration/moderation-guidelines.md), suggesting it is illegal, malware or spam.
 

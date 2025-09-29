@@ -11,12 +11,12 @@ Changes to the REST API endpoints and responses.
 API endpoints updated to use server names instead of server IDs for better usability.
 
 **Changed endpoints:**
-- `GET /v0/servers/{server_id}` → `GET /v0/servers/{server_name}`
-- `GET /v0/servers/{server_id}/versions` → `GET /v0/servers/{server_name}/versions`
+- `GET /v0/servers/{server_id}` → `GET /v0/servers/{serverName}`
+- `GET /v0/servers/{server_id}/versions` → `GET /v0/servers/{serverName}/versions`
 
 **New endpoints:**
-- `GET /v0/servers/{server_name}/versions/{version}` - Get specific server version
-- `PUT /v0/servers/{server_name}/versions/{version}` - Edit server version (admin only)
+- `GET /v0/servers/{serverName}/versions/{version}` - Get specific server version
+- `PUT /v0/servers/{serverName}/versions/{version}` - Edit server version (admin only)
 
 **Response format changes:**
 - Introduced `ServerResponse` schema separating server data from registry metadata

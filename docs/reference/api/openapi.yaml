@@ -19,10 +19,18 @@ paths:
       parameters:
         - name: cursor
           in: query
-          description: Pagination cursor for retrieving next set of results
+          description: |
+            Pagination cursor for retrieving next set of results.
+
+            **Cursor Format**: `{serverName}:{version}`
+
+            Example: `"com.example/my-server:1.0.0"`
+
+            Cursors are opaque strings returned in the `metadata.nextCursor` field of paginated responses. Always use the exact cursor value returned by the API.
           required: false
           schema:
             type: string
+            example: "com.example/my-server:1.0.0"
         - name: limit
           in: query
           description: Maximum number of items to return
@@ -306,7 +314,13 @@ components:
           properties:
             nextCursor:
               type: string
-              description: Cursor for next page of results
+              description: |
+                Pagination cursor for retrieving the next page of results.
+
+                **Format**: `{serverName}:{version}` (e.g., "com.example/my-server:1.0.0")
+
+                Use this exact value in the `cursor` query parameter of your next request. If null or empty, there are no more results.
+              example: "com.example/my-server:1.0.0"
             count:
               type: integer
               description: Number of items in current page
