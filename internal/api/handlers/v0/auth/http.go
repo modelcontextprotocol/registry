@@ -19,7 +19,7 @@ const MaxKeyResponseSize = 4096
 
 // HTTPTokenExchangeInput represents the input for HTTP-based authentication
 type HTTPTokenExchangeInput struct {
-	Body CoreTokenExchangeInput
+	Body SignatureTokenExchangeInput
 }
 
 // HTTPKeyFetcher defines the interface for fetching HTTP keys
@@ -133,34 +133,14 @@ func RegisterHTTPEndpoint(api huma.API, cfg *config.Config) {
 
 // ExchangeToken exchanges HTTP signature for a Registry JWT token
 func (h *HTTPAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, signedTimestamp string) (*auth.TokenResponse, error) {
-	_, err := ValidateDomainAndTimestamp(domain, timestamp)
-	if err != nil {
-		return nil, err
+	keyFetcher := func(ctx context.Context, domain string) ([]string, error) {
+		keyResponse, err := h.fetcher.FetchKey(ctx, domain)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch public key: %w", err)
+		}
+		return []string{keyResponse}, nil
 	}
 
-	signature, err := DecodeAndValidateSignature(signedTimestamp)
-	if err != nil {
-		return nil, err
-	}
-
-	// Fetch the key from well known HTTP endpoint
-	keyResponse, err := h.fetcher.FetchKey(ctx, domain)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch public key: %w", err)
-	}
-
-	publicKeys := ParseMCPKeysFromStrings([]string{keyResponse})
-	if len(publicKeys) == 0 {
-		return nil, fmt.Errorf("failed to parse public key")
-	}
-
-	messageBytes := []byte(timestamp)
-	if !VerifySignatureWithKeys(publicKeys, messageBytes, signature) {
-		return nil, fmt.Errorf("signature verification failed")
-	}
-
-	// Build permissions for domain (HTTP does not include subdomains)
-	permissions := BuildPermissions(domain, false)
-
-	return h.CreateJWTClaimsAndToken(ctx, auth.MethodHTTP, domain, permissions)
+	allowSubdomains := false
+	return h.CoreAuthHandler.ExchangeToken(ctx, domain, timestamp, signedTimestamp, keyFetcher, allowSubdomains, auth.MethodHTTP)
 }

@@ -14,12 +14,15 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
 
-// CoreTokenExchangeInput represents the common input structure for token exchange
-type CoreTokenExchangeInput struct {
+// SignatureTokenExchangeInput represents the common input structure for token exchange
+type SignatureTokenExchangeInput struct {
 	Domain          string `json:"domain" doc:"Domain name" example:"example.com" required:"true"`
 	Timestamp       string `json:"timestamp" doc:"RFC3339 timestamp" example:"2023-01-01T00:00:00Z" required:"true"`
 	SignedTimestamp string `json:"signed_timestamp" doc:"Hex-encoded Ed25519 signature of timestamp" example:"abcdef1234567890" required:"true"`
 }
+
+// KeyFetcher defines a function type for fetching keys from external sources
+type KeyFetcher func(ctx context.Context, domain string) ([]string, error)
 
 // CoreAuthHandler represents the common handler structure
 type CoreAuthHandler struct {
@@ -90,9 +93,6 @@ func BuildPermissions(domain string, includeSubdomains bool) []auth.Permission {
 	}
 
 	if includeSubdomains {
-		// DNS implies a hierarchy where subdomains are treated as part of the parent domain,
-		// therefore we grant permissions for all subdomains (e.g., com.example.*)
-		// This is in line with other DNS-based authentication methods e.g. ACME DNS-01 challenges
 		permissions = append(permissions, auth.Permission{
 			Action:          auth.PermissionActionPublish,
 			ResourcePattern: fmt.Sprintf("%s.*", reverseDomain),
@@ -118,6 +118,51 @@ func (h *CoreAuthHandler) CreateJWTClaimsAndToken(ctx context.Context, authMetho
 	}
 
 	return tokenResponse, nil
+}
+
+// ExchangeToken is a shared method for token exchange that takes a key fetcher function,
+// subdomain inclusion flag, and auth method
+func (h *CoreAuthHandler) ExchangeToken(
+	ctx context.Context,
+	domain, timestamp, signedTimestamp string,
+	keyFetcher KeyFetcher,
+	includeSubdomains bool,
+	authMethod auth.Method) (*auth.TokenResponse, error) {
+	_, err := ValidateDomainAndTimestamp(domain, timestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	signature, err := DecodeAndValidateSignature(signedTimestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	keyStrings, err := keyFetcher(ctx, domain)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch keys: %w", err)
+	}
+
+	publicKeys := ParseMCPKeysFromStrings(keyStrings)
+	if len(publicKeys) == 0 {
+		switch authMethod {
+		case auth.MethodHTTP:
+			return nil, fmt.Errorf("failed to parse public key")
+		case auth.MethodDNS:
+			return nil, fmt.Errorf("no valid MCP public keys found in DNS TXT records")
+		default:
+			return nil, fmt.Errorf("no valid MCP public keys found using %s authentication", authMethod)
+		}
+	}
+
+	messageBytes := []byte(timestamp)
+	if !VerifySignatureWithKeys(publicKeys, messageBytes, signature) {
+		return nil, fmt.Errorf("signature verification failed")
+	}
+
+	permissions := BuildPermissions(domain, includeSubdomains)
+
+	return h.CreateJWTClaimsAndToken(ctx, authMethod, domain, permissions)
 }
 
 func ParseMCPKeysFromStrings(inputs []string) []ed25519.PublicKey {

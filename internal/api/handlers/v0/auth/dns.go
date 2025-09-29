@@ -14,7 +14,7 @@ import (
 
 // DNSTokenExchangeInput represents the input for DNS-based authentication
 type DNSTokenExchangeInput struct {
-	Body CoreTokenExchangeInput
+	Body SignatureTokenExchangeInput
 }
 
 // DNSResolver defines the interface for DNS resolution
@@ -75,35 +75,18 @@ func RegisterDNSEndpoint(api huma.API, cfg *config.Config) {
 
 // ExchangeToken exchanges DNS signature for a Registry JWT token
 func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, signedTimestamp string) (*auth.TokenResponse, error) {
-	_, err := ValidateDomainAndTimestamp(domain, timestamp)
-	if err != nil {
-		return nil, err
+	keyFetcher := func(ctx context.Context, domain string) ([]string, error) {
+		// Lookup DNS TXT records
+		// DNS implies a hierarchy where subdomains are treated as part of the parent domain,
+		// therefore we grant permissions for all subdomains (e.g., com.example.*)
+		// This is in line with other DNS-based authentication methods e.g. ACME DNS-01 challenges
+		txtRecords, err := h.resolver.LookupTXT(ctx, domain)
+		if err != nil {
+			return nil, fmt.Errorf("failed to lookup DNS TXT records: %w", err)
+		}
+		return txtRecords, nil
 	}
 
-	signature, err := DecodeAndValidateSignature(signedTimestamp)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lookup DNS TXT records
-	txtRecords, err := h.resolver.LookupTXT(ctx, domain)
-	if err != nil {
-		return nil, fmt.Errorf("failed to lookup DNS TXT records: %w", err)
-	}
-
-	publicKeys := ParseMCPKeysFromStrings(txtRecords)
-
-	if len(publicKeys) == 0 {
-		return nil, fmt.Errorf("no valid MCP public keys found in DNS TXT records")
-	}
-
-	messageBytes := []byte(timestamp)
-	if !VerifySignatureWithKeys(publicKeys, messageBytes, signature) {
-		return nil, fmt.Errorf("signature verification failed")
-	}
-
-	// Build permissions for domain (DNS includes subdomains)
-	permissions := BuildPermissions(domain, true)
-
-	return h.CreateJWTClaimsAndToken(ctx, auth.MethodDNS, domain, permissions)
+	allowSubdomains := true
+	return h.CoreAuthHandler.ExchangeToken(ctx, domain, timestamp, signedTimestamp, keyFetcher, allowSubdomains, auth.MethodDNS)
 }
