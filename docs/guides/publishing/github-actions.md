@@ -136,40 +136,6 @@ You can keep your package version and server.json version in sync automatically 
     jq --arg v "$VERSION" '.version = $v' server.json > tmp && mv tmp server.json
 ```
 
-## Community Resources
-
-**⚠️ Disclaimer**: The following are third-party, community-maintained tools that are not officially endorsed by the MCP Registry team. Use at your own discretion and review the source code before using in production.
-
-### Third-party GitHub Actions
-
-#### OtherVibes/mcp-publish-action
-
-A reusable GitHub Action that simplifies automated MCP server publishing by handling `server.json` creation and using the MCP Publisher CLI with GitHub OIDC authentication.
-
-**Repository**: [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action)
-
-**Key Features**:
-- Automatically constructs `server.json` using the official schema
-- Supports multiple registry types (PyPI, npm, OCI, NuGet, MCPB)
-- Supports multiple transport types (stdio, streamable-http, sse)
-- Uses GitHub OIDC authentication (no secrets required)
-- Reduces workflow boilerplate
-
-**Example Usage**:
-```yaml
-- name: Publish to MCP Registry
-  uses: OtherVibes/mcp-publish-action@v1
-  with:
-    name: io.github.owner/repo
-    description: "MCP server providing weather data and forecasts"
-    version: "1.0.0"
-    registry_type: pypi
-    identifier: my-server
-    transport_type: stdio
-```
-
-**Benefits**: Zero need to copy workflow YAML steps, keeps up with protocol changes, and aligns with OIDC best practices.
-
 ## Troubleshooting
 - **"Authentication failed"**: Ensure `id-token: write` permission is set for OIDC, or check secrets
 - **"Package validation failed"**: Verify your package published to your registry (NPM, PyPi etc.) successfully first, and that you have done the necessary validation steps in the [Publishing Tutorial](publish-server.md)
