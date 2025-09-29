@@ -150,7 +150,7 @@ func (h *CoreAuthHandler) ExchangeToken(
 			return nil, fmt.Errorf("failed to parse public key")
 		case auth.MethodDNS:
 			return nil, fmt.Errorf("no valid MCP public keys found in DNS TXT records")
-		default:
+		case auth.MethodGitHubAT, auth.MethodGitHubOIDC, auth.MethodOIDC, auth.MethodNone:
 			return nil, fmt.Errorf("no valid MCP public keys found using %s authentication", authMethod)
 		}
 	}
