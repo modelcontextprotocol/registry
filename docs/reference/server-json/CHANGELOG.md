@@ -2,6 +2,24 @@
 
 Changes to the server.json schema and format.
 
+## 2025-09-29
+
+### ⚠️ BREAKING CHANGES
+
+#### Schema Simplification
+
+Removed registry-managed fields from publisher-controlled server.json schema.
+
+**Removed fields:**
+- `status` field from Server object (now managed by registry in API responses)
+- `io.modelcontextprotocol.registry/official` from `_meta` (read-only, added by registry)
+
+**Migration:**
+Publishers should remove these fields from their `server.json` files. The registry will manage server status and official metadata separately.
+
+### Changed
+- Schema version: `2025-09-16` → `2025-09-29`
+
 ## 2025-09-16
 
 ### ⚠️ BREAKING CHANGES
@@ -116,7 +134,7 @@ All JSON field names standardized to camelCase. **All existing `server.json` fil
 
 #### Updated Schema Reference
 
-🔗 **Current schema**: https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json
+🔗 **Current schema**: https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json
 
 ### Changed
 - Schema version: `2025-07-09` → `2025-09-16`

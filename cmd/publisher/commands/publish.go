@@ -39,7 +39,7 @@ func PublishCommand(args []string) error {
 
 	// Check for deprecated schema and recommend migration
 	// Allow empty schema (will use default) but reject old schemas
-	if serverJSON.Schema != "" && !strings.Contains(serverJSON.Schema, "2025-09-16") {
+	if serverJSON.Schema != "" && !strings.Contains(serverJSON.Schema, "2025-09-29") {
 		return fmt.Errorf(`deprecated schema detected :%s.
 
 Migrate to the current schema format for new servers.

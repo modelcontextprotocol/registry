@@ -92,7 +92,7 @@ This creates a `server.json` with auto-detected values. You'll see something lik
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.yourname/your-server",
   "description": "A description of your MCP server",
   "version": "1.0.0",
@@ -151,7 +151,7 @@ Add an `mcpName` field to your `package.json`:
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.username/server-name",
   "description": "A server that provides npm package functionality",
   "version": "1.0.0",
@@ -189,7 +189,7 @@ Add it to your README.md file (which becomes the package description on PyPI). T
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.username/server-name",
   "description": "A server that provides PyPI package functionality",
   "version": "1.0.0",
@@ -227,7 +227,7 @@ Add a README file to your NuGet package that includes the server name. This can 
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.username/server-name",
   "description": "A server that provides NuGet package functionality",
   "version": "1.0.0",
@@ -269,7 +269,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ### Example server.json (Docker Hub)
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.username/server-name",
   "description": "A server that provides Docker container functionality",
   "version": "1.0.0",
@@ -290,7 +290,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ### Example server.json (GitHub Container Registry)
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.username/server-name",
   "description": "A server that provides GitHub container functionality",
   "version": "1.0.0",
@@ -332,7 +332,7 @@ openssl dgst -sha256 server.mcpb
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.username/server-name",
   "description": "A server that provides MCPB package functionality",
   "version": "1.0.0",
@@ -377,7 +377,7 @@ Add the `remotes` field to your `server.json` (can coexist with `packages`):
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "com.yourcompany/api-server",
   "description": "Cloud-hosted MCP server for API operations",
   "version": "2.0.0",

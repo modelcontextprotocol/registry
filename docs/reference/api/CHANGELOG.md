@@ -2,6 +2,30 @@
 
 Changes to the REST API endpoints and responses.
 
+## 2025-09-29
+
+### ⚠️ BREAKING CHANGES
+
+#### API Endpoint Restructuring
+
+API endpoints updated to use server names instead of server IDs for better usability.
+
+**Changed endpoints:**
+- `GET /v0/servers/{server_id}` → `GET /v0/servers/{server_name}`
+- `GET /v0/servers/{server_id}/versions` → `GET /v0/servers/{server_name}/versions`
+
+**New endpoints:**
+- `GET /v0/servers/{server_name}/versions/{version}` - Get specific server version
+- `PUT /v0/servers/{server_name}/versions/{version}` - Edit server version (admin only)
+
+**Response format changes:**
+- Introduced `ServerResponse` schema separating server data from registry metadata
+- Moved `status` field from server data to `_meta.io.modelcontextprotocol.registry/official`
+- Removed `io.modelcontextprotocol.registry/official` metadata from `ServerDetail` schema
+
+### Changed
+- OpenAPI spec version: `2025-09-16` → `2025-09-29`
+
 ## 2025-09-16
 
 ### ⚠️ BREAKING CHANGES
