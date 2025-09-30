@@ -35,9 +35,10 @@ BEGIN
 
         IF official_meta IS NOT NULL THEN
             -- Update columns with extracted metadata
+            -- Note: status is at top level in old format, not in official_meta
             UPDATE servers
             SET
-                status = (official_meta->>'status')::VARCHAR(50),
+                status = COALESCE(NULLIF(rec.value->>'status', 'null'), 'active'),
                 published_at = (official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE,
                 updated_at = (official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE,
                 is_latest = (official_meta->>'isLatest')::BOOLEAN
@@ -46,7 +47,7 @@ BEGIN
             -- Handle records without official metadata (set defaults)
             UPDATE servers
             SET
-                status = COALESCE((rec.value->>'status'), 'active'),
+                status = COALESCE(NULLIF(rec.value->>'status', 'null'), 'active'),
                 published_at = NOW(),
                 updated_at = NOW(),
                 is_latest = true
