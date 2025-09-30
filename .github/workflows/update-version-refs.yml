@@ -1,0 +1,170 @@
+name: Update Version References
+
+on:
+  schedule:
+    # Run daily at 9 AM UTC to check for new releases
+    - cron: '0 9 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-version-references:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest release
+        id: latest_release
+        run: |
+          # Get the latest release info
+          RELEASE_INFO=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+          LATEST_TAG=$(echo "$RELEASE_INFO" | jq -r '.tag_name')
+          LATEST_VERSION=${LATEST_TAG#v}
+
+          echo "latest_tag=${LATEST_TAG}" >> $GITHUB_OUTPUT
+          echo "latest_version=${LATEST_VERSION}" >> $GITHUB_OUTPUT
+          echo "Found latest release: ${LATEST_TAG}"
+
+      - name: Get current version in docs
+        id: current_version
+        run: |
+          # Find the current version referenced in publish-server.md
+          CURRENT_VERSION=$(grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' docs/guides/publishing/publish-server.md | head -1)
+          CURRENT_VERSION_NUM=${CURRENT_VERSION#v}
+          echo "current_tag=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+          echo "current_version=${CURRENT_VERSION_NUM}" >> $GITHUB_OUTPUT
+          echo "Current version in docs: ${CURRENT_VERSION}"
+
+      - name: Check if update is needed
+        id: check_update
+        run: |
+          LATEST="${{ steps.latest_release.outputs.latest_version }}"
+          CURRENT="${{ steps.current_version.outputs.current_version }}"
+
+          if [ "$LATEST" = "$CURRENT" ]; then
+            echo "Documentation is already up to date (${CURRENT})"
+            echo "needs_update=false" >> $GITHUB_OUTPUT
+          else
+            echo "Update needed: ${CURRENT} -> ${LATEST}"
+            echo "needs_update=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verify release assets exist
+        if: steps.check_update.outputs.needs_update == 'true'
+        id: verify_assets
+        run: |
+          LATEST_TAG="${{ steps.latest_release.outputs.latest_tag }}"
+          LATEST_VERSION="${{ steps.latest_release.outputs.latest_version }}"
+
+          # Check for key assets that should be present
+          ASSETS_TO_CHECK=(
+            "mcp-publisher_${LATEST_VERSION}_linux_amd64.tar.gz"
+            "mcp-publisher_${LATEST_VERSION}_darwin_amd64.tar.gz"
+            "mcp-publisher_${LATEST_VERSION}_darwin_arm64.tar.gz"
+            "mcp-publisher_${LATEST_VERSION}_windows_amd64.tar.gz"
+          )
+
+          echo "Checking if release assets exist for ${LATEST_TAG}..."
+
+          ALL_EXIST=true
+          for asset in "${ASSETS_TO_CHECK[@]}"; do
+            echo "Checking: ${asset}"
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              "https://github.com/${{ github.repository }}/releases/download/${LATEST_TAG}/${asset}")
+
+            if [ "$HTTP_CODE" -eq "200" ] || [ "$HTTP_CODE" -eq "302" ]; then
+              echo "✅ ${asset} exists"
+            else
+              echo "❌ ${asset} not found (HTTP ${HTTP_CODE})"
+              ALL_EXIST=false
+            fi
+          done
+
+          if [ "$ALL_EXIST" = "true" ]; then
+            echo "All required assets are available"
+            echo "assets_ready=true" >> $GITHUB_OUTPUT
+          else
+            echo "Some assets are missing, skipping update"
+            echo "assets_ready=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update mcp-publisher version references in all markdown files
+        if: steps.check_update.outputs.needs_update == 'true' && steps.verify_assets.outputs.assets_ready == 'true'
+        run: |
+          NEW_VERSION="${{ steps.latest_release.outputs.latest_version }}"
+          NEW_TAG="${{ steps.latest_release.outputs.latest_tag }}"
+
+          echo "Updating all mcp-publisher references to ${NEW_TAG}"
+
+          # Find all markdown files that contain mcp-publisher download links
+          FILES=$(grep -l "github\.com/modelcontextprotocol/registry/releases/download.*mcp-publisher" **/*.md || true)
+
+          if [ -z "$FILES" ]; then
+            echo "No files found with mcp-publisher download links"
+            exit 0
+          fi
+
+          echo "Found files to update:"
+          echo "$FILES"
+
+          # Update each file
+          for file in $FILES; do
+            echo "Processing $file"
+
+            # Replace all mcp-publisher download URLs
+            # Pattern: releases/download/vX.Y.Z/mcp-publisher_X.Y.Z_ -> releases/download/vNEW/mcp-publisher_NEW_
+            # Handle both full URLs and partial paths
+            sed -i -E "s|(releases/download)/v[0-9]+\.[0-9]+\.[0-9]+(/mcp-publisher_)[0-9]+\.[0-9]+\.[0-9]+_|\1/${NEW_TAG}\2${NEW_VERSION}_|g" "$file"
+
+            echo "Updated $file"
+          done
+
+      - name: Check for changes
+        if: steps.check_update.outputs.needs_update == 'true' && steps.verify_assets.outputs.assets_ready == 'true'
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected in the following files:"
+            git diff --name-only
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "docs: update mcp-publisher download links to ${{ steps.latest_release.outputs.latest_tag }}"
+          title: "Update mcp-publisher version references to ${{ steps.latest_release.outputs.latest_tag }}"
+          body: |
+            ## Summary
+
+            This PR automatically updates all mcp-publisher download links in the documentation to reference the latest release `${{ steps.latest_release.outputs.latest_tag }}`.
+
+            ## Changes
+
+            Updated mcp-publisher download URLs in:
+            $(git diff --name-only | sed 's/^/- /')
+
+            ## Context
+
+            This PR was automatically created by the daily version check workflow after detecting that release `${{ steps.latest_release.outputs.latest_tag }}` is available and all required assets are present.
+
+            Previous version in docs: `${{ steps.current_version.outputs.current_tag }}`
+            New version: `${{ steps.latest_release.outputs.latest_tag }}`
+
+            The workflow ensures that our documentation always references the latest version of the mcp-publisher CLI.
+
+            🤖 Generated by the `update-version-refs.yml` workflow
+          branch: auto-update-version-${{ steps.latest_release.outputs.latest_tag }}
+          delete-branch: true
