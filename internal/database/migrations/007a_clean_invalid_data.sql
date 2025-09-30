@@ -1,4 +1,4 @@
--- Migration 008: Clean up invalid data before applying stricter constraints in migration 009
+-- Migration 007a: Clean up invalid data before applying stricter constraints in migration 008
 -- This migration removes or fixes data that would violate constraints introduced in the next migration
 
 BEGIN;
@@ -27,11 +27,11 @@ BEGIN
 
     -- Skip migration if we don't have the known bad data (indicates test environment)
     IF NOT has_known_bad_server THEN
-        RAISE NOTICE 'Migration 008: Skipping cleanup - no known problematic data found (likely test/dev environment)';
+        RAISE NOTICE 'Migration 007a: Skipping cleanup - no known problematic data found (likely test/dev environment)';
         RETURN;  -- Exit early, don't run any cleanup
     END IF;
 
-    RAISE NOTICE 'Migration 008: Found known problematic data, proceeding with cleanup';
+    RAISE NOTICE 'Migration 007a: Found known problematic data, proceeding with cleanup';
 
     -- Count servers with invalid name format
     SELECT COUNT(*) INTO invalid_name_count
@@ -67,7 +67,7 @@ BEGIN
        OR value->>'version' = '';
 
     -- Log the cleanup operations with safety check
-    RAISE NOTICE 'Migration 008 Data Cleanup Plan:';
+    RAISE NOTICE 'Migration 007a Data Cleanup Plan:';
     RAISE NOTICE '  Total servers in database: %', total_servers;
 
     IF total_servers > 0 THEN
