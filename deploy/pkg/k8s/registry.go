@@ -35,7 +35,9 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	// Determine Docker image tag based on environment
 	imageTag := "main" // Default for staging
 	if environment == "prod" {
-		imageTag = "latest" // Use latest release for production
+		// Use explicitly configured image tag for production
+		// This prevents automatic promotion and requires manual control of production releases
+		imageTag = conf.Require("imageTag") // Explicit configuration required - no fallback
 	}
 
 	// Create Secret with sensitive configuration

@@ -21,6 +21,8 @@ The release workflow will automatically:
   - `ghcr.io/modelcontextprotocol/registry:vX.Y.Z` - Specific release version
 - Binaries can be downloaded from the GitHub release page
 
+**Note:** Releases do not automatically deploy to production. See the [deployment documentation](../../deploy/README.md) for production deployment instructions.
+
 ## Docker Image Tags
 
 The registry publishes different Docker image tags for different use cases:

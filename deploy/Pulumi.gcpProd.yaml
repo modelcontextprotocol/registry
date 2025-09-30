@@ -1,6 +1,7 @@
 config:
   mcp-registry:environment: prod
   mcp-registry:provider: gcp
+  mcp-registry:imageTag: latest  # Set specific image tag for production (change this to deploy different versions)
   gcp:project: mcp-registry-prod
   mcp-registry:githubClientId: Iv23liUydBbI7Z2Q9bOZ
   mcp-registry:githubClientSecret:

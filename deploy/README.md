@@ -29,7 +29,15 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
 
 ### Production Deployment (GCP)
 
-**Note:** The production deployment is automatically handled by GitHub Actions. All merges to the `main` branch trigger an automatic deployment to GCP via [the configured GitHub Actions workflow](../.github/workflows/deploy.yml). The steps below are preserved as a log of what we did, or if a manual override is needed.
+**Note:** The production deployment is automatically handled by GitHub Actions. All merges to the `main` branch trigger an automatic deployment the `staging` environment at GCP via [the configured GitHub Actions workflow](../.github/workflows/deploy.yml).
+
+**Important:** Deployment to `prod` require explicit configuration of the Docker image tag in `Pulumi.gcpProd.yaml`. This prevents automatic promotion of new releases and provides manual control over production versions. To deploy a specific version:
+
+1. Update `mcp-registry:imageTag` in `Pulumi.gcpProd.yaml` to the desired version (e.g., `v1.0.0`, `main-20250930-abc123d`)
+2. Commit the changes and open a PR to `main`
+3. Once merged, the GitHub Actions workflow will deploy the specified version
+
+The steps below are preserved as a log of what we did, or if a manual override is needed.
 
 Pre-requisites:
 - [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
@@ -113,6 +121,7 @@ Pre-requisites:
 | `provider` | Kubernetes provider (local/gcp) | No (default: local) |
 | `githubClientId` | GitHub OAuth Client ID | Yes |
 | `githubClientSecret` | GitHub OAuth Client Secret | Yes |
+| `imageTag` | Docker image tag for production environment | Yes (prod only) |
 | `gcpProjectId` | GCP Project ID (required when provider=gcp) | No |
 | `gcpRegion` | GCP Region (default: us-central1) | No |
 
