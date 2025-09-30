@@ -11,6 +11,10 @@ ALTER TABLE servers ADD COLUMN published_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE servers ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE servers ADD COLUMN is_latest BOOLEAN;
 
+-- Ensure all existing rows have status = 'active' as the initial value
+-- This is a safety measure in addition to the DEFAULT clause
+UPDATE servers SET status = 'active' WHERE status IS NULL;
+
 -- Create a function to migrate existing data from JSON to columns
 CREATE OR REPLACE FUNCTION migrate_official_metadata()
 RETURNS VOID AS $$
@@ -38,7 +42,7 @@ BEGIN
             -- Note: status is at top level in old format, not in official_meta
             UPDATE servers
             SET
-                status = rec.value->>'status',
+                status = COALESCE(NULLIF(NULLIF(rec.value->>'status', ''), 'null'), 'active'),
                 published_at = COALESCE((official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 updated_at = COALESCE((official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 is_latest = COALESCE((official_meta->>'isLatest')::BOOLEAN, true)
@@ -47,7 +51,7 @@ BEGIN
             -- Handle records without official metadata (set defaults)
             UPDATE servers
             SET
-                status = rec.value->>'status',
+                status = COALESCE(NULLIF(NULLIF(rec.value->>'status', ''), 'null'), 'active'),
                 published_at = NOW(),
                 updated_at = NOW(),
                 is_latest = true
