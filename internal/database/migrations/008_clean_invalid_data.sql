@@ -55,7 +55,7 @@ BEGIN
     RAISE NOTICE '  Total servers in database: %', total_servers;
 
     IF total_servers > 0 THEN
-        RAISE NOTICE '  Servers to DELETE: % (%.2f%%)', total_to_delete, (total_to_delete::float / total_servers * 100);
+        RAISE NOTICE '  Servers to DELETE: % (% percent of total)', total_to_delete, ROUND((total_to_delete::numeric / total_servers * 100), 2);
     ELSE
         RAISE NOTICE '  Servers to DELETE: %', total_to_delete;
     END IF;
@@ -85,7 +85,7 @@ BEGIN
                OR value->>'version' = ''
             ORDER BY value->>'name'
         LOOP
-            RAISE NOTICE '  - %@% (reason: %)', r.name, r.version, r.reason;
+            RAISE NOTICE '  - % @ % (reason: %)', r.name, COALESCE(r.version, '<NULL>'), r.reason;
         END LOOP;
 
         RAISE EXCEPTION 'Safety check failed: Expected to delete exactly 5 servers but would delete %. Check the log above for details. Aborting to prevent data loss.', total_to_delete;
@@ -102,7 +102,7 @@ BEGIN
               AND value->>'status' NOT IN ('active', 'deprecated', 'deleted')
             ORDER BY value->>'name'
         LOOP
-            RAISE NOTICE '  - %@% (current status: %)', r.name, r.version, r.status;
+            RAISE NOTICE '  - % @ % (current status: %)', r.name, r.version, r.status;
         END LOOP;
 
         RAISE EXCEPTION 'Safety check failed: Expected to update exactly 1 server status but would update %. Check the log above for details. Aborting to prevent data corruption.', invalid_status_count;

@@ -28,6 +28,7 @@ var (
 
 	// Server name validation errors
 	ErrMultipleSlashesInServerName = errors.New("server name cannot contain multiple slashes")
+	ErrInvalidServerNameFormat     = errors.New("server name format is invalid")
 )
 
 // RepositorySource represents valid repository sources

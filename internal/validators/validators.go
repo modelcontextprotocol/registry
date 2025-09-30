@@ -14,6 +14,18 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+// Server name validation patterns
+var (
+	// Component patterns for namespace and name parts
+	namespacePattern = `[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]`
+	namePartPattern  = `[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]`
+
+	// Compiled regexes
+	namespaceRegex  = regexp.MustCompile(`^` + namespacePattern + `$`)
+	namePartRegex   = regexp.MustCompile(`^` + namePartPattern + `$`)
+	serverNameRegex = regexp.MustCompile(`^` + namespacePattern + `/` + namePartPattern + `$`)
+)
+
 // Regexes to detect semver range syntaxes
 var (
 	// Case 1: comparator ranges
@@ -403,9 +415,26 @@ func parseServerName(serverJSON apiv0.ServerJSON) (string, error) {
 		return "", ErrMultipleSlashesInServerName
 	}
 
+	// Split and check for empty parts
 	parts := strings.SplitN(name, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 		return "", fmt.Errorf("server name must be in format 'dns-namespace/name' with non-empty namespace and name parts")
+	}
+
+	// Validate name format using regex
+	if !serverNameRegex.MatchString(name) {
+		namespace := parts[0]
+		serverName := parts[1]
+
+		// Check which part is invalid for a better error message
+		if !namespaceRegex.MatchString(namespace) {
+			return "", fmt.Errorf("%w: namespace '%s' is invalid. Namespace must start and end with alphanumeric characters, and may contain dots and hyphens in the middle", ErrInvalidServerNameFormat, namespace)
+		}
+		if !namePartRegex.MatchString(serverName) {
+			return "", fmt.Errorf("%w: name '%s' is invalid. Name must start and end with alphanumeric characters, and may contain dots, underscores, and hyphens in the middle", ErrInvalidServerNameFormat, serverName)
+		}
+		// Fallback in case both somehow pass individually but not together
+		return "", fmt.Errorf("%w: invalid format for '%s'", ErrInvalidServerNameFormat, name)
 	}
 
 	return name, nil
