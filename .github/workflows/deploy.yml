@@ -71,7 +71,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Setup Pulumi
-        uses: pulumi/actions@cc7494be991dba0978f7ffafaf995b0449a0998e
+        uses: pulumi/actions@d7ceb0215da5a14ec84f50b703365ddf0194a9c8
         with:
           pulumi-version: ${{ env.PULUMI_VERSION }}
 
@@ -110,7 +110,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Setup Pulumi
-        uses: pulumi/actions@cc7494be991dba0978f7ffafaf995b0449a0998e
+        uses: pulumi/actions@d7ceb0215da5a14ec84f50b703365ddf0194a9c8
         with:
           pulumi-version: ${{ env.PULUMI_VERSION }}
 
