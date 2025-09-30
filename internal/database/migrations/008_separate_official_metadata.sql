@@ -93,18 +93,32 @@ WHERE status IS NULL
 
 UPDATE servers SET published_at = NOW() WHERE published_at IS NULL;
 
--- For is_latest: only set to true if no other version of this server already has is_latest=true
--- Otherwise set to false
-UPDATE servers s1
-SET is_latest = CASE
-    WHEN EXISTS (
+-- For is_latest: preserve existing true values, handle NULLs deterministically
+-- First, for servers where NO version has is_latest=true, mark the most recent as latest
+WITH servers_without_latest AS (
+    SELECT DISTINCT s1.server_name
+    FROM servers s1
+    WHERE NOT EXISTS (
         SELECT 1 FROM servers s2
         WHERE s2.server_name = s1.server_name
         AND s2.is_latest = true
-    ) THEN false
-    ELSE true
-END
-WHERE s1.is_latest IS NULL;
+    )
+),
+latest_versions AS (
+    SELECT s.server_name, MAX(s.published_at) as max_published
+    FROM servers s
+    INNER JOIN servers_without_latest swl ON s.server_name = swl.server_name
+    GROUP BY s.server_name
+)
+UPDATE servers s
+SET is_latest = true
+FROM latest_versions lv
+WHERE s.server_name = lv.server_name
+  AND s.published_at = lv.max_published
+  AND s.is_latest IS NULL;
+
+-- Finally, set remaining NULLs to false
+UPDATE servers SET is_latest = false WHERE is_latest IS NULL;
 
 -- Make the new columns NOT NULL now that all records have values
 ALTER TABLE servers ALTER COLUMN server_name SET NOT NULL;
