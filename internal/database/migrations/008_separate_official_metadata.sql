@@ -6,7 +6,7 @@ BEGIN;
 -- Add new columns for official metadata and core identifiers
 ALTER TABLE servers ADD COLUMN server_name VARCHAR(255);
 ALTER TABLE servers ADD COLUMN version VARCHAR(255);
-ALTER TABLE servers ADD COLUMN status VARCHAR(50);
+ALTER TABLE servers ADD COLUMN status VARCHAR(50) DEFAULT 'active';
 ALTER TABLE servers ADD COLUMN published_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE servers ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE servers ADD COLUMN is_latest BOOLEAN;
@@ -38,7 +38,7 @@ BEGIN
             -- Note: status is at top level in old format, not in official_meta
             UPDATE servers
             SET
-                status = COALESCE(NULLIF(NULLIF(rec.value->>'status', 'null'), ''), 'active'),
+                status = rec.value->>'status',
                 published_at = COALESCE((official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 updated_at = (official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE,
                 is_latest = COALESCE((official_meta->>'isLatest')::BOOLEAN, true)
@@ -47,7 +47,7 @@ BEGIN
             -- Handle records without official metadata (set defaults)
             UPDATE servers
             SET
-                status = COALESCE(NULLIF(NULLIF(rec.value->>'status', 'null'), ''), 'active'),
+                status = rec.value->>'status',
                 published_at = NOW(),
                 updated_at = NOW(),
                 is_latest = true
@@ -82,11 +82,14 @@ SELECT migrate_official_metadata();
 -- Drop the migration function
 DROP FUNCTION migrate_official_metadata();
 
--- Safety check: Update any remaining NULL values with defaults before adding NOT NULL constraints
--- Also normalize any invalid status values to ensure check constraint will pass
+-- Safety check: Normalize invalid status values before adding NOT NULL constraints
+-- This handles: NULL (missing field), empty string, string "null", and any invalid values
 UPDATE servers
 SET status = 'active'
-WHERE status IS NULL OR status NOT IN ('active', 'deprecated', 'deleted');
+WHERE status IS NULL
+   OR status = ''
+   OR status = 'null'
+   OR status NOT IN ('active', 'deprecated', 'deleted');
 
 UPDATE servers SET published_at = NOW() WHERE published_at IS NULL;
 
