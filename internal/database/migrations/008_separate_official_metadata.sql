@@ -83,7 +83,11 @@ SELECT migrate_official_metadata();
 DROP FUNCTION migrate_official_metadata();
 
 -- Safety check: Update any remaining NULL values with defaults before adding NOT NULL constraints
-UPDATE servers SET status = 'active' WHERE status IS NULL;
+-- Also normalize any invalid status values to ensure check constraint will pass
+UPDATE servers
+SET status = 'active'
+WHERE status IS NULL OR status NOT IN ('active', 'deprecated', 'deleted');
+
 UPDATE servers SET published_at = NOW() WHERE published_at IS NULL;
 
 -- For is_latest: only set to true if no other version of this server already has is_latest=true
