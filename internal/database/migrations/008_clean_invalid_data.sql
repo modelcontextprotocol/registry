@@ -65,13 +65,10 @@ BEGIN
     RAISE NOTICE '  Servers to UPDATE (fix status): %', invalid_status_count;
     RAISE NOTICE '  Duplicate name+version pairs: %', duplicate_count;
 
-    -- SAFETY CHECK: Fail if numbers don't match what we found in production
-    -- Based on comprehensive analysis of production data (2025-09-30), we expect:
-    -- - 5 servers to delete (1 invalid name + 4 empty versions)
-    -- - 1 server status to update
-    IF total_to_delete != 5 THEN
-        -- Log the specific servers that would be deleted
-        RAISE NOTICE 'Servers that would be deleted:';
+    -- Always log the specific servers that will be deleted for transparency
+    IF total_to_delete > 0 THEN
+        RAISE NOTICE '';
+        RAISE NOTICE 'Servers that will be deleted:';
         FOR r IN
             SELECT value->>'name' as name, value->>'version' as version,
                    CASE
@@ -87,13 +84,12 @@ BEGIN
         LOOP
             RAISE NOTICE '  - % @ % (reason: %)', r.name, COALESCE(r.version, '<NULL>'), r.reason;
         END LOOP;
-
-        RAISE EXCEPTION 'Safety check failed: Expected to delete exactly 5 servers but would delete %. Check the log above for details. Aborting to prevent data loss.', total_to_delete;
     END IF;
 
-    IF invalid_status_count != 1 THEN
-        -- Log the specific servers that would have status updated
-        RAISE NOTICE 'Servers that would have status updated:';
+    -- Always log the specific servers that will have status updated for transparency
+    IF invalid_status_count > 0 THEN
+        RAISE NOTICE '';
+        RAISE NOTICE 'Servers that will have status updated:';
         FOR r IN
             SELECT value->>'name' as name, value->>'version' as version, value->>'status' as status
             FROM servers
@@ -104,7 +100,17 @@ BEGIN
         LOOP
             RAISE NOTICE '  - % @ % (current status: %)', r.name, r.version, r.status;
         END LOOP;
+    END IF;
 
+    -- SAFETY CHECK: Fail if numbers don't match what we found in production
+    -- Based on comprehensive analysis of production data (2025-09-30), we expect:
+    -- - 5 servers to delete (1 invalid name + 4 empty versions)
+    -- - 1 server status to update
+    IF total_to_delete != 5 THEN
+        RAISE EXCEPTION 'Safety check failed: Expected to delete exactly 5 servers but would delete %. Check the log above for details. Aborting to prevent data loss.', total_to_delete;
+    END IF;
+
+    IF invalid_status_count != 1 THEN
         RAISE EXCEPTION 'Safety check failed: Expected to update exactly 1 server status but would update %. Check the log above for details. Aborting to prevent data corruption.', invalid_status_count;
     END IF;
 END $$;
