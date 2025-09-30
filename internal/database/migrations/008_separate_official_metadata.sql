@@ -40,7 +40,7 @@ BEGIN
             SET
                 status = rec.value->>'status',
                 published_at = COALESCE((official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
-                updated_at = (official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE,
+                updated_at = COALESCE((official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 is_latest = COALESCE((official_meta->>'isLatest')::BOOLEAN, true)
             WHERE version_id = rec.version_id;
         ELSE
@@ -93,6 +93,9 @@ WHERE status IS NULL
 
 UPDATE servers SET published_at = NOW() WHERE published_at IS NULL;
 
+-- Safety check: Ensure updated_at is never NULL
+UPDATE servers SET updated_at = NOW() WHERE updated_at IS NULL;
+
 -- For is_latest: preserve existing true values, handle NULLs deterministically
 -- First, for servers where NO version has is_latest=true, mark the most recent as latest
 WITH servers_without_latest AS (
@@ -125,6 +128,7 @@ ALTER TABLE servers ALTER COLUMN server_name SET NOT NULL;
 ALTER TABLE servers ALTER COLUMN version SET NOT NULL;
 ALTER TABLE servers ALTER COLUMN status SET NOT NULL;
 ALTER TABLE servers ALTER COLUMN published_at SET NOT NULL;
+ALTER TABLE servers ALTER COLUMN updated_at SET NOT NULL;
 ALTER TABLE servers ALTER COLUMN is_latest SET NOT NULL;
 
 -- Drop the old primary key constraint
@@ -150,7 +154,7 @@ CREATE INDEX idx_servers_name_version ON servers (server_name, version);
 CREATE INDEX idx_servers_name_latest ON servers (server_name, is_latest) WHERE is_latest = true;
 CREATE INDEX idx_servers_status ON servers (status);
 CREATE INDEX idx_servers_published_at ON servers (published_at DESC);
-CREATE INDEX idx_servers_updated_at ON servers (updated_at DESC) WHERE updated_at IS NOT NULL;
+CREATE INDEX idx_servers_updated_at ON servers (updated_at DESC);
 
 -- Ensure only one version per server can be marked as latest
 CREATE UNIQUE INDEX idx_unique_latest_per_server
