@@ -38,7 +38,10 @@ BEGIN
             -- Note: status is at top level in old format, not in official_meta
             UPDATE servers
             SET
-                status = rec.value->>'status',
+                status = COALESCE(
+                    NULLIF(NULLIF(rec.value->>'status', ''), 'null'),
+                    'active'
+                ),
                 published_at = COALESCE((official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 updated_at = COALESCE((official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 is_latest = COALESCE((official_meta->>'isLatest')::BOOLEAN, true)
@@ -47,7 +50,10 @@ BEGIN
             -- Handle records without official metadata (set defaults)
             UPDATE servers
             SET
-                status = rec.value->>'status',
+                status = COALESCE(
+                    NULLIF(NULLIF(rec.value->>'status', ''), 'null'),
+                    'active'
+                ),
                 published_at = NOW(),
                 updated_at = NOW(),
                 is_latest = true
@@ -84,12 +90,40 @@ DROP FUNCTION migrate_official_metadata();
 
 -- Safety check: Normalize invalid status values before adding NOT NULL constraints
 -- This handles: NULL (missing field), empty string, string "null", and any invalid values
+-- First, log how many records have problematic status values for debugging
+DO $$
+DECLARE
+    null_count INTEGER;
+    empty_count INTEGER;
+    invalid_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO null_count FROM servers WHERE status IS NULL;
+    SELECT COUNT(*) INTO empty_count FROM servers WHERE status = '' OR status = 'null';
+    SELECT COUNT(*) INTO invalid_count FROM servers WHERE status IS NOT NULL AND status NOT IN ('active', 'deprecated', 'deleted', '', 'null');
+
+    IF null_count > 0 OR empty_count > 0 OR invalid_count > 0 THEN
+        RAISE NOTICE 'Status cleanup: NULL=%, empty/null string=%, invalid=%', null_count, empty_count, invalid_count;
+    END IF;
+END $$;
+
+-- Fix all problematic status values
 UPDATE servers
 SET status = 'active'
 WHERE status IS NULL
    OR status = ''
    OR status = 'null'
    OR status NOT IN ('active', 'deprecated', 'deleted');
+
+-- Double-check that no NULLs remain (this should never fail after the above)
+DO $$
+DECLARE
+    remaining_nulls INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO remaining_nulls FROM servers WHERE status IS NULL;
+    IF remaining_nulls > 0 THEN
+        RAISE EXCEPTION 'Still have % NULL status values after cleanup!', remaining_nulls;
+    END IF;
+END $$;
 
 UPDATE servers SET published_at = NOW() WHERE published_at IS NULL;
 
