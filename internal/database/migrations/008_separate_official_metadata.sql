@@ -38,7 +38,7 @@ BEGIN
             -- Note: status is at top level in old format, not in official_meta
             UPDATE servers
             SET
-                status = COALESCE(NULLIF(rec.value->>'status', 'null'), 'active'),
+                status = COALESCE(NULLIF(NULLIF(rec.value->>'status', 'null'), ''), 'active'),
                 published_at = COALESCE((official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 updated_at = (official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE,
                 is_latest = COALESCE((official_meta->>'isLatest')::BOOLEAN, true)
@@ -47,7 +47,7 @@ BEGIN
             -- Handle records without official metadata (set defaults)
             UPDATE servers
             SET
-                status = COALESCE(NULLIF(rec.value->>'status', 'null'), 'active'),
+                status = COALESCE(NULLIF(NULLIF(rec.value->>'status', 'null'), ''), 'active'),
                 published_at = NOW(),
                 updated_at = NOW(),
                 is_latest = true
