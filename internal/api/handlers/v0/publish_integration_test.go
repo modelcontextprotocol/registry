@@ -162,9 +162,9 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish fails with invalid token", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
-			Name:          "io.github.domdomegg/test-server",
-			Description:   "Test server",
-			Version: "1.0.0",
+			Name:        "io.github.domdomegg/test-server",
+			Description: "Test server",
+			Version:     "1.0.0",
 		}
 
 		body, err := json.Marshal(publishReq)
@@ -185,7 +185,7 @@ func TestPublishIntegration(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "io.github.other/test-server",
 			Description: "A test server",
-			Version: "1.0.0",
+			Version:     "1.0.0",
 			Repository: model.Repository{
 				URL:    "https://github.com/example/test-server",
 				Source: "github",
@@ -221,7 +221,7 @@ func TestPublishIntegration(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "io.github.domdomegg/airtable-mcp-server",
 			Description: "A test server with MCPB package",
-			Version: "1.7.2",
+			Version:     "1.7.2",
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,

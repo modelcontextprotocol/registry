@@ -41,6 +41,7 @@ type ServerVersionsInput struct {
 }
 
 // RegisterServersEndpoints registers all server-related endpoints
+//
 //nolint:cyclop // Multiple endpoint registrations are inherently complex
 func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 	// List servers endpoint

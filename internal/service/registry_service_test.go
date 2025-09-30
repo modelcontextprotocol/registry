@@ -447,14 +447,14 @@ func TestUpdateServer(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		serverName     string
-		version        string
-		updatedServer  *apiv0.ServerJSON
-		newStatus      *string
-		expectError    bool
-		errorMsg       string
-		checkResult    func(*testing.T, *apiv0.ServerResponse)
+		name          string
+		serverName    string
+		version       string
+		updatedServer *apiv0.ServerJSON
+		newStatus     *string
+		expectError   bool
+		errorMsg      string
+		checkResult   func(*testing.T, *apiv0.ServerResponse)
 	}{
 		{
 			name:       "successful server update",

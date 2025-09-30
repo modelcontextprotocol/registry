@@ -13,7 +13,7 @@ func LogoutCommand() error {
 	}
 
 	tokenPath := filepath.Join(homeDir, TokenFileName)
-	
+
 	// Check if token file exists
 	if _, err := os.Stat(tokenPath); os.IsNotExist(err) {
 		_, _ = fmt.Fprintln(os.Stdout, "Not logged in")
@@ -30,7 +30,7 @@ func LogoutCommand() error {
 		".mcpregistry_github_token",
 		".mcpregistry_registry_token",
 	}
-	
+
 	for _, file := range legacyFiles {
 		path := filepath.Join(homeDir, file)
 		if _, err := os.Stat(path); err == nil {

@@ -97,8 +97,8 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 
 			// Prevent undeleting servers - once deleted, they stay deleted
 			if currentServer.Meta.Official != nil &&
-			   currentServer.Meta.Official.Status == model.StatusDeleted &&
-			   newStatus != model.StatusDeleted {
+				currentServer.Meta.Official.Status == model.StatusDeleted &&
+				newStatus != model.StatusDeleted {
 				return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
 			}
 

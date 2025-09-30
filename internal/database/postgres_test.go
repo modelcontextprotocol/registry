@@ -19,11 +19,11 @@ func TestPostgreSQL_CreateServer(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		serverJSON  *apiv0.ServerJSON
+		name         string
+		serverJSON   *apiv0.ServerJSON
 		officialMeta *apiv0.RegistryExtensions
-		expectError bool
-		errorType   error
+		expectError  bool
+		errorType    error
 	}{
 		{
 			name: "successful server creation",
@@ -285,13 +285,13 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 	}
 
 	tests := []struct {
-		name           string
-		filter         *database.ServerFilter
-		cursor         string
-		limit          int
-		expectedCount  int
-		expectedNames  []string
-		expectError    bool
+		name          string
+		filter        *database.ServerFilter
+		cursor        string
+		limit         int
+		expectedCount int
+		expectedNames []string
+		expectError   bool
 	}{
 		{
 			name:          "list all servers",
@@ -418,12 +418,12 @@ func TestPostgreSQL_UpdateServer(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		serverName     string
-		version        string
-		updatedServer  *apiv0.ServerJSON
-		expectError    bool
-		errorType      error
+		name          string
+		serverName    string
+		version       string
+		updatedServer *apiv0.ServerJSON
+		expectError   bool
+		errorType     error
 	}{
 		{
 			name:       "successful server update",

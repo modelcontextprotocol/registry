@@ -23,12 +23,12 @@ func TrailingSlashMiddleware(next http.Handler) http.Handler {
 			// Create a copy of the URL and remove the trailing slash
 			newURL := *r.URL
 			newURL.Path = strings.TrimSuffix(r.URL.Path, "/")
-			
+
 			// Use 308 Permanent Redirect to preserve the request method
 			http.Redirect(w, r, newURL.String(), http.StatusPermanentRedirect)
 			return
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }

@@ -113,9 +113,9 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "invalid authorization header format",
 			requestBody: apiv0.ServerJSON{
-				Name:          "io.github.domdomegg/test-server",
-				Description:   "Test server",
-				Version: "1.0.0",
+				Name:        "io.github.domdomegg/test-server",
+				Description: "Test server",
+				Version:     "1.0.0",
 			},
 			authHeader: "InvalidFormat",
 			setupRegistryService: func(_ service.RegistryService) {
@@ -129,7 +129,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 			},
 			authHeader: "Bearer invalidToken",
 			setupRegistryService: func(_ service.RegistryService) {
@@ -143,7 +143,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "io.github.other/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Repository: model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
@@ -167,7 +167,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Repository: model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
@@ -185,7 +185,7 @@ func TestPublishEndpoint(t *testing.T) {
 				existingServer := apiv0.ServerJSON{
 					Name:        "example/test-server",
 					Description: "Existing test server",
-					Version: "1.0.0",
+					Version:     "1.0.0",
 					Repository: model.Repository{
 						URL:    "https://github.com/example/test-server-existing",
 						Source: "github",
@@ -202,7 +202,7 @@ func TestPublishEndpoint(t *testing.T) {
 			requestBody: apiv0.ServerJSON{
 				Name:        "com.example/test-server-mcpb",
 				Description: "A test server with MCPB package",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						RegistryType: model.RegistryTypeMCPB,
@@ -499,7 +499,7 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 			mux.ServeHTTP(rr, req)
 
 			// Assertions
-			assert.Equal(t, tc.expectedStatus, rr.Code, 
+			assert.Equal(t, tc.expectedStatus, rr.Code,
 				"%s: expected status %d, got %d", tc.description, tc.expectedStatus, rr.Code)
 
 			if tc.expectedStatus == http.StatusBadRequest {

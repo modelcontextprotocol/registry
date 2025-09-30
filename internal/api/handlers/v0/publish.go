@@ -75,7 +75,7 @@ func buildPermissionErrorMessage(attemptedResource string, permissions []auth.Pe
 			permissionStrs = append(permissionStrs, perm.ResourcePattern)
 		}
 	}
-	
+
 	errorMsg := "You do not have permission to publish this server"
 	if len(permissionStrs) > 0 {
 		errorMsg += ". You have permission to publish: " + strings.Join(permissionStrs, ", ")
@@ -83,6 +83,6 @@ func buildPermissionErrorMessage(attemptedResource string, permissions []auth.Pe
 		errorMsg += ". You do not have any publish permissions"
 	}
 	errorMsg += ". Attempting to publish: " + attemptedResource
-	
+
 	return errorMsg
 }

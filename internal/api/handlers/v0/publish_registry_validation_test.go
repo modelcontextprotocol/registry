@@ -47,7 +47,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "com.example/test-server-with-npm",
 			Description: "A test server with invalid npm package reference",
-			Version: "1.0.0",
+			Version:     "1.0.0",
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeNPM,
@@ -88,7 +88,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "com.example/test-server-mcpb-validation",
 			Description: "A test server with MCPB package and registry validation enabled",
-			Version: "0.0.36",
+			Version:     "0.0.36",
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,
@@ -138,7 +138,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "com.example/test-server-multiple-packages",
 			Description: "A test server with multiple packages where second fails",
-			Version: "1.0.0",
+			Version:     "1.0.0",
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeMCPB,
@@ -189,7 +189,7 @@ func TestPublishRegistryValidation(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Name:        "com.example/test-server-first-package-fails",
 			Description: "A test server where first package fails",
-			Version: "1.0.0",
+			Version:     "1.0.0",
 			Packages: []model.Package{
 				{
 					RegistryType: model.RegistryTypeNPM,
