@@ -39,9 +39,9 @@ BEGIN
             UPDATE servers
             SET
                 status = COALESCE(NULLIF(rec.value->>'status', 'null'), 'active'),
-                published_at = (official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE,
+                published_at = COALESCE((official_meta->>'publishedAt')::TIMESTAMP WITH TIME ZONE, NOW()),
                 updated_at = (official_meta->>'updatedAt')::TIMESTAMP WITH TIME ZONE,
-                is_latest = (official_meta->>'isLatest')::BOOLEAN
+                is_latest = COALESCE((official_meta->>'isLatest')::BOOLEAN, true)
             WHERE version_id = rec.version_id;
         ELSE
             -- Handle records without official metadata (set defaults)
@@ -81,6 +81,23 @@ SELECT migrate_official_metadata();
 
 -- Drop the migration function
 DROP FUNCTION migrate_official_metadata();
+
+-- Safety check: Update any remaining NULL values with defaults before adding NOT NULL constraints
+UPDATE servers SET status = 'active' WHERE status IS NULL;
+UPDATE servers SET published_at = NOW() WHERE published_at IS NULL;
+
+-- For is_latest: only set to true if no other version of this server already has is_latest=true
+-- Otherwise set to false
+UPDATE servers s1
+SET is_latest = CASE
+    WHEN EXISTS (
+        SELECT 1 FROM servers s2
+        WHERE s2.server_name = s1.server_name
+        AND s2.is_latest = true
+    ) THEN false
+    ELSE true
+END
+WHERE s1.is_latest IS NULL;
 
 -- Make the new columns NOT NULL now that all records have values
 ALTER TABLE servers ALTER COLUMN server_name SET NOT NULL;
