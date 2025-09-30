@@ -12,6 +12,7 @@ DECLARE
     duplicate_count INTEGER;
     total_to_delete INTEGER;
     total_servers INTEGER;
+    r RECORD;
 BEGIN
     -- Get total server count
     SELECT COUNT(*) INTO total_servers FROM servers;
@@ -69,11 +70,42 @@ BEGIN
     -- - 5 servers to delete (1 invalid name + 4 empty versions)
     -- - 1 server status to update
     IF total_to_delete != 5 THEN
-        RAISE EXCEPTION 'Safety check failed: Expected to delete exactly 5 servers but would delete %. Aborting to prevent data loss.', total_to_delete;
+        -- Log the specific servers that would be deleted
+        RAISE NOTICE 'Servers that would be deleted:';
+        FOR r IN
+            SELECT value->>'name' as name, value->>'version' as version,
+                   CASE
+                       WHEN value->>'name' NOT SIMILAR TO '[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]/[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]' THEN 'Invalid name format'
+                       WHEN value->>'version' IS NULL THEN 'NULL version'
+                       WHEN value->>'version' = '' THEN 'Empty version'
+                   END as reason
+            FROM servers
+            WHERE value->>'name' NOT SIMILAR TO '[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]/[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]'
+               OR value->>'version' IS NULL
+               OR value->>'version' = ''
+            ORDER BY value->>'name'
+        LOOP
+            RAISE NOTICE '  - %@% (reason: %)', r.name, r.version, r.reason;
+        END LOOP;
+
+        RAISE EXCEPTION 'Safety check failed: Expected to delete exactly 5 servers but would delete %. Check the log above for details. Aborting to prevent data loss.', total_to_delete;
     END IF;
 
     IF invalid_status_count != 1 THEN
-        RAISE EXCEPTION 'Safety check failed: Expected to update exactly 1 server status but would update %. Aborting to prevent data corruption.', invalid_status_count;
+        -- Log the specific servers that would have status updated
+        RAISE NOTICE 'Servers that would have status updated:';
+        FOR r IN
+            SELECT value->>'name' as name, value->>'version' as version, value->>'status' as status
+            FROM servers
+            WHERE value->>'status' IS NOT NULL
+              AND value->>'status' != ''
+              AND value->>'status' NOT IN ('active', 'deprecated', 'deleted')
+            ORDER BY value->>'name'
+        LOOP
+            RAISE NOTICE '  - %@% (current status: %)', r.name, r.version, r.status;
+        END LOOP;
+
+        RAISE EXCEPTION 'Safety check failed: Expected to update exactly 1 server status but would update %. Check the log above for details. Aborting to prevent data corruption.', invalid_status_count;
     END IF;
 END $$;
 
