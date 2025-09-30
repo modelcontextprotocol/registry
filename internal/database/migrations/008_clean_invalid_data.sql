@@ -131,13 +131,13 @@ WHERE value->>'status' IS NOT NULL
   AND value->>'status' NOT IN ('active', 'deprecated', 'deleted');
 
 -- Remove duplicate name+version combinations
--- Keep the one with the highest version_id (most recently added)
+-- Keep the one with the most recent publishedAt date
 DELETE FROM servers s1
 WHERE EXISTS (
   SELECT 1 FROM servers s2
   WHERE s2.value->>'name' = s1.value->>'name'
     AND s2.value->>'version' = s1.value->>'version'
-    AND s2.version_id > s1.version_id
+    AND (s2.value->>'publishedAt')::timestamp > (s1.value->>'publishedAt')::timestamp
 );
 
 -- Verify the operations completed as expected
