@@ -188,7 +188,7 @@
         },
         "value": {
           "type": "string",
-          "description": "The default value for the input. If this is not set, the user may be prompted to provide a value. If a value is set, it should not be configurable by end users.\n\nIdentifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged.\n"
+          "description": "The value for the input. If this is not set, the user may be prompted to provide a value. If a value is set, it should not be configurable by end users.\n\nIdentifiers wrapped in `{curly_braces}` will be replaced with the corresponding properties from the input `variables` map. If an identifier in braces is not found in `variables`, or if `variables` is not provided, the `{curly_braces}` substring should remain unchanged.\n"
         },
         "isSecret": {
           "type": "boolean",
@@ -197,7 +197,11 @@
         },
         "default": {
           "type": "string",
-          "description": "The default value for the input."
+          "description": "The default value for the input.  This should be a valid value for the input.  If you want to provide input examples or guidance, use the `placeholder` field instead."
+        },
+        "placeholder": {
+          "type": "string",
+          "description": "A placeholder for the input to be displaying during configuration. This is used to provide examples or guidance about the expected form or content of the input."
         },
         "choices": {
           "type": "array",
@@ -249,7 +253,7 @@
             },
             "valueHint": {
               "type": "string",
-              "description": "An identifier-like hint for the value. This is not part of the command line, but can be used by client configuration and to provide hints to users.",
+              "description": "An identifier for the positional argument. It is not part of the command line. It may be used by client configuration as a label identifying the argument. It is also used to identify the value in transport URL variable substitution.",
               "example": "file_path"
             },
             "isRepeated": {
@@ -274,7 +278,7 @@
       ]
     },
     "NamedArgument": {
-      "description": "A command-line `--flag={value}`.",
+      "description": "A command-line `--flag {value}`.",
       "allOf": [
         {
           "$ref": "#/definitions/InputWithVariables"
