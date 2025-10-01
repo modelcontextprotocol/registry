@@ -402,7 +402,7 @@
         "url": {
           "type": "string",
           "pattern": "^https?://[^\\s]+$",
-          "description": "Server-Sent Events endpoint URL",
+          "description": "URL template for the sse transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
           "example": "https://mcp-fs.example.com/sse"
         },
         "headers": {
