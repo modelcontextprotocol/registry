@@ -88,8 +88,10 @@ jobs:
 
       - name: Deploy to Staging
         working-directory: ./deploy
+        env:
+          PULUMI_STAGING_PASSPHRASE: ${{ secrets.PULUMI_STAGING_PASSPHRASE }}
         run: |
-          echo "${{ secrets.PULUMI_STAGING_PASSPHRASE }}" > passphrase.staging.txt
+          echo "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
           make staging-up
 
   deploy-production:
@@ -127,6 +129,8 @@ jobs:
 
       - name: Deploy to Production
         working-directory: ./deploy
+        env:
+          PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
         run: |
-          echo "${{ secrets.PULUMI_PROD_PASSPHRASE }}" > passphrase.prod.txt
+          echo "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
           make prod-up

@@ -58,15 +58,19 @@ jobs:
       - name: Cancel Pulumi Lock (Staging)
         if: inputs.environment == 'staging'
         working-directory: ./deploy
+        env:
+          PULUMI_STAGING_PASSPHRASE: ${{ secrets.PULUMI_STAGING_PASSPHRASE }}
         run: |
-          echo "${{ secrets.PULUMI_STAGING_PASSPHRASE }}" > passphrase.staging.txt
+          echo "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
           pulumi login gs://mcp-registry-staging-pulumi-state
           PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi cancel --stack gcpStaging --yes
 
       - name: Cancel Pulumi Lock (Production)
         if: inputs.environment == 'production'
         working-directory: ./deploy
+        env:
+          PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
         run: |
-          echo "${{ secrets.PULUMI_PROD_PASSPHRASE }}" > passphrase.prod.txt
+          echo "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
           pulumi login gs://mcp-registry-prod-pulumi-state
           PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi cancel --stack gcpProd --yes
