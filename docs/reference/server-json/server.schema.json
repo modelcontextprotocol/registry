@@ -133,10 +133,10 @@
               "$ref": "#/definitions/StdioTransport"
             },
             {
-              "$ref": "#/definitions/StreamableHttpTransport"
+              "$ref": "#/definitions/PackageStreamableHttpTransport"
             },
             {
-              "$ref": "#/definitions/SseTransport"
+              "$ref": "#/definitions/PackageSseTransport"
             }
           ],
           "description": "Transport protocol configuration for the package"
@@ -371,8 +371,8 @@
         },
         "url": {
           "type": "string",
-          "pattern": "^https?://[^\\s]+$",
-          "description": "URL template for the streamable-http transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
+          "format": "uri",
+          "description": "Remote streamable-http endpoint URL",
           "example": "https://api.example.com/mcp"
         },
         "headers": {
@@ -401,8 +401,8 @@
         },
         "url": {
           "type": "string",
-          "pattern": "^https?://[^\\s]+$",
-          "description": "URL template for the sse transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
+          "format": "uri",
+          "description": "Remote Server-Sent Events endpoint URL",
           "example": "https://mcp-fs.example.com/sse"
         },
         "headers": {
@@ -413,6 +413,40 @@
           }
         }
       }
+    },
+    "PackageStreamableHttpTransport": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StreamableHttpTransport"
+        },
+        {
+          "properties": {
+            "url": {
+              "type": "string",
+              "pattern": "^https?://[^\\s]+$",
+              "description": "URL template for the streamable-http transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
+              "example": "https://api.example.com/mcp"
+            }
+          }
+        }
+      ]
+    },
+    "PackageSseTransport": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/SseTransport"
+        },
+        {
+          "properties": {
+            "url": {
+              "type": "string",
+              "pattern": "^https?://[^\\s]+$",
+              "description": "URL template for the sse transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
+              "example": "https://mcp-fs.example.com/sse"
+            }
+          }
+        }
+      ]
     },
     "ServerDetail": {
       "description": "Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.",
