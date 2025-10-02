@@ -1,0 +1,12 @@
+{
+  "$schema": "https://registry.modelcontextprotocol.io/schemas/server-config.json",
+  "name": "exiftool",
+  "description": "MCP server for reading metadata from files using ExifTool. Supports over 150 file formats including images (JPEG, PNG, RAW), videos (MP4, MOV), audio files, PDFs, and documents.",
+  "version": "0.1.0",
+  "packages": [
+    {
+      "type": "pypi",
+      "name": "exiftool-mcp"
+    }
+  ]
+}
