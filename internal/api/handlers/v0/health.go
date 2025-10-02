@@ -16,6 +16,8 @@ import (
 type HealthBody struct {
 	Status         string `json:"status" example:"ok" doc:"Health status"`
 	GitHubClientID string `json:"github_client_id,omitempty" doc:"GitHub OAuth App Client ID"`
+	OIDCIssuer     string `json:"oidc_issuer,omitempty" doc:"OIDC issuer URL"`
+	OIDCClientID   string `json:"oidc_client_id,omitempty" doc:"OIDC client ID"`
 }
 
 // RegisterHealthEndpoint registers the health check endpoint
@@ -31,11 +33,19 @@ func RegisterHealthEndpoint(api huma.API, cfg *config.Config, metrics *telemetry
 		// Record the health check metrics
 		recordHealthMetrics(ctx, metrics, "/v0/health", cfg.Version)
 
+		response := HealthBody{
+			Status:         "ok",
+			GitHubClientID: cfg.GithubClientID,
+		}
+
+		// Include OIDC configuration if enabled
+		if cfg.OIDCEnabled {
+			response.OIDCIssuer = cfg.OIDCIssuer
+			response.OIDCClientID = cfg.OIDCClientID
+		}
+
 		return &Response[HealthBody]{
-			Body: HealthBody{
-				Status:         "ok",
-				GitHubClientID: cfg.GithubClientID,
-			},
+			Body: response,
 		}, nil
 	})
 }
