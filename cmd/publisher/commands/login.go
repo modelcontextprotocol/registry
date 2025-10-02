@@ -19,7 +19,7 @@ const (
 
 func LoginCommand(args []string) error {
 	if len(args) < 1 {
-		return errors.New("authentication method required\n\nUsage: mcp-publisher login <method>\n\nMethods:\n  github        Interactive GitHub authentication\n  github-oidc   GitHub Actions OIDC authentication\n  oidc          Generic OIDC authentication using device flow\n  dns           DNS-based authentication (requires --domain and --private-key)\n  http          HTTP-based authentication (requires --domain and --private-key)\n  none          Anonymous authentication (for testing)")
+		return errors.New("authentication method required\n\nUsage: mcp-publisher login <method>\n\nMethods:\n  github        Interactive GitHub authentication\n  github-oidc   GitHub Actions OIDC authentication\n  dns           DNS-based authentication (requires --domain and --private-key)\n  http          HTTP-based authentication (requires --domain and --private-key)\n  oidc          Interactive OIDC authentication (for subregistries using oidc)\n  none          Anonymous authentication (for testing)")
 	}
 
 	method := args[0]

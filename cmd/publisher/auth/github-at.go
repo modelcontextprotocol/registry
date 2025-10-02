@@ -19,6 +19,29 @@ const (
 	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token" // #nosec:G101
 )
 
+// DeviceCodeResponse represents the response from GitHub's device code endpoint
+type DeviceCodeResponse struct {
+	DeviceCode      string `json:"device_code"`
+	UserCode        string `json:"user_code"`
+	VerificationURI string `json:"verification_uri"`
+	ExpiresIn       int    `json:"expires_in"`
+	Interval        int    `json:"interval"`
+}
+
+// AccessTokenResponse represents the response from GitHub's access token endpoint
+type AccessTokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	Scope       string `json:"scope"`
+	Error       string `json:"error,omitempty"`
+}
+
+// RegistryTokenResponse represents the response from registry's token exchange endpoint
+type RegistryTokenResponse struct {
+	RegistryToken string `json:"registry_token"`
+	ExpiresAt     int64  `json:"expires_at"`
+}
+
 // StoredRegistryToken represents the registry token with expiration stored locally
 type StoredRegistryToken struct {
 	Token     string `json:"token"`
@@ -109,10 +132,24 @@ func (g *GitHubATProvider) Login(ctx context.Context) error {
 		g.clientID = clientID
 	}
 
-	// Use shared device flow implementation
-	token, err := runDeviceFlow(ctx, g.clientID, GitHubDeviceCodeURL, GitHubAccessTokenURL, "read:org read:user")
+	// Device flow login logic using GitHub's device flow
+	// First, request a device code
+	deviceCode, userCode, verificationURI, err := g.requestDeviceCode(ctx)
 	if err != nil {
-		return fmt.Errorf("error in GitHub device flow: %w", err)
+		return fmt.Errorf("error requesting device code: %w", err)
+	}
+
+	// Display instructions to the user
+	_, _ = fmt.Fprintln(os.Stdout, "\nTo authenticate, please:")
+	_, _ = fmt.Fprintln(os.Stdout, "1. Go to:", verificationURI)
+	_, _ = fmt.Fprintln(os.Stdout, "2. Enter code:", userCode)
+	_, _ = fmt.Fprintln(os.Stdout, "3. Authorize this application")
+
+	// Poll for the token
+	_, _ = fmt.Fprintln(os.Stdout, "Waiting for authorization...")
+	token, err := g.pollForToken(ctx, deviceCode)
+	if err != nil {
+		return fmt.Errorf("error polling for token: %w", err)
 	}
 
 	// Store the token locally
@@ -121,12 +158,130 @@ func (g *GitHubATProvider) Login(ctx context.Context) error {
 		return fmt.Errorf("error saving token: %w", err)
 	}
 
+	_, _ = fmt.Fprintln(os.Stdout, "Successfully authenticated!")
 	return nil
 }
 
 // Name returns the name of this auth provider
 func (g *GitHubATProvider) Name() string {
 	return "github"
+}
+
+// requestDeviceCode initiates the device authorization flow
+func (g *GitHubATProvider) requestDeviceCode(ctx context.Context) (string, string, string, error) {
+	if g.clientID == "" {
+		return "", "", "", fmt.Errorf("GitHub Client ID is required for device flow login")
+	}
+
+	payload := map[string]string{
+		"client_id": g.clientID,
+		"scope":     "read:org read:user",
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, GitHubDeviceCodeURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", "", "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", "", "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", "", "", fmt.Errorf("request device code failed: %s", body)
+	}
+
+	var deviceCodeResp DeviceCodeResponse
+	err = json.Unmarshal(body, &deviceCodeResp)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	return deviceCodeResp.DeviceCode, deviceCodeResp.UserCode, deviceCodeResp.VerificationURI, nil
+}
+
+// pollForToken polls for access token after user completes authorization
+func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) (string, error) {
+	if g.clientID == "" {
+		return "", fmt.Errorf("GitHub Client ID is required for device flow login")
+	}
+
+	payload := map[string]string{
+		"client_id":   g.clientID,
+		"device_code": deviceCode,
+		"grant_type":  "urn:ietf:params:oauth:grant-type:device_code",
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", err
+	}
+
+	// Default polling interval and expiration time
+	interval := 5    // seconds
+	expiresIn := 900 // 15 minutes
+	deadline := time.Now().Add(time.Duration(expiresIn) * time.Second)
+
+	for time.Now().Before(deadline) {
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
+		if err != nil {
+			return "", err
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Accept", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return "", err
+		}
+
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return "", err
+		}
+
+		var tokenResp AccessTokenResponse
+		err = json.Unmarshal(body, &tokenResp)
+		if err != nil {
+			return "", err
+		}
+
+		if tokenResp.Error == "authorization_pending" {
+			// User hasn't authorized yet, wait and retry
+			time.Sleep(time.Duration(interval) * time.Second)
+			continue
+		}
+
+		if tokenResp.Error != "" {
+			return "", fmt.Errorf("token request failed: %s", tokenResp.Error)
+		}
+
+		if tokenResp.AccessToken != "" {
+			return tokenResp.AccessToken, nil
+		}
+
+		// If we reach here, something unexpected happened
+		return "", fmt.Errorf("failed to obtain access token")
+	}
+
+	return "", fmt.Errorf("device code authorization timed out")
 }
 
 // saveToken saves the GitHub access token to a local file
