@@ -410,8 +410,6 @@ You can offer multiple connection methods:
 }
 ```
 
-> **Note**: SSE transport is deprecated in the MCP specification but still supported by the registry during the preview period. New servers should use `streamable-http`.
-
 ### URL Validation Requirements
 
 - For `com.yourcompany/*` namespaces: URLs must be on `yourcompany.com` or its subdomains
