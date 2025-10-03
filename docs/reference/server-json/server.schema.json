@@ -35,47 +35,6 @@
         }
       }
     },
-    "Server": {
-      "type": "object",
-      "required": [
-        "name",
-        "description",
-        "version"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Server name in reverse-DNS format. Must contain exactly one forward slash separating namespace from server name.",
-          "example": "io.github.user/weather",
-          "pattern": "^[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+$",
-          "minLength": 3,
-          "maxLength": 200
-        },
-        "description": {
-          "type": "string",
-          "description": "Clear human-readable explanation of server functionality. Should focus on capabilities, not implementation details.",
-          "example": "MCP server providing weather data and forecasts via OpenWeatherMap API",
-          "minLength": 1,
-          "maxLength": 100
-        },
-        "repository": {
-          "$ref": "#/definitions/Repository",
-          "description": "Optional repository metadata for the MCP server source code. Recommended for transparency and security inspection."
-        },
-        "version": {
-          "type": "string",
-          "maxLength": 255,
-          "example": "1.0.2",
-          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
-        },
-        "websiteUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements.",
-          "example": "https://modelcontextprotocol.io/examples"
-        }
-      }
-    },
     "Package": {
       "type": "object",
       "additionalProperties": false,
@@ -415,53 +374,82 @@
     },
     "ServerDetail": {
       "description": "Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.",
-      "allOf": [
-        {
-          "$ref": "#/definitions/Server"
+      "type": "object",
+      "required": [
+        "name",
+        "description",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Server name in reverse-DNS format. Must contain exactly one forward slash separating namespace from server name.",
+          "example": "io.github.user/weather",
+          "pattern": "^[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+$",
+          "minLength": 3,
+          "maxLength": 200
         },
-        {
+        "description": {
+          "type": "string",
+          "description": "Clear human-readable explanation of server functionality. Should focus on capabilities, not implementation details.",
+          "example": "MCP server providing weather data and forecasts via OpenWeatherMap API",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "repository": {
+          "$ref": "#/definitions/Repository",
+          "description": "Optional repository metadata for the MCP server source code. Recommended for transparency and security inspection."
+        },
+        "version": {
+          "type": "string",
+          "maxLength": 255,
+          "example": "1.0.2",
+          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
+        },
+        "websiteUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements.",
+          "example": "https://modelcontextprotocol.io/examples"
+        },
+        "$schema": {
+          "type": "string",
+          "format": "uri",
+          "description": "JSON Schema URI for this server.json format",
+          "example": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Package"
+          }
+        },
+        "remotes": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/StreamableHttpTransport"
+              },
+              {
+                "$ref": "#/definitions/SseTransport"
+              }
+            ]
+          }
+        },
+        "_meta": {
           "type": "object",
+          "description": "Extension metadata using reverse DNS namespacing for vendor-specific data",
+          "additionalProperties": true,
           "properties": {
-            "$schema": {
-              "type": "string",
-              "format": "uri",
-              "description": "JSON Schema URI for this server.json format",
-              "example": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
-            },
-            "packages": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Package"
-              }
-            },
-            "remotes": {
-              "type": "array",
-              "items": {
-                "anyOf": [
-                  {
-                    "$ref": "#/definitions/StreamableHttpTransport"
-                  },
-                  {
-                    "$ref": "#/definitions/SseTransport"
-                  }
-                ]
-              }
-            },
-            "_meta": {
+            "io.modelcontextprotocol.registry/publisher-provided": {
               "type": "object",
-              "description": "Extension metadata using reverse DNS namespacing for vendor-specific data",
-              "additionalProperties": true,
-              "properties": {
-                "io.modelcontextprotocol.registry/publisher-provided": {
-                  "type": "object",
-                  "description": "Publisher-provided metadata for downstream registries",
-                  "additionalProperties": true
-                }
-              }
+              "description": "Publisher-provided metadata for downstream registries",
+              "additionalProperties": true
             }
           }
         }
-      ]
+      }
     }
   }
 }

@@ -267,33 +267,6 @@ components:
           description: "Optional relative path from repository root to the server location within a monorepo structure"
           example: "src/everything"
 
-    Server:
-      type: object
-      required:
-        - name
-        - description
-        - version
-      properties:
-        name:
-          type: string
-          description: "Reverse DNS name of the MCP server"
-          example: "io.github.modelcontextprotocol/filesystem"
-        description:
-          type: string
-          description: "Human-readable description of the server's functionality"
-          example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
-        repository:
-          $ref: '#/components/schemas/Repository'
-        version:
-          type: string
-          example: "1.0.2"
-          description: "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification."
-        websiteUrl:
-          type: string
-          format: uri
-          description: "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements."
-          example: "https://modelcontextprotocol.io/examples"
-
 
     ServerList:
       type: object
@@ -515,38 +488,59 @@ components:
 
     ServerDetail:
       description: Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.
-      allOf:
-        - $ref: '#/components/schemas/Server'
-        - type: object
+      type: object
+      required:
+        - name
+        - description
+        - version
+      properties:
+        name:
+          type: string
+          description: "Reverse DNS name of the MCP server"
+          example: "io.github.modelcontextprotocol/filesystem"
+        description:
+          type: string
+          description: "Human-readable description of the server's functionality"
+          example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+        repository:
+          $ref: '#/components/schemas/Repository'
+        version:
+          type: string
+          example: "1.0.2"
+          description: "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification."
+        websiteUrl:
+          type: string
+          format: uri
+          description: "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements."
+          example: "https://modelcontextprotocol.io/examples"
+        $schema:
+          type: string
+          format: uri
+          description: JSON Schema URI for this server.json format
+          example: "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
+        packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Package'
+        remotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Remote'
+        _meta:
+          type: object
+          description: Extension metadata using reverse DNS namespacing
           properties:
-            $schema:
-              type: string
-              format: uri
-              description: JSON Schema URI for this server.json format
-              example: "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
-            packages:
-              type: array
-              items:
-                $ref: '#/components/schemas/Package'
-            remotes:
-              type: array
-              items:
-                $ref: '#/components/schemas/Remote'
-            _meta:
+            io.modelcontextprotocol.registry/publisher-provided:
               type: object
-              description: Extension metadata using reverse DNS namespacing
-              properties:
-                io.modelcontextprotocol.registry/publisher-provided:
-                  type: object
-                  description: Publisher-specific metadata and build information
-                  additionalProperties: true
-                  example:
-                    tool: "publisher-cli"
-                    version: "1.2.3"
-                    buildInfo:
-                      commit: "abc123def456"
-                      timestamp: "2023-12-01T10:30:00Z"
-                      pipelineId: "build-789"
+              description: Publisher-specific metadata and build information
+              additionalProperties: true
+              example:
+                tool: "publisher-cli"
+                version: "1.2.3"
+                buildInfo:
+                  commit: "abc123def456"
+                  timestamp: "2023-12-01T10:30:00Z"
+                  pipelineId: "build-789"
 
     ServerResponse:
       description: API response format with separated server data and registry metadata
