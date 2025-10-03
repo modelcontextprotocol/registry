@@ -115,6 +115,17 @@ openssl genpkey -algorithm Ed25519 -out key.pem
 # Content: v=MCPv1; k=ed25519; p=PUBLIC_KEY
 ```
 
+#### OIDC Interactive
+```bash
+mcp-publisher login oidc [--registry=URL]
+```
+- Interactive OIDC authentication for subregistries configured for OIDC auth
+- Uses device authorization flow with any OIDC provider (Auth0, Google, Azure AD, etc.)
+- Registry server provides OIDC issuer and client ID from health endpoint
+- Grants access based on server-configured permissions
+
+Also see server-side OIDC configuration for registry operators.
+
 #### Anonymous (Testing)
 ```bash
 mcp-publisher login none [--registry=URL]
