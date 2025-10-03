@@ -48,7 +48,7 @@ brew install mcp-publisher
 <summary><strong>⬇️ macOS/Linux/WSL: Pre-built binaries</strong></summary>
 
 ```bash
-curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.1.0/mcp-publisher_1.1.0_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
+curl -L "https://github.com/modelcontextprotocol/registry/releases/download/latest/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
 ```
 
 </details>
@@ -74,7 +74,7 @@ export PATH=$PATH:$(pwd)/bin
 <summary><strong>🪟 Windows PowerShell: Pre-built binaries</strong></summary>
 
 ```powershell
-$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq "Arm64") { "arm64" } else { "amd64" }; Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/v1.1.0/mcp-publisher_1.1.0_windows_$arch.tar.gz" -OutFile "mcp-publisher.tar.gz"; tar xf mcp-publisher.tar.gz mcp-publisher.exe; rm mcp-publisher.tar.gz
+$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq "Arm64") { "arm64" } else { "amd64" }; Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/latest/mcp-publisher_windows_$arch.tar.gz" -OutFile "mcp-publisher.tar.gz"; tar xf mcp-publisher.tar.gz mcp-publisher.exe; rm mcp-publisher.tar.gz
 # Move mcp-publisher.exe to a directory in your PATH
 ```
 
@@ -371,7 +371,7 @@ Add the `remotes` field to your `server.json` (can coexist with `packages`):
 ### Requirements
 
 - **Service endpoint**: Your MCP server must be accessible at the specified URL
-- **Transport protocol**: Choose from `sse` (Server-Sent Events) or `streamable-http`
+- **Transport protocol**: Choose from `streamable-http` (recommended) or `sse` (deprecated)
 - **URL validation**: For domain namespaces only (see URL requirements below)
 
 ### Example server.json
@@ -384,8 +384,8 @@ Add the `remotes` field to your `server.json` (can coexist with `packages`):
   "version": "2.0.0",
   "remotes": [
     {
-      "type": "sse",
-      "url": "https://mcp.yourcompany.com/sse"
+      "type": "streamable-http",
+      "url": "https://mcp.yourcompany.com/http"
     }
   ]
 }
@@ -399,12 +399,12 @@ You can offer multiple connection methods:
 {
   "remotes": [
     {
-      "type": "sse",
-      "url": "https://mcp.yourcompany.com/sse"
+      "type": "streamable-http",
+      "url": "https://mcp.yourcompany.com/http"
     },
     {
-      "type": "streamable-http", 
-      "url": "https://mcp.yourcompany.com/http"
+      "type": "sse",
+      "url": "https://mcp.yourcompany.com/sse"
     }
   ]
 }
@@ -423,11 +423,11 @@ Configure headers that clients should send when connecting:
 {
   "remotes": [
     {
-      "type": "sse",
-      "url": "https://mcp.yourcompany.com/sse",
+      "type": "streamable-http",
+      "url": "https://mcp.yourcompany.com/http",
       "headers": [
         {
-          "name": "X-API-Key", 
+          "name": "X-API-Key",
           "description": "API key for authentication",
           "isRequired": true,
           "isSecret": true

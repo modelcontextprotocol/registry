@@ -40,7 +40,9 @@ Often (but not always) ideas flow through this pipeline:
 make dev-compose
 ```
 
-This starts the registry at [`localhost:8080`](http://localhost:8080) with PostgreSQL and seed data. The database uses ephemeral storage and is reset each time you restart the containers, ensuring a clean state for development and testing.
+This starts the registry at [`localhost:8080`](http://localhost:8080) with PostgreSQL. The database uses ephemeral storage and is reset each time you restart the containers, ensuring a clean state for development and testing.
+
+By default, the registry seeds from the production API with a filtered subset of servers (to keep startup fast). This ensures your local environment mirrors production behavior and all seed data passes validation. For offline development you can seed from a file without validation with `MCP_REGISTRY_SEED_FROM=data/seed.json MCP_REGISTRY_ENABLE_REGISTRY_VALIDATION=false make dev-compose`.
 
 The setup can be configured with environment variables in [docker-compose.yml](./docker-compose.yml) - see [.env.example](./.env.example) for a reference.
 

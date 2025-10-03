@@ -260,8 +260,8 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
   "version": "2.0.0",
   "remotes": [
     {
-      "type": "sse",
-      "url": "http://mcp-fs.anonymous.modelcontextprotocol.io/sse"
+      "type": "streamable-http",
+      "url": "http://mcp-fs.anonymous.modelcontextprotocol.io/http"
     }
   ],
   "_meta": {
@@ -531,8 +531,8 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   ],
   "remotes": [
     {
-      "type": "sse",
-      "url": "https://mcp.anonymous.modelcontextprotocol.io/sse",
+      "type": "streamable-http",
+      "url": "https://mcp.anonymous.modelcontextprotocol.io/http",
       "headers": [
         {
           "name": "X-API-Key",
@@ -553,8 +553,8 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
       ]
     },
     {
-      "type": "streamable-http",
-      "url": "https://mcp.anonymous.modelcontextprotocol.io/http"
+      "type": "sse",
+      "url": "https://mcp.anonymous.modelcontextprotocol.io/sse"
     }
   ],
   "_meta": {
