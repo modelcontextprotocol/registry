@@ -94,13 +94,14 @@ This creates a `server.json` with auto-detected values. You'll see something lik
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.yourname/your-server",
-  "description": "A description of your MCP server",
+  "name": "io.github.yourname/weather-data-mcp",
+  "title": "Weather Data",
+  "description": "Access real-time weather data and forecasts",
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "your-package-name",
+      "identifier": "@yourname/weather-data-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
@@ -153,13 +154,14 @@ Add an `mcpName` field to your `package.json`:
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.username/server-name",
-  "description": "A server that provides npm package functionality",
+  "name": "io.github.username/slack-integration-mcp",
+  "title": "Slack Integration",
+  "description": "Send messages and manage Slack workspaces",
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "your-npm-package",
+      "identifier": "@username/slack-integration-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
@@ -191,13 +193,14 @@ Add it to your README.md file (which becomes the package description on PyPI). T
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.username/server-name",
-  "description": "A server that provides PyPI package functionality",
+  "name": "io.github.username/database-query-mcp",
+  "title": "Database Query",
+  "description": "Execute SQL queries and manage database connections",
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "pypi",
-      "identifier": "your-pypi-package",
+      "identifier": "database-query-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
@@ -229,13 +232,14 @@ Add a README file to your NuGet package that includes the server name. This can 
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.username/server-name",
-  "description": "A server that provides NuGet package functionality",
+  "name": "io.github.username/azure-devops-mcp",
+  "title": "Azure DevOps",
+  "description": "Manage Azure DevOps work items and pipelines",
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "nuget",
-      "identifier": "Your.NuGet.Package",
+      "identifier": "Username.AzureDevOpsMcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
@@ -271,14 +275,15 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.username/server-name",
-  "description": "A server that provides Docker container functionality",
+  "name": "io.github.username/kubernetes-manager-mcp",
+  "title": "Kubernetes Manager",
+  "description": "Deploy and manage Kubernetes resources",
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "oci",
       "registryBaseUrl": "https://docker.io",
-      "identifier": "yourusername/your-mcp-server",
+      "identifier": "yourusername/kubernetes-manager-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
@@ -292,14 +297,15 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.username/server-name",
-  "description": "A server that provides GitHub container functionality",
+  "name": "io.github.username/git-operations-mcp",
+  "title": "Git Operations",
+  "description": "Advanced Git repository management and operations",
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "oci",
       "registryBaseUrl": "https://ghcr.io",
-      "identifier": "yourusername/your-mcp-server",
+      "identifier": "username/git-operations-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
@@ -334,13 +340,14 @@ openssl dgst -sha256 server.mcpb
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.username/server-name",
-  "description": "A server that provides MCPB package functionality",
+  "name": "io.github.username/image-processor-mcp",
+  "title": "Image Processor",
+  "description": "Process and transform images with various filters",
   "version": "1.0.0",
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/you/your-repo/releases/download/v1.0.0/server.mcpb",
+      "identifier": "https://github.com/username/image-processor-mcp/releases/download/v1.0.0/image-processor.mcpb",
       "version": "1.0.0",
       "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
       "transport": {
@@ -379,13 +386,14 @@ Add the `remotes` field to your `server.json` (can coexist with `packages`):
 ```json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "com.yourcompany/api-server",
-  "description": "Cloud-hosted MCP server for API operations",
+  "name": "com.yourcompany/acme-analytics",
+  "title": "ACME Analytics",
+  "description": "Real-time business intelligence and reporting platform",
   "version": "2.0.0",
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://mcp.yourcompany.com/http"
+      "url": "https://mcp.yourcompany.com/mcp"
     }
   ]
 }
@@ -400,7 +408,7 @@ You can offer multiple connection methods:
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://mcp.yourcompany.com/http"
+      "url": "https://mcp.yourcompany.com/mcp"
     },
     {
       "type": "sse",
@@ -424,7 +432,7 @@ Configure headers that clients should send when connecting:
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://mcp.yourcompany.com/http",
+      "url": "https://mcp.yourcompany.com/mcp",
       "headers": [
         {
           "name": "X-API-Key",

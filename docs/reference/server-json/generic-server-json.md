@@ -25,6 +25,7 @@ The official registry has some more restrictions on top of this. See the [offici
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/brave-search",
   "description": "MCP server for Brave Search API integration",
+  "title": "Brave Search",
   "websiteUrl": "https://anonymous.modelcontextprotocol.io/examples",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
@@ -71,6 +72,7 @@ For MCP servers located within a subdirectory of a larger repository (monorepo s
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol/everything",
   "description": "MCP server that exercises all the features of the MCP protocol",
+  "title": "Everything",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -152,6 +154,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
+  "title": "Filesystem",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/servers",
     "source": "github",
@@ -285,6 +288,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 {
   "name": "io.github.example/weather-mcp",
   "description": "Python MCP server for weather data access",
+  "title": "Weather",
   "repository": {
     "url": "https://github.com/example/weather-mcp",
     "source": "github",
@@ -498,6 +502,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/hybrid-mcp",
   "description": "MCP server available as both local package and remote service",
+  "title": "Hybrid",
   "repository": {
     "url": "https://github.com/example/hybrid-mcp",
     "source": "github",
@@ -582,6 +587,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 {
   "name": "io.modelcontextprotocol/text-editor",
   "description": "MCP Bundle server for advanced text editing capabilities",
+  "title": "Text Editor",
   "repository": {
     "url": "https://github.com/modelcontextprotocol/text-editor-mcpb",
     "source": "github"
@@ -626,6 +632,7 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.snyk/cli-mcp",
   "description": "MCP server provided by the Snyk CLI",
+  "title": "Snyk",
   "version": "1.1298.0",
   "packages": [
     {

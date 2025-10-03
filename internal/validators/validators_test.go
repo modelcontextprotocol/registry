@@ -1593,3 +1593,150 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 		},
 	}
 }
+
+func TestValidateTitle(t *testing.T) {
+	tests := []struct {
+		name          string
+		serverDetail  apiv0.ServerJSON
+		expectedError string
+	}{
+		{
+			name: "Valid title without MCP suffix",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Valid title with multiple words",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "Weather API",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Empty title is allowed (optional field)",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Rejects title with 'MCP Server' suffix",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub MCP Server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+		},
+		{
+			name: "Rejects title with 'MCP' suffix",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub MCP",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+		},
+		{
+			name: "Rejects title with 'mcp server' suffix (lowercase)",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub mcp server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+		},
+		{
+			name: "Rejects title with hyphenated 'MCP' suffix",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub-MCP",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+		},
+		{
+			name: "Allows 'MCP' in the middle of title",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "MCP Weather API",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Rejects title with only whitespace",
+			serverDetail: apiv0.ServerJSON{
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "   ",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "title cannot be only whitespace",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validators.ValidateServerJSON(&tt.serverDetail)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}

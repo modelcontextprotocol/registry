@@ -156,6 +156,7 @@ paths:
                 value:
                   name: "io.modelcontextprotocol/filesystem"
                   description: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+                  title: "Filesystem"
                   repository:
                     url: "https://github.com/modelcontextprotocol/servers"
                     source: "github"
@@ -177,6 +178,7 @@ paths:
                 value:
                   name: "com.example/demo-server"
                   description: "Example MCP server demonstrating publisher extensions."
+                  title: "Demo Server"
                   repository:
                     url: "https://github.com/example/mcp-demo"
                     source: "github"
@@ -282,6 +284,10 @@ components:
           type: string
           description: "Human-readable description of the server's functionality"
           example: "Node.js server implementing Model Context Protocol (MCP) for filesystem operations."
+        title:
+          type: string
+          description: "Optional human-readable title or display name for the MCP server. MCP subregistries or clients MAY choose to use this for display purposes. Should be clean and concise without 'MCP Server' or 'MCP' suffixes (e.g., 'GitHub' not 'GitHub MCP Server')."
+          example: "Filesystem"
         repository:
           $ref: '#/components/schemas/Repository'
         version:

@@ -73,6 +73,11 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 		return err
 	}
 
+	// Validate title if provided
+	if err := validateTitle(serverJSON.Title); err != nil {
+		return err
+	}
+
 	// Validate all packages (basic field validation)
 	// Detailed package validation (including registry checks) is done during publish
 	for _, pkg := range serverJSON.Packages {
@@ -141,6 +146,35 @@ func validateWebsiteURL(websiteURL string) error {
 	// Only allow HTTP/HTTPS schemes for security
 	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
 		return fmt.Errorf("websiteUrl must use http or https scheme: %s", websiteURL)
+	}
+
+	return nil
+}
+
+func validateTitle(title string) error {
+	// Skip validation if title is not provided (optional field)
+	if title == "" {
+		return nil
+	}
+
+	// Check that title is not only whitespace
+	if strings.TrimSpace(title) == "" {
+		return fmt.Errorf("title cannot be only whitespace")
+	}
+
+	// Check for MCP suffix variants (case-insensitive)
+	titleLower := strings.ToLower(strings.TrimSpace(title))
+	invalidSuffixes := []string{
+		" mcp server",
+		" mcp",
+		"-mcp server",
+		"-mcp",
+	}
+
+	for _, suffix := range invalidSuffixes {
+		if strings.HasSuffix(titleLower, suffix) {
+			return fmt.Errorf("%w: found '%s' suffix", ErrTitleHasMCPSuffix, suffix)
+		}
 	}
 
 	return nil
