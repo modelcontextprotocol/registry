@@ -757,8 +757,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "valid match - example.com domain",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/test-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -771,8 +771,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "valid match - subdomain mcp.example.com",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/test-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -785,8 +785,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "valid match - api subdomain",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/api-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/api-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -799,8 +799,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "invalid - wrong domain",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/test-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -814,8 +814,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "invalid - different domain entirely",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.microsoft/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.microsoft/server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -829,8 +829,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "invalid URL format",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/test",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -844,7 +844,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "empty remotes array",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
+				Schema:  model.CurrentSchemaURL,
 				Name:    "com.example/test",
 				Remotes: []model.Transport{},
 			},
@@ -853,8 +853,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "multiple valid remotes - different subdomains",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -871,8 +871,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "one valid, one invalid remote",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -913,24 +913,24 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "valid namespace/name format",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example.api/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example.api/server",
 			},
 			expectError: false,
 		},
 		{
 			name: "valid complex namespace",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.microsoft.azure.service/webapp-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.microsoft.azure.service/webapp-server",
 			},
 			expectError: false,
 		},
 		{
 			name: "empty server name",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "",
+				Schema: model.CurrentSchemaURL,
+				Name:   "",
 			},
 			expectError: true,
 			errorMsg:    "server name is required",
@@ -938,8 +938,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "missing slash separator",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example.server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example.server",
 			},
 			expectError: true,
 			errorMsg:    "server name must be in format 'dns-namespace/name'",
@@ -947,8 +947,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "empty namespace part",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "/server-name",
+				Schema: model.CurrentSchemaURL,
+				Name:   "/server-name",
 			},
 			expectError: true,
 			errorMsg:    "non-empty namespace and name parts",
@@ -956,8 +956,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "empty name part",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/",
 			},
 			expectError: true,
 			errorMsg:    "non-empty namespace and name parts",
@@ -965,8 +965,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "multiple slashes - should be rejected",
 			serverDetail: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name: "com.example/server/path",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/server/path",
 			},
 			expectError: true,
 			errorMsg:    "server name cannot contain multiple slashes",
@@ -1052,7 +1052,7 @@ func TestValidate_MultipleSlashesInServerName(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			serverDetail := apiv0.ServerJSON{
 				Schema: model.CurrentSchemaURL,
-				Name: tt.serverName,
+				Name:   tt.serverName,
 			}
 			err := validators.ValidateServerJSON(&serverDetail)
 

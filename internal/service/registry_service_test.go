@@ -134,7 +134,7 @@ func TestGetServerByName(t *testing.T) {
 
 	// Create multiple versions of the same server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/test-server",
 		Description: "Test server v1",
 		Version:     "1.0.0",
@@ -142,7 +142,7 @@ func TestGetServerByName(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/test-server",
 		Description: "Test server v2",
 		Version:     "2.0.0",
@@ -205,7 +205,7 @@ func TestGetServerByNameAndVersion(t *testing.T) {
 
 	// Create multiple versions of the same server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Versioned server v1",
 		Version:     "1.0.0",
@@ -213,7 +213,7 @@ func TestGetServerByNameAndVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Versioned server v2",
 		Version:     "2.0.0",
@@ -298,7 +298,7 @@ func TestGetAllVersionsByServerName(t *testing.T) {
 
 	// Create multiple versions of the same server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Multi-version server v1",
 		Version:     "1.0.0",
@@ -306,7 +306,7 @@ func TestGetAllVersionsByServerName(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Multi-version server v2",
 		Version:     "2.0.0",
@@ -314,7 +314,7 @@ func TestGetAllVersionsByServerName(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Multi-version server v2.1",
 		Version:     "2.1.0",
@@ -401,8 +401,8 @@ func TestCreateServerConcurrentVersionsNoRace(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			result, err := service.CreateServer(ctx, &apiv0.ServerJSON{
-				Schema: model.CurrentSchemaURL,
-		Name:        serverName,
+				Schema:      model.CurrentSchemaURL,
+				Name:        serverName,
 				Description: fmt.Sprintf("Version %d", idx),
 				Version:     fmt.Sprintf("1.0.%d", idx),
 			})
@@ -451,7 +451,7 @@ func TestUpdateServer(t *testing.T) {
 
 	// Create initial server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
-		Schema: model.CurrentSchemaURL,
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Original description",
 		Version:     version,
@@ -660,8 +660,8 @@ func TestListServers(t *testing.T) {
 
 	for _, server := range testServers {
 		_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
-			Schema: model.CurrentSchemaURL,
-		Name:        server.name,
+			Schema:      model.CurrentSchemaURL,
+			Name:        server.name,
 			Description: server.description,
 			Version:     server.version,
 		})
@@ -758,8 +758,8 @@ func TestVersionComparison(t *testing.T) {
 			time.Sleep(v.delay)
 		}
 		_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
-			Schema: model.CurrentSchemaURL,
-		Name:        serverName,
+			Schema:      model.CurrentSchemaURL,
+			Name:        serverName,
 			Description: v.description,
 			Version:     v.version,
 		})

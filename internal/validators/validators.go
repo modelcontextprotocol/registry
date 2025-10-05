@@ -54,6 +54,8 @@ var (
 
 func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	// Validate schema version is provided and supported
+	// Note: Schema field is also marked as required in the ServerJSON struct definition
+	// for API-level validation and documentation
 	if serverJSON.Schema == "" {
 		return fmt.Errorf("$schema field is required")
 	}
