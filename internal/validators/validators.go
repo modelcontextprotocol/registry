@@ -162,21 +162,6 @@ func validateTitle(title string) error {
 		return fmt.Errorf("title cannot be only whitespace")
 	}
 
-	// Check for MCP suffix variants (case-insensitive)
-	titleLower := strings.ToLower(strings.TrimSpace(title))
-	invalidSuffixes := []string{
-		" mcp server",
-		" mcp",
-		"-mcp server",
-		"-mcp",
-	}
-
-	for _, suffix := range invalidSuffixes {
-		if strings.HasSuffix(titleLower, suffix) {
-			return fmt.Errorf("%w: found '%s' suffix", ErrTitleHasMCPSuffix, suffix)
-		}
-	}
-
 	return nil
 }
 

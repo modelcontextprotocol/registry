@@ -60,7 +60,7 @@
         },
         "title": {
           "type": "string",
-          "description": "Optional human-readable title or display name for the MCP server. MCP subregistries or clients MAY choose to use this for display purposes. Should be clean and concise without 'MCP Server' or 'MCP' suffixes (e.g., 'GitHub' not 'GitHub MCP Server').",
+          "description": "Optional human-readable title or display name for the MCP server. MCP subregistries or clients MAY choose to use this for display purposes.",
           "example": "Weather API",
           "minLength": 1,
           "maxLength": 100

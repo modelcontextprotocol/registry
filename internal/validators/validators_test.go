@@ -1643,7 +1643,7 @@ func TestValidateTitle(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name: "Rejects title with 'MCP Server' suffix",
+			name: "Allows title with 'MCP Server' suffix",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -1654,10 +1654,10 @@ func TestValidateTitle(t *testing.T) {
 				},
 				Version: "1.0.0",
 			},
-			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+			expectedError: "",
 		},
 		{
-			name: "Rejects title with 'MCP' suffix",
+			name: "Allows title with 'MCP' suffix",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -1668,10 +1668,10 @@ func TestValidateTitle(t *testing.T) {
 				},
 				Version: "1.0.0",
 			},
-			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+			expectedError: "",
 		},
 		{
-			name: "Rejects title with 'mcp server' suffix (lowercase)",
+			name: "Allows title with 'mcp server' suffix (lowercase)",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -1682,10 +1682,10 @@ func TestValidateTitle(t *testing.T) {
 				},
 				Version: "1.0.0",
 			},
-			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+			expectedError: "",
 		},
 		{
-			name: "Rejects title with hyphenated 'MCP' suffix",
+			name: "Allows title with hyphenated 'MCP' suffix",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
@@ -1696,7 +1696,7 @@ func TestValidateTitle(t *testing.T) {
 				},
 				Version: "1.0.0",
 			},
-			expectedError: validators.ErrTitleHasMCPSuffix.Error(),
+			expectedError: "",
 		},
 		{
 			name: "Allows 'MCP' in the middle of title",

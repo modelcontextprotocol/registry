@@ -29,9 +29,6 @@ var (
 	// Server name validation errors
 	ErrMultipleSlashesInServerName = errors.New("server name cannot contain multiple slashes")
 	ErrInvalidServerNameFormat     = errors.New("server name format is invalid")
-
-	// Title validation errors
-	ErrTitleHasMCPSuffix = errors.New("title should not end with 'MCP Server', 'MCP server', or 'MCP' suffix. For example, name your server 'CoolThing' instead of 'CoolThing MCP Server'")
 )
 
 // RepositorySource represents valid repository sources
