@@ -23,6 +23,7 @@ func TestImportService_LocalFile(t *testing.T) {
 	tempFile := "/tmp/test_import_seed.json"
 	seedData := []*apiv0.ServerJSON{
 		{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.test/test-server-1",
 			Description: "Test server 1",
 			Repository: model.Repository{
@@ -65,6 +66,7 @@ func TestImportService_HTTPFile(t *testing.T) {
 	// Create a test HTTP server
 	seedData := []*apiv0.ServerJSON{
 		{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.test/http-test-server",
 			Description: "HTTP test server",
 			Repository: model.Repository{
@@ -115,11 +117,13 @@ func TestImportService_RegistryPagination(t *testing.T) {
 	// Setup source registry with test data
 	sourceServers := []*apiv0.ServerJSON{
 		{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "com.source/server-1",
 			Description: "Source server 1",
 			Version:     "1.0.0",
 		},
 		{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "com.source/server-2",
 			Description: "Source server 2",
 			Version:     "1.0.0",

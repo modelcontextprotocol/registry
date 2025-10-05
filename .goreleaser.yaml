@@ -120,12 +120,12 @@ signs:
 archives:
   # Registry server archive
   - id: registry
-    name_template: "registry_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "registry_{{ .Os }}_{{ .Arch }}"
     ids:
       - registry
-  
+
   # Publisher CLI archive
   - id: publisher
-    name_template: "mcp-publisher_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "mcp-publisher_{{ .Os }}_{{ .Arch }}"
     ids:
       - publisher

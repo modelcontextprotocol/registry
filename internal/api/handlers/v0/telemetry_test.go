@@ -24,6 +24,7 @@ import (
 func TestPrometheusHandler(t *testing.T) {
 	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 	server, err := registryService.CreateServer(context.Background(), &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "io.github.example/test-server",
 		Description: "Test server detail",
 		Repository: model.Repository{

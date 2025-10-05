@@ -57,6 +57,7 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.testuser/test-mcp-server",
 			Description: "A test MCP server for integration testing",
 			Repository: model.Repository{
@@ -101,6 +102,7 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("successful publish with none auth (no prefix)", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "com.example/test-mcp-server-no-auth",
 			Description: "A test MCP server without authentication",
 			Repository: model.Repository{
@@ -143,7 +145,8 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish fails with missing authorization header", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
-			Name: "test-server",
+			Schema: model.CurrentSchemaURL,
+			Name:   "test-server",
 		}
 
 		body, err := json.Marshal(publishReq)
@@ -162,6 +165,7 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish fails with invalid token", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.domdomegg/test-server",
 			Description: "Test server",
 			Version:     "1.0.0",
@@ -183,6 +187,7 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish fails when permission denied", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.other/test-server",
 			Description: "A test server",
 			Version:     "1.0.0",
@@ -219,6 +224,7 @@ func TestPublishIntegration(t *testing.T) {
 
 	t.Run("publish succeeds with MCPB package", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.domdomegg/airtable-mcp-server",
 			Description: "A test server with MCPB package",
 			Version:     "1.7.2",

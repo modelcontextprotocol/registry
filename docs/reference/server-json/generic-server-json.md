@@ -108,6 +108,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
 
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.joelverhagen/knapcode-samplemcpserver",
   "description": "Sample NuGet MCP server for a random number and random weather",
   "version": "0.4.0-beta",
@@ -253,6 +254,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/mcp-fs",
   "description": "Cloud-hosted MCP filesystem server",
   "repository": {
@@ -286,6 +288,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.example/weather-mcp",
   "description": "Python MCP server for weather data access",
   "title": "Weather",
@@ -341,6 +344,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.joelverhagen/knapcode-samplemcpserver",
   "description": "Sample NuGet MCP server for a random number and random weather",
   "repository": {
@@ -389,6 +393,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.github.example/database-manager",
   "description": "MCP server for database operations with support for multiple database types",
   "repository": {
@@ -585,6 +590,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "name": "io.modelcontextprotocol/text-editor",
   "description": "MCP Bundle server for advanced text editing capabilities",
   "title": "Text Editor",

@@ -26,6 +26,7 @@ func TestListServersEndpoint(t *testing.T) {
 
 	// Setup test data
 	_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/server-alpha",
 		Description: "Alpha test server",
 		Version:     "1.0.0",
@@ -33,6 +34,7 @@ func TestListServersEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/server-beta",
 		Description: "Beta test server",
 		Version:     "2.0.0",
@@ -118,6 +120,7 @@ func TestGetServerByNameEndpoint(t *testing.T) {
 
 	// Setup test data
 	_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/detail-server",
 		Description: "Server for detail testing",
 		Version:     "1.0.0",
@@ -180,6 +183,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 
 	// Setup test data with multiple versions
 	_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Version test server v1",
 		Version:     "1.0.0",
@@ -187,6 +191,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Version test server v2",
 		Version:     "2.0.0",
@@ -195,6 +200,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 
 	// Add version with build metadata for URL encoding test
 	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Version test server with build metadata",
 		Version:     "1.0.0+20130313144700",
@@ -304,6 +310,7 @@ func TestGetAllVersionsEndpoint(t *testing.T) {
 	versions := []string{"1.0.0", "1.1.0", "2.0.0"}
 	for _, version := range versions {
 		_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        serverName,
 			Description: "Multi-version test server " + version,
 			Version:     version,
@@ -402,6 +409,7 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 
 	for _, server := range specialServers {
 		_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        server.name,
 			Description: server.description,
 			Version:     server.version,
