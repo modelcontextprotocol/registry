@@ -1719,6 +1719,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Valid title without MCP suffix",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub",
@@ -1733,6 +1734,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Valid title with multiple words",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "Weather API",
@@ -1747,6 +1749,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Empty title is allowed (optional field)",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "",
@@ -1761,6 +1764,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Allows title with 'MCP Server' suffix",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub MCP Server",
@@ -1775,6 +1779,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Allows title with 'MCP' suffix",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub MCP",
@@ -1789,6 +1794,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Allows title with 'mcp server' suffix (lowercase)",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub mcp server",
@@ -1803,6 +1809,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Allows title with hyphenated 'MCP' suffix",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub-MCP",
@@ -1817,6 +1824,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Allows 'MCP' in the middle of title",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "MCP Weather API",
@@ -1831,6 +1839,7 @@ func TestValidateTitle(t *testing.T) {
 		{
 			name: "Rejects title with only whitespace",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "   ",
