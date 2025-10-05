@@ -53,145 +53,227 @@ var (
 )
 
 func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
-	// Validate server name exists and format
-	if _, err := parseServerName(*serverJSON); err != nil {
-		return err
-	}
-
-	// Validate top-level server version is a specific version (not a range) & not "latest"
-	if err := validateVersion(serverJSON.Version); err != nil {
-		return err
-	}
-
-	// Validate repository
-	if err := validateRepository(&serverJSON.Repository); err != nil {
-		return err
-	}
-
-	// Validate website URL if provided
-	if err := validateWebsiteURL(serverJSON.WebsiteURL); err != nil {
-		return err
-	}
-
-	// Validate all packages (basic field validation)
-	// Detailed package validation (including registry checks) is done during publish
-	for _, pkg := range serverJSON.Packages {
-		if err := validatePackageField(&pkg); err != nil {
-			return err
+	result := ValidateServerJSONDetailed(serverJSON, false)
+	if !result.Valid {
+		// Return the first error issue
+		for _, issue := range result.Issues {
+			if issue.Severity == ValidationIssueSeverityError {
+				return fmt.Errorf("%s", issue.Message)
+			}
 		}
 	}
-
-	// Validate all remotes
-	for _, remote := range serverJSON.Remotes {
-		if err := validateRemoteTransport(&remote); err != nil {
-			return err
-		}
-	}
-
-	// Validate reverse-DNS namespace matching for remote URLs
-	if err := validateRemoteNamespaceMatch(*serverJSON); err != nil {
-		return err
-	}
-
-	// Validate reverse-DNS namespace matching for website URL
-	if err := validateWebsiteURLNamespaceMatch(*serverJSON); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func validateRepository(obj *model.Repository) error {
+// ValidateServerJSONDetailed performs exhaustive validation and returns all issues found
+// If validateSchema is true, it will also validate against server.schema.json
+func ValidateServerJSONDetailed(serverJSON *apiv0.ServerJSON, validateSchema bool) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+	ctx := &ValidationContext{}
+
+	// Schema validation first (if requested) - catches structural issues early
+	if validateSchema {
+		schemaResult := validateServerJSONSchema(serverJSON)
+		result.Merge(schemaResult)
+		// If schema validation fails, we might still want to run semantic validation
+		// to provide additional context, but schema errors take precedence
+	}
+
+	// Validate server name exists and format
+	if _, err := parseServerName(*serverJSON); err != nil {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("name").String(),
+			err,
+			"invalid-server-name",
+		)
+		result.AddIssue(issue)
+	}
+
+	// Validate top-level server version is a specific version (not a range) & not "latest"
+	versionResult := validateVersion(ctx.Field("version"), serverJSON.Version)
+	result.Merge(versionResult)
+
+	// Validate repository
+	repoResult := validateRepository(ctx.Field("repository"), &serverJSON.Repository)
+	result.Merge(repoResult)
+
+	// Validate website URL if provided
+	websiteResult := validateWebsiteURL(ctx.Field("websiteUrl"), serverJSON.WebsiteURL)
+	result.Merge(websiteResult)
+
+	// Validate all packages (basic field validation)
+	// Detailed package validation (including registry checks) is done during publish
+	for i, pkg := range serverJSON.Packages {
+		pkgResult := validatePackageField(ctx.Field("packages").Index(i), &pkg)
+		result.Merge(pkgResult)
+	}
+
+	// Validate all remotes
+	for i, remote := range serverJSON.Remotes {
+		remoteResult := validateRemoteTransport(ctx.Field("remotes").Index(i), &remote)
+		result.Merge(remoteResult)
+	}
+
+	// Validate reverse-DNS namespace matching for remote URLs
+	remoteNamespaceResult := validateRemoteNamespaceMatch(ctx.Field("remotes"), *serverJSON)
+	result.Merge(remoteNamespaceResult)
+
+	// Validate reverse-DNS namespace matching for website URL
+	websiteNamespaceResult := validateWebsiteURLNamespaceMatch(ctx.Field("websiteUrl"), *serverJSON)
+	result.Merge(websiteNamespaceResult)
+
+	return result
+}
+
+func validateRepository(ctx *ValidationContext, obj *model.Repository) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	// Skip validation for empty repository (optional field)
 	if obj.URL == "" && obj.Source == "" {
-		return nil
+		return result
 	}
 
 	// validate the repository source
 	repoSource := RepositorySource(obj.Source)
 	if !IsValidRepositoryURL(repoSource, obj.URL) {
-		return fmt.Errorf("%w: %s", ErrInvalidRepositoryURL, obj.URL)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("url").String(),
+			fmt.Errorf("%w: %s", ErrInvalidRepositoryURL, obj.URL),
+			"invalid-repository-url",
+		)
+		result.AddIssue(issue)
 	}
 
 	// validate subfolder if present
 	if obj.Subfolder != "" && !IsValidSubfolderPath(obj.Subfolder) {
-		return fmt.Errorf("%w: %s", ErrInvalidSubfolderPath, obj.Subfolder)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("subfolder").String(),
+			fmt.Errorf("%w: %s", ErrInvalidSubfolderPath, obj.Subfolder),
+			"invalid-subfolder-path",
+		)
+		result.AddIssue(issue)
 	}
 
-	return nil
+	return result
 }
 
-func validateWebsiteURL(websiteURL string) error {
+func validateWebsiteURL(ctx *ValidationContext, websiteURL string) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	// Skip validation if website URL is not provided (optional field)
 	if websiteURL == "" {
-		return nil
+		return result
 	}
 
 	// Parse the URL to ensure it's valid
 	parsedURL, err := url.Parse(websiteURL)
 	if err != nil {
-		return fmt.Errorf("invalid websiteUrl: %w", err)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Errorf("invalid websiteUrl: %w", err),
+			"invalid-website-url",
+		)
+		result.AddIssue(issue)
+		return result
 	}
 
 	// Ensure it's an absolute URL with valid scheme
 	if !parsedURL.IsAbs() {
-		return fmt.Errorf("websiteUrl must be absolute (include scheme): %s", websiteURL)
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Sprintf("websiteUrl must be absolute (include scheme): %s", websiteURL),
+			ValidationIssueSeverityError,
+			"website-url-must-be-absolute",
+		)
+		result.AddIssue(issue)
 	}
 
 	// Only allow HTTP/HTTPS schemes for security
 	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
-		return fmt.Errorf("websiteUrl must use http or https scheme: %s", websiteURL)
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Sprintf("websiteUrl must use http or https scheme: %s", websiteURL),
+			ValidationIssueSeverityError,
+			"website-url-invalid-scheme",
+		)
+		result.AddIssue(issue)
 	}
 
-	return nil
+	return result
 }
 
-func validatePackageField(obj *model.Package) error {
+func validatePackageField(ctx *ValidationContext, obj *model.Package) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
+	// Validate identifier has no spaces
 	if !HasNoSpaces(obj.Identifier) {
-		return ErrPackageNameHasSpaces
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("identifier").String(),
+			ErrPackageNameHasSpaces,
+			"package-name-has-spaces",
+		)
+		result.AddIssue(issue)
 	}
 
 	// Validate version string
-	if err := validateVersion(obj.Version); err != nil {
-		return err
-	}
+	versionResult := validateVersion(ctx.Field("version"), obj.Version)
+	result.Merge(versionResult)
 
 	// Validate runtime arguments
-	for _, arg := range obj.RuntimeArguments {
-		if err := validateArgument(&arg); err != nil {
-			return fmt.Errorf("invalid runtime argument: %w", err)
-		}
+	for i, arg := range obj.RuntimeArguments {
+		argResult := validateArgument(ctx.Field("runtimeArguments").Index(i), &arg)
+		result.Merge(argResult)
 	}
 
 	// Validate package arguments
-	for _, arg := range obj.PackageArguments {
-		if err := validateArgument(&arg); err != nil {
-			return fmt.Errorf("invalid package argument: %w", err)
-		}
+	for i, arg := range obj.PackageArguments {
+		argResult := validateArgument(ctx.Field("packageArguments").Index(i), &arg)
+		result.Merge(argResult)
 	}
 
 	// Validate transport with template variable support
 	availableVariables := collectAvailableVariables(obj)
-	if err := validatePackageTransport(&obj.Transport, availableVariables); err != nil {
-		return fmt.Errorf("invalid transport: %w", err)
-	}
+	transportResult := validatePackageTransport(ctx.Field("transport"), &obj.Transport, availableVariables)
+	result.Merge(transportResult)
 
-	return nil
+	return result
 }
 
 // validateVersion validates the version string.
 // NB: we decided that we would not enforce strict semver for version strings
-func validateVersion(version string) error {
+func validateVersion(ctx *ValidationContext, version string) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	if version == "latest" {
-		return ErrReservedVersionString
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			ErrReservedVersionString,
+			"reserved-version-string",
+		)
+		result.AddIssue(issue)
+		return result
 	}
 
 	// Reject semver range-like inputs
 	if looksLikeVersionRange(version) {
-		return fmt.Errorf("%w: %q", ErrVersionLooksLikeRange, version)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Errorf("%w: %q", ErrVersionLooksLikeRange, version),
+			"version-looks-like-range",
+		)
+		result.AddIssue(issue)
 	}
 
-	return nil
+	return result
 }
 
 // looksLikeVersionRange detects common semver range syntaxes and wildcard patterns.
@@ -227,25 +309,34 @@ func looksLikeVersionRange(version string) bool {
 }
 
 // validateArgument validates argument details
-func validateArgument(obj *model.Argument) error {
+func validateArgument(ctx *ValidationContext, obj *model.Argument) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	if obj.Type == model.ArgumentTypeNamed {
 		// Validate named argument name format
-		if err := validateNamedArgumentName(obj.Name); err != nil {
-			return err
-		}
+		nameResult := validateNamedArgumentName(ctx.Field("name"), obj.Name)
+		result.Merge(nameResult)
 
 		// Validate value and default don't start with the name
-		if err := validateArgumentValueFields(obj.Name, obj.Value, obj.Default); err != nil {
-			return err
-		}
+		valueResult := validateArgumentValueFields(ctx, obj.Name, obj.Value, obj.Default)
+		result.Merge(valueResult)
 	}
-	return nil
+	return result
 }
 
-func validateNamedArgumentName(name string) error {
+func validateNamedArgumentName(ctx *ValidationContext, name string) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	// Check if name is required for named arguments
 	if name == "" {
-		return ErrNamedArgumentNameRequired
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			ErrNamedArgumentNameRequired,
+			"named-argument-name-required",
+		)
+		result.AddIssue(issue)
+		return result
 	}
 
 	// Check for invalid characters that suggest embedded values or descriptions
@@ -253,23 +344,43 @@ func validateNamedArgumentName(name string) error {
 	// Invalid: "--directory <absolute_path_to_adfin_mcp_folder>", "--port 8080"
 	if strings.Contains(name, "<") || strings.Contains(name, ">") ||
 		strings.Contains(name, " ") || strings.Contains(name, "$") {
-		return fmt.Errorf("%w: %s", ErrInvalidNamedArgumentName, name)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Errorf("%w: %s", ErrInvalidNamedArgumentName, name),
+			"invalid-named-argument-name",
+		)
+		result.AddIssue(issue)
 	}
 
-	return nil
+	return result
 }
 
-func validateArgumentValueFields(name, value, defaultValue string) error {
+func validateArgumentValueFields(ctx *ValidationContext, name, value, defaultValue string) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	// Check if value starts with the argument name (using startsWith, not contains)
 	if value != "" && strings.HasPrefix(value, name) {
-		return fmt.Errorf("%w: value starts with argument name '%s': %s", ErrArgumentValueStartsWithName, name, value)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("value").String(),
+			fmt.Errorf("%w: value starts with argument name '%s': %s", ErrArgumentValueStartsWithName, name, value),
+			"argument-value-starts-with-name",
+		)
+		result.AddIssue(issue)
 	}
 
 	if defaultValue != "" && strings.HasPrefix(defaultValue, name) {
-		return fmt.Errorf("%w: default starts with argument name '%s': %s", ErrArgumentDefaultStartsWithName, name, defaultValue)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("default").String(),
+			fmt.Errorf("%w: default starts with argument name '%s': %s", ErrArgumentDefaultStartsWithName, name, defaultValue),
+			"argument-default-starts-with-name",
+		)
+		result.AddIssue(issue)
 	}
 
-	return nil
+	return result
 }
 
 // collectAvailableVariables collects all available template variables from a package
@@ -305,53 +416,110 @@ func collectAvailableVariables(pkg *model.Package) []string {
 }
 
 // validatePackageTransport validates a package's transport with templating support
-func validatePackageTransport(transport *model.Transport, availableVariables []string) error {
+func validatePackageTransport(ctx *ValidationContext, transport *model.Transport, availableVariables []string) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	// Validate transport type is supported
 	switch transport.Type {
 	case model.TransportTypeStdio:
 		// Validate that URL is empty for stdio transport
 		if transport.URL != "" {
-			return fmt.Errorf("url must be empty for %s transport type, got: %s", transport.Type, transport.URL)
+			issue := NewValidationIssue(
+				ValidationIssueTypeSemantic,
+				ctx.Field("url").String(),
+				fmt.Sprintf("url must be empty for %s transport type, got: %s", transport.Type, transport.URL),
+				ValidationIssueSeverityError,
+				"stdio-transport-url-not-empty",
+			)
+			result.AddIssue(issue)
 		}
-		return nil
 	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
 		// URL is required for streamable-http and sse
 		if transport.URL == "" {
-			return fmt.Errorf("url is required for %s transport type", transport.Type)
-		}
-		// Validate URL format with template variable support
-		if !IsValidTemplatedURL(transport.URL, availableVariables, true) {
-			// Check if it's a template variable issue or basic URL issue
-			templateVars := extractTemplateVariables(transport.URL)
-			if len(templateVars) > 0 {
-				return fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v",
-					ErrInvalidRemoteURL, transport.URL, availableVariables)
+			issue := NewValidationIssue(
+				ValidationIssueTypeSemantic,
+				ctx.Field("url").String(),
+				fmt.Sprintf("url is required for %s transport type", transport.Type),
+				ValidationIssueSeverityError,
+				"streamable-transport-url-required",
+			)
+			result.AddIssue(issue)
+		} else {
+			// Validate URL format with template variable support
+			if !IsValidTemplatedURL(transport.URL, availableVariables, true) {
+				// Check if it's a template variable issue or basic URL issue
+				templateVars := extractTemplateVariables(transport.URL)
+				var err error
+				if len(templateVars) > 0 {
+					err = fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v",
+						ErrInvalidRemoteURL, transport.URL, availableVariables)
+				} else {
+					err = fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
+				}
+				issue := NewValidationIssueFromError(
+					ValidationIssueTypeSemantic,
+					ctx.Field("url").String(),
+					err,
+					"invalid-templated-url",
+				)
+				result.AddIssue(issue)
 			}
-			return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
 		}
-		return nil
 	default:
-		return fmt.Errorf("unsupported transport type: %s", transport.Type)
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.Field("type").String(),
+			fmt.Sprintf("unsupported transport type: %s", transport.Type),
+			ValidationIssueSeverityError,
+			"unsupported-transport-type",
+		)
+		result.AddIssue(issue)
 	}
+
+	return result
 }
 
 // validateRemoteTransport validates a remote transport (no templating allowed)
-func validateRemoteTransport(obj *model.Transport) error {
+func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	// Validate transport type is supported - remotes only support streamable-http and sse
 	switch obj.Type {
 	case model.TransportTypeStreamableHTTP, model.TransportTypeSSE:
 		// URL is required for streamable-http and sse
 		if obj.URL == "" {
-			return fmt.Errorf("url is required for %s transport type", obj.Type)
+			issue := NewValidationIssue(
+				ValidationIssueTypeSemantic,
+				ctx.Field("url").String(),
+				fmt.Sprintf("url is required for %s transport type", obj.Type),
+				ValidationIssueSeverityError,
+				"remote-transport-url-required",
+			)
+			result.AddIssue(issue)
+		} else {
+			// Validate URL format (no templates allowed for remotes, no localhost)
+			if !IsValidRemoteURL(obj.URL) {
+				issue := NewValidationIssueFromError(
+					ValidationIssueTypeSemantic,
+					ctx.Field("url").String(),
+					fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL),
+					"invalid-remote-url",
+				)
+				result.AddIssue(issue)
+			}
 		}
-		// Validate URL format (no templates allowed for remotes, no localhost)
-		if !IsValidRemoteURL(obj.URL) {
-			return fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL)
-		}
-		return nil
 	default:
-		return fmt.Errorf("unsupported transport type for remotes: %s (only streamable-http and sse are supported)", obj.Type)
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.Field("type").String(),
+			fmt.Sprintf("unsupported transport type for remotes: %s (only streamable-http and sse are supported)", obj.Type),
+			ValidationIssueSeverityError,
+			"unsupported-remote-transport-type",
+		)
+		result.AddIssue(issue)
 	}
+
+	return result
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions
@@ -441,31 +609,46 @@ func parseServerName(serverJSON apiv0.ServerJSON) (string, error) {
 }
 
 // validateRemoteNamespaceMatch validates that remote URLs match the reverse-DNS namespace
-func validateRemoteNamespaceMatch(serverJSON apiv0.ServerJSON) error {
+func validateRemoteNamespaceMatch(ctx *ValidationContext, serverJSON apiv0.ServerJSON) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 	namespace := serverJSON.Name
 
-	for _, remote := range serverJSON.Remotes {
+	for i, remote := range serverJSON.Remotes {
 		if err := validateRemoteURLMatchesNamespace(remote.URL, namespace); err != nil {
-			return fmt.Errorf("remote URL %s does not match namespace %s: %w", remote.URL, namespace, err)
+			issue := NewValidationIssueFromError(
+				ValidationIssueTypeSemantic,
+				ctx.Index(i).Field("url").String(),
+				fmt.Errorf("remote URL %s does not match namespace %s: %w", remote.URL, namespace, err),
+				"remote-url-namespace-mismatch",
+			)
+			result.AddIssue(issue)
 		}
 	}
 
-	return nil
+	return result
 }
 
 // validateWebsiteURLNamespaceMatch validates that website URL matches the reverse-DNS namespace
-func validateWebsiteURLNamespaceMatch(serverJSON apiv0.ServerJSON) error {
+func validateWebsiteURLNamespaceMatch(ctx *ValidationContext, serverJSON apiv0.ServerJSON) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
 	// Skip validation if website URL is not provided
 	if serverJSON.WebsiteURL == "" {
-		return nil
+		return result
 	}
 
 	namespace := serverJSON.Name
 	if err := validateRemoteURLMatchesNamespace(serverJSON.WebsiteURL, namespace); err != nil {
-		return fmt.Errorf("websiteUrl %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err)
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Errorf("websiteUrl %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err),
+			"website-url-namespace-mismatch",
+		)
+		result.AddIssue(issue)
 	}
 
-	return nil
+	return result
 }
 
 // validateRemoteURLMatchesNamespace checks if a remote URL's hostname matches the publisher domain from the namespace
