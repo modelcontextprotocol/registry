@@ -114,7 +114,7 @@ func TestListServersEndpoint(t *testing.T) {
 	}
 }
 
-func TestGetServerByNameEndpoint(t *testing.T) {
+func TestGetLatestServerVersionEndpoint(t *testing.T) {
 	ctx := context.Background()
 	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 
@@ -139,7 +139,7 @@ func TestGetServerByNameEndpoint(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:           "get existing server",
+			name:           "get existing server latest version",
 			serverName:     "com.example/detail-server",
 			expectedStatus: http.StatusOK,
 		},
@@ -155,7 +155,7 @@ func TestGetServerByNameEndpoint(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// URL encode the server name
 			encodedName := url.PathEscape(tt.serverName)
-			req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName, nil)
+			req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName+"/versions/latest", nil)
 			w := httptest.NewRecorder()
 
 			mux.ServeHTTP(w, req)
@@ -434,9 +434,9 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				// Test server detail endpoint
+				// Test latest version endpoint
 				encodedName := url.PathEscape(tt.serverName)
-				req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName, nil)
+				req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName+"/versions/latest", nil)
 				w := httptest.NewRecorder()
 
 				mux.ServeHTTP(w, req)

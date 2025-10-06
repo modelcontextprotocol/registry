@@ -39,35 +39,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
-  /v0/servers/{serverName}:
-    get:
-      summary: Get MCP server details
-      description: Returns detailed information about the latest version of a specific MCP server.
-      parameters:
-        - name: serverName
-          in: path
-          required: true
-          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
-          schema:
-            type: string
-            example: "com.example%2Fmy-server"
-      responses:
-        '200':
-          description: Detailed server information
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ServerResponse'
-        '404':
-          description: Server not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: "Server not found"
   /v0/servers/{serverName}/versions:
     get:
       summary: List all versions of an MCP server
@@ -100,7 +71,7 @@ paths:
   /v0/servers/{serverName}/versions/{version}:
     get:
       summary: Get specific MCP server version
-      description: Returns detailed information about a specific version of an MCP server.
+      description: Returns detailed information about a specific version of an MCP server. Use the special version `latest` to get the latest version.
       parameters:
         - name: serverName
           in: path

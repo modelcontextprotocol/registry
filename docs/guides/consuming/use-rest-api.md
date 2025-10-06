@@ -9,9 +9,10 @@ Integration patterns and best practices for building applications that consume M
 **Authentication**: Not required for read-only access
 
 - **`GET /v0/servers`** - List all servers with pagination
-- **`GET /v0/servers/{serverName}`** - Get latest version of server by server name (URL-encoded)
-- **`GET /v0/servers/{serverName}/versions/{version}`** - Get specific version of server
 - **`GET /v0/servers/{serverName}/versions`** - List all versions of a server
+- **`GET /v0/servers/{serverName}/versions/{version}`** - Get specific version of server. Use the special version `latest` to get the latest version.
+
+Server names and version strings should be URL-encoded in paths.
 
 See the [interactive API documentation](https://registry.modelcontextprotocol.io/docs) for complete request/response schemas.
 
