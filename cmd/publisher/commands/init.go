@@ -377,7 +377,6 @@ func createServerJSON(
 		Schema:      model.CurrentSchemaURL,
 		Name:        name,
 		Description: description,
-		Status:      model.StatusActive,
 		Repository:  repo,
 		Version:     version,
 		Packages:    []model.Package{pkg},
