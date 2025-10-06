@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
@@ -300,8 +301,15 @@ func createServerJSON(
 	}
 
 	// Create server structure
+	// Get current schema version from embedded schema
+	currentSchema, err := validators.GetCurrentSchemaVersion()
+	if err != nil {
+		// Should never happen (schema is embedded)
+		panic(fmt.Sprintf("failed to get embedded schema version: %v", err))
+	}
+
 	return apiv0.ServerJSON{
-		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+		Schema:      currentSchema,
 		Name:        name,
 		Description: description,
 		Repository: model.Repository{

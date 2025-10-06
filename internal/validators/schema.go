@@ -2,44 +2,42 @@ package validators
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
+//go:embed schema/*.json
+var embeddedSchema []byte
+
+// GetCurrentSchemaVersion extracts the $id field from the embedded schema
+func GetCurrentSchemaVersion() (string, error) {
+	var schema map[string]any
+	if err := json.Unmarshal(embeddedSchema, &schema); err != nil {
+		return "", fmt.Errorf("failed to parse embedded schema: %w", err)
+	}
+
+	id, ok := schema["$id"].(string)
+	if !ok {
+		return "", fmt.Errorf("embedded schema missing $id field")
+	}
+
+	return id, nil
+}
+
 // validateServerJSONSchema validates the server JSON against server.schema.json using jsonschema
 func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 
-	// Load the schema file - find it relative to the binary's location
-	schemaPath := "docs/reference/server-json/server.schema.json"
-
-	// If running from bin/ directory, go up one level to find the schema
-	if _, err := os.Stat(schemaPath); os.IsNotExist(err) {
-		schemaPath = "../docs/reference/server-json/server.schema.json"
-	}
-
-	// Try to find the schema file relative to the current working directory
-	schemaData, err := os.ReadFile(schemaPath)
-	if err != nil {
-		// If we can't load the schema, return an error - schema validation is required
-		issue := NewValidationIssue(
-			ValidationIssueTypeSchema,
-			"",
-			fmt.Sprintf("failed to load schema file '%s': %v", schemaPath, err),
-			ValidationIssueSeverityError,
-			"schema-load-error",
-		)
-		result.AddIssue(issue)
-		return result
-	}
+	// Use embedded schema - no file system access needed
+	schemaData := embeddedSchema
 
 	// Parse the schema
-	var schema map[string]interface{}
+	var schema map[string]any
 	if err := json.Unmarshal(schemaData, &schema); err != nil {
 		// If we can't parse the schema, return an error
 		issue := NewValidationIssue(
@@ -67,7 +65,7 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 		return result
 	}
 
-	var serverMap map[string]interface{}
+	var serverMap map[string]any
 	if err := json.Unmarshal(serverData, &serverMap); err != nil {
 		issue := NewValidationIssue(
 			ValidationIssueTypeJSON,

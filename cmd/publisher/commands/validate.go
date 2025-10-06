@@ -37,13 +37,24 @@ func ValidateCommand(args []string) error {
 
 	// Check for deprecated schema and recommend migration
 	// Allow empty schema (will use default) but reject old schemas
-	if serverJSON.Schema != "" && !strings.Contains(serverJSON.Schema, "2025-09-29") {
-		return fmt.Errorf(`deprecated schema detected: %s.
+	if serverJSON.Schema != "" {
+		// Get current schema version from embedded schema
+		currentSchema, err := validators.GetCurrentSchemaVersion()
+		if err != nil {
+			// Should never happen (schema is embedded)
+			return fmt.Errorf("failed to get current schema version: %w", err)
+		}
+
+		if serverJSON.Schema != currentSchema {
+			return fmt.Errorf(`deprecated schema detected: %s.
+
+Expected current schema: %s
 
 Migrate to the current schema format for new servers.
 
 📋 Migration checklist: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md#migration-checklist-for-publishers
-📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema)
+📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema, currentSchema)
+		}
 	}
 
 	// Run detailed validation (this is the whole point of the validate command)

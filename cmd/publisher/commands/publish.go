@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
@@ -39,13 +40,24 @@ func PublishCommand(args []string) error {
 
 	// Check for deprecated schema and recommend migration
 	// Allow empty schema (will use default) but reject old schemas
-	if serverJSON.Schema != "" && !strings.Contains(serverJSON.Schema, "2025-09-29") {
-		return fmt.Errorf(`deprecated schema detected :%s.
+	if serverJSON.Schema != "" {
+		// Get current schema version from embedded schema
+		currentSchema, err := validators.GetCurrentSchemaVersion()
+		if err != nil {
+			// Schema is embedded, so this should never happen
+			return fmt.Errorf("failed to get current schema version: %w", err)
+		}
+
+		if serverJSON.Schema != currentSchema {
+			return fmt.Errorf(`deprecated schema detected: %s.
+
+Expected current schema: %s
 
 Migrate to the current schema format for new servers.
 
 📋 Migration checklist: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md#migration-checklist-for-publishers
-📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema)
+📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema, currentSchema)
+		}
 	}
 
 	// Load saved token
