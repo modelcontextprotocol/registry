@@ -8,6 +8,13 @@
       "source": "github"
     },
     "version": "1.7.2",
+    "icons": [
+      {
+        "src": "https://airtable.com/images/favicon/favicon-32x32.png",
+        "mimeType": "image/png",
+        "sizes": ["32x32"]
+      }
+    ],
     "packages": [
       {
         "registryType": "npm",

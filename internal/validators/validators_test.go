@@ -452,7 +452,7 @@ func TestValidate(t *testing.T) {
 				Version:    "1.0.0",
 				WebsiteURL: "ftp://example.com/docs",
 			},
-			expectedError: "websiteUrl must use http or https scheme: ftp://example.com/docs",
+			expectedError: "websiteUrl must use https scheme: ftp://example.com/docs",
 		},
 		{
 			name: "server with malformed websiteUrl",
@@ -1851,6 +1851,170 @@ func TestValidateTitle(t *testing.T) {
 			},
 			expectedError: "title cannot be only whitespace",
 		},
+		// Icon validation tests
+		{
+			name: "Accepts valid icon with HTTPS URL",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "https://example.com/icon.png",
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts icon with all optional fields",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:      "https://example.com/icon.png",
+						MimeType: stringPtr("image/png"),
+						Sizes:    []string{"48x48", "96x96"},
+						Theme:    stringPtr("light"),
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts icon with 'any' size for SVG",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:      "https://example.com/icon.svg",
+						MimeType: stringPtr("image/svg+xml"),
+						Sizes:    []string{"any"},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts icon with dark theme",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:   "https://example.com/icon-dark.png",
+						Theme: stringPtr("dark"),
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts multiple icons",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:   "https://example.com/icon-light.png",
+						Theme: stringPtr("light"),
+					},
+					{
+						Src:   "https://example.com/icon-dark.png",
+						Theme: stringPtr("dark"),
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Rejects icon with HTTP URL (not HTTPS)",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "http://example.com/icon.png",
+					},
+				},
+			},
+			expectedError: "icon src must use https scheme",
+		},
+		{
+			name: "Rejects icon with data URI",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA",
+					},
+				},
+			},
+			expectedError: "icon src must use https scheme",
+		},
+		{
+			name: "Rejects icon with relative URL",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "/icon.png",
+					},
+				},
+			},
+			expectedError: "icon src must be an absolute URL",
+		},
 	}
 
 	for _, tt := range tests {
@@ -1864,4 +2028,9 @@ func TestValidateTitle(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Helper function for creating string pointers in tests
+func stringPtr(s string) *string {
+	return &s
 }

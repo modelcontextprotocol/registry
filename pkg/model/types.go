@@ -90,3 +90,18 @@ type Argument struct {
 	IsRepeated         bool         `json:"isRepeated,omitempty"`
 	ValueHint          string       `json:"valueHint,omitempty"`
 }
+
+// Icon represents an optionally-sized icon that can be displayed in a user interface
+type Icon struct {
+	// Src is a standard URI pointing to an icon resource (HTTPS URL only for registry)
+	Src string `json:"src" required:"true" format:"uri" maxLength:"255"`
+	// MimeType is an optional MIME type override if the source MIME type is missing or generic
+	MimeType *string `json:"mimeType,omitempty" enum:"image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"`
+	// Sizes is an optional array of strings that specify sizes at which the icon can be used
+	// Each string should be in WxH format (e.g., "48x48", "96x96") or "any" for scalable formats
+	Sizes []string `json:"sizes,omitempty" pattern:"^(\\d+x\\d+|any)$"`
+	// Theme is an optional specifier for the theme this icon is designed for
+	// "light" indicates the icon is designed for light backgrounds
+	// "dark" indicates the icon is designed for dark backgrounds
+	Theme *string `json:"theme,omitempty" enum:"light,dark"`
+}

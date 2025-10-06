@@ -372,6 +372,51 @@
         }
       }
     },
+    "Icon": {
+      "type": "object",
+      "description": "An optionally-sized icon that can be displayed in a user interface.",
+      "required": [
+        "src"
+      ],
+      "properties": {
+        "src": {
+          "type": "string",
+          "format": "uri",
+          "description": "A standard URI pointing to an icon resource. Must be an HTTPS URL. Consumers SHOULD take steps to ensure URLs serving icons are from the same domain as the server or a trusted domain. Consumers SHOULD take appropriate precautions when consuming SVGs as they can contain executable JavaScript.",
+          "example": "https://example.com/icon.png",
+          "maxLength": 255
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "Optional MIME type override if the source MIME type is missing or generic. Must be one of: image/png, image/jpeg, image/jpg, image/svg+xml, image/webp.",
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/jpg",
+            "image/svg+xml",
+            "image/webp"
+          ],
+          "example": "image/png"
+        },
+        "sizes": {
+          "type": "array",
+          "description": "Optional array of strings that specify sizes at which the icon can be used. Each string should be in WxH format (e.g., '48x48', '96x96') or 'any' for scalable formats like SVG. If not provided, the client should assume that the icon can be used at any size.",
+          "items": {
+            "type": "string",
+            "pattern": "^(\\d+x\\d+|any)$",
+            "examples": ["48x48", "96x96", "any"]
+          }
+        },
+        "theme": {
+          "type": "string",
+          "description": "Optional specifier for the theme this icon is designed for. 'light' indicates the icon is designed to be used with a light background, and 'dark' indicates the icon is designed to be used with a dark background. If not provided, the client should assume the icon can be used with any theme.",
+          "enum": [
+            "light",
+            "dark"
+          ]
+        }
+      }
+    },
     "ServerDetail": {
       "description": "Schema for a static representation of an MCP server. Used in various contexts related to discovery, installation, and configuration.",
       "type": "object",
@@ -418,6 +463,13 @@
           "format": "uri",
           "description": "Optional URL to the server's homepage, documentation, or project website. This provides a central link for users to learn more about the server. Particularly useful when the server has custom installation instructions or setup requirements.",
           "example": "https://modelcontextprotocol.io/examples"
+        },
+        "icons": {
+          "type": "array",
+          "description": "Optional set of sized icons that the client can display in a user interface. Clients that support rendering icons MUST support at least the following MIME types: image/png and image/jpeg (safe, universal compatibility). Clients SHOULD also support: image/svg+xml (scalable but requires security precautions) and image/webp (modern, efficient format).",
+          "items": {
+            "$ref": "#/definitions/Icon"
+          }
         },
         "$schema": {
           "type": "string",
