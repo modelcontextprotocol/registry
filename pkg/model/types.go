@@ -48,7 +48,7 @@ const (
 	FormatString   Format = "string"
 	FormatNumber   Format = "number"
 	FormatBoolean  Format = "boolean"
-	FormatFilePath Format = "file_path"
+	FormatFilePath Format = "filepath"
 )
 
 // Input represents a configuration input
