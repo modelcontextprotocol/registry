@@ -191,10 +191,8 @@ func buildGitHubServerName(repoURL, subfolder string) string {
 
 	// If we're in a subdirectory, use the current folder name
 	if subfolder != "" {
-		if cwd, err := os.Getwd(); err == nil {
-			folderName := filepath.Base(cwd)
-			return fmt.Sprintf("io.github.%s/%s", owner, folderName)
-		}
+		folderName := filepath.Base(subfolder)
+		return fmt.Sprintf("io.github.%s/%s", owner, folderName)
 	}
 
 	return fmt.Sprintf("io.github.%s/%s", owner, repo)
