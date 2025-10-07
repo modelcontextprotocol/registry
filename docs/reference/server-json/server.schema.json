@@ -87,17 +87,21 @@
           ]
         },
         "transport": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/StdioTransport"
-            },
-            {
-              "$ref": "#/definitions/StreamableHttpTransport"
-            },
-            {
-              "$ref": "#/definitions/SseTransport"
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["stdio", "streamable-http", "sse"]
             }
-          ],
+          },
+          "required": ["type"],
+          "if": {"properties": {"type": {"const": "stdio"}}},
+          "then": {"$ref": "#/definitions/StdioTransport"},
+          "else": {
+            "if": {"properties": {"type": {"const": "streamable-http"}}},
+            "then": {"$ref": "#/definitions/StreamableHttpTransport"},
+            "else": {"$ref": "#/definitions/SseTransport"}
+          },
           "description": "Transport protocol configuration for the package"
         },
         "runtimeArguments": {
@@ -292,14 +296,17 @@
     },
     "Argument": {
       "description": "Warning: Arguments construct command-line parameters that may contain user-provided input. This creates potential command injection risks if clients execute commands in a shell environment. For example, a malicious argument value like ';rm -rf ~/Development' could execute dangerous commands. Clients should prefer non-shell execution methods (e.g., posix_spawn) when possible to eliminate injection risks entirely. Where not possible, clients should obtain consent from users or agents to run the resolved command before execution.",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/PositionalArgument"
-        },
-        {
-          "$ref": "#/definitions/NamedArgument"
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["positional", "named"]
         }
-      ]
+      },
+      "required": ["type"],
+      "if": {"properties": {"type": {"const": "positional"}}},
+      "then": {"$ref": "#/definitions/PositionalArgument"},
+      "else": {"$ref": "#/definitions/NamedArgument"}
     },
     "StdioTransport": {
       "type": "object",
@@ -334,6 +341,7 @@
         },
         "url": {
           "type": "string",
+          "pattern": "^https?://[^\\s]+$",
           "description": "URL template for the streamable-http transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
           "example": "https://api.example.com/mcp"
         },
@@ -363,8 +371,8 @@
         },
         "url": {
           "type": "string",
-          "format": "uri",
-          "description": "Server-Sent Events endpoint URL",
+          "pattern": "^https?://[^\\s]+$",
+          "description": "URL template for the sse transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
           "example": "https://mcp-fs.example.com/sse"
         },
         "headers": {
@@ -490,14 +498,17 @@
         "remotes": {
           "type": "array",
           "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/StreamableHttpTransport"
-              },
-              {
-                "$ref": "#/definitions/SseTransport"
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["streamable-http", "sse"]
               }
-            ]
+            },
+            "required": ["type"],
+            "if": {"properties": {"type": {"const": "streamable-http"}}},
+            "then": {"$ref": "#/definitions/StreamableHttpTransport"},
+            "else": {"$ref": "#/definitions/SseTransport"}
           }
         },
         "_meta": {
