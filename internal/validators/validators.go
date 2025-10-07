@@ -53,7 +53,7 @@ var (
 )
 
 func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
-	result := ValidateServerJSONDetailed(serverJSON, false)
+	result := ValidateServerJSONExhaustive(serverJSON, false)
 	if !result.Valid {
 		// Return the first error issue
 		for _, issue := range result.Issues {
@@ -65,9 +65,9 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	return nil
 }
 
-// ValidateServerJSONDetailed performs exhaustive validation and returns all issues found
+// ValidateServerJSONExhaustive performs exhaustive validation and returns all issues found
 // If validateSchema is true, it will also validate against server.schema.json
-func ValidateServerJSONDetailed(serverJSON *apiv0.ServerJSON, validateSchema bool) *ValidationResult {
+func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema bool) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 	ctx := &ValidationContext{}
 

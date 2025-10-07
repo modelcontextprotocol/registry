@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateServerJSONDetailed_CollectsAllErrors(t *testing.T) {
+func TestValidateServerJSONExhaustive_CollectsAllErrors(t *testing.T) {
 	// Create a server JSON with multiple validation errors
 	serverJSON := &apiv0.ServerJSON{
 		Name:        "invalid-name", // Invalid server name format
@@ -47,7 +47,7 @@ func TestValidateServerJSONDetailed_CollectsAllErrors(t *testing.T) {
 	}
 
 	// Run detailed validation
-	result := validators.ValidateServerJSONDetailed(serverJSON, false)
+	result := validators.ValidateServerJSONExhaustive(serverJSON, false)
 
 	// Verify it's invalid
 	assert.False(t, result.Valid)
@@ -99,7 +99,7 @@ func TestValidateServerJSONDetailed_CollectsAllErrors(t *testing.T) {
 	assert.Greater(t, foundPaths, 5, "Should have issues at multiple JSON paths")
 }
 
-func TestValidateServerJSONDetailed_ValidServer(t *testing.T) {
+func TestValidateServerJSONExhaustive_ValidServer(t *testing.T) {
 	// Create a valid server JSON
 	serverJSON := &apiv0.ServerJSON{
 		Name:        "com.example.test/valid-server",
@@ -124,14 +124,14 @@ func TestValidateServerJSONDetailed_ValidServer(t *testing.T) {
 	}
 
 	// Run detailed validation
-	result := validators.ValidateServerJSONDetailed(serverJSON, false)
+	result := validators.ValidateServerJSONExhaustive(serverJSON, false)
 
 	// Verify it's valid
 	assert.True(t, result.Valid)
 	assert.Empty(t, result.Issues, "Should have no validation issues")
 }
 
-func TestValidateServerJSONDetailed_ContextPaths(t *testing.T) {
+func TestValidateServerJSONExhaustive_ContextPaths(t *testing.T) {
 	// Create a server with nested validation errors to test context paths
 	serverJSON := &apiv0.ServerJSON{
 		Name:    "com.example.test/server",
@@ -165,7 +165,7 @@ func TestValidateServerJSONDetailed_ContextPaths(t *testing.T) {
 	}
 
 	// Run detailed validation
-	result := validators.ValidateServerJSONDetailed(serverJSON, false)
+	result := validators.ValidateServerJSONExhaustive(serverJSON, false)
 
 	// Verify we have issues at the correct paths
 	issuePaths := make(map[string]bool)
@@ -178,7 +178,7 @@ func TestValidateServerJSONDetailed_ContextPaths(t *testing.T) {
 	assert.True(t, issuePaths["packages[1].runtimeArguments[0].name"], "Should have issue at packages[1].runtimeArguments[0].name")
 }
 
-func TestValidateServerJSONDetailed_RefResolution(t *testing.T) {
+func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
 	// Create a server JSON with validation errors that will trigger $ref resolution
 	serverJSON := &apiv0.ServerJSON{
 		Name:        "com.example.test/invalid-server",
@@ -214,7 +214,7 @@ func TestValidateServerJSONDetailed_RefResolution(t *testing.T) {
 	}
 
 	// Run validation with schema validation enabled
-	result := validators.ValidateServerJSONDetailed(serverJSON, true)
+	result := validators.ValidateServerJSONExhaustive(serverJSON, true)
 
 	// Check that we have validation errors
 	assert.False(t, result.Valid, "Expected validation errors")

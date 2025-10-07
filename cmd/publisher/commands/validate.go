@@ -59,7 +59,7 @@ Migrate to the current schema format for new servers.
 
 	// Run detailed validation (this is the whole point of the validate command)
 	// Include schema validation for comprehensive validation
-	result := validators.ValidateServerJSONDetailed(&serverJSON, true)
+	result := validators.ValidateServerJSONExhaustive(&serverJSON, true)
 
 	if result.Valid {
 		fmt.Println("✅ server.json is valid")
