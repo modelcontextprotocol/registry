@@ -5,7 +5,7 @@
 This document outlines the design for implementing comprehensive server validation in the MCP Registry, due to the following concerns: 
 
 - Currently, the MPC Registry project publishes a server.json schema but does not validate servers against it, allowing non-compliant servers to be published. 
-- There is existing ad-hoc validation that covers some schema compliance, but not all (there are logical errors not identifiable by schema validation that are not covered by the existing ad hoc validation). 
+- There is existing ad-hoc validation that covers some schema compliance, but not all (there are logical errors not identifiable by schema validation and that are not covered by the existing ad hoc validation). 
 - Many servers that do pass validation do not represent best-practices for published servers. 
 
 This design implements a three-tier validation system: **Schema Validation**, **Semantic Validation**, and **Linter Validation**.
@@ -15,30 +15,46 @@ This design implements a three-tier validation system: **Schema Validation**, **
 ### Problems with Current Validation
 - **No schema validation**: Servers are published without validating against the published schema (and many violate it)
 - **Incomplete validation**: Ad hoc validation covers only some schema constraints (many published servers have additional logical errors)
-- **Best Practives not indicated**: Many servers that would pass schema and semantic validation do not represent best practices
+- **Best Practices not indicated**: Many servers that would pass schema and semantic validation do not represent best practices
 - **Fail-fast behavior**: `ValidateServerJSON()` stops at first error
 - **No path information**: Errors don't specify where in JSON the problem occurs
 
 ## Three-Tier Validation System
 
 ### Schema Validation (Primary)
-- **Runs first**: Primary validator that catches all structural/format violations
 - **Validates against published schema**: Ensures servers comply with the official server.json schema
 - **Exhaustive coverage**: Catches all structural and format violations defined in the schema
 - **Detailed error references**: Shows exact schema rule locations with specific constraint and full path to constraint
 
 ### Semantic Validation (Secondary)
-- **Runs after schema validation**: Focused scope on business logic not expressible in JSON Schema
 - **Business logic validation**: Validates only constraints not expressible in JSON Schema
 - **Registry validation**: Enforce validitiy of registry references (as current)
 - **Logical Errors**: Enforce logical consistency: format, choices, variable usage, etc
 
 ### Linter Validation (Tertiary)
-- **Runs last**: Best practice recommendations after structural and business logic validation
 - **Best practice recommendations**: Security concerns, style guidelines, naming conventions
 - **Non-blocking**: Warnings and suggestions, not errors
 - **Quality improvements**: Helps developers create better servers
 - **Educational**: Teaches best practices for MCP server development
+
+## Implementation Approach
+
+The enhanced validation will be implemented in stages to minimize risk and allow for review and experimentation:
+
+### **Stage 1: Schema Validation and Exhaustive Validation Results (Current)**
+- Convert existing validators to use and track context and to return exhaustive results
+- Add `mcp-publisher validate` command that performs exhaustive validation
+- Implement schema validation but only enable it for the `validate` command (not the `/v0/publish` API)
+- Maintain backward compatibility with no production impact
+  - All existing validation calls use a wrapper that returns the first error
+  - Existing validation tests work without modification (since they call the wrapper)
+- This allows experimentation and validation of the new model (including schema validation) without impacting production code
+
+### **Future Stages**
+- Enable schema validation in all validation cases (including the `/v0/publish` API endpoint) - flip boolean switch
+- Build out comprehensive semantic and linter validation rules (with tests)
+- Remove redundant manual validators that duplicate schema constraints
+- Update unit tests to handle rich/exhaustive validation results
 
 ## Proposed Design
 
@@ -49,6 +65,7 @@ This design implements a three-tier validation system: **Schema Validation**, **
 3. **Structured Output**: Return machine-readable validation results with consistent format
 4. **Backward Compatibility**: Maintain existing `ValidateServerJSON() error` signature
 5. **Extensible**: Support different validation types (json, schema, semantic, linter) and severity levels
+
 
 ### Core Types
 
@@ -127,24 +144,9 @@ The `ValidationContext` tracks the current JSON path during validation, allowing
 
 #### **Usage Example**
 ```go
-// Start with empty context
-ctx := &ValidationContext{}
-
 // Navigate to packages array, first item, transport field
 pkgCtx := ctx.Field("packages").Index(0).Field("transport")
-
 // Validate transport - any issues will be reported at "packages[0].transport"
-if err := validateTransport(pkgCtx, transport); err != nil {
-    // Issue will have path "packages[0].transport.url" if URL is invalid
-}
-```
-
-#### **Context Helper Methods**
-
-```go
-func (ctx *ValidationContext) Field(name string) *ValidationContext
-func (ctx *ValidationContext) Index(i int) *ValidationContext  
-func (ctx *ValidationContext) String() string
 ```
 
 ### Backward Compatibility Strategy
@@ -159,22 +161,11 @@ The design maintains perfect backward compatibility by leveraging Go's existing 
 #### **Constructor Pattern**
 Following Go conventions used throughout the project:
 ```go
-// Standard constructor for manual field setting (linter rules, etc.)
-issue := NewValidationIssue(
-    ValidationIssueTypeLinter,
-    "name",
-    "consider using descriptive server name",
-    ValidationIssueSeverityWarning,
-    "descriptive-naming",
-)
+// Standard constructor for manual field setting
+issue := NewValidationIssue(ValidationIssueTypeLinter, "name", "message", ValidationIssueSeverityWarning, "rule-name")
 
-// Constructor that preserves existing error formatting (all current validators)
-issue := NewValidationIssueFromError(
-    ValidationIssueTypeSemantic, // All existing validation uses "semantic" type
-    "repository.url",
-    fmt.Errorf("%w: %s", ErrInvalidRepositoryURL, obj.URL), // Same error creation as before
-    "invalid-repository-url",
-)
+// Constructor that preserves existing error formatting
+issue := NewValidationIssueFromError(ValidationIssueTypeSemantic, "path", err, "rule-name")
 ```
 
 #### **Error Interface Compatibility**
@@ -185,19 +176,9 @@ issue := NewValidationIssueFromError(
 
 ### New Validation Architecture
 
-#### 1. All Validators Return ValidationResult
+#### **All Validators Use Context and Return ValidationResult**
 
-```go
-// Every validator becomes exhaustive and returns ValidationResult
-func validateRepository(ctx *ValidationContext, obj *model.Repository) *ValidationResult
-func validatePackageField(ctx *ValidationContext, obj *model.Package) *ValidationResult  
-func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *ValidationResult
-func validateVersion(ctx *ValidationContext, version string) *ValidationResult
-func validateWebsiteURL(ctx *ValidationContext, websiteURL string) *ValidationResult
-func validateArgument(ctx *ValidationContext, obj *model.Argument) *ValidationResult
-```
-
-#### 2. All Validators Use Context
+All existing validators are converted to use `ValidationContext` for precise error location tracking and return `ValidationResult` for comprehensive error collection:
 
 ```go
 func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON) *ValidationResult {
@@ -239,7 +220,7 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON) *ValidationResul
 }
 ```
 
-#### 3. Existing Validator Becomes Simple Wrapper
+#### **Existing Validator Becomes Simple Wrapper**
 
 ```go
 func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
@@ -256,144 +237,11 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 }
 ```
 
-## Server Schema Validation
+## Schema Validation
 
 The project uses `github.com/santhosh-tekuri/jsonschema/v5` for schema validation with an embedded schema approach. The schema is embedded at compile time using Go's `//go:embed` directive, eliminating the need for file system access and ensuring the schema is always available.
 
-### Schema Validation Integration
-
-```go
-func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
-    result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
-    
-    // Use embedded schema - no file system access needed
-    schemaData := embeddedSchema
-    
-    // Parse the schema
-    var schema map[string]any
-    if err := json.Unmarshal(schemaData, &schema); err != nil {
-        // Handle schema parsing error
-        issue := NewValidationIssue(
-            ValidationIssueTypeSchema,
-            "",
-            fmt.Sprintf("failed to parse schema file: %v", err),
-            ValidationIssueSeverityError,
-            "schema-parse-error",
-        )
-        result.AddIssue(issue)
-        return result
-    }
-    
-    // Convert server JSON to map for validation
-    serverData, err := json.Marshal(serverJSON)
-    if err != nil {
-        // Handle JSON marshaling error
-        return result
-    }
-    
-    var serverMap map[string]any
-    if err := json.Unmarshal(serverData, &serverMap); err != nil {
-        // Handle JSON unmarshaling error
-        return result
-    }
-    
-    // Validate against schema using jsonschema library
-    compiler := jsonschema.NewCompiler()
-    if err := compiler.AddResource("file:///server.schema.json", bytes.NewReader(schemaData)); err != nil {
-        // Handle schema resource error
-        return result
-    }
-    
-    schemaInstance, err := compiler.Compile("file:///server.schema.json")
-    if err != nil {
-        // Handle schema compilation error
-        return result
-    }
-    
-    // Validate the server JSON against the schema
-    if err := schemaInstance.Validate(serverMap); err != nil {
-        // Convert jsonschema.ValidationError to ValidationIssue with $ref resolution
-        if validationErr, ok := err.(*jsonschema.ValidationError); ok {
-            addValidationError(result, validationErr, schema)
-        }
-    }
-    
-    return result
-}
-```
-
-### Embedded Schema Benefits
-
-#### **No File System Dependencies**
-- **Embedded at compile time**: Schema is included in the binary using `//go:embed schema/*.json`
-- **No external files**: Eliminates dependency on schema files being present at runtime
-- **Portable**: Binary contains everything needed for validation
-
-#### **Version Consistency**
-- **Schema version tracking**: `GetCurrentSchemaVersion()` extracts the `$id` field from embedded schema
-- **Compile-time validation**: Schema is validated when the binary is built
-- **No version drift**: Schema version is locked to the binary version
-
-#### **Performance Benefits**
-- **No I/O operations**: Schema is already in memory
-- **Faster startup**: No need to read schema files
-- **Reduced complexity**: No file path resolution or error handling for missing files
-
-### Integration with ValidateServerJSONExhaustive
-
-```go
-func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema bool) *ValidationResult {
-    result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
-    ctx := &ValidationContext{}
-
-    // Schema validation first (if requested) - catches structural issues early
-    if validateSchema {
-        schemaResult := validateServerJSONSchema(serverJSON)
-        result.Merge(schemaResult)
-        // If schema validation fails, we might still want to run semantic validation
-        // to provide additional context, but schema errors take precedence
-    }
-
-    // Semantic validation (always runs) - business logic not covered by schema
-    if _, err := parseServerName(*serverJSON); err != nil {
-        issue := NewValidationIssueFromError(
-            ValidationIssueTypeSemantic,
-            ctx.Field("name").String(),
-            err,
-            "invalid-server-name",
-        )
-        result.AddIssue(issue)
-    }
-    
-    // ... more semantic validation ...
-    
-    return result
-}
-```
-
-### Benefits of Schema Validation
-
-#### **Schema-First Validation**
-- **Schema validation is the primary validator** - catches all structural and format violations defined in the schema
-- **Semantic validation only for gaps** - covers business logic that cannot be expressed in JSON Schema
-- **Standards compliance** ensures server.json follows the official schema
-- **Detailed error messages** with exact JSON paths and resolved schema references
-
-#### **Rich Error Information**
-The `jsonschema.ValidationError` provides:
-- **InstanceLocation**: JSON path to the invalid field (e.g., `"/packages/0/transport/url"`)
-- **Error**: Detailed error message from schema
-- **KeywordLocation**: Schema path with $ref segments (e.g., `"/$ref/properties/transport/$ref/properties/url/format"`)
-- **AbsoluteKeywordLocation**: Resolved schema path (e.g., `"file:///server.schema.json#/definitions/SseTransport/properties/url/format"`)
-
-#### **Integration with Existing Library**
-- **No new dependencies**: Uses existing `jsonschema/v5` library
-- **Consistent with project**: Same library used in `tools/validate-examples/`
-- **Proven reliability**: Already tested and used in the project
-
-## Schema-First Validation Strategy
-
-### Primary Validation Approach
+### Schema-First Validation Strategy
 
 The enhanced validation system adopts a **schema-first approach** where JSON Schema validation serves as the primary and first validator. This strategy addresses the current duplication between manual/semantic validators and schema constraints.
 
@@ -414,9 +262,30 @@ This creates redundancy and potential inconsistencies where:
 2. **Manual validators are eliminated** for constraints already specified in the schema
 3. **Schema error messages are mapped to friendly messages** using deterministic schema rule references (if needed)
 
-### Enhanced Schema Error References
+### Embedded Schema Benefits
 
-The current implementation provides comprehensive error context through sophisticated `$ref` resolution, making schema validation errors highly readable and informative.
+#### **No File System Dependencies**
+- **Embedded at compile time**: Schema is included in the binary using `//go:embed schema/*.json`
+- **No external files**: Eliminates dependency on schema files being present at runtime
+- **Portable**: Binary contains everything needed for validation
+
+#### **Version Consistency**
+- **Schema version tracking**: `GetCurrentSchemaVersion()` extracts the `$id` field from embedded schema
+- **Compile-time validation**: Schema is validated when the binary is built
+- **No version drift**: Schema version is locked to the binary version
+
+#### **Performance Benefits**
+- **No I/O operations**: Schema is already in memory
+- **Faster startup**: No need to read schema files
+- **Reduced complexity**: No file path resolution or error handling for missing files
+
+### Rich Error Information
+
+The `jsonschema.ValidationError` provides:
+- **InstanceLocation**: JSON path to the invalid field (e.g., `"/packages/0/transport/url"`)
+- **Error**: Detailed error message from schema
+- **KeywordLocation**: Schema path with $ref segments (e.g., `"/$ref/properties/transport/$ref/properties/url/format"`)
+- **AbsoluteKeywordLocation**: Resolved schema path (e.g., `"file:///server.schema.json#/definitions/SseTransport/properties/url/format"`)
 
 #### **Current Error Reference Format**
 
@@ -453,218 +322,37 @@ If we encounter situations where schema validation errors need to be more user-f
 
 This allows us to build better, more descriptive error messages if needed, while maintaining the current high-quality error references.
 
-### Migration Strategy
+### Integration with ValidateServerJSONExhaustive
 
-#### **Phase 1: Identify Schema Coverage**
-- Audit existing manual validators against schema constraints
-- Identify validators that duplicate schema validation
-- Document which validators can be eliminated
+```go
+func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema bool) *ValidationResult {
+    result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+    ctx := &ValidationContext{}
 
-#### **Phase 2: Implement Error Mapping (Optional)**
-- Create mapping function for schema error messages (only if current messages are insufficient)
-- Test mapping with existing validation scenarios
-- Ensure friendly messages match current manual validator messages
-- **Note**: Current schema error messages with `$ref` resolution are generally readable and may not need additional mapping
-
-#### **Phase 3: Enable Schema-First Validation**
-- [x] Update `ValidateServerJSONExhaustive()` to run schema validation first (with optional parameter)
-- [x] Schema validation is enabled in `mcp-publisher validate` command
-- [ ] Update tests to expect schema validation errors instead of semantic errors
-- [ ] Enable schema validation in publish API (currently uses `ValidateServerJSON()` without schema validation)
-
-#### **Phase 4: Clean Up Redundant Validators**
-- Remove manual validators that duplicate schema constraints
-- Keep only semantic validators for business logic
-- Update documentation to reflect new validation strategy
-
-#### **Phase 5: Add Enhanced Semantic and Linter Rules**
-- [ ] Review and implement specific rules from [MCP Registry Validator linter guidelines](https://github.com/TeamSparkAI/ToolCatalog/blob/main/packages/mcp-registry-validator/linter.md)
-- [ ] Create comprehensive test coverage for new validation rules
-
-
-### Benefits of Schema-First Strategy
-
-#### **Eliminates Duplication**
-- Single source of truth for structural constraints
-- No conflicting validation logic between manual and schema validators
-- Consistent validation behavior across all tools
-
-#### **Better Error Messages**
-- Schema validation provides precise JSON paths
-- Deterministic mapping ensures consistent friendly messages
-- No dependency on error message text parsing
-
-#### **Maintainability**
-- Schema changes automatically update validation
-- No need to maintain parallel validation logic
-- Clear separation between structural and business logic validation
-
-#### **Standards Compliance**
-- Ensures validation matches official schema exactly
-- Schema is the authoritative specification
-- Reduces risk of validation drift
-
-
-## Example Usage
-
-### JSON Output Format
-```json
-{
-  "valid": false,
-  "issues": [
-    {
-      "type": "json",
-      "path": "",
-      "message": "invalid JSON syntax at line 5, column 12",
-      "severity": "error",
-      "reference": "json-syntax-error"
-    },
-    {
-      "type": "semantic",
-      "path": "name",
-      "message": "server name must be in format 'dns-namespace/name'",
-      "severity": "error",
-      "reference": "invalid-server-name"
-    },
-    {
-      "type": "semantic", 
-      "path": "packages[0].transport.url",
-      "message": "url is required for streamable-http transport type",
-      "severity": "error",
-      "reference": "missing-transport-url"
-    },
-    {
-      "type": "schema",
-      "path": "packages[1].environmentVariables[0].name",
-      "message": "string does not match required pattern",
-      "severity": "error",
-      "reference": "#/definitions/EnvironmentVariable/properties/name/pattern from: [#/definitions/ServerDetail]/properties/packages/items/[#/definitions/Package]/properties/environmentVariables/items/[#/definitions/EnvironmentVariable]/properties/name/pattern"
-    },
-    {
-      "type": "linter",
-      "path": "packages[1].description",
-      "message": "consider adding a more descriptive package description",
-      "severity": "warning",
-      "reference": "descriptive-package-description"
+    // Schema validation first (if requested) - catches structural issues early
+    if validateSchema {
+        schemaResult := validateServerJSONSchema(serverJSON)
+        result.Merge(schemaResult)
+        // If schema validation fails, we might still want to run semantic validation
+        // to provide additional context, but schema errors take precedence
     }
-  ]
+
+    // Semantic validation (always runs) - business logic not covered by schema
+    if _, err := parseServerName(*serverJSON); err != nil {
+        issue := NewValidationIssueFromError(
+            ValidationIssueTypeSemantic,
+            ctx.Field("name").String(),
+            err,
+            "invalid-server-name",
+        )
+        result.AddIssue(issue)
+    }
+    
+    // ... more semantic validation ...
+    
+    return result
 }
 ```
-
-**Note**: The JSON output still uses string values for `type` and `severity` fields for JSON serialization compatibility, but the Go code uses the typed constants for type safety.
-
-### CLI Usage
-```bash
-# Basic validation
-mcp-publisher validate server.json
-
-# JSON output format
-mcp-publisher validate --format json server.json
-
-# Filter by severity
-mcp-publisher validate --severity error server.json
-
-# Include schema validation
-mcp-publisher validate --schema server.json
-```
-
-## Benefits
-
-### ✅ Comprehensive Feedback
-- See all validation issues at once
-- No need to fix errors one by one
-- Better developer experience
-
-### ✅ Precise Error Location
-- JSON paths show exactly where issues occur
-- Easy to locate problems in large JSON files
-- Structured error format with rule names
-
-### ✅ Structured Output
-- JSON format for tooling integration
-- Machine-readable error information
-- Easy to parse and process programmatically
-
-### ✅ Backward Compatibility
-- Existing `ValidateServerJSON() error` signature unchanged
-- All existing code continues to work
-- Leverages Go's error interface and existing error constants
-- Constructor pattern follows established project conventions
-
-### ✅ Extensible Architecture
-- Easy to add new validation types (schema, linter, warning)
-- Easy to add new severity levels
-- Easy to add filtering and formatting options
-
-## Technical Considerations
-
-### Go-Specific Design Rationale
-
-#### **Error Interface Compatibility**
-- **Leverages existing error constants**: `ErrInvalidRepositoryURL`, `ErrVersionLooksLikeRange`, etc.
-- **Preserves error wrapping**: Uses `fmt.Errorf("%w: %s", err, context)` pattern
-- **Maintains error.Is() compatibility**: Existing error checking continues to work
-- **No breaking changes**: All error handling code remains functional
-
-#### **Constructor Pattern**
-Following established Go conventions in the project:
-- **`NewValidationIssue()`**: Standard constructor following `NewXxx()` pattern
-- **`NewValidationIssueFromError()`**: Specialized constructor for error conversion
-- **Consistent with project**: Matches patterns used in `NewConfig()`, `NewServer()`, etc.
-- **Type safety**: Compile-time validation of required fields
-
-#### **Context Passing Architecture**
-- **Immutable context building**: `ctx.Field("name").Index(0)` pattern
-- **Clean composition**: Validators focus on validation, not path building
-- **Reusable validators**: Same validator can be called with different contexts
-- **No global state**: Thread-safe validation with explicit context
-
-#### **Type Safety with Constrained Values**
-Following Go best practices used throughout the project:
-- **Typed string constants**: `ValidationIssueType`, `ValidationIssueSeverity` prevent invalid values
-- **Compile-time validation**: IDE autocomplete and error checking
-- **JSON compatibility**: Still serializes as strings for API compatibility
-- **Refactoring safety**: Rename constants without breaking code
-- **Consistent with project**: Matches patterns used in `Status`, `Format`, `ArgumentType`
-
-### Performance
-- Slightly slower than fail-fast validation
-- Memory usage increases with error collection
-- Acceptable trade-off for better user experience
-
-### Testing Strategy
-- Unit tests for each validator with context
-- Integration tests for path building
-- Backward compatibility tests
-- Performance benchmarks
-
-### Migration Strategy
-- Implement alongside existing validators
-- Gradual migration of individual validators
-- Thorough testing at each phase
-- Rollback plan if issues arise
-
-## Future Enhancements
-
-### Additional Validation Types
-- **Linter rules**: Best practices and style guidelines
-- **Warning level**: Non-critical issues
-- **Info level**: Suggestions and improvements
-
-### Advanced Features
-- **Error filtering**: By type, severity, path pattern
-- **Output formatting**: Human-readable, JSON, XML
-- **Configuration**: Custom validation rules
-- **IDE integration**: Real-time validation feedback
-
-### Tooling Integration
-- **WASM package**: Browser-based validation
-- **VS Code extension**: Real-time validation
-- **CI/CD integration**: Automated validation in pipelines
-- **API endpoint**: Validation as a service
-
-
-## Schema Validation Improvements
 
 ### Transport Validation Improvements
 
@@ -732,7 +420,7 @@ Then it would fix on the "see" transport reference (by type) and validate agains
 
 Same applies to Argument and remotes
 
-## Current Implementation Status
+## Implementation Status
 
 ### ✅ Completed Features
 
@@ -747,6 +435,7 @@ Same applies to Argument and remotes
 - [x] **Error conversion**: Schema errors converted to `ValidationIssue` format
 - [x] **$ref resolution**: Sophisticated resolution showing complete schema path with resolved references
 - [x] **Comprehensive testing**: Full test coverage for schema validation scenarios
+- [x] **Embedded schema**: Schema embedded at compile time using `//go:embed` directive
 
 #### **Enhanced Error References**
 - [x] **Resolved schema paths**: Shows complete path with `$ref` segments replaced by resolved values
@@ -762,11 +451,20 @@ Same applies to Argument and remotes
 ### 🔄 In Progress
 
 #### **Schema-First Validation Strategy**
+- [x] **Schema validation integration**: `ValidateServerJSONExhaustive()` runs schema validation first
+- [x] **CLI integration**: Schema validation enabled in `mcp-publisher validate` command
 - [ ] **Discriminated unions**: Replace `anyOf` with `if/then/else` for transport, argument, and remote validation
-- [ ] **Error message mapping**: Map technical schema errors to user-friendly messages
+- [ ] **Error message mapping**: Map technical schema errors to user-friendly messages (if needed)
 - [ ] **Validator migration**: Move from manual validators to schema-first approach
 
 ### 📋 Pending
+
+#### **Migration Strategy**
+- [ ] **Phase 1: Identify Schema Coverage**: Audit existing manual validators against schema constraints
+- [ ] **Phase 2: Implement Error Mapping (Optional)**: Create mapping function for schema error messages (only if current messages are insufficient)
+- [ ] **Phase 3: Enable Schema-First Validation**: Update tests to expect schema validation errors instead of semantic errors; Enable schema validation in publish API
+- [ ] **Phase 4: Clean Up Redundant Validators**: Remove manual validators that duplicate schema constraints
+- [ ] **Phase 5: Add Enhanced Semantic and Linter Rules**: Review and implement specific rules from [MCP Registry Validator linter guidelines](https://github.com/TeamSparkAI/ToolCatalog/blob/main/packages/mcp-registry-validator/linter.md)
 
 #### **Command Integration**
 - [ ] **CLI updates**: Update `mcp-publisher validate` command to use detailed validation
@@ -786,5 +484,168 @@ Same applies to Argument and remotes
 6. **Extensible Architecture**: Easy to add new validation types and severity levels
 
 The enhanced validation system is now production-ready with comprehensive schema validation, detailed error references, and full backward compatibility.
+
+
+## Example Usage
+
+### JSON Output Format
+```json
+{
+  "valid": false,
+  "issues": [
+    {
+      "type": "json",
+      "path": "",
+      "message": "invalid JSON syntax at line 5, column 12",
+      "severity": "error",
+      "reference": "json-syntax-error"
+    },
+    {
+      "type": "semantic",
+      "path": "name",
+      "message": "server name must be in format 'dns-namespace/name'",
+      "severity": "error",
+      "reference": "invalid-server-name"
+    },
+    {
+      "type": "semantic", 
+      "path": "packages[0].transport.url",
+      "message": "url is required for streamable-http transport type",
+      "severity": "error",
+      "reference": "missing-transport-url"
+    },
+    {
+      "type": "schema",
+      "path": "packages[1].environmentVariables[0].name",
+      "message": "string does not match required pattern",
+      "severity": "error",
+      "reference": "#/definitions/EnvironmentVariable/properties/name/pattern from: [#/definitions/ServerDetail]/properties/packages/items/[#/definitions/Package]/properties/environmentVariables/items/[#/definitions/EnvironmentVariable]/properties/name/pattern"
+    },
+    {
+      "type": "linter",
+      "path": "packages[1].description",
+      "message": "consider adding a more descriptive package description",
+      "severity": "warning",
+      "reference": "descriptive-package-description"
+    }
+  ]
+}
+```
+
+**Note**: The JSON output still uses string values for `type` and `severity` fields for JSON serialization compatibility, but the Go code uses the typed constants for type safety.
+
+### CLI Usage
+```bash
+# Basic validation
+mcp-publisher validate server.json
+
+# JSON output format
+mcp-publisher validate --format json server.json
+
+# Filter by severity
+mcp-publisher validate --severity error server.json
+
+# Include schema validation
+mcp-publisher validate --schema server.json
+```
+
+## Benefits and Achievements
+
+### ✅ Comprehensive Feedback
+- **Exhaustive error collection**: See all validation issues at once, not just the first error
+- **Better developer experience**: No need to fix errors one by one
+- **Precise error location**: JSON paths show exactly where issues occur in large JSON files
+- **Structured output**: JSON format for tooling integration and machine-readable error information
+
+### ✅ Schema-First Validation
+- **Primary validator**: Schema validation catches all structural and format violations defined in the schema
+- **Semantic validation only for gaps**: Covers business logic that cannot be expressed in JSON Schema
+- **Standards compliance**: Ensures server.json follows the official schema
+- **Detailed error messages**: Exact JSON paths and resolved schema references
+
+### ✅ Backward Compatibility
+- **Existing `ValidateServerJSON() error` signature unchanged**: All existing code continues to work
+- **Error interface compatibility**: Leverages Go's error interface and existing error constants
+- **Constructor pattern**: Follows established project conventions
+- **No breaking changes**: All error handling code remains functional
+
+### ✅ Extensible Architecture
+- **Easy to add new validation types**: Schema, semantic, linter validation
+- **Easy to add new severity levels**: Error, warning, info
+- **Easy to add filtering and formatting options**: By type, severity, path pattern
+- **Type safety**: Constrained types prevent invalid validation issue creation
+
+### ✅ Schema-First Strategy Benefits
+- **Eliminates duplication**: Single source of truth for structural constraints
+- **Better error messages**: Schema validation provides precise JSON paths with deterministic mapping
+- **Maintainability**: Schema changes automatically update validation
+- **Standards compliance**: Ensures validation matches official schema exactly
+
+## Technical Design
+
+### Architecture Overview
+
+The enhanced validation system uses a **schema-first approach** with comprehensive error collection and precise location tracking. The system is designed for maximum backward compatibility while providing extensive new capabilities.
+
+#### **Error Interface Compatibility**
+- **Leverages existing error constants**: `ErrInvalidRepositoryURL`, `ErrVersionLooksLikeRange`, etc.
+- **Preserves error wrapping**: Uses `fmt.Errorf("%w: %s", err, context)` pattern
+- **Maintains error.Is() compatibility**: Existing error checking continues to work
+- **No breaking changes**: All error handling code remains functional
+
+#### **Constructor Pattern**
+Following established Go conventions in the project:
+- **`NewValidationIssue()`**: Standard constructor following `NewXxx()` pattern
+- **`NewValidationIssueFromError()`**: Specialized constructor for error conversion
+- **Consistent with project**: Matches patterns used in `NewConfig()`, `NewServer()`, etc.
+- **Type safety**: Compile-time validation of required fields
+
+#### **Context Passing Architecture**
+- **Immutable context building**: `ctx.Field("name").Index(0)` pattern
+- **Clean composition**: Validators focus on validation, not path building
+- **Reusable validators**: Same validator can be called with different contexts
+- **No global state**: Thread-safe validation with explicit context
+
+#### **Type Safety with Constrained Values**
+Following Go best practices used throughout the project:
+- **Typed string constants**: `ValidationIssueType`, `ValidationIssueSeverity` prevent invalid values
+- **Compile-time validation**: IDE autocomplete and error checking
+- **JSON compatibility**: Still serializes as strings for API compatibility
+- **Refactoring safety**: Rename constants without breaking code
+- **Consistent with project**: Matches patterns used in `Status`, `Format`, `ArgumentType`
+
+### Performance Considerations
+- **Slightly slower than fail-fast validation**: Acceptable trade-off for better user experience
+- **Memory usage increases with error collection**: Manageable for typical server.json files
+- **Schema validation performance**: Embedded schema eliminates I/O operations
+
+### Testing Strategy
+- **Unit tests**: Each validator with context
+- **Integration tests**: End-to-end validation testing
+- **Backward compatibility tests**: Ensure existing code continues to work
+- **Performance benchmarks**: Validate acceptable performance characteristics
+
+---
+
+## Appendix: Future Enhancements
+
+### Additional Validation Types
+- **Linter rules**: Best practices and style guidelines
+- **Warning level**: Non-critical issues
+- **Info level**: Suggestions and improvements
+
+### Advanced Features
+- **Error filtering**: By type, severity, path pattern
+- **Output formatting**: Human-readable, JSON, XML
+- **Configuration**: Custom validation rules
+- **IDE integration**: Real-time validation feedback
+
+### Tooling Integration
+- **WASM package**: Browser-based validation
+- **VS Code extension**: Real-time validation
+- **CI/CD integration**: Automated validation in pipelines
+- **API endpoint**: Validation as a service
+
+
 
 
