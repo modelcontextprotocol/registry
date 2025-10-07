@@ -177,3 +177,77 @@ func TestValidateServerJSONDetailed_ContextPaths(t *testing.T) {
 	assert.True(t, issuePaths["packages[0].version"], "Should have issue at packages[0].version")
 	assert.True(t, issuePaths["packages[1].runtimeArguments[0].name"], "Should have issue at packages[1].runtimeArguments[0].name")
 }
+
+func TestValidateServerJSONDetailed_RefResolution(t *testing.T) {
+	// Create a server JSON with validation errors that will trigger $ref resolution
+	serverJSON := &apiv0.ServerJSON{
+		Name:        "com.example.test/invalid-server",
+		Version:     "1.0.0",
+		Description: "Test server with validation errors",
+		Repository: model.Repository{
+			URL:    "", // Empty URL should trigger format validation error in $ref'd Repository
+			Source: "github",
+		},
+		Packages: []model.Package{
+			{
+				RegistryType:    model.RegistryTypeOCI,
+				RegistryBaseURL: "https://docker.io",
+				Identifier:      "test-package",
+				Version:         "1.0.0",
+				Transport: model.Transport{
+					Type: model.TransportTypeSSE,
+					URL:  "https://example.com",
+				},
+				PackageArguments: []model.Argument{
+					{
+						InputWithVariables: model.InputWithVariables{
+							Input: model.Input{
+								Format: "invalid-format", // This should trigger a validation error in the complex path
+							},
+						},
+						Type: "named",
+						Name: "test-arg",
+					},
+				},
+			},
+		},
+	}
+
+	// Run validation with schema validation enabled
+	result := validators.ValidateServerJSONDetailed(serverJSON, true)
+
+	// Check that we have validation errors
+	assert.False(t, result.Valid, "Expected validation errors")
+	assert.Greater(t, len(result.Issues), 0, "Expected at least one validation issue")
+
+	// Check that we have schema validation issues with proper $ref resolution
+	hasSchemaIssues := false
+	for _, issue := range result.Issues {
+		if issue.Type == validators.ValidationIssueTypeSchema {
+			hasSchemaIssues = true
+			// Check that there are no unresolved [$ref] segments
+			assert.NotContains(t, issue.Reference, "[$ref]", "Found unresolved $ref segment in reference: %s", issue.Reference)
+
+			// Check for exact resolved paths we expect
+			if issue.Path == "repository.url" {
+				expectedRef := "#/definitions/Repository/properties/url/format from: [#/definitions/ServerDetail]/properties/repository/[#/definitions/Repository]/properties/url/format"
+				assert.Equal(t, expectedRef, issue.Reference, "Repository URL error should have exact resolved reference")
+			}
+			if issue.Path == "packages.0.packageArguments.0.format" {
+				expectedRef := "#/definitions/Input/properties/format/enum from: [#/definitions/ServerDetail]/properties/packages/items/[#/definitions/Package]/properties/packageArguments/items/[#/definitions/Argument]/else/[#/definitions/NamedArgument]/allOf/0/[#/definitions/InputWithVariables]/allOf/0/[#/definitions/Input]/properties/format/enum"
+				assert.Equal(t, expectedRef, issue.Reference, "Input format error should have exact resolved reference")
+			}
+		}
+	}
+	assert.True(t, hasSchemaIssues, "Expected schema validation issues with $ref resolution")
+
+	// Check that we have issues at expected paths
+	issuePaths := make(map[string]bool)
+	for _, issue := range result.Issues {
+		issuePaths[issue.Path] = true
+	}
+
+	// Should have issues at specific paths that trigger $ref resolution
+	assert.True(t, issuePaths["repository.url"], "Should have issue at repository.url")
+	assert.True(t, issuePaths["packages.0.packageArguments.0.format"], "Should have issue at packages.0.packageArguments.0.format")
+}

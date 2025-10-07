@@ -23,11 +23,11 @@ const (
 
 // ValidationIssue represents a single validation problem
 type ValidationIssue struct {
-	Type     ValidationIssueType     `json:"type"`
-	Path     string                  `json:"path"`    // JSON path like "packages[0].transport.url"
-	Message  string                  `json:"message"` // Error description (extracted from error.Error())
-	Severity ValidationIssueSeverity `json:"severity"`
-	Rule     string                  `json:"rule"` // Rule name like "prefer-transport-configuration"
+	Type      ValidationIssueType     `json:"type"`
+	Path      string                  `json:"path"`    // JSON path like "packages[0].transport.url"
+	Message   string                  `json:"message"` // Error description (extracted from error.Error())
+	Severity  ValidationIssueSeverity `json:"severity"`
+	Reference string                  `json:"reference"` // Reference to validation trigger (schema rule path, named rule, etc.)
 }
 
 // ValidationResult contains the results of validation
@@ -42,24 +42,24 @@ type ValidationContext struct {
 }
 
 // NewValidationIssue creates a validation issue with manual field setting
-func NewValidationIssue(issueType ValidationIssueType, path, message string, severity ValidationIssueSeverity, rule string) ValidationIssue {
+func NewValidationIssue(issueType ValidationIssueType, path, message string, severity ValidationIssueSeverity, reference string) ValidationIssue {
 	return ValidationIssue{
-		Type:     issueType,
-		Path:     path,
-		Message:  message,
-		Severity: severity,
-		Rule:     rule,
+		Type:      issueType,
+		Path:      path,
+		Message:   message,
+		Severity:  severity,
+		Reference: reference,
 	}
 }
 
 // NewValidationIssueFromError creates a validation issue from an existing error
-func NewValidationIssueFromError(issueType ValidationIssueType, path string, err error, rule string) ValidationIssue {
+func NewValidationIssueFromError(issueType ValidationIssueType, path string, err error, reference string) ValidationIssue {
 	return ValidationIssue{
-		Type:     issueType,
-		Path:     path,
-		Message:  err.Error(),                  // Extract string from error
-		Severity: ValidationIssueSeverityError, // Errors are always severity "error"
-		Rule:     rule,
+		Type:      issueType,
+		Path:      path,
+		Message:   err.Error(),                  // Extract string from error
+		Severity:  ValidationIssueSeverityError, // Errors are always severity "error"
+		Reference: reference,
 	}
 }
 

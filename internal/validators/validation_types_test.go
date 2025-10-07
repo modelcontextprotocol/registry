@@ -58,7 +58,7 @@ func TestNewValidationIssue(t *testing.T) {
 	assert.Equal(t, "repository.url", issue.Path)
 	assert.Equal(t, "invalid repository URL", issue.Message)
 	assert.Equal(t, validators.ValidationIssueSeverityError, issue.Severity)
-	assert.Equal(t, "invalid-repository-url", issue.Rule)
+	assert.Equal(t, "invalid-repository-url", issue.Reference)
 }
 
 func TestNewValidationIssueFromError(t *testing.T) {
@@ -74,7 +74,7 @@ func TestNewValidationIssueFromError(t *testing.T) {
 	assert.Equal(t, "repository.url", issue.Path)
 	assert.Equal(t, "invalid repository URL: https://bad-url.com", issue.Message)
 	assert.Equal(t, validators.ValidationIssueSeverityError, issue.Severity)
-	assert.Equal(t, "invalid-repository-url", issue.Rule)
+	assert.Equal(t, "invalid-repository-url", issue.Reference)
 }
 
 func TestValidationResultAddIssue(t *testing.T) {

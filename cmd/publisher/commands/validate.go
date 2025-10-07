@@ -20,13 +20,13 @@ func ValidateCommand(args []string) error {
 		}
 	}
 
-	// Read server.json
+	// Read server file
 	serverData, err := os.ReadFile(serverFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("server.json not found. Run 'mcp-publisher init' to create one")
+			return fmt.Errorf("%s not found. Please check the file path.", serverFile)
 		}
-		return fmt.Errorf("failed to read server.json: %w", err)
+		return fmt.Errorf("failed to read %s: %w", serverFile, err)
 	}
 
 	// Validate JSON
@@ -71,7 +71,9 @@ Migrate to the current schema format for new servers.
 	for i, issue := range result.Issues {
 		fmt.Printf("%d. [%s] %s (%s)\n", i+1, issue.Severity, issue.Path, issue.Type)
 		fmt.Printf("   %s\n", issue.Message)
-		fmt.Printf("   Rule: %s\n", issue.Rule)
+		if issue.Reference != "" {
+			fmt.Printf("   Reference: %s\n", issue.Reference)
+		}
 		fmt.Println()
 	}
 

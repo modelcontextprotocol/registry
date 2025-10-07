@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
@@ -112,7 +113,7 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 		// Convert validation error to our issue format
 		if validationErr, ok := err.(*jsonschema.ValidationError); ok {
 			// Process the validation error and its causes
-			addValidationError(result, validationErr)
+			addValidationError(result, validationErr, schema)
 		} else {
 			// Fallback for other error types
 			issue := NewValidationIssue(
@@ -130,14 +131,17 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 }
 
 // addValidationError processes validation errors and extracts useful information
-func addValidationError(result *ValidationResult, validationErr *jsonschema.ValidationError) {
+func addValidationError(result *ValidationResult, validationErr *jsonschema.ValidationError, schema map[string]any) {
 	// Use DetailedOutput to get the nested error details
 	detailed := validationErr.DetailedOutput()
-	addDetailedErrors(result, detailed)
+
+	// Process the detailed error structure
+
+	addDetailedErrors(result, detailed, schema)
 }
 
 // addDetailedErrors recursively processes detailed validation errors
-func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed) {
+func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed, schema map[string]any) {
 	// Only process errors that have specific field paths and meaningful messages
 	if detailed.InstanceLocation != "" && detailed.Error != "" {
 		// Convert JSON Pointer to readable path (remove leading slash, convert / to .)
@@ -155,18 +159,147 @@ func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed) {
 			message = strings.ReplaceAll(message, "is not valid", "has invalid format")
 		}
 
+		// Build the full resolved reference path
+		reference := buildResolvedReference(detailed.KeywordLocation, detailed.AbsoluteKeywordLocation, schema)
+
 		issue := NewValidationIssue(
 			ValidationIssueTypeSchema,
 			path,
 			message,
 			ValidationIssueSeverityError,
-			"schema-validation",
+			reference, // cleaned schema rule path for deterministic mapping
 		)
 		result.AddIssue(issue)
 	}
 
 	// Process nested errors
 	for _, nested := range detailed.Errors {
-		addDetailedErrors(result, nested)
+		addDetailedErrors(result, nested, schema)
 	}
+}
+
+// buildResolvedReference extracts the resolved reference path by resolving $ref segments
+func buildResolvedReference(keywordLocation, absoluteKeywordLocation string, schema map[string]any) string {
+	if keywordLocation == "" || absoluteKeywordLocation == "" {
+		return ""
+	}
+
+	// Clean up the absolute location by removing file:// prefix
+	absolute := absoluteKeywordLocation
+	if strings.HasPrefix(absolute, "file://") {
+		absolute = strings.TrimPrefix(absolute, "file://")
+		if idx := strings.Index(absolute, "#"); idx != -1 {
+			absolute = absolute[idx:] // Keep only the #/path part
+		}
+	}
+
+	// Parse the keyword location to understand the $ref chain
+	keyword := strings.TrimPrefix(keywordLocation, "/")
+	keywordParts := strings.Split(keyword, "/")
+
+	// Build the path showing $ref resolution
+	pathSegments := make([]string, 0)
+
+	// Track the resolved path so far (starts empty, gets built up as we resolve $refs)
+	resolvedPath := ""
+
+	// Process each part of the keyword path
+	for i, part := range keywordParts {
+		if part == "" {
+			continue // Skip empty parts
+		}
+
+		if part == "$ref" {
+			// This is a $ref - we need to look up what it resolves to
+			// For the first $ref, use the path from the root
+			// For subsequent $refs, use the resolved path from the previous $ref plus the current segment
+			var refPath string
+			if resolvedPath == "" {
+				// First $ref - use the path from the root
+				refPath = strings.Join(keywordParts[:i+1], "/")
+				refPath = "/" + refPath
+			} else {
+				// Subsequent $ref - use the resolved path plus the current segment
+				refPath = resolvedPath + "/" + part
+			}
+
+			// Look up the $ref value in the schema
+			refValue := resolveRefInSchema(schema, refPath)
+
+			if refValue != "" {
+				pathSegments = append(pathSegments, fmt.Sprintf("[%s]", refValue))
+				// Update the resolved path for the next $ref
+				resolvedPath = refValue
+			} else {
+				pathSegments = append(pathSegments, "[$ref]")
+			}
+		} else {
+			// Regular path segment
+			pathSegments = append(pathSegments, part)
+			// Add this segment to the resolved path for the next $ref
+			if resolvedPath != "" {
+				resolvedPath = resolvedPath + "/" + part
+			} else {
+				resolvedPath = part
+			}
+		}
+	}
+
+	// Build the final reference string
+	if len(pathSegments) > 0 {
+		pathStr := strings.Join(pathSegments, "/")
+		return fmt.Sprintf("%s from: %s", absolute, pathStr)
+	}
+
+	// Fallback: return the absolute location with context
+	return absolute + " (from: " + keywordLocation + ")"
+}
+
+// resolveRefInSchema looks up a $ref value in the schema
+func resolveRefInSchema(schema map[string]any, refPath string) string {
+	// Handle the # prefix - it indicates the root of the schema JSON
+	refPath = strings.TrimPrefix(refPath, "#")
+
+	// Parse the JSON pointer path
+	pathParts := strings.Split(strings.TrimPrefix(refPath, "/"), "/")
+
+	// Navigate through the schema to find the $ref value
+	var current any = schema
+	for _, part := range pathParts {
+		if part == "" {
+			continue
+		}
+
+		if part == "$ref" {
+			// We've reached the $ref, return its value
+			if currentMap, ok := current.(map[string]any); ok {
+				if refValue, ok := currentMap["$ref"].(string); ok {
+					return refValue
+				}
+			}
+			return ""
+		}
+
+		// Navigate to the next level
+		// Check if this is an array index
+		if index, err := strconv.Atoi(part); err == nil {
+			// This is an array index - check if current element is an array
+			if arr, ok := current.([]any); ok && index < len(arr) {
+				current = arr[index]
+			} else {
+				// Current element is not an array or index out of bounds
+				return ""
+			}
+		} else {
+			// This is a map key
+			if currentMap, ok := current.(map[string]any); ok {
+				current = currentMap[part]
+			} else {
+				// Current element is not a map
+				return ""
+			}
+		}
+	}
+
+	return ""
 }
