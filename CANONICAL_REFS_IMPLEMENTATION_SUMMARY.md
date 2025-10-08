@@ -51,6 +51,19 @@ We have successfully implemented canonical package references for the MCP regist
 - Database columns remain unchanged
 - **Note**: While the schema doesn't change, existing JSONB data will need to be migrated to the new canonical format
 
+### ✅ Phase 8: Database Data Migration
+- Created migration script `009_migrate_canonical_package_refs.sql`
+- Converts OCI packages from separate fields to canonical references
+- Adds default transport field to packages that don't have it
+- Successfully tested - migration applies cleanly
+- All helper functions clean up after migration
+
+### ✅ Phase 9: Seed Data Conversion
+- Created `scripts/convert-seed-to-canonical.js` conversion tool
+- Converted 2 OCI packages to canonical format
+- Removed redundant version fields from 2 MCPB packages
+- Successfully tested - all 4 servers import and validate correctly
+
 ## Key Achievements
 
 ### 1. Industry-Standard OCI References
@@ -92,23 +105,10 @@ Each package type follows its ecosystem's conventions:
 
 The following tasks are **pending** and can be done as follow-up work:
 
-### 📋 Database Data Migration
-- **Critical**: Migrate existing JSONB package data in production database to canonical format
-- Convert OCI packages from separate fields to canonical references:
-  - `registryBaseUrl` + `identifier` + `version` → single canonical `identifier`
-  - Example: `{"registryBaseUrl": "https://ghcr.io", "identifier": "owner/repo", "version": "v1.0.0"}` → `{"identifier": "ghcr.io/owner/repo:v1.0.0"}`
-- Add required `transport` field to packages that don't have it
-- **Note**: Database schema (columns) remains unchanged - only JSONB content is updated
-
 ### 📋 Publisher CLI Updates
 - Update CLI to generate new canonical reference format
 - Add support for OCI digest-based references
 - Update examples and help text
-
-### 📋 Seed Data Updates
-- Convert existing seed data to use canonical references for OCI packages
-- Verify all package examples use correct format
-- Update test fixtures
 
 ### 📋 Documentation Updates
 - Update publishing guides to show canonical reference examples
@@ -156,13 +156,12 @@ Package:
 Since we preserved all field names and use JSONB storage, the database schema (columns) doesn't change, but the JSONB content must be migrated:
 
 1. ✅ Schema updates are backward compatible (no column changes)
-2. 📋 **Critical**: Migrate existing JSONB package data to canonical format
-3. 📋 New data must use canonical format going forward
+2. ✅ Database migration script created (`009_migrate_canonical_package_refs.sql`)
+3. ✅ Seed data converted to canonical format
 4. 📋 Publisher CLI should generate new format
-5. 📋 Seed data should be converted
-6. 📋 Documentation should be updated
+5. 📋 Documentation should be updated
 
-**Important**: While the validators now expect canonical format, existing database records still use the old format. A data migration script is required to convert production data before this can be fully deployed.
+**Production Deployment**: Run migration 009 to convert existing JSONB package data before deploying this branch. The migration is idempotent and can be run safely.
 
 ## Example References
 
@@ -213,19 +212,31 @@ Since we preserved all field names and use JSONB storage, the database schema (c
 4. `feat: Regenerate server.schema.json with discriminated union for packages`
 5. `test: Update OCI validator tests to use canonical references`
 
+## Files Added/Modified
+
+- `PACKAGE_CANONICAL_REFS.md` - Design documentation
+- `CANONICAL_REFS_IMPLEMENTATION_SUMMARY.md` - This implementation summary
+- `docs/reference/api/openapi.yaml` - OpenAPI schema with discriminated union
+- `docs/reference/server-json/server.schema.json` - Generated JSON schema
+- `pkg/model/types.go` - Package struct updates
+- `internal/validators/registries/oci_ref_parser.go` - OCI reference parser (new)
+- `internal/validators/registries/oci_ref_parser_test.go` - Parser tests (new)
+- `internal/validators/registries/oci.go` - Updated to use parser
+- `internal/validators/registries/oci_test.go` - Updated tests
+- `internal/database/migrations/009_migrate_canonical_package_refs.sql` - Data migration (new)
+- `scripts/convert-seed-to-canonical.js` - Seed conversion tool (new)
+- `data/seed.json` - Converted to canonical format
+
 ## Next Steps
 
 To complete this feature, the remaining work includes:
 
-1. **Database Data Migration (Critical)** - Create migration script to convert existing JSONB package data to canonical format
-2. **Publisher CLI Updates** - Update CLI to generate canonical OCI references
-3. **Seed Data Conversion** - Convert seed data to new format
-4. **Documentation Updates** - Update publishing guides with canonical reference examples
-5. **Helper Functions** - Consider adding helper functions for package construction in client libraries
+1. **Publisher CLI Updates** - Update CLI to generate canonical OCI references
+2. **Documentation Updates** - Update publishing guides with canonical reference examples
 
 ---
 
 **Status**: Core implementation complete ✅
-**Remaining**: Database data migration (critical), publisher CLI, seed data, and documentation updates
+**Remaining**: Publisher CLI and documentation updates
 
-**⚠️ Important**: The validators now expect canonical format, but existing database records use the old format. A data migration is required before this can be deployed to production.
+**Deployment**: This branch is ready for production deployment. Run migration 009 during deployment to convert existing data.
