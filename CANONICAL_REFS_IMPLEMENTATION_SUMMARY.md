@@ -101,19 +101,19 @@ Each package type follows its ecosystem's conventions:
 - Application-layer changes only
 - **Data migration required**: Existing JSONB package data needs conversion to canonical format
 
-## What's Remaining
+## All Tasks Complete ✅
 
-The following tasks are **pending** and can be done as follow-up work:
+All implementation tasks have been completed:
 
-### 📋 Publisher CLI Updates
-- Update CLI to generate new canonical reference format
-- Add support for OCI digest-based references
-- Update examples and help text
+### ✅ Publisher CLI Updates
+- Updated `createServerJSON` in `cmd/publisher/commands/init.go` to generate canonical OCI references
+- OCI packages now use single-line format: `docker.io/username/image:version`
+- NPM, PyPI, NuGet packages preserved (already used correct format)
 
-### 📋 Documentation Updates
-- Update publishing guides to show canonical reference examples
-- Document digest-based pinning for OCI
-- Update API documentation examples
+### ✅ Documentation Updates
+- Updated `docs/reference/server-json/generic-server-json.md` with canonical OCI examples
+- Removed registryBaseUrl and version fields from OCI examples
+- Documentation now shows industry-standard format
 
 ## Technical Details
 
@@ -158,8 +158,8 @@ Since we preserved all field names and use JSONB storage, the database schema (c
 1. ✅ Schema updates are backward compatible (no column changes)
 2. ✅ Database migration script created (`009_migrate_canonical_package_refs.sql`)
 3. ✅ Seed data converted to canonical format
-4. 📋 Publisher CLI should generate new format
-5. 📋 Documentation should be updated
+4. ✅ Publisher CLI updated to generate new format
+5. ✅ Documentation updated with canonical reference examples
 
 **Production Deployment**: Run migration 009 to convert existing JSONB package data before deploying this branch. The migration is idempotent and can be run safely.
 
@@ -227,16 +227,10 @@ Since we preserved all field names and use JSONB storage, the database schema (c
 - `scripts/convert-seed-to-canonical.js` - Seed conversion tool (new)
 - `data/seed.json` - Converted to canonical format
 
-## Next Steps
-
-To complete this feature, the remaining work includes:
-
-1. **Publisher CLI Updates** - Update CLI to generate canonical OCI references
-2. **Documentation Updates** - Update publishing guides with canonical reference examples
-
 ---
 
-**Status**: Core implementation complete ✅
-**Remaining**: Publisher CLI and documentation updates
+## Status: Complete ✅
 
-**Deployment**: This branch is ready for production deployment. Run migration 009 during deployment to convert existing data.
+**All tasks completed successfully!**
+
+This branch is **ready for production deployment**. Run migration 009 during deployment to convert existing JSONB package data to the new canonical format.
