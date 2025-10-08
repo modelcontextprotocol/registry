@@ -71,12 +71,29 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 	ctx := &ValidationContext{}
 
-	// Schema validation first (if requested) - catches structural issues early
-	if validateSchema {
+	// Validate schema version is provided and supported
+	// Note: Schema field is also marked as required in the ServerJSON struct definition
+	// for API-level validation and documentation
+	if serverJSON.Schema == "" {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("schema").String(),
+			fmt.Errorf("$schema field is required"),
+			"schema-field-required",
+		)
+		result.AddIssue(issue)
+	} else if !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion) {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("schema").String(),
+			fmt.Errorf("schema version %s is not supported. Please use schema version %s", serverJSON.Schema, model.CurrentSchemaVersion),
+			"schema-version-not-supported",
+		)
+		result.AddIssue(issue)
+	} else if validateSchema {
+		// Schema validation first (if requested) - catches structural issues early
 		schemaResult := validateServerJSONSchema(serverJSON)
 		result.Merge(schemaResult)
-		// If schema validation fails, we might still want to run semantic validation
-		// to provide additional context, but schema errors take precedence
 	}
 
 	// Validate server name exists and format
@@ -101,6 +118,14 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 	// Validate website URL if provided
 	websiteResult := validateWebsiteURL(ctx.Field("websiteUrl"), serverJSON.WebsiteURL)
 	result.Merge(websiteResult)
+
+	// Validate title if provided
+	titleResult := validateTitle(ctx.Field("title"), serverJSON.Title)
+	result.Merge(titleResult)
+
+	// Validate icons if provided
+	iconsResult := validateIcons(ctx.Field("icons"), serverJSON.Icons)
+	result.Merge(iconsResult)
 
 	// Validate all packages (basic field validation)
 	// Detailed package validation (including registry checks) is done during publish
@@ -193,14 +218,94 @@ func validateWebsiteURL(ctx *ValidationContext, websiteURL string) *ValidationRe
 		result.AddIssue(issue)
 	}
 
-	// Only allow HTTP/HTTPS schemes for security
-	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+	// Only allow HTTPS scheme for security
+	if parsedURL.Scheme != SchemeHTTPS {
 		issue := NewValidationIssue(
 			ValidationIssueTypeSemantic,
 			ctx.String(),
-			fmt.Sprintf("websiteUrl must use http or https scheme: %s", websiteURL),
+			fmt.Sprintf("websiteUrl must use https scheme: %s", websiteURL),
 			ValidationIssueSeverityError,
 			"website-url-invalid-scheme",
+		)
+		result.AddIssue(issue)
+	}
+
+	return nil
+}
+
+func validateTitle(ctx *ValidationContext, title string) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
+	// Skip validation if title is not provided (optional field)
+	if title == "" {
+		return result
+	}
+
+	// Check that title is not only whitespace
+	if strings.TrimSpace(title) == "" {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Errorf("title cannot be only whitespace"),
+			"title-whitespace-only",
+		)
+		result.AddIssue(issue)
+	}
+
+	return result
+}
+
+func validateIcons(ctx *ValidationContext, icons []model.Icon) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
+	// Skip validation if no icons are provided (optional field)
+	if len(icons) == 0 {
+		return result
+	}
+
+	// Validate each icon
+	for i, icon := range icons {
+		iconResult := validateIcon(ctx.Index(i), &icon)
+		result.Merge(iconResult)
+	}
+
+	return result
+}
+
+func validateIcon(ctx *ValidationContext, icon *model.Icon) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
+	// Parse the URL to ensure it's valid
+	parsedURL, err := url.Parse(icon.Src)
+	if err != nil {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("src").String(),
+			fmt.Errorf("invalid icon src URL: %w", err),
+			"icon-src-invalid-url",
+		)
+		result.AddIssue(issue)
+		return result
+	}
+
+	// Ensure it's an absolute URL
+	if !parsedURL.IsAbs() {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("src").String(),
+			fmt.Errorf("icon src must be an absolute URL (include scheme): %s", icon.Src),
+			"icon-src-not-absolute",
+		)
+		result.AddIssue(issue)
+	}
+
+	// Only allow HTTPS scheme for security (no HTTP or data: URIs)
+	if parsedURL.Scheme != SchemeHTTPS {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("src").String(),
+			fmt.Errorf("icon src must use https scheme (got %s): %s", parsedURL.Scheme, icon.Src),
+			"icon-src-invalid-scheme",
 		)
 		result.AddIssue(issue)
 	}

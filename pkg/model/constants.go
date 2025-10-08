@@ -34,3 +34,11 @@ const (
 	RuntimeHintDocker = "docker"
 	RuntimeHintDNX    = "dnx"
 )
+
+// Schema versions
+const (
+	// CurrentSchemaVersion is the current supported schema version date
+	CurrentSchemaVersion = "2025-09-29"
+	// CurrentSchemaURL is the full URL to the current schema
+	CurrentSchemaURL = "https://static.modelcontextprotocol.io/schemas/" + CurrentSchemaVersion + "/server.schema.json"
+)

@@ -15,10 +15,11 @@ The official registry has some more endpoints and restrictions on top of this. S
 
 ### Core Endpoints
 - **`GET /v0/servers`** - List all servers with pagination
-- **`GET /v0/servers/{serverName}`** - Get latest version of server by server name (URL-encoded)
-- **`GET /v0/servers/{serverName}/versions/{version}`** - Get specific version of server (both parameters should be URL-encoded)
 - **`GET /v0/servers/{serverName}/versions`** - List all versions of a server
+- **`GET /v0/servers/{serverName}/versions/{version}`** - Get specific version of server. Use the special version `latest` to get the latest version.
 - **`POST /v0/publish`** - Publish new server (optional, registry-specific authentication)
+
+Server names and version strings should be URL-encoded in paths.
 
 ### Authentication
 - **Read operations**: No authentication required

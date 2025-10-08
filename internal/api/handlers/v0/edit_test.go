@@ -42,6 +42,7 @@ func TestEditServerEndpoint(t *testing.T) {
 	// Create test servers for different scenarios
 	testServers := map[string]*apiv0.ServerJSON{
 		"editable": {
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.testuser/editable-server",
 			Description: "Server that can be edited",
 			Version:     "1.0.0",
@@ -52,6 +53,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			},
 		},
 		"other": {
+			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.otheruser/other-server",
 			Description: "Server owned by another user",
 			Version:     "1.0.0",
@@ -71,6 +73,7 @@ func TestEditServerEndpoint(t *testing.T) {
 
 	// Create a deleted server for undelete testing
 	deletedServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "io.github.testuser/deleted-server",
 		Description: "Server that was deleted",
 		Version:     "1.0.0",
@@ -89,6 +92,7 @@ func TestEditServerEndpoint(t *testing.T) {
 
 	// Create a server with build metadata for URL encoding test
 	buildMetadataServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "io.github.testuser/build-metadata-server",
 		Description: "Server with build metadata version",
 		Version:     "1.0.0+20130313144700",
@@ -125,6 +129,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/editable-server",
 				Description: "Updated server description",
 				Version:     "1.0.0",
@@ -155,6 +160,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/editable-server",
 				Description: "Server with status change",
 				Version:     "1.0.0",
@@ -182,6 +188,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			version:    "1.0.0",
 			authHeader: "InvalidFormat token123",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/editable-server",
 				Description: "Test server",
 				Version:     "1.0.0",
@@ -195,6 +202,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			version:    "1.0.0",
 			authHeader: "Bearer invalid-token",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/editable-server",
 				Description: "Test server",
 				Version:     "1.0.0",
@@ -214,6 +222,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/editable-server",
 				Description: "Updated test server",
 				Version:     "1.0.0",
@@ -233,6 +242,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.otheruser/other-server",
 				Description: "Updated test server",
 				Version:     "1.0.0",
@@ -252,6 +262,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/non-existent",
 				Description: "Non-existent server",
 				Version:     "1.0.0",
@@ -271,6 +282,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/renamed-server", // Different name
 				Description: "Trying to rename server",
 				Version:     "1.0.0",
@@ -290,6 +302,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/editable-server",
 				Description: "Version mismatch test",
 				Version:     "2.0.0", // Different version from URL
@@ -309,6 +322,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/deleted-server",
 				Description: "Trying to undelete server",
 				Version:     "1.0.0",
@@ -329,6 +343,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				},
 			},
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.testuser/build-metadata-server",
 				Description: "Updated server with build metadata",
 				Version:     "1.0.0+20130313144700",
@@ -432,6 +447,7 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 
 	for _, server := range testServers {
 		_, err := registryService.CreateServer(context.Background(), &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        server.name,
 			Description: "Test server for editing",
 			Version:     server.version,
@@ -441,6 +457,7 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 		// Set specific status if not active
 		if server.status != model.StatusActive {
 			_, err = registryService.UpdateServer(context.Background(), server.name, server.version, &apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        server.name,
 				Description: "Test server for editing",
 				Version:     server.version,
@@ -498,6 +515,7 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				requestBody := apiv0.ServerJSON{
+					Schema:      model.CurrentSchemaURL,
 					Name:        tt.serverName,
 					Description: "Status transition test",
 					Version:     tt.version,
@@ -546,6 +564,7 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 		// Create server with special characters
 		specialServerName := "io.dots.and-dashes/server_with_underscores"
 		_, err := registryService.CreateServer(context.Background(), &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        specialServerName,
 			Description: "Server with special characters",
 			Version:     "1.0.0",
@@ -553,6 +572,7 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		requestBody := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        specialServerName,
 			Description: "Updated server with special chars",
 			Version:     "1.0.0",
@@ -593,6 +613,7 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 	t.Run("version-specific editing", func(t *testing.T) {
 		// Test editing a specific version of a multi-version server
 		requestBody := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        "com.example/multi-version-server",
 			Description: "Updated v1.0.0 specifically",
 			Version:     "1.0.0",
