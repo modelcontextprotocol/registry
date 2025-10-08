@@ -96,6 +96,9 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	if pkg.Version != "" {
 		return fmt.Errorf("OCI packages must not have 'version' field - include version in 'identifier' instead (e.g., 'docker.io/owner/image:1.0.0')")
 	}
+	if pkg.FileSHA256 != "" {
+		return fmt.Errorf("OCI packages must not have 'fileSha256' field - this is only for MCPB packages")
+	}
 
 	// Parse the canonical OCI reference from the identifier
 	ociRef, err := ParseOCIReference(pkg.Identifier)
