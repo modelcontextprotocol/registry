@@ -1,6 +1,8 @@
 -- Migrate package references to canonical format
--- This migration converts OCI packages to use canonical single-line references
--- and ensures all packages have required transport field
+-- This migration:
+-- - Converts OCI packages to use canonical single-line references (registry/namespace/image:tag)
+-- - Removes redundant version and registryBaseUrl fields from MCPB packages
+-- - Ensures all packages have required transport field
 
 -- Helper function to convert OCI package to canonical reference format
 CREATE OR REPLACE FUNCTION convert_oci_package_to_canonical(pkg jsonb)
@@ -64,6 +66,32 @@ BEGIN
 END;
 $$;
 
+-- Helper function to convert MCPB package to canonical reference format
+CREATE OR REPLACE FUNCTION convert_mcpb_package_to_canonical(pkg jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    result jsonb;
+BEGIN
+    -- Start with the original package
+    result := pkg;
+
+    -- Only process MCPB packages
+    IF pkg->>'registryType' != 'mcpb' THEN
+        RETURN result;
+    END IF;
+
+    -- Remove version field if it exists (version is embedded in the download URL)
+    result := result - 'version';
+
+    -- Remove registryBaseUrl field if it exists (not needed for MCPB)
+    result := result - 'registryBaseUrl';
+
+    RETURN result;
+END;
+$$;
+
 -- Helper function to ensure transport field exists
 CREATE OR REPLACE FUNCTION ensure_transport_field(pkg jsonb)
 RETURNS jsonb
@@ -113,7 +141,10 @@ BEGIN
         -- First convert OCI packages to canonical format
         pkg := convert_oci_package_to_canonical(pkg);
 
-        -- Then ensure transport field exists
+        -- Then convert MCPB packages to canonical format
+        pkg := convert_mcpb_package_to_canonical(pkg);
+
+        -- Finally ensure transport field exists
         pkg := ensure_transport_field(pkg);
 
         -- Add to result array
@@ -138,5 +169,6 @@ WHERE value ? 'packages'
 
 -- Clean up helper functions
 DROP FUNCTION IF EXISTS convert_oci_package_to_canonical(jsonb);
+DROP FUNCTION IF EXISTS convert_mcpb_package_to_canonical(jsonb);
 DROP FUNCTION IF EXISTS ensure_transport_field(jsonb);
 DROP FUNCTION IF EXISTS convert_packages_array(jsonb);
