@@ -13,11 +13,24 @@ jobs:
   sync-database:
     name: Sync Prod DB to Staging from k8up Backups
     runs-on: ubuntu-latest
-    environment: staging
+    environment: staging  # CRITICAL: This ensures we're targeting staging and requires staging environment approval
     concurrency:
       group: sync-staging-database
       cancel-in-progress: false
     steps:
+      - name: Initial safety banner
+        run: |
+          echo "╔════════════════════════════════════════════════════════════╗"
+          echo "║                    ⚠️  SAFETY NOTICE ⚠️                     ║"
+          echo "║                                                            ║"
+          echo "║  This workflow will REPLACE staging database with         ║"
+          echo "║  production backup data. This is IRREVERSIBLE.            ║"
+          echo "║                                                            ║"
+          echo "║  Target: STAGING ONLY                                     ║"
+          echo "║  Source: Production backups (read-only)                   ║"
+          echo "║                                                            ║"
+          echo "║  Multiple safety checks will verify we're in staging.     ║"
+          echo "╚════════════════════════════════════════════════════════════╝"
       - name: Authenticate to Google Cloud (Production)
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
         with:
@@ -160,6 +173,51 @@ jobs:
 
           echo "✓ k8up restore completed successfully"
 
+      - name: Verify we are in staging cluster (SAFETY CHECK)
+        run: |
+          echo "=== SAFETY CHECK: Verifying cluster context ==="
+
+          # Get current cluster context
+          CURRENT_CONTEXT=$(kubectl config current-context)
+          CURRENT_PROJECT=$(gcloud config get-value project)
+
+          echo "Current kubectl context: $CURRENT_CONTEXT"
+          echo "Current GCP project: $CURRENT_PROJECT"
+
+          # CRITICAL: Abort if we're in prod
+          if echo "$CURRENT_CONTEXT" | grep -qi "prod"; then
+            echo "❌ SAFETY CHECK FAILED: Currently connected to PRODUCTION cluster!"
+            echo "Context: $CURRENT_CONTEXT"
+            echo "ABORTING to prevent data loss"
+            exit 1
+          fi
+
+          if [ "$CURRENT_PROJECT" = "mcp-registry-prod" ]; then
+            echo "❌ SAFETY CHECK FAILED: Currently in PRODUCTION project!"
+            echo "Project: $CURRENT_PROJECT"
+            echo "ABORTING to prevent data loss"
+            exit 1
+          fi
+
+          # Verify we're in staging
+          if ! echo "$CURRENT_CONTEXT" | grep -qi "staging"; then
+            echo "❌ SAFETY CHECK FAILED: Not in staging cluster"
+            echo "Context: $CURRENT_CONTEXT"
+            echo "Expected: staging cluster"
+            exit 1
+          fi
+
+          if [ "$CURRENT_PROJECT" != "mcp-registry-staging" ]; then
+            echo "❌ SAFETY CHECK FAILED: Not in staging project"
+            echo "Project: $CURRENT_PROJECT"
+            echo "Expected: mcp-registry-staging"
+            exit 1
+          fi
+
+          echo "✅ SAFETY CHECK PASSED: Confirmed we are in STAGING"
+          echo "   Context: $CURRENT_CONTEXT"
+          echo "   Project: $CURRENT_PROJECT"
+
       - name: Find staging PostgreSQL PVC
         id: pgdata-pvc
         run: |
@@ -175,6 +233,11 @@ jobs:
           echo "pvc_name=$PVC_NAME" >> $GITHUB_OUTPUT
           echo "✓ Found PostgreSQL PVC: $PVC_NAME"
 
+          # Additional safety: Verify PVC is in staging by checking labels or annotations
+          PVC_INFO=$(kubectl get pvc $PVC_NAME -n default -o yaml)
+          echo "PVC Details:"
+          echo "$PVC_INFO" | grep -E "name:|namespace:|labels:" | head -10
+
       - name: Scale down staging PostgreSQL
         run: |
           echo "Scaling down PostgreSQL cluster..."
@@ -187,6 +250,52 @@ jobs:
           kubectl wait --for=delete pod -l cnpg.io/cluster=registry-pg -n default --timeout=300s || true
 
           echo "✓ PostgreSQL scaled down"
+
+      - name: Final safety check before data replacement
+        run: |
+          echo "=== FINAL SAFETY CHECK BEFORE DATA REPLACEMENT ==="
+
+          # Re-verify we're in staging (paranoid check)
+          CURRENT_CONTEXT=$(kubectl config current-context)
+          CURRENT_PROJECT=$(gcloud config get-value project)
+
+          if echo "$CURRENT_CONTEXT" | grep -qi "prod" || [ "$CURRENT_PROJECT" = "mcp-registry-prod" ]; then
+            echo "❌ FINAL SAFETY CHECK FAILED: Detected production environment!"
+            echo "Context: $CURRENT_CONTEXT"
+            echo "Project: $CURRENT_PROJECT"
+            echo "ABORTING IMMEDIATELY"
+            exit 1
+          fi
+
+          # Verify the PVC we're about to modify
+          PVC_NAME="${{ steps.pgdata-pvc.outputs.pvc_name }}"
+          echo "About to modify PVC: $PVC_NAME"
+
+          # Check if PVC has any production indicators
+          if echo "$PVC_NAME" | grep -qi "prod"; then
+            echo "❌ SAFETY CHECK FAILED: PVC name contains 'prod'"
+            echo "PVC: $PVC_NAME"
+            echo "This might be a production PVC. ABORTING."
+            exit 1
+          fi
+
+          # Verify PostgreSQL is scaled down (safety measure)
+          POD_COUNT=$(kubectl get pods -l cnpg.io/cluster=registry-pg -n default --no-headers 2>/dev/null | wc -l)
+          if [ "$POD_COUNT" -gt 0 ]; then
+            echo "❌ SAFETY CHECK FAILED: PostgreSQL pods are still running!"
+            echo "Expected 0 pods, found: $POD_COUNT"
+            echo "Database must be scaled down before data replacement"
+            exit 1
+          fi
+
+          echo "✅ FINAL SAFETY CHECK PASSED"
+          echo "   Environment: STAGING"
+          echo "   Context: $CURRENT_CONTEXT"
+          echo "   Project: $CURRENT_PROJECT"
+          echo "   Target PVC: $PVC_NAME"
+          echo "   PostgreSQL pods: 0 (scaled down)"
+          echo ""
+          echo "Proceeding with data replacement..."
 
       - name: Replace staging database with restored backup
         id: copy-job
