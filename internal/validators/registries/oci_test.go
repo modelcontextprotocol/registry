@@ -138,11 +138,10 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 func TestValidateOCI_UnsupportedRegistry(t *testing.T) {
 	ctx := context.Background()
 
+	// Test with unsupported registry in canonical reference format
 	pkg := model.Package{
-		RegistryType:    model.RegistryTypeOCI,
-		RegistryBaseURL: "https://unsupported-registry.com",
-		Identifier:      "test/image",
-		Version:         "latest",
+		RegistryType: model.RegistryTypeOCI,
+		Identifier:   "unsupported-registry.com/test/image:latest",
 	}
 
 	err := registries.ValidateOCI(ctx, pkg, "com.example/test")
@@ -155,34 +154,32 @@ func TestValidateOCI_SupportedRegistries(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		registryURL string
-		expected    bool
+		name       string
+		identifier string
+		expected   bool
 	}{
 		{
-			name:        "Docker Hub should be supported",
-			registryURL: model.RegistryURLDocker,
-			expected:    true,
+			name:       "Docker Hub should be supported",
+			identifier: "docker.io/test/image:latest",
+			expected:   true,
 		},
 		{
-			name:        "GHCR should be supported",
-			registryURL: model.RegistryURLGHCR,
-			expected:    true,
+			name:       "GHCR should be supported",
+			identifier: "ghcr.io/test/image:latest",
+			expected:   true,
 		},
 		{
-			name:        "Unsupported registry should fail",
-			registryURL: "https://quay.io",
-			expected:    false,
+			name:       "Unsupported registry should fail",
+			identifier: "quay.io/test/image:latest",
+			expected:   false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			pkg := model.Package{
-				RegistryType:    model.RegistryTypeOCI,
-				RegistryBaseURL: tt.registryURL,
-				Identifier:      "test/image",
-				Version:         "latest",
+				RegistryType: model.RegistryTypeOCI,
+				Identifier:   tt.identifier,
 			}
 
 			err := registries.ValidateOCI(ctx, pkg, "com.example/test")
