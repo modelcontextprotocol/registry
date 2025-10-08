@@ -76,7 +76,7 @@ jobs:
 
       - name: Create secret for prod backup bucket access
         run: |
-          # Create/update secret in staging with read-only access to prod backups
+          # Create/update secret in staging with access to prod backups
           kubectl create secret generic prod-backup-credentials \
             --from-literal=AWS_ACCESS_KEY_ID="${{ steps.backup-creds.outputs.access_key }}" \
             --from-literal=AWS_SECRET_ACCESS_KEY="${{ steps.backup-creds.outputs.secret_key }}" \
