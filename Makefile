@@ -31,7 +31,7 @@ check-schema: ## Check if server.schema.json is in sync with openapi.yaml
 	@./bin/extract-server-schema -check
 
 # Test targets
-test-unit: ## Run unit tests with coverage (requires PostgreSQL)
+test-unit: prep-schema ## Run unit tests with coverage (requires PostgreSQL)
 	@echo "Starting PostgreSQL for unit tests..."
 	@docker compose up -d postgres
 	@echo "Waiting for PostgreSQL to be ready..."

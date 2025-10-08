@@ -231,7 +231,7 @@ func validateWebsiteURL(ctx *ValidationContext, websiteURL string) *ValidationRe
 		result.AddIssue(issue)
 	}
 
-	return nil
+	return result
 }
 
 func validateTitle(ctx *ValidationContext, title string) *ValidationResult {

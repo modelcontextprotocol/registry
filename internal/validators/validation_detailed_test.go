@@ -102,6 +102,7 @@ func TestValidateServerJSONExhaustive_CollectsAllErrors(t *testing.T) {
 func TestValidateServerJSONExhaustive_ValidServer(t *testing.T) {
 	// Create a valid server JSON
 	serverJSON := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example.test/valid-server",
 		Version:     "1.0.0",
 		Description: "A valid test server",
@@ -181,6 +182,7 @@ func TestValidateServerJSONExhaustive_ContextPaths(t *testing.T) {
 func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
 	// Create a server JSON with validation errors that will trigger $ref resolution
 	serverJSON := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example.test/invalid-server",
 		Version:     "1.0.0",
 		Description: "Test server with validation errors",
@@ -234,8 +236,11 @@ func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
 				assert.Equal(t, expectedRef, issue.Reference, "Repository URL error should have exact resolved reference")
 			}
 			if issue.Path == "packages.0.packageArguments.0.format" {
-				expectedRef := "#/definitions/Input/properties/format/enum from: [#/definitions/ServerDetail]/properties/packages/items/[#/definitions/Package]/properties/packageArguments/items/[#/definitions/Argument]/else/[#/definitions/NamedArgument]/allOf/0/[#/definitions/InputWithVariables]/allOf/0/[#/definitions/Input]/properties/format/enum"
-				assert.Equal(t, expectedRef, issue.Reference, "Input format error should have exact resolved reference")
+				// The schema uses anyOf for Argument types, so it could match either PositionalArgument or NamedArgument
+				// Just check that it contains the expected definitions
+				assert.Contains(t, issue.Reference, "#/definitions/Input/properties/format/enum", "Should reference the Input format enum")
+				assert.Contains(t, issue.Reference, "[#/definitions/InputWithVariables]", "Should reference InputWithVariables")
+				assert.Contains(t, issue.Reference, "[#/definitions/Input]", "Should reference Input")
 			}
 		}
 	}
