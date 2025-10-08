@@ -196,3 +196,67 @@ func TestValidateOCI_SupportedRegistries(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateOCI_RejectsOldFormat(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name         string
+		pkg          model.Package
+		errorMessage string
+	}{
+		{
+			name: "OCI package with registryBaseUrl should be rejected",
+			pkg: model.Package{
+				RegistryType:    model.RegistryTypeOCI,
+				RegistryBaseURL: "https://docker.io",
+				Identifier:      "docker.io/test/image:latest",
+			},
+			errorMessage: "OCI packages must not have 'registryBaseUrl' field",
+		},
+		{
+			name: "OCI package with version field should be rejected",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypeOCI,
+				Identifier:   "docker.io/test/image:latest",
+				Version:      "1.0.0",
+			},
+			errorMessage: "OCI packages must not have 'version' field",
+		},
+		{
+			name: "OCI package with both old format fields should fail on registryBaseUrl first",
+			pkg: model.Package{
+				RegistryType:    model.RegistryTypeOCI,
+				RegistryBaseURL: "https://docker.io",
+				Identifier:      "test/image",
+				Version:         "1.0.0",
+			},
+			errorMessage: "OCI packages must not have 'registryBaseUrl' field",
+		},
+		{
+			name: "OCI package with canonical format should pass old format validation",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypeOCI,
+				Identifier:   "docker.io/test/image:latest",
+			},
+			errorMessage: "", // Should pass old format check (will fail later due to image not existing)
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := registries.ValidateOCI(ctx, tt.pkg, "com.example/test")
+
+			if tt.errorMessage != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMessage)
+			} else {
+				// Should not fail with old format error (may fail with other errors like image not found)
+				if err != nil {
+					assert.NotContains(t, err.Error(), "must not have 'registryBaseUrl'")
+					assert.NotContains(t, err.Error(), "must not have 'version'")
+				}
+			}
+		})
+	}
+}

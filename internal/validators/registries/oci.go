@@ -89,6 +89,14 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		return ErrMissingIdentifierForOCI
 	}
 
+	// Validate that old format fields are not present
+	if pkg.RegistryBaseURL != "" {
+		return fmt.Errorf("OCI packages must not have 'registryBaseUrl' field - use canonical reference in 'identifier' instead (e.g., 'docker.io/owner/image:1.0.0')")
+	}
+	if pkg.Version != "" {
+		return fmt.Errorf("OCI packages must not have 'version' field - include version in 'identifier' instead (e.g., 'docker.io/owner/image:1.0.0')")
+	}
+
 	// Parse the canonical OCI reference from the identifier
 	ociRef, err := ParseOCIReference(pkg.Identifier)
 	if err != nil {
