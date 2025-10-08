@@ -44,11 +44,12 @@ We have successfully implemented canonical package references for the MCP regist
 - All validator tests passing
 - Full project builds successfully
 
-### ✅ Phase 7: Database Assessment
-- Confirmed no database migration needed
+### ✅ Phase 7: Database Schema Assessment
+- Confirmed no database **schema** migration needed
 - Packages stored as JSONB (schema-less)
 - All field names preserved
-- Database transparently supports both old and new formats
+- Database columns remain unchanged
+- **Note**: While the schema doesn't change, existing JSONB data will need to be migrated to the new canonical format
 
 ## Key Achievements
 
@@ -80,15 +81,24 @@ Each package type follows its ecosystem's conventions:
 - **OCI**: Canonical single-line reference (matches docker/k8s)
 - **MCPB**: Direct URL in `identifier` (matches download patterns)
 
-### 4. No Breaking Changes
+### 4. Minimal Breaking Changes
 - All existing field names preserved
-- JSONB storage remains compatible
-- Backward compatible at database layer
-- Only application-layer changes
+- Database schema unchanged (no column changes)
+- Backward compatible at database schema layer
+- Application-layer changes only
+- **Data migration required**: Existing JSONB package data needs conversion to canonical format
 
 ## What's Remaining
 
 The following tasks are **pending** and can be done as follow-up work:
+
+### 📋 Database Data Migration
+- **Critical**: Migrate existing JSONB package data in production database to canonical format
+- Convert OCI packages from separate fields to canonical references:
+  - `registryBaseUrl` + `identifier` + `version` → single canonical `identifier`
+  - Example: `{"registryBaseUrl": "https://ghcr.io", "identifier": "owner/repo", "version": "v1.0.0"}` → `{"identifier": "ghcr.io/owner/repo:v1.0.0"}`
+- Add required `transport` field to packages that don't have it
+- **Note**: Database schema (columns) remains unchanged - only JSONB content is updated
 
 ### 📋 Publisher CLI Updates
 - Update CLI to generate new canonical reference format
@@ -143,13 +153,16 @@ Package:
 
 ## Migration Path
 
-Since we preserved all field names and use JSONB storage:
-1. ✅ Schema updates are backward compatible
-2. ✅ Existing data continues to work
-3. ✅ New data uses canonical format
+Since we preserved all field names and use JSONB storage, the database schema (columns) doesn't change, but the JSONB content must be migrated:
+
+1. ✅ Schema updates are backward compatible (no column changes)
+2. 📋 **Critical**: Migrate existing JSONB package data to canonical format
+3. 📋 New data must use canonical format going forward
 4. 📋 Publisher CLI should generate new format
 5. 📋 Seed data should be converted
 6. 📋 Documentation should be updated
+
+**Important**: While the validators now expect canonical format, existing database records still use the old format. A data migration script is required to convert production data before this can be fully deployed.
 
 ## Example References
 
@@ -203,12 +216,16 @@ Since we preserved all field names and use JSONB storage:
 ## Next Steps
 
 To complete this feature, the remaining work includes:
-1. Update publisher CLI to generate canonical OCI references
-2. Convert seed data to new format
-3. Update documentation with examples
-4. Consider adding helper functions for package construction in client libraries
+
+1. **Database Data Migration (Critical)** - Create migration script to convert existing JSONB package data to canonical format
+2. **Publisher CLI Updates** - Update CLI to generate canonical OCI references
+3. **Seed Data Conversion** - Convert seed data to new format
+4. **Documentation Updates** - Update publishing guides with canonical reference examples
+5. **Helper Functions** - Consider adding helper functions for package construction in client libraries
 
 ---
 
 **Status**: Core implementation complete ✅
-**Remaining**: Publisher CLI, seed data, and documentation updates
+**Remaining**: Database data migration (critical), publisher CLI, seed data, and documentation updates
+
+**⚠️ Important**: The validators now expect canonical format, but existing database records use the old format. A data migration is required before this can be deployed to production.
