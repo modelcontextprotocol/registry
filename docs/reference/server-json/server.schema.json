@@ -156,6 +156,78 @@
         }
       ]
     },
+    "MCPBPackage": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PackageBase"
+        },
+        {
+          "properties": {
+            "fileSha256": {
+              "description": "SHA-256 hash of the file for integrity verification. Required for MCPB packages. MCP clients must validate the downloaded file matches this hash before execution.",
+              "example": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "identifier": {
+              "description": "Direct HTTPS download URL to the MCPB binary. Must be from GitHub or GitLab release assets.",
+              "examples": [
+                "https://github.com/owner/repo/releases/download/v1.0.0/server-macos-arm64.mcpb",
+                "https://gitlab.com/owner/repo/-/releases/v1.0.0/downloads/server.mcpb"
+              ],
+              "format": "uri",
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "identifier",
+            "fileSha256"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "MCPB binary package reference. Uses direct download URL in identifier field. Must include SHA-256 hash for integrity verification. The version and registryBaseUrl fields are not used for MCPB packages."
+    },
+    "NPMPackage": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PackageBase"
+        },
+        {
+          "properties": {
+            "identifier": {
+              "description": "NPM package name (with or without @scope)",
+              "example": "@modelcontextprotocol/server-filesystem",
+              "minLength": 1,
+              "type": "string"
+            },
+            "registryBaseUrl": {
+              "default": "https://registry.npmjs.org",
+              "description": "NPM registry URL. Defaults to https://registry.npmjs.org if not specified",
+              "example": "https://registry.npmjs.org",
+              "format": "uri",
+              "type": "string"
+            },
+            "version": {
+              "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '\u003e=1.2.3', '1.x', '1.*').",
+              "example": "1.0.2",
+              "minLength": 1,
+              "not": {
+                "const": "latest"
+              },
+              "type": "string"
+            }
+          },
+          "required": [
+            "identifier",
+            "version"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "NPM package reference. Uses separate identifier (package name) + version, following NPM ecosystem standards."
+    },
     "NamedArgument": {
       "allOf": [
         {
@@ -190,7 +262,105 @@
       ],
       "description": "A command-line `--flag={value}`."
     },
+    "NuGetPackage": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PackageBase"
+        },
+        {
+          "properties": {
+            "identifier": {
+              "description": "NuGet package ID",
+              "example": "ModelContextProtocol.Server",
+              "minLength": 1,
+              "type": "string"
+            },
+            "registryBaseUrl": {
+              "default": "https://api.nuget.org/v3/index.json",
+              "description": "NuGet source URL. Defaults to https://api.nuget.org/v3/index.json if not specified",
+              "example": "https://api.nuget.org/v3/index.json",
+              "format": "uri",
+              "type": "string"
+            },
+            "version": {
+              "description": "Package version. Must be a specific version. Version ranges are rejected.",
+              "example": "1.0.2",
+              "minLength": 1,
+              "not": {
+                "const": "latest"
+              },
+              "type": "string"
+            }
+          },
+          "required": [
+            "identifier",
+            "version"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "NuGet package reference. Uses separate identifier (package ID) + version, following NuGet ecosystem standards."
+    },
+    "OCIPackage": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PackageBase"
+        },
+        {
+          "properties": {
+            "identifier": {
+              "description": "Full OCI image reference including registry, namespace, image, and tag/digest. Registry defaults to docker.io if not specified. Must include at least a tag or digest.",
+              "examples": [
+                "ghcr.io/modelcontextprotocol/server-example:v1.0.0",
+                "docker.io/library/postgres:16",
+                "owner/repo:latest",
+                "ghcr.io/owner/repo@sha256:abc123...",
+                "owner/repo:v1.0.0@sha256:abc123..."
+              ],
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "identifier"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "OCI container image reference. Uses single canonical reference in identifier field, following Docker/Kubernetes standards. Format: [registry/]namespace/image[:tag][@digest]. Examples: 'ghcr.io/owner/repo:v1.0.0', 'docker.io/library/postgres:16', 'owner/repo:latest' (defaults to docker.io). The version and registryBaseUrl fields are not used for OCI packages."
+    },
     "Package": {
+      "description": "Discriminated union of package types. The 'registryType' field determines which package schema to use and which fields are required.",
+      "discriminator": {
+        "mapping": {
+          "mcpb": "#/components/schemas/MCPBPackage",
+          "npm": "#/components/schemas/NPMPackage",
+          "nuget": "#/components/schemas/NuGetPackage",
+          "oci": "#/components/schemas/OCIPackage",
+          "pypi": "#/components/schemas/PyPIPackage"
+        },
+        "propertyName": "registryType"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/definitions/NPMPackage"
+        },
+        {
+          "$ref": "#/definitions/PyPIPackage"
+        },
+        {
+          "$ref": "#/definitions/NuGetPackage"
+        },
+        {
+          "$ref": "#/definitions/OCIPackage"
+        },
+        {
+          "$ref": "#/definitions/MCPBPackage"
+        }
+      ]
+    },
+    "PackageBase": {
+      "description": "Common fields shared across all package types",
       "properties": {
         "environmentVariables": {
           "description": "A mapping of environment variables to be set when running the package.",
@@ -199,20 +369,6 @@
           },
           "type": "array"
         },
-        "fileSha256": {
-          "description": "SHA-256 hash of the package file for integrity verification. Required for MCPB packages and optional for other package types. Authors are responsible for generating correct SHA-256 hashes when creating server.json. If present, MCP clients must validate the downloaded file matches the hash before running packages to ensure file integrity.",
-          "example": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
-          "pattern": "^[a-f0-9]{64}$",
-          "type": "string"
-        },
-        "identifier": {
-          "description": "Package identifier - either a package name (for registries) or URL (for direct downloads)",
-          "examples": [
-            "@modelcontextprotocol/server-brave-search",
-            "https://github.com/example/releases/download/v1.0.0/package.mcpb"
-          ],
-          "type": "string"
-        },
         "packageArguments": {
           "description": "A list of arguments to be passed to the package's binary.",
           "items": {
@@ -220,26 +376,13 @@
           },
           "type": "array"
         },
-        "registryBaseUrl": {
-          "description": "Base URL of the package registry",
-          "examples": [
-            "https://registry.npmjs.org",
-            "https://pypi.org",
-            "https://docker.io",
-            "https://api.nuget.org",
-            "https://github.com",
-            "https://gitlab.com"
-          ],
-          "format": "uri",
-          "type": "string"
-        },
         "registryType": {
-          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')",
-          "examples": [
+          "description": "Package type discriminator",
+          "enum": [
             "npm",
             "pypi",
-            "oci",
             "nuget",
+            "oci",
             "mcpb"
           ],
           "type": "string"
@@ -274,21 +417,10 @@
             }
           ],
           "description": "Transport protocol configuration for the package"
-        },
-        "version": {
-          "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '\u003e=1.2.3', '1.x', '1.*').",
-          "example": "1.0.2",
-          "minLength": 1,
-          "not": {
-            "const": "latest"
-          },
-          "type": "string"
         }
       },
       "required": [
         "registryType",
-        "identifier",
-        "version",
         "transport"
       ],
       "type": "object"
@@ -337,6 +469,45 @@
         }
       ],
       "description": "A positional input is a value inserted verbatim into the command line."
+    },
+    "PyPIPackage": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PackageBase"
+        },
+        {
+          "properties": {
+            "identifier": {
+              "description": "PyPI package name",
+              "example": "mcp-server-time",
+              "minLength": 1,
+              "type": "string"
+            },
+            "registryBaseUrl": {
+              "default": "https://pypi.org",
+              "description": "PyPI index URL. Defaults to https://pypi.org if not specified",
+              "example": "https://pypi.org",
+              "format": "uri",
+              "type": "string"
+            },
+            "version": {
+              "description": "Package version. Must be a specific version. Version ranges are rejected.",
+              "example": "1.0.2",
+              "minLength": 1,
+              "not": {
+                "const": "latest"
+              },
+              "type": "string"
+            }
+          },
+          "required": [
+            "identifier",
+            "version"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "PyPI package reference. Uses separate identifier (package name) + version."
     },
     "Repository": {
       "description": "Repository metadata for the MCP server source code. Enables users and security experts to inspect the code, improving transparency.",
