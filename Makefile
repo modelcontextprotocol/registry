@@ -5,12 +5,17 @@ help: ## Show this help message
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
+# Preparation targets
+prep-schema: ## Copy schema file for embedding
+	@mkdir -p internal/validators/schema
+	@cp docs/reference/server-json/server.schema.json internal/validators/schema/server.schema.json
+
 # Build targets
-build: ## Build the registry application with version info
+build: prep-schema ## Build the registry application with version info
 	@mkdir -p bin
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/registry ./cmd/registry
 
-publisher: ## Build the publisher tool with version info
+publisher: prep-schema ## Build the publisher tool with version info
 	@mkdir -p bin
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
 

@@ -12,7 +12,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
-//go:embed schema/*.json
+//go:embed schema/server.schema.json
 var embeddedSchema []byte
 
 // GetCurrentSchemaVersion extracts the $id field from the embedded schema

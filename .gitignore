@@ -13,3 +13,6 @@ coverage.out
 coverage.html
 deploy/infra/infra
 registry
+
+# Generated schema directory for embedding
+internal/validators/schema/

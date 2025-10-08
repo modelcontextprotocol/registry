@@ -1,5 +1,7 @@
 # Enhanced Server Validation Design
 
+NOTE: This document describes a proposed direction for improving validation of server.json data in the Official Registry. This work is in progress (including open PRs ands discussions)in a collaborative process and may change signficianty or be abandoned.
+
 ## Overview
 
 This document outlines the design for implementing comprehensive server validation in the MCP Registry, due to the following concerns: 
