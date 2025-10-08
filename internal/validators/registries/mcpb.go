@@ -158,21 +158,3 @@ func isValidGitLabReleaseURL(path string) bool {
 
 	return false
 }
-
-// inferMCPBRegistryBaseURL infers the registry base URL from an MCPB identifier
-func inferMCPBRegistryBaseURL(identifier string) (string, error) {
-	parsedURL, err := url.Parse(identifier)
-	if err != nil {
-		return "", err
-	}
-
-	host := strings.ToLower(parsedURL.Host)
-	switch host {
-	case "github.com", "www.github.com":
-		return model.RegistryURLGitHub, nil
-	case "gitlab.com", "www.gitlab.com":
-		return model.RegistryURLGitLab, nil
-	default:
-		return "", fmt.Errorf("invalid host for MCPB package: %s, expected github or gitlab", host)
-	}
-}

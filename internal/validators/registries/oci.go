@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -240,18 +239,6 @@ func validateServerNameAnnotation(ctx context.Context, client *http.Client, regi
 	}
 
 	return nil
-}
-
-func parseImageReference(identifier string) (string, string, error) {
-	parts := strings.Split(identifier, "/")
-	switch len(parts) {
-	case 2:
-		return parts[0], parts[1], nil
-	case 1:
-		return "library", parts[0], nil
-	default:
-		return "", "", fmt.Errorf("invalid image reference: %s", identifier)
-	}
 }
 
 // getRegistryAuthToken retrieves an authentication token from a registry

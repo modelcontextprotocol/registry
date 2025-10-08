@@ -178,6 +178,12 @@
               "format": "uri",
               "minLength": 1,
               "type": "string"
+            },
+            "registryType": {
+              "enum": [
+                "mcpb"
+              ],
+              "type": "string"
             }
           },
           "required": [
@@ -207,6 +213,12 @@
               "description": "NPM registry URL. Defaults to https://registry.npmjs.org if not specified",
               "example": "https://registry.npmjs.org",
               "format": "uri",
+              "type": "string"
+            },
+            "registryType": {
+              "enum": [
+                "npm"
+              ],
               "type": "string"
             },
             "version": {
@@ -282,6 +294,12 @@
               "format": "uri",
               "type": "string"
             },
+            "registryType": {
+              "enum": [
+                "nuget"
+              ],
+              "type": "string"
+            },
             "version": {
               "description": "Package version. Must be a specific version. Version ranges are rejected.",
               "example": "1.0.2",
@@ -318,6 +336,12 @@
                 "owner/repo:v1.0.0@sha256:abc123..."
               ],
               "minLength": 1,
+              "type": "string"
+            },
+            "registryType": {
+              "enum": [
+                "oci"
+              ],
               "type": "string"
             }
           },
@@ -488,6 +512,12 @@
               "description": "PyPI index URL. Defaults to https://pypi.org if not specified",
               "example": "https://pypi.org",
               "format": "uri",
+              "type": "string"
+            },
+            "registryType": {
+              "enum": [
+                "pypi"
+              ],
               "type": "string"
             },
             "version": {

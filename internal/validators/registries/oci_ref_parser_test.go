@@ -1,20 +1,22 @@
-package registries
+package registries_test
 
 import (
 	"testing"
+
+	"github.com/modelcontextprotocol/registry/internal/validators/registries"
 )
 
 func TestParseOCIReference(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     string
-		want      *OCIReference
+		want      *registries.OCIReference
 		wantError bool
 	}{
 		{
 			name:  "full reference with tag",
 			input: "ghcr.io/owner/repo:v1.0.0",
-			want: &OCIReference{
+			want: &registries.OCIReference{
 				Registry:  "ghcr.io",
 				Namespace: "owner",
 				Image:     "repo",
@@ -25,7 +27,7 @@ func TestParseOCIReference(t *testing.T) {
 		{
 			name:  "full reference with digest only",
 			input: "ghcr.io/owner/repo@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-			want: &OCIReference{
+			want: &registries.OCIReference{
 				Registry:  "ghcr.io",
 				Namespace: "owner",
 				Image:     "repo",
@@ -36,7 +38,7 @@ func TestParseOCIReference(t *testing.T) {
 		{
 			name:  "full reference with tag and digest",
 			input: "ghcr.io/owner/repo:v1.0.0@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-			want: &OCIReference{
+			want: &registries.OCIReference{
 				Registry:  "ghcr.io",
 				Namespace: "owner",
 				Image:     "repo",
@@ -47,7 +49,7 @@ func TestParseOCIReference(t *testing.T) {
 		{
 			name:  "docker.io short form",
 			input: "owner/repo:latest",
-			want: &OCIReference{
+			want: &registries.OCIReference{
 				Registry:  "docker.io",
 				Namespace: "owner",
 				Image:     "repo",
@@ -58,7 +60,7 @@ func TestParseOCIReference(t *testing.T) {
 		{
 			name:  "docker.io library image",
 			input: "postgres:16",
-			want: &OCIReference{
+			want: &registries.OCIReference{
 				Registry:  "docker.io",
 				Namespace: "library",
 				Image:     "postgres",
@@ -69,7 +71,7 @@ func TestParseOCIReference(t *testing.T) {
 		{
 			name:  "docker.io library image with digest",
 			input: "postgres@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-			want: &OCIReference{
+			want: &registries.OCIReference{
 				Registry:  "docker.io",
 				Namespace: "library",
 				Image:     "postgres",
@@ -80,7 +82,7 @@ func TestParseOCIReference(t *testing.T) {
 		{
 			name:  "multi-level namespace",
 			input: "ghcr.io/org/team/repo:v2.0.0",
-			want: &OCIReference{
+			want: &registries.OCIReference{
 				Registry:  "ghcr.io",
 				Namespace: "org/team",
 				Image:     "repo",
@@ -112,17 +114,17 @@ func TestParseOCIReference(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseOCIReference(tt.input)
+			got, err := registries.ParseOCIReference(tt.input)
 
 			if tt.wantError {
 				if err == nil {
-					t.Errorf("ParseOCIReference() expected error, got nil")
+					t.Errorf("registries.ParseOCIReference() expected error, got nil")
 				}
 				return
 			}
 
 			if err != nil {
-				t.Errorf("ParseOCIReference() unexpected error: %v", err)
+				t.Errorf("registries.ParseOCIReference() unexpected error: %v", err)
 				return
 			}
 
@@ -148,12 +150,12 @@ func TestParseOCIReference(t *testing.T) {
 func TestOCIReference_String(t *testing.T) {
 	tests := []struct {
 		name string
-		ref  *OCIReference
+		ref  *registries.OCIReference
 		want string
 	}{
 		{
 			name: "full reference with tag",
-			ref: &OCIReference{
+			ref: &registries.OCIReference{
 				Registry:  "ghcr.io",
 				Namespace: "owner",
 				Image:     "repo",
@@ -163,7 +165,7 @@ func TestOCIReference_String(t *testing.T) {
 		},
 		{
 			name: "full reference with digest",
-			ref: &OCIReference{
+			ref: &registries.OCIReference{
 				Registry:  "ghcr.io",
 				Namespace: "owner",
 				Image:     "repo",
@@ -174,7 +176,7 @@ func TestOCIReference_String(t *testing.T) {
 		},
 		{
 			name: "docker.io library image",
-			ref: &OCIReference{
+			ref: &registries.OCIReference{
 				Registry:  "docker.io",
 				Namespace: "library",
 				Image:     "postgres",
@@ -218,7 +220,7 @@ func TestOCIReference_GetRegistryBaseURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ref := &OCIReference{Registry: tt.registry}
+			ref := &registries.OCIReference{Registry: tt.registry}
 			if got := ref.GetRegistryBaseURL(); got != tt.want {
 				t.Errorf("GetRegistryBaseURL() = %v, want %v", got, tt.want)
 			}

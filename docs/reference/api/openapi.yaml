@@ -332,6 +332,9 @@ components:
             - identifier
             - version
           properties:
+            registryType:
+              type: string
+              enum: [npm]
             identifier:
               type: string
               description: "NPM package name (with or without @scope)"
@@ -360,6 +363,9 @@ components:
             - identifier
             - version
           properties:
+            registryType:
+              type: string
+              enum: [pypi]
             identifier:
               type: string
               description: "PyPI package name"
@@ -388,6 +394,9 @@ components:
             - identifier
             - version
           properties:
+            registryType:
+              type: string
+              enum: [nuget]
             identifier:
               type: string
               description: "NuGet package ID"
@@ -415,6 +424,9 @@ components:
           required:
             - identifier
           properties:
+            registryType:
+              type: string
+              enum: [oci]
             identifier:
               type: string
               description: "Full OCI image reference including registry, namespace, image, and tag/digest. Registry defaults to docker.io if not specified. Must include at least a tag or digest."
@@ -435,6 +447,9 @@ components:
             - identifier
             - fileSha256
           properties:
+            registryType:
+              type: string
+              enum: [mcpb]
             identifier:
               type: string
               format: uri

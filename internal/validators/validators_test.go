@@ -1616,16 +1616,14 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 		{"valid_npm", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeNPM, "", "airtable-mcp-server", "1.7.2", "", false},
 		{"valid_pypi", "io.github.domdomegg/time-mcp-pypi", model.RegistryTypePyPI, model.RegistryURLPyPI, "time-mcp-pypi", "1.0.1", "", false},
 		{"valid_pypi", "io.github.domdomegg/time-mcp-pypi", model.RegistryTypePyPI, "", "time-mcp-pypi", "1.0.1", "", false},
-		{"valid_oci", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeOCI, model.RegistryURLDocker, "domdomegg/airtable-mcp-server", "1.7.2", "", false},
+		{"valid_oci", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeOCI, "", "domdomegg/airtable-mcp-server:1.7.2", "", "", false},
 		{"valid_nuget", "io.github.domdomegg/time-mcp-server", model.RegistryTypeNuGet, model.RegistryURLNuGet, "TimeMcpServer", "1.0.2", "", false},
 		{"valid_nuget", "io.github.domdomegg/time-mcp-server", model.RegistryTypeNuGet, "", "TimeMcpServer", "1.0.2", "", false},
-		{"valid_mcpb_github", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce", false},
-		{"valid_mcpb_github", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, "", "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce", false},
-		{"valid_mcpb_gitlab", "io.gitlab.fforster/gitlab-mcp", model.RegistryTypeMCPB, model.RegistryURLGitLab, "https://gitlab.com/fforster/gitlab-mcp/-/releases/v1.31.0/downloads/gitlab-mcp_1.31.0_Linux_x86_64.tar.gz", "1.31.0", "abc123ef4567890abcdef1234567890abcdef1234567890abcdef1234567890", false}, // this is not actually a valid mcpb, but it's the closest I can get for testing for now
-		{"valid_mcpb_gitlab", "io.gitlab.fforster/gitlab-mcp", model.RegistryTypeMCPB, "", "https://gitlab.com/fforster/gitlab-mcp/-/releases/v1.31.0/downloads/gitlab-mcp_1.31.0_Linux_x86_64.tar.gz", "1.31.0", "abc123ef4567890abcdef1234567890abcdef1234567890abcdef1234567890", false},                      // this is not actually a valid mcpb, but it's the closest I can get for testing for now
+		{"valid_mcpb_github", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, "", "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "", "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce", false},
+		{"valid_mcpb_gitlab", "io.gitlab.fforster/gitlab-mcp", model.RegistryTypeMCPB, "", "https://gitlab.com/fforster/gitlab-mcp/-/releases/v1.31.0/downloads/gitlab-mcp_1.31.0_Linux_x86_64.tar.gz", "", "abc123ef4567890abcdef1234567890abcdef1234567890abcdef1234567890", false}, // this is not actually a valid mcpb, but it's the closest I can get for testing for now
 
 		// Test MCPB without file hash (should fail)
-		{"invalid_mcpb_no_hash", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "", true},
+		{"invalid_mcpb_no_hash", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, "", "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "", "", true},
 
 		// Invalid registry types (should fail)
 		{"invalid_maven", "io.github.domdomegg/airtable-mcp-server", "maven", model.RegistryURLNPM, "airtable-mcp-server", "1.7.2", "", true},

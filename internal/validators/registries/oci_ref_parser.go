@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+const (
+	// defaultOCIRegistry is the default registry when none is specified
+	defaultOCIRegistry = "docker.io"
+	// defaultOCINamespace is the default namespace for official images
+	defaultOCINamespace = "library"
+)
+
 // OCIReference represents a parsed OCI image reference
 type OCIReference struct {
 	Registry  string // e.g., "ghcr.io", "docker.io"
@@ -68,8 +75,8 @@ func ParseOCIReference(ref string) (*OCIReference, error) {
 	switch len(parts) {
 	case 1:
 		// Just image name: "postgres:16" -> docker.io/library/postgres:16
-		result.Registry = "docker.io"
-		result.Namespace = "library"
+		result.Registry = defaultOCIRegistry
+		result.Namespace = defaultOCINamespace
 		result.Image = parts[0]
 
 	case 2:
@@ -78,10 +85,10 @@ func ParseOCIReference(ref string) (*OCIReference, error) {
 		// Heuristic: if first part looks like a domain (contains . or :), treat as registry
 		if strings.Contains(parts[0], ".") || strings.Contains(parts[0], ":") {
 			result.Registry = parts[0]
-			result.Namespace = "library"
+			result.Namespace = defaultOCINamespace
 			result.Image = parts[1]
 		} else {
-			result.Registry = "docker.io"
+			result.Registry = defaultOCIRegistry
 			result.Namespace = parts[0]
 			result.Image = parts[1]
 		}

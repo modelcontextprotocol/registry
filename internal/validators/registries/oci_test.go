@@ -250,12 +250,10 @@ func TestValidateOCI_RejectsOldFormat(t *testing.T) {
 			if tt.errorMessage != "" {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMessage)
-			} else {
+			} else if err != nil {
 				// Should not fail with old format error (may fail with other errors like image not found)
-				if err != nil {
-					assert.NotContains(t, err.Error(), "must not have 'registryBaseUrl'")
-					assert.NotContains(t, err.Error(), "must not have 'version'")
-				}
+				assert.NotContains(t, err.Error(), "must not have 'registryBaseUrl'")
+				assert.NotContains(t, err.Error(), "must not have 'version'")
 			}
 		})
 	}
