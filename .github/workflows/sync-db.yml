@@ -60,6 +60,35 @@ jobs:
 
           echo "✓ Backup credentials extracted from prod"
 
+      - name: Remove all production access (SAFETY MEASURE)
+        run: |
+          echo "=== REMOVING ALL PRODUCTION ACCESS ==="
+
+          # Remove production cluster from kubeconfig
+          kubectl config delete-context gke_mcp-registry-prod_us-central1-b_mcp-registry-prod 2>/dev/null || true
+
+          # Revoke gcloud credentials
+          gcloud auth revoke --all 2>/dev/null || true
+
+          # Clear gcloud configuration
+          gcloud config unset project 2>/dev/null || true
+          gcloud config unset account 2>/dev/null || true
+
+          # Verify no contexts contain "prod"
+          if kubectl config get-contexts | grep -i prod; then
+            echo "❌ ERROR: Production context still exists!"
+            kubectl config get-contexts
+            exit 1
+          fi
+
+          echo "✅ Production access completely removed"
+          echo "   - Kubeconfig cleared"
+          echo "   - GCloud credentials revoked"
+          echo "   - No production contexts remaining"
+          echo ""
+          echo "Remaining contexts:"
+          kubectl config get-contexts || echo "No contexts (expected)"
+
       - name: Switch to staging cluster
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
         with:
