@@ -74,7 +74,8 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 	// Validate schema version is provided and supported
 	// Note: Schema field is also marked as required in the ServerJSON struct definition
 	// for API-level validation and documentation
-	if serverJSON.Schema == "" {
+	switch {
+	case serverJSON.Schema == "":
 		issue := NewValidationIssueFromError(
 			ValidationIssueTypeSemantic,
 			ctx.Field("schema").String(),
@@ -82,7 +83,7 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 			"schema-field-required",
 		)
 		result.AddIssue(issue)
-	} else if !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion) {
+	case !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion):
 		issue := NewValidationIssueFromError(
 			ValidationIssueTypeSemantic,
 			ctx.Field("schema").String(),
@@ -90,8 +91,8 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 			"schema-version-not-supported",
 		)
 		result.AddIssue(issue)
-	} else if validateSchema {
-		// Schema validation first (if requested) - catches structural issues early
+	case validateSchema:
+		// We have a valid schema version and validation requested
 		schemaResult := validateServerJSONSchema(serverJSON)
 		result.Merge(schemaResult)
 	}
@@ -549,26 +550,24 @@ func validatePackageTransport(ctx *ValidationContext, transport *model.Transport
 				"streamable-transport-url-required",
 			)
 			result.AddIssue(issue)
-		} else {
+		} else if !IsValidTemplatedURL(transport.URL, availableVariables, true) {
 			// Validate URL format with template variable support
-			if !IsValidTemplatedURL(transport.URL, availableVariables, true) {
-				// Check if it's a template variable issue or basic URL issue
-				templateVars := extractTemplateVariables(transport.URL)
-				var err error
-				if len(templateVars) > 0 {
-					err = fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v",
-						ErrInvalidRemoteURL, transport.URL, availableVariables)
-				} else {
-					err = fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
-				}
-				issue := NewValidationIssueFromError(
-					ValidationIssueTypeSemantic,
-					ctx.Field("url").String(),
-					err,
-					"invalid-templated-url",
-				)
-				result.AddIssue(issue)
+			// Check if it's a template variable issue or basic URL issue
+			templateVars := extractTemplateVariables(transport.URL)
+			var err error
+			if len(templateVars) > 0 {
+				err = fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v",
+					ErrInvalidRemoteURL, transport.URL, availableVariables)
+			} else {
+				err = fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
 			}
+			issue := NewValidationIssueFromError(
+				ValidationIssueTypeSemantic,
+				ctx.Field("url").String(),
+				err,
+				"invalid-templated-url",
+			)
+			result.AddIssue(issue)
 		}
 	default:
 		issue := NewValidationIssue(
@@ -601,17 +600,15 @@ func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *Vali
 				"remote-transport-url-required",
 			)
 			result.AddIssue(issue)
-		} else {
+		} else if !IsValidRemoteURL(obj.URL) {
 			// Validate URL format (no templates allowed for remotes, no localhost)
-			if !IsValidRemoteURL(obj.URL) {
-				issue := NewValidationIssueFromError(
-					ValidationIssueTypeSemantic,
-					ctx.Field("url").String(),
-					fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL),
-					"invalid-remote-url",
-				)
-				result.AddIssue(issue)
-			}
+			issue := NewValidationIssueFromError(
+				ValidationIssueTypeSemantic,
+				ctx.Field("url").String(),
+				fmt.Errorf("%w: %s", ErrInvalidRemoteURL, obj.URL),
+				"invalid-remote-url",
+			)
+			result.AddIssue(issue)
 		}
 	default:
 		issue := NewValidationIssue(

@@ -24,7 +24,7 @@ func ValidateCommand(args []string) error {
 	serverData, err := os.ReadFile(serverFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%s not found. Please check the file path.", serverFile)
+			return fmt.Errorf("%s not found, please check the file path", serverFile)
 		}
 		return fmt.Errorf("failed to read %s: %w", serverFile, err)
 	}
@@ -62,19 +62,19 @@ Migrate to the current schema format for new servers.
 	result := validators.ValidateServerJSONExhaustive(&serverJSON, true)
 
 	if result.Valid {
-		fmt.Println("✅ server.json is valid")
+		_, _ = fmt.Fprintln(os.Stdout, "✅ server.json is valid")
 		return nil
 	}
 
 	// Print all issues
-	fmt.Printf("❌ Validation failed with %d issue(s):\n\n", len(result.Issues))
+	_, _ = fmt.Fprintf(os.Stdout, "❌ Validation failed with %d issue(s):\n\n", len(result.Issues))
 	for i, issue := range result.Issues {
-		fmt.Printf("%d. [%s] %s (%s)\n", i+1, issue.Severity, issue.Path, issue.Type)
-		fmt.Printf("   %s\n", issue.Message)
+		_, _ = fmt.Fprintf(os.Stdout, "%d. [%s] %s (%s)\n", i+1, issue.Severity, issue.Path, issue.Type)
+		_, _ = fmt.Fprintf(os.Stdout, "   %s\n", issue.Message)
 		if issue.Reference != "" {
-			fmt.Printf("   Reference: %s\n", issue.Reference)
+			_, _ = fmt.Fprintf(os.Stdout, "   Reference: %s\n", issue.Reference)
 		}
-		fmt.Println()
+		_, _ = fmt.Fprintln(os.Stdout)
 	}
 
 	return fmt.Errorf("validation failed")

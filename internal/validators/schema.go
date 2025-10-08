@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -111,7 +112,8 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 	// Perform validation
 	if err := schemaInstance.Validate(serverMap); err != nil {
 		// Convert validation error to our issue format
-		if validationErr, ok := err.(*jsonschema.ValidationError); ok {
+		var validationErr *jsonschema.ValidationError
+		if errors.As(err, &validationErr) {
 			// Process the validation error and its causes
 			addValidationError(result, validationErr, schema)
 		} else {
