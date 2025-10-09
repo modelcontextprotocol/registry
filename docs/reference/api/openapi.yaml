@@ -275,13 +275,14 @@ components:
       properties:
         registryType:
           type: string
-          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')
+          description: Registry type indicating how to download or locate packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb', 'on_device'). The 'on_device' type represents a pre-installed server that should be launched locally and not downloaded.
           examples:
             - "npm"
             - "pypi"
             - "oci"
             - "nuget"
             - "mcpb"
+            - "on_device"
         registryBaseUrl:
           type: string
           format: uri
@@ -336,6 +337,13 @@ components:
           description: A mapping of environment variables to be set when running the package.
           items:
             $ref: '#/components/schemas/KeyValueInput'
+        manifest:
+          type: object
+          description: Optional embedded MCPB manifest describing an on-device server. Only used when registryType is 'on_device'.
+          additionalProperties: true
+        __dirname:
+          type: string
+          description: Optional local directory path containing the on-device server implementation (analogous to Node.js __dirname). Only used when registryType is 'on_device'.
 
     Input:
       type: object

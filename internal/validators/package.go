@@ -23,6 +23,11 @@ func ValidatePackage(ctx context.Context, pkg model.Package, serverName string) 
 		return registries.ValidateOCI(ctx, pkg, serverName)
 	case model.RegistryTypeMCPB:
 		return registries.ValidateMCPB(ctx, pkg, serverName)
+	case model.RegistryTypeOnDevice:
+		// On-device packages are assumed to be pre-installed and do not require
+		// remote registry validation. Basic structural validation (e.g., presence
+		// of identifier/version) is handled elsewhere. We simply accept them here.
+		return nil
 	default:
 		return fmt.Errorf("unsupported registry type: %s", pkg.RegistryType)
 	}

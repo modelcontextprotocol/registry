@@ -2,6 +2,14 @@
 
 Changes to the server.json schema and format.
 
+## Unreleased
+
+### Added
+- Support for `on_device` `registryType` for pre-installed/system-managed MCP servers.
+- New optional `manifest` field on package objects (used with `on_device`) to embed an MCPB-style manifest.
+- New optional `__dirname` field on package objects to specify the local directory containing on-device server assets.
+
+
 ## 2025-09-29
 
 ### ⚠️ BREAKING CHANGES
