@@ -11,6 +11,7 @@ The following is a list of notable community-driven projects in the ecosystem re
 - [mcp-registry-spec-sdk](https://www.npmjs.com/package/mcp-registry-spec-sdk) - TypeScript client for the MCP Registry
 - [MCP Server for MCP Registry](https://github.com/formulahendry/mcp-server-mcp-registry) - MCP Server to discover and search for available MCP servers in the registry
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
+- [MCP Registry Remote MCP Server](https://github.com/jaw9c/mcp-registry-mcp) - Open Remote MCP server for the Registry at `https://registry-mcp.remote-mcp.com`
 - Add your project here!
 
 ## Adding Your Project
