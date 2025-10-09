@@ -389,15 +389,18 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          # Wait for any restore jobs to finish before cleanup (max 2 minutes)
+          # Wait for any restore jobs to finish before cleanup (max 5 minutes for large database restores)
           echo "Checking for running restore jobs..."
-          for i in {1..24}; do
-            RUNNING_JOBS=$(kubectl get jobs -n default --no-headers 2>/dev/null | grep "^restore-" | grep -v "Completed\|Failed" | wc -l)
+          RESTORE_NAME="${{ steps.restore.outputs.restore_name }}"
+
+          for i in {1..60}; do
+            # Check specifically for our restore job in Running or Pending state
+            RUNNING_JOBS=$(kubectl get jobs -n default --no-headers 2>/dev/null | grep "^restore-${RESTORE_NAME}" | grep -E "Running|Pending" | wc -l)
             if [ "$RUNNING_JOBS" -eq 0 ]; then
               echo "No running restore jobs found"
               break
             fi
-            echo "Waiting for $RUNNING_JOBS restore job(s) to finish... ($i/24)"
+            echo "Waiting for $RUNNING_JOBS restore job(s) to finish... ($i/60)"
             sleep 5
           done
 
@@ -406,10 +409,14 @@ jobs:
             kubectl delete job ${{ steps.copy-job.outputs.job_name }} -n default || true
           fi
 
-          # Clean up the restore job if it exists
-          RESTORE_NAME="${{ steps.restore.outputs.restore_name }}"
+          # Clean up the restore job if it exists (with proper error handling)
           if [ -n "$RESTORE_NAME" ]; then
-            kubectl delete job "restore-$RESTORE_NAME" -n default 2>/dev/null || true
+            if kubectl get job "restore-$RESTORE_NAME" -n default >/dev/null 2>&1; then
+              echo "Deleting restore job: restore-$RESTORE_NAME"
+              kubectl delete job "restore-$RESTORE_NAME" -n default || echo "Failed to delete job, may have already been cleaned up"
+            else
+              echo "Restore job restore-$RESTORE_NAME not found, skipping deletion"
+            fi
           fi
 
           # Remove restore PVC (will wait for jobs to finish)
