@@ -29,7 +29,7 @@ You can make your MCP server available in multiple ways:
 - **🌐 Remote deployment**: Hosted as a web service that clients connect to directly  
 - **🔄 Hybrid deployment**: Offer both package and remote options for maximum flexibility
 
-Learn more about [MCP server architecture](https://modelcontextprotocol.io/docs/concepts/servers) in the official docs.
+Learn more about [MCP server architecture](https://modelcontextprotocol.io/docs/learn/architecture) in the official docs.
 
 ## Step 1: Install the Publisher CLI
 
