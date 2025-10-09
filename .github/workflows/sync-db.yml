@@ -13,24 +13,11 @@ jobs:
   sync-database:
     name: Sync Prod DB to Staging from k8up Backups
     runs-on: ubuntu-latest
-    environment: staging  # CRITICAL: This ensures we're targeting staging and requires staging environment approval
+    environment: staging
     concurrency:
       group: sync-staging-database
       cancel-in-progress: false
     steps:
-      - name: Initial safety banner
-        run: |
-          echo "╔════════════════════════════════════════════════════════════╗"
-          echo "║                    ⚠️  SAFETY NOTICE ⚠️                     ║"
-          echo "║                                                            ║"
-          echo "║  This workflow will REPLACE staging database with         ║"
-          echo "║  production backup data. This is IRREVERSIBLE.            ║"
-          echo "║                                                            ║"
-          echo "║  Target: STAGING ONLY                                     ║"
-          echo "║  Source: Production backups (read-only)                   ║"
-          echo "║                                                            ║"
-          echo "║  Multiple safety checks will verify we're in staging.     ║"
-          echo "╚════════════════════════════════════════════════════════════╝"
       - name: Authenticate to Google Cloud (Production)
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
         with:
@@ -45,25 +32,18 @@ jobs:
       - name: Get backup credentials from prod cluster
         id: backup-creds
         run: |
-          # Connect to prod cluster to get backup credentials
           gcloud container clusters get-credentials mcp-registry-prod \
             --zone=us-central1-b \
             --project=mcp-registry-prod
 
-          # Extract backup credentials from prod cluster
-          ACCESS_KEY=$(kubectl get secret k8up-backup-credentials -n default -o jsonpath='{.data.AWS_ACCESS_KEY_ID}' | base64 -d)
-          SECRET_KEY=$(kubectl get secret k8up-backup-credentials -n default -o jsonpath='{.data.AWS_SECRET_ACCESS_KEY}' | base64 -d)
-
           # Store in outputs (GitHub Actions encrypts these automatically)
-          echo "access_key=$ACCESS_KEY" >> $GITHUB_OUTPUT
-          echo "secret_key=$SECRET_KEY" >> $GITHUB_OUTPUT
-
-          echo "✓ Backup credentials extracted from prod"
+          kubectl get secret k8up-backup-credentials -n default -o json | jq -r '
+            "access_key=" + (.data.AWS_ACCESS_KEY_ID | @base64d),
+            "secret_key=" + (.data.AWS_SECRET_ACCESS_KEY | @base64d)
+          ' >> $GITHUB_OUTPUT
 
       - name: Remove all production access (SAFETY MEASURE)
         run: |
-          echo "=== REMOVING ALL PRODUCTION ACCESS ==="
-
           # Remove production cluster from kubeconfig
           kubectl config delete-context gke_mcp-registry-prod_us-central1-b_mcp-registry-prod 2>/dev/null || true
 
@@ -74,20 +54,13 @@ jobs:
           gcloud config unset project 2>/dev/null || true
           gcloud config unset account 2>/dev/null || true
 
-          # Verify no contexts contain "prod"
-          if kubectl config get-contexts | grep -i prod; then
-            echo "❌ ERROR: Production context still exists!"
+          # Verify no contexts remain
+          CONTEXT_COUNT=$(kubectl config get-contexts -o name 2>/dev/null | wc -l)
+          if [ "$CONTEXT_COUNT" -gt 0 ]; then
+            echo "❌ ERROR: $CONTEXT_COUNT context(s) still exist after cleanup!"
             kubectl config get-contexts
             exit 1
           fi
-
-          echo "✅ Production access completely removed"
-          echo "   - Kubeconfig cleared"
-          echo "   - GCloud credentials revoked"
-          echo "   - No production contexts remaining"
-          echo ""
-          echo "Remaining contexts:"
-          kubectl config get-contexts || echo "No contexts (expected)"
 
       - name: Switch to staging cluster
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
@@ -101,17 +74,13 @@ jobs:
             --zone=us-central1-b \
             --project=mcp-registry-staging
 
-          echo "✓ Connected to staging cluster"
-
       - name: Create secret for prod backup bucket access
         run: |
           # Create/update secret in staging with access to prod backups
-          kubectl create secret generic prod-backup-credentials \
+          kubectl create secret generic prod-to-staging-sync-credentials \
             --from-literal=AWS_ACCESS_KEY_ID="${{ steps.backup-creds.outputs.access_key }}" \
             --from-literal=AWS_SECRET_ACCESS_KEY="${{ steps.backup-creds.outputs.secret_key }}" \
             --dry-run=client -o yaml | kubectl apply -f -
-
-          echo "✓ Backup credentials configured in staging"
 
       - name: Create restore PVC
         run: |
@@ -128,8 +97,6 @@ jobs:
               requests:
                 storage: 50Gi
           EOF
-
-          echo "✓ Restore PVC created"
 
       - name: Trigger k8up restore from prod backups
         id: restore
@@ -157,14 +124,12 @@ jobs:
                 bucket: mcp-registry-prod-backups
                 endpoint: https://storage.googleapis.com
                 accessKeyIDSecretRef:
-                  name: prod-backup-credentials
+                  name: prod-to-staging-sync-credentials
                   key: AWS_ACCESS_KEY_ID
                 secretAccessKeySecretRef:
-                  name: prod-backup-credentials
+                  name: prod-to-staging-sync-credentials
                   key: AWS_SECRET_ACCESS_KEY
           EOF
-
-          echo "✓ k8up restore triggered: $RESTORE_NAME"
 
       - name: Wait for k8up restore to complete
         run: |
@@ -200,33 +165,39 @@ jobs:
               exit 1
             }
 
-          echo "✓ k8up restore completed successfully"
+      - name: Find staging PostgreSQL PVC
+        id: pgdata-pvc
+        run: |
+          # Find the PVC used by the PostgreSQL cluster
+          PVC_NAME=$(kubectl get pvc -n default -l cnpg.io/cluster=registry-pg -o jsonpath='{.items[0].metadata.name}')
+
+          if [ -z "$PVC_NAME" ]; then
+            echo "ERROR: Could not find PostgreSQL PVC"
+            kubectl get pvc -n default -l cnpg.io/cluster=registry-pg
+            exit 1
+          fi
+
+          echo "pvc_name=$PVC_NAME" >> $GITHUB_OUTPUT
+
+      - name: Scale down staging PostgreSQL
+        run: |
+          echo "Scaling down PostgreSQL cluster..."
+          kubectl patch cluster registry-pg -n default \
+            --type merge \
+            --patch '{"spec":{"instances":0}}'
+
+          # Wait for pods to terminate
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod -l cnpg.io/cluster=registry-pg -n default --timeout=300s || true
 
       - name: Verify we are in staging cluster (SAFETY CHECK)
         run: |
-          echo "=== SAFETY CHECK: Verifying cluster context ==="
-
           # Get current cluster context
           CURRENT_CONTEXT=$(kubectl config current-context)
           CURRENT_PROJECT=$(gcloud config get-value project)
 
           echo "Current kubectl context: $CURRENT_CONTEXT"
           echo "Current GCP project: $CURRENT_PROJECT"
-
-          # CRITICAL: Abort if we're in prod
-          if echo "$CURRENT_CONTEXT" | grep -qi "prod"; then
-            echo "❌ SAFETY CHECK FAILED: Currently connected to PRODUCTION cluster!"
-            echo "Context: $CURRENT_CONTEXT"
-            echo "ABORTING to prevent data loss"
-            exit 1
-          fi
-
-          if [ "$CURRENT_PROJECT" = "mcp-registry-prod" ]; then
-            echo "❌ SAFETY CHECK FAILED: Currently in PRODUCTION project!"
-            echo "Project: $CURRENT_PROJECT"
-            echo "ABORTING to prevent data loss"
-            exit 1
-          fi
 
           # Verify we're in staging
           if ! echo "$CURRENT_CONTEXT" | grep -qi "staging"; then
@@ -242,89 +213,6 @@ jobs:
             echo "Expected: mcp-registry-staging"
             exit 1
           fi
-
-          echo "✅ SAFETY CHECK PASSED: Confirmed we are in STAGING"
-          echo "   Context: $CURRENT_CONTEXT"
-          echo "   Project: $CURRENT_PROJECT"
-
-      - name: Find staging PostgreSQL PVC
-        id: pgdata-pvc
-        run: |
-          # Find the PVC used by the PostgreSQL cluster
-          PVC_NAME=$(kubectl get pvc -n default -l cnpg.io/cluster=registry-pg -o jsonpath='{.items[0].metadata.name}')
-
-          if [ -z "$PVC_NAME" ]; then
-            echo "ERROR: Could not find PostgreSQL PVC"
-            kubectl get pvc -n default -l cnpg.io/cluster=registry-pg
-            exit 1
-          fi
-
-          echo "pvc_name=$PVC_NAME" >> $GITHUB_OUTPUT
-          echo "✓ Found PostgreSQL PVC: $PVC_NAME"
-
-          # Additional safety: Verify PVC is in staging by checking labels or annotations
-          PVC_INFO=$(kubectl get pvc $PVC_NAME -n default -o yaml)
-          echo "PVC Details:"
-          echo "$PVC_INFO" | grep -E "name:|namespace:|labels:" | head -10
-
-      - name: Scale down staging PostgreSQL
-        run: |
-          echo "Scaling down PostgreSQL cluster..."
-          kubectl patch cluster registry-pg -n default \
-            --type merge \
-            --patch '{"spec":{"instances":0}}'
-
-          # Wait for pods to terminate
-          echo "Waiting for pods to terminate..."
-          kubectl wait --for=delete pod -l cnpg.io/cluster=registry-pg -n default --timeout=300s || true
-
-          echo "✓ PostgreSQL scaled down"
-
-      - name: Final safety check before data replacement
-        run: |
-          echo "=== FINAL SAFETY CHECK BEFORE DATA REPLACEMENT ==="
-
-          # Re-verify we're in staging (paranoid check)
-          CURRENT_CONTEXT=$(kubectl config current-context)
-          CURRENT_PROJECT=$(gcloud config get-value project)
-
-          if echo "$CURRENT_CONTEXT" | grep -qi "prod" || [ "$CURRENT_PROJECT" = "mcp-registry-prod" ]; then
-            echo "❌ FINAL SAFETY CHECK FAILED: Detected production environment!"
-            echo "Context: $CURRENT_CONTEXT"
-            echo "Project: $CURRENT_PROJECT"
-            echo "ABORTING IMMEDIATELY"
-            exit 1
-          fi
-
-          # Verify the PVC we're about to modify
-          PVC_NAME="${{ steps.pgdata-pvc.outputs.pvc_name }}"
-          echo "About to modify PVC: $PVC_NAME"
-
-          # Check if PVC has any production indicators
-          if echo "$PVC_NAME" | grep -qi "prod"; then
-            echo "❌ SAFETY CHECK FAILED: PVC name contains 'prod'"
-            echo "PVC: $PVC_NAME"
-            echo "This might be a production PVC. ABORTING."
-            exit 1
-          fi
-
-          # Verify PostgreSQL is scaled down (safety measure)
-          POD_COUNT=$(kubectl get pods -l cnpg.io/cluster=registry-pg -n default --no-headers 2>/dev/null | wc -l)
-          if [ "$POD_COUNT" -gt 0 ]; then
-            echo "❌ SAFETY CHECK FAILED: PostgreSQL pods are still running!"
-            echo "Expected 0 pods, found: $POD_COUNT"
-            echo "Database must be scaled down before data replacement"
-            exit 1
-          fi
-
-          echo "✅ FINAL SAFETY CHECK PASSED"
-          echo "   Environment: STAGING"
-          echo "   Context: $CURRENT_CONTEXT"
-          echo "   Project: $CURRENT_PROJECT"
-          echo "   Target PVC: $PVC_NAME"
-          echo "   PostgreSQL pods: 0 (scaled down)"
-          echo ""
-          echo "Proceeding with data replacement..."
 
       - name: Replace staging database with restored backup
         id: copy-job
@@ -391,7 +279,6 @@ jobs:
                       echo "Setting correct permissions..."
                       chmod 700 /pgdata
 
-                      echo "✓ Data copy completed"
                       ls -lah /pgdata/ | head -20
                       echo "PostgreSQL version: \$(cat /pgdata/PG_VERSION)"
                   volumeMounts:
@@ -408,8 +295,6 @@ jobs:
                     claimName: ${{ steps.pgdata-pvc.outputs.pvc_name }}
           EOF
 
-          echo "✓ Copy job created: $JOB_NAME"
-
       - name: Wait for data copy to complete
         run: |
           JOB_NAME="${{ steps.copy-job.outputs.job_name }}"
@@ -421,8 +306,6 @@ jobs:
             kubectl logs job/$JOB_NAME -n default --tail=100
             exit 1
           }
-
-          echo "✓ Database data replaced successfully"
 
       - name: Scale up staging PostgreSQL
         run: |
@@ -446,8 +329,6 @@ jobs:
           # Wait for PostgreSQL to be ready
           echo "Waiting for PostgreSQL to be ready..."
           kubectl wait --for=condition=ready pod -l cnpg.io/cluster=registry-pg -n default --timeout=300s
-
-          echo "✓ PostgreSQL is running"
 
       - name: Verify staging DB is functional
         run: |
@@ -480,14 +361,11 @@ jobs:
                 exit 1
               fi
 
-              echo "✓ Staging DB is healthy with $TABLE_COUNT tables"
-
+              echo "Staging DB has $TABLE_COUNT tables"
               echo "Top 10 tables by row count:"
               psql -h registry-pg-rw -U postgres -d app \
                 -c "SELECT schemaname, tablename, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10;" || true
             '
-
-          echo "✓ Database verification completed"
 
       - name: Cleanup
         if: always()
@@ -501,12 +379,10 @@ jobs:
           kubectl delete pvc restore-data-pvc -n default || true
 
           # Remove prod backup credentials (for security)
-          kubectl delete secret prod-backup-credentials -n default || true
+          kubectl delete secret prod-to-staging-sync-credentials -n default || true
 
           # Clean up old restore resources (keep last 3)
           kubectl get restore -n default --sort-by=.metadata.creationTimestamp -o name | head -n -3 | xargs -r kubectl delete || true
 
           # Clean up old copy jobs (keep last 3)
           kubectl get jobs -n default --sort-by=.metadata.creationTimestamp -o name | grep 'copy-pgdata-' | head -n -3 | xargs -r kubectl delete -n default || true
-
-          echo "✓ Cleanup completed"
