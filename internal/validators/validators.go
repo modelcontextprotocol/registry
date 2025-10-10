@@ -53,6 +53,16 @@ var (
 )
 
 func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
+	// Validate schema version is provided and supported
+	// Note: Schema field is also marked as required in the ServerJSON struct definition
+	// for API-level validation and documentation
+	if serverJSON.Schema == "" {
+		return fmt.Errorf("$schema field is required")
+	}
+	if !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion) {
+		return fmt.Errorf("schema version %s is not supported. Please use schema version %s", serverJSON.Schema, model.CurrentSchemaVersion)
+	}
+
 	// Validate server name exists and format
 	if _, err := parseServerName(*serverJSON); err != nil {
 		return err
@@ -70,6 +80,16 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 
 	// Validate website URL if provided
 	if err := validateWebsiteURL(serverJSON.WebsiteURL); err != nil {
+		return err
+	}
+
+	// Validate title if provided
+	if err := validateTitle(serverJSON.Title); err != nil {
+		return err
+	}
+
+	// Validate icons if provided
+	if err := validateIcons(serverJSON.Icons); err != nil {
 		return err
 	}
 
@@ -138,9 +158,59 @@ func validateWebsiteURL(websiteURL string) error {
 		return fmt.Errorf("websiteUrl must be absolute (include scheme): %s", websiteURL)
 	}
 
-	// Only allow HTTP/HTTPS schemes for security
-	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
-		return fmt.Errorf("websiteUrl must use http or https scheme: %s", websiteURL)
+	// Only allow HTTPS scheme for security
+	if parsedURL.Scheme != SchemeHTTPS {
+		return fmt.Errorf("websiteUrl must use https scheme: %s", websiteURL)
+	}
+
+	return nil
+}
+
+func validateTitle(title string) error {
+	// Skip validation if title is not provided (optional field)
+	if title == "" {
+		return nil
+	}
+
+	// Check that title is not only whitespace
+	if strings.TrimSpace(title) == "" {
+		return fmt.Errorf("title cannot be only whitespace")
+	}
+
+	return nil
+}
+
+func validateIcons(icons []model.Icon) error {
+	// Skip validation if no icons are provided (optional field)
+	if len(icons) == 0 {
+		return nil
+	}
+
+	// Validate each icon
+	for i, icon := range icons {
+		if err := validateIcon(&icon); err != nil {
+			return fmt.Errorf("invalid icon at index %d: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func validateIcon(icon *model.Icon) error {
+	// Parse the URL to ensure it's valid
+	parsedURL, err := url.Parse(icon.Src)
+	if err != nil {
+		return fmt.Errorf("invalid icon src URL: %w", err)
+	}
+
+	// Ensure it's an absolute URL
+	if !parsedURL.IsAbs() {
+		return fmt.Errorf("icon src must be an absolute URL (include scheme): %s", icon.Src)
+	}
+
+	// Only allow HTTPS scheme for security (no HTTP or data: URIs)
+	if parsedURL.Scheme != SchemeHTTPS {
+		return fmt.Errorf("icon src must use https scheme (got %s): %s", parsedURL.Scheme, icon.Src)
 	}
 
 	return nil

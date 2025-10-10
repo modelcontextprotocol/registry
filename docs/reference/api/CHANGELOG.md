@@ -2,6 +2,17 @@
 
 Changes to the REST API endpoints and responses.
 
+## Unreleased
+
+### ⚠️ BREAKING CHANGES
+
+#### Endpoint Simplification
+
+Removed redundant endpoint to simplify API surface and reduce implementation burden for subregistries.
+
+**Removed endpoints:**
+- `GET /v0/servers/{serverName}` - Use `GET /v0/servers/{serverName}/versions/latest` instead
+
 ## 2025-09-29
 
 ### ⚠️ BREAKING CHANGES

@@ -38,3 +38,7 @@ const (
 	SourceGitHub RepositorySource = "github"
 	SourceGitLab RepositorySource = "gitlab"
 )
+
+const (
+	SchemeHTTPS = "https"
+)

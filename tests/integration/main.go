@@ -245,7 +245,7 @@ func verifyPublishedServer(serverName string, expected *apiv0.ServerJSON) error 
 
 	// URL encode the server name since it contains special characters like "/"
 	encodedName := url.PathEscape(serverName)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, registryURL+"/v0/servers/"+encodedName, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, registryURL+"/v0/servers/"+encodedName+"/versions/latest", nil)
 	if err != nil {
 		return err
 	}
