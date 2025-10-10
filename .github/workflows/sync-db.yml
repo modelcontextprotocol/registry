@@ -139,29 +139,48 @@ jobs:
           sleep 15
 
           # Find the job created by k8up for this restore
-          for i in {1..30}; do
-            JOB_NAME=$(kubectl get jobs -n default -l k8up.io/owned-by=restore -o jsonpath='{.items[?(@.metadata.ownerReferences[0].name=="'$RESTORE_NAME'")].metadata.name}' 2>/dev/null)
+          # k8up creates jobs with name pattern "restore-<restore-name>"
+          # Since our restore is named "restore-from-prod-*", the job will be "restore-restore-from-prod-*"
+          for i in {1..60}; do
+            JOB_NAME=$(kubectl get jobs -n default --no-headers 2>/dev/null | grep "^restore-$RESTORE_NAME" | awk '{print $1}' | head -1)
             if [ -n "$JOB_NAME" ]; then
               echo "Found restore job: $JOB_NAME"
               break
             fi
-            echo "Waiting for job to be created... ($i/30)"
+            echo "Waiting for job to be created... ($i/60)"
             sleep 2
           done
 
           if [ -z "$JOB_NAME" ]; then
-            echo "ERROR: Restore job not found"
-            kubectl get restore $RESTORE_NAME -n default -o yaml
+            echo "ERROR: Restore job not found after 120 seconds"
+            echo "Checking restore resource status:"
+            kubectl get restore $RESTORE_NAME -n default
+            kubectl describe restore $RESTORE_NAME -n default
+
+            echo "Checking for any restore jobs:"
+            kubectl get jobs -n default | grep restore || echo "No restore jobs found"
+
+            echo "Checking k8up operator logs:"
+            kubectl logs deployment/k8up -n default --tail=50 | grep -i restore || echo "No restore logs found"
             exit 1
           fi
 
           # Wait for the restore job to complete (max 15 minutes)
+          echo "Waiting for restore job to complete..."
           kubectl wait --for=condition=complete \
             job/$JOB_NAME \
             --timeout=900s -n default || {
               echo "Restore job failed or timed out"
+              echo "Job status:"
+              kubectl get job/$JOB_NAME -n default
+              echo "Job details:"
               kubectl describe job/$JOB_NAME -n default
-              kubectl logs job/$JOB_NAME -n default --tail=100
+              echo "Job logs (if available):"
+              kubectl logs job/$JOB_NAME -n default --tail=100 || echo "No logs available"
+
+              # Check if it's a credential issue
+              echo "Checking if credentials exist:"
+              kubectl get secret prod-to-staging-sync-credentials -n default || echo "Credentials secret missing!"
               exit 1
             }
 
@@ -370,9 +389,34 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
+          # Wait for any restore jobs to finish before cleanup (max 5 minutes for large database restores)
+          echo "Checking for running restore jobs..."
+          RESTORE_NAME="${{ steps.restore.outputs.restore_name }}"
+
+          for i in {1..60}; do
+            # Check specifically for our restore job in Running or Pending state
+            RUNNING_JOBS=$(kubectl get jobs -n default --no-headers 2>/dev/null | grep "^restore-${RESTORE_NAME}" | grep -E "Running|Pending" | wc -l)
+            if [ "$RUNNING_JOBS" -eq 0 ]; then
+              echo "No running restore jobs found"
+              break
+            fi
+            echo "Waiting for $RUNNING_JOBS restore job(s) to finish... ($i/60)"
+            sleep 5
+          done
+
           # Clean up jobs first
           if [ -n "${{ steps.copy-job.outputs.job_name }}" ]; then
             kubectl delete job ${{ steps.copy-job.outputs.job_name }} -n default || true
+          fi
+
+          # Clean up the restore job if it exists (with proper error handling)
+          if [ -n "$RESTORE_NAME" ]; then
+            if kubectl get job "restore-$RESTORE_NAME" -n default >/dev/null 2>&1; then
+              echo "Deleting restore job: restore-$RESTORE_NAME"
+              kubectl delete job "restore-$RESTORE_NAME" -n default || echo "Failed to delete job, may have already been cleaned up"
+            else
+              echo "Restore job restore-$RESTORE_NAME not found, skipping deletion"
+            fi
           fi
 
           # Remove restore PVC (will wait for jobs to finish)
@@ -383,6 +427,9 @@ jobs:
 
           # Clean up old restore resources (keep last 3)
           kubectl get restore -n default --sort-by=.metadata.creationTimestamp -o name | head -n -3 | xargs -r kubectl delete || true
+
+          # Clean up old restore jobs (keep last 3)
+          kubectl get jobs -n default --sort-by=.metadata.creationTimestamp -o name | grep '^job.batch/restore-' | head -n -3 | xargs -r kubectl delete -n default || true
 
           # Clean up old copy jobs (keep last 3)
           kubectl get jobs -n default --sort-by=.metadata.creationTimestamp -o name | grep 'copy-pgdata-' | head -n -3 | xargs -r kubectl delete -n default || true
