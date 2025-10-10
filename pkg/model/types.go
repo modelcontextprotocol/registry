@@ -31,10 +31,6 @@ type Package struct {
 	RuntimeArguments     []Argument      `json:"runtimeArguments,omitempty"`
 	PackageArguments     []Argument      `json:"packageArguments,omitempty"`
 	EnvironmentVariables []KeyValueInput `json:"environmentVariables,omitempty"`
-	// Manifest is an optional embedded MCPB manifest describing an on-device server. Only used when registryType == on_device.
-	Manifest map[string]any `json:"manifest,omitempty"`
-	// Dirname is the directory on the local filesystem containing the on-device server (mirrors Node.js __dirname semantics for discovery). Only used when registryType == on_device.
-	Dirname string `json:"__dirname,omitempty"`
 }
 
 // Repository represents a source code repository as defined in the spec

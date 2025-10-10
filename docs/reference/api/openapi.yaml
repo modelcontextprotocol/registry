@@ -337,13 +337,6 @@ components:
           description: A mapping of environment variables to be set when running the package.
           items:
             $ref: '#/components/schemas/KeyValueInput'
-        manifest:
-          type: object
-          description: Optional embedded MCPB manifest describing an on-device server. Only used when registryType is 'on_device'.
-          additionalProperties: true
-        __dirname:
-          type: string
-          description: Optional local directory path containing the on-device server implementation (analogous to Node.js __dirname). Only used when registryType is 'on_device'.
 
     Input:
       type: object

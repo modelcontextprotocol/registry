@@ -694,7 +694,11 @@ Some platforms (e.g., an operating system distribution) may provide a catalog of
       "identifier": "com.example.troubleshooting",
       "version": "1.0.0",
       "runtimeHint": "odr.exe",
-      "transport": { "type": "stdio" },
+      "transport": { "type": "stdio" }
+    }
+  ],
+  "_meta": {
+    "com.microsoft.windows": {
       "manifest": {
         "manifest_version": "0.2",
         "name": "troubleshooting-mcp-server",
@@ -703,7 +707,7 @@ Some platforms (e.g., an operating system distribution) may provide a catalog of
         "author": { "name": "ExampleOS" },
         "server": {
           "type": "binary",
-          "entry_point": "C:\\Windows\\System32\\odr.exe",
+          "entry_point": "odr.exe",
           "mcp_config": {
             "command": "odr.exe",
             "args": ["mcp", "--proxy", "troubleshooting-mcp-server"]
@@ -712,14 +716,14 @@ Some platforms (e.g., an operating system distribution) may provide a catalog of
       },
       "__dirname": "C:\\Windows\\System32\\mcp\\troubleshooting"
     }
-  ]
+  }
 }
 ```
 
 Notes:
 
 - `registryBaseUrl` is omitted because the package is not fetched remotely.
-- `manifest` embeds the MCPB-style metadata so clients have consistent information without a download.
+- `manifest` embeds the MCPB manifest so clients have consistent information without a download.
 - `__dirname` gives clients a stable local path if they need to resolve relative resources (optional).
 - Validation for `on_device` packages does not perform remote ownership checks; responsibility shifts to the platform distribution.
 

@@ -192,10 +192,6 @@
     },
     "Package": {
       "properties": {
-        "__dirname": {
-          "description": "Optional local directory path containing the on-device server implementation (analogous to Node.js __dirname). Only used when registryType is 'on_device'.",
-          "type": "string"
-        },
         "environmentVariables": {
           "description": "A mapping of environment variables to be set when running the package.",
           "items": {
@@ -216,11 +212,6 @@
             "https://github.com/example/releases/download/v1.0.0/package.mcpb"
           ],
           "type": "string"
-        },
-        "manifest": {
-          "additionalProperties": true,
-          "description": "Optional embedded MCPB manifest describing an on-device server. Only used when registryType is 'on_device'.",
-          "type": "object"
         },
         "packageArguments": {
           "description": "A list of arguments to be passed to the package's binary.",

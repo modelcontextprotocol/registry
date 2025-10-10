@@ -38,7 +38,7 @@ These steps may evolve as additional validations or details are discovered and m
      - Add your package registry base url to the `registryBaseUrl` example array.
      - Add the single-shot CLI command name to the `runtimeHint` example value array.
    - Update the [`openapi.yaml`](../../reference/api/openapi.yaml)
-   - Add your package registry name to the `registryType` enum value array (not needed for `on_device`, which is already defined).
+   - Add your package registry name to the `registryType` enum value array.
      - Add your package registry base url to the `registryBaseUrl` enum value array.
      - Add the single-shot CLI command name to the `runtimeHint` example value array.
    - Add a sample, minimal `server.json` to the [`server.json` examples](../../reference/server-json/generic-server-json.md).
