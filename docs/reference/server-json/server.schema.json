@@ -260,18 +260,7 @@
       "description": "A command-line `--flag={value}`."
     },
     "Package": {
-      "description": "Discriminated union of package types grouped by structural similarity. The 'registryType' field determines which package schema to use and which fields are required.",
-      "discriminator": {
-        "mapping": {
-          "mcpb": "#/components/schemas/BinaryPackage",
-          "npm": "#/components/schemas/RegistryPackage",
-          "nuget": "#/components/schemas/RegistryPackage",
-          "oci": "#/components/schemas/ImagePackage",
-          "pypi": "#/components/schemas/RegistryPackage"
-        },
-        "propertyName": "registryType"
-      },
-      "oneOf": [
+      "anyOf": [
         {
           "$ref": "#/definitions/RegistryPackage"
         },
@@ -281,7 +270,8 @@
         {
           "$ref": "#/definitions/BinaryPackage"
         }
-      ]
+      ],
+      "description": "Package types grouped by structural similarity. The 'registryType' field determines package behavior and which fields are expected. Packages should match at least one of the structural patterns below."
     },
     "PackageBase": {
       "description": "Common fields shared across all package types",
@@ -301,8 +291,8 @@
           "type": "array"
         },
         "registryType": {
-          "description": "Package type discriminator",
-          "enum": [
+          "description": "Package type discriminator. Common values include npm, pypi, nuget (registry-based), oci (container images), and mcpb (direct binaries).",
+          "examples": [
             "npm",
             "pypi",
             "nuget",
@@ -423,7 +413,7 @@
             },
             "registryType": {
               "description": "Type of package registry",
-              "enum": [
+              "examples": [
                 "npm",
                 "pypi",
                 "nuget"
@@ -447,7 +437,7 @@
           "type": "object"
         }
       ],
-      "description": "Registry-based packages (npm, pypi, nuget).\nThese packages use a registry to store and distribute packages, identified by package name + version.\nThe registryBaseUrl can be customized or defaults to the standard registry for each type:\n- npm: https://registry.npmjs.org\n- pypi: https://pypi.org\n- nuget: https://api.nuget.org/v3/index.json\n"
+      "description": "Registry-based packages (npm, pypi, nuget, and others).\nThese packages use a registry to store and distribute packages, identified by package name + version.\nThe registryBaseUrl can be customized or defaults to the standard registry for each type:\n- npm: https://registry.npmjs.org\n- pypi: https://pypi.org\n- nuget: https://api.nuget.org/v3/index.json\n"
     },
     "Repository": {
       "description": "Repository metadata for the MCP server source code. Enables users and security experts to inspect the code, improving transparency.",

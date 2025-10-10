@@ -270,19 +270,11 @@ components:
               example: 30
 
     Package:
-      description: "Discriminated union of package types grouped by structural similarity. The 'registryType' field determines which package schema to use and which fields are required."
-      oneOf:
+      description: "Package types grouped by structural similarity. The 'registryType' field determines package behavior and which fields are expected. Packages should match at least one of the structural patterns below."
+      anyOf:
         - $ref: '#/components/schemas/RegistryPackage'
         - $ref: '#/components/schemas/ImagePackage'
         - $ref: '#/components/schemas/BinaryPackage'
-      discriminator:
-        propertyName: registryType
-        mapping:
-          npm: '#/components/schemas/RegistryPackage'
-          pypi: '#/components/schemas/RegistryPackage'
-          nuget: '#/components/schemas/RegistryPackage'
-          oci: '#/components/schemas/ImagePackage'
-          mcpb: '#/components/schemas/BinaryPackage'
 
     PackageBase:
       type: object
@@ -293,8 +285,13 @@ components:
       properties:
         registryType:
           type: string
-          description: Package type discriminator
-          enum: [npm, pypi, nuget, oci, mcpb]
+          description: "Package type discriminator. Common values include npm, pypi, nuget (registry-based), oci (container images), and mcpb (direct binaries)."
+          examples:
+            - npm
+            - pypi
+            - nuget
+            - oci
+            - mcpb
         runtimeHint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.
@@ -323,7 +320,7 @@ components:
 
     RegistryPackage:
       description: |
-        Registry-based packages (npm, pypi, nuget).
+        Registry-based packages (npm, pypi, nuget, and others).
         These packages use a registry to store and distribute packages, identified by package name + version.
         The registryBaseUrl can be customized or defaults to the standard registry for each type:
         - npm: https://registry.npmjs.org
@@ -338,8 +335,11 @@ components:
           properties:
             registryType:
               type: string
-              enum: [npm, pypi, nuget]
               description: "Type of package registry"
+              examples:
+                - npm
+                - pypi
+                - nuget
             identifier:
               type: string
               description: |

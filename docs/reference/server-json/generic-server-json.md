@@ -598,9 +598,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "packages": [
     {
       "registryType": "mcpb",
-      "registryBaseUrl": "https://github.com",
       "identifier": "https://github.com/modelcontextprotocol/text-editor-mcpb/releases/download/v1.0.2/text-editor.mcpb",
-      "version": "1.0.2",
       "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
       "transport": {
         "type": "stdio"
