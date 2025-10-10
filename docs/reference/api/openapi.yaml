@@ -137,8 +137,6 @@ paths:
                       registryBaseUrl: "https://registry.npmjs.org"
                       identifier: "@modelcontextprotocol/server-filesystem"
                       version: "1.0.2"
-                      transport:
-                        type: "stdio"
                   _meta:
                     io.modelcontextprotocol.registry/publisher-provided:
                       tool: "publisher-cli"
@@ -161,8 +159,6 @@ paths:
                       registryBaseUrl: "https://registry.npmjs.org"
                       identifier: "@example/mcp-demo-server"
                       version: "1.0.0"
-                      transport:
-                        type: "stdio"
                   _meta:
                     io.modelcontextprotocol.registry/publisher-provided:
                       contactEmail: "maintainer@example.com"
@@ -270,28 +266,50 @@ components:
               example: 30
 
     Package:
-      description: "Package types grouped by structural similarity. The 'registryType' field determines package behavior and which fields are expected. Packages should match at least one of the structural patterns below."
-      anyOf:
-        - $ref: '#/components/schemas/RegistryPackage'
-        - $ref: '#/components/schemas/ImagePackage'
-        - $ref: '#/components/schemas/BinaryPackage'
-
-    PackageBase:
       type: object
-      description: "Common fields shared across all package types"
       required:
         - registryType
+        - identifier
         - transport
       properties:
         registryType:
           type: string
-          description: "Package type discriminator. Common values include npm, pypi, nuget (registry-based), oci (container images), and mcpb (direct binaries)."
+          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')
           examples:
-            - npm
-            - pypi
-            - nuget
-            - oci
-            - mcpb
+            - "npm"
+            - "pypi"
+            - "oci"
+            - "nuget"
+            - "mcpb"
+        registryBaseUrl:
+          type: string
+          format: uri
+          description: Base URL of the package registry
+          examples:
+            - "https://registry.npmjs.org"
+            - "https://pypi.org"
+            - "https://docker.io"
+            - "https://api.nuget.org"
+            - "https://github.com"
+            - "https://gitlab.com"
+        identifier:
+          type: string
+          description: Package identifier - either a package name (for registries) or URL (for direct downloads)
+          examples:
+            - "@modelcontextprotocol/server-brave-search"
+            - "https://github.com/example/releases/download/v1.0.0/package.mcpb"
+        version:
+          type: string
+          description: "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
+          example: "1.0.2"
+          minLength: 1
+          not:
+            const: "latest"
+        fileSha256:
+          type: string
+          description: "SHA-256 hash of the package file for integrity verification. Required for MCPB packages and optional for other package types. Authors are responsible for generating correct SHA-256 hashes when creating server.json. If present, MCP clients must validate the downloaded file matches the hash before running packages to ensure file integrity."
+          example: "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
+          pattern: "^[a-f0-9]{64}$"
         runtimeHint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.
@@ -317,118 +335,6 @@ components:
           description: A mapping of environment variables to be set when running the package.
           items:
             $ref: '#/components/schemas/KeyValueInput'
-
-    RegistryPackage:
-      description: |
-        Registry-based packages (npm, pypi, nuget, and others).
-        These packages use a registry to store and distribute packages, identified by package name + version.
-        The registryBaseUrl can be customized or defaults to the standard registry for each type:
-        - npm: https://registry.npmjs.org
-        - pypi: https://pypi.org
-        - nuget: https://api.nuget.org/v3/index.json
-      allOf:
-        - $ref: '#/components/schemas/PackageBase'
-        - type: object
-          required:
-            - identifier
-            - version
-          properties:
-            registryType:
-              type: string
-              description: "Type of package registry"
-              examples:
-                - npm
-                - pypi
-                - nuget
-            identifier:
-              type: string
-              description: |
-                Package name or identifier in the registry.
-                - npm: Package name with or without @scope (e.g., "@modelcontextprotocol/server-filesystem", "express")
-                - pypi: Package name (e.g., "mcp-server-time", "flask")
-                - nuget: Package ID (e.g., "ModelContextProtocol.Server", "Newtonsoft.Json")
-              examples:
-                - "@modelcontextprotocol/server-filesystem"
-                - "mcp-server-time"
-                - "ModelContextProtocol.Server"
-              minLength: 1
-            version:
-              type: string
-              description: "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*', 'latest')."
-              example: "1.0.2"
-              minLength: 1
-              not:
-                const: "latest"
-            registryBaseUrl:
-              type: string
-              format: uri
-              description: |
-                Registry base URL. Optional, with type-specific defaults:
-                - npm: https://registry.npmjs.org
-                - pypi: https://pypi.org
-                - nuget: https://api.nuget.org/v3/index.json
-              examples:
-                - "https://registry.npmjs.org"
-                - "https://pypi.org"
-                - "https://api.nuget.org/v3/index.json"
-
-    ImagePackage:
-      description: |
-        OCI container image packages.
-        Uses a single canonical reference that includes registry, namespace, image, and tag/digest.
-        Format: [registry/]namespace/image[:tag][@digest]
-        Registry defaults to docker.io if not specified.
-        Examples: 'ghcr.io/owner/repo:v1.0.0', 'docker.io/library/postgres:16', 'owner/repo:latest'
-      allOf:
-        - $ref: '#/components/schemas/PackageBase'
-        - type: object
-          required:
-            - identifier
-          properties:
-            registryType:
-              type: string
-              const: oci
-            identifier:
-              type: string
-              description: |
-                Full OCI image reference including registry, namespace, image, and tag/digest.
-                Registry defaults to docker.io if not specified. Must include at least a tag or digest.
-              examples:
-                - "ghcr.io/modelcontextprotocol/server-example:v1.0.0"
-                - "docker.io/library/postgres:16"
-                - "owner/repo:latest"
-                - "ghcr.io/owner/repo@sha256:abc123..."
-                - "owner/repo:v1.0.0@sha256:abc123..."
-              minLength: 1
-
-    BinaryPackage:
-      description: |
-        Direct binary download packages (MCPB format).
-        Uses a direct HTTPS download URL with SHA-256 hash for integrity verification.
-        Currently supports GitHub and GitLab release assets.
-      allOf:
-        - $ref: '#/components/schemas/PackageBase'
-        - type: object
-          required:
-            - identifier
-            - fileSha256
-          properties:
-            registryType:
-              type: string
-              const: mcpb
-            identifier:
-              type: string
-              format: uri
-              description: "Direct HTTPS download URL to the MCPB binary. Must be from GitHub or GitLab release assets."
-              examples:
-                - "https://github.com/owner/repo/releases/download/v1.0.0/server-macos-arm64.mcpb"
-                - "https://gitlab.com/owner/repo/-/releases/v1.0.0/downloads/server.mcpb"
-              minLength: 1
-            fileSha256:
-              type: string
-              description: "SHA-256 hash of the file for integrity verification. Required for MCPB packages. MCP clients must validate the downloaded file matches this hash before execution."
-              example: "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
-              pattern: "^[a-f0-9]{64}$"
 
     Input:
       type: object
