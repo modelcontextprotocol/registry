@@ -270,21 +270,19 @@ components:
               example: 30
 
     Package:
-      description: "Discriminated union of package types. The 'registryType' field determines which package schema to use and which fields are required."
+      description: "Discriminated union of package types grouped by structural similarity. The 'registryType' field determines which package schema to use and which fields are required."
       oneOf:
-        - $ref: '#/components/schemas/NPMPackage'
-        - $ref: '#/components/schemas/PyPIPackage'
-        - $ref: '#/components/schemas/NuGetPackage'
-        - $ref: '#/components/schemas/OCIPackage'
-        - $ref: '#/components/schemas/MCPBPackage'
+        - $ref: '#/components/schemas/RegistryPackage'
+        - $ref: '#/components/schemas/ImagePackage'
+        - $ref: '#/components/schemas/BinaryPackage'
       discriminator:
         propertyName: registryType
         mapping:
-          npm: '#/components/schemas/NPMPackage'
-          pypi: '#/components/schemas/PyPIPackage'
-          nuget: '#/components/schemas/NuGetPackage'
-          oci: '#/components/schemas/OCIPackage'
-          mcpb: '#/components/schemas/MCPBPackage'
+          npm: '#/components/schemas/RegistryPackage'
+          pypi: '#/components/schemas/RegistryPackage'
+          nuget: '#/components/schemas/RegistryPackage'
+          oci: '#/components/schemas/ImagePackage'
+          mcpb: '#/components/schemas/BinaryPackage'
 
     PackageBase:
       type: object
@@ -323,8 +321,14 @@ components:
           items:
             $ref: '#/components/schemas/KeyValueInput'
 
-    NPMPackage:
-      description: "NPM package reference. Uses separate identifier (package name) + version, following NPM ecosystem standards."
+    RegistryPackage:
+      description: |
+        Registry-based packages (npm, pypi, nuget).
+        These packages use a registry to store and distribute packages, identified by package name + version.
+        The registryBaseUrl can be customized or defaults to the standard registry for each type:
+        - npm: https://registry.npmjs.org
+        - pypi: https://pypi.org
+        - nuget: https://api.nuget.org/v3/index.json
       allOf:
         - $ref: '#/components/schemas/PackageBase'
         - type: object
@@ -334,15 +338,23 @@ components:
           properties:
             registryType:
               type: string
-              enum: [npm]
+              enum: [npm, pypi, nuget]
+              description: "Type of package registry"
             identifier:
               type: string
-              description: "NPM package name (with or without @scope)"
-              example: "@modelcontextprotocol/server-filesystem"
+              description: |
+                Package name or identifier in the registry.
+                - npm: Package name with or without @scope (e.g., "@modelcontextprotocol/server-filesystem", "express")
+                - pypi: Package name (e.g., "mcp-server-time", "flask")
+                - nuget: Package ID (e.g., "ModelContextProtocol.Server", "Newtonsoft.Json")
+              examples:
+                - "@modelcontextprotocol/server-filesystem"
+                - "mcp-server-time"
+                - "ModelContextProtocol.Server"
               minLength: 1
             version:
               type: string
-              description: "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
+              description: "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*', 'latest')."
               example: "1.0.2"
               minLength: 1
               not:
@@ -350,74 +362,23 @@ components:
             registryBaseUrl:
               type: string
               format: uri
-              description: "NPM registry URL. Defaults to https://registry.npmjs.org if not specified"
-              example: "https://registry.npmjs.org"
-              default: "https://registry.npmjs.org"
+              description: |
+                Registry base URL. Optional, with type-specific defaults:
+                - npm: https://registry.npmjs.org
+                - pypi: https://pypi.org
+                - nuget: https://api.nuget.org/v3/index.json
+              examples:
+                - "https://registry.npmjs.org"
+                - "https://pypi.org"
+                - "https://api.nuget.org/v3/index.json"
 
-    PyPIPackage:
-      description: "PyPI package reference. Uses separate identifier (package name) + version."
-      allOf:
-        - $ref: '#/components/schemas/PackageBase'
-        - type: object
-          required:
-            - identifier
-            - version
-          properties:
-            registryType:
-              type: string
-              enum: [pypi]
-            identifier:
-              type: string
-              description: "PyPI package name"
-              example: "mcp-server-time"
-              minLength: 1
-            version:
-              type: string
-              description: "Package version. Must be a specific version. Version ranges are rejected."
-              example: "1.0.2"
-              minLength: 1
-              not:
-                const: "latest"
-            registryBaseUrl:
-              type: string
-              format: uri
-              description: "PyPI index URL. Defaults to https://pypi.org if not specified"
-              example: "https://pypi.org"
-              default: "https://pypi.org"
-
-    NuGetPackage:
-      description: "NuGet package reference. Uses separate identifier (package ID) + version, following NuGet ecosystem standards."
-      allOf:
-        - $ref: '#/components/schemas/PackageBase'
-        - type: object
-          required:
-            - identifier
-            - version
-          properties:
-            registryType:
-              type: string
-              enum: [nuget]
-            identifier:
-              type: string
-              description: "NuGet package ID"
-              example: "ModelContextProtocol.Server"
-              minLength: 1
-            version:
-              type: string
-              description: "Package version. Must be a specific version. Version ranges are rejected."
-              example: "1.0.2"
-              minLength: 1
-              not:
-                const: "latest"
-            registryBaseUrl:
-              type: string
-              format: uri
-              description: "NuGet source URL. Defaults to https://api.nuget.org/v3/index.json if not specified"
-              example: "https://api.nuget.org/v3/index.json"
-              default: "https://api.nuget.org/v3/index.json"
-
-    OCIPackage:
-      description: "OCI container image reference. Uses single canonical reference in identifier field, following Docker/Kubernetes standards. Format: [registry/]namespace/image[:tag][@digest]. Examples: 'ghcr.io/owner/repo:v1.0.0', 'docker.io/library/postgres:16', 'owner/repo:latest' (defaults to docker.io). The version and registryBaseUrl fields are not used for OCI packages."
+    ImagePackage:
+      description: |
+        OCI container image packages.
+        Uses a single canonical reference that includes registry, namespace, image, and tag/digest.
+        Format: [registry/]namespace/image[:tag][@digest]
+        Registry defaults to docker.io if not specified.
+        Examples: 'ghcr.io/owner/repo:v1.0.0', 'docker.io/library/postgres:16', 'owner/repo:latest'
       allOf:
         - $ref: '#/components/schemas/PackageBase'
         - type: object
@@ -426,10 +387,12 @@ components:
           properties:
             registryType:
               type: string
-              enum: [oci]
+              const: oci
             identifier:
               type: string
-              description: "Full OCI image reference including registry, namespace, image, and tag/digest. Registry defaults to docker.io if not specified. Must include at least a tag or digest."
+              description: |
+                Full OCI image reference including registry, namespace, image, and tag/digest.
+                Registry defaults to docker.io if not specified. Must include at least a tag or digest.
               examples:
                 - "ghcr.io/modelcontextprotocol/server-example:v1.0.0"
                 - "docker.io/library/postgres:16"
@@ -438,8 +401,11 @@ components:
                 - "owner/repo:v1.0.0@sha256:abc123..."
               minLength: 1
 
-    MCPBPackage:
-      description: "MCPB binary package reference. Uses direct download URL in identifier field. Must include SHA-256 hash for integrity verification. The version and registryBaseUrl fields are not used for MCPB packages."
+    BinaryPackage:
+      description: |
+        Direct binary download packages (MCPB format).
+        Uses a direct HTTPS download URL with SHA-256 hash for integrity verification.
+        Currently supports GitHub and GitLab release assets.
       allOf:
         - $ref: '#/components/schemas/PackageBase'
         - type: object
@@ -449,7 +415,7 @@ components:
           properties:
             registryType:
               type: string
-              enum: [mcpb]
+              const: mcpb
             identifier:
               type: string
               format: uri
