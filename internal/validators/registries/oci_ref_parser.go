@@ -2,13 +2,12 @@ package registries
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
+
+	"github.com/distribution/reference"
 )
 
 const (
-	// defaultOCIRegistry is the default registry when none is specified
-	defaultOCIRegistry = "docker.io"
 	// defaultOCINamespace is the default namespace for official images
 	defaultOCINamespace = "library"
 )
@@ -22,7 +21,7 @@ type OCIReference struct {
 	Digest    string // e.g., "sha256:abc..." (optional)
 }
 
-// ParseOCIReference parses a canonical OCI image reference.
+// ParseOCIReference parses a canonical OCI image reference using github.com/distribution/reference.
 // Supported formats:
 //   - registry/namespace/image:tag
 //   - registry/namespace/image@digest
@@ -34,84 +33,43 @@ func ParseOCIReference(ref string) (*OCIReference, error) {
 		return nil, fmt.Errorf("OCI reference cannot be empty")
 	}
 
+	// Parse using distribution/reference - normalizes short forms to canonical
+	named, err := reference.ParseNormalizedNamed(ref)
+	if err != nil {
+		return nil, fmt.Errorf("invalid OCI reference format: %w", err)
+	}
+
 	result := &OCIReference{}
 
-	// Split by @ to separate digest
-	var mainPart string
-	if idx := strings.Index(ref, "@"); idx >= 0 {
-		mainPart = ref[:idx]
-		result.Digest = ref[idx+1:]
+	// Extract registry (domain)
+	result.Registry = reference.Domain(named)
 
-		// Validate digest format
-		if !strings.HasPrefix(result.Digest, "sha256:") {
-			return nil, fmt.Errorf("invalid digest format: must start with 'sha256:'")
-		}
-		digestPattern := regexp.MustCompile(`^sha256:[a-fA-F0-9]{64}$`)
-		if !digestPattern.MatchString(result.Digest) {
-			return nil, fmt.Errorf("invalid digest format: must be sha256 followed by 64 hex characters")
-		}
-	} else {
-		mainPart = ref
-	}
+	// Extract path (namespace/image or just image)
+	path := reference.Path(named)
+	parts := strings.Split(path, "/")
 
-	// Split by : to separate tag
-	var pathPart string
-	if idx := strings.LastIndex(mainPart, ":"); idx >= 0 {
-		// Check if this looks like a registry with port (e.g., localhost:5000)
-		// or a tag. If there's a / after the :, it's likely a port.
-		if idx > 0 && !strings.Contains(mainPart[idx:], "/") {
-			pathPart = mainPart[:idx]
-			result.Tag = mainPart[idx+1:]
-		} else {
-			pathPart = mainPart
-		}
-	} else {
-		pathPart = mainPart
-	}
-
-	// Parse the path (registry/namespace/image or namespace/image or image)
-	parts := strings.Split(pathPart, "/")
-
-	switch len(parts) {
-	case 1:
-		// Just image name: "postgres:16" -> docker.io/library/postgres:16
-		result.Registry = defaultOCIRegistry
+	// Parse namespace and image from path
+	if len(parts) == 1 {
+		// Single part: library/image (docker.io default namespace)
 		result.Namespace = defaultOCINamespace
 		result.Image = parts[0]
-
-	case 2:
-		// namespace/image: "owner/repo:tag" -> docker.io/owner/repo:tag
-		// OR registry/image: "ghcr.io/image" -> ghcr.io/library/image
-		// Heuristic: if first part looks like a domain (contains . or :), treat as registry
-		if strings.Contains(parts[0], ".") || strings.Contains(parts[0], ":") {
-			result.Registry = parts[0]
-			result.Namespace = defaultOCINamespace
-			result.Image = parts[1]
-		} else {
-			result.Registry = defaultOCIRegistry
-			result.Namespace = parts[0]
-			result.Image = parts[1]
-		}
-
-	case 3:
-		// registry/namespace/image: "ghcr.io/owner/repo:tag"
-		result.Registry = parts[0]
-		result.Namespace = parts[1]
-		result.Image = parts[2]
-
-	default:
-		// More than 3 parts could be multi-level namespace (e.g., ghcr.io/org/team/repo)
-		// Take first as registry, last as image, everything in between as namespace
-		if len(parts) > 3 {
-			result.Registry = parts[0]
-			result.Namespace = strings.Join(parts[1:len(parts)-1], "/")
-			result.Image = parts[len(parts)-1]
-		} else {
-			return nil, fmt.Errorf("invalid OCI reference format: %s", ref)
-		}
+	} else {
+		// Multiple parts: namespace/image or org/team/image
+		result.Namespace = strings.Join(parts[:len(parts)-1], "/")
+		result.Image = parts[len(parts)-1]
 	}
 
-	// Validate we have either a tag or digest
+	// Extract tag if present
+	if tagged, ok := named.(reference.Tagged); ok {
+		result.Tag = tagged.Tag()
+	}
+
+	// Extract digest if present
+	if digested, ok := named.(reference.Digested); ok {
+		result.Digest = digested.Digest().String()
+	}
+
+	// Validate we have either a tag or digest (required for MCP registry)
 	if result.Tag == "" && result.Digest == "" {
 		return nil, fmt.Errorf("OCI reference must include either a tag or digest: %s", ref)
 	}
