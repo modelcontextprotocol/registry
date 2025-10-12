@@ -157,5 +157,94 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+    "name": "io.github.HzaCode/onecite",
+    "title": "OneCite",
+    "description": "Universal citation management and academic reference toolkit. Generate citations from DOI, arXiv, titles, or URLs in multiple formats (BibTeX, APA, MLA). Supports 7+ literature types and 10+ academic databases with intelligent metadata completion.",
+    "repository": {
+      "url": "https://github.com/HzaCode/OneCite.git",
+      "source": "github"
+    },
+    "version": "latest",
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "onecite",
+        "version": "latest",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ],
+    "capabilities": {
+      "tools": [
+        {
+          "name": "cite",
+          "description": "Generate academic citations from DOI, arXiv, titles, or URLs",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "description": "Source of the literature (DOI, arXiv ID, paper title, or URL)"
+              },
+              "style": {
+                "type": "string",
+                "description": "Citation format",
+                "enum": ["bibtex", "apa", "mla"],
+                "default": "bibtex"
+              }
+            },
+            "required": ["source"]
+          }
+        },
+        {
+          "name": "batch_cite",
+          "description": "Generate citations for multiple sources at once",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "sources": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of literature sources"
+              },
+              "style": {
+                "type": "string",
+                "description": "Citation format",
+                "enum": ["bibtex", "apa", "mla"],
+                "default": "bibtex"
+              }
+            },
+            "required": ["sources"]
+          }
+        }
+      ]
+    },
+    "keywords": [
+      "citation",
+      "bibliography",
+      "academic",
+      "research",
+      "doi",
+      "arxiv",
+      "bibtex",
+      "apa",
+      "mla",
+      "reference",
+      "literature"
+    ],
+    "authors": [
+      {
+        "name": "OneCite Team",
+        "email": "onecite@example.com"
+      }
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/HzaCode/OneCite",
+    "documentation": "https://github.com/HzaCode/OneCite#readme"
   }
 ]
