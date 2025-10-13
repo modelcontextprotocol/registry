@@ -32,6 +32,28 @@ paths:
           required: false
           schema:
             type: integer
+        - name: search
+          in: query
+          description: Search servers by name (substring match)
+          required: false
+          schema:
+            type: string
+            example: "filesystem"
+        - name: updated_since
+          in: query
+          description: Filter servers updated since timestamp (RFC3339 datetime)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-08-07T13:15:04.280Z"
+        - name: version
+          in: query
+          description: Filter by version (an exact version like '1.2.3')
+          required: false
+          schema:
+            type: string
+            example: "1.2.3"
       responses:
         '200':
           description: A list of MCP servers
