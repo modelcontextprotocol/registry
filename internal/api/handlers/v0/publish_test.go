@@ -381,7 +381,7 @@ func TestPublishEndpoint(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint with test config
-			v0.RegisterPublishEndpoint(api, registryService, testConfig)
+			v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
 
 			// Prepare request body
 			var requestBody []byte
@@ -480,7 +480,7 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint
-			v0.RegisterPublishEndpoint(api, registryService, testConfig)
+			v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
 
 			// Create request body
 			requestBody := apiv0.ServerJSON{

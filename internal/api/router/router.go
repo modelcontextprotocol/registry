@@ -102,9 +102,10 @@ func handle404(w http.ResponseWriter, r *http.Request) {
 	detail := "Endpoint not found. See /docs for the API documentation."
 
 	// Provide suggestions for common API endpoint mistakes
-	if !strings.HasPrefix(path, "/v0/") {
+	if !strings.HasPrefix(path, "/v0/") && !strings.HasPrefix(path, "/v0.1/") {
 		detail = fmt.Sprintf(
-			"Endpoint not found. Did you mean '%s'? See /docs for the API documentation.",
+			"Endpoint not found. Did you mean '%s' or '%s'? See /docs for the API documentation.",
+			"/v0.1"+path,
 			"/v0"+path,
 		)
 	}
@@ -145,6 +146,7 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 
 	// Register routes for all API versions
 	RegisterV0Routes(api, cfg, registry, metrics)
+	RegisterV0_1Routes(api, cfg, registry, metrics)
 
 	// Add /metrics for Prometheus metrics using promhttp
 	mux.Handle("/metrics", metrics.PrometheusHandler())

@@ -40,13 +40,13 @@ type ServerVersionsInput struct {
 	ServerName string `path:"serverName" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 }
 
-// RegisterServersEndpoints registers all server-related endpoints
-func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
+// RegisterServersEndpoints registers all server-related endpoints with a custom path prefix
+func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.RegistryService) {
 	// List servers endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "list-servers",
+		OperationID: "list-servers" + pathPrefix,
 		Method:      http.MethodGet,
-		Path:        "/v0/servers",
+		Path:        pathPrefix + "/servers",
 		Summary:     "List MCP servers",
 		Description: "Get a paginated list of MCP servers from the registry",
 		Tags:        []string{"servers"},
@@ -106,9 +106,9 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 
 	// Get specific server version endpoint (supports "latest" as special version)
 	huma.Register(api, huma.Operation{
-		OperationID: "get-server-version",
+		OperationID: "get-server-version" + pathPrefix,
 		Method:      http.MethodGet,
-		Path:        "/v0/servers/{serverName}/versions/{version}",
+		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Get specific MCP server version",
 		Description: "Get detailed information about a specific version of an MCP server. Use the special version 'latest' to get the latest version.",
 		Tags:        []string{"servers"},
@@ -147,9 +147,9 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 
 	// Get server versions endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "get-server-versions",
+		OperationID: "get-server-versions" + pathPrefix,
 		Method:      http.MethodGet,
-		Path:        "/v0/servers/{serverName}/versions",
+		Path:        pathPrefix + "/servers/{serverName}/versions",
 		Summary:     "Get all versions of an MCP server",
 		Description: "Get all available versions for a specific MCP server",
 		Tags:        []string{"servers"},

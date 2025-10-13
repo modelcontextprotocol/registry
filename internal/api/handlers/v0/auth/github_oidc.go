@@ -226,14 +226,14 @@ func (h *GitHubOIDCHandler) SetValidator(validator OIDCValidator) {
 }
 
 // RegisterGitHubOIDCEndpoint registers the GitHub OIDC authentication endpoint
-func RegisterGitHubOIDCEndpoint(api huma.API, cfg *config.Config) {
+func RegisterGitHubOIDCEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 	handler := NewGitHubOIDCHandler(cfg)
 
 	// GitHub OIDC token exchange endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-github-oidc-token",
+		OperationID: "exchange-github-oidc-token" + pathPrefix,
 		Method:      http.MethodPost,
-		Path:        "/v0/auth/github-oidc",
+		Path:        pathPrefix + "/auth/github-oidc",
 		Summary:     "Exchange GitHub OIDC token for Registry JWT",
 		Description: "Exchange a GitHub Actions OIDC token for a short-lived Registry JWT token",
 		Tags:        []string{"auth"},

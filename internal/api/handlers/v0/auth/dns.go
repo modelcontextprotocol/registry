@@ -50,14 +50,14 @@ func (h *DNSAuthHandler) SetResolver(resolver DNSResolver) {
 }
 
 // RegisterDNSEndpoint registers the DNS authentication endpoint
-func RegisterDNSEndpoint(api huma.API, cfg *config.Config) {
+func RegisterDNSEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 	handler := NewDNSAuthHandler(cfg)
 
 	// DNS authentication endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-dns-token",
+		OperationID: "exchange-dns-token" + pathPrefix,
 		Method:      http.MethodPost,
-		Path:        "/v0/auth/dns",
+		Path:        pathPrefix + "/auth/dns",
 		Summary:     "Exchange DNS signature for Registry JWT",
 		Description: "Authenticate using DNS TXT record public key and signed timestamp",
 		Tags:        []string{"auth"},
