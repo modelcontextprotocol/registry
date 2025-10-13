@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher generate-schema check-schema
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher openapi-export generate-openapi generate-schema check-schema
 
 # Default target
 help: ## Show this help message
@@ -13,6 +13,17 @@ build: ## Build the registry application with version info
 publisher: ## Build the publisher tool with version info
 	@mkdir -p bin
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
+
+openapi-export: ## Build the OpenAPI export tool with version info
+	@mkdir -p bin
+	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/openapi-export ./cmd/openapi-export
+
+generate-openapi: openapi-export ## Generate OpenAPI specification file
+	@echo "Generating OpenAPI specification..."
+	# Using dev JWT key from .env.example - this is safe for OpenAPI generation
+	# The key is only needed to satisfy API initialization, not used for actual auth
+	@MCP_REGISTRY_JWT_PRIVATE_KEY=bb2c6b424005acd5df47a9e2c87f446def86dd740c888ea3efb825b23f7ef47c ./bin/openapi-export -format yaml -o docs/reference/api/openapi.yaml
+	@echo "✓ Generated docs/reference/api/openapi.yaml"
 
 # Schema generation targets
 generate-schema: ## Generate server.schema.json from openapi.yaml
