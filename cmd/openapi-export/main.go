@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -34,7 +34,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("openapi-export %s (commit: %s, built: %s)\n", Version, GitCommit, BuildTime)
+		log.Printf("openapi-export %s (commit: %s, built: %s)", Version, GitCommit, BuildTime)
 		return
 	}
 
@@ -60,7 +60,7 @@ func main() {
 	// 1. Route definitions are statically registered and don't require the service
 	// 2. We're only generating the OpenAPI spec, not executing any handlers
 	// 3. The service is only used by handler implementations, not by OpenAPI generation
-	var mockRegistry service.RegistryService = nil
+	var mockRegistry service.RegistryService
 
 	// Create a minimal HTTP mux and metrics for API initialization
 	mux := http.NewServeMux()
@@ -100,37 +100,43 @@ func main() {
 	}
 
 	if outputPath != "" {
-		if err := os.WriteFile(outputPath, data, 0644); err != nil {
+		if err := os.WriteFile(outputPath, data, 0600); err != nil {
 			log.Fatalf("Failed to write to file %s: %v", outputPath, err)
 		}
 		log.Printf("OpenAPI specification exported to %s", outputPath)
 	} else {
-		fmt.Println(string(data))
+		if _, err := io.WriteString(os.Stdout, string(data)+"\n"); err != nil {
+			log.Fatalf("Failed to write to stdout: %v", err)
+		}
 	}
 }
 
 func printUsage() {
-	fmt.Println("OpenAPI Export Tool")
-	fmt.Println()
-	fmt.Println("Recommended Usage:")
-	fmt.Println("  make generate-openapi                   # Generate to docs/reference/api/openapi.yaml")
-	fmt.Println()
-	fmt.Println("Advanced Usage:")
-	fmt.Println("  openapi-export [flags]")
-	fmt.Println()
-	fmt.Println("Flags:")
-	fmt.Println("  -format string")
-	fmt.Println("        Output format: json, yaml, json3.0, yaml3.0 (default: yaml)")
-	fmt.Println("  -o, -output string")
-	fmt.Println("        Output file path (default: stdout)")
-	fmt.Println("  -version")
-	fmt.Println("        Display version information")
-	fmt.Println("  -help")
-	fmt.Println("        Display this help information")
-	fmt.Println()
-	fmt.Println("Examples:")
-	fmt.Println("  openapi-export                          # Export OpenAPI 3.1 YAML to stdout")
-	fmt.Println("  openapi-export -format json             # Export OpenAPI 3.1 JSON to stdout")
-	fmt.Println("  openapi-export -o openapi.yaml          # Export to file")
-	fmt.Println("  openapi-export -format json3.0 -o spec.json  # Export OpenAPI 3.0 JSON to file")
+	usage := `OpenAPI Export Tool
+
+Recommended Usage:
+  make generate-openapi                   # Generate to docs/reference/api/openapi.yaml
+
+Advanced Usage:
+  openapi-export [flags]
+
+Flags:
+  -format string
+        Output format: json, yaml, json3.0, yaml3.0 (default: yaml)
+  -o, -output string
+        Output file path (default: stdout)
+  -version
+        Display version information
+  -help
+        Display this help information
+
+Examples:
+  openapi-export                          # Export OpenAPI 3.1 YAML to stdout
+  openapi-export -format json             # Export OpenAPI 3.1 JSON to stdout
+  openapi-export -o openapi.yaml          # Export to file
+  openapi-export -format json3.0 -o spec.json  # Export OpenAPI 3.0 JSON to file
+`
+	if _, err := io.WriteString(os.Stdout, usage); err != nil {
+		log.Fatalf("Failed to write usage: %v", err)
+	}
 }
