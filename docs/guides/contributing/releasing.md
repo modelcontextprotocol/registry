@@ -21,7 +21,13 @@ The release workflow will automatically:
   - `ghcr.io/modelcontextprotocol/registry:vX.Y.Z` - Specific release version
 - Binaries can be downloaded from the GitHub release page
 
-**Note:** Releases do not automatically deploy to production. See the [deployment documentation](../../deploy/README.md) for production deployment instructions.
+**Note:** Releases do not automatically deploy to production. To deploy a release to production:
+
+1. Update `mcp-registry:imageTag` in `deploy/Pulumi.gcpProd.yaml` to the desired version (e.g., `v1.2.3`)
+2. Commit and push the change to the `main` branch
+3. The [deploy-production.yml](../../../.github/workflows/deploy-production.yml) workflow will automatically trigger and deploy the specified version
+
+See the [deployment documentation](../../../deploy/README.md) for more details.
 
 ## Docker Image Tags
 

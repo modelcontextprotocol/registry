@@ -29,15 +29,34 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
 
 ### Production Deployment (GCP)
 
-**Note:** The production deployment is automatically handled by GitHub Actions. All merges to the `main` branch trigger an automatic deployment the `staging` environment at GCP via [the configured GitHub Actions workflow](../.github/workflows/deploy.yml).
+**Note:** Deployments are automatically handled by GitHub Actions with separate workflows for staging and production:
 
-**Important:** Deployment to `prod` require explicit configuration of the Docker image tag in `Pulumi.gcpProd.yaml`. This prevents automatic promotion of new releases and provides manual control over production versions. To deploy a specific version:
+- **Staging:** All merges to the `main` branch automatically build and deploy the latest code to the `staging` environment via [deploy-staging.yml](../.github/workflows/deploy-staging.yml). Staging always uses the `:main` Docker image tag.
 
-1. Update `mcp-registry:imageTag` in `Pulumi.gcpProd.yaml` to the desired version (e.g., `v1.0.0`, `main-20250930-abc123d`)
-2. Commit the changes and open a PR to `main`
-3. Once merged, the GitHub Actions workflow will deploy the specified version
+- **Production:** Deployment requires explicit configuration of the Docker image tag in `Pulumi.gcpProd.yaml` and is triggered automatically via [deploy-production.yml](../.github/workflows/deploy-production.yml) when this config file is pushed to `main`. This GitOps-style approach provides manual control and an audit trail for production versions.
 
-The steps below are preserved as a log of what we did, or if a manual override is needed.
+**To deploy a specific version to production:**
+
+1. Cut a release (if deploying a new version):
+   ```bash
+   # Via GitHub UI: https://github.com/modelcontextprotocol/registry/releases
+   # Or via gh CLI:
+   gh release create v1.2.3 --generate-notes
+   ```
+   This builds Docker images tagged as `v1.2.3` and `latest`
+
+2. Update the production image tag in `Pulumi.gcpProd.yaml`:
+   ```bash
+   # Edit deploy/Pulumi.gcpProd.yaml
+   # Change line: mcp-registry:imageTag: v1.2.3
+   git add deploy/Pulumi.gcpProd.yaml
+   git commit -m "Deploy v1.2.3 to production"
+   git push
+   ```
+
+3. The production deployment workflow will automatically trigger and deploy the specified version
+
+**Manual Override:** The steps below are preserved if a manual deployment override is needed.
 
 Pre-requisites:
 - [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
