@@ -43,14 +43,14 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
    # Or via gh CLI:
    gh release create v1.2.3 --generate-notes
    ```
-   This builds Docker images tagged as `v1.2.3` and `latest`
+   This builds Docker images tagged as `1.2.3` and `latest` (note: image tags do not include the 'v' prefix)
 
 2. Update the production image tag in `Pulumi.gcpProd.yaml`:
    ```bash
    # Edit deploy/Pulumi.gcpProd.yaml
-   # Change line: mcp-registry:imageTag: v1.2.3
+   # Change line: mcp-registry:imageTag: 1.2.3  (note: no 'v' prefix for Docker image tags)
    git add deploy/Pulumi.gcpProd.yaml
-   git commit -m "Deploy v1.2.3 to production"
+   git commit -m "Deploy version 1.2.3 to production"
    git push
    ```
 
