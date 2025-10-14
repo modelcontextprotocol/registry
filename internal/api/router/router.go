@@ -149,6 +149,22 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 			Name:        "publish",
 			Description: "Operations for publishing MCP servers to the registry",
 		},
+		{
+			Name:        "auth",
+			Description: "Authentication operations for obtaining tokens to publish servers",
+		},
+		{
+			Name:        "admin",
+			Description: "Administrative operations for managing servers (requires elevated permissions)",
+		},
+		{
+			Name:        "health",
+			Description: "Health check endpoint for monitoring service availability",
+		},
+		{
+			Name:        "ping",
+			Description: "Simple ping endpoint for testing connectivity",
+		},
 	}
 
 	// Add metrics middleware with options
