@@ -18,15 +18,15 @@ type PublishServerInput struct {
 	Body          apiv0.ServerJSON `body:""`
 }
 
-// RegisterPublishEndpoint registers the publish endpoint
-func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg *config.Config) {
+// RegisterPublishEndpoint registers the publish endpoint with a custom path prefix
+func RegisterPublishEndpoint(api huma.API, pathPrefix string, registry service.RegistryService, cfg *config.Config) {
 	// Create JWT manager for token validation
 	jwtManager := auth.NewJWTManager(cfg)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "publish-server",
+		OperationID: "publish-server" + pathPrefix,
 		Method:      http.MethodPost,
-		Path:        "/v0/publish",
+		Path:        pathPrefix + "/publish",
 		Summary:     "Publish MCP server",
 		Description: "Publish a new MCP server to the registry or update an existing one",
 		Tags:        []string{"publish"},

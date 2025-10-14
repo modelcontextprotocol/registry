@@ -42,15 +42,15 @@ func (h *GitHubHandler) SetBaseURL(url string) {
 	h.baseURL = url
 }
 
-// RegisterGitHubATEndpoint registers the GitHub access token authentication endpoint
-func RegisterGitHubATEndpoint(api huma.API, cfg *config.Config) {
+// RegisterGitHubATEndpoint registers the GitHub access token authentication endpoint with a custom path prefix
+func RegisterGitHubATEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 	handler := NewGitHubHandler(cfg)
 
 	// GitHub token exchange endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-github-token",
+		OperationID: "exchange-github-token" + pathPrefix,
 		Method:      http.MethodPost,
-		Path:        "/v0/auth/github-at",
+		Path:        pathPrefix + "/auth/github-at",
 		Summary:     "Exchange GitHub OAuth access token for Registry JWT",
 		Description: "Exchange a GitHub OAuth access token for a short-lived Registry JWT token",
 		Tags:        []string{"auth"},

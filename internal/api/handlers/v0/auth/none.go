@@ -28,7 +28,7 @@ func NewNoneHandler(cfg *config.Config) *NoneHandler {
 // RegisterNoneEndpoint registers the anonymous authentication endpoint
 // WARNING: This endpoint is intended for local development and automated tests only.
 // It should NOT be enabled in production environments as it bypasses normal authentication.
-func RegisterNoneEndpoint(api huma.API, cfg *config.Config) {
+func RegisterNoneEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 	if !cfg.EnableAnonymousAuth {
 		return
 	}
@@ -39,7 +39,7 @@ func RegisterNoneEndpoint(api huma.API, cfg *config.Config) {
 	huma.Register(api, huma.Operation{
 		OperationID: "get-anonymous-token",
 		Method:      http.MethodPost,
-		Path:        "/v0/auth/none",
+		Path:        pathPrefix + "/auth/none",
 		Summary:     "Get anonymous Registry JWT (Development/Testing Only)",
 		Description: "Get a short-lived Registry JWT token for publishing and editing servers in the io.modelcontextprotocol.anonymous/* namespace. This endpoint is intended for local development and automated testing only.",
 		Tags:        []string{"auth"},

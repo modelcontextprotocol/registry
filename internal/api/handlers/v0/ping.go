@@ -12,12 +12,12 @@ type PingBody struct {
 	Pong bool `json:"pong" example:"true" doc:"Ping response"`
 }
 
-// RegisterPingEndpoint registers the ping endpoint
-func RegisterPingEndpoint(api huma.API) {
+// RegisterPingEndpoint registers the ping endpoint with a custom path prefix
+func RegisterPingEndpoint(api huma.API, pathPrefix string) {
 	huma.Register(api, huma.Operation{
-		OperationID: "ping",
+		OperationID: "ping" + pathPrefix,
 		Method:      http.MethodGet,
-		Path:        "/v0/ping",
+		Path:        pathPrefix + "/ping",
 		Summary:     "Ping",
 		Description: "Simple ping endpoint",
 		Tags:        []string{"ping"},
