@@ -16,14 +16,6 @@ tags:
     description: Operations for discovering and retrieving MCP servers
   - name: publish
     description: Operations for publishing MCP servers to the registry
-  - name: auth
-    description: Authentication and authorization endpoints
-  - name: admin
-    description: Administrative operations (restricted access)
-  - name: health
-    description: Health check and system status endpoints
-  - name: ping
-    description: Simple connectivity test endpoint
 
 paths:
   /v0/servers:
