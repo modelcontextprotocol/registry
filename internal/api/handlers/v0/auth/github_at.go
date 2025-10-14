@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
@@ -48,7 +49,7 @@ func RegisterGitHubATEndpoint(api huma.API, pathPrefix string, cfg *config.Confi
 
 	// GitHub token exchange endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-github-token" + pathPrefix,
+		OperationID: "exchange-github-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
 		Path:        pathPrefix + "/auth/github-at",
 		Summary:     "Exchange GitHub OAuth access token for Registry JWT",

@@ -154,7 +154,7 @@ func RegisterOIDCEndpoints(api huma.API, pathPrefix string, cfg *config.Config) 
 
 	// Direct token exchange endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-oidc-token" + pathPrefix,
+		OperationID: "exchange-oidc-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
 		Path:        pathPrefix + "/auth/oidc",
 		Summary:     "Exchange OIDC ID token for Registry JWT",

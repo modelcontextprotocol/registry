@@ -24,7 +24,7 @@ func RegisterPublishEndpoint(api huma.API, pathPrefix string, registry service.R
 	jwtManager := auth.NewJWTManager(cfg)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "publish-server" + pathPrefix,
+		OperationID: "publish-server" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
 		Path:        pathPrefix + "/publish",
 		Summary:     "Publish MCP server",

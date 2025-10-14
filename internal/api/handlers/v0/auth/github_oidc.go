@@ -9,6 +9,7 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -231,7 +232,7 @@ func RegisterGitHubOIDCEndpoint(api huma.API, pathPrefix string, cfg *config.Con
 
 	// GitHub OIDC token exchange endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-github-oidc-token" + pathPrefix,
+		OperationID: "exchange-github-oidc-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
 		Path:        pathPrefix + "/auth/github-oidc",
 		Summary:     "Exchange GitHub OIDC token for Registry JWT",

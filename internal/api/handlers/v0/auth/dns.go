@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
@@ -55,7 +56,7 @@ func RegisterDNSEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 
 	// DNS authentication endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-dns-token" + pathPrefix,
+		OperationID: "exchange-dns-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
 		Path:        pathPrefix + "/auth/dns",
 		Summary:     "Exchange DNS signature for Registry JWT",

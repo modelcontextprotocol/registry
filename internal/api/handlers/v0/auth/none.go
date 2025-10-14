@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
@@ -37,7 +38,7 @@ func RegisterNoneEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 
 	// Anonymous token endpoint for development/testing only
 	huma.Register(api, huma.Operation{
-		OperationID: "get-anonymous-token",
+		OperationID: "get-anonymous-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
 		Path:        pathPrefix + "/auth/none",
 		Summary:     "Get anonymous Registry JWT (Development/Testing Only)",

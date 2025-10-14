@@ -3,6 +3,7 @@ package v0
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"go.opentelemetry.io/otel/attribute"
@@ -21,7 +22,7 @@ type HealthBody struct {
 // RegisterHealthEndpoint registers the health check endpoint with a custom path prefix
 func RegisterHealthEndpoint(api huma.API, pathPrefix string, cfg *config.Config, metrics *telemetry.Metrics) {
 	huma.Register(api, huma.Operation{
-		OperationID: "get-health" + pathPrefix,
+		OperationID: "get-health" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
 		Path:        pathPrefix + "/health",
 		Summary:     "Health check",

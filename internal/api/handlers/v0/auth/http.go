@@ -113,7 +113,7 @@ func RegisterHTTPEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 
 	// HTTP authentication endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-http-token" + pathPrefix,
+		OperationID: "exchange-http-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
 		Path:        pathPrefix + "/auth/http",
 		Summary:     "Exchange HTTP signature for Registry JWT",

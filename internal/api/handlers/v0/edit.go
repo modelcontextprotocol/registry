@@ -31,7 +31,7 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 
 	// Edit server endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "edit-server" + pathPrefix,
+		OperationID: "edit-server" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPut,
 		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Edit MCP server",

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -44,7 +45,7 @@ type ServerVersionsInput struct {
 func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.RegistryService) {
 	// List servers endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "list-servers" + pathPrefix,
+		OperationID: "list-servers" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
 		Path:        pathPrefix + "/servers",
 		Summary:     "List MCP servers",
@@ -106,7 +107,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 
 	// Get specific server version endpoint (supports "latest" as special version)
 	huma.Register(api, huma.Operation{
-		OperationID: "get-server-version" + pathPrefix,
+		OperationID: "get-server-version" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
 		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Get specific MCP server version",
@@ -147,7 +148,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 
 	// Get server versions endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "get-server-versions" + pathPrefix,
+		OperationID: "get-server-versions" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
 		Path:        pathPrefix + "/servers/{serverName}/versions",
 		Summary:     "Get all versions of an MCP server",

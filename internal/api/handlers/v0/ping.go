@@ -3,6 +3,7 @@ package v0
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -15,7 +16,7 @@ type PingBody struct {
 // RegisterPingEndpoint registers the ping endpoint with a custom path prefix
 func RegisterPingEndpoint(api huma.API, pathPrefix string) {
 	huma.Register(api, huma.Operation{
-		OperationID: "ping" + pathPrefix,
+		OperationID: "ping" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
 		Path:        pathPrefix + "/ping",
 		Summary:     "Ping",
