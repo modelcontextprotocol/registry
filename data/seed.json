@@ -155,5 +155,116 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+    "name": "io.github.neverinfamous/sqlite-mcp-server",
+    "description": "Enterprise-grade SQLite with AI-native JSON operations & intelligent workflow automation. 73 specialized tools for advanced analytics, JSON operations, text processing, vector search, geospatial operations, and intelligent workflow automation.",
+    "repository": {
+      "url": "https://github.com/neverinfamous/sqlite-mcp-server.git",
+      "source": "github"
+    },
+    "version": "2.6.3",
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "sqlite-mcp-server-enhanced",
+        "version": "2.6.3",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        }
+      },
+      {
+        "registryType": "oci",
+        "identifier": "docker.io/writenotenow/sqlite-mcp-server:latest",
+        "runtimeHint": "docker",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+    "name": "io.github.neverinfamous/postgres-mcp-server",
+    "description": "Enterprise-grade PostgreSQL MCP server with enhanced security, comprehensive testing, AI-native database operations, intelligent meta-awareness, and guided workflows. 63 specialized tools, 10 intelligent resources, and 10 guided prompts.",
+    "repository": {
+      "url": "https://github.com/neverinfamous/postgres-mcp.git",
+      "source": "github"
+    },
+    "version": "1.1.1",
+    "environmentVariables": [
+      {
+        "description": "PostgreSQL connection URI (e.g., postgresql://user:pass@localhost:5432/db)",
+        "isRequired": true,
+        "isSecret": true,
+        "name": "DATABASE_URI"
+      }
+    ],
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "postgres-mcp-enhanced",
+        "version": "1.1.1",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "PostgreSQL connection URI (e.g., postgresql://user:pass@localhost:5432/db)",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "DATABASE_URI"
+          }
+        ]
+      },
+      {
+        "registryType": "oci",
+        "identifier": "docker.io/writenotenow/postgres-mcp-enhanced:latest",
+        "runtimeHint": "docker",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "PostgreSQL connection URI (e.g., postgresql://user:pass@localhost:5432/db)",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "DATABASE_URI"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+    "name": "io.github.neverinfamous/memory-journal-mcp",
+    "description": "A production-ready developer journal with knowledge graphs, visual relationship mapping, and intelligent search. 15 MCP tools, 8 workflow prompts, triple search system (FTS5, date range, semantic), and relationship visualization with Mermaid diagrams.",
+    "repository": {
+      "url": "https://github.com/neverinfamous/memory-journal-mcp.git",
+      "source": "github"
+    },
+    "version": "1.1.3",
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "memory-journal-mcp",
+        "version": "1.1.3",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        }
+      },
+      {
+        "registryType": "oci",
+        "identifier": "docker.io/writenotenow/memory-journal-mcp:latest",
+        "runtimeHint": "docker",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
   }
 ]
