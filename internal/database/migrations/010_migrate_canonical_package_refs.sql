@@ -5,6 +5,8 @@
 -- - Removes package-type-specific forbidden fields (e.g., fileSha256 from non-MCPB packages)
 -- - Ensures all packages have required transport field
 
+BEGIN;
+
 -- Helper function to convert OCI package to canonical reference format
 CREATE OR REPLACE FUNCTION convert_oci_package_to_canonical(pkg jsonb)
 RETURNS jsonb
@@ -198,3 +200,5 @@ DROP FUNCTION IF EXISTS convert_mcpb_package_to_canonical(jsonb);
 DROP FUNCTION IF EXISTS remove_forbidden_fields(jsonb);
 DROP FUNCTION IF EXISTS ensure_transport_field(jsonb);
 DROP FUNCTION IF EXISTS convert_packages_array(jsonb);
+
+COMMIT;
