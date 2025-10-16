@@ -80,9 +80,9 @@ mcp-publisher login dns --domain=example.com --private-key=HEX_KEY [--registry=U
 ```
 - Verifies domain ownership via DNS TXT record
 - Grants access to `com.example.*` namespaces
-- Requires Ed25519 private key (64-character hex)
+- Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
 
-**Setup:**
+**Setup:** (for Ed25519)
 ```bash
 # Generate keypair
 openssl genpkey -algorithm Ed25519 -out key.pem
@@ -97,15 +97,30 @@ openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64
 openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n'
 ```
 
+**Setup:** (for ECDSA P-384)
+```bash
+# Generate keypair
+openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
+
+# Get public key for DNS record
+openssl ec -in key.pem -text -noout -conv_form compressed | grep -A4 "pub:" | tail -n +2 | tr -d ' :\n' | xxd -r -p | base64
+
+# Add DNS TXT record:
+# example.com. IN TXT "v=MCPv1; k=ecdsap384; p=PUBLIC_KEY"
+
+# Extract private key for login
+openssl ec -in <pem path> -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n'
+```
+
 #### HTTP Verification
 ```bash
 mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--registry=URL]
 ```
 - Verifies domain ownership via HTTPS endpoint  
 - Grants access to `com.example.*` namespaces
-- Requires Ed25519 private key (64-character hex)
+- Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
 
-**Setup:**
+**Setup:** (for Ed25519)
 ```bash
 # Generate keypair (same as DNS)
 openssl genpkey -algorithm Ed25519 -out key.pem
@@ -113,6 +128,16 @@ openssl genpkey -algorithm Ed25519 -out key.pem
 # Host public key at:
 # https://example.com/.well-known/mcp-registry-auth
 # Content: v=MCPv1; k=ed25519; p=PUBLIC_KEY
+```
+
+**Setup:** (for ECDSA P-384)
+```bash
+# Generate keypair (same as DNS)
+openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
+
+# Host public key at:
+# https://example.com/.well-known/mcp-registry-auth
+# Content: v=MCPv1; k=ecdsap384; p=PUBLIC_KEY
 ```
 
 #### Anonymous (Testing)

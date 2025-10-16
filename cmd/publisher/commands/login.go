@@ -17,6 +17,21 @@ const (
 	TokenFileName      = ".mcp_publisher_token" //nolint:gosec // Not a credential, just a filename
 )
 
+type CryptoAlgorithm auth.CryptoAlgorithm
+
+func (c *CryptoAlgorithm) String() string {
+	return string(*c)
+}
+
+func (c *CryptoAlgorithm) Set(v string) error {
+	switch v {
+	case string(auth.AlgorithmEd25519), string(auth.AlgorithmECDSAP384):
+		*c = CryptoAlgorithm(v)
+		return nil
+	}
+	return fmt.Errorf("invalid algorithm: %q (allowed: ed25519, ecdsap384)", v)
+}
+
 func LoginCommand(args []string) error {
 	if len(args) < 1 {
 		return errors.New("authentication method required\n\nUsage: mcp-publisher login <method>\n\nMethods:\n  github        Interactive GitHub authentication\n  github-oidc   GitHub Actions OIDC authentication\n  dns           DNS-based authentication (requires --domain and --private-key)\n  http          HTTP-based authentication (requires --domain and --private-key)\n  none          Anonymous authentication (for testing)")
@@ -28,13 +43,15 @@ func LoginCommand(args []string) error {
 	loginFlags := flag.NewFlagSet("login", flag.ExitOnError)
 	var domain string
 	var privateKey string
+	var cryptoAlgorithm = CryptoAlgorithm(auth.AlgorithmEd25519)
 	var registryURL string
 
 	loginFlags.StringVar(&registryURL, "registry", DefaultRegistryURL, "Registry URL")
 
 	if method == "dns" || method == "http" {
 		loginFlags.StringVar(&domain, "domain", "", "Domain name")
-		loginFlags.StringVar(&privateKey, "private-key", "", "Private key (64-char hex)")
+		loginFlags.StringVar(&privateKey, "private-key", "", "Private key (hex)")
+		loginFlags.Var(&cryptoAlgorithm, "algorithm", "Cryptographic algorithm (ed25519, ecdsap384)")
 	}
 
 	if err := loginFlags.Parse(args[1:]); err != nil {
@@ -52,12 +69,12 @@ func LoginCommand(args []string) error {
 		if domain == "" || privateKey == "" {
 			return errors.New("dns authentication requires --domain and --private-key")
 		}
-		authProvider = auth.NewDNSProvider(registryURL, domain, privateKey)
+		authProvider = auth.NewDNSProvider(registryURL, domain, privateKey, auth.CryptoAlgorithm(cryptoAlgorithm))
 	case "http":
 		if domain == "" || privateKey == "" {
 			return errors.New("http authentication requires --domain and --private-key")
 		}
-		authProvider = auth.NewHTTPProvider(registryURL, domain, privateKey)
+		authProvider = auth.NewHTTPProvider(registryURL, domain, privateKey, auth.CryptoAlgorithm(cryptoAlgorithm))
 	case "none":
 		authProvider = auth.NewNoneProvider(registryURL)
 	default:

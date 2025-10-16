@@ -3,7 +3,11 @@ package auth
 import (
 	"bytes"
 	"context"
+	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -12,12 +16,24 @@ import (
 	"time"
 )
 
+type CryptoAlgorithm string
+
+const (
+	AlgorithmEd25519 CryptoAlgorithm = "ed25519"
+
+	// ECDSA with NIST P-384 curve
+	// public key is in compressed format
+	// signature is in R || S format
+	AlgorithmECDSAP384 CryptoAlgorithm = "ecdsap384"
+)
+
 // CryptoProvider provides common functionality for DNS and HTTP authentication
 type CryptoProvider struct {
-	registryURL string
-	domain      string
-	hexSeed     string
-	authMethod  string
+	registryURL     string
+	domain          string
+	privateKey      string
+	cryptoAlgorithm CryptoAlgorithm
+	authMethod      string
 }
 
 // GetToken retrieves the registry JWT token using cryptographic authentication
@@ -26,36 +42,63 @@ func (c *CryptoProvider) GetToken(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("%s domain is required", c.authMethod)
 	}
 
-	if c.hexSeed == "" {
-		return "", fmt.Errorf("%s private key (hex seed) is required", c.authMethod)
+	if c.privateKey == "" {
+		return "", fmt.Errorf("%s private key (hex) is required", c.authMethod)
 	}
 
-	// Decode hex seed to private key
-	seedBytes, err := hex.DecodeString(c.hexSeed)
+	// Decode private key from hex
+	privateKeyBytes, err := hex.DecodeString(c.privateKey)
 	if err != nil {
-		return "", fmt.Errorf("invalid hex seed format: %w", err)
+		return "", fmt.Errorf("invalid hex private key format: %w", err)
 	}
-
-	if len(seedBytes) != ed25519.SeedSize {
-		return "", fmt.Errorf("invalid seed length: expected %d bytes, got %d", ed25519.SeedSize, len(seedBytes))
-	}
-
-	privateKey := ed25519.NewKeyFromSeed(seedBytes)
 
 	// Generate current timestamp
 	timestamp := time.Now().UTC().Format(time.RFC3339)
-
-	// Sign the timestamp
-	signature := ed25519.Sign(privateKey, []byte(timestamp))
-	signedTimestamp := hex.EncodeToString(signature)
+	signedTimestamp, err := c.signMessage(privateKeyBytes, []byte(timestamp))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign timestamp: %w", err)
+	}
+	signedTimestampHex := hex.EncodeToString(signedTimestamp)
 
 	// Exchange signature for registry token
-	registryToken, err := c.exchangeTokenForRegistry(ctx, c.domain, timestamp, signedTimestamp)
+	registryToken, err := c.exchangeTokenForRegistry(ctx, c.domain, timestamp, signedTimestampHex)
 	if err != nil {
 		return "", fmt.Errorf("failed to exchange %s signature: %w", c.authMethod, err)
 	}
 
 	return registryToken, nil
+}
+
+func (c *CryptoProvider) signMessage(privateKeyBytes []byte, message []byte) ([]byte, error) {
+	switch c.cryptoAlgorithm {
+	case AlgorithmEd25519:
+		if len(privateKeyBytes) != ed25519.SeedSize {
+			return nil, fmt.Errorf("invalid seed length: expected %d bytes, got %d", ed25519.SeedSize, len(privateKeyBytes))
+		}
+
+		privateKey := ed25519.NewKeyFromSeed(privateKeyBytes)
+		signature := ed25519.Sign(privateKey, message)
+		return signature, nil
+	case AlgorithmECDSAP384:
+		if len(privateKeyBytes) != 48 {
+			return nil, fmt.Errorf("invalid seed length for ECDSA P-384: expected 48 bytes, got %d", len(privateKeyBytes))
+		}
+
+		digest := sha512.Sum384(message)
+		curve := elliptic.P384()
+		privateKey, err := ecdsa.ParseRawPrivateKey(curve, privateKeyBytes)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse ECDSA private key: %w", err)
+		}
+		r, s, err := ecdsa.Sign(rand.Reader, privateKey, digest[:])
+		if err != nil {
+			return nil, fmt.Errorf("failed to sign message: %w", err)
+		}
+		signature := append(r.Bytes(), s.Bytes()...)
+		return signature, nil
+	default:
+		return nil, fmt.Errorf("unsupported crypto algorithm: %s", c.cryptoAlgorithm)
+	}
 }
 
 // NeedsLogin always returns false for cryptographic auth since no interactive login is needed

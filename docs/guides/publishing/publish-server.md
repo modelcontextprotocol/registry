@@ -468,6 +468,8 @@ echo "yourcompany.com. IN TXT \"v=MCPv1; k=ed25519; p=$(openssl pkey -in key.pem
 mcp-publisher login dns --domain yourcompany.com --private-key $(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')
 ```
 
+The ECDSA P-384 crypto algorithm is also supported, along with HTTP-based authenication. See the [publisher CLI commands reference](../../reference/cli/commands.md) for more details.
+
 ## Step 5: Publish Your Server
 
 With authentication complete, publish your server:
