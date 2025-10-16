@@ -32,7 +32,7 @@ test-unit: ## Run unit tests with coverage (requires PostgreSQL)
 	@echo "Waiting for PostgreSQL to be ready..."
 	@sleep 3
 	@echo "Running unit tests..."
-	go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/...
+	go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/... ./cmd/...
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 	@echo "Stopping PostgreSQL..."
