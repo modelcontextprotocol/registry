@@ -108,14 +108,14 @@ func (h *HTTPAuthHandler) SetFetcher(fetcher HTTPKeyFetcher) {
 }
 
 // RegisterHTTPEndpoint registers the HTTP authentication endpoint
-func RegisterHTTPEndpoint(api huma.API, cfg *config.Config) {
+func RegisterHTTPEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 	handler := NewHTTPAuthHandler(cfg)
 
 	// HTTP authentication endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-http-token",
+		OperationID: "exchange-http-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
-		Path:        "/v0/auth/http",
+		Path:        pathPrefix + "/auth/http",
 		Summary:     "Exchange HTTP signature for Registry JWT",
 		Description: "Authenticate using HTTP-hosted public key and signed timestamp",
 		Tags:        []string{"auth"},

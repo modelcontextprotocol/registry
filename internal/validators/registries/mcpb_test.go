@@ -119,3 +119,69 @@ func TestValidateMCPB(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateMCPB_RejectsExtraFields(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name         string
+		pkg          model.Package
+		errorMessage string
+	}{
+		{
+			name: "MCPB package with version field should be rejected",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypeMCPB,
+				Identifier:   "https://github.com/example/repo/releases/download/v1.0.0/server.mcpb",
+				Version:      "1.0.0",
+				FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+			},
+			errorMessage: "MCPB packages must not have 'version' field",
+		},
+		{
+			name: "MCPB package with registryBaseUrl should be rejected",
+			pkg: model.Package{
+				RegistryType:    model.RegistryTypeMCPB,
+				Identifier:      "https://github.com/example/repo/releases/download/v1.0.0/server.mcpb",
+				RegistryBaseURL: "https://github.com",
+				FileSHA256:      "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+			},
+			errorMessage: "MCPB packages must not have 'registryBaseUrl' field",
+		},
+		{
+			name: "MCPB package with both extra fields should fail on version first",
+			pkg: model.Package{
+				RegistryType:    model.RegistryTypeMCPB,
+				Identifier:      "https://github.com/example/repo/releases/download/v1.0.0/server.mcpb",
+				Version:         "1.0.0",
+				RegistryBaseURL: "https://github.com",
+				FileSHA256:      "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+			},
+			errorMessage: "MCPB packages must not have 'version' field",
+		},
+		{
+			name: "MCPB package with canonical format should pass extra field validation",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypeMCPB,
+				Identifier:   "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
+				FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+			},
+			errorMessage: "", // Should pass extra field check (will succeed as this is a real package)
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := registries.ValidateMCPB(ctx, tt.pkg, "com.example/test")
+
+			if tt.errorMessage != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errorMessage)
+			} else if err != nil {
+				// Should not fail with extra field error (may pass completely for real package)
+				assert.NotContains(t, err.Error(), "must not have 'version'")
+				assert.NotContains(t, err.Error(), "must not have 'registryBaseUrl'")
+			}
+		})
+	}
+}

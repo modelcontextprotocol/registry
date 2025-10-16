@@ -131,7 +131,7 @@ func TestPublishEndpoint(t *testing.T) {
 			name: "invalid token",
 			requestBody: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
-				Name:        "test-server",
+				Name:        "example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
 			},
@@ -252,8 +252,8 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - multiple slashes (three slashes)",
@@ -270,8 +270,8 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - consecutive slashes",
@@ -288,8 +288,8 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - URL-like path",
@@ -306,8 +306,8 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - many slashes",
@@ -324,8 +324,8 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - with packages and remotes",
@@ -363,8 +363,8 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 	}
 
@@ -381,7 +381,7 @@ func TestPublishEndpoint(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint with test config
-			v0.RegisterPublishEndpoint(api, registryService, testConfig)
+			v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
 
 			// Prepare request body
 			var requestBody []byte
@@ -447,25 +447,25 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 		{
 			name:           "invalid - trailing slash after valid name",
 			serverName:     "com.example/server/",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "Trailing slash creates multiple slashes",
 		},
 		{
 			name:           "invalid - leading and middle slash",
 			serverName:     "/com.example/server",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "Leading slash with middle slash",
 		},
 		{
 			name:           "invalid - file system style path",
 			serverName:     "usr/local/bin/server",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "File system style paths should be rejected",
 		},
 		{
 			name:           "invalid - version-like suffix",
 			serverName:     "com.example/server/v1.0.0",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "Version suffixes with slash should be rejected",
 		},
 	}
@@ -480,7 +480,7 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint
-			v0.RegisterPublishEndpoint(api, registryService, testConfig)
+			v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
 
 			// Create request body
 			requestBody := apiv0.ServerJSON{
@@ -517,9 +517,9 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 			assert.Equal(t, tc.expectedStatus, rr.Code,
 				"%s: expected status %d, got %d", tc.description, tc.expectedStatus, rr.Code)
 
-			if tc.expectedStatus == http.StatusBadRequest {
-				assert.Contains(t, rr.Body.String(), "server name cannot contain multiple slashes",
-					"%s: should contain specific error message", tc.description)
+			if tc.expectedStatus == http.StatusUnprocessableEntity {
+				assert.Contains(t, rr.Body.String(), "expected string to match pattern",
+					"%s: should contain pattern validation error", tc.description)
 			}
 		})
 	}

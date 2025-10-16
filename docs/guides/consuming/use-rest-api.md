@@ -4,13 +4,21 @@ Integration patterns and best practices for building applications that consume M
 
 ## Key details
 
-**Base URL**: `https://registry.modelcontextprotocol.io`  
+**Base URL**: `https://registry.modelcontextprotocol.io`
 
 **Authentication**: Not required for read-only access
 
-- **`GET /v0/servers`** - List all servers with pagination
-- **`GET /v0/servers/{serverName}/versions`** - List all versions of a server
-- **`GET /v0/servers/{serverName}/versions/{version}`** - Get specific version of server. Use the special version `latest` to get the latest version.
+**API Versions**:
+- `/v0/` - Development version with latest features (may receive breaking changes)
+- `/v0.1/` - Stable version (only backward-compatible changes)
+
+**Recommendation**: Use `/v0.1/` for production applications requiring API stability. Both versions currently have identical functionality.
+We may add breaking changes _only_ to `/v0/` in the future, and we reserve the possibility of deprecating `/v0/` entirely.
+
+**Core endpoints:**
+- **`GET /v0.1/servers`** - List all servers with pagination
+- **`GET /v0.1/servers/{serverName}/versions`** - List all versions of a server
+- **`GET /v0.1/servers/{serverName}/versions/{version}`** - Get specific version of server. Use the special version `latest` to get the latest version.
 
 Server names and version strings should be URL-encoded in paths.
 

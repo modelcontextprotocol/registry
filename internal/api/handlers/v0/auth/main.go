@@ -5,23 +5,23 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
 
-// RegisterAuthEndpoints registers all authentication endpoints
-func RegisterAuthEndpoints(api huma.API, cfg *config.Config) {
+// RegisterAuthEndpoints registers all authentication endpoints with a custom path prefix
+func RegisterAuthEndpoints(api huma.API, pathPrefix string, cfg *config.Config) {
 	// Register GitHub access token authentication endpoint
-	RegisterGitHubATEndpoint(api, cfg)
+	RegisterGitHubATEndpoint(api, pathPrefix, cfg)
 
 	// Register GitHub OIDC authentication endpoint
-	RegisterGitHubOIDCEndpoint(api, cfg)
+	RegisterGitHubOIDCEndpoint(api, pathPrefix, cfg)
 
 	// Register configurable OIDC authentication endpoints
-	RegisterOIDCEndpoints(api, cfg)
+	RegisterOIDCEndpoints(api, pathPrefix, cfg)
 
 	// Register DNS-based authentication endpoint
-	RegisterDNSEndpoint(api, cfg)
+	RegisterDNSEndpoint(api, pathPrefix, cfg)
 
 	// Register HTTP-based authentication endpoint
-	RegisterHTTPEndpoint(api, cfg)
+	RegisterHTTPEndpoint(api, pathPrefix, cfg)
 
 	// Register anonymous authentication endpoint
-	RegisterNoneEndpoint(api, cfg)
+	RegisterNoneEndpoint(api, pathPrefix, cfg)
 }

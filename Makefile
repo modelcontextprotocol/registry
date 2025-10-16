@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher generate-schema check-schema
 
 # Default target
 help: ## Show this help message
@@ -13,6 +13,17 @@ build: ## Build the registry application with version info
 publisher: ## Build the publisher tool with version info
 	@mkdir -p bin
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
+
+# Schema generation targets
+generate-schema: ## Generate server.schema.json from openapi.yaml
+	@mkdir -p bin
+	go build -o bin/extract-server-schema ./tools/extract-server-schema
+	@./bin/extract-server-schema
+
+check-schema: ## Check if server.schema.json is in sync with openapi.yaml
+	@mkdir -p bin
+	go build -o bin/extract-server-schema ./tools/extract-server-schema
+	@./bin/extract-server-schema -check
 
 # Test targets
 test-unit: ## Run unit tests with coverage (requires PostgreSQL)
@@ -45,6 +56,7 @@ test-all: test-unit test-integration ## Run all tests (unit and integration)
 # Validation targets
 validate-schemas: ## Validate JSON schemas
 	./tools/validate-schemas.sh
+	@$(MAKE) check-schema
 
 validate-examples: ## Validate examples against schemas
 	./tools/validate-examples.sh
@@ -64,6 +76,9 @@ check: dev-down lint validate test-all ## Run all checks (lint, validate, unit t
 
 # Development targets
 dev-compose: ## Start development environment with Docker Compose (builds image automatically)
+	GIT_COMMIT=$$(git rev-parse HEAD) \
+	GIT_COMMIT_SHORT=$$(git rev-parse --short HEAD) \
+	BUILD_TIME=$$(date -u +%Y-%m-%dT%H:%M:%SZ) \
 	docker compose up --build
 
 dev-down: ## Stop development environment

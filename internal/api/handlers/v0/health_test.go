@@ -56,7 +56,7 @@ func TestHealthEndpoint(t *testing.T) {
 			shutdownTelemetry, metrics, _ := telemetry.InitMetrics("test")
 
 			// Register the health endpoint
-			v0.RegisterHealthEndpoint(api, tc.config, metrics)
+			v0.RegisterHealthEndpoint(api, "/v0", tc.config, metrics)
 
 			// Create a test request
 			req := httptest.NewRequest(http.MethodGet, "/v0/health", nil)

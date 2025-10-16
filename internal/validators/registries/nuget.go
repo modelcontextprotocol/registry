@@ -28,6 +28,11 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 		return ErrMissingIdentifierForNuget
 	}
 
+	// Validate that MCPB-specific fields are not present
+	if pkg.FileSHA256 != "" {
+		return fmt.Errorf("NuGet packages must not have 'fileSha256' field - this is only for MCPB packages")
+	}
+
 	// Validate that the registry base URL matches NuGet exactly
 	if pkg.RegistryBaseURL != model.RegistryURLNuGet {
 		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",

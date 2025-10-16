@@ -9,6 +9,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/service"
@@ -42,11 +43,11 @@ type Server struct {
 }
 
 // NewServer creates a new HTTP server
-func NewServer(cfg *config.Config, registryService service.RegistryService, metrics *telemetry.Metrics) *Server {
+func NewServer(cfg *config.Config, registryService service.RegistryService, metrics *telemetry.Metrics, versionInfo *v0.VersionBody) *Server {
 	// Create HTTP mux and Huma API
 	mux := http.NewServeMux()
 
-	api := router.NewHumaAPI(cfg, registryService, mux, metrics)
+	api := router.NewHumaAPI(cfg, registryService, mux, metrics, versionInfo)
 
 	// Wrap the mux with trailing slash middleware
 	handler := TrailingSlashMiddleware(mux)

@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
@@ -102,9 +103,10 @@ func handle404(w http.ResponseWriter, r *http.Request) {
 	detail := "Endpoint not found. See /docs for the API documentation."
 
 	// Provide suggestions for common API endpoint mistakes
-	if !strings.HasPrefix(path, "/v0/") {
+	if !strings.HasPrefix(path, "/v0/") && !strings.HasPrefix(path, "/v0.1/") {
 		detail = fmt.Sprintf(
-			"Endpoint not found. Did you mean '%s'? See /docs for the API documentation.",
+			"Endpoint not found. Did you mean '%s' or '%s'? See /docs for the API documentation.",
+			"/v0.1"+path,
 			"/v0"+path,
 		)
 	}
@@ -128,7 +130,7 @@ func handle404(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewHumaAPI creates a new Huma API with all routes registered
-func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.ServeMux, metrics *telemetry.Metrics) huma.API {
+func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.ServeMux, metrics *telemetry.Metrics, versionInfo *v0.VersionBody) huma.API {
 	// Create Huma API configuration
 	humaConfig := huma.DefaultConfig("Official MCP Registry", "1.0.0")
 	humaConfig.Info.Description = "A community driven registry service for Model Context Protocol (MCP) servers.\n\n[GitHub repository](https://github.com/modelcontextprotocol/registry) | [Documentation](https://github.com/modelcontextprotocol/registry/tree/main/docs)"
@@ -138,13 +140,46 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 	// Create a new API using humago adapter for standard library
 	api := humago.New(mux, humaConfig)
 
+	// Add OpenAPI tag metadata with descriptions
+	api.OpenAPI().Tags = []*huma.Tag{
+		{
+			Name:        "servers",
+			Description: "Operations for discovering and retrieving MCP servers",
+		},
+		{
+			Name:        "publish",
+			Description: "Operations for publishing MCP servers to the registry",
+		},
+		{
+			Name:        "auth",
+			Description: "Authentication operations for obtaining tokens to publish servers",
+		},
+		{
+			Name:        "admin",
+			Description: "Administrative operations for managing servers (requires elevated permissions)",
+		},
+		{
+			Name:        "health",
+			Description: "Health check endpoint for monitoring service availability",
+		},
+		{
+			Name:        "ping",
+			Description: "Simple ping endpoint for testing connectivity",
+		},
+		{
+			Name:        "version",
+			Description: "Version information endpoint for retrieving build and version details",
+		},
+	}
+
 	// Add metrics middleware with options
 	api.UseMiddleware(MetricTelemetryMiddleware(metrics,
 		WithSkipPaths("/health", "/metrics", "/ping", "/docs"),
 	))
 
 	// Register routes for all API versions
-	RegisterV0Routes(api, cfg, registry, metrics)
+	RegisterV0Routes(api, cfg, registry, metrics, versionInfo)
+	RegisterV0_1Routes(api, cfg, registry, metrics, versionInfo)
 
 	// Add /metrics for Prometheus metrics using promhttp
 	mux.Handle("/metrics", metrics.PrometheusHandler())

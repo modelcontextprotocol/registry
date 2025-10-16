@@ -1,0 +1,435 @@
+name: Sync Production DB to Staging (from backups)
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC (during low-traffic hours)
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual triggering
+
+permissions:
+  contents: read
+
+jobs:
+  sync-database:
+    name: Sync Prod DB to Staging from k8up Backups
+    runs-on: ubuntu-latest
+    environment: staging
+    concurrency:
+      group: sync-staging-database
+      cancel-in-progress: false
+    steps:
+      - name: Authenticate to Google Cloud (Production)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          credentials_json: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          project_id: mcp-registry-prod
+          install_components: gke-gcloud-auth-plugin
+
+      - name: Get backup credentials from prod cluster
+        id: backup-creds
+        run: |
+          gcloud container clusters get-credentials mcp-registry-prod \
+            --zone=us-central1-b \
+            --project=mcp-registry-prod
+
+          # Store in outputs (GitHub Actions encrypts these automatically)
+          kubectl get secret k8up-backup-credentials -n default -o json | jq -r '
+            "access_key=" + (.data.AWS_ACCESS_KEY_ID | @base64d),
+            "secret_key=" + (.data.AWS_SECRET_ACCESS_KEY | @base64d)
+          ' >> $GITHUB_OUTPUT
+
+      - name: Remove all production access (SAFETY MEASURE)
+        run: |
+          # Remove production cluster from kubeconfig
+          kubectl config delete-context gke_mcp-registry-prod_us-central1-b_mcp-registry-prod 2>/dev/null || true
+
+          # Revoke gcloud credentials
+          gcloud auth revoke --all 2>/dev/null || true
+
+          # Clear gcloud configuration
+          gcloud config unset project 2>/dev/null || true
+          gcloud config unset account 2>/dev/null || true
+
+          # Verify no contexts remain
+          CONTEXT_COUNT=$(kubectl config get-contexts -o name 2>/dev/null | wc -l)
+          if [ "$CONTEXT_COUNT" -gt 0 ]; then
+            echo "❌ ERROR: $CONTEXT_COUNT context(s) still exist after cleanup!"
+            kubectl config get-contexts
+            exit 1
+          fi
+
+      - name: Switch to staging cluster
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          credentials_json: ${{ secrets.GCP_STAGING_SERVICE_ACCOUNT_KEY }}
+
+      - name: Configure staging cluster access
+        run: |
+          gcloud config set project mcp-registry-staging
+          gcloud container clusters get-credentials mcp-registry-staging \
+            --zone=us-central1-b \
+            --project=mcp-registry-staging
+
+      - name: Create secret for prod backup bucket access
+        run: |
+          # Create/update secret in staging with access to prod backups
+          kubectl create secret generic prod-to-staging-sync-credentials \
+            --from-literal=AWS_ACCESS_KEY_ID="${{ steps.backup-creds.outputs.access_key }}" \
+            --from-literal=AWS_SECRET_ACCESS_KEY="${{ steps.backup-creds.outputs.secret_key }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create restore PVC
+        run: |
+          kubectl apply -f - <<EOF
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            name: restore-data-pvc
+            namespace: default
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 50Gi
+          EOF
+
+      - name: Trigger k8up restore from prod backups
+        id: restore
+        run: |
+          RESTORE_NAME="restore-from-prod-$(date +%Y%m%d-%H%M%S)"
+          echo "restore_name=$RESTORE_NAME" >> $GITHUB_OUTPUT
+
+          # Create a k8up Restore resource to restore from prod backups
+          kubectl apply -f - <<EOF
+          apiVersion: k8up.io/v1
+          kind: Restore
+          metadata:
+            name: $RESTORE_NAME
+            namespace: default
+          spec:
+            snapshot: latest
+            restoreMethod:
+              folder:
+                claimName: restore-data-pvc
+            backend:
+              repoPasswordSecretRef:
+                name: k8up-repo-password
+                key: password
+              s3:
+                bucket: mcp-registry-prod-backups
+                endpoint: https://storage.googleapis.com
+                accessKeyIDSecretRef:
+                  name: prod-to-staging-sync-credentials
+                  key: AWS_ACCESS_KEY_ID
+                secretAccessKeySecretRef:
+                  name: prod-to-staging-sync-credentials
+                  key: AWS_SECRET_ACCESS_KEY
+          EOF
+
+      - name: Wait for k8up restore to complete
+        run: |
+          RESTORE_NAME="${{ steps.restore.outputs.restore_name }}"
+
+          echo "Waiting for restore job to start..."
+          sleep 15
+
+          # Find the job created by k8up for this restore
+          # k8up creates jobs with name pattern "restore-<restore-name>"
+          # Since our restore is named "restore-from-prod-*", the job will be "restore-restore-from-prod-*"
+          for i in {1..60}; do
+            JOB_NAME=$(kubectl get jobs -n default --no-headers 2>/dev/null | grep "^restore-$RESTORE_NAME" | awk '{print $1}' | head -1)
+            if [ -n "$JOB_NAME" ]; then
+              echo "Found restore job: $JOB_NAME"
+              break
+            fi
+            echo "Waiting for job to be created... ($i/60)"
+            sleep 2
+          done
+
+          if [ -z "$JOB_NAME" ]; then
+            echo "ERROR: Restore job not found after 120 seconds"
+            echo "Checking restore resource status:"
+            kubectl get restore $RESTORE_NAME -n default
+            kubectl describe restore $RESTORE_NAME -n default
+
+            echo "Checking for any restore jobs:"
+            kubectl get jobs -n default | grep restore || echo "No restore jobs found"
+
+            echo "Checking k8up operator logs:"
+            kubectl logs deployment/k8up -n default --tail=50 | grep -i restore || echo "No restore logs found"
+            exit 1
+          fi
+
+          # Wait for the restore job to complete (max 15 minutes)
+          echo "Waiting for restore job to complete..."
+          kubectl wait --for=condition=complete \
+            job/$JOB_NAME \
+            --timeout=900s -n default || {
+              echo "Restore job failed or timed out"
+              echo "Job status:"
+              kubectl get job/$JOB_NAME -n default
+              echo "Job details:"
+              kubectl describe job/$JOB_NAME -n default
+              echo "Job logs (if available):"
+              kubectl logs job/$JOB_NAME -n default --tail=100 || echo "No logs available"
+
+              # Check if it's a credential issue
+              echo "Checking if credentials exist:"
+              kubectl get secret prod-to-staging-sync-credentials -n default || echo "Credentials secret missing!"
+              exit 1
+            }
+
+      - name: Find staging PostgreSQL PVC
+        id: pgdata-pvc
+        run: |
+          # Find the PVC used by the PostgreSQL cluster
+          PVC_NAME=$(kubectl get pvc -n default -l cnpg.io/cluster=registry-pg -o jsonpath='{.items[0].metadata.name}')
+
+          if [ -z "$PVC_NAME" ]; then
+            echo "ERROR: Could not find PostgreSQL PVC"
+            kubectl get pvc -n default -l cnpg.io/cluster=registry-pg
+            exit 1
+          fi
+
+          echo "pvc_name=$PVC_NAME" >> $GITHUB_OUTPUT
+
+      - name: Scale down staging PostgreSQL
+        run: |
+          echo "Scaling down PostgreSQL cluster..."
+          kubectl patch cluster registry-pg -n default \
+            --type merge \
+            --patch '{"spec":{"instances":0}}'
+
+          # Wait for pods to terminate
+          echo "Waiting for pods to terminate..."
+          kubectl wait --for=delete pod -l cnpg.io/cluster=registry-pg -n default --timeout=300s || true
+
+      - name: Verify we are in staging cluster (SAFETY CHECK)
+        run: |
+          # Get current cluster context
+          CURRENT_CONTEXT=$(kubectl config current-context)
+          CURRENT_PROJECT=$(gcloud config get-value project)
+
+          echo "Current kubectl context: $CURRENT_CONTEXT"
+          echo "Current GCP project: $CURRENT_PROJECT"
+
+          # Verify we're in staging
+          if ! echo "$CURRENT_CONTEXT" | grep -qi "staging"; then
+            echo "❌ SAFETY CHECK FAILED: Not in staging cluster"
+            echo "Context: $CURRENT_CONTEXT"
+            echo "Expected: staging cluster"
+            exit 1
+          fi
+
+          if [ "$CURRENT_PROJECT" != "mcp-registry-staging" ]; then
+            echo "❌ SAFETY CHECK FAILED: Not in staging project"
+            echo "Project: $CURRENT_PROJECT"
+            echo "Expected: mcp-registry-staging"
+            exit 1
+          fi
+
+      - name: Replace staging database with restored backup
+        id: copy-job
+        run: |
+          JOB_NAME="copy-pgdata-$(date +%Y%m%d-%H%M%S)"
+          echo "job_name=$JOB_NAME" >> $GITHUB_OUTPUT
+
+          # Create a job to copy the restored backup data to the staging PVC
+          kubectl apply -f - <<EOF
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $JOB_NAME
+            namespace: default
+          spec:
+            ttlSecondsAfterFinished: 600
+            template:
+              spec:
+                restartPolicy: Never
+                containers:
+                - name: copy-data
+                  image: busybox:latest
+                  command:
+                    - /bin/sh
+                    - -c
+                    - |
+                      set -e
+                      echo "Finding PostgreSQL data in backup..."
+                      echo "Restore structure:"
+                      find /restore -maxdepth 3 -type d 2>/dev/null | head -20
+
+                      # Try different possible paths for pgdata
+                      PGDATA_SOURCE=""
+                      for path in \$(find /restore -type d -name "pgdata" 2>/dev/null); do
+                        if [ -f "\$path/PG_VERSION" ]; then
+                          PGDATA_SOURCE="\$path"
+                          break
+                        fi
+                      done
+
+                      if [ -z "\$PGDATA_SOURCE" ]; then
+                        echo "ERROR: Could not find valid pgdata directory with PG_VERSION"
+                        echo "Searched paths:"
+                        find /restore -type d -name "pgdata" 2>/dev/null
+                        exit 1
+                      fi
+
+                      echo "Found pgdata at: \$PGDATA_SOURCE"
+                      echo "Contents:"
+                      ls -lah \$PGDATA_SOURCE/ | head -10
+
+                      echo "Backing up existing staging data..."
+                      mkdir -p /pgdata-backup
+                      if [ "\$(ls -A /pgdata)" ]; then
+                        cp -a /pgdata/. /pgdata-backup/ || echo "Warning: Could not backup existing data"
+                      fi
+
+                      echo "Clearing existing data..."
+                      rm -rf /pgdata/*
+
+                      echo "Copying backup data to staging PVC..."
+                      cp -a \$PGDATA_SOURCE/. /pgdata/
+
+                      echo "Setting correct permissions..."
+                      chmod 700 /pgdata
+
+                      ls -lah /pgdata/ | head -20
+                      echo "PostgreSQL version: \$(cat /pgdata/PG_VERSION)"
+                  volumeMounts:
+                  - name: restore-data
+                    mountPath: /restore
+                  - name: staging-pgdata
+                    mountPath: /pgdata
+                volumes:
+                - name: restore-data
+                  persistentVolumeClaim:
+                    claimName: restore-data-pvc
+                - name: staging-pgdata
+                  persistentVolumeClaim:
+                    claimName: ${{ steps.pgdata-pvc.outputs.pvc_name }}
+          EOF
+
+      - name: Wait for data copy to complete
+        run: |
+          JOB_NAME="${{ steps.copy-job.outputs.job_name }}"
+
+          # Wait for copy to complete
+          kubectl wait --for=condition=complete job/$JOB_NAME --timeout=600s -n default || {
+            echo "Data copy job failed"
+            kubectl describe job/$JOB_NAME -n default
+            kubectl logs job/$JOB_NAME -n default --tail=100
+            exit 1
+          }
+
+      - name: Scale up staging PostgreSQL
+        run: |
+          echo "Scaling up PostgreSQL cluster..."
+          kubectl patch cluster registry-pg -n default \
+            --type merge \
+            --patch '{"spec":{"instances":1}}'
+
+          # Wait for PostgreSQL pod to be created
+          echo "Waiting for PostgreSQL pod to be created..."
+          for i in {1..60}; do
+            POD_COUNT=$(kubectl get pods -l cnpg.io/cluster=registry-pg -n default --no-headers 2>/dev/null | wc -l)
+            if [ "$POD_COUNT" -gt 0 ]; then
+              echo "Pod created"
+              break
+            fi
+            echo "Waiting... ($i/60)"
+            sleep 2
+          done
+
+          # Wait for PostgreSQL to be ready
+          echo "Waiting for PostgreSQL to be ready..."
+          kubectl wait --for=condition=ready pod -l cnpg.io/cluster=registry-pg -n default --timeout=300s
+
+      - name: Verify staging DB is functional
+        run: |
+          # Create a verification pod
+          kubectl run pg-verify-$(date +%s) \
+            --image=postgres:15 \
+            --rm -i --restart=Never \
+            --env="PGPASSWORD=$(kubectl get secret registry-pg-superuser -n default -o jsonpath='{.data.password}' | base64 -d)" \
+            -- bash -c '
+              echo "Waiting for database to accept connections..."
+              for i in {1..30}; do
+                if pg_isready -h registry-pg-rw -U postgres 2>/dev/null; then
+                  break
+                fi
+                echo "Waiting... ($i/30)"
+                sleep 2
+              done
+
+              echo "Querying database..."
+              TABLE_COUNT=$(psql -h registry-pg-rw -U postgres -d app -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '\''public'\'';" 2>&1)
+
+              if [ $? -ne 0 ]; then
+                echo "ERROR: Could not query database"
+                echo "$TABLE_COUNT"
+                exit 1
+              fi
+
+              if [ "$TABLE_COUNT" -lt 1 ]; then
+                echo "ERROR: Staging DB has no tables!"
+                exit 1
+              fi
+
+              echo "Staging DB has $TABLE_COUNT tables"
+              echo "Top 10 tables by row count:"
+              psql -h registry-pg-rw -U postgres -d app \
+                -c "SELECT schemaname, tablename, n_live_tup FROM pg_stat_user_tables ORDER BY n_live_tup DESC LIMIT 10;" || true
+            '
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Wait for any restore jobs to finish before cleanup (max 5 minutes for large database restores)
+          echo "Checking for running restore jobs..."
+          RESTORE_NAME="${{ steps.restore.outputs.restore_name }}"
+
+          for i in {1..60}; do
+            # Check specifically for our restore job in Running or Pending state
+            RUNNING_JOBS=$(kubectl get jobs -n default --no-headers 2>/dev/null | grep "^restore-${RESTORE_NAME}" | grep -E "Running|Pending" | wc -l)
+            if [ "$RUNNING_JOBS" -eq 0 ]; then
+              echo "No running restore jobs found"
+              break
+            fi
+            echo "Waiting for $RUNNING_JOBS restore job(s) to finish... ($i/60)"
+            sleep 5
+          done
+
+          # Clean up jobs first
+          if [ -n "${{ steps.copy-job.outputs.job_name }}" ]; then
+            kubectl delete job ${{ steps.copy-job.outputs.job_name }} -n default || true
+          fi
+
+          # Clean up the restore job if it exists (with proper error handling)
+          if [ -n "$RESTORE_NAME" ]; then
+            if kubectl get job "restore-$RESTORE_NAME" -n default >/dev/null 2>&1; then
+              echo "Deleting restore job: restore-$RESTORE_NAME"
+              kubectl delete job "restore-$RESTORE_NAME" -n default || echo "Failed to delete job, may have already been cleaned up"
+            else
+              echo "Restore job restore-$RESTORE_NAME not found, skipping deletion"
+            fi
+          fi
+
+          # Remove restore PVC (will wait for jobs to finish)
+          kubectl delete pvc restore-data-pvc -n default || true
+
+          # Remove prod backup credentials (for security)
+          kubectl delete secret prod-to-staging-sync-credentials -n default || true
+
+          # Clean up old restore resources (keep last 3)
+          kubectl get restore -n default --sort-by=.metadata.creationTimestamp -o name | head -n -3 | xargs -r kubectl delete || true
+
+          # Clean up old restore jobs (keep last 3)
+          kubectl get jobs -n default --sort-by=.metadata.creationTimestamp -o name | grep '^job.batch/restore-' | head -n -3 | xargs -r kubectl delete -n default || true
+
+          # Clean up old copy jobs (keep last 3)
+          kubectl get jobs -n default --sort-by=.metadata.creationTimestamp -o name | grep 'copy-pgdata-' | head -n -3 | xargs -r kubectl delete -n default || true

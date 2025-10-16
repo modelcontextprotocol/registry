@@ -44,7 +44,7 @@ func TestListServersEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -130,7 +130,7 @@ func TestGetLatestServerVersionEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -210,7 +210,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -321,7 +321,7 @@ func TestGetAllVersionsEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -420,7 +420,7 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	t.Run("URL encoding edge cases", func(t *testing.T) {
 		tests := []struct {

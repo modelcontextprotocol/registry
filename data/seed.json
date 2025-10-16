@@ -12,7 +12,9 @@
       {
         "src": "https://airtable.com/images/favicon/favicon-32x32.png",
         "mimeType": "image/png",
-        "sizes": ["32x32"]
+        "sizes": [
+          "32x32"
+        ]
       }
     ],
     "packages": [
@@ -35,8 +37,7 @@
       },
       {
         "registryType": "oci",
-        "identifier": "domdomegg/airtable-mcp-server",
-        "version": "1.7.2",
+        "identifier": "docker.io/domdomegg/airtable-mcp-server:1.7.2",
         "runtimeHint": "docker",
         "transport": {
           "type": "stdio"
@@ -53,7 +54,6 @@
       {
         "registryType": "mcpb",
         "identifier": "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
-        "version": "1.7.2",
         "fileSha256": "8220de07a08ebe908f04da139ea03dbfe29758141347e945da60535fb7bcca20",
         "transport": {
           "type": "stdio"
@@ -90,8 +90,7 @@
       },
       {
         "registryType": "oci",
-        "identifier": "domdomegg/airtable-mcp-server",
-        "version": "1.7.3",
+        "identifier": "docker.io/domdomegg/airtable-mcp-server:1.7.3",
         "runtimeHint": "docker",
         "transport": {
           "type": "stdio"
@@ -108,7 +107,6 @@
       {
         "registryType": "mcpb",
         "identifier": "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.3/airtable-mcp-server.mcpb",
-        "version": "1.7.3",
         "fileSha256": "0f28a9129cfebd262dfb77854c872355d21401bb3e056575b3027081f5d570ca",
         "transport": {
           "type": "stdio"
