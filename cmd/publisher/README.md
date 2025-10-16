@@ -32,6 +32,12 @@ make dev-compose  # Start local registry
 - **`http`** - Domain verification via HTTPS endpoints
 - **`none`** - No auth (testing only)
 
+### Signing Providers
+Optional, for `dns` and `http` to sign out of process without direct access to the private key.
+
+- **`google-kms`** - Google KMS signing 
+- **`azure-key-vault`** - Azure Key Vault signing
+
 ## Key Files
 
 - **`main.go`** - CLI setup and command routing

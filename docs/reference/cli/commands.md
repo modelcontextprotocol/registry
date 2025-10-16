@@ -81,6 +81,7 @@ mcp-publisher login dns --domain=example.com --private-key=HEX_KEY [--registry=U
 - Verifies domain ownership via DNS TXT record
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
+  - The private key can stored in a cloud signing provider like Google KMS or Azure Key Vault.
 
 **Setup:** (for Ed25519, recommended)
 ```bash
@@ -112,6 +113,62 @@ openssl ec -in key.pem -text -noout -conv_form compressed | grep -A4 "pub:" | ta
 openssl ec -in <pem path> -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n'
 ```
 
+**Setup:** (for Google KMS signing)
+
+This requires the [gcloud CLI](https://cloud.google.com/sdk/docs/install).
+
+```bash
+# log in and set default project
+gcloud auth login
+gcloud config set project myproject
+
+# Create a keyring in your project
+gcloud kms keyrings create mykeyring --location global
+
+# Create an Ed25519 signing key
+gcloud kms keys create mykey --default-algorithm=ec-sign-ed25519 --purpose=asymmetric-signing --keyring=mykeyring --location=global
+
+# Enable Application Default Credentials (ADC) so the publisher tool can sign
+gcloud auth application-default login
+
+# Attempt login to show the public key
+mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykering/cryptoKeys/mykey/cryptoKeyVersions/1
+
+# Copy the "Expected proof record" and add the TXT record
+# example.com. IN TXT "v=MCPv1; k=ed25519; p=PUBLIC_KEY"
+
+# Re-run the login command
+mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykering/cryptoKeys/mykey/cryptoKeyVersions/1
+```
+
+**Setup:** (for Azure Key Vault signing)
+
+This requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
+
+```bash
+# log in and set default subscrption
+az login
+az account set --subscription "My Subscription (name or ID)"
+
+# Create a resource group
+az group create --location westus --resource-group MyResourceGroup
+
+# Create a Key Vault
+az keyvault create --name MyKeyVault --location westus --resource-group MyResourceGroup
+
+# Create an ECDCA P-384 signing key
+az keyvault key create --name MyKey --vault-name MyKeyVault --curve P-384
+
+# Attempt login to show the public key
+mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault --key MyKey
+
+# Copy the "Expected proof record" and add the TXT record
+# example.com. IN TXT "v=MCPv1; k=ecdsa0384; p=PUBLIC_KEY"
+
+# Re-run the login command
+mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault --key MyKey
+```
+
 #### HTTP Verification
 ```bash
 mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--registry=URL]
@@ -119,6 +176,7 @@ mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--registry=
 - Verifies domain ownership via HTTPS endpoint  
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
+  - The private key can stored in a cloud signing provider like Google KMS or Azure Key Vault.
 
 **Setup:** (for Ed25519, recommended)
 ```bash
@@ -139,6 +197,8 @@ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
 # https://example.com/.well-known/mcp-registry-auth
 # Content: v=MCPv1; k=ecdsap384; p=PUBLIC_KEY
 ```
+
+Cloud signing is also supported for HTTP authentication, similar to the DNS examples above. Just swap out the `dns` positional argument for `http`.
 
 #### Anonymous (Testing)
 ```bash

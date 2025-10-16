@@ -5,14 +5,13 @@ type HTTPProvider struct {
 }
 
 // NewHTTPProvider creates a new HTTP-based auth provider
-func NewHTTPProvider(registryURL, domain, privateKey string, cryptoAlgorithm CryptoAlgorithm) Provider {
+func NewHTTPProvider(registryURL, domain string, signer *Signer) Provider {
 	return &HTTPProvider{
 		CryptoProvider: &CryptoProvider{
-			registryURL:     registryURL,
-			domain:          domain,
-			privateKey:      privateKey,
-			cryptoAlgorithm: cryptoAlgorithm,
-			authMethod:      "http",
+			registryURL: registryURL,
+			domain:      domain,
+			signer:      *signer,
+			authMethod:  "http",
 		},
 	}
 }
