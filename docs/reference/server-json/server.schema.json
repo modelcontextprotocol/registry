@@ -5,15 +5,46 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "Argument": {
-      "anyOf": [
+      "allOf": [
         {
-          "$ref": "#/definitions/PositionalArgument"
+          "if": {
+            "properties": {
+              "type": {
+                "const": "positional"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/definitions/PositionalArgument"
+          }
         },
         {
-          "$ref": "#/definitions/NamedArgument"
+          "if": {
+            "properties": {
+              "type": {
+                "const": "named"
+              }
+            }
+          },
+          "then": {
+            "$ref": "#/definitions/NamedArgument"
+          }
         }
       ],
-      "description": "Warning: Arguments construct command-line parameters that may contain user-provided input. This creates potential command injection risks if clients execute commands in a shell environment. For example, a malicious argument value like ';rm -rf ~/Development' could execute dangerous commands. Clients should prefer non-shell execution methods (e.g., posix_spawn) when possible to eliminate injection risks entirely. Where not possible, clients should obtain consent from users or agents to run the resolved command before execution."
+      "description": "Warning: Arguments construct command-line parameters that may contain user-provided input. This creates potential command injection risks if clients execute commands in a shell environment. For example, a malicious argument value like ';rm -rf ~/Development' could execute dangerous commands. Clients should prefer non-shell execution methods (e.g., posix_spawn) when possible to eliminate injection risks entirely. Where not possible, clients should obtain consent from users or agents to run the resolved command before execution.",
+      "properties": {
+        "type": {
+          "enum": [
+            "positional",
+            "named"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
     },
     "Icon": {
       "description": "An optionally-sized icon that can be displayed in a user interface.",
@@ -262,18 +293,58 @@
           "type": "string"
         },
         "transport": {
-          "anyOf": [
+          "allOf": [
             {
-              "$ref": "#/definitions/StdioTransport"
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "stdio"
+                  }
+                }
+              },
+              "then": {
+                "$ref": "#/definitions/StdioTransport"
+              }
             },
             {
-              "$ref": "#/definitions/StreamableHttpTransport"
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "streamable-http"
+                  }
+                }
+              },
+              "then": {
+                "$ref": "#/definitions/StreamableHttpTransport"
+              }
             },
             {
-              "$ref": "#/definitions/SseTransport"
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "sse"
+                  }
+                }
+              },
+              "then": {
+                "$ref": "#/definitions/SseTransport"
+              }
             }
           ],
-          "description": "Transport protocol configuration for the package"
+          "properties": {
+            "type": {
+              "enum": [
+                "stdio",
+                "streamable-http",
+                "sse"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
         },
         "version": {
           "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '\u003e=1.2.3', '1.x', '1.*').",
@@ -427,14 +498,45 @@
         },
         "remotes": {
           "items": {
-            "anyOf": [
+            "allOf": [
               {
-                "$ref": "#/definitions/StreamableHttpTransport"
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "streamable-http"
+                    }
+                  }
+                },
+                "then": {
+                  "$ref": "#/definitions/StreamableHttpTransport"
+                }
               },
               {
-                "$ref": "#/definitions/SseTransport"
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "sse"
+                    }
+                  }
+                },
+                "then": {
+                  "$ref": "#/definitions/SseTransport"
+                }
               }
-            ]
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "streamable-http",
+                  "sse"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "type": "object"
           },
           "type": "array"
         },

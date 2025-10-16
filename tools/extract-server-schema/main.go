@@ -99,7 +99,10 @@ func main() {
 		"definitions": definitions,
 	}
 
-	// Replace all #/components/schemas/ references with #/definitions/
+	// Convert OpenAPI discriminators to JSON Schema if/then/else patterns first
+	jsonSchema = convertDiscriminators(jsonSchema).(map[string]interface{})
+
+	// Then replace all #/components/schemas/ references with #/definitions/
 	jsonSchema = replaceComponentRefs(jsonSchema).(map[string]interface{})
 
 	// Convert to JSON
@@ -190,4 +193,109 @@ func replaceComponentRefs(obj interface{}) interface{} {
 	default:
 		return obj
 	}
+}
+
+// convertDiscriminators converts OpenAPI discriminators to JSON Schema if/then/else patterns
+func convertDiscriminators(obj interface{}) interface{} {
+	switch v := obj.(type) {
+	case map[string]interface{}:
+		// Check if this object has a discriminator with oneOf
+		if discriminator, hasDiscriminator := v["discriminator"].(map[string]interface{}); hasDiscriminator {
+			if oneOf, hasOneOf := v["oneOf"].([]interface{}); hasOneOf {
+				// Extract discriminator property name and mapping
+				propertyName, _ := discriminator["propertyName"].(string)
+				mapping, _ := discriminator["mapping"].(map[string]interface{})
+
+				if propertyName != "" && mapping != nil && len(oneOf) > 0 {
+					// Get description if present
+					description, _ := v["description"].(string)
+
+					// Build the allOf with if/then blocks for discriminated union
+					result := buildDiscriminatedUnion(propertyName, mapping, oneOf, description)
+
+					// Recursively convert discriminators in the result
+					return convertDiscriminators(result)
+				}
+			}
+		}
+
+		// Recursively convert discriminators in nested objects
+		result := make(map[string]interface{})
+		for key, value := range v {
+			result[key] = convertDiscriminators(value)
+		}
+		return result
+
+	case []interface{}:
+		result := make([]interface{}, len(v))
+		for i, item := range v {
+			result[i] = convertDiscriminators(item)
+		}
+		return result
+
+	default:
+		return obj
+	}
+}
+
+// buildDiscriminatedUnion builds an allOf structure with separate if/then blocks for each discriminator value
+func buildDiscriminatedUnion(propertyName string, mapping map[string]interface{}, oneOf []interface{}, description string) map[string]interface{} {
+	// Build a sorted list of mapping entries by extracting from oneOf order
+	mappingList := make([]struct{ key, ref string }, 0, len(oneOf))
+	for _, item := range oneOf {
+		if refMap, ok := item.(map[string]interface{}); ok {
+			if ref, ok := refMap["$ref"].(string); ok {
+				// Find the key in mapping that matches this ref
+				for key, value := range mapping {
+					if refValue, ok := value.(string); ok && refValue == ref {
+						mappingList = append(mappingList, struct{ key, ref string }{key, ref})
+						break
+					}
+				}
+			}
+		}
+	}
+
+	// Extract enum values in the same order
+	enumValues := make([]interface{}, 0, len(mappingList))
+	for _, item := range mappingList {
+		enumValues = append(enumValues, item.key)
+	}
+
+	// Build allOf array with separate if/then for each type
+	allOfItems := make([]interface{}, 0, len(mappingList))
+	for _, item := range mappingList {
+		allOfItems = append(allOfItems, map[string]interface{}{
+			"if": map[string]interface{}{
+				"properties": map[string]interface{}{
+					propertyName: map[string]interface{}{
+						"const": item.key,
+					},
+				},
+			},
+			"then": map[string]interface{}{
+				"$ref": item.ref,
+			},
+		})
+	}
+
+	// Build result as regular map (will be alphabetically sorted by Go's json.Marshal)
+	result := map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			propertyName: map[string]interface{}{
+				"type": "string",
+				"enum": enumValues,
+			},
+		},
+		"required": []interface{}{propertyName},
+		"allOf":    allOfItems,
+	}
+
+	// Add description if present
+	if description != "" {
+		result["description"] = description
+	}
+
+	return result
 }
