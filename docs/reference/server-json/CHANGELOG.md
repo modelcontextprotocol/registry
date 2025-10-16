@@ -2,6 +2,60 @@
 
 Changes to the server.json schema and format.
 
+## 2025-10-17
+
+### Changed
+
+The `version` field is now **optional** for MCPB packages, providing flexibility for publishers.
+
+**Key Changes:**
+
+- **MCPB packages can now include an optional `version` field** - Previously rejected by validation, MCPB packages can now optionally specify a version field for clarity and metadata purposes.
+- **Both formats are valid**:
+  - MCPB packages **with** version field: Provides explicit version metadata
+  - MCPB packages **without** version field: Version information is embedded in the download URL (as before)
+
+**Migration:**
+
+Publishers using MCPB packages can optionally add a `version` field to their package configuration. This is particularly useful when:
+- The version information is not clearly visible in the download URL
+- You want to provide explicit version metadata for tooling and clients
+- You need consistent version tracking across different package types
+
+Existing MCPB packages without the version field continue to work without any changes.
+
+**Example - MCPB Package with optional version:**
+```json
+{
+  "packages": [{
+    "registryType": "mcpb",
+    "identifier": "https://github.com/example/releases/download/v1.0.0/package.mcpb",
+    "version": "1.0.0",
+    "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+    "transport": {
+      "type": "stdio"
+    }
+  }]
+}
+```
+
+**Example - MCPB Package without version (still valid):**
+```json
+{
+  "packages": [{
+    "registryType": "mcpb",
+    "identifier": "https://github.com/example/releases/download/v1.0.0/package.mcpb",
+    "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+    "transport": {
+      "type": "stdio"
+    }
+  }]
+}
+```
+
+### Schema Version
+- Schema version: `2025-10-11` → `2025-10-17`
+
 ## 2025-10-11
 
 ### Changed

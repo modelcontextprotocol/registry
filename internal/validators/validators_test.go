@@ -47,7 +47,7 @@ func TestValidate(t *testing.T) {
 			expectedError: "schema version https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json is not supported",
 		},
 		{
-			name: "Schema version accepts current schema (2025-10-11)",
+			name: "Schema version accepts current schema (2025-10-17)",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",

@@ -1,9 +1,9 @@
 openapi: 3.1.0
 jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
-$id: https://modelcontextprotocol.io/schemas/draft/2025-10-11/server-registry-openapi
+$id: https://modelcontextprotocol.io/schemas/draft/2025-10-17/server-registry-openapi
 info:
   title: MCP Server Registry API
-  version: "2025-10-11"
+  version: "2025-10-17"
   summary: API for discovering and accessing MCP server metadata
   description: |
     Specification for a theoretical REST API that serves up metadata about MCP servers.
@@ -616,7 +616,7 @@ components:
           type: string
           format: uri
           description: JSON Schema URI for this server.json format
-          example: "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json"
+          example: "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json"
         packages:
           type: array
           items:
