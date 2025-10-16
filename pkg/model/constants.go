@@ -7,6 +7,10 @@ const (
 	RegistryTypeOCI   = "oci"
 	RegistryTypeNuGet = "nuget"
 	RegistryTypeMCPB  = "mcpb"
+	// RegistryTypeOnDevice represents a package that is already available on the local device
+	// and should be launched using the provided runtimeHint / manifest configuration rather than
+	// being downloaded from a remote registry.
+	RegistryTypeOnDevice = "on_device"
 )
 
 // Registry Base URLs - supported package registry base URLs

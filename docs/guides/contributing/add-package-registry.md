@@ -4,7 +4,7 @@ The MCP Registry project is a **metaregistry**, meaning that it hosts metadata f
 
 For local MCP servers, the MCP Registry has pointers in the `packages` node of the [`server.json`](../../reference/server-json/generic-server-json.md) schema that refer to packages in supported package managers.
 
-The list of supported package managers for hosting MCP servers is defined by the `properties.packages[N].properties.registryType` string enum in the [`server.json` schema](../../reference/server-json/server.schema.json). For example, this could be "npm" (for npmjs.com packages) or "pypi" (for PyPI packages).
+The list of supported package managers for hosting MCP servers is defined by the `properties.packages[N].properties.registryType` string enum in the [`server.json` schema](../../reference/server-json/server.schema.json). For example, this could be "npm" (for npmjs.com packages) or "pypi" (for PyPI packages). A special `on_device` value is also supported for pre-installed, system-managed servers that do not originate from a remote package registry.
 
 For remote MCP servers, the package registry is not relevant. The MCP client consumes the server via a URL instead of by downloading and running a package. In other words, this document only applies to local MCP servers.
 
@@ -38,7 +38,7 @@ These steps may evolve as additional validations or details are discovered and m
      - Add your package registry base url to the `registryBaseUrl` example array.
      - Add the single-shot CLI command name to the `runtimeHint` example value array.
    - Update the [`openapi.yaml`](../../reference/api/openapi.yaml)
-     - Add your package registry name to the `registryType` enum value array.
+   - Add your package registry name to the `registryType` enum value array.
      - Add your package registry base url to the `registryBaseUrl` enum value array.
      - Add the single-shot CLI command name to the `runtimeHint` example value array.
    - Add a sample, minimal `server.json` to the [`server.json` examples](../../reference/server-json/generic-server-json.md).

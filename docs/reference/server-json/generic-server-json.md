@@ -672,3 +672,53 @@ For MCP servers that follow a custom installation path or are embedded in applic
 }
 ```
 
+### On-Device (Pre-Installed) Server Example
+
+Some platforms (e.g., an operating system distribution) may provide a catalog of pre-installed or system-managed MCP servers. These can be referenced using the `on_device` `registryType`. In this case, the server is not downloaded from a registry. Instead, the platform launches it using a known runtime or entry point. An embedded `manifest` can be provided (reusing the MCPB manifest format) along with an optional `__dirname` pointing to the local directory where related assets or binaries reside.
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "com.example/troubleshooting",
+  "description": "On-device troubleshooting server provided by the OS",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "on_device",
+      "identifier": "com.example.troubleshooting",
+      "version": "1.0.0",
+      "runtimeHint": "odr.exe",
+      "transport": { "type": "stdio" }
+    }
+  ],
+  "_meta": {
+    "com.microsoft.windows": {
+      "manifest": {
+        "manifest_version": "0.2",
+        "name": "troubleshooting-mcp-server",
+        "version": "1.0.0",
+        "description": "MCP server for OS troubleshooting utilities",
+        "author": { "name": "ExampleOS" },
+        "server": {
+          "type": "binary",
+          "entry_point": "odr.exe",
+          "mcp_config": {
+            "command": "odr.exe",
+            "args": ["mcp", "--proxy", "troubleshooting-mcp-server"]
+          }
+        }
+      },
+      "__dirname": "C:\\Windows\\System32\\mcp\\troubleshooting"
+    }
+  }
+}
+```
+
+Notes:
+
+- `registryBaseUrl` is omitted because the package is not fetched remotely.
+- `manifest` embeds the MCPB manifest so clients have consistent information without a download.
+- `__dirname` gives clients a stable local path if they need to resolve relative resources (optional).
+- Validation for `on_device` packages does not perform remote ownership checks; responsibility shifts to the platform distribution.
+
+

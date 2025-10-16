@@ -2,6 +2,11 @@
 
 Changes to the server.json schema and format.
 
+## Unreleased
+
+### Added
+- Support for `on_device` `registryType` for pre-installed/system-managed MCP servers. For servers marked as such, registries provide MCPB manifests and `__dirname` in `server._meta`.
+
 ## 2025-09-29
 
 ### ⚠️ BREAKING CHANGES

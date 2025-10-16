@@ -306,13 +306,14 @@ components:
       properties:
         registryType:
           type: string
-          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')
+          description: Registry type indicating how to download or locate packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb', 'on_device'). The 'on_device' type represents a pre-installed server that should be launched locally and not downloaded.
           examples:
             - "npm"
             - "pypi"
             - "oci"
             - "nuget"
             - "mcpb"
+            - "on_device"
         registryBaseUrl:
           type: string
           format: uri
