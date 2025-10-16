@@ -76,6 +76,9 @@ check: dev-down lint validate test-all ## Run all checks (lint, validate, unit t
 
 # Development targets
 dev-compose: ## Start development environment with Docker Compose (builds image automatically)
+	GIT_COMMIT=$$(git rev-parse HEAD) \
+	GIT_COMMIT_SHORT=$$(git rev-parse --short HEAD) \
+	BUILD_TIME=$$(date -u +%Y-%m-%dT%H:%M:%SZ) \
 	docker compose up --build
 
 dev-down: ## Stop development environment

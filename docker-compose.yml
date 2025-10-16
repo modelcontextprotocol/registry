@@ -5,6 +5,10 @@ services:
     container_name: registry
     build:
       dockerfile: Dockerfile
+      args:
+        - VERSION=dev-${GIT_COMMIT_SHORT:-unknown}
+        - GIT_COMMIT=${GIT_COMMIT:-unknown}
+        - BUILD_TIME=${BUILD_TIME:-unknown}
     depends_on:
       postgres:
         condition: service_healthy
