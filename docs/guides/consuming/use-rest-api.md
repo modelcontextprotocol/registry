@@ -67,7 +67,7 @@ You can also add custom metadata to servers using the `_meta` field. For example
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.yourname/weather-server",
   "description": "MCP server for weather data access",
   "status": "active",

@@ -93,7 +93,7 @@ This creates a `server.json` with auto-detected values. You'll see something lik
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.yourname/weather-data-mcp",
   "title": "Weather Data",
   "description": "Access real-time weather data and forecasts",
@@ -153,7 +153,7 @@ Add an `mcpName` field to your `package.json`:
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.username/slack-integration-mcp",
   "title": "Slack Integration",
   "description": "Send messages and manage Slack workspaces",
@@ -192,7 +192,7 @@ Add it to your README.md file (which becomes the package description on PyPI). T
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.username/database-query-mcp",
   "title": "Database Query",
   "description": "Execute SQL queries and manage database connections",
@@ -231,7 +231,7 @@ Add a README file to your NuGet package that includes the server name. This can 
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.username/azure-devops-mcp",
   "title": "Azure DevOps",
   "description": "Manage Azure DevOps work items and pipelines",
@@ -274,7 +274,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ### Example server.json (Docker Hub)
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.username/kubernetes-manager-mcp",
   "title": "Kubernetes Manager",
   "description": "Deploy and manage Kubernetes resources",
@@ -282,9 +282,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
   "packages": [
     {
       "registryType": "oci",
-      "registryBaseUrl": "https://docker.io",
-      "identifier": "yourusername/kubernetes-manager-mcp",
-      "version": "1.0.0",
+      "identifier": "docker.io/yourusername/kubernetes-manager-mcp:1.0.0",
       "transport": {
         "type": "stdio"
       }
@@ -296,7 +294,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ### Example server.json (GitHub Container Registry)
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.username/git-operations-mcp",
   "title": "Git Operations",
   "description": "Advanced Git repository management and operations",
@@ -304,9 +302,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
   "packages": [
     {
       "registryType": "oci",
-      "registryBaseUrl": "https://ghcr.io",
-      "identifier": "username/git-operations-mcp",
-      "version": "1.0.0",
+      "identifier": "ghcr.io/username/git-operations-mcp:1.0.0",
       "transport": {
         "type": "stdio"
       }
@@ -315,9 +311,9 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 }
 ```
 
-The identifier is `namespace/repository`, and version is the tag and optionally digest.
+The identifier format is `registry/namespace/repository:tag` (e.g., `docker.io/user/app:1.0.0` or `ghcr.io/user/app:1.0.0`). The version can also be specified as a digest.
 
-The official MCP registry currently supports Docker Hub (`https://docker.io`) and GitHub Container Registry (`https://ghcr.io`).
+The official MCP registry currently supports Docker Hub (`docker.io`) and GitHub Container Registry (`ghcr.io`).
 
 </details>
 
@@ -339,7 +335,7 @@ openssl dgst -sha256 server.mcpb
 ### Example server.json
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "io.github.username/image-processor-mcp",
   "title": "Image Processor",
   "description": "Process and transform images with various filters",
@@ -348,7 +344,6 @@ openssl dgst -sha256 server.mcpb
     {
       "registryType": "mcpb",
       "identifier": "https://github.com/username/image-processor-mcp/releases/download/v1.0.0/image-processor.mcpb",
-      "version": "1.0.0",
       "fileSha256": "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
       "transport": {
         "type": "stdio"
@@ -385,7 +380,7 @@ Add the `remotes` field to your `server.json` (can coexist with `packages`):
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
   "name": "com.yourcompany/acme-analytics",
   "title": "ACME Analytics",
   "description": "Real-time business intelligence and reporting platform",

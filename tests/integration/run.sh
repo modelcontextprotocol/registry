@@ -24,7 +24,8 @@ cleanup() {
 
 go build -o ./bin/publisher ./cmd/publisher
 
-docker build -t registry .
+# Build the registry image with both tags, forcing a rebuild to ensure latest code
+docker build --no-cache -t registry -t modelcontextprotocol/registry:dev .
 
 trap cleanup EXIT
 
