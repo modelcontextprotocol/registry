@@ -22,26 +22,12 @@ jobs:
       uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
       with:
         go-version-file: 'go.mod'
-
-    - name: Cache Go modules
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ github.sha }}-${{ hashFiles('**/go.sum', '.golangci.yml') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Download dependencies
-      run: go mod download
-
-    - name: Install golangci-lint
-      run: |
-        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.4.0
+        cache: true
 
     - name: Run lint
-      run: make lint
+      uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9
+      with:
+        version: v2.4.0
 
     - name: Validate schemas and examples
       run: make validate
@@ -66,19 +52,7 @@ jobs:
       uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
       with:
         go-version-file: 'go.mod'
-
-    - name: Cache Go modules
-      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Download dependencies
-      run: go mod download
+        cache: true
 
     - name: Run all tests
       run: make test-all

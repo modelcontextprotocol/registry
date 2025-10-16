@@ -26,7 +26,7 @@ By the end of this tutorial, you'll have:
 You can make your MCP server available in multiple ways:
 
 - **📦 Package deployment**: Published to registries (npm, PyPI, NuGet, Docker Hub, etc.) and run locally by clients
-- **🌐 Remote deployment**: Hosted as a web service that clients connect to directly  
+- **🌐 Remote deployment**: Hosted as a web service that clients connect to directly
 - **🔄 Hybrid deployment**: Offer both package and remote options for maximum flexibility
 
 Learn more about [MCP server architecture](https://modelcontextprotocol.io/docs/learn/architecture) in the official docs.
@@ -48,7 +48,7 @@ brew install mcp-publisher
 <summary><strong>⬇️ macOS/Linux/WSL: Pre-built binaries</strong></summary>
 
 ```bash
-curl -L "https://github.com/modelcontextprotocol/registry/releases/download/latest/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
+curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher && sudo mv mcp-publisher /usr/local/bin/
 ```
 
 </details>
@@ -74,7 +74,7 @@ export PATH=$PATH:$(pwd)/bin
 <summary><strong>🪟 Windows PowerShell: Pre-built binaries</strong></summary>
 
 ```powershell
-$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq "Arm64") { "arm64" } else { "amd64" }; Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/download/latest/mcp-publisher_windows_$arch.tar.gz" -OutFile "mcp-publisher.tar.gz"; tar xf mcp-publisher.tar.gz mcp-publisher.exe; rm mcp-publisher.tar.gz
+$arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture -eq "Arm64") { "arm64" } else { "amd64" }; Invoke-WebRequest -Uri "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_windows_$arch.tar.gz" -OutFile "mcp-publisher.tar.gz"; tar xf mcp-publisher.tar.gz mcp-publisher.exe; rm mcp-publisher.tar.gz
 # Move mcp-publisher.exe to a directory in your PATH
 ```
 
@@ -266,7 +266,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 ### How It Works
 - Registry authenticates with container registries using token-based authentication:
   - **Docker Hub**: Uses `auth.docker.io` token service
-  - **GitHub Container Registry**: Uses `ghcr.io` token service  
+  - **GitHub Container Registry**: Uses `ghcr.io` token service
 - Fetches image manifest using Docker Registry v2 API
 - Checks that `io.modelcontextprotocol.server.name` annotation matches your server name
 - Fails if annotation is missing or doesn't match

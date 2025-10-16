@@ -267,36 +267,63 @@ func createServerJSON(
 	packageType, packageIdentifier, packageVersion string,
 	envVars []model.KeyValueInput,
 ) apiv0.ServerJSON {
-	// Determine registry type and base URL
-	var registryType, registryBaseURL string
+	// Create package based on type
+	var pkg model.Package
+
 	switch packageType {
 	case model.RegistryTypeNPM:
-		registryType = model.RegistryTypeNPM
-		registryBaseURL = model.RegistryURLNPM
+		pkg = model.Package{
+			RegistryType:         model.RegistryTypeNPM,
+			Identifier:           packageIdentifier,
+			Version:              packageVersion,
+			EnvironmentVariables: envVars,
+			Transport: model.Transport{
+				Type: model.TransportTypeStdio,
+			},
+		}
 	case model.RegistryTypePyPI:
-		registryType = model.RegistryTypePyPI
-		registryBaseURL = model.RegistryURLPyPI
+		pkg = model.Package{
+			RegistryType:         model.RegistryTypePyPI,
+			Identifier:           packageIdentifier,
+			Version:              packageVersion,
+			EnvironmentVariables: envVars,
+			Transport: model.Transport{
+				Type: model.TransportTypeStdio,
+			},
+		}
 	case model.RegistryTypeOCI:
-		registryType = model.RegistryTypeOCI
-		registryBaseURL = model.RegistryURLDocker
+		// OCI packages use canonical references: registry/namespace/image:tag
+		// Format: docker.io/username/image:version
+		canonicalRef := fmt.Sprintf("docker.io/%s:%s", packageIdentifier, packageVersion)
+		pkg = model.Package{
+			RegistryType: model.RegistryTypeOCI,
+			Identifier:   canonicalRef,
+			// No Version field for OCI - it's embedded in the canonical reference
+			EnvironmentVariables: envVars,
+			Transport: model.Transport{
+				Type: model.TransportTypeStdio,
+			},
+		}
 	case "url":
-		registryType = "url"
-		registryBaseURL = ""
+		pkg = model.Package{
+			RegistryType:         "url",
+			Identifier:           packageIdentifier,
+			Version:              packageVersion,
+			EnvironmentVariables: envVars,
+			Transport: model.Transport{
+				Type: model.TransportTypeStdio,
+			},
+		}
 	default:
-		registryType = packageType
-		registryBaseURL = ""
-	}
-
-	// Create package
-	pkg := model.Package{
-		RegistryType:         registryType,
-		RegistryBaseURL:      registryBaseURL,
-		Identifier:           packageIdentifier,
-		Version:              packageVersion,
-		EnvironmentVariables: envVars,
-		Transport: model.Transport{
-			Type: model.TransportTypeStdio,
-		},
+		pkg = model.Package{
+			RegistryType:         packageType,
+			Identifier:           packageIdentifier,
+			Version:              packageVersion,
+			EnvironmentVariables: envVars,
+			Transport: model.Transport{
+				Type: model.TransportTypeStdio,
+			},
+		}
 	}
 
 	// Create server structure

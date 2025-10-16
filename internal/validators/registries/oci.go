@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -78,60 +77,73 @@ type OCIImageConfig struct {
 	} `json:"config"`
 }
 
-// ValidateOCI validates that an OCI image contains the correct MCP server name annotation
+// ValidateOCI validates that an OCI image contains the correct MCP server name annotation.
+// Supports canonical OCI references including:
+//   - registry/namespace/image:tag
+//   - registry/namespace/image@sha256:digest
+//   - registry/namespace/image:tag@sha256:digest
+//   - namespace/image:tag (defaults to docker.io)
 func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) error {
-	// Set default registry base URL if empty
-	if pkg.RegistryBaseURL == "" {
-		pkg.RegistryBaseURL = model.RegistryURLDocker
-	}
-
 	if pkg.Identifier == "" {
 		return ErrMissingIdentifierForOCI
 	}
 
-	// we need version (tag) to look up the image manifest
-	if pkg.Version == "" {
-		return ErrMissingVersionForOCI
+	// Validate that old format fields are not present
+	if pkg.RegistryBaseURL != "" {
+		return fmt.Errorf("OCI packages must not have 'registryBaseUrl' field - use canonical reference in 'identifier' instead (e.g., 'docker.io/owner/image:1.0.0')")
+	}
+	if pkg.Version != "" {
+		return fmt.Errorf("OCI packages must not have 'version' field - include version in 'identifier' instead (e.g., 'docker.io/owner/image:1.0.0')")
+	}
+	if pkg.FileSHA256 != "" {
+		return fmt.Errorf("OCI packages must not have 'fileSha256' field")
 	}
 
-	// Validate that the registry base URL is supported
-	if err := validateRegistryURL(pkg.RegistryBaseURL); err != nil {
+	// Parse the canonical OCI reference from the identifier
+	ociRef, err := ParseOCIReference(pkg.Identifier)
+	if err != nil {
+		return fmt.Errorf("invalid OCI reference: %w", err)
+	}
+
+	// Validate that the registry is supported
+	registryBaseURL := ociRef.GetRegistryBaseURL()
+	if err := validateRegistryURL(registryBaseURL); err != nil {
 		return err
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Parse image reference (namespace/repo or repo)
-	namespace, repo, err := parseImageReference(pkg.Identifier)
-	if err != nil {
-		return fmt.Errorf("invalid OCI image reference: %w", err)
+	// Get registry configuration
+	registryConfig := getRegistryConfig(registryBaseURL, ociRef.Namespace, ociRef.Image)
+	if registryConfig == nil {
+		return fmt.Errorf("unsupported registry: %s", registryBaseURL)
 	}
 
-	// Get registry configuration
-	registryConfig := getRegistryConfig(pkg.RegistryBaseURL, namespace, repo)
-	if registryConfig == nil {
-		return fmt.Errorf("unsupported registry: %s", pkg.RegistryBaseURL)
+	// Determine what to use for manifest lookup: digest if available (most secure), otherwise tag
+	manifestRef := ociRef.Tag
+	if ociRef.Digest != "" {
+		manifestRef = ociRef.Digest
 	}
 
 	// Get the image manifest
-	manifest, err := fetchImageManifest(ctx, client, registryConfig, namespace, repo, pkg.Version)
+	manifest, err := fetchImageManifest(ctx, client, registryConfig, ociRef.Namespace, ociRef.Image, manifestRef)
 	if err != nil {
 		// Handle rate limiting explicitly - skip validation
 		if errors.Is(err, ErrRateLimited) {
-			log.Printf("Skipping OCI validation for %s/%s:%s due to rate limiting", namespace, repo, pkg.Version)
+			log.Printf("Skipping OCI validation for %s due to rate limiting", ociRef.String())
 			return nil
 		}
 		return err
 	}
 
 	// Get config digest from manifest
-	configDigest, err := getConfigDigestFromManifest(ctx, client, registryConfig, namespace, repo, manifest)
+	configDigest, err := getConfigDigestFromManifest(ctx, client, registryConfig, ociRef.Namespace, ociRef.Image, manifest)
 	if err != nil {
 		return err
 	}
 
 	// Validate server name annotation
-	return validateServerNameAnnotation(ctx, client, registryConfig, namespace, repo, pkg.Version, configDigest, serverName)
+	return validateServerNameAnnotation(ctx, client, registryConfig, ociRef.Namespace, ociRef.Image, ociRef.Tag, configDigest, serverName)
 }
 
 // validateRegistryURL validates that the registry base URL is supported
@@ -227,18 +239,6 @@ func validateServerNameAnnotation(ctx context.Context, client *http.Client, regi
 	}
 
 	return nil
-}
-
-func parseImageReference(identifier string) (string, string, error) {
-	parts := strings.Split(identifier, "/")
-	switch len(parts) {
-	case 2:
-		return parts[0], parts[1], nil
-	case 1:
-		return "library", parts[0], nil
-	default:
-		return "", "", fmt.Errorf("invalid image reference: %s", identifier)
-	}
 }
 
 // getRegistryAuthToken retrieves an authentication token from a registry

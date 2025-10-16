@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
@@ -42,8 +43,15 @@ func TestOpenAPIEndpointCompliance(t *testing.T) {
 		JWTPrivateKey: "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20", // 32-byte hex key
 	}
 
+	// Create version info for testing
+	versionInfo := &v0.VersionBody{
+		Version:   "test",
+		GitCommit: "test",
+		BuildTime: "test",
+	}
+
 	// Register V0 routes exactly like production does
-	router.RegisterV0Routes(api, cfg, nil, nil) // nil service and metrics for schema testing
+	router.RegisterV0Routes(api, cfg, nil, nil, versionInfo) // nil service and metrics for schema testing
 
 	// Get the OpenAPI schema
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)

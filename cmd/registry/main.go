@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/api"
+	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/importer"
@@ -39,7 +40,7 @@ func main() {
 
 	// Show version information if requested
 	if *showVersion {
-		log.Printf("MCP Registry v%s\n", Version)
+		log.Printf("MCP Registry %s\n", Version)
 		log.Printf("Git commit: %s\n", GitCommit)
 		log.Printf("Build time: %s\n", BuildTime)
 		return
@@ -102,8 +103,15 @@ func main() {
 		}
 	}()
 
+	// Prepare version information
+	versionInfo := &v0.VersionBody{
+		Version:   Version,
+		GitCommit: GitCommit,
+		BuildTime: BuildTime,
+	}
+
 	// Initialize HTTP server
-	server := api.NewServer(cfg, registryService, metrics)
+	server := api.NewServer(cfg, registryService, metrics, versionInfo)
 
 	// Start server in a goroutine so it doesn't block signal handling
 	go func() {
