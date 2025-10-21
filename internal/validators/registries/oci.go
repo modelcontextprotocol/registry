@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -75,23 +76,37 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		return fmt.Errorf("%w: %s", ErrUnsupportedRegistry, registry)
 	}
 
+	// Add explicit timeout to prevent hanging on slow registries
+	// Use a new context with timeout to avoid modifying the caller's context
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
 	// Fetch the image using anonymous authentication (public images only)
 	// The go-containerregistry library handles:
 	// - OCI auth discovery via WWW-Authenticate headers
 	// - Token negotiation for different registries
 	// - Rate limiting and retries
 	// - Multi-arch manifest resolution
-	img, err := remote.Image(ref, remote.WithAuth(authn.Anonymous), remote.WithContext(ctx))
+	img, err := remote.Image(ref, remote.WithAuth(authn.Anonymous), remote.WithContext(timeoutCtx))
 	if err != nil {
-		// Check if this is a rate limiting error
+		// Check if this is a timeout error
+		if errors.Is(err, context.DeadlineExceeded) {
+			return fmt.Errorf("OCI image validation timed out after 30 seconds for '%s'. The registry may be slow or unreachable", pkg.Identifier)
+		}
+
+		// Check for specific HTTP status codes
 		var transportErr *transport.Error
 		if errors.As(err, &transportErr) {
-			if transportErr.StatusCode == http.StatusTooManyRequests {
+			switch transportErr.StatusCode {
+			case http.StatusTooManyRequests:
+				// Rate limited - skip validation to avoid blocking publishers
+				// This is intentional: we prioritize UX over strict validation during high traffic
 				log.Printf("Skipping OCI validation for %s due to rate limiting", pkg.Identifier)
 				return nil
-			}
-			if transportErr.StatusCode == http.StatusNotFound || transportErr.StatusCode == http.StatusUnauthorized {
-				return fmt.Errorf("OCI image '%s' not found or not accessible (status: %d)", pkg.Identifier, transportErr.StatusCode)
+			case http.StatusNotFound:
+				return fmt.Errorf("OCI image '%s' does not exist in the registry", pkg.Identifier)
+			case http.StatusUnauthorized, http.StatusForbidden:
+				return fmt.Errorf("OCI image '%s' is private or requires authentication. Only public images are supported", pkg.Identifier)
 			}
 		}
 		return fmt.Errorf("failed to fetch OCI image: %w", err)
