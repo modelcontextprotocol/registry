@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -16,10 +17,23 @@ import (
 
 var (
 	ErrMissingIdentifierForOCI = errors.New("package identifier is required for OCI packages")
+	ErrUnsupportedRegistry     = errors.New("unsupported OCI registry")
 )
 
 // ErrRateLimited is returned when a registry rate limits our requests
 var ErrRateLimited = errors.New("rate limited by registry")
+
+// allowedOCIRegistries defines the list of supported OCI registries.
+// This can be expanded in the future to support additional public registries.
+var allowedOCIRegistries = map[string]bool{
+	// Docker Hub (and its various endpoints)
+	"docker.io":            true,
+	"registry-1.docker.io": true, // Docker Hub API endpoint
+	"index.docker.io":      true, // Docker Hub index
+	// GitHub Container Registry
+	"ghcr.io": true,
+	// Google Artifact Registry (*.pkg.dev pattern handled in isAllowedRegistry)
+}
 
 // ValidateOCI validates that an OCI image contains the correct MCP server name annotation.
 // Supports canonical OCI references including:
@@ -28,14 +42,10 @@ var ErrRateLimited = errors.New("rate limited by registry")
 //   - registry/namespace/image:tag@sha256:digest
 //   - namespace/image:tag (defaults to docker.io)
 //
-// This validator now supports ANY public OCI-compliant registry including:
+// Supported registries:
 //   - Docker Hub (docker.io)
 //   - GitHub Container Registry (ghcr.io)
-//   - Quay.io (quay.io)
-//   - Google Container Registry (gcr.io, artifacts.dev)
-//   - Amazon ECR Public (public.ecr.aws)
-//   - GitLab Container Registry (registry.gitlab.com)
-//   - Any other OCI Distribution Spec compliant registry
+//   - Google Artifact Registry (*.pkg.dev)
 func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) error {
 	if pkg.Identifier == "" {
 		return ErrMissingIdentifierForOCI
@@ -57,6 +67,12 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	ref, err := name.ParseReference(pkg.Identifier)
 	if err != nil {
 		return fmt.Errorf("invalid OCI reference: %w", err)
+	}
+
+	// Validate that the registry is in the allowlist
+	registry := ref.Context().RegistryStr()
+	if !isAllowedRegistry(registry) {
+		return fmt.Errorf("%w: %s", ErrUnsupportedRegistry, registry)
 	}
 
 	// Fetch the image using anonymous authentication (public images only)
@@ -102,4 +118,21 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	}
 
 	return nil
+}
+
+// isAllowedRegistry checks if the given registry is in the allowlist.
+// It handles registry aliases and wildcard patterns (e.g., *.pkg.dev for Artifact Registry).
+func isAllowedRegistry(registry string) bool {
+	// Direct match
+	if allowedOCIRegistries[registry] {
+		return true
+	}
+
+	// Check for wildcard patterns
+	// Google Artifact Registry: *.pkg.dev (e.g., us-docker.pkg.dev, europe-west1-docker.pkg.dev)
+	if strings.HasSuffix(registry, ".pkg.dev") {
+		return true
+	}
+
+	return false
 }
