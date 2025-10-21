@@ -14,120 +14,101 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		packageName  string
-		version      string
+		identifier   string
 		serverName   string
 		expectError  bool
 		errorMessage string
-		registryURL  string
+		skip         bool
+		skipReason   string
 	}{
 		{
 			name:         "empty package identifier should fail",
-			packageName:  "",
-			version:      "latest",
+			identifier:   "",
 			serverName:   "com.example/test",
 			expectError:  true,
 			errorMessage: "package identifier is required for OCI packages",
 		},
 		{
-			name:         "empty package version should fail",
-			packageName:  "test-image",
-			version:      "",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "package version is required for OCI packages",
-		},
-		{
-			name:         "both empty identifier and version should fail with identifier error first",
-			packageName:  "",
-			version:      "",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "package identifier is required for OCI packages",
-		},
-		{
-			name:         "non-existent image should fail",
-			packageName:  generateRandomImageName(),
-			version:      "latest",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "not found",
-		},
-		{
-			name:         "real image without MCP annotation should fail",
-			packageName:  "nginx", // Popular image without MCP annotation
-			version:      "latest",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "missing required annotation",
-		},
-		{
-			name:         "real image with specific tag without MCP annotation should fail",
-			packageName:  "redis",
-			version:      "7-alpine", // Specific tag
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "missing required annotation",
-		},
-		{
-			name:         "namespaced image without MCP annotation should fail",
-			packageName:  "hello-world", // Simple image for testing
-			version:      "latest",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "missing required annotation",
-		},
-		{
-			name:        "real image with correct MCP annotation should pass",
-			packageName: "domdomegg/airtable-mcp-server",
-			version:     "1.7.2",
-			serverName:  "io.github.domdomegg/airtable-mcp-server", // This should match the annotation
+			name:        "real image with correct MCP annotation should pass (Docker Hub)",
+			identifier:  "docker.io/domdomegg/airtable-mcp-server:1.7.2",
+			serverName:  "io.github.domdomegg/airtable-mcp-server",
 			expectError: false,
-		},
-		{
-			name:         "GHCR image without MCP annotation should fail",
-			packageName:  "actions/runner", // GitHub's action runner image (real image without MCP annotation)
-			version:      "latest",
-			serverName:   "com.example/test",
-			expectError:  true,
-			errorMessage: "missing required annotation",
-			registryURL:  model.RegistryURLGHCR,
-		},
-		{
-			name:         "real GHCR image without MCP annotation should fail",
-			packageName:  "github/github-mcp-server", // Real GitHub MCP server image
-			version:      "main",
-			serverName:   "io.github.github/github-mcp-server",
-			expectError:  true,
-			errorMessage: "missing required annotation", // Image exists but lacks MCP annotation
-			registryURL:  model.RegistryURLGHCR,
+			skip:        true,
+			skipReason:  "Skipping to avoid hitting DockerHub rate limits in CI",
 		},
 		{
 			name:        "GHCR image with correct MCP annotation should pass",
-			packageName: "nkapila6/mcp-local-rag", // Real MCP server with proper annotation
-			version:     "latest",
+			identifier:  "ghcr.io/nkapila6/mcp-local-rag:latest",
 			serverName:  "io.github.nkapila6/mcp-local-rag",
 			expectError: false,
-			registryURL: model.RegistryURLGHCR,
+			skip:        true,
+			skipReason:  "Skipping to avoid network dependencies in CI",
+		},
+		{
+			name:         "image without MCP annotation should fail",
+			identifier:   "docker.io/library/nginx:latest",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "missing required annotation",
+			skip:         true,
+			skipReason:   "Skipping to avoid hitting DockerHub rate limits in CI",
+		},
+		{
+			name:         "non-existent image should fail",
+			identifier:   "docker.io/nonexistent/doesnotexist:v99.99.99",
+			serverName:   "com.example/test",
+			expectError:  true,
+			errorMessage: "not found",
+			skip:         true,
+			skipReason:   "Skipping to avoid network dependencies in CI",
+		},
+		{
+			name:         "Quay.io registry should be supported",
+			identifier:   "quay.io/test/image:v1.0.0",
+			serverName:   "com.example/test",
+			expectError:  true, // Will fail because image doesn't exist, but registry should be accepted
+			errorMessage: "not found",
+			skip:         true,
+			skipReason:   "Skipping to avoid network dependencies in CI",
+		},
+		{
+			name:         "GCR registry should be supported",
+			identifier:   "gcr.io/test/image:v1.0.0",
+			serverName:   "com.example/test",
+			expectError:  true, // Will fail because image doesn't exist, but registry should be accepted
+			errorMessage: "not found",
+			skip:         true,
+			skipReason:   "Skipping to avoid network dependencies in CI",
+		},
+		{
+			name:         "GitLab registry should be supported",
+			identifier:   "registry.gitlab.com/test/image:v1.0.0",
+			serverName:   "com.example/test",
+			expectError:  true, // Will fail because image doesn't exist, but registry should be accepted
+			errorMessage: "not found",
+			skip:         true,
+			skipReason:   "Skipping to avoid network dependencies in CI",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Skip("Skipping OCI registry tests because we keep hitting DockerHub rate limits")
+			if tt.skip {
+				t.Skip(tt.skipReason)
+			}
 
 			pkg := model.Package{
-				RegistryType:    model.RegistryTypeOCI,
-				RegistryBaseURL: tt.registryURL,
-				Identifier:      tt.packageName,
-				Version:         tt.version,
+				RegistryType: model.RegistryTypeOCI,
+				Identifier:   tt.identifier,
 			}
 
 			err := registries.ValidateOCI(ctx, pkg, tt.serverName)
 
 			if tt.expectError {
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.errorMessage)
+				if tt.errorMessage != "" {
+					assert.Contains(t, err.Error(), tt.errorMessage)
+				}
 			} else {
 				assert.NoError(t, err)
 			}
@@ -135,63 +116,34 @@ func TestValidateOCI_RealPackages(t *testing.T) {
 	}
 }
 
-func TestValidateOCI_UnsupportedRegistry(t *testing.T) {
+func TestValidateOCI_AllRegistriesSupported(t *testing.T) {
 	ctx := context.Background()
 
-	// Test with unsupported registry in canonical reference format
-	pkg := model.Package{
-		RegistryType: model.RegistryTypeOCI,
-		Identifier:   "unsupported-registry.com/test/image:latest",
+	// Test that various registry formats are accepted (they will fail on fetch, not on validation)
+	testRegistries := []string{
+		"docker.io/test/image:latest",
+		"ghcr.io/test/image:latest",
+		"quay.io/test/image:latest",
+		"gcr.io/test/image:latest",
+		"public.ecr.aws/test/image:latest",
+		"registry.gitlab.com/test/image:latest",
+		"custom-registry.com/test/image:latest",
 	}
 
-	err := registries.ValidateOCI(ctx, pkg, "com.example/test")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "registry type and base URL do not match")
-	assert.Contains(t, err.Error(), "Expected: https://docker.io or https://ghcr.io")
-}
-
-func TestValidateOCI_SupportedRegistries(t *testing.T) {
-	ctx := context.Background()
-
-	tests := []struct {
-		name       string
-		identifier string
-		expected   bool
-	}{
-		{
-			name:       "Docker Hub should be supported",
-			identifier: "docker.io/test/image:latest",
-			expected:   true,
-		},
-		{
-			name:       "GHCR should be supported",
-			identifier: "ghcr.io/test/image:latest",
-			expected:   true,
-		},
-		{
-			name:       "Unsupported registry should fail",
-			identifier: "quay.io/test/image:latest",
-			expected:   false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, registry := range testRegistries {
+		t.Run(registry, func(t *testing.T) {
 			pkg := model.Package{
 				RegistryType: model.RegistryTypeOCI,
-				Identifier:   tt.identifier,
+				Identifier:   registry,
 			}
 
 			err := registries.ValidateOCI(ctx, pkg, "com.example/test")
-			if tt.expected {
-				// Should not fail immediately on registry validation
-				// (may fail later due to network/image not found, but not due to unsupported registry)
-				if err != nil {
-					assert.NotContains(t, err.Error(), "registry type and base URL do not match")
-				}
-			} else {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "registry type and base URL do not match")
+
+			// Should NOT fail with "unsupported registry" error
+			// Will fail with "not found" or similar, but that means the registry was accepted
+			if err != nil {
+				assert.NotContains(t, err.Error(), "unsupported registry")
+				assert.NotContains(t, err.Error(), "registry type and base URL do not match")
 			}
 		})
 	}
@@ -224,17 +176,16 @@ func TestValidateOCI_RejectsOldFormat(t *testing.T) {
 			errorMessage: "OCI packages must not have 'version' field",
 		},
 		{
-			name: "OCI package with both old format fields should fail on registryBaseUrl first",
+			name: "OCI package with fileSha256 field should be rejected",
 			pkg: model.Package{
-				RegistryType:    model.RegistryTypeOCI,
-				RegistryBaseURL: "https://docker.io",
-				Identifier:      "test/image",
-				Version:         "1.0.0",
+				RegistryType: model.RegistryTypeOCI,
+				Identifier:   "docker.io/test/image:latest",
+				FileSHA256:   "abcd1234",
 			},
-			errorMessage: "OCI packages must not have 'registryBaseUrl' field",
+			errorMessage: "OCI packages must not have 'fileSha256' field",
 		},
 		{
-			name: "OCI package with canonical format should pass old format validation",
+			name: "OCI package with canonical format should pass format validation",
 			pkg: model.Package{
 				RegistryType: model.RegistryTypeOCI,
 				Identifier:   "docker.io/test/image:latest",
@@ -254,7 +205,39 @@ func TestValidateOCI_RejectsOldFormat(t *testing.T) {
 				// Should not fail with old format error (may fail with other errors like image not found)
 				assert.NotContains(t, err.Error(), "must not have 'registryBaseUrl'")
 				assert.NotContains(t, err.Error(), "must not have 'version'")
+				assert.NotContains(t, err.Error(), "must not have 'fileSha256'")
 			}
+		})
+	}
+}
+
+func TestValidateOCI_InvalidReferences(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name       string
+		identifier string
+	}{
+		{
+			name:       "invalid characters in reference",
+			identifier: "docker.io/test/image:INVALID SPACE",
+		},
+		{
+			name:       "malformed reference",
+			identifier: "not-a-valid-reference::::",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pkg := model.Package{
+				RegistryType: model.RegistryTypeOCI,
+				Identifier:   tt.identifier,
+			}
+
+			err := registries.ValidateOCI(ctx, pkg, "com.example/test")
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "invalid OCI reference")
 		})
 	}
 }

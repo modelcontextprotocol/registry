@@ -36,9 +36,16 @@ Only trusted public registries are supported. Private registries and alternative
 
 **Supported registries:**
 - **NPM**: `https://registry.npmjs.org` only
-- **PyPI**: `https://pypi.org` only  
+- **PyPI**: `https://pypi.org` only
 - **NuGet**: `https://api.nuget.org` only
-- **Docker/OCI**: `https://docker.io` only
+- **Docker/OCI**: Any public OCI-compliant registry including:
+  - Docker Hub (`docker.io`)
+  - GitHub Container Registry (`ghcr.io`)
+  - Quay.io (`quay.io`)
+  - Google Container Registry (`gcr.io`, `*.pkg.dev`)
+  - Amazon ECR Public (`public.ecr.aws`)
+  - GitLab Container Registry (`registry.gitlab.com`)
+  - Any other OCI Distribution Spec compliant registry
 - **MCPB**: `https://github.com` releases and `https://gitlab.com` releases only
 
 ## `_meta` Namespace Restrictions

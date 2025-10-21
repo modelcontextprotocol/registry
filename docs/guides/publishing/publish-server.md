@@ -313,7 +313,7 @@ LABEL io.modelcontextprotocol.server.name="io.github.username/server-name"
 
 The identifier format is `registry/namespace/repository:tag` (e.g., `docker.io/user/app:1.0.0` or `ghcr.io/user/app:1.0.0`). The version can also be specified as a digest.
 
-The official MCP registry currently supports Docker Hub (`docker.io`) and GitHub Container Registry (`ghcr.io`).
+The official MCP registry supports any public OCI-compliant registry including Docker Hub, GitHub Container Registry (GHCR), Quay.io, Google Container Registry (GCR), Amazon ECR Public, GitLab Container Registry, and more.
 
 </details>
 
