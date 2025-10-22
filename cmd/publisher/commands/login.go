@@ -19,7 +19,7 @@ const (
 
 func LoginCommand(args []string) error {
 	if len(args) < 1 {
-		return errors.New("authentication method required\n\nUsage: mcp-publisher login <method>\n\nMethods:\n  github        Interactive GitHub authentication\n  github-oidc   GitHub Actions OIDC authentication\n  dns           DNS-based authentication (requires --domain and --private-key)\n  http          HTTP-based authentication (requires --domain and --private-key)\n  none          Anonymous authentication (for testing)")
+		return errors.New("authentication method required\n\nUsage: mcp-publisher login <method>\n\nMethods:\n  github        Interactive GitHub authentication\n  github-oidc   GitHub Actions OIDC authentication\n  dns           DNS-based authentication (requires --domain and --private-key)\n  http          HTTP-based authentication (requires --domain and --private-key)\n  oidc          Interactive OIDC authentication (for subregistries using oidc)\n  none          Anonymous authentication (for testing)")
 	}
 
 	method := args[0]
@@ -42,26 +42,9 @@ func LoginCommand(args []string) error {
 	}
 
 	// Create auth provider based on method
-	var authProvider auth.Provider
-	switch method {
-	case "github":
-		authProvider = auth.NewGitHubATProvider(true, registryURL)
-	case "github-oidc":
-		authProvider = auth.NewGitHubOIDCProvider(registryURL)
-	case "dns":
-		if domain == "" || privateKey == "" {
-			return errors.New("dns authentication requires --domain and --private-key")
-		}
-		authProvider = auth.NewDNSProvider(registryURL, domain, privateKey)
-	case "http":
-		if domain == "" || privateKey == "" {
-			return errors.New("http authentication requires --domain and --private-key")
-		}
-		authProvider = auth.NewHTTPProvider(registryURL, domain, privateKey)
-	case "none":
-		authProvider = auth.NewNoneProvider(registryURL)
-	default:
-		return fmt.Errorf("unknown authentication method: %s\nFor a list of available methods, run: mcp-publisher login", method)
+	authProvider, err := createAuthProvider(method, registryURL, domain, privateKey)
+	if err != nil {
+		return err
 	}
 
 	// Perform login
@@ -102,4 +85,30 @@ func LoginCommand(args []string) error {
 
 	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully logged in")
 	return nil
+}
+
+// createAuthProvider creates an authentication provider based on the method
+func createAuthProvider(method, registryURL, domain, privateKey string) (auth.Provider, error) {
+	switch method {
+	case "github":
+		return auth.NewGitHubATProvider(true, registryURL), nil
+	case "github-oidc":
+		return auth.NewGitHubOIDCProvider(registryURL), nil
+	case "oidc":
+		return auth.NewOIDCProvider(registryURL), nil
+	case "dns":
+		if domain == "" || privateKey == "" {
+			return nil, errors.New("dns authentication requires --domain and --private-key")
+		}
+		return auth.NewDNSProvider(registryURL, domain, privateKey), nil
+	case "http":
+		if domain == "" || privateKey == "" {
+			return nil, errors.New("http authentication requires --domain and --private-key")
+		}
+		return auth.NewHTTPProvider(registryURL, domain, privateKey), nil
+	case "none":
+		return auth.NewNoneProvider(registryURL), nil
+	default:
+		return nil, fmt.Errorf("unknown authentication method: %s", method)
+	}
 }
