@@ -120,7 +120,7 @@ mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--registry=
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
 
-**Setup:** (for Ed25519)
+**Setup:** (for Ed25519, recommended)
 ```bash
 # Generate keypair (same as DNS)
 openssl genpkey -algorithm Ed25519 -out key.pem
