@@ -14,6 +14,22 @@ The schema contains all field definitions, validation rules, examples, and detai
 
 The official registry has some more restrictions on top of this. See the [official registry requirements](./official-registry-requirements.md) for details.
 
+## Extension Metadata with `_meta`
+
+The optional `_meta` field allows publishers to include custom metadata alongside their server definitions using reverse DNS namespacing.
+
+```json
+{
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      // Your custom metadata here
+    }
+  }
+}
+```
+
+When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions.
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->
