@@ -18,7 +18,7 @@ The official registry has some more restrictions on top of this. See the [offici
 
 The optional `_meta` field allows publishers to include custom metadata alongside their server definitions using reverse DNS namespacing.
 
-```json
+```
 {
   "_meta": {
     "io.modelcontextprotocol.registry/publisher-provided": {
@@ -28,7 +28,7 @@ The optional `_meta` field allows publishers to include custom metadata alongsid
 }
 ```
 
-When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions.
+When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions and examples.
 
 ## Examples
 
