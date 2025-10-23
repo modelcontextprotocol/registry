@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: daily
+  - package-ecosystem: gomod
+    directory: /deploy
+    schedule:
+      interval: daily
   - package-ecosystem: github-actions
     directory: /
     groups:
