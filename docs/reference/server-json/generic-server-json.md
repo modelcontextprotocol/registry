@@ -18,7 +18,7 @@ The official registry has some more restrictions on top of this. See the [offici
 
 The optional `_meta` field allows publishers to include custom metadata alongside their server definitions using reverse DNS namespacing.
 
-```
+```jsonc
 {
   "_meta": {
     "io.modelcontextprotocol.registry/publisher-provided": {

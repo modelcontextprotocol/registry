@@ -51,7 +51,7 @@ When publishing to the official registry, **only data under the specific key `io
 
 **Example:**
 
-```json
+```jsonc
 {
   "_meta": {
     "io.modelcontextprotocol.registry/publisher-provided": {
@@ -78,5 +78,52 @@ The `_meta` field in `server.json` is **different** from the `_meta` field retur
   - `publishedAt`: When the server was first published
   - `updatedAt`: When the server was last updated
   - `isLatest`: Whether this is the latest version
+
+**Example: What you publish (server.json)**
+
+```jsonc
+{
+  "name": "io.github.example/my-server",
+  "version": "1.0.0",
+  "description": "My MCP server",
+  // ... other fields ...
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "tool": "ci-publisher",
+      "version": "2.0.0"
+    }
+  }
+}
+```
+
+**Example: What the registry API returns**
+
+```jsonc
+{
+  "server": {
+    "name": "io.github.example/my-server",
+    "version": "1.0.0",
+    "description": "My MCP server",
+    // ... other fields ...
+    "_meta": {
+      "io.modelcontextprotocol.registry/publisher-provided": {
+        "tool": "ci-publisher",
+        "version": "2.0.0"
+      }
+    }
+  },
+  "_meta": {
+    // Registry-managed metadata at response level
+    "status": "active",
+    "publishedAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z",
+    "isLatest": true
+  }
+}
+```
+
+Notice how the registry API response has **two** `_meta` fields:
+1. Inside the `server` object: Your publisher-provided metadata (preserved from server.json)
+2. At the response level: Registry-managed metadata (automatically added by the registry)
 
 Registry-managed metadata cannot be set or overridden by publishers. See the [API documentation](../api/generic-registry-api.md) for the complete response structure.
