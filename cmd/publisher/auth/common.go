@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"time"
 )
@@ -86,10 +87,13 @@ func (c *CryptoProvider) signMessage(privateKeyBytes []byte, message []byte) ([]
 
 		digest := sha512.Sum384(message)
 		curve := elliptic.P384()
-		privateKey, err := ecdsa.ParseRawPrivateKey(curve, privateKeyBytes)
+
+		// Parse the raw private key (compatible with Go 1.24)
+		privateKey, err := parseRawPrivateKey(curve, privateKeyBytes)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse ECDSA private key: %w", err)
 		}
+
 		r, s, err := ecdsa.Sign(rand.Reader, privateKey, digest[:])
 		if err != nil {
 			return nil, fmt.Errorf("failed to sign message: %w", err)
@@ -99,6 +103,38 @@ func (c *CryptoProvider) signMessage(privateKeyBytes []byte, message []byte) ([]
 	default:
 		return nil, fmt.Errorf("unsupported crypto algorithm: %s", c.cryptoAlgorithm)
 	}
+}
+
+// parseRawPrivateKey parses a raw ECDSA private key from bytes.
+// This mimics crypto/ecdsa.ParseRawPrivateKey from Go 1.25+ for compatibility with Go 1.24.
+func parseRawPrivateKey(curve elliptic.Curve, privateKeyBytes []byte) (*ecdsa.PrivateKey, error) {
+	if curve == nil {
+		return nil, fmt.Errorf("nil curve")
+	}
+
+	// Only standard NIST curves supported
+	switch curve {
+	case elliptic.P224(), elliptic.P256(), elliptic.P384(), elliptic.P521():
+		// ok
+	default:
+		return nil, fmt.Errorf("unsupported curve")
+	}
+
+	d := new(big.Int).SetBytes(privateKeyBytes)
+	params := curve.Params()
+	if d.Sign() <= 0 || d.Cmp(params.N) >= 0 {
+		return nil, fmt.Errorf("invalid private scalar")
+	}
+
+	x, y := curve.ScalarBaseMult(d.Bytes())
+	return &ecdsa.PrivateKey{
+		PublicKey: ecdsa.PublicKey{
+			Curve: curve,
+			X:     x,
+			Y:     y,
+		},
+		D: d,
+	}, nil
 }
 
 // NeedsLogin always returns false for cryptographic auth since no interactive login is needed
