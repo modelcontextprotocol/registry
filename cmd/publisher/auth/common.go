@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"strings"
@@ -114,7 +115,7 @@ func (c *InProcessSigner) GetSignedTimestamp(_ context.Context) (*string, []byte
 
 		digest := sha512.Sum384([]byte(timestamp))
 		curve := elliptic.P384()
-		privateKey, err := ecdsa.ParseRawPrivateKey(curve, c.privateKey)
+		privateKey, err := parseRawPrivateKey(curve, c.privateKey)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to parse ECDSA private key: %w", err)
 		}
@@ -130,6 +131,27 @@ func (c *InProcessSigner) GetSignedTimestamp(_ context.Context) (*string, []byte
 	default:
 		return nil, nil, fmt.Errorf("unsupported crypto algorithm: %s", c.cryptoAlgorithm)
 	}
+}
+
+func parseRawPrivateKey(curve elliptic.Curve, bytes []byte) (*ecdsa.PrivateKey, error) {
+	// ecdsa.ParseRawPrivateKey is not available until Go 1.25.
+	// This is the equivalent implementation.
+	expectedBytes := (curve.Params().N.BitLen() + 7) / 8
+	if len(bytes) != expectedBytes {
+		return nil, fmt.Errorf("invalid private key length: expected %d bytes, got %d", expectedBytes, len(bytes))
+	}
+
+	d := new(big.Int).SetBytes(bytes)
+	x, y := curve.ScalarBaseMult(bytes)
+	privateKey := &ecdsa.PrivateKey{
+		PublicKey: ecdsa.PublicKey{
+			Curve: curve,
+			X:     x,
+			Y:     y,
+		},
+		D: d,
+	}
+	return privateKey, nil
 }
 
 // NeedsLogin always returns false for cryptographic auth since no interactive login is needed
