@@ -41,15 +41,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  docker:
+  ko-push:
+    name: Build and Push Image with ko
     runs-on: ubuntu-latest
     needs: goreleaser
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Set up ko
+        uses: ko-build/setup-ko@v0.9
 
       - name: Log in to Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
@@ -58,31 +65,23 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get build timestamp
-        id: build-time
-        run: echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+      - name: Get build timestamp and version
+        id: build-info
+        run: |
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+          # Extract version from tag (e.g., refs/tags/v1.2.3 -> v1.2.3)
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            VERSION=${{ steps.meta.outputs.version }}
-            GIT_COMMIT=${{ github.sha }}
-            BUILD_TIME=${{ steps.build-time.outputs.timestamp }}
+      - name: Build and push with ko
+        env:
+          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
+          VERSION: ${{ steps.build-info.outputs.version }}
+          GIT_COMMIT: ${{ github.sha }}
+          BUILD_TIME: ${{ steps.build-info.outputs.timestamp }}
+        run: |
+          # Build and push multi-platform image with version tag and latest
+          ko build ./cmd/registry \
+            --bare \
+            --platform=linux/amd64,linux/arm64 \
+            --tags=${{ steps.build-info.outputs.version }},latest

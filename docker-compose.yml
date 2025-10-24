@@ -1,14 +1,9 @@
 services:
   registry:
-    image: modelcontextprotocol/registry:dev
-    pull_policy: never
+    # Built using ko (see Makefile dev-compose target)
+    # Image format: ko.local/<import-path>:<tag>
+    image: ko.local/github.com/modelcontextprotocol/registry/cmd/registry:dev
     container_name: registry
-    build:
-      dockerfile: Dockerfile
-      args:
-        - VERSION=dev-${GIT_COMMIT_SHORT:-unknown}
-        - GIT_COMMIT=${GIT_COMMIT:-unknown}
-        - BUILD_TIME=${BUILD_TIME:-unknown}
     depends_on:
       postgres:
         condition: service_healthy

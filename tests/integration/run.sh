@@ -24,8 +24,19 @@ cleanup() {
 
 go build -o ./bin/publisher ./cmd/publisher
 
-# Build the registry image with both tags, forcing a rebuild to ensure latest code
-docker build --no-cache -t registry -t modelcontextprotocol/registry:dev .
+# Build the registry image with ko, forcing a rebuild to ensure latest code
+# Use Alpine for integration tests because health checks need wget (production uses static image)
+echo "Building registry image with ko..."
+VERSION=dev-$(git rev-parse --short HEAD) \
+GIT_COMMIT=$(git rev-parse HEAD) \
+BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+KO_DOCKER_REPO=ko.local \
+KO_DEFAULTBASEIMAGE=alpine:latest \
+ko build --preserve-import-paths --tags=dev --sbom=none ./cmd/registry
+
+# Tag the ko.local image with the tags expected by docker-compose
+docker tag ko.local/github.com/modelcontextprotocol/registry/cmd/registry:dev registry
+docker tag ko.local/github.com/modelcontextprotocol/registry/cmd/registry:dev modelcontextprotocol/registry:dev
 
 trap cleanup EXIT
 

@@ -54,6 +54,9 @@ jobs:
         go-version-file: 'go.mod'
         cache: true
 
+    - name: Set up ko
+      uses: ko-build/setup-ko@v0.9
+
     - name: Run all tests
       run: make test-all
 

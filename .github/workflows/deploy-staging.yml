@@ -14,8 +14,8 @@ env:
   PULUMI_VERSION: "3.188.0"
 
 jobs:
-  docker-push:
-    name: Build Docker Image
+  ko-push:
+    name: Build and Push Image with ko
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,8 +24,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Set up ko
+        uses: ko-build/setup-ko@v0.9
 
       - name: Log in to Container Registry
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
@@ -34,40 +40,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Get build timestamp
-        id: build-time
-        run: echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+      - name: Get build timestamp and tags
+        id: build-info
+        run: |
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=sha,prefix=main-{{date 'YYYYMMDD'}}-,enable={{is_default_branch}}
-            type=raw,value=main,enable={{is_default_branch}}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
-        with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            VERSION=${{ steps.meta.outputs.version }}
-            GIT_COMMIT=${{ github.sha }}
-            BUILD_TIME=${{ steps.build-time.outputs.timestamp }}
+      - name: Build and push with ko
+        env:
+          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
+          VERSION: main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }}
+          GIT_COMMIT: ${{ github.sha }}
+          BUILD_TIME: ${{ steps.build-info.outputs.timestamp }}
+        run: |
+          # Build and push multi-platform image
+          ko build ./cmd/registry \
+            --bare \
+            --platform=linux/amd64,linux/arm64 \
+            --tags=main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }},main
 
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     environment: staging
-    needs: docker-push
+    needs: ko-push
     concurrency:
       group: deploy-staging
       cancel-in-progress: false

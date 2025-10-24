@@ -1,0 +1,32 @@
+# ko configuration for MCP Registry
+# Documentation: https://ko.build/configuration/
+
+# Default base image for all builds
+# Using Chainguard's static image for minimal, secure containers (~2MB)
+defaultBaseImage: cgr.dev/chainguard/static:latest
+
+# Default platforms for multi-architecture builds
+defaultPlatforms:
+  - linux/amd64
+  - linux/arm64
+
+# Build configuration
+builds:
+  - id: registry
+    # Main package to build
+    main: ./cmd/registry
+    # Inject version information at build time via ldflags
+    ldflags:
+      - -s -w
+      - -X main.Version={{ .Env.VERSION }}
+      - -X main.GitCommit={{ .Env.GIT_COMMIT }}
+      - -X main.BuildTime={{ .Env.BUILD_TIME }}
+    env:
+      - CGO_ENABLED=0
+
+# SBOM (Software Bill of Materials) configuration
+sbom: spdx
+
+# Base import path handling
+# Set to false to preserve full import paths in image names
+baseImportPaths: false

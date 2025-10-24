@@ -1,0 +1,52 @@
+# Build artifacts
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test and coverage files
+coverage.out
+coverage.html
+*.test
+
+# Database files
+*.db
+.db/
+
+# Deployment files
+deploy/
+
+# Documentation
+docs/
+
+# Tests
+tests/
+
+# Git
+.git/
+.gitignore
+
+# GitHub Actions
+.github/
+
+# Docker files (no longer used)
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS files
+.DS_Store
+Thumbs.db
