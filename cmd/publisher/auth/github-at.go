@@ -50,9 +50,10 @@ type StoredRegistryToken struct {
 
 // GitHubATProvider implements the Provider interface using GitHub's device flow
 type GitHubATProvider struct {
-	clientID    string
-	forceLogin  bool
-	registryURL string
+	clientID      string
+	forceLogin    bool
+	registryURL   string
+	providedToken string // Token provided via --token flag or MCP_GITHUB_TOKEN env var
 }
 
 // ServerHealthResponse represents the response from the health endpoint
@@ -62,10 +63,16 @@ type ServerHealthResponse struct {
 }
 
 // NewGitHubATProvider creates a new GitHub OAuth provider
-func NewGitHubATProvider(forceLogin bool, registryURL string) Provider {
+func NewGitHubATProvider(forceLogin bool, registryURL, token string) Provider {
+	// Check for token from flag or environment variable
+	if token == "" {
+		token = os.Getenv("MCP_GITHUB_TOKEN")
+	}
+
 	return &GitHubATProvider{
-		forceLogin:  forceLogin,
-		registryURL: registryURL,
+		forceLogin:    forceLogin,
+		registryURL:   registryURL,
+		providedToken: token,
 	}
 }
 
@@ -100,6 +107,11 @@ func (g *GitHubATProvider) GetToken(ctx context.Context) (string, error) {
 
 // NeedsLogin checks if a new login is required
 func (g *GitHubATProvider) NeedsLogin() bool {
+	// If a token was provided via --token or MCP_GITHUB_TOKEN, no login needed
+	if g.providedToken != "" {
+		return false
+	}
+
 	if g.forceLogin {
 		return true
 	}
@@ -123,6 +135,15 @@ func (g *GitHubATProvider) NeedsLogin() bool {
 
 // Login performs the GitHub device flow authentication
 func (g *GitHubATProvider) Login(ctx context.Context) error {
+	// If a token was provided via --token or MCP_GITHUB_TOKEN, save it and skip device flow
+	if g.providedToken != "" {
+		err := saveToken(g.providedToken)
+		if err != nil {
+			return fmt.Errorf("error saving provided token: %w", err)
+		}
+		return nil
+	}
+
 	// If clientID is not set, try to retrieve it from the server's health endpoint
 	if g.clientID == "" {
 		clientID, err := getClientID(ctx, g.registryURL)

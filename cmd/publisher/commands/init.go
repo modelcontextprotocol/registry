@@ -29,7 +29,7 @@ func InitCommand() error {
 	description := detectDescription()
 	version := "1.0.0"
 	repoURL := detectRepoURL()
-	repoSource := "github"
+	repoSource := MethodGitHub
 	if repoURL != "" && !strings.Contains(repoURL, "github.com") {
 		if strings.Contains(repoURL, "gitlab.com") {
 			repoSource = "gitlab"

@@ -18,6 +18,11 @@ import (
 const (
 	DefaultRegistryURL = "https://registry.modelcontextprotocol.io"
 	TokenFileName      = ".mcp_publisher_token" //nolint:gosec // Not a credential, just a filename
+	MethodGitHub       = "github"
+	MethodGitHubOIDC   = "github-oidc"
+	MethodDNS          = "dns"
+	MethodHTTP         = "http"
+	MethodNone         = "none"
 )
 
 type CryptoAlgorithm auth.CryptoAlgorithm
@@ -31,6 +36,7 @@ type LoginFlags struct {
 	KvVault         string
 	KvKeyName       string
 	KmsResource     string
+	Token           Token
 	CryptoAlgorithm CryptoAlgorithm
 	SignerType      SignerType
 	ArgOffset       int
@@ -56,6 +62,8 @@ func (c *CryptoAlgorithm) Set(v string) error {
 	return fmt.Errorf("invalid algorithm: %q (allowed: ed25519, ecdsap384)", v)
 }
 
+type Token string
+
 func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 	var flags LoginFlags
 	loginFlags := flag.NewFlagSet("login", flag.ExitOnError)
@@ -63,6 +71,12 @@ func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 	flags.SignerType = NoSignerType
 	flags.ArgOffset = 1
 	loginFlags.StringVar(&flags.RegistryURL, "registry", DefaultRegistryURL, "Registry URL")
+
+	// Add --token flag for GitHub authentication
+	var token string
+	if method == MethodGitHub {
+		loginFlags.StringVar(&token, "token", "", "GitHub Personal Access Token")
+	}
 
 	if method == "dns" || method == "http" {
 		loginFlags.StringVar(&flags.Domain, "domain", "", "Domain name")
@@ -90,6 +104,11 @@ func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 		flags.RegistryURL = strings.TrimRight(flags.RegistryURL, "/")
 	}
 
+	// Store the token in flags if it was provided
+	if method == MethodGitHub {
+		flags.Token = Token(token)
+	}
+
 	return flags, err
 }
 
@@ -108,23 +127,23 @@ func createSigner(flags LoginFlags) (auth.Signer, error) {
 	}
 }
 
-func createAuthProvider(method, registryURL, domain string, signer auth.Signer) (auth.Provider, error) {
+func createAuthProvider(method, registryURL, domain string, token Token, signer auth.Signer) (auth.Provider, error) {
 	switch method {
-	case "github":
-		return auth.NewGitHubATProvider(true, registryURL), nil
-	case "github-oidc":
+	case MethodGitHub:
+		return auth.NewGitHubATProvider(true, registryURL, string(token)), nil
+	case MethodGitHubOIDC:
 		return auth.NewGitHubOIDCProvider(registryURL), nil
-	case "dns":
+	case MethodDNS:
 		if domain == "" {
 			return nil, errors.New("dns authentication requires --domain")
 		}
 		return auth.NewDNSProvider(registryURL, domain, &signer), nil
-	case "http":
+	case MethodHTTP:
 		if domain == "" {
 			return nil, errors.New("http authentication requires --domain")
 		}
 		return auth.NewHTTPProvider(registryURL, domain, &signer), nil
-	case "none":
+	case MethodNone:
 		return auth.NewNoneProvider(registryURL), nil
 	default:
 		return nil, fmt.Errorf("unknown authentication method: %s\nFor a list of available methods, run: mcp-publisher login", method)
@@ -191,11 +210,10 @@ Examples:
 		}
 	}
 
-	authProvider, err := createAuthProvider(method, flags.RegistryURL, flags.Domain, signer)
+	authProvider, err := createAuthProvider(method, flags.RegistryURL, flags.Domain, flags.Token, signer)
 	if err != nil {
 		return err
 	}
-
 	ctx := context.Background()
 	_, _ = fmt.Fprintf(os.Stdout, "Logging in with %s...\n", method)
 
