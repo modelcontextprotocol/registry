@@ -18,42 +18,38 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 		expectError bool
 		errorMsg    string
 	}{
-		// Allowed registries - these should NOT fail with "unsupported registry"
+		// Allowed registries - use real public images that exist
+		// These should fail with "missing required annotation" (no MCP label)
+		// NOT with "unsupported registry", "does not exist", or "is private" errors
 		{
-			name:       "Docker Hub should be allowed",
-			identifier: "docker.io/test/image:latest",
-			// Will fail on image not found, but registry should be accepted
+			name:        "Docker Hub should be allowed",
+			identifier:  "docker.io/library/alpine:latest",
 			expectError: true,
+			errorMsg:    "missing required annotation",
 		},
 		{
-			name:       "Docker Hub without explicit registry should default and be allowed",
-			identifier: "test/image:latest",
-			// Will fail on image not found, but registry should be accepted
+			name:        "Docker Hub without explicit registry should default and be allowed",
+			identifier:  "library/hello-world:latest",
 			expectError: true,
+			errorMsg:    "missing required annotation",
 		},
 		{
-			name:       "GHCR should be allowed",
-			identifier: "ghcr.io/test/image:latest",
-			// Will fail on image fetch, but registry should be accepted
+			name:        "GHCR should be allowed",
+			identifier:  "ghcr.io/containerbase/base:latest",
 			expectError: true,
+			errorMsg:    "missing required annotation",
 		},
 		{
-			name:       "Artifact Registry us-central1 should be allowed",
-			identifier: "us-central1-docker.pkg.dev/project/repo/image:latest",
-			// Will fail on image fetch, but registry should be accepted
+			name:        "Artifact Registry regional should be allowed",
+			identifier:  "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
 			expectError: true,
+			errorMsg:    "missing required annotation",
 		},
 		{
-			name:       "Artifact Registry europe-west1 should be allowed",
-			identifier: "europe-west1-docker.pkg.dev/project/repo/image:latest",
-			// Will fail on image fetch, but registry should be accepted
+			name:        "Artifact Registry multi-region should be allowed",
+			identifier:  "us-docker.pkg.dev/berglas/berglas/berglas:latest",
 			expectError: true,
-		},
-		{
-			name:       "Artifact Registry multi-region us should be allowed",
-			identifier: "us-docker.pkg.dev/project/repo/image:latest",
-			// Will fail on image fetch, but registry should be accepted
-			expectError: true,
+			errorMsg:    "missing required annotation",
 		},
 
 		// Disallowed registries
@@ -106,13 +102,8 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 
 			if tt.expectError {
 				assert.Error(t, err)
-				if tt.errorMsg != "" {
-					// Should contain the specific error message
-					assert.Contains(t, err.Error(), tt.errorMsg)
-				} else {
-					// For allowed registries, should NOT be "unsupported registry" error
-					assert.NotContains(t, err.Error(), "unsupported OCI registry")
-				}
+				// Should contain the specific error message
+				assert.Contains(t, err.Error(), tt.errorMsg)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -209,4 +200,33 @@ func TestValidateOCI_EmptyIdentifier(t *testing.T) {
 	err := registries.ValidateOCI(ctx, pkg, "com.example/test")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "package identifier is required")
+}
+
+func TestValidateOCI_SuccessfulValidation(t *testing.T) {
+	ctx := context.Background()
+
+	// Test with a real MCP server image that has the correct label
+	pkg := model.Package{
+		RegistryType: model.RegistryTypeOCI,
+		Identifier:   "ghcr.io/github/github-mcp-server:latest",
+	}
+
+	err := registries.ValidateOCI(ctx, pkg, "io.github.github/github-mcp-server")
+	assert.NoError(t, err)
+}
+
+func TestValidateOCI_LabelMismatch(t *testing.T) {
+	ctx := context.Background()
+
+	// Test with a real MCP server image but wrong expected server name
+	// This should fail because the label doesn't match
+	pkg := model.Package{
+		RegistryType: model.RegistryTypeOCI,
+		Identifier:   "ghcr.io/github/github-mcp-server:latest",
+	}
+
+	err := registries.ValidateOCI(ctx, pkg, "io.github.github/github-mcp-server-mismatch")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "ownership validation failed")
+	assert.Contains(t, err.Error(), "Expected annotation")
 }
