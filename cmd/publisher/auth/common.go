@@ -115,6 +115,8 @@ func (c *InProcessSigner) GetSignedTimestamp(_ context.Context) (*string, []byte
 
 		digest := sha512.Sum384([]byte(timestamp))
 		curve := elliptic.P384()
+
+		// Parse the raw private key (compatible with Go 1.24)
 		privateKey, err := parseRawPrivateKey(curve, c.privateKey)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to parse ECDSA private key: %w", err)
@@ -133,25 +135,41 @@ func (c *InProcessSigner) GetSignedTimestamp(_ context.Context) (*string, []byte
 	}
 }
 
-func parseRawPrivateKey(curve elliptic.Curve, bytes []byte) (*ecdsa.PrivateKey, error) {
-	// ecdsa.ParseRawPrivateKey is not available until Go 1.25.
-	// This is the equivalent implementation.
-	expectedBytes := (curve.Params().N.BitLen() + 7) / 8
-	if len(bytes) != expectedBytes {
-		return nil, fmt.Errorf("invalid private key length: expected %d bytes, got %d", expectedBytes, len(bytes))
+// parseRawPrivateKey parses a raw ECDSA private key from bytes.
+// This mimics crypto/ecdsa.ParseRawPrivateKey from Go 1.25+ for compatibility with Go 1.24.
+func parseRawPrivateKey(curve elliptic.Curve, privateKeyBytes []byte) (*ecdsa.PrivateKey, error) {
+	if curve == nil {
+		return nil, fmt.Errorf("nil curve")
 	}
 
-	d := new(big.Int).SetBytes(bytes)
-	x, y := curve.ScalarBaseMult(bytes)
-	privateKey := &ecdsa.PrivateKey{
+	expectedBytes := (curve.Params().N.BitLen() + 7) / 8
+	if len(privateKeyBytes) != expectedBytes {
+		return nil, fmt.Errorf("invalid private key length: expected %d bytes, got %d", expectedBytes, len(privateKeyBytes))
+	}
+
+	// Only standard NIST curves supported
+	switch curve {
+	case elliptic.P224(), elliptic.P256(), elliptic.P384(), elliptic.P521():
+		// ok
+	default:
+		return nil, fmt.Errorf("unsupported curve")
+	}
+
+	d := new(big.Int).SetBytes(privateKeyBytes)
+	params := curve.Params()
+	if d.Sign() <= 0 || d.Cmp(params.N) >= 0 {
+		return nil, fmt.Errorf("invalid private scalar")
+	}
+
+	x, y := curve.ScalarBaseMult(d.Bytes())
+	return &ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
 			Curve: curve,
 			X:     x,
 			Y:     y,
 		},
 		D: d,
-	}
-	return privateKey, nil
+	}, nil
 }
 
 // NeedsLogin always returns false for cryptographic auth since no interactive login is needed
