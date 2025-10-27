@@ -176,7 +176,7 @@ mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--registry=
 - Verifies domain ownership via HTTPS endpoint  
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
-  - The private key can stored in a cloud signing provider like Google KMS or Azure Key Vault.
+  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault.
 
 **Setup:** (for Ed25519, recommended)
 ```bash
