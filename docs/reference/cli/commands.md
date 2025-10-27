@@ -81,7 +81,7 @@ mcp-publisher login dns --domain=example.com --private-key=HEX_KEY [--registry=U
 - Verifies domain ownership via DNS TXT record
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
-  - The private key can stored in a cloud signing provider like Google KMS or Azure Key Vault.
+  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault.
 
 **Setup:** (for Ed25519, recommended)
 ```bash
