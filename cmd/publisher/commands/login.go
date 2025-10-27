@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/modelcontextprotocol/registry/cmd/publisher/auth"
 	"github.com/modelcontextprotocol/registry/cmd/publisher/auth/azurekeyvault"
@@ -85,6 +86,10 @@ func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 		}
 	}
 	err := loginFlags.Parse(args[flags.ArgOffset:])
+	if err == nil {
+		flags.RegistryURL = strings.TrimRight(flags.RegistryURL, "/")
+	}
+
 	return flags, err
 }
 
@@ -149,6 +154,25 @@ needed for an authentication challenge with the registry.
 
 The github and github-oidc methods do not support signing providers and
 authenticate using the GitHub as an identity provider.
+
+Examples:
+
+  # Interactive GitHub login, using device code flow
+  mcp-publisher login github
+  
+  # Sign in using a specific Ed25519 private key for DNS authentication
+  mcp-publisher login dns -algorithm ed25519 -domain example.com -private-key <64 hex chars>
+
+  # Sign in using a specific ECDSA P-384 private key for DNS authentication
+  mcp-publisher login dns -algorithm ecdsap384 -domain example.com -private-key <96 hex chars>
+  
+  # Sign in with gcloud CLI, use Google Cloud KMS for signing in DNS authentication
+  gcloud auth application-default login
+  mcp-publisher login dns google-kms -domain example.com -resource projects/lotr/locations/global/keyRings/fellowship/cryptoKeys/frodo/cryptoKeyVersions/1
+
+  # Sign in with az CLI, use Azure Key Vault for signing in HTTP authentication
+  az login
+  mcp-publisher login http azure-key-vault -domain example.com -vault myvault -key mysigningkey
 
   `)
 	}

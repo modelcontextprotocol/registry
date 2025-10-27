@@ -33,9 +33,9 @@ make dev-compose  # Start local registry
 - **`none`** - No auth (testing only)
 
 ### Signing Providers
-Optional, for `dns` and `http` to sign out of process without direct access to the private key.
+Optional: enables `dns` and `http` methods to sign out-of-process without direct access to the private key.
 
-- **`google-kms`** - Google KMS signing 
+- **`google-kms`** - Google KMS signing
 - **`azure-key-vault`** - Azure Key Vault signing
 
 ## Key Files

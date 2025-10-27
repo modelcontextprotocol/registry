@@ -16,7 +16,6 @@ import (
 	"math/big"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -218,7 +217,7 @@ func (c *CryptoProvider) exchangeTokenForRegistry(ctx context.Context, domain, t
 	}
 
 	// Make the token exchange request
-	exchangeURL := fmt.Sprintf("%s/v0/auth/%s", strings.TrimSuffix(c.registryURL, "/"), c.authMethod)
+	exchangeURL := fmt.Sprintf("%s/v0/auth/%s", c.registryURL, c.authMethod)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, exchangeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)

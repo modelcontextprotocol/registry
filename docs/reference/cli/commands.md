@@ -132,13 +132,13 @@ gcloud kms keys create mykey --default-algorithm=ec-sign-ed25519 --purpose=asymm
 gcloud auth application-default login
 
 # Attempt login to show the public key
-mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykering/cryptoKeys/mykey/cryptoKeyVersions/1
+mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykeyring/cryptoKeys/mykey/cryptoKeyVersions/1
 
 # Copy the "Expected proof record" and add the TXT record
 # example.com. IN TXT "v=MCPv1; k=ed25519; p=PUBLIC_KEY"
 
 # Re-run the login command
-mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykering/cryptoKeys/mykey/cryptoKeyVersions/1
+mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykeyring/cryptoKeys/mykey/cryptoKeyVersions/1
 ```
 
 **Setup:** (for Azure Key Vault signing)
@@ -156,7 +156,7 @@ az group create --location westus --resource-group MyResourceGroup
 # Create a Key Vault
 az keyvault create --name MyKeyVault --location westus --resource-group MyResourceGroup
 
-# Create an ECDCA P-384 signing key
+# Create an ECDSA P-384 signing key
 az keyvault key create --name MyKey --vault-name MyKeyVault --curve P-384
 
 # Attempt login to show the public key
