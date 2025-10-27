@@ -146,7 +146,7 @@ mcp-publisher login dns google-kms --domain=example.com --resource=projects/mypr
 This requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
 
 ```bash
-# log in and set default subscrption
+# log in and set default subscription
 az login
 az account set --subscription "My Subscription (name or ID)"
 
