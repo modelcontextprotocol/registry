@@ -163,7 +163,7 @@ az keyvault key create --name MyKey --vault-name MyKeyVault --curve P-384
 mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault --key MyKey
 
 # Copy the "Expected proof record" and add the TXT record
-# example.com. IN TXT "v=MCPv1; k=ecdsa0384; p=PUBLIC_KEY"
+# example.com. IN TXT "v=MCPv1; k=ecdsap384; p=PUBLIC_KEY"
 
 # Re-run the login command
 mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault --key MyKey
