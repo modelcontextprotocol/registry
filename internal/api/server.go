@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/rs/cors"
 
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
 	"github.com/modelcontextprotocol/registry/internal/api/router"
@@ -49,8 +50,25 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 
 	api := router.NewHumaAPI(cfg, registryService, mux, metrics, versionInfo)
 
-	// Wrap the mux with trailing slash middleware
-	handler := TrailingSlashMiddleware(mux)
+	// Configure CORS with permissive settings for public API
+	corsHandler := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+		},
+		AllowedHeaders:   []string{"*"},
+		ExposedHeaders:   []string{"Content-Type", "Content-Length"},
+		AllowCredentials: false, // Must be false when AllowedOrigins is "*"
+		MaxAge:           86400, // 24 hours
+	})
+
+	// Wrap the mux with middleware stack
+	// Order: TrailingSlash -> CORS -> Mux
+	handler := TrailingSlashMiddleware(corsHandler.Handler(mux))
 
 	server := &Server{
 		config:   cfg,

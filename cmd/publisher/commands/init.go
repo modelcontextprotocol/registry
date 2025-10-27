@@ -21,8 +21,11 @@ func InitCommand() error {
 		return errors.New("server.json already exists")
 	}
 
+	// Detect if we're in a subdirectory of the git repository
+	subfolder := detectSubfolder()
+
 	// Try to detect values from environment
-	name := detectServerName()
+	name := detectServerName(subfolder)
 	description := detectDescription()
 	version := "1.0.0"
 	repoURL := detectRepoURL()
@@ -55,7 +58,7 @@ func InitCommand() error {
 
 	// Create the server structure
 	server := createServerJSON(
-		name, description, version, repoURL, repoSource,
+		name, description, version, repoURL, repoSource, subfolder,
 		packageType, packageIdentifier, version, envVars,
 	)
 
@@ -80,6 +83,50 @@ func InitCommand() error {
 	_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher publish")
 
 	return nil
+}
+
+func detectSubfolder() string {
+	// Get current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+
+	// Find git repository root
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "git", "rev-parse", "--show-toplevel")
+	cmd.Dir = cwd
+	output, err := cmd.Output()
+	if err != nil {
+		// Not in a git repository
+		return ""
+	}
+
+	gitRoot := strings.TrimSpace(string(output))
+
+	// Clean the paths to ensure proper comparison
+	gitRoot = filepath.Clean(gitRoot)
+	cwd = filepath.Clean(cwd)
+
+	// If we're in the root, no subfolder
+	if gitRoot == cwd {
+		return ""
+	}
+
+	// Check if cwd is actually within gitRoot
+	if !strings.HasPrefix(cwd, gitRoot) {
+		return ""
+	}
+
+	// Calculate relative path from git root to current directory
+	relPath, err := filepath.Rel(gitRoot, cwd)
+	if err != nil {
+		return ""
+	}
+
+	// Convert to forward slashes for consistency (important for cross-platform)
+	return filepath.ToSlash(relPath)
 }
 
 func getNameFromPackageJSON() string {
@@ -109,18 +156,13 @@ func getNameFromPackageJSON() string {
 	return fmt.Sprintf("io.github.<your-username>/%s", name)
 }
 
-func detectServerName() string {
+func detectServerName(subfolder string) string {
 	// Try to get from git remote
 	repoURL := detectRepoURL()
-	if repoURL != "" {
-		// Extract owner/repo from GitHub URL
-		if strings.Contains(repoURL, "github.com") {
-			parts := strings.Split(repoURL, "/")
-			if len(parts) >= 5 {
-				owner := parts[3]
-				repo := strings.TrimSuffix(parts[4], ".git")
-				return fmt.Sprintf("io.github.%s/%s", owner, repo)
-			}
+	if repoURL != "" && strings.Contains(repoURL, "github.com") {
+		name := buildGitHubServerName(repoURL, subfolder)
+		if name != "" {
+			return name
 		}
 	}
 
@@ -136,6 +178,24 @@ func detectServerName() string {
 	}
 
 	return "com.example/my-mcp-server"
+}
+
+func buildGitHubServerName(repoURL, subfolder string) string {
+	parts := strings.Split(repoURL, "/")
+	if len(parts) < 5 {
+		return ""
+	}
+
+	owner := parts[3]
+	repo := strings.TrimSuffix(parts[4], ".git")
+
+	// If we're in a subdirectory, use the current folder name
+	if subfolder != "" {
+		folderName := filepath.Base(subfolder)
+		return fmt.Sprintf("io.github.%s/%s", owner, folderName)
+	}
+
+	return fmt.Sprintf("io.github.%s/%s", owner, repo)
 }
 
 func detectDescription() string {
@@ -263,7 +323,7 @@ func detectPackageIdentifier(serverName string, packageType string) string {
 }
 
 func createServerJSON(
-	name, description, version, repoURL, repoSource,
+	name, description, version, repoURL, repoSource, subfolder,
 	packageType, packageIdentifier, packageVersion string,
 	envVars []model.KeyValueInput,
 ) apiv0.ServerJSON {
@@ -326,16 +386,24 @@ func createServerJSON(
 		}
 	}
 
+	// Create repository with optional subfolder
+	repo := model.Repository{
+		URL:    repoURL,
+		Source: repoSource,
+	}
+
+	// Only set subfolder if we're actually in a subdirectory
+	if subfolder != "" {
+		repo.Subfolder = subfolder
+	}
+
 	// Create server structure
 	return apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
 		Name:        name,
 		Description: description,
-		Repository: model.Repository{
-			URL:    repoURL,
-			Source: repoSource,
-		},
-		Version:  version,
-		Packages: []model.Package{pkg},
+		Repository:  repo,
+		Version:     version,
+		Packages:    []model.Package{pkg},
 	}
 }
