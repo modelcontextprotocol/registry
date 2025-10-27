@@ -54,11 +54,11 @@ func (d Signer) GetSignedTimestamp(ctx context.Context) (*string, []byte, error)
 	}
 
 	if *keyResp.Key.Kty != azkeys.KeyTypeEC && *keyResp.Key.Kty != azkeys.KeyTypeECHSM {
-		return nil, nil, fmt.Errorf("unsupported key type: kty=%v (only EC keys are supported)", keyResp.Key.Kty)
+		return nil, nil, fmt.Errorf("unsupported key type: kty: %s (only EC or EC-HSM keys are supported)", *keyResp.Key.Kty)
 	}
 
 	if *keyResp.Key.Crv != azkeys.CurveNameP384 {
-		return nil, nil, fmt.Errorf("unsupported curve: crv=%v (only P-384 is supported)", keyResp.Key.Crv)
+		return nil, nil, fmt.Errorf("unsupported curve: %s (only P-384 is supported)", *keyResp.Key.Crv)
 	}
 
 	fmt.Fprintln(os.Stdout, "Successfully read the public key from Key Vault.")
