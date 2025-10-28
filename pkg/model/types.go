@@ -48,8 +48,8 @@ type Package struct {
 }
 
 type Repository struct {
-	URL       string `json:"url" format:"uri" doc:"Repository URL for browsing source code. Should support both web browsing and git clone operations." example:"https://github.com/modelcontextprotocol/servers"`
-	Source    string `json:"source" doc:"Repository hosting service identifier. Used by registries to determine validation and API access methods." example:"github"`
+	URL       string `json:"url,omitempty" format:"uri" doc:"Repository URL for browsing source code. Should support both web browsing and git clone operations." example:"https://github.com/modelcontextprotocol/servers"`
+	Source    string `json:"source,omitempty" doc:"Repository hosting service identifier. Used by registries to determine validation and API access methods." example:"github"`
 	ID        string `json:"id,omitempty" doc:"Repository identifier from the hosting service (e.g., GitHub repo ID). Owned and determined by the source forge. Should remain stable across repository renames and may be used to detect repository resurrection attacks - if a repository is deleted and recreated, the ID should change. For GitHub, use: gh api repos/<owner>/<repo> --jq '.id'" example:"b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9"`
 	Subfolder string `json:"subfolder,omitempty" doc:"Optional relative path from repository root to the server location within a monorepo or nested package structure. Must be a clean relative path." example:"src/everything"`
 }

@@ -74,7 +74,7 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	}
 
 	// Validate repository
-	if err := validateRepository(&serverJSON.Repository); err != nil {
+	if err := validateRepository(serverJSON.Repository); err != nil {
 		return err
 	}
 
@@ -122,8 +122,8 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 }
 
 func validateRepository(obj *model.Repository) error {
-	// Skip validation for empty repository (optional field)
-	if obj.URL == "" && obj.Source == "" {
+	// Skip validation if repository is nil or empty (optional field)
+	if obj == nil || (obj.URL == "" && obj.Source == "") {
 		return nil
 	}
 

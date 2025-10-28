@@ -387,14 +387,17 @@ func createServerJSON(
 	}
 
 	// Create repository with optional subfolder
-	repo := model.Repository{
-		URL:    repoURL,
-		Source: repoSource,
-	}
+	var repo *model.Repository
+	if repoURL != "" && repoSource != "" {
+		repo = &model.Repository{
+			URL:    repoURL,
+			Source: repoSource,
+		}
 
-	// Only set subfolder if we're actually in a subdirectory
-	if subfolder != "" {
-		repo.Subfolder = subfolder
+		// Only set subfolder if we're actually in a subdirectory
+		if subfolder != "" {
+			repo.Subfolder = subfolder
+		}
 	}
 
 	// Create server structure

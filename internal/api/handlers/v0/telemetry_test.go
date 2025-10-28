@@ -27,7 +27,7 @@ func TestPrometheusHandler(t *testing.T) {
 		Schema:      model.CurrentSchemaURL,
 		Name:        "io.github.example/test-server",
 		Description: "Test server detail",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "https://github.com/example/test-server",
 			Source: "github",
 			ID:     "example/test-server",

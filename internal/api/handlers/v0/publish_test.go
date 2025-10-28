@@ -59,7 +59,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -84,7 +84,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "example/test-server",
 				Description: "A test server without auth",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -149,7 +149,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Name:        "io.github.other/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -174,7 +174,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Name:        "example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -193,7 +193,7 @@ func TestPublishEndpoint(t *testing.T) {
 					Name:        "example/test-server",
 					Description: "Existing test server",
 					Version:     "1.0.0",
-					Repository: model.Repository{
+					Repository: &model.Repository{
 						URL:    "https://github.com/example/test-server-existing",
 						Source: "github",
 						ID:     "example/test-server-existing",
@@ -239,7 +239,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Name:        "com.example/server/path",
 				Description: "Server with multiple slashes in name",
 				Version:     "1.0.0",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -334,7 +334,7 @@ func TestPublishEndpoint(t *testing.T) {
 				Name:        "com.example/test/server/v2",
 				Description: "Complex server with invalid name",
 				Version:     "2.0.0",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",

@@ -24,7 +24,7 @@ func TestValidate(t *testing.T) {
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -38,7 +38,7 @@ func TestValidate(t *testing.T) {
 				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json",
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -52,7 +52,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -66,7 +66,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -80,7 +80,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -102,7 +102,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -124,7 +124,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -146,7 +146,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -160,7 +160,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -174,7 +174,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -188,7 +188,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -202,7 +202,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -216,7 +216,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -251,7 +251,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 					ID:     "owner/repo",
@@ -283,7 +283,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://bitbucket.org/owner/repo",
 					Source: "bitbucket", // Not in validSources
 				},
@@ -297,7 +297,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner", // Missing repo name
 					Source: "github",
 				},
@@ -311,7 +311,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://gitlab.com", // Missing owner and repo
 					Source: "gitlab",
 				},
@@ -325,7 +325,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers/my-server",
@@ -340,7 +340,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "../parent/folder",
@@ -355,7 +355,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "/absolute/path",
@@ -370,7 +370,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers/my-server/",
@@ -385,7 +385,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers/my server",
@@ -400,7 +400,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers//my-server",
@@ -415,7 +415,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -430,7 +430,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -445,7 +445,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -460,7 +460,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -475,7 +475,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -490,7 +490,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -505,7 +505,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -520,7 +520,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -544,7 +544,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -569,7 +569,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -601,7 +601,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -621,7 +621,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -641,7 +641,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -661,7 +661,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -681,7 +681,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -705,7 +705,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -721,7 +721,7 @@ func TestValidate(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1645,7 +1645,7 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        tc.name,
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 					ID:     "owner/repo",
@@ -1682,7 +1682,7 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/test-server",
 		Description: "A test server",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "https://github.com/owner/repo",
 			Source: "github",
 			ID:     "owner/repo",
@@ -1721,7 +1721,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1736,7 +1736,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "Weather API",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1751,7 +1751,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1766,7 +1766,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub MCP Server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1781,7 +1781,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub MCP",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1796,7 +1796,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub mcp server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1811,7 +1811,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "GitHub-MCP",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1826,7 +1826,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "MCP Weather API",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1841,7 +1841,7 @@ func TestValidateTitle(t *testing.T) {
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Title:       "   ",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1856,7 +1856,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1875,7 +1875,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1897,7 +1897,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1918,7 +1918,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1938,7 +1938,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1962,7 +1962,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -1981,7 +1981,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -2000,7 +2000,7 @@ func TestValidateTitle(t *testing.T) {
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},

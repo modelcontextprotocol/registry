@@ -26,7 +26,7 @@ func TestImportService_LocalFile(t *testing.T) {
 			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.test/test-server-1",
 			Description: "Test server 1",
-			Repository: model.Repository{
+			Repository: &model.Repository{
 				URL:    "https://github.com/test/repo1",
 				Source: "github",
 				ID:     "123",
@@ -69,7 +69,7 @@ func TestImportService_HTTPFile(t *testing.T) {
 			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.test/http-test-server",
 			Description: "HTTP test server",
-			Repository: model.Repository{
+			Repository: &model.Repository{
 				URL:    "https://github.com/test/http-repo",
 				Source: "github",
 				ID:     "456",
