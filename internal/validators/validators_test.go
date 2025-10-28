@@ -1628,10 +1628,10 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 		// Invalid registry types (should fail)
 		{"invalid_maven", "io.github.domdomegg/airtable-mcp-server", "maven", model.RegistryURLNPM, "airtable-mcp-server", "1.7.2", "", true},
 		{"invalid_cargo", "io.github.domdomegg/time-mcp-pypi", "cargo", model.RegistryURLPyPI, "time-mcp-pypi", "1.0.1", "", true},
-		{"invalid_gem", "io.github.domdomegg/airtable-mcp-server", "gem", model.RegistryURLDocker, "domdomegg/airtable-mcp-server", "1.7.2", "", true},
+		{"invalid_gem", "io.github.domdomegg/airtable-mcp-server", "gem", "", "domdomegg/airtable-mcp-server", "1.7.2", "", true},
 		{"invalid_unknown", "io.github.domdomegg/time-mcp-server", "unknown", model.RegistryURLNuGet, "TimeMcpServer", "1.0.2", "", true},
 		{"invalid_blank", "io.github.domdomegg/time-mcp-server", "", model.RegistryURLNuGet, "TimeMcpServer", "1.0.2", "", true},
-		{"invalid_docker", "io.github.domdomegg/airtable-mcp-server", "docker", model.RegistryURLDocker, "domdomegg/airtable-mcp-server", "1.7.2", "", true},                                                                      // should be oci
+		{"invalid_docker", "io.github.domdomegg/airtable-mcp-server", "docker", "", "domdomegg/airtable-mcp-server", "1.7.2", "", true},                                                                                           // should be oci
 		{"invalid_github", "io.github.domdomegg/airtable-mcp-server", "github", model.RegistryURLGitHub, "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "", true}, // should be mcpb
 
 		{"invalid_mix_1", "io.github.domdomegg/time-mcp-server", model.RegistryTypeNuGet, model.RegistryURLNPM, "TimeMcpServer", "1.0.2", "", true},

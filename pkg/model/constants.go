@@ -13,8 +13,6 @@ const (
 const (
 	RegistryURLNPM    = "https://registry.npmjs.org"
 	RegistryURLPyPI   = "https://pypi.org"
-	RegistryURLDocker = "https://docker.io"
-	RegistryURLGHCR   = "https://ghcr.io"
 	RegistryURLNuGet  = "https://api.nuget.org"
 	RegistryURLGitHub = "https://github.com"
 	RegistryURLGitLab = "https://gitlab.com"

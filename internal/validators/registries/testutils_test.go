@@ -22,11 +22,3 @@ func generateRandomNuGetPackageName() string {
 	}
 	return fmt.Sprintf("NonExistent.Package.%s", hex.EncodeToString(bytes)[:16])
 }
-
-func generateRandomImageName() string {
-	bytes := make([]byte, 16)
-	if _, err := rand.Read(bytes); err != nil {
-		return "nonexistent-image-fallback"
-	}
-	return fmt.Sprintf("nonexistent-image-%s", hex.EncodeToString(bytes)[:16])
-}
