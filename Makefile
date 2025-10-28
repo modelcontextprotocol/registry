@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-unit-verbose test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher generate-schema check-schema
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check dev-compose clean publisher generate-schema check-schema
 
 # Default target
 help: ## Show this help message
@@ -45,19 +45,6 @@ test-unit: ## Run unit tests with coverage (requires PostgreSQL)
 	@echo ""
 	@docker compose down postgres >/dev/null 2>&1
 	@echo "✅ Tests complete"
-
-test-unit-verbose: ## Run unit tests with verbose output
-	@echo "Starting PostgreSQL for unit tests..."
-	@docker compose up -d postgres 2>&1 | grep -v "Pulling\|Pulled\|Creating\|Created\|Starting\|Started" || true
-	@echo "Waiting for PostgreSQL to be ready..."
-	@sleep 3
-	@echo ""
-	@echo "Running unit tests (verbose)..."
-	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./internal/... ./cmd/... 2>&1 | grep -v "ld: warning:" | grep -v "^ld:"
-	@echo ""
-	@go tool cover -html=coverage.out -o coverage.html
-	@echo "✅ Coverage report: coverage.html"
-	@docker compose down postgres >/dev/null 2>&1
 
 test: ## Run unit tests (use 'make test-all' to run all tests)
 	@echo "⚠️  Running unit tests only. Use 'make test-all' to run both unit and integration tests."
