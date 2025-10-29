@@ -98,14 +98,25 @@ The workflow runs tests, builds your package, publishes to npm, and publishes to
 
 ### GitHub Personal Access Token
 
+You can authenticate using a GitHub Personal Access Token in two ways:
+
+**Option 1: Using the --token flag**
+
 ```yaml
 - name: Login to MCP Registry
-  run: mcp-publisher login github --token ${{ secrets.GITHUB_TOKEN }}
-  env:
-    GITHUB_TOKEN: ${{ secrets.MCP_GITHUB_TOKEN }}
+  run: mcp-publisher login github --token ${{ secrets.MCP_GITHUB_TOKEN }}
 ```
 
-Add `MCP_GITHUB_TOKEN` secret with a GitHub PAT that has repo access.
+**Option 2: Using environment variable**
+
+```yaml
+- name: Login to MCP Registry
+  run: mcp-publisher login github
+  env:
+    MCP_GITHUB_TOKEN: ${{ secrets.MCP_GITHUB_TOKEN }}
+```
+
+**Note:** You must create a custom secret `MCP_GITHUB_TOKEN` with a GitHub Personal Access Token that has `read:org` and `read:user` scopes. The automatic `GITHUB_TOKEN` provided by GitHub Actions does not have these permissions and cannot be used.
 
 ### DNS Authentication
 
