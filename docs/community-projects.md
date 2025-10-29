@@ -14,6 +14,7 @@ The following is a list of notable community-driven projects in the ecosystem re
 - [mcp-registry-spec-sdk](https://www.npmjs.com/package/mcp-registry-spec-sdk) - TypeScript client for the MCP Registry
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [TeamSpark AI Server Registry](https://teamsparkai.github.io/ToolCatalog/registry)🔎 - Browse and discover servers from the official MCP Registry ([source code](https://github.com/TeamSparkAI/ToolCatalog)).
+- [go-mcp-registry](https://github.com/leefowlercu/go-mcp-registry) - Go SDK for the MCP Registry API
 - **Add your project here!**
 
 🔎 = Browse the official MCP Registry in your browser!
