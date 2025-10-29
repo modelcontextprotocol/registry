@@ -69,8 +69,9 @@ jobs:
         id: build-info
         run: |
           echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
-          # Extract version from tag (e.g., refs/tags/v1.2.3 -> v1.2.3)
+          # Extract version from tag and strip 'v' prefix (e.g., refs/tags/v1.2.3 -> 1.2.3)
           VERSION="${GITHUB_REF#refs/tags/}"
+          VERSION="${VERSION#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build and push with ko
