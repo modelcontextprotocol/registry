@@ -15,7 +15,7 @@ The following is a list of notable community-driven projects in the ecosystem re
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [TeamSpark AI Server Registry](https://teamsparkai.github.io/ToolCatalog/registry)🔎 - Browse and discover servers from the official MCP Registry ([source code](https://github.com/TeamSparkAI/ToolCatalog)).
 - [go-mcp-registry](https://github.com/leefowlercu/go-mcp-registry) - Go SDK for the MCP Registry API
-- [Awesome MCP Registry](https://github.com/toolsdk-ai/awesome-mcp-registry) - **Secure, sandboxed, and privately deployable** MCP Registry for flexible and safe local or enterprise use.
+- [Awesome MCP Registry](https://github.com/toolsdk-ai/awesome-mcp-registry) - Extends the MCP Registry with **API-based MCP execution, private deployment**, and **secure sandbox isolation**.
 - **Add your project here!**
 
 🔎 = Browse the official MCP Registry in your browser!
