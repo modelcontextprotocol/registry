@@ -70,7 +70,7 @@ jobs:
         run: ./mcp-publisher publish
 ```
 
-Optionally, at the end of your workflow, you can show the latest registration for your server as the GitHub Actions workflow job summary. Replace "<<your server name>>" with the name of the server in the YAML snippet below.
+Optionally, at the end of your workflow, you can show the latest registration for your server as the GitHub Actions workflow job summary. Replace "<<your server name>>" with the name of the server in the YAML snippet below. Replace the "/" with "%2F" in your server name when you put it into the URL.
 
 ```yaml
       - name: Show MCP registration
@@ -78,9 +78,9 @@ Optionally, at the end of your workflow, you can show the latest registration fo
         if: always()
         run: |
           # Show last registered version
-          curl -s -X GET "https://registry.modelcontextprotocol.io/v0/servers?search=<<your server name>>" \
-            -H "accept: application/json" | \
-            jq '.servers[0] | {name, version, _meta}' > output.json
+          curl -s https://registry.modelcontextprotocol.io/v0/servers/<<your server name>>/versions/latest | \
+          jq '{server: {name: .server.name, version: .server.version}, _meta: ._meta}' > \
+            output.json
           echo '```json' >> $GITHUB_STEP_SUMMARY
           cat output.json >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
