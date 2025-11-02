@@ -1,0 +1,103 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'deploy/Pulumi.gcpProd.yaml'
+
+permissions:
+  contents: read
+
+env:
+  PULUMI_VERSION: "3.188.0"
+
+jobs:
+  ko-push:
+    name: Build and Push Image with ko
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Set up Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Set up ko
+        uses: ko-build/setup-ko@v0.9
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get build timestamp and tags
+        id: build-info
+        run: |
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push with ko
+        env:
+          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
+          VERSION: main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }}
+          GIT_COMMIT: ${{ github.sha }}
+          BUILD_TIME: ${{ steps.build-info.outputs.timestamp }}
+        run: |
+          # Build and push multi-platform image
+          ko build ./cmd/registry \
+            --bare \
+            --platform=linux/amd64,linux/arm64 \
+            --tags=main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }},main
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: ko-push
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@d7ceb0215da5a14ec84f50b703365ddf0194a9c8
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          credentials_json: ${{ secrets.GCP_STAGING_SERVICE_ACCOUNT_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          project_id: mcp-registry-staging
+          install_components: gke-gcloud-auth-plugin
+
+      - name: Deploy to Staging
+        working-directory: ./deploy
+        env:
+          PULUMI_STAGING_PASSPHRASE: ${{ secrets.PULUMI_STAGING_PASSPHRASE }}
+        run: |
+          echo "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
+          make staging-up

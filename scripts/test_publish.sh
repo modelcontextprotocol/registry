@@ -102,7 +102,7 @@ cat > "$PAYLOAD_FILE" << EOF
           "type": "positional",
           "name": "config",
           "description": "Configuration file path",
-          "format": "file_path",
+          "format": "filepath",
           "isRequired": false,
           "default": "./config.json"
         }

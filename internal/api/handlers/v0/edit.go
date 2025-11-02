@@ -25,15 +25,15 @@ type EditServerInput struct {
 	Body          apiv0.ServerJSON `body:""`
 }
 
-// RegisterEditEndpoints registers the edit endpoint
-func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *config.Config) {
+// RegisterEditEndpoints registers the edit endpoint with a custom path prefix
+func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.RegistryService, cfg *config.Config) {
 	jwtManager := auth.NewJWTManager(cfg)
 
 	// Edit server endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "edit-server",
+		OperationID: "edit-server" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPut,
-		Path:        "/v0/servers/{serverName}/versions/{version}",
+		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Edit MCP server",
 		Description: "Update a specific version of an existing MCP server (admin only).",
 		Tags:        []string{"admin"},
@@ -97,8 +97,8 @@ func RegisterEditEndpoints(api huma.API, registry service.RegistryService, cfg *
 
 			// Prevent undeleting servers - once deleted, they stay deleted
 			if currentServer.Meta.Official != nil &&
-			   currentServer.Meta.Official.Status == model.StatusDeleted &&
-			   newStatus != model.StatusDeleted {
+				currentServer.Meta.Official.Status == model.StatusDeleted &&
+				newStatus != model.StatusDeleted {
 				return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
 			}
 

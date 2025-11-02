@@ -22,6 +22,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 	// Create test data
 	existingServers := map[string]*apiv0.ServerJSON{
 		"existing1": {
+			Schema:      model.CurrentSchemaURL,
 			Name:        "com.example/existing-server",
 			Description: "An existing server",
 			Version:     "1.0.0",
@@ -31,6 +32,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			},
 		},
 		"existing2": {
+			Schema:      model.CurrentSchemaURL,
 			Name:        "com.microsoft/another-server",
 			Description: "Another existing server",
 			Version:     "1.0.0",
@@ -58,6 +60,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		{
 			name: "no remote URLs - should pass",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/new-server",
 				Description: "A new server with no remotes",
 				Version:     "1.0.0",
@@ -68,6 +71,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		{
 			name: "new unique remote URLs - should pass",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/new-server-unique",
 				Description: "A new server",
 				Version:     "1.0.0",
@@ -81,6 +85,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		{
 			name: "duplicate remote URL - should fail",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/new-server-duplicate",
 				Description: "A new server with duplicate URL",
 				Version:     "1.0.0",
@@ -94,6 +99,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		{
 			name: "updating same server with same URLs - should pass",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/existing-server", // Same name as existing
 				Description: "Updated existing server",
 				Version:     "1.1.0", // Different version
@@ -128,6 +134,7 @@ func TestGetServerByName(t *testing.T) {
 
 	// Create multiple versions of the same server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/test-server",
 		Description: "Test server v1",
 		Version:     "1.0.0",
@@ -135,6 +142,7 @@ func TestGetServerByName(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/test-server",
 		Description: "Test server v2",
 		Version:     "2.0.0",
@@ -197,6 +205,7 @@ func TestGetServerByNameAndVersion(t *testing.T) {
 
 	// Create multiple versions of the same server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Versioned server v1",
 		Version:     "1.0.0",
@@ -204,6 +213,7 @@ func TestGetServerByNameAndVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Versioned server v2",
 		Version:     "2.0.0",
@@ -288,6 +298,7 @@ func TestGetAllVersionsByServerName(t *testing.T) {
 
 	// Create multiple versions of the same server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Multi-version server v1",
 		Version:     "1.0.0",
@@ -295,6 +306,7 @@ func TestGetAllVersionsByServerName(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Multi-version server v2",
 		Version:     "2.0.0",
@@ -302,6 +314,7 @@ func TestGetAllVersionsByServerName(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Multi-version server v2.1",
 		Version:     "2.1.0",
@@ -388,6 +401,7 @@ func TestCreateServerConcurrentVersionsNoRace(t *testing.T) {
 		go func(idx int) {
 			defer wg.Done()
 			result, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        serverName,
 				Description: fmt.Sprintf("Version %d", idx),
 				Version:     fmt.Sprintf("1.0.%d", idx),
@@ -437,6 +451,7 @@ func TestUpdateServer(t *testing.T) {
 
 	// Create initial server
 	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Original description",
 		Version:     version,
@@ -447,20 +462,21 @@ func TestUpdateServer(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		serverName     string
-		version        string
-		updatedServer  *apiv0.ServerJSON
-		newStatus      *string
-		expectError    bool
-		errorMsg       string
-		checkResult    func(*testing.T, *apiv0.ServerResponse)
+		name          string
+		serverName    string
+		version       string
+		updatedServer *apiv0.ServerJSON
+		newStatus     *string
+		expectError   bool
+		errorMsg      string
+		checkResult   func(*testing.T, *apiv0.ServerResponse)
 	}{
 		{
 			name:       "successful server update",
 			serverName: serverName,
 			version:    version,
 			updatedServer: &apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        serverName,
 				Description: "Updated description",
 				Version:     version,
@@ -482,6 +498,7 @@ func TestUpdateServer(t *testing.T) {
 			serverName: serverName,
 			version:    version,
 			updatedServer: &apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        serverName,
 				Description: "Updated with status change",
 				Version:     version,
@@ -499,6 +516,7 @@ func TestUpdateServer(t *testing.T) {
 			serverName: "com.example/non-existent",
 			version:    "1.0.0",
 			updatedServer: &apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/non-existent",
 				Description: "Should fail",
 				Version:     "1.0.0",
@@ -540,6 +558,7 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 
 	// Create server with invalid package configuration (this would fail registry validation)
 	invalidServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Server with invalid package for testing validation skip",
 		Version:     version,
@@ -572,6 +591,7 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 
 	// Now try to update a deleted server - validation should be skipped
 	updatedInvalidServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Updated description for deleted server",
 		Version:     version,
@@ -594,6 +614,7 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 
 	// Test updating a server being set to deleted status
 	activeServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/being-deleted-test",
 		Description: "Server being deleted",
 		Version:     "1.0.0",
@@ -639,6 +660,7 @@ func TestListServers(t *testing.T) {
 
 	for _, server := range testServers {
 		_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        server.name,
 			Description: server.description,
 			Version:     server.version,
@@ -736,6 +758,7 @@ func TestVersionComparison(t *testing.T) {
 			time.Sleep(v.delay)
 		}
 		_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        serverName,
 			Description: v.description,
 			Version:     v.version,

@@ -26,6 +26,7 @@ func TestListServersEndpoint(t *testing.T) {
 
 	// Setup test data
 	_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/server-alpha",
 		Description: "Alpha test server",
 		Version:     "1.0.0",
@@ -33,6 +34,7 @@ func TestListServersEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/server-beta",
 		Description: "Beta test server",
 		Version:     "2.0.0",
@@ -42,7 +44,7 @@ func TestListServersEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -112,12 +114,13 @@ func TestListServersEndpoint(t *testing.T) {
 	}
 }
 
-func TestGetServerByNameEndpoint(t *testing.T) {
+func TestGetLatestServerVersionEndpoint(t *testing.T) {
 	ctx := context.Background()
 	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
 
 	// Setup test data
 	_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/detail-server",
 		Description: "Server for detail testing",
 		Version:     "1.0.0",
@@ -127,7 +130,7 @@ func TestGetServerByNameEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -136,7 +139,7 @@ func TestGetServerByNameEndpoint(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:           "get existing server",
+			name:           "get existing server latest version",
 			serverName:     "com.example/detail-server",
 			expectedStatus: http.StatusOK,
 		},
@@ -152,7 +155,7 @@ func TestGetServerByNameEndpoint(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// URL encode the server name
 			encodedName := url.PathEscape(tt.serverName)
-			req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName, nil)
+			req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName+"/versions/latest", nil)
 			w := httptest.NewRecorder()
 
 			mux.ServeHTTP(w, req)
@@ -180,6 +183,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 
 	// Setup test data with multiple versions
 	_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Version test server v1",
 		Version:     "1.0.0",
@@ -187,6 +191,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Version test server v2",
 		Version:     "2.0.0",
@@ -195,6 +200,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 
 	// Add version with build metadata for URL encoding test
 	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        serverName,
 		Description: "Version test server with build metadata",
 		Version:     "1.0.0+20130313144700",
@@ -204,7 +210,7 @@ func TestGetServerVersionEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -304,6 +310,7 @@ func TestGetAllVersionsEndpoint(t *testing.T) {
 	versions := []string{"1.0.0", "1.1.0", "2.0.0"}
 	for _, version := range versions {
 		_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        serverName,
 			Description: "Multi-version test server " + version,
 			Version:     version,
@@ -314,7 +321,7 @@ func TestGetAllVersionsEndpoint(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	tests := []struct {
 		name           string
@@ -402,6 +409,7 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 
 	for _, server := range specialServers {
 		_, err := registryService.CreateServer(ctx, &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
 			Name:        server.name,
 			Description: server.description,
 			Version:     server.version,
@@ -412,7 +420,7 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterServersEndpoints(api, registryService)
+	v0.RegisterServersEndpoints(api, "/v0", registryService)
 
 	t.Run("URL encoding edge cases", func(t *testing.T) {
 		tests := []struct {
@@ -426,9 +434,9 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				// Test server detail endpoint
+				// Test latest version endpoint
 				encodedName := url.PathEscape(tt.serverName)
-				req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName, nil)
+				req := httptest.NewRequest(http.MethodGet, "/v0/servers/"+encodedName+"/versions/latest", nil)
 				w := httptest.NewRecorder()
 
 				mux.ServeHTTP(w, req)

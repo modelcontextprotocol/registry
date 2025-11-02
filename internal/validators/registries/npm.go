@@ -41,6 +41,11 @@ func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) erro
 		return ErrMissingVersionForNPM
 	}
 
+	// Validate that MCPB-specific fields are not present
+	if pkg.FileSHA256 != "" {
+		return fmt.Errorf("NPM packages must not have 'fileSha256' field")
+	}
+
 	// Validate that the registry base URL matches NPM exactly
 	if pkg.RegistryBaseURL != model.RegistryURLNPM {
 		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",

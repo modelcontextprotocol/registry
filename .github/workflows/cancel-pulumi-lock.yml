@@ -1,0 +1,76 @@
+name: Cancel Pulumi Lock
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to cancel lock for'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+
+env:
+  PULUMI_VERSION: "3.188.0"
+
+jobs:
+  cancel-lock:
+    name: Cancel Pulumi Lock
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@d7ceb0215da5a14ec84f50b703365ddf0194a9c8
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Authenticate to Google Cloud (Staging)
+        if: inputs.environment == 'staging'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          credentials_json: ${{ secrets.GCP_STAGING_SERVICE_ACCOUNT_KEY }}
+
+      - name: Authenticate to Google Cloud (Production)
+        if: inputs.environment == 'production'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          credentials_json: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT_KEY }}
+
+      - name: Setup Google Cloud SDK (Staging)
+        if: inputs.environment == 'staging'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          project_id: mcp-registry-staging
+
+      - name: Setup Google Cloud SDK (Production)
+        if: inputs.environment == 'production'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          project_id: mcp-registry-prod
+
+      - name: Cancel Pulumi Lock (Staging)
+        if: inputs.environment == 'staging'
+        working-directory: ./deploy
+        env:
+          PULUMI_STAGING_PASSPHRASE: ${{ secrets.PULUMI_STAGING_PASSPHRASE }}
+        run: |
+          echo "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
+          pulumi login gs://mcp-registry-staging-pulumi-state
+          PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi cancel --stack gcpStaging --yes
+
+      - name: Cancel Pulumi Lock (Production)
+        if: inputs.environment == 'production'
+        working-directory: ./deploy
+        env:
+          PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
+        run: |
+          echo "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
+          pulumi login gs://mcp-registry-prod-pulumi-state
+          PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi cancel --stack gcpProd --yes

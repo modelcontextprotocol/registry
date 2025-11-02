@@ -51,7 +51,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
 				"service": pulumi.Map{
-					"type": serviceType,
+					"type":        serviceType,
 					"annotations": pulumi.Map{},
 				},
 				"config": pulumi.Map{

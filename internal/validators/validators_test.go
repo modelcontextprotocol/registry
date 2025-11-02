@@ -20,11 +20,53 @@ func TestValidate(t *testing.T) {
 		expectedError string
 	}{
 		{
-			name: "Version rejects top-level version ranges",
+			name: "Schema version is required",
 			serverDetail: apiv0.ServerJSON{
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "$schema field is required",
+		},
+		{
+			name: "Schema version rejects old schema (2025-01-27)",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json",
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "schema version https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json is not supported",
+		},
+		{
+			name: "Schema version accepts current schema (2025-10-17)",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Version rejects top-level version ranges",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -35,9 +77,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "rejects package version ranges",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -56,9 +99,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version allows specific versions (semver)",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -77,9 +121,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version allows specific non-semver versions",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -98,9 +143,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version rejects wildcard and x-range",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -111,9 +157,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version rejects wildcard *",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -124,9 +171,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version allows freeform version with hyphen not a range",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -137,9 +185,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version rejects hyphen range of two versions",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -150,9 +199,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version rejects OR range with two versions",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -163,9 +213,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "Version rejects comparator with space",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -177,6 +228,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server name with two slashes",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/server/path",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -186,6 +238,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server name with three slashes",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/server/path/deep",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -195,9 +248,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "valid server detail with all fields",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 					ID:     "owner/repo",
@@ -226,9 +280,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with invalid repository source",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://bitbucket.org/owner/repo",
 					Source: "bitbucket", // Not in validSources
 				},
@@ -239,9 +294,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with invalid GitHub URL format",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner", // Missing repo name
 					Source: "github",
 				},
@@ -252,9 +308,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with invalid GitLab URL format",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://gitlab.com", // Missing owner and repo
 					Source: "gitlab",
 				},
@@ -265,9 +322,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with valid repository subfolder",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers/my-server",
@@ -279,9 +337,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with repository subfolder containing path traversal",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "../parent/folder",
@@ -293,9 +352,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with repository subfolder starting with slash",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "/absolute/path",
@@ -307,9 +367,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with repository subfolder ending with slash",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers/my-server/",
@@ -321,9 +382,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with repository subfolder containing invalid characters",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers/my server",
@@ -335,9 +397,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with repository subfolder containing empty segments",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:       "https://github.com/owner/repo",
 					Source:    "github",
 					Subfolder: "servers//my-server",
@@ -349,9 +412,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with valid websiteUrl",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -363,9 +427,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with invalid websiteUrl - no scheme",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -377,23 +442,25 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with invalid websiteUrl - invalid scheme",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
 				Version:    "1.0.0",
 				WebsiteURL: "ftp://example.com/docs",
 			},
-			expectedError: "websiteUrl must use http or https scheme: ftp://example.com/docs",
+			expectedError: "websiteUrl must use https scheme: ftp://example.com/docs",
 		},
 		{
 			name: "server with malformed websiteUrl",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -405,9 +472,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with websiteUrl that matches namespace domain",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -419,9 +487,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with websiteUrl subdomain that matches namespace",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -433,9 +502,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server with websiteUrl that does not match namespace",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -447,9 +517,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "package with spaces in name",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -470,9 +541,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "package with reserved version 'latest'",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -494,9 +566,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "multiple packages with one invalid",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -525,9 +598,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "remote with invalid URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -544,9 +618,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "remote with missing scheme",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -563,9 +638,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "remote with localhost url",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -582,9 +658,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "remote with localhost url with port",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -601,9 +678,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "multiple remotes with one invalid",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -624,9 +702,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server detail with nil packages and remotes",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -639,9 +718,10 @@ func TestValidate(t *testing.T) {
 		{
 			name: "server detail with empty packages and remotes slices",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 				},
@@ -677,7 +757,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "valid match - example.com domain",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/test-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -690,7 +771,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "valid match - subdomain mcp.example.com",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/test-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -703,7 +785,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "valid match - api subdomain",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/api-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/api-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -716,7 +799,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "invalid - wrong domain",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/test-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test-server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -730,7 +814,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "invalid - different domain entirely",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.microsoft/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.microsoft/server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -744,7 +829,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "invalid URL format",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/test",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/test",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -758,6 +844,7 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "empty remotes array",
 			serverDetail: apiv0.ServerJSON{
+				Schema:  model.CurrentSchemaURL,
 				Name:    "com.example/test",
 				Remotes: []model.Transport{},
 			},
@@ -766,7 +853,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "multiple valid remotes - different subdomains",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -783,7 +871,8 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 		{
 			name: "one valid, one invalid remote",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/server",
 				Remotes: []model.Transport{
 					{
 						Type: "streamable-http",
@@ -824,21 +913,24 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "valid namespace/name format",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example.api/server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example.api/server",
 			},
 			expectError: false,
 		},
 		{
 			name: "valid complex namespace",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.microsoft.azure.service/webapp-server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.microsoft.azure.service/webapp-server",
 			},
 			expectError: false,
 		},
 		{
 			name: "empty server name",
 			serverDetail: apiv0.ServerJSON{
-				Name: "",
+				Schema: model.CurrentSchemaURL,
+				Name:   "",
 			},
 			expectError: true,
 			errorMsg:    "server name is required",
@@ -846,7 +938,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "missing slash separator",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example.server",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example.server",
 			},
 			expectError: true,
 			errorMsg:    "server name must be in format 'dns-namespace/name'",
@@ -854,7 +947,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "empty namespace part",
 			serverDetail: apiv0.ServerJSON{
-				Name: "/server-name",
+				Schema: model.CurrentSchemaURL,
+				Name:   "/server-name",
 			},
 			expectError: true,
 			errorMsg:    "non-empty namespace and name parts",
@@ -862,7 +956,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "empty name part",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/",
 			},
 			expectError: true,
 			errorMsg:    "non-empty namespace and name parts",
@@ -870,7 +965,8 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 		{
 			name: "multiple slashes - should be rejected",
 			serverDetail: apiv0.ServerJSON{
-				Name: "com.example/server/path",
+				Schema: model.CurrentSchemaURL,
+				Name:   "com.example/server/path",
 			},
 			expectError: true,
 			errorMsg:    "server name cannot contain multiple slashes",
@@ -893,10 +989,10 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 
 func TestValidate_MultipleSlashesInServerName(t *testing.T) {
 	tests := []struct {
-		name         string
-		serverName   string
-		expectError  bool
-		errorMsg     string
+		name        string
+		serverName  string
+		expectError bool
+		errorMsg    string
 	}{
 		{
 			name:        "single slash - valid",
@@ -955,7 +1051,8 @@ func TestValidate_MultipleSlashesInServerName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			serverDetail := apiv0.ServerJSON{
-				Name: tt.serverName,
+				Schema: model.CurrentSchemaURL,
+				Name:   tt.serverName,
 			}
 			err := validators.ValidateServerJSON(&serverDetail)
 
@@ -1173,6 +1270,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport stdio without URL should pass",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1191,6 +1289,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport stdio with URL (should fail)",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1211,6 +1310,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport streamable-http with valid URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1230,6 +1330,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport streamable-http with templated URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1253,6 +1354,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport streamable-http without URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1271,6 +1373,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport streamable-http with templated URL missing variables",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1292,6 +1395,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport sse with valid URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1311,6 +1415,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport sse without URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1330,6 +1435,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport unsupported type",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1349,6 +1455,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "remote transport streamable-http with valid URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1364,6 +1471,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "remote transport streamable-http without URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1379,6 +1487,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "remote transport sse with valid URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1394,6 +1503,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "remote transport sse without URL",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1409,6 +1519,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "remote transport stdio not supported",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1423,6 +1534,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "remote transport unsupported type",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1439,6 +1551,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "package transport allows localhost URLs",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1458,6 +1571,7 @@ func TestValidate_TransportValidation(t *testing.T) {
 		{
 			name: "remote transport rejects localhost URLs",
 			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server",
 				Description: "A test server",
 				Version:     "1.0.0",
@@ -1502,24 +1616,22 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 		{"valid_npm", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeNPM, "", "airtable-mcp-server", "1.7.2", "", false},
 		{"valid_pypi", "io.github.domdomegg/time-mcp-pypi", model.RegistryTypePyPI, model.RegistryURLPyPI, "time-mcp-pypi", "1.0.1", "", false},
 		{"valid_pypi", "io.github.domdomegg/time-mcp-pypi", model.RegistryTypePyPI, "", "time-mcp-pypi", "1.0.1", "", false},
-		{"valid_oci", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeOCI, model.RegistryURLDocker, "domdomegg/airtable-mcp-server", "1.7.2", "", false},
+		{"valid_oci", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeOCI, "", "domdomegg/airtable-mcp-server:1.7.2", "", "", false},
 		{"valid_nuget", "io.github.domdomegg/time-mcp-server", model.RegistryTypeNuGet, model.RegistryURLNuGet, "TimeMcpServer", "1.0.2", "", false},
 		{"valid_nuget", "io.github.domdomegg/time-mcp-server", model.RegistryTypeNuGet, "", "TimeMcpServer", "1.0.2", "", false},
-		{"valid_mcpb_github", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce", false},
-		{"valid_mcpb_github", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, "", "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce", false},
-		{"valid_mcpb_gitlab", "io.gitlab.fforster/gitlab-mcp", model.RegistryTypeMCPB, model.RegistryURLGitLab, "https://gitlab.com/fforster/gitlab-mcp/-/releases/v1.31.0/downloads/gitlab-mcp_1.31.0_Linux_x86_64.tar.gz", "1.31.0", "abc123ef4567890abcdef1234567890abcdef1234567890abcdef1234567890", false}, // this is not actually a valid mcpb, but it's the closest I can get for testing for now
-		{"valid_mcpb_gitlab", "io.gitlab.fforster/gitlab-mcp", model.RegistryTypeMCPB, "", "https://gitlab.com/fforster/gitlab-mcp/-/releases/v1.31.0/downloads/gitlab-mcp_1.31.0_Linux_x86_64.tar.gz", "1.31.0", "abc123ef4567890abcdef1234567890abcdef1234567890abcdef1234567890", false},                      // this is not actually a valid mcpb, but it's the closest I can get for testing for now
+		{"valid_mcpb_github", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, "", "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "", "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce", false},
+		{"valid_mcpb_gitlab", "io.gitlab.fforster/gitlab-mcp", model.RegistryTypeMCPB, "", "https://gitlab.com/fforster/gitlab-mcp/-/releases/v1.31.0/downloads/gitlab-mcp_1.31.0_Linux_x86_64.tar.gz", "", "abc123ef4567890abcdef1234567890abcdef1234567890abcdef1234567890", false}, // this is not actually a valid mcpb, but it's the closest I can get for testing for now
 
 		// Test MCPB without file hash (should fail)
-		{"invalid_mcpb_no_hash", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, model.RegistryURLGitHub, "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "", true},
+		{"invalid_mcpb_no_hash", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, "", "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "", "", true},
 
 		// Invalid registry types (should fail)
 		{"invalid_maven", "io.github.domdomegg/airtable-mcp-server", "maven", model.RegistryURLNPM, "airtable-mcp-server", "1.7.2", "", true},
 		{"invalid_cargo", "io.github.domdomegg/time-mcp-pypi", "cargo", model.RegistryURLPyPI, "time-mcp-pypi", "1.0.1", "", true},
-		{"invalid_gem", "io.github.domdomegg/airtable-mcp-server", "gem", model.RegistryURLDocker, "domdomegg/airtable-mcp-server", "1.7.2", "", true},
+		{"invalid_gem", "io.github.domdomegg/airtable-mcp-server", "gem", "", "domdomegg/airtable-mcp-server", "1.7.2", "", true},
 		{"invalid_unknown", "io.github.domdomegg/time-mcp-server", "unknown", model.RegistryURLNuGet, "TimeMcpServer", "1.0.2", "", true},
 		{"invalid_blank", "io.github.domdomegg/time-mcp-server", "", model.RegistryURLNuGet, "TimeMcpServer", "1.0.2", "", true},
-		{"invalid_docker", "io.github.domdomegg/airtable-mcp-server", "docker", model.RegistryURLDocker, "domdomegg/airtable-mcp-server", "1.7.2", "", true},                                                                      // should be oci
+		{"invalid_docker", "io.github.domdomegg/airtable-mcp-server", "docker", "", "domdomegg/airtable-mcp-server", "1.7.2", "", true},                                                                                           // should be oci
 		{"invalid_github", "io.github.domdomegg/airtable-mcp-server", "github", model.RegistryURLGitHub, "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "1.7.2", "", true}, // should be mcpb
 
 		{"invalid_mix_1", "io.github.domdomegg/time-mcp-server", model.RegistryTypeNuGet, model.RegistryURLNPM, "TimeMcpServer", "1.0.2", "", true},
@@ -1530,9 +1642,10 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.tcName, func(t *testing.T) {
 			serverJSON := apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        tc.name,
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/owner/repo",
 					Source: "github",
 					ID:     "owner/repo",
@@ -1566,9 +1679,10 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 
 func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 	return apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/test-server",
 		Description: "A test server",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "https://github.com/owner/repo",
 			Source: "github",
 			ID:     "owner/repo",
@@ -1592,4 +1706,329 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 			},
 		},
 	}
+}
+
+func TestValidateTitle(t *testing.T) {
+	tests := []struct {
+		name          string
+		serverDetail  apiv0.ServerJSON
+		expectedError string
+	}{
+		{
+			name: "Valid title without MCP suffix",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Valid title with multiple words",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "Weather API",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Empty title is allowed (optional field)",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Allows title with 'MCP Server' suffix",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub MCP Server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Allows title with 'MCP' suffix",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub MCP",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Allows title with 'mcp server' suffix (lowercase)",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub mcp server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Allows title with hyphenated 'MCP' suffix",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "GitHub-MCP",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Allows 'MCP' in the middle of title",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "MCP Weather API",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Rejects title with only whitespace",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Title:       "   ",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "title cannot be only whitespace",
+		},
+		// Icon validation tests
+		{
+			name: "Accepts valid icon with HTTPS URL",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "https://example.com/icon.png",
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts icon with all optional fields",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:      "https://example.com/icon.png",
+						MimeType: stringPtr("image/png"),
+						Sizes:    []string{"48x48", "96x96"},
+						Theme:    stringPtr("light"),
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts icon with 'any' size for SVG",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:      "https://example.com/icon.svg",
+						MimeType: stringPtr("image/svg+xml"),
+						Sizes:    []string{"any"},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts icon with dark theme",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:   "https://example.com/icon-dark.png",
+						Theme: stringPtr("dark"),
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Accepts multiple icons",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src:   "https://example.com/icon-light.png",
+						Theme: stringPtr("light"),
+					},
+					{
+						Src:   "https://example.com/icon-dark.png",
+						Theme: stringPtr("dark"),
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Rejects icon with HTTP URL (not HTTPS)",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "http://example.com/icon.png",
+					},
+				},
+			},
+			expectedError: "icon src must use https scheme",
+		},
+		{
+			name: "Rejects icon with data URI",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUA",
+					},
+				},
+			},
+			expectedError: "icon src must use https scheme",
+		},
+		{
+			name: "Rejects icon with relative URL",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+				Icons: []model.Icon{
+					{
+						Src: "/icon.png",
+					},
+				},
+			},
+			expectedError: "icon src must be an absolute URL",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validators.ValidateServerJSON(&tt.serverDetail)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedError)
+			}
+		})
+	}
+}
+
+// Helper function for creating string pointers in tests
+func stringPtr(s string) *string {
+	return &s
 }

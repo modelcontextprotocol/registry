@@ -300,9 +300,9 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		originalBlocked := auth.BlockedNamespaces
 		auth.BlockedNamespaces = []string{"io.github.spammer"}
 		defer func() { auth.BlockedNamespaces = originalBlocked }()
-		
+
 		jwtManager := auth.NewJWTManager(cfg)
-		
+
 		claims := auth.JWTClaims{
 			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "spammer",
@@ -325,9 +325,9 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		originalBlocked := auth.BlockedNamespaces
 		auth.BlockedNamespaces = []string{"io.github.spammer"}
 		defer func() { auth.BlockedNamespaces = originalBlocked }()
-		
+
 		jwtManager := auth.NewJWTManager(cfg)
-		
+
 		claims := auth.JWTClaims{
 			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "gooduser",
@@ -349,9 +349,9 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		originalBlocked := auth.BlockedNamespaces
 		auth.BlockedNamespaces = []string{"io.github.badorg"}
 		defer func() { auth.BlockedNamespaces = originalBlocked }()
-		
+
 		jwtManager := auth.NewJWTManager(cfg)
-		
+
 		claims := auth.JWTClaims{
 			AuthMethod:        auth.MethodGitHubAT,
 			AuthMethodSubject: "user",
@@ -378,9 +378,9 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		originalBlocked := auth.BlockedNamespaces
 		auth.BlockedNamespaces = []string{"io.github.spammer"}
 		defer func() { auth.BlockedNamespaces = originalBlocked }()
-		
+
 		jwtManager := auth.NewJWTManager(cfg)
-		
+
 		claims := auth.JWTClaims{
 			AuthMethod:        auth.MethodNone,
 			AuthMethodSubject: "admin",

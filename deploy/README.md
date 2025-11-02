@@ -29,7 +29,34 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
 
 ### Production Deployment (GCP)
 
-**Note:** The production deployment is automatically handled by GitHub Actions. All merges to the `main` branch trigger an automatic deployment to GCP via [the configured GitHub Actions workflow](../.github/workflows/deploy.yml). The steps below are preserved as a log of what we did, or if a manual override is needed.
+**Note:** Deployments are automatically handled by GitHub Actions with separate workflows for staging and production:
+
+- **Staging:** All merges to the `main` branch automatically build and deploy the latest code to the `staging` environment via [deploy-staging.yml](../.github/workflows/deploy-staging.yml). Staging always uses the `:main` Docker image tag.
+
+- **Production:** Deployment requires explicit configuration of the Docker image tag in `Pulumi.gcpProd.yaml` and is triggered automatically via [deploy-production.yml](../.github/workflows/deploy-production.yml) when this config file is pushed to `main`. This GitOps-style approach provides manual control and an audit trail for production versions.
+
+**To deploy a specific version to production:**
+
+1. Cut a release (if deploying a new version):
+   ```bash
+   # Via GitHub UI: https://github.com/modelcontextprotocol/registry/releases
+   # Or via gh CLI:
+   gh release create v1.2.3 --generate-notes
+   ```
+   This builds Docker images tagged as `1.2.3` and `latest` (note: image tags do not include the 'v' prefix)
+
+2. Update the production image tag in `Pulumi.gcpProd.yaml`:
+   ```bash
+   # Edit deploy/Pulumi.gcpProd.yaml
+   # Change line: mcp-registry:imageTag: 1.2.3  (note: no 'v' prefix for Docker image tags)
+   git add deploy/Pulumi.gcpProd.yaml
+   git commit -m "Deploy version 1.2.3 to production"
+   git push
+   ```
+
+3. The production deployment workflow will automatically trigger and deploy the specified version
+
+**Manual Override:** The steps below are preserved if a manual deployment override is needed.
 
 Pre-requisites:
 - [Pulumi CLI installed](https://www.pulumi.com/docs/iac/download-install/)
@@ -113,6 +140,7 @@ Pre-requisites:
 | `provider` | Kubernetes provider (local/gcp) | No (default: local) |
 | `githubClientId` | GitHub OAuth Client ID | Yes |
 | `githubClientSecret` | GitHub OAuth Client Secret | Yes |
+| `imageTag` | Docker image tag for production environment | Yes (prod only) |
 | `gcpProjectId` | GCP Project ID (required when provider=gcp) | No |
 | `gcpRegion` | GCP Region (default: us-central1) | No |
 

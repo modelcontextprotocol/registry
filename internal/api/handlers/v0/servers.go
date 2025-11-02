@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -40,14 +41,13 @@ type ServerVersionsInput struct {
 	ServerName string `path:"serverName" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 }
 
-// RegisterServersEndpoints registers all server-related endpoints
-//nolint:cyclop // Multiple endpoint registrations are inherently complex
-func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
+// RegisterServersEndpoints registers all server-related endpoints with a custom path prefix
+func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.RegistryService) {
 	// List servers endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "list-servers",
+		OperationID: "list-servers" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
-		Path:        "/v0/servers",
+		Path:        pathPrefix + "/servers",
 		Summary:     "List MCP servers",
 		Description: "Get a paginated list of MCP servers from the registry",
 		Tags:        []string{"servers"},
@@ -105,42 +105,13 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 		}, nil
 	})
 
-	// Get server details endpoint (latest version)
+	// Get specific server version endpoint (supports "latest" as special version)
 	huma.Register(api, huma.Operation{
-		OperationID: "get-server",
+		OperationID: "get-server-version" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
-		Path:        "/v0/servers/{serverName}",
-		Summary:     "Get MCP server details",
-		Description: "Get detailed information about the latest version of a specific MCP server.",
-		Tags:        []string{"servers"},
-	}, func(ctx context.Context, input *ServerDetailInput) (*Response[apiv0.ServerResponse], error) {
-		// URL-decode the server name
-		serverName, err := url.PathUnescape(input.ServerName)
-		if err != nil {
-			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
-		}
-
-		// Get latest version by server name
-		serverResponse, err := registry.GetServerByName(ctx, serverName)
-		if err != nil {
-			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
-				return nil, huma.Error404NotFound("Server not found")
-			}
-			return nil, huma.Error500InternalServerError("Failed to get server details", err)
-		}
-
-		return &Response[apiv0.ServerResponse]{
-			Body: *serverResponse,
-		}, nil
-	})
-
-	// Get specific server version endpoint
-	huma.Register(api, huma.Operation{
-		OperationID: "get-server-version",
-		Method:      http.MethodGet,
-		Path:        "/v0/servers/{serverName}/versions/{version}",
+		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Get specific MCP server version",
-		Description: "Get detailed information about a specific version of an MCP server.",
+		Description: "Get detailed information about a specific version of an MCP server. Use the special version 'latest' to get the latest version.",
 		Tags:        []string{"servers"},
 	}, func(ctx context.Context, input *ServerVersionDetailInput) (*Response[apiv0.ServerResponse], error) {
 		// URL-decode the server name
@@ -155,8 +126,14 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 			return nil, huma.Error400BadRequest("Invalid version encoding", err)
 		}
 
-		// Get specific version by server name and version
-		serverResponse, err := registry.GetServerByNameAndVersion(ctx, serverName, version)
+		var serverResponse *apiv0.ServerResponse
+		// Handle "latest" as a special version
+		if version == "latest" {
+			serverResponse, err = registry.GetServerByName(ctx, serverName)
+		} else {
+			serverResponse, err = registry.GetServerByNameAndVersion(ctx, serverName, version)
+		}
+
 		if err != nil {
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
@@ -171,9 +148,9 @@ func RegisterServersEndpoints(api huma.API, registry service.RegistryService) {
 
 	// Get server versions endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "get-server-versions",
+		OperationID: "get-server-versions" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
-		Path:        "/v0/servers/{serverName}/versions",
+		Path:        pathPrefix + "/servers/{serverName}/versions",
 		Summary:     "Get all versions of an MCP server",
 		Description: "Get all available versions for a specific MCP server",
 		Tags:        []string{"servers"},

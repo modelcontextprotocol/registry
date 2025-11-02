@@ -56,9 +56,10 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "successful publish with GitHub auth",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.example/test-server",
 				Description: "A test server",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -80,9 +81,10 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "successful publish with no auth (AuthMethodNone)",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "example/test-server",
 				Description: "A test server without auth",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -113,9 +115,10 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "invalid authorization header format",
 			requestBody: apiv0.ServerJSON{
-				Name:          "io.github.domdomegg/test-server",
-				Description:   "Test server",
-				Version: "1.0.0",
+				Schema:      model.CurrentSchemaURL,
+				Name:        "io.github.domdomegg/test-server",
+				Description: "Test server",
+				Version:     "1.0.0",
 			},
 			authHeader: "InvalidFormat",
 			setupRegistryService: func(_ service.RegistryService) {
@@ -127,9 +130,10 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "invalid token",
 			requestBody: apiv0.ServerJSON{
-				Name:        "test-server",
+				Schema:      model.CurrentSchemaURL,
+				Name:        "example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 			},
 			authHeader: "Bearer invalidToken",
 			setupRegistryService: func(_ service.RegistryService) {
@@ -141,10 +145,11 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "permission denied",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "io.github.other/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
-				Repository: model.Repository{
+				Version:     "1.0.0",
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -165,10 +170,11 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "registry service error",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "example/test-server",
 				Description: "A test server",
-				Version: "1.0.0",
-				Repository: model.Repository{
+				Version:     "1.0.0",
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -183,10 +189,11 @@ func TestPublishEndpoint(t *testing.T) {
 			setupRegistryService: func(registry service.RegistryService) {
 				// Pre-publish the same server to cause duplicate version error
 				existingServer := apiv0.ServerJSON{
+					Schema:      model.CurrentSchemaURL,
 					Name:        "example/test-server",
 					Description: "Existing test server",
-					Version: "1.0.0",
-					Repository: model.Repository{
+					Version:     "1.0.0",
+					Repository: &model.Repository{
 						URL:    "https://github.com/example/test-server-existing",
 						Source: "github",
 						ID:     "example/test-server-existing",
@@ -200,9 +207,10 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "package validation success - MCPB package",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test-server-mcpb",
 				Description: "A test server with MCPB package",
-				Version: "1.0.0",
+				Version:     "1.0.0",
 				Packages: []model.Package{
 					{
 						RegistryType: model.RegistryTypeMCPB,
@@ -227,10 +235,11 @@ func TestPublishEndpoint(t *testing.T) {
 		{
 			name: "invalid server name - multiple slashes (two slashes)",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/server/path",
 				Description: "Server with multiple slashes in name",
 				Version:     "1.0.0",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -243,12 +252,13 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - multiple slashes (three slashes)",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "org.company/dept/team/project",
 				Description: "Server with three slashes in name",
 				Version:     "1.0.0",
@@ -260,12 +270,13 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - consecutive slashes",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example//double-slash",
 				Description: "Server with consecutive slashes",
 				Version:     "1.0.0",
@@ -277,12 +288,13 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - URL-like path",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/servers/v1/api",
 				Description: "Server with URL-like path structure",
 				Version:     "1.0.0",
@@ -294,12 +306,13 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - many slashes",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "a/b/c/d/e/f",
 				Description: "Server with many slashes",
 				Version:     "1.0.0",
@@ -311,16 +324,17 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 		{
 			name: "invalid server name - with packages and remotes",
 			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/test/server/v2",
 				Description: "Complex server with invalid name",
 				Version:     "2.0.0",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/example/test-server",
 					Source: "github",
 					ID:     "example/test-server",
@@ -349,8 +363,8 @@ func TestPublishEndpoint(t *testing.T) {
 				},
 			},
 			setupRegistryService: func(_ service.RegistryService) {},
-			expectedStatus:       http.StatusBadRequest,
-			expectedError:        "server name cannot contain multiple slashes",
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "expected string to match pattern",
 		},
 	}
 
@@ -367,7 +381,7 @@ func TestPublishEndpoint(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint with test config
-			v0.RegisterPublishEndpoint(api, registryService, testConfig)
+			v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
 
 			// Prepare request body
 			var requestBody []byte
@@ -433,25 +447,25 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 		{
 			name:           "invalid - trailing slash after valid name",
 			serverName:     "com.example/server/",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "Trailing slash creates multiple slashes",
 		},
 		{
 			name:           "invalid - leading and middle slash",
 			serverName:     "/com.example/server",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "Leading slash with middle slash",
 		},
 		{
 			name:           "invalid - file system style path",
 			serverName:     "usr/local/bin/server",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "File system style paths should be rejected",
 		},
 		{
 			name:           "invalid - version-like suffix",
 			serverName:     "com.example/server/v1.0.0",
-			expectedStatus: http.StatusBadRequest,
+			expectedStatus: http.StatusUnprocessableEntity,
 			description:    "Version suffixes with slash should be rejected",
 		},
 	}
@@ -466,10 +480,11 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register the endpoint
-			v0.RegisterPublishEndpoint(api, registryService, testConfig)
+			v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
 
 			// Create request body
 			requestBody := apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
 				Name:        tc.serverName,
 				Description: "Test server",
 				Version:     "1.0.0",
@@ -499,12 +514,12 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 			mux.ServeHTTP(rr, req)
 
 			// Assertions
-			assert.Equal(t, tc.expectedStatus, rr.Code, 
+			assert.Equal(t, tc.expectedStatus, rr.Code,
 				"%s: expected status %d, got %d", tc.description, tc.expectedStatus, rr.Code)
 
-			if tc.expectedStatus == http.StatusBadRequest {
-				assert.Contains(t, rr.Body.String(), "server name cannot contain multiple slashes",
-					"%s: should contain specific error message", tc.description)
+			if tc.expectedStatus == http.StatusUnprocessableEntity {
+				assert.Contains(t, rr.Body.String(), "expected string to match pattern",
+					"%s: should contain pattern validation error", tc.description)
 			}
 		})
 	}

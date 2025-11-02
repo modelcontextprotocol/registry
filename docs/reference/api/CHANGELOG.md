@@ -2,6 +2,35 @@
 
 Changes to the REST API endpoints and responses.
 
+## Unreleased
+
+### Added
+
+#### API Versioning - v0.1 Introduction
+
+Introduced `/v0.1/` as a stable API version while `/v0/` continues as the development version.
+
+**New version paths:**
+- All `/v0/` endpoints are now also available at `/v0.1/`
+- Both versions currently share identical behavior
+- `/v0/` will continue to evolve with additive changes (new optional fields, new endpoints)
+- `/v0.1/` will remain stable with only additive, backward-compatible changes
+- Both versions will be maintained until a future v1.0 release
+
+**Migration guidance:**
+- Production applications should consider using `/v0.1/` for stability
+- Development and testing can continue using `/v0/` for latest features
+- No immediate action required - `/v0/` remains fully supported
+
+### ⚠️ BREAKING CHANGES
+
+#### Endpoint Simplification
+
+Removed redundant endpoint to simplify API surface and reduce implementation burden for subregistries.
+
+**Removed endpoints:**
+- `GET /v0/servers/{serverName}` - Use `GET /v0/servers/{serverName}/versions/latest` instead
+
 ## 2025-09-29
 
 ### ⚠️ BREAKING CHANGES

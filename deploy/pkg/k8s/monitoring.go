@@ -174,6 +174,8 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 				"repository": pulumi.String("otel/opentelemetry-collector-contrib"),
 				"tag":        pulumi.String("0.133.0"),
 			},
+			"hostNetwork": pulumi.Bool(true),
+			"dnsPolicy":   pulumi.String("ClusterFirstWithHostNet"),
 			"clusterRole": pulumi.Map{
 				"create": pulumi.Bool(true),
 				"rules": pulumi.Array{
@@ -183,12 +185,37 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 							pulumi.String("pods"),
 							pulumi.String("pods/log"),
 							pulumi.String("nodes"),
+							pulumi.String("nodes/stats"),
+							pulumi.String("nodes/proxy"),
 							pulumi.String("namespaces"),
+							pulumi.String("events"),
 						},
 						"verbs": pulumi.StringArray{
 							pulumi.String("get"),
 							pulumi.String("list"),
 							pulumi.String("watch"),
+						},
+					},
+					pulumi.Map{
+						"apiGroups": pulumi.StringArray{pulumi.String("apps")},
+						"resources": pulumi.StringArray{
+							pulumi.String("replicasets"),
+							pulumi.String("deployments"),
+							pulumi.String("daemonsets"),
+						},
+						"verbs": pulumi.StringArray{
+							pulumi.String("get"),
+							pulumi.String("list"),
+							pulumi.String("watch"),
+						},
+					},
+					pulumi.Map{
+						"nonResourceURLs": pulumi.StringArray{
+							pulumi.String("/stats/*"),
+							pulumi.String("/metrics"),
+						},
+						"verbs": pulumi.StringArray{
+							pulumi.String("get"),
 						},
 					},
 				},
@@ -205,26 +232,11 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 							pulumi.Map{
 								"type":       pulumi.String("regex_parser"),
 								"id":         pulumi.String("extract_metadata_from_filepath"),
-								"regex":      pulumi.String(`^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]{36})\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log`),
+								"regex":      pulumi.String(`^.*\/[^_]+_[^_]+_(?P<uid>[a-f0-9\-]{36})\/[^\._]+\/(?P<restart_count>\d+)\.log`),
 								"parse_from": pulumi.String("attributes[\"log.file.path\"]"),
 								"cache": pulumi.Map{
 									"size": pulumi.Int(128),
 								},
-							},
-							pulumi.Map{
-								"type": pulumi.String("move"),
-								"from": pulumi.String("attributes.container_name"),
-								"to":   pulumi.String("resource[\"k8s.container.name\"]"),
-							},
-							pulumi.Map{
-								"type": pulumi.String("move"),
-								"from": pulumi.String("attributes.namespace"),
-								"to":   pulumi.String("resource[\"k8s.namespace.name\"]"),
-							},
-							pulumi.Map{
-								"type": pulumi.String("move"),
-								"from": pulumi.String("attributes.pod_name"),
-								"to":   pulumi.String("resource[\"k8s.pod.name\"]"),
 							},
 							pulumi.Map{
 								"type": pulumi.String("move"),
@@ -238,9 +250,28 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 							},
 						},
 					},
+					"kubeletstats": pulumi.Map{
+						"collection_interval":  pulumi.String("60s"),
+						"auth_type":            pulumi.String("serviceAccount"),
+						"endpoint":             pulumi.String("https://${env:KUBERNETES_NODE_NAME}:10250"),
+						"insecure_skip_verify": pulumi.Bool(true),
+					},
+					"k8s_events": pulumi.Map{
+						"auth_type": pulumi.String("serviceAccount"),
+						"namespaces": pulumi.StringArray{
+							pulumi.String("default"),
+						},
+					},
 				},
 				"processors": pulumi.Map{
 					"batch": pulumi.Map{},
+					"filter/kubeletstats_filter": pulumi.Map{
+						"metrics": pulumi.Map{
+							"datapoint": pulumi.StringArray{
+								pulumi.String(`resource.attributes["k8s.namespace.name"] != "default"`),
+							},
+						},
+					},
 					"k8sattributes": pulumi.Map{
 						"auth_type":   pulumi.String("serviceAccount"),
 						"passthrough": pulumi.Bool(false),
@@ -254,15 +285,8 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 								pulumi.String("k8s.deployment.name"),
 								pulumi.String("k8s.namespace.name"),
 								pulumi.String("k8s.node.name"),
-								pulumi.String("k8s.pod.start_time"),
-								pulumi.String("k8s.cluster.uid"),
-							},
-							"labels": pulumi.Array{
-								pulumi.Map{
-									"tag_name": pulumi.String("app"),
-									"key":      pulumi.String("app"),
-									"from":     pulumi.String("pod"),
-								},
+								pulumi.String("container.image.name"),
+								pulumi.String("container.image.tag"),
 							},
 						},
 						"pod_association": pulumi.Array{
@@ -270,11 +294,22 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 								"sources": pulumi.Array{
 									pulumi.Map{
 										"from": pulumi.String("resource_attribute"),
-										"name": pulumi.String("k8s.pod.name"),
+										"name": pulumi.String("k8s.pod.ip"),
 									},
+								},
+							},
+							pulumi.Map{
+								"sources": pulumi.Array{
 									pulumi.Map{
 										"from": pulumi.String("resource_attribute"),
-										"name": pulumi.String("k8s.namespace.name"),
+										"name": pulumi.String("k8s.pod.uid"),
+									},
+								},
+							},
+							pulumi.Map{
+								"sources": pulumi.Array{
+									pulumi.Map{
+										"from": pulumi.String("connection"),
 									},
 								},
 							},
@@ -302,13 +337,28 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 							"queue_size":    pulumi.Int(50),
 						},
 					},
+					"otlphttp/victoriametrics": pulumi.Map{
+						"metrics_endpoint": pulumi.String("http://victoria-metrics-victoria-metrics-single-server:8428/opentelemetry/v1/metrics"),
+						"timeout":          pulumi.String("10s"),
+						"retry_on_failure": pulumi.Map{
+							"enabled":          pulumi.Bool(true),
+							"initial_interval": pulumi.String("5s"),
+							"max_interval":     pulumi.String("30s"),
+							"max_elapsed_time": pulumi.String("300s"),
+						},
+					},
 				},
 				"service": pulumi.Map{
 					"pipelines": pulumi.Map{
 						"logs": pulumi.Map{
-							"receivers":  pulumi.StringArray{pulumi.String("filelog")},
-							"processors": pulumi.StringArray{pulumi.String("batch"), pulumi.String("k8sattributes")},
+							"receivers":  pulumi.StringArray{pulumi.String("filelog"), pulumi.String("k8s_events")},
+							"processors": pulumi.StringArray{pulumi.String("k8sattributes"), pulumi.String("batch")},
 							"exporters":  pulumi.StringArray{pulumi.String("otlphttp/victorialogs")},
+						},
+						"metrics": pulumi.Map{
+							"receivers":  pulumi.StringArray{pulumi.String("kubeletstats")},
+							"processors": pulumi.StringArray{pulumi.String("k8sattributes"), pulumi.String("filter/kubeletstats_filter"), pulumi.String("batch")},
+							"exporters":  pulumi.StringArray{pulumi.String("otlphttp/victoriametrics")},
 						},
 					},
 				},
@@ -326,6 +376,18 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 						"path": pulumi.String("/var/lib/docker/containers"),
 					},
 				},
+				pulumi.Map{
+					"name": pulumi.String("proc"),
+					"hostPath": pulumi.Map{
+						"path": pulumi.String("/proc"),
+					},
+				},
+				pulumi.Map{
+					"name": pulumi.String("sys"),
+					"hostPath": pulumi.Map{
+						"path": pulumi.String("/sys"),
+					},
+				},
 			},
 			"extraVolumeMounts": pulumi.Array{
 				pulumi.Map{
@@ -336,6 +398,16 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 				pulumi.Map{
 					"name":      pulumi.String("varlibdockercontainers"),
 					"mountPath": pulumi.String("/var/lib/docker/containers"),
+					"readOnly":  pulumi.Bool(true),
+				},
+				pulumi.Map{
+					"name":      pulumi.String("proc"),
+					"mountPath": pulumi.String("/host/proc"),
+					"readOnly":  pulumi.Bool(true),
+				},
+				pulumi.Map{
+					"name":      pulumi.String("sys"),
+					"mountPath": pulumi.String("/host/sys"),
 					"readOnly":  pulumi.Bool(true),
 				},
 			},

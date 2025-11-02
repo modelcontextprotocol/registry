@@ -1,0 +1,56 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'deploy/Pulumi.gcpProd.yaml'
+
+permissions:
+  contents: read
+
+env:
+  PULUMI_VERSION: "3.188.0"
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Setup Pulumi
+        uses: pulumi/actions@d7ceb0215da5a14ec84f50b703365ddf0194a9c8
+        with:
+          pulumi-version: ${{ env.PULUMI_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          credentials_json: ${{ secrets.GCP_PROD_SERVICE_ACCOUNT_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db
+        with:
+          project_id: mcp-registry-prod
+          install_components: gke-gcloud-auth-plugin
+
+      - name: Deploy to Production
+        working-directory: ./deploy
+        env:
+          PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
+        run: |
+          echo "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
+          make prod-up

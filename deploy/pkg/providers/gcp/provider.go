@@ -22,19 +22,19 @@ type Provider struct{}
 // createGCPProvider creates a GCP provider with explicit credentials if configured
 func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) {
 	gcpConf := config.New(ctx, "gcp")
-	
+
 	// Get project ID from config
 	projectID := gcpConf.Get("project")
 	if projectID == "" {
 		return nil, fmt.Errorf("GCP project ID not configured. Set gcp:project")
 	}
-	
+
 	// Get region from config or use default
 	region := gcpConf.Get("region")
 	if region == "" {
 		region = "us-central1"
 	}
-	
+
 	// Get credentials from config (base64 encoded service account JSON)
 	credentials := gcpConf.Get("credentials")
 	if credentials != "" {
@@ -45,7 +45,7 @@ func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) 
 		}
 		credentials = string(decodedCreds)
 	}
-	
+
 	// Create a GCP provider with explicit credentials if provided
 	if credentials != "" {
 		return gcp.NewProvider(ctx, name, &gcp.ProviderArgs{
@@ -54,7 +54,7 @@ func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) 
 			Credentials: pulumi.String(credentials),
 		})
 	}
-	
+
 	return nil, nil
 }
 
