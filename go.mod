@@ -1,10 +1,10 @@
 module github.com/modelcontextprotocol/registry
 
-go 1.24.6
+go 1.24.9
 
 require (
-	cloud.google.com/go/kms v1.23.0
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.12.0
+	cloud.google.com/go/kms v1.23.2
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.0
 	github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys v1.4.0
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/coreos/go-oidc/v3 v3.16.0
