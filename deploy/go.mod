@@ -1,10 +1,10 @@
 module github.com/modelcontextprotocol/registry/deploy/infra
 
-go 1.24.6
+go 1.24.7
 
 require (
 	github.com/pulumi/pulumi-gcp/sdk/v8 v8.41.1
-	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.23.0
+	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.24.0
 	github.com/pulumi/pulumi/sdk/v3 v3.206.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -65,11 +65,11 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0 // indirect
-	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
+	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
-	github.com/spf13/cobra v1.8.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/cobra v1.10.1 // indirect
+	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/texttheater/golang-levenshtein v1.0.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
