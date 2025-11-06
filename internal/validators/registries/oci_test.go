@@ -40,6 +40,12 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 			errorMsg:    "missing required annotation",
 		},
 		{
+			name:        "MCR should be allowed",
+			identifier:  "mcr.microsoft.com/dotnet/aspire-dashboard:9.5.0",
+			expectError: true,
+			errorMsg:    "missing required annotation",
+		},
+		{
 			name:        "Artifact Registry regional should be allowed",
 			identifier:  "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
 			expectError: true,

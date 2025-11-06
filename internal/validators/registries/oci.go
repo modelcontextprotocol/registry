@@ -33,6 +33,8 @@ var allowedOCIRegistries = map[string]bool{
 	"index.docker.io":      true, // Docker Hub index
 	// GitHub Container Registry
 	"ghcr.io": true,
+	// Microsoft Container Registry
+	"mcr.microsoft.com": true,
 	// Google Artifact Registry (*.pkg.dev pattern handled in isAllowedRegistry)
 }
 
@@ -47,6 +49,7 @@ var allowedOCIRegistries = map[string]bool{
 //   - Docker Hub (docker.io)
 //   - GitHub Container Registry (ghcr.io)
 //   - Google Artifact Registry (*.pkg.dev)
+//   - Microsoft Container Registry (mcr.microsoft.com)
 func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) error {
 	if pkg.Identifier == "" {
 		return ErrMissingIdentifierForOCI
