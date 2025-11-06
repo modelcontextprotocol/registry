@@ -317,6 +317,8 @@ The official MCP registry supports:
 - Docker Hub (`docker.io`)
 - GitHub Container Registry (`ghcr.io`)
 - Google Artifact Registry (any `*.pkg.dev` domain)
+- Azure Container Registry (`*.azurecr.io`)
+- Microsoft Container Registry (`mcr.microsoft.com`)
 
 </details>
 

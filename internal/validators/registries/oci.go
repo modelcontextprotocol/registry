@@ -36,6 +36,7 @@ var allowedOCIRegistries = map[string]bool{
 	// Microsoft Container Registry
 	"mcr.microsoft.com": true,
 	// Google Artifact Registry (*.pkg.dev pattern handled in isAllowedRegistry)
+	// Azure Container Registry (*.azurecr.io pattern handled in isAllowedRegistry)
 }
 
 // ValidateOCI validates that an OCI image contains the correct MCP server name annotation.
@@ -149,6 +150,11 @@ func isAllowedRegistry(registry string) bool {
 	// Check for wildcard patterns
 	// Google Artifact Registry: *.pkg.dev (e.g., us-docker.pkg.dev, europe-west1-docker.pkg.dev)
 	if strings.HasSuffix(registry, ".pkg.dev") {
+		return true
+	}
+
+	// Azure Container Registry: *.azurecr.io
+	if strings.HasSuffix(registry, ".azurecr.io") {
 		return true
 	}
 

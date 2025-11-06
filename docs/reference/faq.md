@@ -62,6 +62,9 @@ This applies to both locally-run and remote servers.
 - NuGet.org (.NET packages)
 - GitHub Container Registry (GHCR)
 - Docker Hub
+- Google Artifact Registry (`*.pkg.dev` domains)
+- Azure Container Registry (`*.azurecr.io` domains)
+- Microsoft Container Registry (MCR)
 
 More can be added as the community desires; feel free to open an issue if you are interested in building support for another registry.
 

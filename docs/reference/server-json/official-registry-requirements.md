@@ -42,6 +42,8 @@ Only trusted public registries are supported. Private registries and alternative
   - Docker Hub (`docker.io`)
   - GitHub Container Registry (`ghcr.io`)
   - Google Artifact Registry (`*.pkg.dev`)
+  - Azure Container Registry (`*.azurecr.io`)
+  - Microsoft Container Registry (`mcr.microsoft.com`)
 - **MCPB**: `https://github.com` releases and `https://gitlab.com` releases only
 
 ## `_meta` Namespace Restrictions

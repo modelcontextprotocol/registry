@@ -40,12 +40,6 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 			errorMsg:    "missing required annotation",
 		},
 		{
-			name:        "MCR should be allowed",
-			identifier:  "mcr.microsoft.com/dotnet/aspire-dashboard:9.5.0",
-			expectError: true,
-			errorMsg:    "missing required annotation",
-		},
-		{
 			name:        "Artifact Registry regional should be allowed",
 			identifier:  "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
 			expectError: true,
@@ -54,6 +48,18 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 		{
 			name:        "Artifact Registry multi-region should be allowed",
 			identifier:  "us-docker.pkg.dev/berglas/berglas/berglas:latest",
+			expectError: true,
+			errorMsg:    "missing required annotation",
+		},
+		{
+			name:        "MCR should be allowed",
+			identifier:  "mcr.microsoft.com/dotnet/aspire-dashboard:9.5.0",
+			expectError: true,
+			errorMsg:    "missing required annotation",
+		},
+		{
+			name:        "ACR should be allowed",
+			identifier:  "azurearcjumpstart.azurecr.io/hello-arc:latest",
 			expectError: true,
 			errorMsg:    "missing required annotation",
 		},
