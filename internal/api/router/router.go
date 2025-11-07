@@ -184,14 +184,16 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 	// Add /metrics for Prometheus metrics using promhttp
 	mux.Handle("/metrics", metrics.PrometheusHandler())
 
-	// Add redirect from / to docs and 404 handler for all other routes
+	// Add UI and 404 handler for all other routes
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			http.Redirect(w, r, "https://github.com/modelcontextprotocol/registry/tree/main/docs", http.StatusTemporaryRedirect)
+			// Serve UI at root
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write([]byte(v0.GetUIHTML()))
 			return
 		}
 
-		// Handle 404 for all other routes
+		// Handle 404 for all non-matched routes
 		handle404(w, r)
 	})
 
