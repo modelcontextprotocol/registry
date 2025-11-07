@@ -189,7 +189,10 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 		if r.URL.Path == "/" {
 			// Serve UI at root
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.Write([]byte(v0.GetUIHTML()))
+			_, err := w.Write([]byte(v0.GetUIHTML()))
+			if err != nil {
+				http.Error(w, "Failed to write response", http.StatusInternalServerError)
+			}
 			return
 		}
 
