@@ -79,7 +79,7 @@ jobs:
           cache: true
 
       - name: Setup Pulumi
-        uses: pulumi/actions@d7ceb0215da5a14ec84f50b703365ddf0194a9c8
+        uses: pulumi/actions@8582a9e8cc630786854029b4e09281acd6794b58
         with:
           pulumi-version: ${{ env.PULUMI_VERSION }}
 
