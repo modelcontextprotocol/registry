@@ -24,3 +24,5 @@ Staging auto-deploys from `main` via [deploy-staging.yml](.github/workflows/depl
 ## Rollback
 
 To rollback production, update `deploy/Pulumi.gcpProd.yaml` to the previous version and push.
+
+**Note:** Rollbacks may not work as expected if the release included database migrations, since migrations are not automatically reversed.
