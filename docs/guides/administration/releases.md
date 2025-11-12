@@ -11,17 +11,11 @@
 
 ## Deploying to Production
 
-1. Update `deploy/Pulumi.gcpProd.yaml`:
+1. Update `deploy/Pulumi.gcpProd.yaml` (e.g., through a PR or by pushing directly to main):
    ```yaml
    mcp-registry:imageTag: 1.3.9
    ```
-2. Commit and push:
-   ```bash
-   git add deploy/Pulumi.gcpProd.yaml
-   git commit -m "Promote prod to 1.3.9"
-   git push
-   ```
-3. The [deploy-production workflow](.github/workflows/deploy-production.yml) automatically deploys
+2. The [deploy-production workflow](.github/workflows/deploy-production.yml) automatically deploys
 
 ## Staging
 
