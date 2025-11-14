@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
@@ -20,7 +21,7 @@ import (
 
 func TestImportService_LocalFile(t *testing.T) {
 	// Create a temporary seed file
-	tempFile := "/tmp/test_import_seed.json"
+	tempFile := filepath.Join(os.TempDir(), "test_import_seed.json")
 	seedData := []*apiv0.ServerJSON{
 		{
 			Schema:      model.CurrentSchemaURL,

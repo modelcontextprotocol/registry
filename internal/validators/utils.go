@@ -144,6 +144,10 @@ func IsValidRemoteURL(rawURL string) bool {
 		return false
 	}
 
+	if u.Scheme != "https" {
+		return false
+	}
+
 	return true
 }
 
