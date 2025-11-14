@@ -280,7 +280,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "http://mcp-fs.anonymous.modelcontextprotocol.io/http"
+      "url": "https://mcp-fs.anonymous.modelcontextprotocol.io/http"
     }
   ],
   "_meta": {
