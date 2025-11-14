@@ -455,6 +455,21 @@ func TestValidate(t *testing.T) {
 			expectedError: "websiteUrl must use https scheme: ftp://example.com/docs",
 		},
 		{
+			name: "server with invalid websiteUrl - required HTTPS",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "http://example.com/docs",
+			},
+			expectedError: "websiteUrl must use https scheme: http://example.com/docs",
+		},
+		{
 			name: "server with malformed websiteUrl",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
@@ -512,7 +527,7 @@ func TestValidate(t *testing.T) {
 				Version:    "1.0.0",
 				WebsiteURL: "https://different.com/docs",
 			},
-			expectedError: "websiteUrl https://different.com/docs does not match namespace com.example/test-server",
+			expectedError: "",
 		},
 		{
 			name: "package with spaces in name",

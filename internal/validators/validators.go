@@ -113,11 +113,6 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 		return err
 	}
 
-	// Validate reverse-DNS namespace matching for website URL
-	if err := validateWebsiteURLNamespaceMatch(*serverJSON); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -518,21 +513,6 @@ func validateRemoteNamespaceMatch(serverJSON apiv0.ServerJSON) error {
 		if err := validateRemoteURLMatchesNamespace(remote.URL, namespace); err != nil {
 			return fmt.Errorf("remote URL %s does not match namespace %s: %w", remote.URL, namespace, err)
 		}
-	}
-
-	return nil
-}
-
-// validateWebsiteURLNamespaceMatch validates that website URL matches the reverse-DNS namespace
-func validateWebsiteURLNamespaceMatch(serverJSON apiv0.ServerJSON) error {
-	// Skip validation if website URL is not provided
-	if serverJSON.WebsiteURL == "" {
-		return nil
-	}
-
-	namespace := serverJSON.Name
-	if err := validateRemoteURLMatchesNamespace(serverJSON.WebsiteURL, namespace); err != nil {
-		return fmt.Errorf("websiteUrl %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err)
 	}
 
 	return nil
