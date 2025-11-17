@@ -85,47 +85,9 @@ func buildPermissionErrorMessage(attemptedResource string, permissions []auth.Pe
 	errorMsg += ". Attempting to publish: " + attemptedResource
 
 	// Add helpful hint for GitHub organization publishing issues
-	if strings.HasPrefix(attemptedResource, "io.github.") && !hasPermissionForResource(attemptedResource, permissions) {
-		// Extract the org name from the resource pattern
-		parts := strings.Split(attemptedResource, "/")
-		if len(parts) >= 2 {
-			namespace := parts[0] // e.g., "io.github.orgname"
-			if orgName := extractGitHubOrgName(namespace); orgName != "" {
-				// Check if user has permission for their personal namespace but not this org
-				hasPersonalPermission := false
-				for _, perm := range permissions {
-					if strings.Contains(perm.ResourcePattern, "io.github.") && perm.Action == auth.PermissionActionPublish {
-						hasPersonalPermission = true
-						break
-					}
-				}
-				
-				if hasPersonalPermission {
-					errorMsg += ". If you're trying to publish to a GitHub organization, you may need to make your membership of the '" + orgName + "' organization public in your GitHub settings"
-				}
-			}
-		}
+	if strings.HasPrefix(attemptedResource, "io.github.") {
+		errorMsg += ". If you're trying to publish to a GitHub organization, you may need to make your organization membership public in your GitHub settings: https://docs.github.com/en/account-and-profile/how-tos/organization-membership/publicizing-or-hiding-organization-membership"
 	}
 
 	return errorMsg
-}
-
-// extractGitHubOrgName extracts the organization name from a GitHub namespace
-// e.g., "io.github.orgname" -> "orgname"
-func extractGitHubOrgName(namespace string) string {
-	const prefix = "io.github."
-	if strings.HasPrefix(namespace, prefix) {
-		return namespace[len(prefix):]
-	}
-	return ""
-}
-
-// hasPermissionForResource checks if any permission matches the given resource
-func hasPermissionForResource(resource string, permissions []auth.Permission) bool {
-	for _, perm := range permissions {
-		if perm.Action == auth.PermissionActionPublish && strings.HasPrefix(resource, strings.TrimSuffix(perm.ResourcePattern, "*")) {
-			return true
-		}
-	}
-	return false
 }
