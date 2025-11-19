@@ -208,6 +208,16 @@ paths:
                   error:
                     type: string
                     example: "Failed to delete server version"
+        '501':
+          description: Not Implemented - Registry does not support deletion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Deletion is not supported by this registry"
   /v0/publish:
     post:
       tags: [publish]
