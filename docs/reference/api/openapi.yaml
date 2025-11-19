@@ -322,6 +322,16 @@ paths:
                   error:
                     type: string
                     example: "Failed to publish server"
+        '501':
+          description: Not Implemented - Registry does not support publishing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Publishing is not supported by this registry"
 components:
   securitySchemes:
     bearerAuth:
