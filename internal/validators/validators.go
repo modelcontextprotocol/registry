@@ -56,10 +56,10 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	// Note: Schema field is also marked as required in the ServerJSON struct definition
 	// for API-level validation and documentation
 	if serverJSON.Schema == "" {
-		return fmt.Errorf("$schema field is required. Use: %s", model.CurrentSchemaURL)
+		return fmt.Errorf("$schema field is required")
 	}
-	if serverJSON.Schema != model.CurrentSchemaURL {
-		return fmt.Errorf("invalid $schema URL: %s. Must be: %s", serverJSON.Schema, model.CurrentSchemaURL)
+	if !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion) {
+		return fmt.Errorf("schema version %s is not supported. Please use schema version %s", serverJSON.Schema, model.CurrentSchemaVersion)
 	}
 
 	// Validate server name exists and format

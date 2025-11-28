@@ -38,23 +38,15 @@ func PublishCommand(args []string) error {
 		return fmt.Errorf("invalid server.json: %w", err)
 	}
 
-	// Validate $schema field is required and must be the current schema URL
-	if serverJSON.Schema == "" {
-		return fmt.Errorf(`$schema field is required.
+	// Check for deprecated schema and recommend migration
+	// Allow empty schema (will use default) but reject old schemas
+	if serverJSON.Schema != "" && !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion) {
+		return fmt.Errorf(`deprecated schema detected: %s.
 
-Add the following to your server.json:
-  "$schema": "%s"
+Migrate to the current schema format for new servers.
 
-📖 Schema reference: https://github.com/modelcontextprotocol/registry/tree/main/docs/reference/server-json`, model.CurrentSchemaURL)
-	}
-
-	if serverJSON.Schema != model.CurrentSchemaURL {
-		return fmt.Errorf(`invalid $schema URL: %s
-
-Update your server.json to use:
-  "$schema": "%s"
-
-📖 Schema reference: https://github.com/modelcontextprotocol/registry/tree/main/docs/reference/server-json`, serverJSON.Schema, model.CurrentSchemaURL)
+📋 Migration checklist: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md#migration-checklist-for-publishers
+📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema)
 	}
 
 	// Load saved token

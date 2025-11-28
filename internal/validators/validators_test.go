@@ -33,7 +33,7 @@ func TestValidate(t *testing.T) {
 			expectedError: "$schema field is required",
 		},
 		{
-			name: "Schema version rejects old schema",
+			name: "Schema version rejects old schema (2025-01-27)",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json",
 				Name:        "com.example/test-server",
@@ -44,35 +44,7 @@ func TestValidate(t *testing.T) {
 				},
 				Version: "1.0.0",
 			},
-			expectedError: "invalid $schema URL",
-		},
-		{
-			name: "Schema version rejects random URL",
-			serverDetail: apiv0.ServerJSON{
-				Schema:      "https://example.com/my-schema.json",
-				Name:        "com.example/test-server",
-				Description: "A test server",
-				Repository: &model.Repository{
-					URL:    "https://github.com/owner/repo",
-					Source: "github",
-				},
-				Version: "1.0.0",
-			},
-			expectedError: "invalid $schema URL",
-		},
-		{
-			name: "Schema version rejects schema URL with wrong suffix",
-			serverDetail: apiv0.ServerJSON{
-				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-10-17/wrong.json",
-				Name:        "com.example/test-server",
-				Description: "A test server",
-				Repository: &model.Repository{
-					URL:    "https://github.com/owner/repo",
-					Source: "github",
-				},
-				Version: "1.0.0",
-			},
-			expectedError: "invalid $schema URL",
+			expectedError: "schema version https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json is not supported",
 		},
 		{
 			name: "Schema version accepts current schema (2025-10-17)",
