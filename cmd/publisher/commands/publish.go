@@ -45,7 +45,7 @@ func PublishCommand(args []string) error {
 Add the following to your server.json:
   "$schema": "%s"
 
-📖 Schema reference: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, model.CurrentSchemaURL)
+📖 Schema reference: https://github.com/modelcontextprotocol/registry/tree/main/docs/reference/server-json`, model.CurrentSchemaURL)
 	}
 
 	if !model.IsValidSchemaURL(serverJSON.Schema) {
@@ -54,8 +54,7 @@ Add the following to your server.json:
 Update your server.json to use a valid schema URL, e.g.:
   "$schema": "%s"
 
-📋 Migration checklist: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md#migration-checklist-for-publishers
-📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema, model.CurrentSchemaURL)
+📖 Schema reference: https://github.com/modelcontextprotocol/registry/tree/main/docs/reference/server-json`, serverJSON.Schema, model.CurrentSchemaURL)
 	}
 
 	// Load saved token
