@@ -44,7 +44,91 @@ func TestValidate(t *testing.T) {
 				},
 				Version: "1.0.0",
 			},
-			expectedError: "schema version https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json is not supported",
+			expectedError: "invalid $schema URL",
+		},
+		{
+			name: "Schema version accepts 2025-10-11 schema",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-10-11/server.schema.json",
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Schema version accepts 2025-09-29 schema",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Schema version accepts 2025-09-16 schema",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Schema version accepts 2025-07-09 schema",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Schema version rejects random URL",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      "https://example.com/my-schema.json",
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "invalid $schema URL",
+		},
+		{
+			name: "Schema version rejects schema URL with wrong suffix",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-10-17/wrong.json",
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "invalid $schema URL",
 		},
 		{
 			name: "Schema version accepts current schema (2025-10-17)",
