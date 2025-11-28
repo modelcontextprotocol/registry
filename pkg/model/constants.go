@@ -40,4 +40,3 @@ const (
 	// CurrentSchemaURL is the full URL to the current schema
 	CurrentSchemaURL = "https://static.modelcontextprotocol.io/schemas/" + CurrentSchemaVersion + "/server.schema.json"
 )
-
