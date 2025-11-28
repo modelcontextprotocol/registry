@@ -47,13 +47,13 @@ const (
 
 // ValidSchemaVersions is the list of all accepted schema versions.
 // This is used by validators to accept any valid schema version (not just the current one).
-// Note: We accept all historical schema versions to support existing published servers.
+// TODO: Consider only supporting more recent schema versions.
 var ValidSchemaVersions = []string{
-	"2025-10-17", // Current: Optional version field for MCPB packages
-	"2025-10-11", // Package format enhancements (version optional for OCI)
-	"2025-09-29", // Schema simplification (removed status, official metadata)
-	"2025-09-16", // Breaking: snake_case → camelCase field names
-	"2025-07-09", // Initial release
+	"2025-10-17",
+	"2025-10-11",
+	"2025-09-29",
+	"2025-09-16",
+	"2025-07-09",
 }
 
 // IsValidSchemaURL checks if the given schema URL is a valid MCP server schema URL.
