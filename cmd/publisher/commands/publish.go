@@ -38,7 +38,7 @@ func PublishCommand(args []string) error {
 		return fmt.Errorf("invalid server.json: %w", err)
 	}
 
-	// Validate $schema field is required and must be a valid schema URL
+	// Validate $schema field is required and must be the current schema URL
 	if serverJSON.Schema == "" {
 		return fmt.Errorf(`$schema field is required.
 
@@ -48,10 +48,10 @@ Add the following to your server.json:
 📖 Schema reference: https://github.com/modelcontextprotocol/registry/tree/main/docs/reference/server-json`, model.CurrentSchemaURL)
 	}
 
-	if !model.IsValidSchemaURL(serverJSON.Schema) {
+	if serverJSON.Schema != model.CurrentSchemaURL {
 		return fmt.Errorf(`invalid $schema URL: %s
 
-Update your server.json to use a valid schema URL, e.g.:
+Update your server.json to use:
   "$schema": "%s"
 
 📖 Schema reference: https://github.com/modelcontextprotocol/registry/tree/main/docs/reference/server-json`, serverJSON.Schema, model.CurrentSchemaURL)

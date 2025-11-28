@@ -58,8 +58,8 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	if serverJSON.Schema == "" {
 		return fmt.Errorf("$schema field is required. Use: %s", model.CurrentSchemaURL)
 	}
-	if !model.IsValidSchemaURL(serverJSON.Schema) {
-		return fmt.Errorf("invalid $schema URL: %s. Must be one of the valid schema URLs (e.g., %s)", serverJSON.Schema, model.CurrentSchemaURL)
+	if serverJSON.Schema != model.CurrentSchemaURL {
+		return fmt.Errorf("invalid $schema URL: %s. Must be: %s", serverJSON.Schema, model.CurrentSchemaURL)
 	}
 
 	// Validate server name exists and format
