@@ -213,6 +213,10 @@ func detectDescription() string {
 }
 
 func detectRepoURL() string {
+	sanitizeURL := func(url string) string {
+		return strings.TrimPrefix(url, "git+")
+	}
+
 	// Try git remote
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -233,11 +237,11 @@ func detectRepoURL() string {
 		if json.Unmarshal(data, &pkg) == nil {
 			if repo, ok := pkg["repository"].(map[string]any); ok {
 				if url, ok := repo["url"].(string); ok {
-					return strings.TrimSuffix(url, ".git")
+					return sanitizeURL(strings.TrimSuffix(url, ".git"))
 				}
 			}
 			if repo, ok := pkg["repository"].(string); ok {
-				return strings.TrimSuffix(repo, ".git")
+				return sanitizeURL(strings.TrimSuffix(repo, ".git"))
 			}
 		}
 	}
