@@ -123,7 +123,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 
 func validateAndNormalizeBaseURL(pkg *model.Package) error {
 	if pkg.RegistryBaseURL == "" {
-		pkg.RegistryBaseURL = model.RegistryURLNuGetV3
+		pkg.RegistryBaseURL = model.RegistryURLNuGet
 	}
 
 	if pkg.Identifier == "" {
@@ -136,14 +136,9 @@ func validateAndNormalizeBaseURL(pkg *model.Package) error {
 	}
 
 	// Validate that the registry base URL matches NuGet exactly
-	if pkg.RegistryBaseURL != model.RegistryURLNuGet && pkg.RegistryBaseURL != model.RegistryURLNuGetV3 {
+	if pkg.RegistryBaseURL != model.RegistryURLNuGet {
 		return fmt.Errorf("registry type and base URL do not match: '%s' is not valid for registry type '%s'. Expected: %s",
-			pkg.RegistryBaseURL, model.RegistryTypeNuGet, model.RegistryURLNuGetV3)
-	}
-
-	// Normalize to canonical NuGet V3 URL
-	if pkg.RegistryBaseURL == model.RegistryURLNuGet {
-		pkg.RegistryBaseURL = model.RegistryURLNuGetV3
+			pkg.RegistryBaseURL, model.RegistryTypeNuGet, model.RegistryURLNuGet)
 	}
 
 	return nil

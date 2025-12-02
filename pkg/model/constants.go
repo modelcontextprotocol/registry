@@ -11,12 +11,11 @@ const (
 
 // Registry Base URLs - supported package registry base URLs
 const (
-	RegistryURLNPM     = "https://registry.npmjs.org"
-	RegistryURLPyPI    = "https://pypi.org"
-	RegistryURLNuGet   = "https://api.nuget.org"               // legacy base URL for NuGet (backwards compatibility)
-	RegistryURLNuGetV3 = "https://api.nuget.org/v3/index.json" // canonical base URL for NuGet
-	RegistryURLGitHub  = "https://github.com"
-	RegistryURLGitLab  = "https://gitlab.com"
+	RegistryURLNPM    = "https://registry.npmjs.org"
+	RegistryURLPyPI   = "https://pypi.org"
+	RegistryURLNuGet  = "https://api.nuget.org/v3/index.json"
+	RegistryURLGitHub = "https://github.com"
+	RegistryURLGitLab = "https://gitlab.com"
 )
 
 // Transport Types - supported remote transport protocols
