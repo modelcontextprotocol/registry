@@ -97,7 +97,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 	case ValidReadme:
 		return nil
 	case InvalidReadme:
-		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed. The server name '%s' must appear as 'mcp-name: %s' in the package README. Add it to your package README", pkg.Identifier, pkg.Version, serverName, serverName)
+		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed. The server name '%s' must appear as 'mcp-name: %s' in the package README. Add it to your README and publish a new package version", pkg.Identifier, pkg.Version, serverName, serverName)
 	case NoReadme:
 		// Continue to check if package exists
 	default:
@@ -115,7 +115,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 	case PackageExistsVersionMissing:
 		return fmt.Errorf("NuGet package '%s' exists but version %s does not exist in the registry. If you recently published the version, wait for validation to complete", pkg.Identifier, pkg.Version)
 	case PackageAndVersionExist:
-		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed because it does not have an embedded README. Add one to your package", pkg.Identifier, pkg.Version)
+		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed because it does not have an embedded README. Add one to your package and publish a new version", pkg.Identifier, pkg.Version)
 	default:
 		return fmt.Errorf("unexpected package existence state: %d", existenceState)
 	}
