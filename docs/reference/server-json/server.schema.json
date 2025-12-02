@@ -1,6 +1,6 @@
 {
   "$comment": "This file is auto-generated from docs/reference/api/openapi.yaml. Do not edit manually. Run 'make generate-schema' to update.",
-  "$id": "https://static.modelcontextprotocol.io/schemas/2025-12-01/server.schema.json",
+  "$id": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "$ref": "#/definitions/ServerDetail",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
