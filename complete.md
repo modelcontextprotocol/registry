@@ -658,7 +658,7 @@ Only trusted public registries are supported. Private registries and alternative
 **Supported registries:**
 - **NPM**: `https://registry.npmjs.org` only
 - **PyPI**: `https://pypi.org` only
-- **NuGet**: `https://api.nuget.org/v3/index.json` only (`https://api.nuget.org` is supported for backwards compatibility)
+- **NuGet**: `https://api.nuget.org/v3/index.json`
 - **Docker/OCI**: `https://docker.io` only
 - **MCPB**: `https://github.com` releases and `https://gitlab.com` releases only
 
