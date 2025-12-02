@@ -131,7 +131,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
   "packages": [
     {
       "registryType": "nuget",
-      "registryBaseUrl": "https://api.nuget.org",
+      "registryBaseUrl": "https://api.nuget.org/v3/index.json",
       "identifier": "Knapcode.SampleMcpServer",
       "version": "0.4.0-beta",
       "transport": {
@@ -370,7 +370,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "packages": [
     {
       "registryType": "nuget",
-      "registryBaseUrl": "https://api.nuget.org",
+      "registryBaseUrl": "https://api.nuget.org/v3/index.json",
       "identifier": "Knapcode.SampleMcpServer",
       "version": "0.5.0",
       "runtimeHint": "dnx",

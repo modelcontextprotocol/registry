@@ -414,7 +414,7 @@ components:
             - "https://registry.npmjs.org"
             - "https://pypi.org"
             - "https://docker.io"
-            - "https://api.nuget.org"
+            - "https://api.nuget.org/v3/index.json"
             - "https://github.com"
             - "https://gitlab.com"
         identifier:
