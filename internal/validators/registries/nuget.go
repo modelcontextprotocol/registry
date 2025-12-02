@@ -58,12 +58,12 @@ type PackageExistenceState int
 const (
 	PackageAndVersionExist PackageExistenceState = iota
 	PackageExistsVersionMissing
-	PackageIdNotFound
+	PackageIDNotFound
 )
 
 // ValidateNuGet validates that a NuGet package contains the correct MCP server name
 func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) error {
-	err := validateAndNormalizeBaseUrl(&pkg)
+	err := validateAndNormalizeBaseURL(&pkg)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 		return err
 	}
 
-	lowerId := strings.ToLower(pkg.Identifier)
+	lowerID := strings.ToLower(pkg.Identifier)
 	lowerVersion := strings.ToLower(pkg.Version)
 
 	// remove any SemVer 2.0.0 build metadata suffix (e.g., +abc)
@@ -88,7 +88,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 		lowerVersion = lowerVersion[:i]
 	}
 
-	status, err := validateReadme(ctx, serverName, lowerId, lowerVersion, client, serviceIndex)
+	status, err := validateReadme(ctx, serverName, lowerID, lowerVersion, client, serviceIndex)
 	if err != nil {
 		return err
 	}
@@ -104,13 +104,13 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 		return fmt.Errorf("unexpected readme state: %d", status)
 	}
 
-	existenceState, err := validatePackageExists(ctx, lowerId, lowerVersion, client, serviceIndex)
+	existenceState, err := validatePackageExists(ctx, lowerID, lowerVersion, client, serviceIndex)
 	if err != nil {
 		return err
 	}
 
 	switch existenceState {
-	case PackageIdNotFound:
+	case PackageIDNotFound:
 		return fmt.Errorf("NuGet package '%s' does not exist in the registry. If you recently published the package for the first time, wait for validation to complete", pkg.Identifier)
 	case PackageExistsVersionMissing:
 		return fmt.Errorf("NuGet package '%s' exists but version %s does not exist in the registry. If you recently published the version, wait for validation to complete", pkg.Identifier, pkg.Version)
@@ -121,7 +121,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 	}
 }
 
-func validateAndNormalizeBaseUrl(pkg *model.Package) error {
+func validateAndNormalizeBaseURL(pkg *model.Package) error {
 	if pkg.RegistryBaseURL == "" {
 		pkg.RegistryBaseURL = model.RegistryURLNuGetV3
 	}
@@ -208,14 +208,14 @@ func getReadmeURLTemplate(index *serviceIndex) (string, error) {
 	return "", fmt.Errorf("ReadmeUriTemplate/6.13.0 not found in service index")
 }
 
-func validateReadme(ctx context.Context, serverName, lowerId, lowerVersion string, client *http.Client, index *serviceIndex) (ReadmeState, error) {
+func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion string, client *http.Client, index *serviceIndex) (ReadmeState, error) {
 	readmeURLTemplate, err := getReadmeURLTemplate(index)
 	if err != nil {
 		return NoReadme, fmt.Errorf("failed to get README URL template: %w", err)
 	}
 
 	// Replace placeholders in the template
-	readmeURL := strings.ReplaceAll(readmeURLTemplate, "{lower_id}", lowerId)
+	readmeURL := strings.ReplaceAll(readmeURLTemplate, "{lower_id}", lowerID)
 	readmeURL = strings.ReplaceAll(readmeURL, "{lower_version}", lowerVersion)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, readmeURL, nil)
 	if err != nil {
@@ -243,9 +243,9 @@ func validateReadme(ctx context.Context, serverName, lowerId, lowerVersion strin
 		mcpNamePattern := "mcp-name: " + serverName
 		if strings.Contains(readmeContent, mcpNamePattern) {
 			return ValidReadme, nil // Found as mcp-name: format
-		} else {
-			return InvalidReadme, nil
 		}
+
+		return InvalidReadme, nil
 	}
 
 	if resp.StatusCode == http.StatusNotFound {
@@ -255,7 +255,7 @@ func validateReadme(ctx context.Context, serverName, lowerId, lowerVersion strin
 	return InvalidReadme, fmt.Errorf("NuGet README request returned status %d", resp.StatusCode)
 }
 
-func getPackageContentBaseUrl(index *serviceIndex) (string, error) {
+func getPackageContentBaseURL(index *serviceIndex) (string, error) {
 	for _, resource := range index.Resources {
 		if resource.Type == "PackageBaseAddress/3.0.0" {
 			return resource.ID, nil
@@ -265,39 +265,39 @@ func getPackageContentBaseUrl(index *serviceIndex) (string, error) {
 	return "", fmt.Errorf("PackageBaseAddress/3.0.0 not found in service index")
 }
 
-func validatePackageExists(ctx context.Context, lowerId, lowerVersion string, client *http.Client, index *serviceIndex) (PackageExistenceState, error) {
-	packageBaseURL, err := getPackageContentBaseUrl(index)
+func validatePackageExists(ctx context.Context, lowerID, lowerVersion string, client *http.Client, index *serviceIndex) (PackageExistenceState, error) {
+	packageBaseURL, err := getPackageContentBaseURL(index)
 	if err != nil {
-		return PackageIdNotFound, fmt.Errorf("failed to get Package Base URL: %w", err)
+		return PackageIDNotFound, fmt.Errorf("failed to get Package Base URL: %w", err)
 	}
 
 	// Fetch the package content index to check if package ID and version exist
-	indexURL := fmt.Sprintf("%s/%s/index.json", strings.TrimRight(packageBaseURL, "/"), lowerId)
+	indexURL := fmt.Sprintf("%s/%s/index.json", strings.TrimRight(packageBaseURL, "/"), lowerID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, indexURL, nil)
 	if err != nil {
-		return PackageIdNotFound, fmt.Errorf("failed to create NuGet package index request: %w", err)
+		return PackageIDNotFound, fmt.Errorf("failed to create NuGet package index request: %w", err)
 	}
 
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return PackageIdNotFound, fmt.Errorf("failed to fetch NuGet package index: %w", err)
+		return PackageIDNotFound, fmt.Errorf("failed to fetch NuGet package index: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return PackageIdNotFound, nil // Package ID does not exist
+		return PackageIDNotFound, nil // Package ID does not exist
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return PackageIdNotFound, fmt.Errorf("NuGet package index returned status %d", resp.StatusCode)
+		return PackageIDNotFound, fmt.Errorf("NuGet package index returned status %d", resp.StatusCode)
 	}
 
 	var contentIndex packageContentIndex
 	if err := json.NewDecoder(resp.Body).Decode(&contentIndex); err != nil {
-		return PackageIdNotFound, fmt.Errorf("failed to parse NuGet package index: %w", err)
+		return PackageIDNotFound, fmt.Errorf("failed to parse NuGet package index: %w", err)
 	}
 
 	// Check if the version exists in the versions list
