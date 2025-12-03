@@ -17,43 +17,6 @@ This is a brief guide for admins and moderators managing content on the registry
 ./tools/admin/auth.sh
 ```
 
-## Connecting to the Production Database
-
-For debugging or data analysis, you can connect directly to the production PostgreSQL database. Use caution and prefer read-only access.
-
-### Prerequisites
-
-Install the GKE auth plugin if you haven't already:
-
-```bash
-gcloud components install gke-gcloud-auth-plugin
-```
-
-### Connect
-
-```bash
-# Get cluster credentials
-gcloud container clusters get-credentials mcp-registry-prod --zone us-central1-b --project mcp-registry-prod
-
-# Get the database password
-kubectl get secret registry-pg-app -o jsonpath='{.data.password}' | base64 -d
-
-# Port-forward and connect (enter the password from above)
-kubectl port-forward svc/registry-pg-rw 15432:5432 &
-sleep 2
-psql -h localhost -p 15432 -U app -d app
-```
-
-### Read-Only Access
-
-To prevent accidental writes, set your session to read-only after connecting:
-
-```sql
-SET default_transaction_read_only = on;
-```
-
-Any write attempts will fail with an error until you disconnect.
-
 ## Edit a Specific Server Version
 
 Use this when you need to modify details of a specific version (e.g., fix description, update status, modify packages).
@@ -176,9 +139,46 @@ curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NA
   done
 ```
 
+## Connecting to the Production Database
+
+For debugging or data analysis, you can connect directly to the production PostgreSQL database. Use caution and prefer read-only access.
+
+### Prerequisites
+
+Install the GKE auth plugin if you haven't already:
+
+```bash
+gcloud components install gke-gcloud-auth-plugin
+```
+
+### Connect
+
+```bash
+# Get cluster credentials
+gcloud container clusters get-credentials mcp-registry-prod --zone us-central1-b --project mcp-registry-prod
+
+# Get the database password
+kubectl get secret registry-pg-app -o jsonpath='{.data.password}' | base64 -d
+
+# Port-forward and connect (enter the password from above)
+kubectl port-forward svc/registry-pg-rw 15432:5432 &
+sleep 2
+psql -h localhost -p 15432 -U app -d app
+```
+
+### Read-Only Access
+
+To prevent accidental writes, set your session to read-only after connecting:
+
+```sql
+SET default_transaction_read_only = on;
+```
+
+Any write attempts will fail with an error until you disconnect.
+
 ## Notes
 
 - **Version-specific changes**: Only affect that particular version
-- **Server-wide changes**: Must be applied to each version individually  
+- **Server-wide changes**: Must be applied to each version individually
 - **Content scrubbing**: Use the version-specific edit workflow to scrub sensitive content
 - **Server name**: Cannot be changed in any version (it's the immutable identifier)
