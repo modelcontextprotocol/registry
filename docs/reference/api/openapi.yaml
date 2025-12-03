@@ -741,7 +741,6 @@ components:
       type: object
       required:
         - server
-        - _meta
       properties:
         server:
           $ref: '#/components/schemas/ServerDetail'
