@@ -2,6 +2,20 @@
 
 Changes to the server.json schema and format.
 
+## Draft (Unreleased)
+
+This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./server.schema.json) in this repository.
+
+### Changed
+
+- No changes yet.
+
+### Notes
+
+When ready for release, changes in this section will be moved to a dated version section (e.g., `## 2025-XX-XX`) and the schema will be published to a versioned URL.
+
+---
+
 ## 2025-10-17
 
 ### Changed
