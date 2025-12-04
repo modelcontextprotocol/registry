@@ -88,8 +88,12 @@ func main() {
 		}
 	}
 
-	// Build the JSON Schema document with dynamic version from OpenAPI spec
-	schemaID := fmt.Sprintf("https://static.modelcontextprotocol.io/schemas/%s/server.schema.json", version)
+	// Build the JSON Schema document with draft URL
+	// The in-repo schema uses "draft" since it may contain unreleased changes.
+	// When releasing, the schema is published to a versioned URL (e.g., 2025-10-17)
+	// on https://github.com/modelcontextprotocol/static
+	_ = version // version from OpenAPI spec available if needed
+	schemaID := "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json"
 	jsonSchema := map[string]interface{}{
 		"$comment":    "This file is auto-generated from docs/reference/api/openapi.yaml. Do not edit manually. Run 'make generate-schema' to update.",
 		"$schema":     "http://json-schema.org/draft-07/schema#",

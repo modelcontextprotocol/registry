@@ -2,7 +2,7 @@
 
 Changes to the REST API endpoints and responses.
 
-## 2025-11-17
+## 2025-10-17
 
 ### Added
 
