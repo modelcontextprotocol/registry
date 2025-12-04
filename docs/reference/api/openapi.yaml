@@ -709,7 +709,7 @@ components:
           type: string
           format: uri
           description: JSON Schema URI for this server.json format
-          example: "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json"
+          example: "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json"
         packages:
           type: array
           items:
