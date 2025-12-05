@@ -6,10 +6,9 @@ This guide covers onboarding new maintainers to the MCP Registry project.
 
 When onboarding a new maintainer, complete the following steps:
 
-### 1. GitHub Organization
+### 1. Access Repository (GitHub, Google Workspace)
 
-- [ ] Add them to the [modelcontextprotocol GitHub organization](https://github.com/modelcontextprotocol)
-- [ ] Grant appropriate repository permissions (typically "Maintain" or "Admin" on the registry repo)
+- [ ] Open a PR on the [modelcontextprotocol/access](https://github.com/modelcontextprotocol/access) repository
 
 ### 2. MAINTAINERS.md
 
@@ -19,29 +18,7 @@ When onboarding a new maintainer, complete the following steps:
 
 - [ ] Add them to the "Current key maintainers" section in [README.md](../../README.md)
 
-### 4. Claude GitHub App
-
-The `@claude` bot is automatically available to all modelcontextprotocol org members (no manual step required). The workflow checks org membership dynamically via the GitHub API.
-
-### 5. Google Workspace
-
-- [ ] Create a @modelcontextprotocol.io Google Workspace account for them
-- [ ] This is required for admin operations (see [admin-operations.md](./admin-operations.md))
-
-### 6. Discord
+### 4. Discord
 
 - [ ] Invite them to the MCP Discord server
-- [ ] Grant them the appropriate moderator/maintainer role
-- [ ] Add them to the `#registry-dev` channel
-
-## Offboarding
-
-When a maintainer steps down:
-
-1. Remove them from the GitHub organization (or adjust permissions)
-2. Remove them from `MAINTAINERS.md`
-3. Remove them from the README.md maintainers list
-4. Disable or remove their @modelcontextprotocol.io account
-5. Remove Discord moderator role (if applicable)
-
-Note: The `@claude` bot access is automatically revoked when they are removed from the GitHub organization.
+- [ ] Ask a Community Moderator or Core Maintainer to add them to the appropriate roles
