@@ -25,6 +25,20 @@ jobs:
       id-token: write
       actions: read
     steps:
+      # Only allow registry maintainers to trigger @claude
+      # This enables @claude to work on external fork PRs when triggered by maintainers
+      # To update this list, see: docs/administration/maintainer-onboarding.md
+      - name: Check if maintainer
+        run: |
+          MAINTAINERS="domdomegg tadasant toby rdimitrov"
+          ACTOR="${{ github.triggering_actor }}"
+          if [[ " $MAINTAINERS " =~ " $ACTOR " ]]; then
+            echo "User $ACTOR is a maintainer"
+          else
+            echo "::error::User $ACTOR is not a registry maintainer. Only maintainers can trigger @claude."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
         with:
