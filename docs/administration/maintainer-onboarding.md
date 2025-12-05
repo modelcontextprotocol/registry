@@ -21,9 +21,7 @@ When onboarding a new maintainer, complete the following steps:
 
 ### 4. Claude GitHub App
 
-- [ ] Add their GitHub username to the `MAINTAINERS` list in [`.github/workflows/claude.yml`](../../.github/workflows/claude.yml)
-
-This allows them to trigger the @claude bot on issues and PRs, including PRs from external forks.
+The `@claude` bot is automatically available to all modelcontextprotocol org members (no manual step required). The workflow checks org membership dynamically via the GitHub API.
 
 ### 5. Google Workspace
 
@@ -43,6 +41,7 @@ When a maintainer steps down:
 1. Remove them from the GitHub organization (or adjust permissions)
 2. Remove them from `MAINTAINERS.md`
 3. Remove them from the README.md maintainers list
-4. Remove their username from the Claude workflow in `.github/workflows/claude.yml`
-5. Disable or remove their @modelcontextprotocol.io account
-6. Remove Discord moderator role (if applicable)
+4. Disable or remove their @modelcontextprotocol.io account
+5. Remove Discord moderator role (if applicable)
+
+Note: The `@claude` bot access is automatically revoked when they are removed from the GitHub organization.

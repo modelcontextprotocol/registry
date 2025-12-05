@@ -25,17 +25,18 @@ jobs:
       id-token: write
       actions: read
     steps:
-      # Only allow registry maintainers to trigger @claude
-      # This enables @claude to work on external fork PRs when triggered by maintainers
-      # To update this list, see: docs/administration/maintainer-onboarding.md
-      - name: Check if maintainer
+      # Only allow modelcontextprotocol org members to trigger @claude
+      # This enables @claude to work on external fork PRs when triggered by org members
+      # Requires ORG_MEMBERSHIP_TOKEN secret with read:org scope
+      - name: Check if org member
+        env:
+          GH_TOKEN: ${{ secrets.ORG_MEMBERSHIP_TOKEN }}
         run: |
-          MAINTAINERS="domdomegg tadasant toby rdimitrov"
           ACTOR="${{ github.triggering_actor }}"
-          if [[ " $MAINTAINERS " =~ " $ACTOR " ]]; then
-            echo "User $ACTOR is a maintainer"
+          if gh api orgs/modelcontextprotocol/members/"$ACTOR" --silent 2>/dev/null; then
+            echo "User $ACTOR is a member of modelcontextprotocol org"
           else
-            echo "::error::User $ACTOR is not a registry maintainer. Only maintainers can trigger @claude."
+            echo "::error::User $ACTOR is not a member of the modelcontextprotocol org. Only org members can trigger @claude."
             exit 1
           fi
 
