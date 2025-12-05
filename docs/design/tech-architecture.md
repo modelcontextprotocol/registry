@@ -177,7 +177,7 @@ sequenceDiagram
     Admin->>CLI: Request admin token
     CLI->>GCP: gcloud auth print-identity-token --audiences=mcp-registry
     GCP-->>CLI: ID Token (with hd: "modelcontextprotocol.io")
-    CLI->>API: POST /v0/auth/oidc {"oidc_token": "eyJ..."}
+    CLI->>API: POST /v0.1/auth/oidc {"oidc_token": "eyJ..."}
     API->>GCP: Verify token signature (JWKS)
     API->>API: Validate claims (issuer, audience, hd)
     API->>API: Grant admin permissions (edit: *, publish: *)
@@ -193,10 +193,10 @@ sequenceDiagram
 ID_TOKEN=$(gcloud auth print-identity-token)
 
 # Exchange for Registry JWT token  
-REGISTRY_TOKEN=$(curl -X POST /v0/auth/oidc \
+REGISTRY_TOKEN=$(curl -X POST /v0.1/auth/oidc \
   -H "Content-Type: application/json" \
   -d '{"oidc_token": "'$ID_TOKEN'"}' | jq -r .registry_token)
 
 # Use for admin operations
-curl -H "Authorization: Bearer $REGISTRY_TOKEN" /v0/...
+curl -H "Authorization: Bearer $REGISTRY_TOKEN" /v0.1/...
 ```

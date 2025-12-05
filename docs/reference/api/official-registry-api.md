@@ -35,7 +35,7 @@ The official registry enforces additional [package validation requirements](../s
 
 ### Server List Filtering
 
-The official registry extends the `GET /v0/servers` endpoint with additional query parameters for improved discovery and synchronization:
+The official registry extends the `GET /v0.1/servers` endpoint with additional query parameters for improved discovery and synchronization:
 
 - `updated_since` - Filter servers updated after RFC3339 timestamp (e.g., `2025-08-07T13:15:04.280Z`)
 - `search` - Case-insensitive substring search on server names (e.g., `filesystem`)  
@@ -44,18 +44,18 @@ The official registry extends the `GET /v0/servers` endpoint with additional que
 
 These extensions enable efficient incremental synchronization for downstream registries and improved server discovery. Parameters can be combined and work with standard cursor-based pagination.
 
-Example: `GET /v0/servers?search=filesystem&updated_since=2025-08-01T00:00:00Z&version=latest`
+Example: `GET /v0.1/servers?search=filesystem&updated_since=2025-08-01T00:00:00Z&version=latest`
 
 ### Additional endpoints
 
 #### Auth endpoints
-- POST `/v0/auth/dns` - Exchange signed DNS challenge for auth token
-- POST `/v0/auth/http` - Exchange signed HTTP challenge for auth token
-- POST `/v0/auth/github-at` - Exchange GitHub access token for auth token
-- POST `/v0/auth/github-oidc` - Exchange GitHub OIDC token for auth token
-- POST `/v0/auth/oidc` - Exchange Google OIDC token for auth token (for admins)
+- POST `/v0.1/auth/dns` - Exchange signed DNS challenge for auth token
+- POST `/v0.1/auth/http` - Exchange signed HTTP challenge for auth token
+- POST `/v0.1/auth/github-at` - Exchange GitHub access token for auth token
+- POST `/v0.1/auth/github-oidc` - Exchange GitHub OIDC token for auth token
+- POST `/v0.1/auth/oidc` - Exchange Google OIDC token for auth token (for admins)
 
 #### Admin endpoints
 - GET `/metrics` - Prometheus metrics endpoint
-- GET `/v0/health` - Basic health check endpoint
-- PUT `/v0/servers/{serverName}/versions/{version}` - Edit specific server version
+- GET `/v0.1/health` - Basic health check endpoint
+- PUT `/v0.1/servers/{serverName}/versions/{version}` - Edit specific server version

@@ -30,7 +30,7 @@ The `GET /v0.1/servers` endpoint supports cursor-based pagination.
 For example, the first page can be fetched using a `limit` query parameter:
 
 ```bash
-curl "https://registry.modelcontextprotocol.io/v0/servers?limit=100"
+curl "https://registry.modelcontextprotocol.io/v0.1/servers?limit=100"
 ```
 
 ```jsonc Output highlight={5}
@@ -48,7 +48,7 @@ curl "https://registry.modelcontextprotocol.io/v0/servers?limit=100"
 Then subsequent pages can be fetched by passing the `nextCursor` value as the `cursor` query parameter:
 
 ```bash
-curl "https://registry.modelcontextprotocol.io/v0/servers?limit=100&cursor=com.example/my-server:1.0.0"
+curl "https://registry.modelcontextprotocol.io/v0.1/servers?limit=100&cursor=com.example/my-server:1.0.0"
 ```
 
 ### Filtering Since
