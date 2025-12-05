@@ -3,6 +3,7 @@ package v0
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"go.opentelemetry.io/otel/attribute"
@@ -18,18 +19,18 @@ type HealthBody struct {
 	GitHubClientID string `json:"github_client_id,omitempty" doc:"GitHub OAuth App Client ID"`
 }
 
-// RegisterHealthEndpoint registers the health check endpoint
-func RegisterHealthEndpoint(api huma.API, cfg *config.Config, metrics *telemetry.Metrics) {
+// RegisterHealthEndpoint registers the health check endpoint with a custom path prefix
+func RegisterHealthEndpoint(api huma.API, pathPrefix string, cfg *config.Config, metrics *telemetry.Metrics) {
 	huma.Register(api, huma.Operation{
-		OperationID: "get-health",
+		OperationID: "get-health" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodGet,
-		Path:        "/v0/health",
+		Path:        pathPrefix + "/health",
 		Summary:     "Health check",
 		Description: "Check the health status of the API",
 		Tags:        []string{"health"},
 	}, func(ctx context.Context, _ *struct{}) (*Response[HealthBody], error) {
 		// Record the health check metrics
-		recordHealthMetrics(ctx, metrics, "/v0/health", cfg.Version)
+		recordHealthMetrics(ctx, metrics, pathPrefix+"/health", cfg.Version)
 
 		return &Response[HealthBody]{
 			Body: HealthBody{

@@ -5,6 +5,7 @@ Technical specifications and quick lookups for the MCP Registry.
 ## API Reference
 
 - [Generic Registry API](./api/generic-registry-api.md)
+- [Registry Authorization](./api/registry-authorization.md)
 - [Official Registry API](./api/official-registry-api.md)
 
 ## server.json Reference

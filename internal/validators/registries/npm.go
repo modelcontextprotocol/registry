@@ -43,7 +43,7 @@ func ValidateNPM(ctx context.Context, pkg model.Package, serverName string) erro
 
 	// Validate that MCPB-specific fields are not present
 	if pkg.FileSHA256 != "" {
-		return fmt.Errorf("NPM packages must not have 'fileSha256' field - this is only for MCPB packages")
+		return fmt.Errorf("NPM packages must not have 'fileSha256' field")
 	}
 
 	// Validate that the registry base URL matches NPM exactly

@@ -3,7 +3,7 @@
 A `server.json` file is a standardized way to describe MCP servers for registry publishing, client discovery, and package management.
 
 Also see:
-- For step-by-step instructions on creating and using server.json files, see the [publishing guide](../../guides/publishing/publish-server.md).
+- For step-by-step instructions on creating and using server.json files, see the [publishing guide](../../modelcontextprotocol-io/quickstart.mdx).
 - For understanding the validation requirements when publishing to the official registry, see [official registry requirements](./official-registry-requirements.md).
 
 ## Browse the Complete Schema
@@ -14,6 +14,22 @@ The schema contains all field definitions, validation rules, examples, and detai
 
 The official registry has some more restrictions on top of this. See the [official registry requirements](./official-registry-requirements.md) for details.
 
+## Extension Metadata with `_meta`
+
+The optional `_meta` field allows publishers to include custom metadata alongside their server definitions using reverse DNS namespacing.
+
+```jsonc
+{
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      // Your custom metadata here
+    }
+  }
+}
+```
+
+When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions and examples.
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->
@@ -22,7 +38,7 @@ The official registry has some more restrictions on top of this. See the [offici
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/brave-search",
   "description": "MCP server for Brave Search API integration",
   "title": "Brave Search",
@@ -69,7 +85,7 @@ For MCP servers located within a subdirectory of a larger repository (monorepo s
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol/everything",
   "description": "MCP server that exercises all the features of the MCP protocol",
   "title": "Everything",
@@ -108,7 +124,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.joelverhagen/knapcode-samplemcpserver",
   "description": "Sample NuGet MCP server for a random number and random weather",
   "version": "0.4.0-beta",
@@ -152,7 +168,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.modelcontextprotocol/filesystem",
   "description": "Node.js server implementing Model Context Protocol (MCP) for filesystem operations.",
   "title": "Filesystem",
@@ -252,7 +268,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/mcp-fs",
   "description": "Cloud-hosted MCP filesystem server",
   "repository": {
@@ -264,7 +280,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "http://mcp-fs.anonymous.modelcontextprotocol.io/http"
+      "url": "https://mcp-fs.anonymous.modelcontextprotocol.io/http"
     }
   ],
   "_meta": {
@@ -286,7 +302,7 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.example/weather-mcp",
   "description": "Python MCP server for weather data access",
   "title": "Weather",
@@ -342,7 +358,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.joelverhagen/knapcode-samplemcpserver",
   "description": "Sample NuGet MCP server for a random number and random weather",
   "repository": {
@@ -391,7 +407,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.example/database-manager",
   "description": "MCP server for database operations with support for multiple database types",
   "repository": {
@@ -500,7 +516,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/hybrid-mcp",
   "description": "MCP server available as both local package and remote service",
   "title": "Hybrid",
@@ -586,7 +602,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol/text-editor",
   "description": "MCP Bundle server for advanced text editing capabilities",
   "title": "Text Editor",
@@ -629,7 +645,7 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.snyk/cli-mcp",
   "description": "MCP server provided by the Snyk CLI",
   "title": "Snyk",
@@ -664,7 +680,7 @@ For MCP servers that follow a custom installation path or are embedded in applic
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/embedded-mcp",
   "description": "MCP server embedded in a Desktop app",
   "websiteUrl": "https://anonymous.modelcontextprotocol.io/embedded-mcp-guide",
@@ -679,7 +695,7 @@ This example demonstrates URL templating for remote servers, useful for multi-te
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/multi-tenant-server",
   "description": "MCP server with configurable remote endpoint",
   "title": "Multi-Tenant Server",
@@ -705,7 +721,7 @@ The same URL templating works with SSE transport:
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.modelcontextprotocol.anonymous/events-server",
   "description": "MCP server using SSE with tenant-specific endpoints",
   "version": "1.0.0",
@@ -730,7 +746,7 @@ This example demonstrates URL templating for local/package servers, where variab
 
 ```json
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.example/configurable-server",
   "description": "Local MCP server with configurable port",
   "title": "Configurable Server",

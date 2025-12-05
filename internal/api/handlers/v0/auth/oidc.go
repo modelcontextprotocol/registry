@@ -145,7 +145,7 @@ func (h *OIDCHandler) SetValidator(validator GenericOIDCValidator) {
 }
 
 // RegisterOIDCEndpoints registers all OIDC authentication endpoints
-func RegisterOIDCEndpoints(api huma.API, cfg *config.Config) {
+func RegisterOIDCEndpoints(api huma.API, pathPrefix string, cfg *config.Config) {
 	if !cfg.OIDCEnabled {
 		return // Skip registration if OIDC is not enabled
 	}
@@ -154,9 +154,9 @@ func RegisterOIDCEndpoints(api huma.API, cfg *config.Config) {
 
 	// Direct token exchange endpoint
 	huma.Register(api, huma.Operation{
-		OperationID: "exchange-oidc-token",
+		OperationID: "exchange-oidc-token" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
-		Path:        "/v0/auth/oidc",
+		Path:        pathPrefix + "/auth/oidc",
 		Summary:     "Exchange OIDC ID token for Registry JWT",
 		Description: "Exchange an OIDC ID token from any configured provider for a short-lived Registry JWT token",
 		Tags:        []string{"auth"},

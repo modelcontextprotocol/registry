@@ -27,14 +27,13 @@ func ValidateMCPB(ctx context.Context, pkg model.Package, _ string) error {
 		return ErrMissingIdentifierForMCPB
 	}
 
-	// Validate that old format fields are not present
-	// MCPB packages use URL in identifier, version is embedded in the URL
-	if pkg.Version != "" {
-		return fmt.Errorf("MCPB packages must not have 'version' field - version should be embedded in the download URL")
-	}
+	// Validate that registryBaseUrl is not present
+	// MCPB packages use full download URLs in identifier
 	if pkg.RegistryBaseURL != "" {
 		return fmt.Errorf("MCPB packages must not have 'registryBaseUrl' field - use the full download URL in 'identifier' instead")
 	}
+	// Note: version field is optional for MCPB packages
+	// It can be included for clarity or omitted if the version is embedded in the download URL
 
 	err := validateMCPBUrl(pkg.Identifier)
 	if err != nil {

@@ -31,7 +31,7 @@ go run scripts/mirror_data/fetch_production_data.go
 ```
 
 This will:
-- Fetch all servers from https://registry.modelcontextprotocol.io/v0/servers
+- Fetch all servers from https://registry.modelcontextprotocol.io/v0.1/servers
 - Handle pagination automatically
 - Save data to `scripts/mirror_data/production_servers.json`
 - Be respectful to the API with rate limiting

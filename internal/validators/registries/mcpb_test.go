@@ -120,67 +120,68 @@ func TestValidateMCPB(t *testing.T) {
 	}
 }
 
-func TestValidateMCPB_RejectsExtraFields(t *testing.T) {
+func TestValidateMCPB_OptionalFields(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
 		name         string
 		pkg          model.Package
+		expectError  bool
 		errorMessage string
 	}{
 		{
-			name: "MCPB package with version field should be rejected",
+			name: "MCPB package with optional version field should pass",
 			pkg: model.Package{
 				RegistryType: model.RegistryTypeMCPB,
-				Identifier:   "https://github.com/example/repo/releases/download/v1.0.0/server.mcpb",
-				Version:      "1.0.0",
-				FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+				Identifier:   "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
+				Version:      "1.7.2",
+				FileSHA256:   "8220de07a08ebe908f04da139ea03dbfe29758141347e945da60535fb7bcca20",
 			},
-			errorMessage: "MCPB packages must not have 'version' field",
+			expectError: false,
+		},
+		{
+			name: "MCPB package without version field should pass",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypeMCPB,
+				Identifier:   "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
+				FileSHA256:   "8220de07a08ebe908f04da139ea03dbfe29758141347e945da60535fb7bcca20",
+			},
+			expectError: false,
 		},
 		{
 			name: "MCPB package with registryBaseUrl should be rejected",
 			pkg: model.Package{
 				RegistryType:    model.RegistryTypeMCPB,
-				Identifier:      "https://github.com/example/repo/releases/download/v1.0.0/server.mcpb",
+				Identifier:      "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
 				RegistryBaseURL: "https://github.com",
-				FileSHA256:      "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+				FileSHA256:      "8220de07a08ebe908f04da139ea03dbfe29758141347e945da60535fb7bcca20",
 			},
+			expectError:  true,
 			errorMessage: "MCPB packages must not have 'registryBaseUrl' field",
 		},
 		{
-			name: "MCPB package with both extra fields should fail on version first",
+			name: "MCPB package with both version and registryBaseUrl should fail on registryBaseUrl",
 			pkg: model.Package{
 				RegistryType:    model.RegistryTypeMCPB,
-				Identifier:      "https://github.com/example/repo/releases/download/v1.0.0/server.mcpb",
-				Version:         "1.0.0",
+				Identifier:      "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
+				Version:         "1.7.2",
 				RegistryBaseURL: "https://github.com",
-				FileSHA256:      "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
+				FileSHA256:      "8220de07a08ebe908f04da139ea03dbfe29758141347e945da60535fb7bcca20",
 			},
-			errorMessage: "MCPB packages must not have 'version' field",
-		},
-		{
-			name: "MCPB package with canonical format should pass extra field validation",
-			pkg: model.Package{
-				RegistryType: model.RegistryTypeMCPB,
-				Identifier:   "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
-				FileSHA256:   "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce",
-			},
-			errorMessage: "", // Should pass extra field check (will succeed as this is a real package)
+			expectError:  true,
+			errorMessage: "MCPB packages must not have 'registryBaseUrl' field",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := registries.ValidateMCPB(ctx, tt.pkg, "com.example/test")
+			err := registries.ValidateMCPB(ctx, tt.pkg, "io.github.domdomegg/airtable-mcp-server")
 
-			if tt.errorMessage != "" {
+			if tt.expectError {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tt.errorMessage)
-			} else if err != nil {
-				// Should not fail with extra field error (may pass completely for real package)
-				assert.NotContains(t, err.Error(), "must not have 'version'")
-				assert.NotContains(t, err.Error(), "must not have 'registryBaseUrl'")
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}

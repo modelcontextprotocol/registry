@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
@@ -74,7 +73,7 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 	}
 
 	// Validate repository
-	if err := validateRepository(&serverJSON.Repository); err != nil {
+	if err := validateRepository(serverJSON.Repository); err != nil {
 		return err
 	}
 
@@ -108,22 +107,12 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
 		}
 	}
 
-	// Validate reverse-DNS namespace matching for remote URLs
-	if err := validateRemoteNamespaceMatch(*serverJSON); err != nil {
-		return err
-	}
-
-	// Validate reverse-DNS namespace matching for website URL
-	if err := validateWebsiteURLNamespaceMatch(*serverJSON); err != nil {
-		return err
-	}
-
 	return nil
 }
 
 func validateRepository(obj *model.Repository) error {
-	// Skip validation for empty repository (optional field)
-	if obj.URL == "" && obj.Source == "" {
+	// Skip validation if repository is nil or empty (optional field)
+	if obj == nil || (obj.URL == "" && obj.Source == "") {
 		return nil
 	}
 
@@ -537,103 +526,4 @@ func parseServerName(serverJSON apiv0.ServerJSON) (string, error) {
 	}
 
 	return name, nil
-}
-
-// validateRemoteNamespaceMatch validates that remote URLs match the reverse-DNS namespace
-func validateRemoteNamespaceMatch(serverJSON apiv0.ServerJSON) error {
-	namespace := serverJSON.Name
-
-	for _, remote := range serverJSON.Remotes {
-		if err := validateRemoteURLMatchesNamespace(remote.URL, namespace); err != nil {
-			return fmt.Errorf("remote URL %s does not match namespace %s: %w", remote.URL, namespace, err)
-		}
-	}
-
-	return nil
-}
-
-// validateWebsiteURLNamespaceMatch validates that website URL matches the reverse-DNS namespace
-func validateWebsiteURLNamespaceMatch(serverJSON apiv0.ServerJSON) error {
-	// Skip validation if website URL is not provided
-	if serverJSON.WebsiteURL == "" {
-		return nil
-	}
-
-	namespace := serverJSON.Name
-	if err := validateRemoteURLMatchesNamespace(serverJSON.WebsiteURL, namespace); err != nil {
-		return fmt.Errorf("websiteUrl %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err)
-	}
-
-	return nil
-}
-
-// validateRemoteURLMatchesNamespace checks if a remote URL's hostname matches the publisher domain from the namespace
-func validateRemoteURLMatchesNamespace(remoteURL, namespace string) error {
-	// Replace template variables with placeholders before parsing
-	testURL := replaceTemplateVariables(remoteURL)
-
-	// Parse the URL to extract the hostname
-	parsedURL, err := url.Parse(testURL)
-	if err != nil {
-		return fmt.Errorf("invalid URL format: %w", err)
-	}
-
-	hostname := parsedURL.Hostname()
-	if hostname == "" {
-		return fmt.Errorf("URL must have a valid hostname")
-	}
-
-	// Skip validation for localhost and local development URLs
-	if hostname == "localhost" || strings.HasSuffix(hostname, ".localhost") || hostname == "127.0.0.1" {
-		return nil
-	}
-
-	// Extract publisher domain from reverse-DNS namespace
-	publisherDomain := extractPublisherDomainFromNamespace(namespace)
-	if publisherDomain == "" {
-		return fmt.Errorf("invalid namespace format: cannot extract domain from %s", namespace)
-	}
-
-	// Check if the remote URL hostname matches the publisher domain or is a subdomain
-	if !isValidHostForDomain(hostname, publisherDomain) {
-		return fmt.Errorf("remote URL host %s does not match publisher domain %s", hostname, publisherDomain)
-	}
-
-	return nil
-}
-
-// extractPublisherDomainFromNamespace converts reverse-DNS namespace to normal domain format
-// e.g., "com.example" -> "example.com"
-func extractPublisherDomainFromNamespace(namespace string) string {
-	// Extract the namespace part before the first slash
-	namespacePart := namespace
-	if slashIdx := strings.Index(namespace, "/"); slashIdx != -1 {
-		namespacePart = namespace[:slashIdx]
-	}
-
-	// Split into parts and reverse them to get normal domain format
-	parts := strings.Split(namespacePart, ".")
-	if len(parts) < 2 {
-		return ""
-	}
-
-	// Reverse the parts to convert from reverse-DNS to normal domain
-	slices.Reverse(parts)
-
-	return strings.Join(parts, ".")
-}
-
-// isValidHostForDomain checks if a hostname is the domain or a subdomain of the publisher domain
-func isValidHostForDomain(hostname, publisherDomain string) bool {
-	// Exact match
-	if hostname == publisherDomain {
-		return true
-	}
-
-	// Subdomain match - hostname should end with "." + publisherDomain
-	if strings.HasSuffix(hostname, "."+publisherDomain) {
-		return true
-	}
-
-	return false
 }

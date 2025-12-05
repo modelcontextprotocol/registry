@@ -1,9 +1,9 @@
 name: Sync Production DB to Staging (from backups)
 
 on:
-  schedule:
-    # Run daily at 2 AM UTC (during low-traffic hours)
-    - cron: '0 2 * * *'
+  # schedule:
+  #   # Run daily at 2 AM UTC (during low-traffic hours)
+  #   - cron: '0 2 * * *'
   workflow_dispatch:  # Allow manual triggering
 
 permissions:

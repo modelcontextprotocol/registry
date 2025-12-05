@@ -41,7 +41,17 @@ func runValidation() error {
 			expectedCount: &expectedServerJSONCount,
 		},
 		{
-			path:          filepath.Join("docs", "guides", "publishing", "publish-server.md"),
+			path:          filepath.Join("docs", "modelcontextprotocol-io", "package-types.mdx"),
+			requireSchema: true,
+			expectedCount: nil, // No count validation for guide
+		},
+		{
+			path:          filepath.Join("docs", "modelcontextprotocol-io", "quickstart.mdx"),
+			requireSchema: true,
+			expectedCount: nil, // No count validation for guide
+		},
+		{
+			path:          filepath.Join("docs", "modelcontextprotocol-io", "remote-servers.mdx"),
 			requireSchema: true,
 			expectedCount: nil, // No count validation for guide
 		},
@@ -182,7 +192,7 @@ func extractExamples(path string, requireSchema bool) ([]example, error) {
 	content := string(data)
 
 	// Regex to match JSON code blocks in markdown
-	re := regexp.MustCompile("(?s)```json\r?\n(.*?)\r?\n```")
+	re := regexp.MustCompile("(?s)```json(?: [^\r\n]+)?\r?\n(.*?)\r?\n```")
 	matches := re.FindAllStringSubmatchIndex(content, -1)
 
 	var examples []example
