@@ -27,13 +27,16 @@ jobs:
     steps:
       # Only allow modelcontextprotocol org members to trigger @claude
       # This enables @claude to work on external fork PRs when triggered by org members
-      # Requires ORG_MEMBERSHIP_TOKEN secret with read:org scope
+      # Members list is fetched from modelcontextprotocol/access repo
       - name: Check if org member
-        env:
-          GH_TOKEN: ${{ secrets.ORG_MEMBERSHIP_TOKEN }}
         run: |
           ACTOR="${{ github.triggering_actor }}"
-          if gh api orgs/modelcontextprotocol/members/"$ACTOR" --silent 2>/dev/null; then
+          USERS_URL="https://raw.githubusercontent.com/modelcontextprotocol/access/main/src/config/users.ts"
+
+          # Fetch users.ts and extract GitHub usernames
+          MEMBERS=$(curl -fsSL "$USERS_URL" | grep -oE 'github:\s*"[^"]+"' | sed 's/github:\s*"//;s/"$//')
+
+          if echo "$MEMBERS" | grep -qxF "$ACTOR"; then
             echo "User $ACTOR is a member of modelcontextprotocol org"
           else
             echo "::error::User $ACTOR is not a member of the modelcontextprotocol org. Only org members can trigger @claude."
