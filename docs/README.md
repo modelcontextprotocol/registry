@@ -12,6 +12,8 @@ The MCP registry provides MCP clients with a list of MCP servers, like an app st
 
 ## Documentation Index
 
-- 🛠️ [How-To Guides: Task-focused instructions](./guides/)
-- 💡 [Explanations: Understanding-oriented content](./explanations/)
-- 📖 [Reference: Technical specifications and lookup material](./reference/)
+- 📄 [Public-facing docs](./modelcontextprotocol-io/) - Published on modelcontextprotocol.io
+- 🏗️ [Design documentation](./design/) - Architecture, vision, and roadmap
+- 📖 [Reference](./reference/) - Technical specifications
+- 🔧 [Contributing guides](./contributing/) - How to contribute
+- 🔒 [Administration](./administration/) - Admin operations
