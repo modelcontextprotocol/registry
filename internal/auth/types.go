@@ -10,6 +10,8 @@ const (
 	MethodGitHubOIDC Method = "github-oidc"
 	// Generic OIDC authentication
 	MethodOIDC Method = "oidc"
+	// Azure Entra ID authentication
+	MethodEntraID Method = "entra-id"
 	// DNS-based public/private key authentication
 	MethodDNS Method = "dns"
 	// HTTP-based public/private key authentication

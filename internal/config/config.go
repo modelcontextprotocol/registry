@@ -24,6 +24,14 @@ type Config struct {
 	OIDCExtraClaims  string `env:"OIDC_EXTRA_CLAIMS" envDefault:""`
 	OIDCEditPerms    string `env:"OIDC_EDIT_PERMISSIONS" envDefault:""`
 	OIDCPublishPerms string `env:"OIDC_PUBLISH_PERMISSIONS" envDefault:""`
+
+	// Azure Entra ID Configuration
+	EntraIDEnabled          bool   `env:"ENTRA_ID_ENABLED" envDefault:"false"`
+	EntraIDTenantID         string `env:"ENTRA_ID_TENANT_ID" envDefault:""`
+	EntraIDClientID         string `env:"ENTRA_ID_CLIENT_ID" envDefault:""`
+	EntraIDNamespacePattern string `env:"ENTRA_ID_NAMESPACE_PATTERN" envDefault:""`
+	EntraIDSimpleNamespace  string `env:"ENTRA_ID_SIMPLE_NAMESPACE" envDefault:""`
+	EntraIDAllowEdit        bool   `env:"ENTRA_ID_ALLOW_EDIT" envDefault:"false"`
 }
 
 // NewConfig creates a new configuration with default values

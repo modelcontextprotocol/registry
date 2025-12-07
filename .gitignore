@@ -13,3 +13,5 @@ coverage.out
 coverage.html
 deploy/infra/infra
 ./registry
+/mcp.registry.search.app/.vs
+/mcp.registry.search.app/obj

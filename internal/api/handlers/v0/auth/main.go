@@ -16,6 +16,9 @@ func RegisterAuthEndpoints(api huma.API, pathPrefix string, cfg *config.Config) 
 	// Register configurable OIDC authentication endpoints
 	RegisterOIDCEndpoints(api, pathPrefix, cfg)
 
+	// Register Azure Entra ID authentication endpoint
+	RegisterEntraIDEndpoint(api, pathPrefix, cfg)
+
 	// Register DNS-based authentication endpoint
 	RegisterDNSEndpoint(api, pathPrefix, cfg)
 
