@@ -24,7 +24,7 @@ jobs:
     environment: ${{ inputs.environment }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
 
       - name: Setup Pulumi
         uses: pulumi/actions@8582a9e8cc630786854029b4e09281acd6794b58
