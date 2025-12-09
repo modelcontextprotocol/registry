@@ -1,10 +1,9 @@
 services:
   registry:
-    image: modelcontextprotocol/registry:dev
-    pull_policy: never
+    # Built using ko (see Makefile dev-compose target)
+    # Image format: ko.local/<import-path>:<tag>
+    image: ko.local/github.com/modelcontextprotocol/registry/cmd/registry:dev
     container_name: registry
-    build:
-      dockerfile: Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
@@ -26,6 +25,8 @@ services:
       - MCP_REGISTRY_ENABLE_REGISTRY_VALIDATION=${MCP_REGISTRY_ENABLE_REGISTRY_VALIDATION:-true}
     ports:
       - 8080:8080
+    volumes:
+      - ./data:/data:ro
     restart: "unless-stopped"
 
   postgres:

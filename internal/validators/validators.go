@@ -113,7 +113,7 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 	result.Merge(versionResult)
 
 	// Validate repository
-	repoResult := validateRepository(ctx.Field("repository"), &serverJSON.Repository)
+	repoResult := validateRepository(ctx.Field("repository"), serverJSON.Repository)
 	result.Merge(repoResult)
 
 	// Validate website URL if provided
@@ -155,8 +155,8 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 func validateRepository(ctx *ValidationContext, obj *model.Repository) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 
-	// Skip validation for empty repository (optional field)
-	if obj.URL == "" && obj.Source == "" {
+	// Skip validation if repository is nil or empty (optional field)
+	if obj == nil || (obj.URL == "" && obj.Source == "") {
 		return result
 	}
 

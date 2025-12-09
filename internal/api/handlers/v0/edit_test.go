@@ -46,7 +46,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			Name:        "io.github.testuser/editable-server",
 			Description: "Server that can be edited",
 			Version:     "1.0.0",
-			Repository: model.Repository{
+			Repository: &model.Repository{
 				URL:    "https://github.com/testuser/editable-server",
 				Source: "github",
 				ID:     "testuser/editable-server",
@@ -57,7 +57,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			Name:        "io.github.otheruser/other-server",
 			Description: "Server owned by another user",
 			Version:     "1.0.0",
-			Repository: model.Repository{
+			Repository: &model.Repository{
 				URL:    "https://github.com/otheruser/other-server",
 				Source: "github",
 				ID:     "otheruser/other-server",
@@ -77,7 +77,7 @@ func TestEditServerEndpoint(t *testing.T) {
 		Name:        "io.github.testuser/deleted-server",
 		Description: "Server that was deleted",
 		Version:     "1.0.0",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "https://github.com/testuser/deleted-server",
 			Source: "github",
 			ID:     "testuser/deleted-server",
@@ -96,7 +96,7 @@ func TestEditServerEndpoint(t *testing.T) {
 		Name:        "io.github.testuser/build-metadata-server",
 		Description: "Server with build metadata version",
 		Version:     "1.0.0+20130313144700",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "https://github.com/testuser/build-metadata-server",
 			Source: "github",
 			ID:     "testuser/build-metadata-server",
@@ -133,7 +133,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				Name:        "io.github.testuser/editable-server",
 				Description: "Updated server description",
 				Version:     "1.0.0",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/testuser/editable-server",
 					Source: "github",
 					ID:     "testuser/editable-server",
@@ -347,7 +347,7 @@ func TestEditServerEndpoint(t *testing.T) {
 				Name:        "io.github.testuser/build-metadata-server",
 				Description: "Updated server with build metadata",
 				Version:     "1.0.0+20130313144700",
-				Repository: model.Repository{
+				Repository: &model.Repository{
 					URL:    "https://github.com/testuser/build-metadata-server",
 					Source: "github",
 					ID:     "testuser/build-metadata-server",
@@ -371,7 +371,7 @@ func TestEditServerEndpoint(t *testing.T) {
 			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 			// Register edit endpoints
-			v0.RegisterEditEndpoints(api, registryService, cfg)
+			v0.RegisterEditEndpoints(api, "/v0", registryService, cfg)
 
 			// Create request body
 			requestBody, err := json.Marshal(tc.requestBody)
@@ -469,7 +469,7 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
-	v0.RegisterEditEndpoints(api, registryService, cfg)
+	v0.RegisterEditEndpoints(api, "/v0", registryService, cfg)
 
 	t.Run("status transitions", func(t *testing.T) {
 		tests := []struct {

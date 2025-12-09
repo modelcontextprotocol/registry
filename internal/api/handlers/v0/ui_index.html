@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Official MCP Registry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div class="max-w-7xl mx-auto px-4 py-8 md:py-16 flex-1 w-full">
+        <!-- Header -->
+        <header class="mb-8 pb-8 border-b">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Official MCP Registry</h1>
+            <p class="text-gray-600 text-lg mb-6">Discover Model Context Protocol servers</p>
+            <div class="flex gap-6 text-sm">
+                <a href="https://github.com/modelcontextprotocol/registry" target="_blank" class="text-blue-600 hover:text-blue-700 font-medium">GitHub</a>
+                <a href="https://github.com/modelcontextprotocol/registry/tree/main/docs" target="_blank" class="text-blue-600 hover:text-blue-700 font-medium">Docs</a>
+                <a href="/docs" class="text-blue-600 hover:text-blue-700 font-medium">API Reference</a>
+            </div>
+        </header>
+
+        <!-- Recently Updated -->
+        <div id="recently-updated" class="hidden mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Recently Updated</h2>
+            <div id="recent-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="mb-8 space-y-3">
+            <div class="relative">
+                <input
+                    type="search"
+                    id="search"
+                    placeholder="Search servers by name..."
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autofocus
+                >
+                <span id="search-loading" class="hidden absolute right-3 top-2.5 text-gray-400">Searching...</span>
+            </div>
+            <label class="flex items-center text-sm text-gray-600">
+                <input type="checkbox" id="latest-only" class="mr-2" checked>
+                <span>Show only latest versions</span>
+            </label>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12 text-gray-600">
+            Loading servers...
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p class="text-red-800" id="error-message"></p>
+            <button onclick="location.reload()" class="mt-2 text-sm text-red-600 hover:underline">Retry</button>
+        </div>
+
+        <!-- Server List -->
+        <div id="server-list" class="hidden">
+            <div id="server-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Pagination -->
+            <div class="mt-8 flex justify-between items-center">
+                <button
+                    id="prev-btn"
+                    class="px-5 py-2.5 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    disabled
+                >
+                    Previous
+                </button>
+                <span class="text-sm text-gray-600 font-medium" id="page-info"></span>
+                <button
+                    id="next-btn"
+                    class="px-5 py-2.5 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                >
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-8 bg-gray-50 border-t py-4">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center text-sm text-gray-600">
+                <div>
+                    Built in the open by <a href="https://github.com/modelcontextprotocol/registry" target="_blank" class="text-blue-600 hover:underline">MCP contributors</a>
+                </div>
+                <button id="debug-btn" class="text-blue-600 hover:underline">
+                    Server: <span id="server-name">Production</span> (<span id="version-info">...</span>)
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Debug Modal -->
+    <div id="debug-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">API Base URL</h3>
+            <div class="space-y-2 mb-4">
+                <label class="flex items-center">
+                    <input type="radio" name="baseUrl" value="prod" class="mr-2" checked>
+                    <span>Production (registry.modelcontextprotocol.io)</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="radio" name="baseUrl" value="staging" class="mr-2">
+                    <span>Staging (staging.registry.modelcontextprotocol.io)</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="radio" name="baseUrl" value="local" class="mr-2">
+                    <span>Local (localhost:8080)</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="radio" name="baseUrl" value="custom" class="mr-2">
+                    <span>Custom</span>
+                </label>
+                <input
+                    type="text"
+                    id="custom-url"
+                    placeholder="https://custom-url.com"
+                    class="w-full px-3 py-2 border rounded disabled:bg-gray-100"
+                    disabled
+                >
+            </div>
+            <div class="flex gap-2 justify-end">
+                <button id="debug-cancel" class="px-4 py-2 text-sm border rounded hover:bg-gray-50">Cancel</button>
+                <button id="debug-apply" class="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let servers = [];
+        let cursorHistory = [];
+        let currentCursor = null;
+        let nextCursor = null;
+        let searchTimeout = null;
+        let baseUrl = '';
+
+        // Get base URL based on selection
+        function getBaseUrl() {
+            const selection = localStorage.getItem('baseUrl') || 'prod';
+            const customUrl = localStorage.getItem('customUrl') || '';
+
+            switch (selection) {
+                case 'prod':
+                    return 'https://registry.modelcontextprotocol.io';
+                case 'staging':
+                    return 'https://staging.registry.modelcontextprotocol.io';
+                case 'local':
+                    return '';
+                case 'custom':
+                    return customUrl;
+                default:
+                    return '';
+            }
+        }
+
+        // Get server display name
+        function getServerName() {
+            const selection = localStorage.getItem('baseUrl') || 'prod';
+            const customUrl = localStorage.getItem('customUrl') || '';
+
+            switch (selection) {
+                case 'prod':
+                    return 'Production';
+                case 'staging':
+                    return 'Staging';
+                case 'local':
+                    return 'Local';
+                case 'custom':
+                    return 'Custom';
+                default:
+                    return 'Production';
+            }
+        }
+
+        // Initialize base URL and server name
+        baseUrl = getBaseUrl();
+        document.getElementById('server-name').textContent = getServerName();
+
+        // URL parameter management
+        function updateURL() {
+            const params = new URLSearchParams();
+            const search = document.getElementById('search').value;
+            const latestOnly = document.getElementById('latest-only').checked;
+
+            if (search) params.set('q', search);
+            if (!latestOnly) params.set('all', '1');
+            if (currentCursor) params.set('cursor', currentCursor);
+
+            const newUrl = params.toString() ? `?${params.toString()}` : '/';
+            history.pushState({cursor: currentCursor, search, latestOnly}, '', newUrl);
+        }
+
+        function loadFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            document.getElementById('search').value = params.get('q') || '';
+            document.getElementById('latest-only').checked = !params.has('all');
+            currentCursor = params.get('cursor') || null;
+        }
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', (event) => {
+            if (event.state) {
+                currentCursor = event.state.cursor;
+                document.getElementById('search').value = event.state.search || '';
+                document.getElementById('latest-only').checked = event.state.latestOnly !== false;
+                fetchServers(currentCursor, event.state.search, event.state.latestOnly);
+            }
+        });
+
+        // Debug modal handlers
+        document.getElementById('debug-btn').addEventListener('click', () => {
+            const selection = localStorage.getItem('baseUrl') || 'prod';
+            document.querySelector(`input[name="baseUrl"][value="${selection}"]`).checked = true;
+            document.getElementById('custom-url').value = localStorage.getItem('customUrl') || '';
+            document.getElementById('custom-url').disabled = selection !== 'custom';
+            document.getElementById('debug-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('debug-cancel').addEventListener('click', () => {
+            document.getElementById('debug-modal').classList.add('hidden');
+        });
+
+        document.getElementById('debug-apply').addEventListener('click', () => {
+            const selection = document.querySelector('input[name="baseUrl"]:checked').value;
+            const customUrl = document.getElementById('custom-url').value;
+            localStorage.setItem('baseUrl', selection);
+            localStorage.setItem('customUrl', customUrl);
+            location.reload();
+        });
+
+        document.querySelectorAll('input[name="baseUrl"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                document.getElementById('custom-url').disabled = e.target.value !== 'custom';
+            });
+        });
+
+        // Fetch version info
+        async function fetchVersion() {
+            try {
+                const version = await fetch(`${baseUrl}/v0.1/version`).then(r => r.json());
+                document.getElementById('version-info').textContent = version.version || 'unknown';
+            } catch (err) {
+                document.getElementById('version-info').textContent = 'error';
+            }
+        }
+
+        // Fetch recently updated servers
+        async function fetchRecentlyUpdated() {
+            try {
+                const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+                const response = await fetch(`${baseUrl}/v0.1/servers?updated_since=${oneHourAgo}&limit=96`);
+                const data = await response.json();
+
+                if (data.servers && data.servers.length > 0) {
+                    renderRecentServers(data.servers);
+                    document.getElementById('recently-updated').classList.remove('hidden');
+                }
+            } catch (err) {
+                // Silently fail if recent updates can't be fetched
+            }
+        }
+
+        // Render recently updated servers
+        function renderRecentServers(recentServers) {
+            const container = document.getElementById('recent-cards');
+            container.innerHTML = '';
+
+            recentServers.forEach(item => {
+                const server = item.server;
+                const meta = item._meta?.['io.modelcontextprotocol.registry/official'];
+
+                const card = document.createElement('div');
+                card.className = 'bg-blue-50 border border-blue-200 rounded-lg overflow-hidden hover:border-blue-400 hover:shadow-md transition-all flex flex-col';
+
+                const header = document.createElement('div');
+                header.className = 'cursor-pointer p-5 flex-1';
+                header.onclick = () => toggleDetails(card, item);
+                header.innerHTML = `
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <h3 class="font-semibold text-gray-900 text-base flex-1 min-w-0 break-all">${escapeHtml(server.name)}</h3>
+                        <span class="text-xs text-gray-500 font-medium whitespace-nowrap">v${escapeHtml(server.version)}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-2 break-words">${escapeHtml(server.description || '')}</p>
+                    <div class="text-xs text-gray-500">
+                        Updated ${formatDate(meta?.updatedAt || meta?.publishedAt)}
+                    </div>
+                `;
+
+                card.appendChild(header);
+                container.appendChild(card);
+            });
+        }
+
+        // Fetch servers
+        async function fetchServers(cursor = null, search = '', latestOnly = null) {
+            try {
+                if (latestOnly === null) {
+                    latestOnly = document.getElementById('latest-only').checked;
+                }
+
+                let url = `${baseUrl}/v0.1/servers?limit=96`;
+                if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (latestOnly) url += `&version=latest`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                servers = data.servers || [];
+                nextCursor = data.metadata?.nextCursor || null;
+
+                renderServers();
+                updatePagination();
+                updateURL();
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('server-list').classList.remove('hidden');
+            } catch (err) {
+                showError('Failed to load servers: ' + err.message);
+            }
+        }
+
+        // Render server cards
+        function renderServers() {
+            const container = document.getElementById('server-cards');
+            container.innerHTML = '';
+
+            if (servers.length === 0) {
+                container.innerHTML = '<div class="text-center py-12 text-gray-600">No servers found</div>';
+                return;
+            }
+
+            servers.forEach(item => {
+                const server = item.server;
+                const meta = item._meta?.['io.modelcontextprotocol.registry/official'];
+
+                const card = document.createElement('div');
+                card.className = 'bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-blue-300 hover:shadow-md transition-all flex flex-col';
+
+                const header = document.createElement('div');
+                header.className = 'cursor-pointer p-5 flex-1';
+                header.onclick = () => toggleDetails(card, item);
+                header.innerHTML = `
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <h3 class="font-semibold text-gray-900 text-base flex-1 min-w-0">${escapeHtml(server.name)}</h3>
+                        <span class="text-xs text-gray-500 font-medium whitespace-nowrap">v${escapeHtml(server.version)}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-2">${escapeHtml(server.description || '')}</p>
+                    <div class="text-xs text-gray-500">
+                        ${formatDate(meta?.updatedAt || meta?.publishedAt)}
+                    </div>
+                `;
+
+                card.appendChild(header);
+                container.appendChild(card);
+            });
+        }
+
+        // Toggle expanded details
+        function toggleDetails(card, item) {
+            const existingDetails = card.querySelector('.details-content');
+            if (existingDetails) {
+                existingDetails.remove();
+                card.classList.remove('border-gray-400');
+                return;
+            }
+
+            card.classList.add('border-gray-400');
+
+            const server = item.server;
+            const meta = item._meta?.['io.modelcontextprotocol.registry/official'];
+
+            let packagesHtml = '';
+            if (server.packages && server.packages.length > 0) {
+                packagesHtml = `
+                    <div class="mt-3">
+                        <h4 class="font-medium text-gray-900 mb-2">Packages</h4>
+                        <ul class="space-y-2">
+                            ${server.packages.map(pkg => `
+                                <li class="text-sm">
+                                    <span class="font-mono bg-gray-100 px-2 py-1 rounded">${escapeHtml(pkg.registryType)}</span>
+                                    <span class="text-gray-600">${escapeHtml(pkg.identifier)}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            let remotesHtml = '';
+            if (server.remotes && server.remotes.length > 0) {
+                remotesHtml = `
+                    <div class="mt-3">
+                        <h4 class="font-medium text-gray-900 mb-2">Remotes</h4>
+                        <ul class="space-y-2">
+                            ${server.remotes.map(remote => `
+                                <li class="text-sm">
+                                    <span class="font-mono bg-gray-100 px-2 py-1 rounded">${escapeHtml(remote.type)}</span>
+                                    ${remote.url ? `<span class="text-gray-600">${escapeHtml(remote.url)}</span>` : ''}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'details-content border-t bg-gray-50 p-5 space-y-2 text-sm break-words';
+            detailsDiv.innerHTML = `
+                ${server.title ? `<div><span class="font-medium">Title:</span> <span class="break-all">${escapeHtml(server.title)}</span></div>` : ''}
+                <div><span class="font-medium">Status:</span> <span class="capitalize">${escapeHtml(meta?.status || 'unknown')}</span></div>
+                ${server.repository?.url ? `
+                    <div>
+                        <span class="font-medium">Repository:</span>
+                        <a href="${escapeHtml(server.repository.url)}" target="_blank" class="text-blue-600 hover:underline break-all" onclick="event.stopPropagation()">${escapeHtml(server.repository.url)}</a>
+                    </div>
+                ` : ''}
+                ${server.websiteUrl ? `
+                    <div>
+                        <span class="font-medium">Website:</span>
+                        <a href="${escapeHtml(server.websiteUrl)}" target="_blank" class="text-blue-600 hover:underline break-all" onclick="event.stopPropagation()">${escapeHtml(server.websiteUrl)}</a>
+                    </div>
+                ` : ''}
+                <div>
+                    <a href="${baseUrl}/v0.1/servers/${encodeURIComponent(server.name)}/versions/${encodeURIComponent(server.version)}" target="_blank" class="text-blue-600 hover:underline break-all" onclick="event.stopPropagation()">View in API</a>
+                </div>
+                ${packagesHtml}
+                ${remotesHtml}
+                <details class="mt-4" onclick="event.stopPropagation()">
+                    <summary class="cursor-pointer text-blue-600 hover:underline">View full server.json</summary>
+                    <pre class="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto break-all">${escapeHtml(JSON.stringify(item, null, 2))}</pre>
+                </details>
+            `;
+
+            card.appendChild(detailsDiv);
+        }
+
+        // Update pagination buttons
+        function updatePagination() {
+            document.getElementById('prev-btn').disabled = cursorHistory.length === 0;
+            document.getElementById('next-btn').disabled = !nextCursor;
+
+            const info = nextCursor ? 'More available' : `Showing ${servers.length} servers`;
+            document.getElementById('page-info').textContent = info;
+        }
+
+        // Search handler
+        document.getElementById('search').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            document.getElementById('search-loading').classList.remove('hidden');
+            searchTimeout = setTimeout(() => {
+                cursorHistory = [];
+                currentCursor = null;
+                fetchServers(null, e.target.value);
+                document.getElementById('search-loading').classList.add('hidden');
+            }, 300);
+        });
+
+        // Latest-only checkbox handler
+        document.getElementById('latest-only').addEventListener('change', () => {
+            cursorHistory = [];
+            currentCursor = null;
+            fetchServers(null, document.getElementById('search').value);
+        });
+
+        // Pagination handlers
+        document.getElementById('next-btn').addEventListener('click', () => {
+            if (nextCursor) {
+                cursorHistory.push(currentCursor);
+                currentCursor = nextCursor;
+                fetchServers(nextCursor, document.getElementById('search').value);
+            }
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', () => {
+            if (cursorHistory.length > 0) {
+                currentCursor = cursorHistory.pop();
+                fetchServers(currentCursor, document.getElementById('search').value);
+            }
+        });
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString();
+        }
+
+        function showError(message) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+
+        // Initialize
+        loadFromURL();
+        fetchVersion();
+        fetchRecentlyUpdated();
+        fetchServers(currentCursor, document.getElementById('search').value);
+    </script>
+</body>
+</html>

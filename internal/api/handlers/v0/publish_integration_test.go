@@ -53,14 +53,14 @@ func TestPublishIntegration(t *testing.T) {
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 
 	// Register the endpoint
-	v0.RegisterPublishEndpoint(api, registryService, testConfig)
+	v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
 
 	t.Run("successful publish with GitHub auth", func(t *testing.T) {
 		publishReq := apiv0.ServerJSON{
 			Schema:      model.CurrentSchemaURL,
 			Name:        "io.github.testuser/test-mcp-server",
 			Description: "A test MCP server for integration testing",
-			Repository: model.Repository{
+			Repository: &model.Repository{
 				URL:    "https://github.com/testuser/test-mcp-server",
 				Source: "github",
 				ID:     "testuser/test-mcp-server",
@@ -105,7 +105,7 @@ func TestPublishIntegration(t *testing.T) {
 			Schema:      model.CurrentSchemaURL,
 			Name:        "com.example/test-mcp-server-no-auth",
 			Description: "A test MCP server without authentication",
-			Repository: model.Repository{
+			Repository: &model.Repository{
 				URL:    "https://github.com/example/test-server",
 				Source: "github",
 				ID:     "example/test-server",
@@ -191,7 +191,7 @@ func TestPublishIntegration(t *testing.T) {
 			Name:        "io.github.other/test-server",
 			Description: "A test server",
 			Version:     "1.0.0",
-			Repository: model.Repository{
+			Repository: &model.Repository{
 				URL:    "https://github.com/example/test-server",
 				Source: "github",
 				ID:     "example/test-server",

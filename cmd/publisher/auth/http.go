@@ -5,12 +5,12 @@ type HTTPProvider struct {
 }
 
 // NewHTTPProvider creates a new HTTP-based auth provider
-func NewHTTPProvider(registryURL, domain, hexSeed string) Provider {
+func NewHTTPProvider(registryURL, domain string, signer *Signer) Provider {
 	return &HTTPProvider{
 		CryptoProvider: &CryptoProvider{
 			registryURL: registryURL,
 			domain:      domain,
-			hexSeed:     hexSeed,
+			signer:      *signer,
 			authMethod:  "http",
 		},
 	}

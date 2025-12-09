@@ -2,7 +2,7 @@
 
 Complete command reference for the `mcp-publisher` CLI tool.
 
-See the [publishing guide](../../guides/publishing/publish-server.md) for a walkthrough of using the CLI to publish a server.
+See the [publishing guide](../../modelcontextprotocol-io/quickstart.mdx) for a walkthrough of using the CLI to publish a server.
 
 ## Installation
 
@@ -72,7 +72,7 @@ mcp-publisher login github-oidc [--registry=URL]
 - Requires `id-token: write` permission in workflow
 - No browser interaction needed
 
-Also see [the guide to publishing from GitHub Actions](../../guides/publishing/github-actions.md).
+Also see [the guide to publishing from GitHub Actions](../../modelcontextprotocol-io/github-actions.mdx).
 
 #### DNS Verification
 ```bash
@@ -80,9 +80,10 @@ mcp-publisher login dns --domain=example.com --private-key=HEX_KEY [--registry=U
 ```
 - Verifies domain ownership via DNS TXT record
 - Grants access to `com.example.*` namespaces
-- Requires Ed25519 private key (64-character hex)
+- Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
+  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault.
 
-**Setup:**
+**Setup:** (for Ed25519, recommended)
 ```bash
 # Generate keypair
 openssl genpkey -algorithm Ed25519 -out key.pem
@@ -97,15 +98,87 @@ openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64
 openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n'
 ```
 
+**Setup:** (for ECDSA P-384)
+```bash
+# Generate keypair
+openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
+
+# Get public key for DNS record
+openssl ec -in key.pem -text -noout -conv_form compressed | grep -A4 "pub:" | tail -n +2 | tr -d ' :\n' | xxd -r -p | base64
+
+# Add DNS TXT record:
+# example.com. IN TXT "v=MCPv1; k=ecdsap384; p=PUBLIC_KEY"
+
+# Extract private key for login
+openssl ec -in <pem path> -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n'
+```
+
+**Setup:** (for Google KMS signing)
+
+This requires the [gcloud CLI](https://cloud.google.com/sdk/docs/install).
+
+```bash
+# log in and set default project
+gcloud auth login
+gcloud config set project myproject
+
+# Create a keyring in your project
+gcloud kms keyrings create mykeyring --location global
+
+# Create an Ed25519 signing key
+gcloud kms keys create mykey --default-algorithm=ec-sign-ed25519 --purpose=asymmetric-signing --keyring=mykeyring --location=global
+
+# Enable Application Default Credentials (ADC) so the publisher tool can sign
+gcloud auth application-default login
+
+# Attempt login to show the public key
+mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykeyring/cryptoKeys/mykey/cryptoKeyVersions/1
+
+# Copy the "Expected proof record" and add the TXT record
+# example.com. IN TXT "v=MCPv1; k=ed25519; p=PUBLIC_KEY"
+
+# Re-run the login command
+mcp-publisher login dns google-kms --domain=example.com --resource=projects/myproject/locations/global/keyRings/mykeyring/cryptoKeys/mykey/cryptoKeyVersions/1
+```
+
+**Setup:** (for Azure Key Vault signing)
+
+This requires the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
+
+```bash
+# log in and set default subscription
+az login
+az account set --subscription "My Subscription (name or ID)"
+
+# Create a resource group
+az group create --location westus --resource-group MyResourceGroup
+
+# Create a Key Vault
+az keyvault create --name MyKeyVault --location westus --resource-group MyResourceGroup
+
+# Create an ECDSA P-384 signing key
+az keyvault key create --name MyKey --vault-name MyKeyVault --curve P-384
+
+# Attempt login to show the public key
+mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault --key MyKey
+
+# Copy the "Expected proof record" and add the TXT record
+# example.com. IN TXT "v=MCPv1; k=ecdsap384; p=PUBLIC_KEY"
+
+# Re-run the login command
+mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault --key MyKey
+```
+
 #### HTTP Verification
 ```bash
 mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--registry=URL]
 ```
 - Verifies domain ownership via HTTPS endpoint  
 - Grants access to `com.example.*` namespaces
-- Requires Ed25519 private key (64-character hex)
+- Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
+  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault.
 
-**Setup:**
+**Setup:** (for Ed25519, recommended)
 ```bash
 # Generate keypair (same as DNS)
 openssl genpkey -algorithm Ed25519 -out key.pem
@@ -114,6 +187,18 @@ openssl genpkey -algorithm Ed25519 -out key.pem
 # https://example.com/.well-known/mcp-registry-auth
 # Content: v=MCPv1; k=ed25519; p=PUBLIC_KEY
 ```
+
+**Setup:** (for ECDSA P-384)
+```bash
+# Generate keypair (same as DNS)
+openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
+
+# Host public key at:
+# https://example.com/.well-known/mcp-registry-auth
+# Content: v=MCPv1; k=ecdsap384; p=PUBLIC_KEY
+```
+
+Cloud signing is also supported for HTTP authentication, similar to the DNS examples above. Just swap out the `dns` positional argument for `http`.
 
 #### Anonymous (Testing)
 ```bash
@@ -165,34 +250,30 @@ $ mcp-publisher validate custom-server.json
 
 Publish server to the registry.
 
-For detailed guidance on the publishing process, see the [publishing guide](../../guides/publishing/publish-server.md).
+For detailed guidance on the publishing process, see the [publishing guide](../../modelcontextprotocol-io/quickstart.mdx).
 
 **Usage:**
 ```bash
-mcp-publisher publish [options]
+mcp-publisher publish [PATH]
 ```
 
 **Options:**
-- `--file=PATH` - Path to server.json (default: `./server.json`)
-- `--registry=URL` - Registry URL override
-- `--dry-run` - Validate without publishing
+- `PATH` - Path to server.json (default: `./server.json`)
 
 **Process:**
 1. Validates `server.json` against schema
-2. Verifies package ownership (see [Official Registry Requirements](../server-json/official-registry-requirements.md))
-3. Checks namespace authentication
-4. Publishes to registry
+2. Publishes the `server.json` to the registry server URL specified in the login token
+3. Server: Verifies package ownership (see [Official Registry Requirements](../server-json/official-registry-requirements.md))
+4. Server: Checks namespace authentication
+5. Server: Publishes to registry
 
 **Example:**
 ```bash
 # Basic publish
 mcp-publisher publish
 
-# Dry run validation
-mcp-publisher publish --dry-run
-
 # Custom file location  
-mcp-publisher publish --file=./config/server.json
+mcp-publisher publish ./config/server.json
 ```
 
 ### `mcp-publisher logout`

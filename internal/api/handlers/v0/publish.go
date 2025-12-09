@@ -18,15 +18,15 @@ type PublishServerInput struct {
 	Body          apiv0.ServerJSON `body:""`
 }
 
-// RegisterPublishEndpoint registers the publish endpoint
-func RegisterPublishEndpoint(api huma.API, registry service.RegistryService, cfg *config.Config) {
+// RegisterPublishEndpoint registers the publish endpoint with a custom path prefix
+func RegisterPublishEndpoint(api huma.API, pathPrefix string, registry service.RegistryService, cfg *config.Config) {
 	// Create JWT manager for token validation
 	jwtManager := auth.NewJWTManager(cfg)
 
 	huma.Register(api, huma.Operation{
-		OperationID: "publish-server",
+		OperationID: "publish-server" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
-		Path:        "/v0/publish",
+		Path:        pathPrefix + "/publish",
 		Summary:     "Publish MCP server",
 		Description: "Publish a new MCP server to the registry or update an existing one",
 		Tags:        []string{"publish"},
@@ -83,6 +83,11 @@ func buildPermissionErrorMessage(attemptedResource string, permissions []auth.Pe
 		errorMsg += ". You do not have any publish permissions"
 	}
 	errorMsg += ". Attempting to publish: " + attemptedResource
+
+	// Add helpful hint for GitHub organization publishing issues
+	if strings.HasPrefix(attemptedResource, "io.github.") {
+		errorMsg += ". If you're trying to publish to a GitHub organization, you may need to make your organization membership public in your GitHub settings: https://docs.github.com/en/account-and-profile/how-tos/organization-membership/publicizing-or-hiding-organization-membership"
+	}
 
 	return errorMsg
 }
