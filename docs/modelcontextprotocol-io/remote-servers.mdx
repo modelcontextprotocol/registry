@@ -84,7 +84,7 @@ The `remotes` property can coexist with the `packages` property in `server.json`
 ```json server.json highlight={7-22}
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-  "name": "io.github.username/email-integration-mcp",
+  "name": "com.example.email/email-integration-mcp",
   "title": "Email Integration",
   "description": "Send emails and manage email accounts",
   "version": "1.0.0",
@@ -97,7 +97,7 @@ The `remotes` property can coexist with the `packages` property in `server.json`
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@username/email-integration-mcp",
+      "identifier": "@example/email-integration-mcp",
       "version": "1.0.0",
       "transport": {
         "type": "stdio"
