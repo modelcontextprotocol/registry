@@ -2,11 +2,6 @@ name: Sync Schema
 
 on:
   workflow_dispatch: # Manual trigger
-  push:
-    branches:
-      - enhanced-server-validation
-    paths:
-      - '.github/workflows/sync-schema.yml'  # Only run when workflow file changes (for registration)
   # TODO: Add daily schedule later
   # schedule:
   #   - cron: '0 2 * * *'  # Run daily at 2 AM UTC
