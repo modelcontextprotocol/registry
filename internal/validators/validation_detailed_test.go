@@ -15,7 +15,7 @@ func TestValidateServerJSONExhaustive_CollectsAllErrors(t *testing.T) {
 		Name:        "invalid-name", // Invalid server name format
 		Version:     "^1.0.0",       // Invalid version range
 		Description: "Test server",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "not-a-valid-url", // Invalid repository URL
 			Source: "github",
 		},
@@ -106,7 +106,7 @@ func TestValidateServerJSONExhaustive_ValidServer(t *testing.T) {
 		Name:        "com.example.test/valid-server",
 		Version:     "1.0.0",
 		Description: "A valid test server",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "https://github.com/example/valid-server",
 			Source: "github",
 		},
@@ -186,7 +186,7 @@ func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
 		Name:        "com.example.test/invalid-server",
 		Version:     "1.0.0",
 		Description: "Test server with validation errors",
-		Repository: model.Repository{
+		Repository: &model.Repository{
 			URL:    "", // Empty URL should trigger format validation error in $ref'd Repository
 			Source: "github",
 		},
