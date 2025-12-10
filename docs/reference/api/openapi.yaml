@@ -135,6 +135,95 @@ paths:
                   error:
                     type: string
                     example: "Server not found"
+    put:
+      tags: [publish]
+      summary: Update specific MCP server version (Optional)
+      description: |
+        Update a specific version of an MCP server in the registry.
+
+        **Note**: This endpoint is optional for registry implementations and is not implemented by the official MCP registry. It is included in the specification to standardize the update mechanism for registry implementations that choose to support it.
+
+        Authentication mechanism is registry-specific and may vary between implementations.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: serverName
+          in: path
+          required: true
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
+          schema:
+            type: string
+            example: "com.example%2Fmy-server"
+        - name: version
+          in: path
+          required: true
+          description: URL-encoded version to update (e.g., "1.0.0" or "1.0.0%2B20130313144700" for versions with build metadata)
+          schema:
+            type: string
+            example: "1.0.0"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerDetail'
+      responses:
+        '200':
+          description: Successfully updated server version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired Registry JWT token"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to update this server"
+        '404':
+          description: Server or version not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server version not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to update server version"
+        '501':
+          description: Not Implemented - Registry does not support updates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Updates are not supported by this registry"
     delete:
       tags: [publish]
       summary: Delete specific MCP server version (Optional)
