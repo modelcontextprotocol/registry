@@ -95,26 +95,24 @@ signs:
     cmd: cosign
     args:
       - "sign-blob"
-      - "--output-signature=${signature}"
-      - "--output-certificate=${certificate}"
+      - "--bundle=${signature}" # cosign v3+: bundles signature and certificate together
       - "${artifact}"
       - "--yes" # needed on cosign 2.0.0+
     artifacts: archive
     output: true
-    certificate: '{{ trimsuffix (trimsuffix .Env.artifact ".zip") ".tar.gz" }}.pem'
-    
+    signature: "${artifact}.sigstore.json"
+
   # Also sign checksums file for additional verification
   - id: checksums
     cmd: cosign
     args:
       - "sign-blob"
-      - "--output-signature=${signature}"
-      - "--output-certificate=${certificate}"
+      - "--bundle=${signature}" # cosign v3+: bundles signature and certificate together
       - "${artifact}"
       - "--yes"
     artifacts: checksum
     output: true
-    certificate: '{{ trimsuffix .Env.artifact ".txt" }}.pem'
+    signature: "${artifact}.sigstore.json"
 
 # This section defines the release format.
 archives:
