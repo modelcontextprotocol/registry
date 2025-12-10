@@ -1,9 +1,9 @@
 openapi: 3.1.0
 jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
-$id: https://modelcontextprotocol.io/schemas/draft/2025-10-17/server-registry-openapi
+$id: https://modelcontextprotocol.io/schemas/draft/2025-12-01/server-registry-openapi
 info:
   title: MCP Server Registry API
-  version: "2025-10-17"
+  version: "2025-12-01"
   summary: API for discovering and accessing MCP server metadata
   description: |
     Specification for a theoretical REST API that serves up metadata about MCP servers.
@@ -18,7 +18,7 @@ tags:
     description: Operations for publishing MCP servers to the registry
 
 paths:
-  /v0/servers:
+  /v0.1/servers:
     get:
       tags: [servers]
       summary: List MCP servers
@@ -68,7 +68,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
-  /v0/servers/{serverName}/versions:
+  /v0.1/servers/{serverName}/versions:
     get:
       tags: [servers]
       summary: List all versions of an MCP server
@@ -98,7 +98,7 @@ paths:
                   error:
                     type: string
                     example: "Server not found"
-  /v0/servers/{serverName}/versions/{version}:
+  /v0.1/servers/{serverName}/versions/{version}:
     get:
       tags: [servers]
       summary: Get specific MCP server version
@@ -218,7 +218,7 @@ paths:
                   error:
                     type: string
                     example: "Deletion is not supported by this registry"
-  /v0/publish:
+  /v0.1/publish:
     post:
       tags: [publish]
       summary: Publish MCP server (Optional)
@@ -741,7 +741,6 @@ components:
       type: object
       required:
         - server
-        - _meta
       properties:
         server:
           $ref: '#/components/schemas/ServerDetail'

@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
@@ -77,11 +78,15 @@ func RegisterDNSEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 // ExchangeToken exchanges DNS signature for a Registry JWT token
 func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, signedTimestamp string) (*auth.TokenResponse, error) {
 	keyFetcher := func(ctx context.Context, domain string) ([]string, error) {
+		// Apply a timeout to DNS lookup to prevent resource exhaustion from slow/malicious DNS servers
+		timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
 		// Lookup DNS TXT records
 		// DNS implies a hierarchy where subdomains are treated as part of the parent domain,
 		// therefore we grant permissions for all subdomains (e.g., com.example.*)
 		// This is in line with other DNS-based authentication methods e.g. ACME DNS-01 challenges
-		txtRecords, err := h.resolver.LookupTXT(ctx, domain)
+		txtRecords, err := h.resolver.LookupTXT(timeoutCtx, domain)
 		if err != nil {
 			return nil, fmt.Errorf("failed to lookup DNS TXT records: %w", err)
 		}

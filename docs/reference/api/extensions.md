@@ -13,10 +13,10 @@ A standardized way for registries to provide experimental or community-driven fe
 
 ## URL Structure
 
-Extensions live under the `/v0/x/` prefix:
+Extensions live under the `/v0.1/x/` prefix:
 
 ```
-/v0/x/<namespace>/<extension>[/<path>]
+/v0.1/x/<namespace>/<extension>[/<path>]
 ```
 
 **Components:**
@@ -26,9 +26,9 @@ Extensions live under the `/v0/x/` prefix:
 
 **Examples:**
 ```
-/v0/x/com.example/search?q=database
-/v0/x/com.example/stats
-/v0/x/io.github.username/custom-feature
+/v0.1/x/com.example/search?q=database
+/v0.1/x/com.example/stats
+/v0.1/x/io.github.username/custom-feature
 ```
 
 ## Conventions
@@ -50,7 +50,7 @@ Clients consuming extensions **MUST** gracefully handle missing extensions.
 A simple server stats extension:
 
 ```bash
-GET /v0/x/com.example/stats
+GET /v0.1/x/com.example/stats
 ```
 
 ```json
@@ -63,7 +63,7 @@ GET /v0/x/com.example/stats
 
 ## Future Considerations
 
-- **Extension discovery**: A potential `/v0/x` endpoint to list available extensions
+- **Extension discovery**: A potential `/v0.1/x` endpoint to list available extensions
 - **Extension metadata**: Standardized metadata format for extension capabilities
 - **Defining common extensions**: Like semantic conventions from OpenTelemetry, develop common extensions that registries can adopt (possibly under an experimental namespace)
   - Search extension for free-text search across server metadata ([#389](https://github.com/modelcontextprotocol/registry/issues/389))
