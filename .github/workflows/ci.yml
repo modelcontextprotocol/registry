@@ -41,6 +41,7 @@ jobs:
         go-version-input: ''
         go-version-file: go.mod
         go-package: ./...
+        repo-checkout: false
 
   # All Tests
   tests:
