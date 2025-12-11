@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
@@ -52,49 +51,22 @@ var (
 	dottedVersionLikeRe = regexp.MustCompile(`^\s*(?:v?\d+|x|X|\*)(?:\.(?:\d+|x|X|\*)){1,2}(?:-[0-9A-Za-z.-]+)?\s*$`)
 )
 
-func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
-	result := ValidateServerJSONExhaustive(serverJSON, false)
-	if !result.Valid {
-		// Return the first error issue
-		for _, issue := range result.Issues {
-			if issue.Severity == ValidationIssueSeverityError {
-				return fmt.Errorf("%s", issue.Message)
-			}
-		}
-	}
-	return nil
-}
-
-// ValidateServerJSONExhaustive performs exhaustive validation and returns all issues found
-// If validateSchema is true, it will also validate against server.schema.json
-func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema bool) *ValidationResult {
+// ValidateServerJSON performs exhaustive validation and returns all issues found
+// opts specifies which types of validation to perform. ValidateSchema implies ValidateSchemaVersion.
+// Empty schema is always checked and always produces an error when schema validation is performed.
+func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 	ctx := &ValidationContext{}
 
-	// Validate schema version is provided and supported
-	// Note: Schema field is also marked as required in the ServerJSON struct definition
-	// for API-level validation and documentation
-	switch {
-	case serverJSON.Schema == "":
-		issue := NewValidationIssueFromError(
-			ValidationIssueTypeSemantic,
-			ctx.Field("schema").String(),
-			fmt.Errorf("$schema field is required"),
-			"schema-field-required",
-		)
-		result.AddIssue(issue)
-	case !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion):
-		issue := NewValidationIssueFromError(
-			ValidationIssueTypeSemantic,
-			ctx.Field("schema").String(),
-			fmt.Errorf("schema version %s is not supported. Please use schema version %s", serverJSON.Schema, model.CurrentSchemaVersion),
-			"schema-version-not-supported",
-		)
-		result.AddIssue(issue)
-	case validateSchema:
-		// We have a valid schema version and validation requested
-		schemaResult := validateServerJSONSchema(serverJSON)
+	// Schema validation (version check and/or full validation)
+	if opts.ValidateSchemaVersion || opts.ValidateSchema {
+		schemaResult := validateServerJSONSchema(serverJSON, opts.ValidateSchema, opts.NonCurrentSchemaPolicy)
 		result.Merge(schemaResult)
+	}
+
+	// Semantic validation (only if requested)
+	if !opts.ValidateSemantic {
+		return result
 	}
 
 	// Validate server name exists and format
@@ -140,14 +112,6 @@ func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema b
 		remoteResult := validateRemoteTransport(ctx.Field("remotes").Index(i), &remote)
 		result.Merge(remoteResult)
 	}
-
-	// Validate reverse-DNS namespace matching for remote URLs
-	remoteNamespaceResult := validateRemoteNamespaceMatch(ctx.Field("remotes"), *serverJSON)
-	result.Merge(remoteNamespaceResult)
-
-	// Validate reverse-DNS namespace matching for website URL
-	websiteNamespaceResult := validateWebsiteURLNamespaceMatch(ctx.Field("websiteUrl"), *serverJSON)
-	result.Merge(websiteNamespaceResult)
 
 	return result
 }
@@ -632,19 +596,43 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 	}
 
 	// Validate the server detail (includes all nested validation)
-	if err := ValidateServerJSON(&req); err != nil {
+	result := ValidateServerJSON(&req, ValidationSchemaVersionAndSemantic)
+	if err := result.FirstError(); err != nil {
 		return err
 	}
 
 	// Validate registry ownership for all packages if validation is enabled
 	if cfg.EnableRegistryValidation {
-		for i, pkg := range req.Packages {
-			if err := ValidatePackage(ctx, pkg, req.Name); err != nil {
-				return fmt.Errorf("registry validation failed for package %d (%s): %w", i, pkg.Identifier, err)
-			}
+		if err := validateRegistryOwnership(ctx, req); err != nil {
+			return err
 		}
 	}
 
+	return nil
+}
+
+func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
+	// Validate the server detail (includes all nested validation)
+	result := ValidateServerJSON(&req, ValidationSchemaVersionAndSemantic)
+	if err := result.FirstError(); err != nil {
+		return err
+	}
+
+	if cfg.EnableRegistryValidation && !skipRegistryValidation {
+		if err := validateRegistryOwnership(ctx, req); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func validateRegistryOwnership(ctx context.Context, req apiv0.ServerJSON) error {
+	for i, pkg := range req.Packages {
+		if err := ValidatePackage(ctx, pkg, req.Name); err != nil {
+			return fmt.Errorf("registry validation failed for package %d (%s): %w", i, pkg.Identifier, err)
+		}
+	}
 	return nil
 }
 
@@ -708,115 +696,4 @@ func parseServerName(serverJSON apiv0.ServerJSON) (string, error) {
 	}
 
 	return name, nil
-}
-
-// validateRemoteNamespaceMatch validates that remote URLs match the reverse-DNS namespace
-func validateRemoteNamespaceMatch(ctx *ValidationContext, serverJSON apiv0.ServerJSON) *ValidationResult {
-	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
-	namespace := serverJSON.Name
-
-	for i, remote := range serverJSON.Remotes {
-		if err := validateRemoteURLMatchesNamespace(remote.URL, namespace); err != nil {
-			issue := NewValidationIssueFromError(
-				ValidationIssueTypeSemantic,
-				ctx.Index(i).Field("url").String(),
-				fmt.Errorf("remote URL %s does not match namespace %s: %w", remote.URL, namespace, err),
-				"remote-url-namespace-mismatch",
-			)
-			result.AddIssue(issue)
-		}
-	}
-
-	return result
-}
-
-// validateWebsiteURLNamespaceMatch validates that website URL matches the reverse-DNS namespace
-func validateWebsiteURLNamespaceMatch(ctx *ValidationContext, serverJSON apiv0.ServerJSON) *ValidationResult {
-	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
-
-	// Skip validation if website URL is not provided
-	if serverJSON.WebsiteURL == "" {
-		return result
-	}
-
-	namespace := serverJSON.Name
-	if err := validateRemoteURLMatchesNamespace(serverJSON.WebsiteURL, namespace); err != nil {
-		issue := NewValidationIssueFromError(
-			ValidationIssueTypeSemantic,
-			ctx.String(),
-			fmt.Errorf("websiteUrl %s does not match namespace %s: %w", serverJSON.WebsiteURL, namespace, err),
-			"website-url-namespace-mismatch",
-		)
-		result.AddIssue(issue)
-	}
-
-	return result
-}
-
-// validateRemoteURLMatchesNamespace checks if a remote URL's hostname matches the publisher domain from the namespace
-func validateRemoteURLMatchesNamespace(remoteURL, namespace string) error {
-	// Parse the URL to extract the hostname
-	parsedURL, err := url.Parse(remoteURL)
-	if err != nil {
-		return fmt.Errorf("invalid URL format: %w", err)
-	}
-
-	hostname := parsedURL.Hostname()
-	if hostname == "" {
-		return fmt.Errorf("URL must have a valid hostname")
-	}
-
-	// Skip validation for localhost and local development URLs
-	if hostname == "localhost" || strings.HasSuffix(hostname, ".localhost") || hostname == "127.0.0.1" {
-		return nil
-	}
-
-	// Extract publisher domain from reverse-DNS namespace
-	publisherDomain := extractPublisherDomainFromNamespace(namespace)
-	if publisherDomain == "" {
-		return fmt.Errorf("invalid namespace format: cannot extract domain from %s", namespace)
-	}
-
-	// Check if the remote URL hostname matches the publisher domain or is a subdomain
-	if !isValidHostForDomain(hostname, publisherDomain) {
-		return fmt.Errorf("remote URL host %s does not match publisher domain %s", hostname, publisherDomain)
-	}
-
-	return nil
-}
-
-// extractPublisherDomainFromNamespace converts reverse-DNS namespace to normal domain format
-// e.g., "com.example" -> "example.com"
-func extractPublisherDomainFromNamespace(namespace string) string {
-	// Extract the namespace part before the first slash
-	namespacePart := namespace
-	if slashIdx := strings.Index(namespace, "/"); slashIdx != -1 {
-		namespacePart = namespace[:slashIdx]
-	}
-
-	// Split into parts and reverse them to get normal domain format
-	parts := strings.Split(namespacePart, ".")
-	if len(parts) < 2 {
-		return ""
-	}
-
-	// Reverse the parts to convert from reverse-DNS to normal domain
-	slices.Reverse(parts)
-
-	return strings.Join(parts, ".")
-}
-
-// isValidHostForDomain checks if a hostname is the domain or a subdomain of the publisher domain
-func isValidHostForDomain(hostname, publisherDomain string) bool {
-	// Exact match
-	if hostname == publisherDomain {
-		return true
-	}
-
-	// Subdomain match - hostname should end with "." + publisherDomain
-	if strings.HasSuffix(hostname, "."+publisherDomain) {
-		return true
-	}
-
-	return false
 }

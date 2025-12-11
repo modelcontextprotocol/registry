@@ -2,41 +2,137 @@ package validators
 
 import (
 	"bytes"
-	_ "embed"
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
-//go:embed schema/server.schema.json
-var embeddedSchema []byte
+//go:embed schemas/*.json
+var schemaFS embed.FS
 
-// GetCurrentSchemaVersion extracts the $id field from the embedded schema
-func GetCurrentSchemaVersion() (string, error) {
-	var schema map[string]any
-	if err := json.Unmarshal(embeddedSchema, &schema); err != nil {
-		return "", fmt.Errorf("failed to parse embedded schema: %w", err)
+// extractVersionFromSchemaURL extracts the version identifier from a schema URL
+// e.g., "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json" -> "2025-10-17"
+// e.g., "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json" -> "draft"
+// Version identifier can contain: A-Z, a-z, 0-9, hyphen (-), underscore (_), tilde (~), and period (.)
+func extractVersionFromSchemaURL(schemaURL string) (string, error) {
+	// Pattern: /schemas/{identifier}/server.schema.json
+	// Identifier allowed characters: A-Z, a-z, 0-9, -, _, ~, .
+	re := regexp.MustCompile(`/schemas/([A-Za-z0-9_~.-]+)/server\.schema\.json`)
+	matches := re.FindStringSubmatch(schemaURL)
+	if len(matches) < 2 {
+		return "", fmt.Errorf("invalid schema URL format: %s", schemaURL)
 	}
-
-	id, ok := schema["$id"].(string)
-	if !ok {
-		return "", fmt.Errorf("embedded schema missing $id field")
-	}
-
-	return id, nil
+	return matches[1], nil
 }
 
-// validateServerJSONSchema validates the server JSON against server.schema.json using jsonschema
-func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
-	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+// loadSchemaByVersion loads a schema file from the embedded filesystem by version
+func loadSchemaByVersion(version string) ([]byte, error) {
+	filename := fmt.Sprintf("schemas/%s.json", version)
+	data, err := schemaFS.ReadFile(filename)
+	if err != nil {
+		return nil, fmt.Errorf("schema version %s not found in embedded schemas: %w", version, err)
+	}
+	return data, nil
+}
 
-	// Use embedded schema - no file system access needed
-	schemaData := embeddedSchema
+// GetCurrentSchemaVersion returns the current schema URL from constants
+func GetCurrentSchemaVersion() (string, error) {
+	return model.CurrentSchemaURL, nil
+}
+
+// validateServerJSONSchema validates the server JSON against the schema version specified in $schema using jsonschema
+// Empty/missing schema always produces an error.
+// If performValidation is true, performs full JSON Schema validation.
+// If performValidation is false, only checks for empty schema (always an error) and handles non-current schemas per policy.
+// nonCurrentPolicy determines how non-current (but valid) schema versions are handled when performValidation is true.
+func validateServerJSONSchema(serverJSON *apiv0.ServerJSON, performValidation bool, nonCurrentPolicy SchemaVersionPolicy) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+	ctx := &ValidationContext{}
+
+	// Empty/missing schema is always an error
+	if serverJSON.Schema == "" {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.Field("schema").String(),
+			"$schema field is required",
+			ValidationIssueSeverityError,
+			"schema-field-required",
+		)
+		result.AddIssue(issue)
+		return result
+	}
+
+	// Extract version from the schema URL
+	version, err := extractVersionFromSchemaURL(serverJSON.Schema)
+	if err != nil {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSchema,
+			ctx.Field("schema").String(),
+			fmt.Sprintf("failed to extract schema version from URL: %v", err),
+			ValidationIssueSeverityError,
+			"schema-version-extraction-error",
+		)
+		result.AddIssue(issue)
+		return result
+	}
+
+	// Check if the schema version is the current one and handle based on policy
+	currentSchemaURL, err := GetCurrentSchemaVersion()
+	if err == nil && serverJSON.Schema != currentSchemaURL {
+		// Extract current version for the message
+		currentVersion, _ := extractVersionFromSchemaURL(currentSchemaURL)
+
+		switch nonCurrentPolicy {
+		case SchemaVersionPolicyError:
+			issue := NewValidationIssue(
+				ValidationIssueTypeSemantic,
+				ctx.Field("schema").String(),
+				fmt.Sprintf("schema version %s is not the current version (%s). Use the current schema version", version, currentVersion),
+				ValidationIssueSeverityError,
+				"schema-version-deprecated",
+			)
+			result.AddIssue(issue)
+		case SchemaVersionPolicyWarn:
+			issue := NewValidationIssue(
+				ValidationIssueTypeSemantic,
+				ctx.Field("schema").String(),
+				fmt.Sprintf("schema version %s is not the current version (%s). Consider updating to the latest schema version", version, currentVersion),
+				ValidationIssueSeverityWarning,
+				"schema-version-deprecated",
+			)
+			result.AddIssue(issue)
+		case SchemaVersionPolicyAllow:
+			// No issue added - allow non-current schemas silently
+		}
+	}
+
+	// Load the appropriate schema file to verify it exists (required for schema version validation)
+	// This ensures that the specified schema version is available, even when not performing full validation
+	schemaData, err := loadSchemaByVersion(version)
+	if err != nil {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSchema,
+			ctx.Field("schema").String(),
+			fmt.Sprintf("schema version %s not available: %v", version, err),
+			ValidationIssueSeverityError,
+			"schema-version-not-available",
+		)
+		result.AddIssue(issue)
+		return result
+	}
+
+	// If not performing validation, return after performing schema version checks (done above)
+	if !performValidation {
+		return result
+	}
 
 	// Parse the schema
 	var schema map[string]any
@@ -44,7 +140,7 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 		// If we can't parse the schema, return an error
 		issue := NewValidationIssue(
 			ValidationIssueTypeSchema,
-			"",
+			ctx.Field("schema").String(),
 			fmt.Sprintf("failed to parse schema file: %v", err),
 			ValidationIssueSeverityError,
 			"schema-parse-error",
@@ -80,13 +176,29 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 		return result
 	}
 
+	// Get the schema $id for proper reference resolution
+	// Schema files must have $id (required by JSON Schema spec and verified by sync process)
+	// However, we check here in case a schema file exists but is malformed or missing $id
+	schemaID, ok := schema["$id"].(string)
+	if !ok {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSchema,
+			ctx.Field("schema").String(),
+			fmt.Sprintf("schema file for version %s exists but is missing or has invalid $id field (required by JSON Schema spec)", version),
+			ValidationIssueSeverityError,
+			"schema-missing-id",
+		)
+		result.AddIssue(issue)
+		return result
+	}
+
 	// Validate against schema using jsonschema library
 	compiler := jsonschema.NewCompiler()
-	if err := compiler.AddResource("file:///server.schema.json", bytes.NewReader(schemaData)); err != nil {
+	if err := compiler.AddResource(schemaID, bytes.NewReader(schemaData)); err != nil {
 		// If we can't add the schema resource, return an error
 		issue := NewValidationIssue(
 			ValidationIssueTypeSchema,
-			"",
+			ctx.Field("schema").String(),
 			fmt.Sprintf("failed to add schema resource: %v", err),
 			ValidationIssueSeverityError,
 			"schema-resource-error",
@@ -95,7 +207,7 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON) *ValidationResult {
 		return result
 	}
 
-	schemaInstance, err := compiler.Compile("file:///server.schema.json")
+	schemaInstance, err := compiler.Compile(schemaID)
 	if err != nil {
 		// If we can't compile the schema, return an error
 		issue := NewValidationIssue(
@@ -142,13 +254,70 @@ func addValidationError(result *ValidationResult, validationErr *jsonschema.Vali
 	addDetailedErrors(result, detailed, schema)
 }
 
+// convertJSONPointerToBracketNotation converts a JSON Pointer path (RFC 6901) to bracket notation
+// format to match the format used by semantic validation (ValidationContext).
+// The transformation includes:
+// 1. Remove leading slash from JSON Pointer format
+// 2. Convert path separators from "/" to "."
+// 3. Convert numeric array indices from dot notation to bracket notation
+// Example: "/packages/0/transport" -> "packages[0].transport"
+// Example: "/0/name" -> "[0].name"
+// Example: "/packages/0/transport/1/url" -> "packages[0].transport[1].url"
+func convertJSONPointerToBracketNotation(jsonPointer string) string {
+	if jsonPointer == "" {
+		return ""
+	}
+
+	// Step 1: Convert JSON Pointer to dot notation (remove leading slash, convert / to .)
+	path := strings.TrimPrefix(jsonPointer, "/")
+	path = strings.ReplaceAll(path, "/", ".")
+
+	// Step 2: Convert dot notation array indices to bracket notation
+	if path == "" {
+		return ""
+	}
+
+	parts := strings.Split(path, ".")
+	var result strings.Builder
+
+	for i, part := range parts {
+		// Check if part is a pure number (array index)
+		if _, err := strconv.Atoi(part); err == nil {
+			// It's a numeric index - use bracket notation
+			result.WriteString(fmt.Sprintf("[%s]", part))
+			// Add dot after bracket if next part exists and is a field name (not a number)
+			if i < len(parts)-1 {
+				nextPart := parts[i+1]
+				if _, err := strconv.Atoi(nextPart); err != nil {
+					// Next part is a field name, add dot separator
+					result.WriteString(".")
+				}
+				// If next part is a number, no dot needed (brackets will connect: [0][1])
+			}
+		} else {
+			// It's a field name
+			// Add dot separator before field name if previous part was also a field name
+			if i > 0 {
+				prevPart := parts[i-1]
+				if _, err := strconv.Atoi(prevPart); err != nil {
+					// Previous was not a number (it's a field), need dot separator
+					result.WriteString(".")
+				}
+				// If previous was a number, brackets already written, dot added after bracket above
+			}
+			result.WriteString(part)
+		}
+	}
+
+	return result.String()
+}
+
 // addDetailedErrors recursively processes detailed validation errors
 func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed, schema map[string]any) {
 	// Only process errors that have specific field paths and meaningful messages
 	if detailed.InstanceLocation != "" && detailed.Error != "" {
-		// Convert JSON Pointer to readable path (remove leading slash, convert / to .)
-		path := strings.TrimPrefix(detailed.InstanceLocation, "/")
-		path = strings.ReplaceAll(path, "/", ".")
+		// Convert JSON Pointer format to bracket notation to match semantic validation format
+		path := convertJSONPointerToBracketNotation(detailed.InstanceLocation)
 
 		// Clean up the error message
 		message := detailed.Error

@@ -24,9 +24,6 @@ jobs:
         go-version-file: 'go.mod'
         cache: true
 
-    - name: Prepare schema for embedding
-      run: make prep-schema
-
     - name: Run lint
       uses: golangci/golangci-lint-action@0a35821d5c230e903fcfe077583637dea1b27b47
       with:

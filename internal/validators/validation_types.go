@@ -21,6 +21,55 @@ const (
 	ValidationIssueSeverityInfo    ValidationIssueSeverity = "info"
 )
 
+// SchemaVersionPolicy determines how non-current schema versions are handled
+type SchemaVersionPolicy string
+
+const (
+	// SchemaVersionPolicyAllow allows non-current schemas with no warning or error
+	SchemaVersionPolicyAllow SchemaVersionPolicy = "allow"
+	// SchemaVersionPolicyWarn allows non-current schemas but generates a warning
+	SchemaVersionPolicyWarn SchemaVersionPolicy = "warn"
+	// SchemaVersionPolicyError rejects non-current schemas with an error
+	SchemaVersionPolicyError SchemaVersionPolicy = "error"
+)
+
+// ValidationOptions configures which types of validation to perform
+// ValidateSchema implies ValidateSchemaVersion (the flag is ignored if ValidateSchema is true)
+type ValidationOptions struct {
+	ValidateSchemaVersion  bool                // Check schema version (empty, non-current). Ignored if ValidateSchema is true.
+	ValidateSchema         bool                // Perform full schema validation (implies ValidateSchemaVersion)
+	ValidateSemantic       bool                // Perform semantic validation
+	NonCurrentSchemaPolicy SchemaVersionPolicy // Policy for non-current schemas (only used when schema validation is performed)
+}
+
+// Common validation configurations
+var (
+	// ValidationSemanticOnly performs only semantic validation (no schema checks)
+	ValidationSemanticOnly = ValidationOptions{
+		ValidateSemantic: true,
+	}
+
+	// ValidationSchemaVersionOnly checks schema version only (empty, non-current)
+	ValidationSchemaVersionOnly = ValidationOptions{
+		ValidateSchemaVersion:  true,
+		NonCurrentSchemaPolicy: SchemaVersionPolicyError,
+	}
+
+	// ValidationSchemaVersionAndSemantic checks schema version and performs semantic validation
+	ValidationSchemaVersionAndSemantic = ValidationOptions{
+		ValidateSchemaVersion:  true,
+		ValidateSemantic:       true,
+		NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
+	}
+
+	// ValidationAll performs all validation types (schema version, full schema validation, and semantic)
+	ValidationAll = ValidationOptions{
+		ValidateSchema:         true, // Implies ValidateSchemaVersion
+		ValidateSemantic:       true,
+		NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
+	}
+)
+
 // ValidationIssue represents a single validation problem
 type ValidationIssue struct {
 	Type      ValidationIssueType     `json:"type"`
@@ -77,6 +126,20 @@ func (vr *ValidationResult) Merge(other *ValidationResult) {
 	if !other.Valid {
 		vr.Valid = false
 	}
+}
+
+// FirstError returns the first error-level issue as an error, or nil if valid
+// This provides backward compatibility for code that expects an error return type
+func (vr *ValidationResult) FirstError() error {
+	if vr.Valid {
+		return nil
+	}
+	for _, issue := range vr.Issues {
+		if issue.Severity == ValidationIssueSeverityError {
+			return fmt.Errorf("%s", issue.Message)
+		}
+	}
+	return nil
 }
 
 // Field adds a field name to the context path

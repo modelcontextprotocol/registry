@@ -5,17 +5,12 @@ help: ## Show this help message
 	@echo "Available targets:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
 
-# Preparation targets
-prep-schema: ## Copy schema file for embedding
-	@mkdir -p internal/validators/schema
-	@cp docs/reference/server-json/server.schema.json internal/validators/schema/server.schema.json
-
 # Build targets
-build: prep-schema ## Build the registry application with version info
+build: ## Build the registry application with version info
 	@mkdir -p bin
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/registry ./cmd/registry
 
-publisher: prep-schema ## Build the publisher tool with version info
+publisher: ## Build the publisher tool with version info
 	@mkdir -p bin
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
 
@@ -31,7 +26,7 @@ check-schema: ## Check if server.schema.json is in sync with openapi.yaml
 	@./bin/extract-server-schema -check
 
 # Test targets
-test-unit: prep-schema ## Run unit tests with coverage (requires PostgreSQL)
+test-unit: ## Run unit tests with coverage (requires PostgreSQL)
 	@echo "Starting PostgreSQL for unit tests..."
 	@docker compose up -d postgres 2>&1 | grep -v "Pulling\|Pulled\|Creating\|Created\|Starting\|Started" || true
 	@echo "Waiting for PostgreSQL to be ready..."

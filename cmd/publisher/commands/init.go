@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
@@ -59,7 +58,7 @@ func InitCommand() error {
 
 	// Create the server structure
 	server := createServerJSON(
-		name, description, version, repoURL, repoSource, subfolder,
+		model.CurrentSchemaURL, name, description, version, repoURL, repoSource, subfolder,
 		packageType, packageIdentifier, version, envVars,
 	)
 
@@ -328,7 +327,7 @@ func detectPackageIdentifier(serverName string, packageType string) string {
 }
 
 func createServerJSON(
-	name, description, version, repoURL, repoSource, subfolder,
+	currentSchema, name, description, version, repoURL, repoSource, subfolder,
 	packageType, packageIdentifier, packageVersion string,
 	envVars []model.KeyValueInput,
 ) apiv0.ServerJSON {
@@ -406,13 +405,6 @@ func createServerJSON(
 	}
 
 	// Create server structure
-	// Get current schema version from embedded schema
-	currentSchema, err := validators.GetCurrentSchemaVersion()
-	if err != nil {
-		// Should never happen (schema is embedded)
-		panic(fmt.Sprintf("failed to get embedded schema version: %v", err))
-	}
-
 	return apiv0.ServerJSON{
 		Schema:      currentSchema,
 		Name:        name,

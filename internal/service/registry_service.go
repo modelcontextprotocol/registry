@@ -209,7 +209,7 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	skipRegistryValidation := currentlyDeleted || beingDeleted
 
 	// Validate the request, potentially skipping registry validation for deleted servers
-	if err := s.validateUpdateRequest(ctx, *req, skipRegistryValidation); err != nil {
+	if err := validators.ValidateUpdateRequest(ctx, *req, s.cfg, skipRegistryValidation); err != nil {
 		return nil, err
 	}
 
@@ -242,26 +242,4 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	}
 
 	return updatedServerResponse, nil
-}
-
-// validateUpdateRequest validates an update request with optional registry validation skipping
-func (s *registryServiceImpl) validateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, skipRegistryValidation bool) error {
-	// Always validate the server JSON structure
-	if err := validators.ValidateServerJSON(&req); err != nil {
-		return err
-	}
-
-	// Skip registry validation if requested (for deleted servers)
-	if skipRegistryValidation || !s.cfg.EnableRegistryValidation {
-		return nil
-	}
-
-	// Perform registry validation for all packages
-	for i, pkg := range req.Packages {
-		if err := validators.ValidatePackage(ctx, pkg, req.Name); err != nil {
-			return fmt.Errorf("registry validation failed for package %d (%s): %w", i, pkg.Identifier, err)
-		}
-	}
-
-	return nil
 }

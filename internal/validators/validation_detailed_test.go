@@ -1,6 +1,7 @@
 package validators_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -9,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateServerJSONExhaustive_CollectsAllErrors(t *testing.T) {
+func TestValidateServerJSON_CollectsAllErrors(t *testing.T) {
 	// Create a server JSON with multiple validation errors
 	serverJSON := &apiv0.ServerJSON{
 		Name:        "invalid-name", // Invalid server name format
@@ -47,7 +48,7 @@ func TestValidateServerJSONExhaustive_CollectsAllErrors(t *testing.T) {
 	}
 
 	// Run detailed validation
-	result := validators.ValidateServerJSONExhaustive(serverJSON, false)
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationSchemaVersionAndSemantic)
 
 	// Verify it's invalid
 	assert.False(t, result.Valid)
@@ -99,7 +100,7 @@ func TestValidateServerJSONExhaustive_CollectsAllErrors(t *testing.T) {
 	assert.Greater(t, foundPaths, 5, "Should have issues at multiple JSON paths")
 }
 
-func TestValidateServerJSONExhaustive_ValidServer(t *testing.T) {
+func TestValidateServerJSON_ValidServer(t *testing.T) {
 	// Create a valid server JSON
 	serverJSON := &apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
@@ -125,14 +126,14 @@ func TestValidateServerJSONExhaustive_ValidServer(t *testing.T) {
 	}
 
 	// Run detailed validation
-	result := validators.ValidateServerJSONExhaustive(serverJSON, false)
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationSchemaVersionAndSemantic)
 
 	// Verify it's valid
 	assert.True(t, result.Valid)
 	assert.Empty(t, result.Issues, "Should have no validation issues")
 }
 
-func TestValidateServerJSONExhaustive_ContextPaths(t *testing.T) {
+func TestValidateServerJSON_ContextPaths(t *testing.T) {
 	// Create a server with nested validation errors to test context paths
 	serverJSON := &apiv0.ServerJSON{
 		Name:    "com.example.test/server",
@@ -166,7 +167,7 @@ func TestValidateServerJSONExhaustive_ContextPaths(t *testing.T) {
 	}
 
 	// Run detailed validation
-	result := validators.ValidateServerJSONExhaustive(serverJSON, false)
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationSchemaVersionAndSemantic)
 
 	// Verify we have issues at the correct paths
 	issuePaths := make(map[string]bool)
@@ -179,7 +180,7 @@ func TestValidateServerJSONExhaustive_ContextPaths(t *testing.T) {
 	assert.True(t, issuePaths["packages[1].runtimeArguments[0].name"], "Should have issue at packages[1].runtimeArguments[0].name")
 }
 
-func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
+func TestValidateServerJSON_RefResolution(t *testing.T) {
 	// Create a server JSON with validation errors that will trigger $ref resolution
 	serverJSON := &apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
@@ -216,7 +217,7 @@ func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
 	}
 
 	// Run validation with schema validation enabled
-	result := validators.ValidateServerJSONExhaustive(serverJSON, true)
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationAll)
 
 	// Check that we have validation errors
 	assert.False(t, result.Valid, "Expected validation errors")
@@ -235,7 +236,7 @@ func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
 				expectedRef := "#/definitions/Repository/properties/url/format from: [#/definitions/ServerDetail]/properties/repository/[#/definitions/Repository]/properties/url/format"
 				assert.Equal(t, expectedRef, issue.Reference, "Repository URL error should have exact resolved reference")
 			}
-			if issue.Path == "packages.0.packageArguments.0.format" {
+			if issue.Path == "packages[0].packageArguments[0].format" {
 				// The schema uses anyOf for Argument types, so it could match either PositionalArgument or NamedArgument
 				// Just check that it contains the expected definitions
 				assert.Contains(t, issue.Reference, "#/definitions/Input/properties/format/enum", "Should reference the Input format enum")
@@ -254,5 +255,191 @@ func TestValidateServerJSONExhaustive_RefResolution(t *testing.T) {
 
 	// Should have issues at specific paths that trigger $ref resolution
 	assert.True(t, issuePaths["repository.url"], "Should have issue at repository.url")
-	assert.True(t, issuePaths["packages.0.packageArguments.0.format"], "Should have issue at packages.0.packageArguments.0.format")
+	assert.True(t, issuePaths["packages[0].packageArguments[0].format"], "Should have issue at packages[0].packageArguments[0].format")
+}
+
+func TestValidateServerJSON_EmptySchema(t *testing.T) {
+	// Test that empty/missing schema produces an error
+	serverJSON := &apiv0.ServerJSON{
+		// Schema field intentionally omitted (empty string)
+		Name:        "com.example.test/server",
+		Version:     "1.0.0",
+		Description: "Test server",
+		Repository: &model.Repository{
+			URL:    "https://github.com/example/server",
+			Source: "github",
+		},
+	}
+
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationAll)
+
+	// Should be invalid due to missing schema
+	assert.False(t, result.Valid, "Empty schema should cause validation failure")
+
+	// Should have an error issue for missing schema
+	hasSchemaError := false
+	for _, issue := range result.Issues {
+		if issue.Path == "schema" && issue.Severity == validators.ValidationIssueSeverityError {
+			if strings.Contains(issue.Message, "$schema field is required") {
+				hasSchemaError = true
+			}
+		}
+	}
+	assert.True(t, hasSchemaError, "Should have error for missing $schema field")
+}
+
+func TestValidateServerJSON_NonCurrentSchema_Warning(t *testing.T) {
+	// Test that non-current (but valid) schema produces a warning, not an error
+	serverJSON := &apiv0.ServerJSON{
+		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json", // Older but valid schema
+		Name:        "com.example.test/server",
+		Version:     "1.0.0",
+		Description: "Test server",
+		Repository: &model.Repository{
+			URL:    "https://github.com/example/server",
+			Source: "github",
+		},
+	}
+
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationAll)
+
+	// Should be valid (warnings don't make it invalid)
+	assert.True(t, result.Valid, "Non-current schema should produce warning but still be valid")
+
+	// Should have a warning issue for non-current schema
+	hasSchemaWarning := false
+	for _, issue := range result.Issues {
+		if issue.Path == "schema" && issue.Severity == validators.ValidationIssueSeverityWarning {
+			if strings.Contains(issue.Message, "not the current version") || strings.Contains(issue.Message, "Consider updating") {
+				hasSchemaWarning = true
+			}
+		}
+	}
+	assert.True(t, hasSchemaWarning, "Should have warning for non-current schema version")
+}
+
+func TestValidateServerJSON_InvalidSchema_Error(t *testing.T) {
+	// Test that invalid/non-existent schema produces an error
+	serverJSON := &apiv0.ServerJSON{
+		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json", // Non-existent version
+		Name:        "com.example.test/server",
+		Version:     "1.0.0",
+		Description: "Test server",
+		Repository: &model.Repository{
+			URL:    "https://github.com/example/server",
+			Source: "github",
+		},
+	}
+
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationAll)
+
+	// Should be invalid due to schema not available
+	assert.False(t, result.Valid, "Invalid schema version should cause validation failure")
+
+	// Should have an error issue for schema not available
+	hasSchemaError := false
+	for _, issue := range result.Issues {
+		if issue.Path == "schema" && issue.Severity == validators.ValidationIssueSeverityError {
+			if strings.Contains(issue.Message, "not available") || strings.Contains(issue.Message, "not found") {
+				hasSchemaError = true
+			}
+		}
+	}
+	assert.True(t, hasSchemaError, "Should have error for invalid/non-existent schema version")
+}
+
+func TestValidateServerJSON_NonCurrentSchema_Policies(t *testing.T) {
+	// Test all three policies for non-current schema handling
+	serverJSON := &apiv0.ServerJSON{
+		Schema:      "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json", // Older but valid schema
+		Name:        "com.example.test/server",
+		Version:     "1.0.0",
+		Description: "Test server",
+		Repository: &model.Repository{
+			URL:    "https://github.com/example/server",
+			Source: "github",
+		},
+	}
+
+	tests := []struct {
+		name             string
+		policy           validators.SchemaVersionPolicy
+		expectValid      bool
+		expectWarning    bool
+		expectError      bool
+		expectIssueCount int
+	}{
+		{
+			name:             "Allow policy - no warning or error",
+			policy:           validators.SchemaVersionPolicyAllow,
+			expectValid:      true,
+			expectWarning:    false,
+			expectError:      false,
+			expectIssueCount: 0,
+		},
+		{
+			name:             "Warn policy - warning but still valid",
+			policy:           validators.SchemaVersionPolicyWarn,
+			expectValid:      true,
+			expectWarning:    true,
+			expectError:      false,
+			expectIssueCount: 1,
+		},
+		{
+			name:             "Error policy - error and invalid",
+			policy:           validators.SchemaVersionPolicyError,
+			expectValid:      false,
+			expectWarning:    false,
+			expectError:      true,
+			expectIssueCount: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opts := validators.ValidationOptions{
+				ValidateSchema:         true,
+				ValidateSemantic:       true,
+				NonCurrentSchemaPolicy: tt.policy,
+			}
+			result := validators.ValidateServerJSON(serverJSON, opts)
+
+			assert.Equal(t, tt.expectValid, result.Valid, "Validation result should match expected")
+
+			hasWarning := false
+			hasError := false
+			schemaWarnings := 0
+			schemaErrors := 0
+
+			for _, issue := range result.Issues {
+				if issue.Path == "schema" {
+					if issue.Severity == validators.ValidationIssueSeverityWarning {
+						hasWarning = true
+						schemaWarnings++
+						if !strings.Contains(issue.Message, "not the current version") {
+							t.Errorf("Warning message should mention 'not the current version', got: %s", issue.Message)
+						}
+					}
+					if issue.Severity == validators.ValidationIssueSeverityError {
+						if strings.Contains(issue.Message, "not the current version") {
+							hasError = true
+							schemaErrors++
+						}
+					}
+				}
+			}
+
+			assert.Equal(t, tt.expectWarning, hasWarning, "Warning presence should match expected")
+			assert.Equal(t, tt.expectError, hasError, "Error presence should match expected")
+
+			// Count schema-related issues (excluding other validation issues)
+			schemaIssueCount := 0
+			for _, issue := range result.Issues {
+				if issue.Path == "schema" && (strings.Contains(issue.Message, "not the current version") || strings.Contains(issue.Message, "current version")) {
+					schemaIssueCount++
+				}
+			}
+			assert.Equal(t, tt.expectIssueCount, schemaIssueCount, "Schema issue count should match expected")
+		})
+	}
 }

@@ -1,12 +1,12 @@
 # Enhanced Server Validation Design
 
-NOTE: This document describes a proposed direction for improving validation of server.json data in the Official Registry. This work is in progress (including open PRs ands discussions)in a collaborative process and may change signficianty or be abandoned.
+NOTE: This document describes a proposed direction for improving validation of server.json data in the Official Registry. This work is in progress (including open PRs and discussions) in a collaborative process and may change significantly or be abandoned.
 
 ## Overview
 
 This document outlines the design for implementing comprehensive server validation in the MCP Registry, due to the following concerns: 
 
-- Currently, the MPC Registry project publishes a server.json schema but does not validate servers against it, allowing non-compliant servers to be published. 
+- Currently, the MCP Registry project publishes a server.json schema but does not validate servers against it, allowing non-compliant servers to be published. 
 - There is existing ad-hoc validation that covers some schema compliance, but not all (there are logical errors not identifiable by schema validation and that are not covered by the existing ad hoc validation). 
 - Many servers that do pass validation do not represent best-practices for published servers. 
 
@@ -18,7 +18,7 @@ This design implements a three-tier validation system: **Schema Validation**, **
 - **No schema validation**: Servers are published without validating against the published schema (and many violate it)
 - **Incomplete validation**: Ad hoc validation covers only some schema constraints (many published servers have additional logical errors)
 - **Best Practices not indicated**: Many servers that would pass schema and semantic validation do not represent best practices
-- **Fail-fast behavior**: `ValidateServerJSON()` stops at first error
+- **Fail-fast behavior**: Legacy `ValidateServerJSON()` stopped at first error (now replaced with exhaustive validation)
 - **No path information**: Errors don't specify where in JSON the problem occurs
 
 ## Three-Tier Validation System
@@ -45,18 +45,23 @@ The enhanced validation will be implemented in stages to minimize risk and allow
 
 ### **Stage 1: Schema Validation and Exhaustive Validation Results (Current)**
 - Convert existing validators to use and track context and to return exhaustive results
-- Add `mcp-publisher validate` command that performs exhaustive validation
-- Implement schema validation but only enable it for the `validate` command (not the `/v0/publish` API)
-- Maintain backward compatibility with no production impact
-  - All existing validation calls use a wrapper that returns the first error
-  - Existing validation tests work without modification (since they call the wrapper)
-- This allows experimentation and validation of the new model (including schema validation) without impacting production code
+- Add `mcp-publisher validate` command that performs exhaustive validation with full schema validation
+- Implement schema validation with configurable policy for non-current schemas
+- Schema version validation consolidated in `schema.go` with policy support (Allow/Warn/Error)
+- `mcp-publisher publish` command validates schema version (rejects empty and non-current schemas) but does not perform full schema validation
+- API `/v0/publish` endpoint uses `ValidatePublishRequest` which validates schema version and semantic validation, but not full schema validation
+- **All callers migrated**: All code now uses `ValidateServerJSON()` with `ValidationOptions` directly; legacy wrapper removed
+- **ValidationResult.FirstError()**: Backward compatibility maintained via `FirstError()` method for code expecting error return type
+- This allows experimentation and validation of the new model (including schema validation) without impacting production API
 
 ### **Future Stages**
-- Enable schema validation in all validation cases (including the `/v0/publish` API endpoint) - flip boolean switch
+- Enable full schema validation in `mcp-publisher publish` command (currently only validates schema version)
+- Enable full schema validation in the `/v0/publish` API endpoint (currently only validates schema version via `ValidatePublishRequest`)
+- Add `/v0/validate` API endpoint for programmatic validation without publishing (see Validate API Endpoint section below)
+- Enhance production code to use full validation results: Update `importer.go` and `validate-examples/main.go` to log all issues instead of just first error
 - Build out comprehensive semantic and linter validation rules (with tests)
 - Remove redundant manual validators that duplicate schema constraints
-- Update unit tests to handle rich/exhaustive validation results
+- Consider migrating tests to check all validation issues instead of just first error (where appropriate)
 
 ## Proposed Design
 
@@ -65,7 +70,7 @@ The enhanced validation will be implemented in stages to minimize risk and allow
 1. **Exhaustive Feedback**: Collect all validation issues in a single pass, not just the first error
 2. **Precise Location**: Provide exact JSON paths for every validation issue
 3. **Structured Output**: Return machine-readable validation results with consistent format
-4. **Backward Compatibility**: Maintain existing `ValidateServerJSON() error` signature
+4. **Backward Compatibility**: Use `ValidationResult.FirstError()` for code expecting error return type
 5. **Extensible**: Support different validation types (json, schema, semantic, linter) and severity levels
 
 
@@ -107,6 +112,15 @@ type ValidationResult struct {
 type ValidationContext struct {
     path string
 }
+
+// SchemaVersionPolicy determines how non-current schema versions are handled
+type SchemaVersionPolicy string
+
+const (
+    SchemaVersionPolicyAllow SchemaVersionPolicy = "allow" // Allow non-current schemas silently
+    SchemaVersionPolicyWarn  SchemaVersionPolicy = "warn"  // Allow but generate warning
+    SchemaVersionPolicyError SchemaVersionPolicy = "error" // Reject non-current schemas
+)
 
 // Constructor functions following Go conventions
 func NewValidationIssue(issueType ValidationIssueType, path, message string, severity ValidationIssueSeverity, reference string) ValidationIssue
@@ -171,10 +185,17 @@ issue := NewValidationIssueFromError(ValidationIssueTypeSemantic, "path", err, "
 ```
 
 #### **Error Interface Compatibility**
-- Existing `ValidateServerJSON() error` signature unchanged
-- Returns `fmt.Errorf("%s", issue.Message)` - same string format
-- All `errors.Is()` and `errors.As()` calls continue to work
-- No changes needed to error handling code
+
+For code that needs an error return type, use `ValidationResult.FirstError()`:
+
+```go
+result := ValidateServerJSON(serverJSON, ValidationSchemaVersionAndSemantic)
+if err := result.FirstError(); err != nil {
+    return err  // Returns first error-level issue as error
+}
+```
+
+This maintains compatibility with existing error handling code while providing access to all validation issues.
 
 ### New Validation Architecture
 
@@ -183,59 +204,46 @@ issue := NewValidationIssueFromError(ValidationIssueTypeSemantic, "path", err, "
 All existing validators are converted to use `ValidationContext` for precise error location tracking and return `ValidationResult` for comprehensive error collection:
 
 ```go
-func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON) *ValidationResult {
+func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *ValidationResult {
     result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
     
-    // Validate server name - using existing error logic
-    if _, err := parseServerName(*serverJSON); err != nil {
-        issue := NewValidationIssueFromError(
-            ValidationIssueTypeSemantic, // All existing validation uses "semantic" type
-            "name",
-            err, // Preserves existing error formatting
-            "invalid-server-name",
-        )
-        result.AddIssue(issue)
+    // Schema validation based on options
+    if opts.ValidateSchemaVersion || opts.ValidateSchema {
+        schemaResult := validateServerJSONSchema(serverJSON, opts.ValidateSchema, opts.NonCurrentSchemaPolicy)
+        result.Merge(schemaResult)
     }
-    
-    // Validate repository with context
-    if repoResult := validateRepository(&ValidationContext{}, &serverJSON.Repository); !repoResult.Valid {
-        result.Merge(repoResult)
-    }
-    
-    // Validate packages with array context
-    for i, pkg := range serverJSON.Packages {
-        pkgCtx := &ValidationContext{}.Field("packages").Index(i)
-        if pkgResult := validatePackageField(pkgCtx, &pkg); !pkgResult.Valid {
-            result.Merge(pkgResult)
+
+    // Semantic validation (if requested)
+    if opts.ValidateSemantic {
+        // Validate server name - using existing error logic
+        if _, err := parseServerName(*serverJSON); err != nil {
+            issue := NewValidationIssueFromError(
+                ValidationIssueTypeSemantic,
+                "name",
+                err,
+                "invalid-server-name",
+            )
+            result.AddIssue(issue)
         }
-    }
-    
-    // Validate remotes with array context
-    for i, remote := range serverJSON.Remotes {
-        remoteCtx := &ValidationContext{}.Field("remotes").Index(i)
-        if remoteResult := validateRemoteTransport(remoteCtx, &remote); !remoteResult.Valid {
-            result.Merge(remoteResult)
+        
+        // Validate repository with context
+        if repoResult := validateRepository(&ValidationContext{}, &serverJSON.Repository); !repoResult.Valid {
+            result.Merge(repoResult)
         }
+        
+        // ... more semantic validation ...
     }
     
     return result
 }
 ```
 
-#### **Existing Validator Becomes Simple Wrapper**
+For backward compatibility with code that expects an error return type, `ValidationResult.FirstError()` can be used:
 
 ```go
-func ValidateServerJSON(serverJSON *apiv0.ServerJSON) error {
-    result := ValidateServerJSONExhaustive(serverJSON)
-    if !result.Valid {
-        // Return the first error-level issue
-        for _, issue := range result.Issues {
-            if issue.Severity == "error" {
-                return fmt.Errorf("%s: %s", issue.Path, issue.Message)
-            }
-        }
-    }
-    return nil
+result := ValidateServerJSON(serverJSON, ValidationSchemaVersionAndSemantic)
+if err := result.FirstError(); err != nil {
+    return err
 }
 ```
 
@@ -272,7 +280,9 @@ This creates redundancy and potential inconsistencies where:
 - **Portable**: Binary contains everything needed for validation
 
 #### **Version Consistency**
-- **Schema version tracking**: `GetCurrentSchemaVersion()` extracts the `$id` field from embedded schema
+- **Schema version tracking**: `model.CurrentSchemaURL` provides compile-time constant for current schema version
+- **Version validation**: Schema version validation consolidated in `schema.go` with policy support (Allow/Warn/Error)
+- **Empty schema handling**: Empty/missing schema fields always generate errors during validation
 - **Compile-time validation**: Schema is validated when the binary is built
 - **No version drift**: Schema version is locked to the binary version
 
@@ -284,10 +294,12 @@ This creates redundancy and potential inconsistencies where:
 ### Rich Error Information
 
 The `jsonschema.ValidationError` provides:
-- **InstanceLocation**: JSON path to the invalid field (e.g., `"/packages/0/transport/url"`)
+- **InstanceLocation**: JSON Pointer format (RFC 6901) path to the invalid field (e.g., `"/packages/0/transport/url"`)
 - **Error**: Detailed error message from schema
 - **KeywordLocation**: Schema path with $ref segments (e.g., `"/$ref/properties/transport/$ref/properties/url/format"`)
 - **AbsoluteKeywordLocation**: Resolved schema path (e.g., `"file:///server.schema.json#/definitions/SseTransport/properties/url/format"`)
+
+**Path Format Conversion**: JSON Pointer format paths from `InstanceLocation` are converted to bracket notation format to match semantic validation paths. The conversion transforms JSON Pointer paths like `"/packages/0/transport/url"` into bracket notation like `"packages[0].transport.url"`. This ensures consistent path formatting across all validation types (schema, semantic, and linter).
 
 #### **Current Error Reference Format**
 
@@ -318,109 +330,207 @@ If we encounter situations where schema validation errors need to be more user-f
 
 - **`KeywordLocation`**: The schema path to the validating rule
 - **`AbsoluteKeywordLocation`**: The absolute schema location after `$ref` resolution
-- **`InstanceLocation`**: The JSON path of the element that triggered the violation
+- **`InstanceLocation`**: The JSON Pointer format path (e.g., `"/packages/0/transport/url"`) which is converted to bracket notation (e.g., `"packages[0].transport.url"`) for consistency with semantic validation
 - **`Message`**: The original schema validation error message
 - **Complete reference stack**: The entire resolved path showing how the error was reached
 
 This allows us to build better, more descriptive error messages if needed, while maintaining the current high-quality error references.
 
-### Integration with ValidateServerJSONExhaustive
+### Integration with ValidateServerJSON
 
 ```go
-func ValidateServerJSONExhaustive(serverJSON *apiv0.ServerJSON, validateSchema bool) *ValidationResult {
+// ValidationOptions configures which types of validation to perform
+type ValidationOptions struct {
+    ValidateSchemaVersion  bool                 // Check schema version (empty, non-current)
+    ValidateSchema         bool                 // Perform full schema validation (implies ValidateSchemaVersion)
+    ValidateSemantic       bool                 // Perform semantic validation
+    NonCurrentSchemaPolicy SchemaVersionPolicy  // Policy for non-current schemas
+}
+
+// Common validation configurations
+var (
+    ValidationSemanticOnly = ValidationOptions{
+        ValidateSemantic: true,
+    }
+    
+    ValidationSchemaVersionOnly = ValidationOptions{
+        ValidateSchemaVersion: true,
+        NonCurrentSchemaPolicy: SchemaVersionPolicyError,
+    }
+    
+    ValidationSchemaVersionAndSemantic = ValidationOptions{
+        ValidateSchemaVersion: true,
+        ValidateSemantic: true,
+        NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
+    }
+    
+    ValidationAll = ValidationOptions{
+        ValidateSchema: true,  // Implies ValidateSchemaVersion
+        ValidateSemantic: true,
+        NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
+    }
+)
+
+func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *ValidationResult {
     result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
     ctx := &ValidationContext{}
 
-    // Schema validation first (if requested) - catches structural issues early
-    if validateSchema {
-        schemaResult := validateServerJSONSchema(serverJSON)
+    // Schema validation (version check and/or full validation)
+    if opts.ValidateSchemaVersion || opts.ValidateSchema {
+        schemaResult := validateServerJSONSchema(serverJSON, opts.ValidateSchema, opts.NonCurrentSchemaPolicy)
         result.Merge(schemaResult)
-        // If schema validation fails, we might still want to run semantic validation
-        // to provide additional context, but schema errors take precedence
     }
 
-    // Semantic validation (always runs) - business logic not covered by schema
-    if _, err := parseServerName(*serverJSON); err != nil {
-        issue := NewValidationIssueFromError(
-            ValidationIssueTypeSemantic,
-            ctx.Field("name").String(),
-            err,
-            "invalid-server-name",
-        )
-        result.AddIssue(issue)
+    // Semantic validation (only if requested)
+    if !opts.ValidateSemantic {
+        return result
     }
-    
-    // ... more semantic validation ...
+
+    // ... semantic validation logic ...
     
     return result
 }
 ```
 
-### Transport Validation Improvements
+### Schema Version Validation
 
-Currently the transport validation fails in a pretty ugly way (if no transport is fully satisfied, you get validation errors for all transports). The current schema is:
+Schema version validation is consolidated in `validateServerJSONSchema()` (now private) in `schema.go`:
 
-        "transport": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/StdioTransport"
-            },
-            {
-              "$ref": "#/definitions/StreamableHttpTransport"
-            },
-            {
-              "$ref": "#/definitions/SseTransport"
-            }
-          ],
-          "description": "Transport protocol configuration for the package"
-        },
+- **Empty schema check**: Always performed when schema validation is requested, always generates an error
+- **Schema file existence check**: Always performed when schema validation is requested - verifies the schema file exists in embedded schemas, even when not performing full validation
+- **Schema version policy**: Controls how non-current schemas are handled (via `ValidationOptions.NonCurrentSchemaPolicy`):
+  - `SchemaVersionPolicyAllow`: Non-current schemas are allowed with no warning
+  - `SchemaVersionPolicyWarn`: Non-current schemas are allowed but generate a warning
+  - `SchemaVersionPolicyError`: Non-current schemas are rejected with an error
+- **Full schema validation**: Only performed if `performValidation` is `true`
 
-And if you have an "sse" transport with no url, you get these schema errors:
+The `mcp-publisher publish` command validates schema version (rejects empty, non-existent, and non-current schemas) but does not perform full schema validation. The `mcp-publisher validate` command performs full schema validation with `SchemaVersionPolicyWarn` (warns about non-current schemas but doesn't error).
 
-1. [error] packages.0.transport.type (schema)
+### Request Validation Functions
+
+Two consolidated validation functions in `validators` package handle publish and update requests:
+
+- **`ValidatePublishRequest()`**: Validates publisher extensions, server JSON structure (via `ValidateServerJSON`), and registry ownership (if enabled)
+- **`ValidateUpdateRequest()`**: Validates server JSON structure (via `ValidateServerJSON`) and registry ownership (if enabled), with option to skip registry validation for deleted servers
+
+Both functions use `ValidateServerJSON()` with `ValidationSchemaVersionAndSemantic` and `FirstError()` for backward-compatible error handling. Registry ownership validation is extracted into a shared `validateRegistryOwnership()` helper function.
+
+### Testing with Draft or Custom Schemas
+
+The validation system supports testing against draft schemas or custom schema versions by embedding them in the validators package.
+
+#### Setup Steps
+
+1. **Copy the schema file**: Copy your schema file (e.g., `docs/reference/server-json/server.schema.json`) to `internal/validators/schemas/{version}.json`
+   - Example: Copy to `internal/validators/schemas/draft.json` for draft schema testing
+   - Ensure the schema file's `$id` field matches: `https://static.modelcontextprotocol.io/schemas/{version}/server.schema.json`
+   - For draft schema, the `$id` should be: `https://static.modelcontextprotocol.io/schemas/draft/server.schema.json`
+
+2. **Rebuild**: Recompile the Go binary to embed the new schema file (schemas are embedded at compile time)
+
+3. **Use in server.json**: Reference the schema version in your `server.json` file:
+   ```json
+   {
+     "$schema": "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json",
+     ...
+   }
+   ```
+
+#### Schema Version Identifier Rules
+
+Schema version identifiers can contain:
+- **Letters**: A-Z, a-z
+- **Digits**: 0-9
+- **Special characters**: Hyphen (-), underscore (_), tilde (~), period (.)
+
+Examples of valid identifiers: `2025-10-17`, `draft`, `test-v1.0`, `custom_schema~1.2.3`
+
+#### Non-Current Schema Policy
+
+When testing with draft or custom schemas, they will be treated as **non-current** schemas (since they don't match `model.CurrentSchemaURL`), which triggers the `NonCurrentSchemaPolicy` behavior:
+
+- **`SchemaVersionPolicyAllow`**: Draft schemas are allowed with no warning
+- **`SchemaVersionPolicyWarn`**: Draft schemas are allowed but generate a warning (default for `ValidationAll` and `ValidationSchemaVersionAndSemantic`)
+- **`SchemaVersionPolicyError`**: Draft schemas are rejected with an error (default for `ValidationSchemaVersionOnly`)
+
+#### Treating Draft as Current Schema
+
+To test with a draft schema as if it were the current schema (no warnings/errors about non-current version):
+
+1. Temporarily update `model.CurrentSchemaVersion` in `pkg/model/constants.go`:
+   ```go
+   const (
+       CurrentSchemaVersion = "draft"  // Temporarily set for testing
+       CurrentSchemaURL = "https://static.modelcontextprotocol.io/schemas/" + CurrentSchemaVersion + "/server.schema.json"
+   )
+   ```
+
+2. Rebuild and test
+
+3. **Important**: Revert the change before committing - `model.CurrentSchemaVersion` should always point to the latest official schema version
+
+#### Example: Testing with Draft Schema
+
+```bash
+# 1. Copy draft schema
+cp docs/reference/server-json/server.schema.json internal/validators/schemas/draft.json
+
+# 2. Verify the $id field in draft.json is correct
+# Should be: "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json"
+
+# 3. Rebuild
+go build ./...
+
+# 4. Use in server.json
+# Set "$schema": "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json"
+
+# 5. Validate
+mcp-publisher validate server.json
+```
+
+**Note**: The draft schema will be validated successfully, but you may see a warning about it not being the current schema version unless you temporarily update `model.CurrentSchemaVersion` as described above.
+
+### Discriminated Union Error Consolidation
+
+The schema uses `anyOf` for discriminated unions (transport, argument, remote), which causes noisy error messages when validation fails. When a transport/argument/remote doesn't match its specified type, `anyOf` validation tries all variants and reports errors for each one that doesn't match.
+
+**Problem Example**: If you have an "sse" transport with no url, you get errors for all transport types:
+
+1. [error] packages[0].transport.type (schema)
    value must be "stdio"
    Reference: #/definitions/StdioTransport/properties/type/enum
 
-2. [error] packages.0.transport (schema)
+2. [error] packages[0].transport (schema)
    missing required fields: 'url'
    Reference: #/definitions/StreamableHttpTransport/required
 
-3. [error] packages.0.transport.type (schema)
+3. [error] packages[0].transport.type (schema)
    value must be "streamable-http"
    Reference: #/definitions/StreamableHttpTransport/properties/type/enum
 
-4. [error] packages.0.transport (schema)
-   missing required fields: 'url'
-   Reference: #/definitions/SseTransport/require
-
-If we used a spec to select the discriminated type, like this:
-
-        "transport": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": ["stdio", "streamable-http", "sse"]
-            }
-          },
-          "required": ["type"],
-          "if": {"properties": {"type": {"const": "stdio"}}},
-          "then": {"$ref": "#/definitions/StdioTransport"},
-          "else": {
-            "if": {"properties": {"type": {"const": "streamable-http"}}},
-            "then": {"$ref": "#/definitions/StreamableHttpTransport"},
-            "else": {"$ref": "#/definitions/SseTransport"}
-          },
-          "description": "Transport protocol configuration for the package"
-        }
-
-Then it would fix on the "see" transport reference (by type) and validate against it only, producing only the single (correct) schema violation:
-
-1. [error] packages.0.transport (schema)
+4. [error] packages[0].transport (schema)
    missing required fields: 'url'
    Reference: #/definitions/SseTransport/required
 
-Same applies to Argument and remotes
+**Solution Strategy**: Since we cannot modify the schema (it's managed in the static repository), we'll detect and consolidate these `anyOf` error patterns in the validation error processing code (`addDetailedErrors` in `schema.go`). 
+
+**Detection Strategy**:
+- Identify groups of errors at the same JSON path (e.g., `packages[0].transport`)
+- Detect pattern of multiple "type must be X" errors or multiple "missing required fields" errors from different schema definitions
+- Extract the actual `type` value from the JSON being validated
+- Filter out errors from non-matching transport/argument/remote definitions
+- Consolidate remaining errors into a single, actionable error message
+
+**Implementation Approach**:
+- Add logic in `addDetailedErrors()` or a post-processing function to detect `anyOf` error clusters
+- Group errors by instance location and analyze error patterns
+- Identify the intended type from the JSON data
+- Filter/consolidate errors to only show relevant issues for the actual type specified
+- Preserve all other validation errors unchanged
+
+This approach allows us to provide clearer error messages without modifying the schema, and can be applied to transport, argument, and remote validation.
+
+**Future Enhancement**: If the schema is updated to use `if/then/else` discriminated unions in the future, this consolidation logic can be removed, but it provides immediate value without requiring schema changes.
 
 ## Implementation Status
 
@@ -438,6 +548,7 @@ Same applies to Argument and remotes
 - [x] **$ref resolution**: Sophisticated resolution showing complete schema path with resolved references
 - [x] **Comprehensive testing**: Full test coverage for schema validation scenarios
 - [x] **Embedded schema**: Schema embedded at compile time using `//go:embed` directive
+- [x] **Path format normalization**: JSON Pointer paths converted to bracket notation to match semantic validation format (e.g., `/packages/0/transport` → `packages[0].transport`)
 
 #### **Enhanced Error References**
 - [x] **Resolved schema paths**: Shows complete path with `$ref` segments replaced by resolved values
@@ -450,12 +561,25 @@ Same applies to Argument and remotes
 - [x] **Integration tests**: End-to-end validation testing
 - [x] **Backward compatibility**: Existing validation continues to work
 
+#### **Caller Migration**
+- [x] **Function rename**: `ValidateServerJSONExhaustive` renamed to `ValidateServerJSON` (now takes `ValidationOptions` parameter)
+- [x] **Legacy wrapper removed**: Old `ValidateServerJSON()` wrapper that returned `error` removed
+- [x] **All callers migrated**: All production code and tests now use `ValidateServerJSON()` with `ValidationOptions` directly
+- [x] **FirstError() helper**: `ValidationResult.FirstError()` method added for backward compatibility with error return types
+- [x] **Request validators consolidated**: `ValidatePublishRequest` and `ValidateUpdateRequest` moved to validators package with shared `validateRegistryOwnership` helper
+
 ### 🔄 In Progress
 
 #### **Schema-First Validation Strategy**
-- [x] **Schema validation integration**: `ValidateServerJSONExhaustive()` runs schema validation first
+- [x] **Schema validation integration**: `ValidateServerJSON()` runs schema validation first
 - [x] **CLI integration**: Schema validation enabled in `mcp-publisher validate` command
-- [ ] **Discriminated unions**: Replace `anyOf` with `if/then/else` for transport, argument, and remote validation
+- [x] **Schema version validation**: Consolidated in `schema.go` with policy support (Allow/Warn/Error)
+- [x] **Schema file existence check**: Schema version validation verifies schema file exists in embedded schemas
+- [x] **Publish command schema checks**: `mcp-publisher publish` validates schema version (rejects empty, non-existent, and non-current schemas)
+- [x] **API endpoint validation**: `/v0/publish` uses `ValidatePublishRequest` which validates schema version and semantic validation
+- [ ] **Full schema validation in publish**: Enable full schema validation in `mcp-publisher publish` command
+- [ ] **Full schema validation in API**: Enable full schema validation in `/v0/publish` API endpoint
+- [ ] **Discriminated union error consolidation**: Detect and filter/consolidate noisy `anyOf` errors for transport, argument, and remote validation to show only relevant errors for the actual type
 - [ ] **Error message mapping**: Map technical schema errors to user-friendly messages (if needed)
 - [ ] **Validator migration**: Move from manual validators to schema-first approach
 
@@ -464,14 +588,23 @@ Same applies to Argument and remotes
 #### **Migration Strategy**
 - [ ] **Phase 1: Identify Schema Coverage**: Audit existing manual validators against schema constraints
 - [ ] **Phase 2: Implement Error Mapping (Optional)**: Create mapping function for schema error messages (only if current messages are insufficient)
-- [ ] **Phase 3: Enable Schema-First Validation**: Update tests to expect schema validation errors instead of semantic errors; Enable schema validation in publish API
-- [ ] **Phase 4: Clean Up Redundant Validators**: Remove manual validators that duplicate schema constraints
-- [ ] **Phase 5: Add Enhanced Semantic and Linter Rules**: Review and implement specific rules from [MCP Registry Validator linter guidelines](https://github.com/TeamSparkAI/ToolCatalog/blob/main/packages/mcp-registry-validator/linter.md)
+- [ ] **Phase 3: Error Consolidation**: Implement logic to detect and consolidate noisy `anyOf` errors from discriminated unions (transport, argument, remote)
+- [ ] **Phase 4: Enable Schema-First Validation**: Update tests to expect schema validation errors instead of semantic errors; Enable schema validation in publish API
+- [ ] **Phase 5: Clean Up Redundant Validators**: Remove manual validators that duplicate schema constraints
+- [ ] **Phase 6: Add Enhanced Semantic and Linter Rules**: Review and implement specific rules from [MCP Registry Validator linter guidelines](https://github.com/TeamSparkAI/ToolCatalog/blob/main/packages/mcp-registry-validator/linter.md)
 
 #### **Command Integration**
-- [ ] **CLI updates**: Update `mcp-publisher validate` command to use detailed validation
+- [x] **CLI updates**: `mcp-publisher validate` command uses detailed validation with full schema validation
+- [x] **Publish command**: `mcp-publisher publish` validates schema version (rejects empty, non-existent, and non-current schemas)
+- [x] **Shared validation logic**: Both commands use `runValidationAndPrintIssues` to eliminate duplication
+- [x] **Caller migration**: All callers migrated to use `ValidateServerJSON()` with `ValidationOptions` directly
+- [x] **Request validation consolidation**: `ValidatePublishRequest` and `ValidateUpdateRequest` consolidated in validators package
+- [ ] **Enhanced error reporting**: Update production code (importer, validate-examples tool) to log all issues instead of just first error
 - [ ] **Output formatting**: Add JSON output format options
 - [ ] **Filtering options**: Add severity and type filtering
+
+#### **Validate API Endpoint**
+- [ ] **POST /v0/validate endpoint**: API endpoint for validating server.json without publishing
 
 #### **Documentation and Polish**
 - [ ] **API documentation**: Update API documentation with new validation types
@@ -566,7 +699,7 @@ mcp-publisher validate --schema server.json
 - **Detailed error messages**: Exact JSON paths and resolved schema references
 
 ### ✅ Backward Compatibility
-- **Existing `ValidateServerJSON() error` signature unchanged**: All existing code continues to work
+- **Backward compatibility**: Use `ValidationResult.FirstError()` for code expecting error return type
 - **Error interface compatibility**: Leverages Go's error interface and existing error constants
 - **Constructor pattern**: Follows established project conventions
 - **No breaking changes**: All error handling code remains functional
@@ -646,7 +779,133 @@ Following Go best practices used throughout the project:
 - **WASM package**: Browser-based validation
 - **VS Code extension**: Real-time validation
 - **CI/CD integration**: Automated validation in pipelines
-- **API endpoint**: Validation as a service
+- **API endpoint**: Validation as a service (see Validate API Endpoint section below)
+
+## Validate API Endpoint
+
+### Overview
+
+A REST API endpoint (`POST /v0/validate`) that validates `server.json` files without publishing them to the registry. This endpoint provides programmatic access to the same validation logic used by the CLI commands, returning structured validation results in JSON format.
+
+### Use Cases
+
+- **CI/CD Pipelines**: Validate server.json files before attempting to publish
+- **Editor/IDE Integrations**: Real-time validation feedback in development tools
+- **Web UIs**: Validate files in browser-based interfaces
+- **Pre-publish Checks**: Validate before authentication/publishing workflow
+- **Validation as a Service**: Allow external tools to validate server.json format
+
+### Implementation
+
+#### Endpoint Specification
+
+**Endpoint**: `POST /v0/validate`  
+**Authentication**: None required (read-only operation)  
+**Content-Type**: `application/json`
+
+#### Request
+
+Request body should be a valid `ServerJSON` object:
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.example/server",
+  "version": "1.0.0",
+  ...
+}
+```
+
+#### Response
+
+Returns a `ValidationResult` in JSON format:
+
+```json
+{
+  "valid": false,
+  "issues": [
+    {
+      "type": "schema",
+      "path": "packages[0].transport.url",
+      "message": "missing required field: 'url'",
+      "severity": "error",
+      "reference": "#/definitions/SseTransport/required"
+    },
+    {
+      "type": "semantic",
+      "path": "name",
+      "message": "server name must be in format 'dns-namespace/name'",
+      "severity": "error",
+      "reference": "invalid-server-name"
+    }
+  ]
+}
+```
+
+**HTTP Status Codes**:
+- `200 OK`: Validation completed successfully (regardless of whether valid or invalid)
+- `400 Bad Request`: Malformed JSON or invalid request format
+
+Note: A `200 OK` status does not mean the server.json is valid - check the `valid` field in the response body.
+
+#### Implementation Details
+
+**Location**: `internal/api/handlers/v0/validate.go`
+
+**Handler Function**:
+- Accepts `ServerJSON` in request body
+- Calls `validators.ValidateServerJSON(serverJSON, validators.ValidationAll)`
+- Returns `ValidationResult` as JSON response
+- Uses Huma framework (same as publish endpoint) for request/response handling
+
+**Key Differences from Publish Endpoint**:
+- No authentication required (read-only)
+- Does not save to database
+- Returns structured validation results instead of published server response
+- Returns warnings, not just errors (useful for comprehensive feedback)
+
+**Reuses Existing Infrastructure**:
+- Same validation functions as CLI commands
+- Same `ValidationResult` type
+- Same issue types and severity levels
+- Consistent validation behavior across CLI and API
+
+### Testing Strategy
+
+#### Unit Tests
+
+Test handler function with mocked dependencies:
+- Valid server.json → `valid: true, issues: []`
+- Invalid server.json → `valid: false` with specific issues
+- Schema errors → issues with `type: "schema"`
+- Semantic errors → issues with `type: "semantic"`
+- Empty schema → `schema-field-required` issue
+- Non-current schema → `schema-version-deprecated` issue
+- Multiple issues → all issues returned in response
+- Malformed JSON → proper error handling
+
+#### Integration Tests
+
+Follow patterns from `publish_integration_test.go`:
+- Start test server
+- Send HTTP POST requests with various `server.json` payloads
+- Assert response JSON matches expected `ValidationResult` structure
+- Verify HTTP status codes (200 for valid requests, 400 for malformed)
+- Test both valid and invalid inputs
+- Reuse test fixtures from `validation_detailed_test.go`
+
+#### Test Infrastructure
+
+- Reuse existing test server setup
+- Use same patterns as `test_endpoints.sh` for manual testing
+- Leverage existing validation test cases
+
+### Future Enhancements
+
+- **Query Parameters**: Optional parameters to filter by issue type or severity
+- **Partial Validation**: Validate specific sections (e.g., only schema, only semantic)
+- **Format Options**: Request different output formats (detailed vs. summary)
+- **Batch Validation**: Validate multiple server.json files in one request
 
 
 
