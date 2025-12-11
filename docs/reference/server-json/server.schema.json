@@ -404,7 +404,7 @@
       "properties": {
         "$schema": {
           "description": "JSON Schema URI for this server.json format",
-          "example": "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json",
+          "example": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
           "format": "uri",
           "type": "string"
         },

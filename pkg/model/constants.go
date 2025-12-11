@@ -36,7 +36,7 @@ const (
 // Schema versions
 const (
 	// CurrentSchemaVersion is the current supported schema version date
-	CurrentSchemaVersion = "2025-10-17"
+	CurrentSchemaVersion = "2025-12-11"
 	// CurrentSchemaURL is the full URL to the current schema
 	CurrentSchemaURL = "https://static.modelcontextprotocol.io/schemas/" + CurrentSchemaVersion + "/server.schema.json"
 )

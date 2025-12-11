@@ -32,7 +32,7 @@ type ServerMeta struct {
 }
 
 type ServerJSON struct {
-	Schema      string            `json:"$schema" required:"true" minLength:"1" format:"uri" doc:"JSON Schema URI for this server.json format" example:"https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json"`
+	Schema      string            `json:"$schema" required:"true" minLength:"1" format:"uri" doc:"JSON Schema URI for this server.json format" example:"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json"`
 	Name        string            `json:"name" minLength:"3" maxLength:"200" pattern:"^[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+$" doc:"Server name in reverse-DNS format. Must contain exactly one forward slash separating namespace from server name." example:"io.github.user/weather"`
 	Description string            `json:"description" minLength:"1" maxLength:"100" doc:"Clear human-readable explanation of server functionality." example:"MCP server providing weather data and forecasts via OpenWeatherMap API"`
 	Title       string            `json:"title,omitempty" minLength:"1" maxLength:"100" doc:"Optional human-readable title or display name for the MCP server." example:"Weather API"`
