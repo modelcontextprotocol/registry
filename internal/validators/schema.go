@@ -254,7 +254,7 @@ func addValidationError(result *ValidationResult, validationErr *jsonschema.Vali
 	addDetailedErrors(result, detailed, schema)
 }
 
-// convertJSONPointerToBracketNotation converts a JSON Pointer path (RFC 6901) to bracket notation
+// ConvertJSONPointerToBracketNotation converts a JSON Pointer path (RFC 6901) to bracket notation
 // format to match the format used by semantic validation (ValidationContext).
 // The transformation includes:
 // 1. Remove leading slash from JSON Pointer format
@@ -263,7 +263,7 @@ func addValidationError(result *ValidationResult, validationErr *jsonschema.Vali
 // Example: "/packages/0/transport" -> "packages[0].transport"
 // Example: "/0/name" -> "[0].name"
 // Example: "/packages/0/transport/1/url" -> "packages[0].transport[1].url"
-func convertJSONPointerToBracketNotation(jsonPointer string) string {
+func ConvertJSONPointerToBracketNotation(jsonPointer string) string {
 	if jsonPointer == "" {
 		return ""
 	}
@@ -317,7 +317,7 @@ func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed, s
 	// Only process errors that have specific field paths and meaningful messages
 	if detailed.InstanceLocation != "" && detailed.Error != "" {
 		// Convert JSON Pointer format to bracket notation to match semantic validation format
-		path := convertJSONPointerToBracketNotation(detailed.InstanceLocation)
+		path := ConvertJSONPointerToBracketNotation(detailed.InstanceLocation)
 
 		// Clean up the error message
 		message := detailed.Error

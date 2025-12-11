@@ -100,7 +100,7 @@ func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error)
 
 	for _, response := range serverResponses {
 		// ValidateServerJSON returns all validation results; using FirstError() to preserve existing behavior
-		// TODO: In future, consider logging all issues from result.Issues for better diagnostics
+		// In future, consider logging all issues from result.Issues for better diagnostics
 		result := validators.ValidateServerJSON(&response, validators.ValidationSchemaVersionAndSemantic)
 		if err := result.FirstError(); err != nil {
 			// Log warning and track invalid server instead of failing

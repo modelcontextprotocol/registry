@@ -1,8 +1,9 @@
-package validators
+package validators_test
 
 import (
 	"testing"
 
+	"github.com/modelcontextprotocol/registry/internal/validators"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -113,7 +114,7 @@ func TestConvertJSONPointerToBracketNotation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := convertJSONPointerToBracketNotation(tt.jsonPointer)
+			result := validators.ConvertJSONPointerToBracketNotation(tt.jsonPointer)
 			assert.Equal(t, tt.expectedOutput, result, "%s: JSON Pointer format should convert to bracket notation", tt.description)
 		})
 	}

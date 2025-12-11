@@ -41,7 +41,7 @@ func PublishCommand(args []string) error {
 	// Validate schema version (non-empty schema, valid schema, and current schema)
 	// This performs schema version checks without full schema validation
 	// Note: When we enable full validation, use validators.ValidationAll instead
-	result, _ := runValidationAndPrintIssues(&serverJSON, validators.ValidationSchemaVersionOnly)
+	result := runValidationAndPrintIssues(&serverJSON, validators.ValidationSchemaVersionOnly)
 	if !result.Valid {
 		// Return error after printing (all errors already printed by validateServerJSON)
 		return fmt.Errorf("validation failed")

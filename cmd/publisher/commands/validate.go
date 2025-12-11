@@ -64,15 +64,14 @@ func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON
 
 // runValidationAndPrintIssues validates the server JSON, prints schema validation errors, and prints all issues.
 // Validation failures are always printed (for both validate and publish commands).
-// Returns the validation result and whether schema errors were printed.
-func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.ValidationOptions) (*validators.ValidationResult, bool) {
+func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.ValidationOptions) *validators.ValidationResult {
 	result := validators.ValidateServerJSON(serverJSON, opts)
 
 	// Print schema validation errors/warnings with friendly messages
-	schemaPrinted := printSchemaValidationErrors(result, serverJSON)
+	printSchemaValidationErrors(result, serverJSON)
 
 	if result.Valid {
-		return result, schemaPrinted
+		return result
 	}
 
 	// Print all issues
@@ -83,8 +82,8 @@ func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.V
 	issueNum := 1
 
 	for _, issue := range result.Issues {
-		// Skip schema issues that were already printed
-		if (issue.Reference == "schema-field-required" || issue.Reference == "schema-version-deprecated") && schemaPrinted {
+		// Skip schema issues that were already printed (they're printed by printSchemaValidationErrors above)
+		if issue.Reference == "schema-field-required" || issue.Reference == "schema-version-deprecated" {
 			continue
 		}
 
@@ -98,7 +97,7 @@ func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.V
 		issueNum++
 	}
 
-	return result, schemaPrinted
+	return result
 }
 
 func ValidateCommand(args []string) error {
@@ -141,7 +140,7 @@ func ValidateCommand(args []string) error {
 	// Run detailed validation (this is the whole point of the validate command)
 	// Include schema validation for comprehensive validation
 	// Warn about non-current schemas (don't error, just inform)
-	result, _ := runValidationAndPrintIssues(&serverJSON, validators.ValidationAll)
+	result := runValidationAndPrintIssues(&serverJSON, validators.ValidationAll)
 
 	if result.Valid {
 		_, _ = fmt.Fprintln(os.Stdout, "✅ server.json is valid")

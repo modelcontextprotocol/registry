@@ -10,6 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const schemaPath = "schema"
+
 func TestValidateServerJSON_CollectsAllErrors(t *testing.T) {
 	// Create a server JSON with multiple validation errors
 	serverJSON := &apiv0.ServerJSON{
@@ -279,7 +281,7 @@ func TestValidateServerJSON_EmptySchema(t *testing.T) {
 	// Should have an error issue for missing schema
 	hasSchemaError := false
 	for _, issue := range result.Issues {
-		if issue.Path == "schema" && issue.Severity == validators.ValidationIssueSeverityError {
+		if issue.Path == schemaPath && issue.Severity == validators.ValidationIssueSeverityError {
 			if strings.Contains(issue.Message, "$schema field is required") {
 				hasSchemaError = true
 			}
@@ -309,7 +311,7 @@ func TestValidateServerJSON_NonCurrentSchema_Warning(t *testing.T) {
 	// Should have a warning issue for non-current schema
 	hasSchemaWarning := false
 	for _, issue := range result.Issues {
-		if issue.Path == "schema" && issue.Severity == validators.ValidationIssueSeverityWarning {
+		if issue.Path == schemaPath && issue.Severity == validators.ValidationIssueSeverityWarning {
 			if strings.Contains(issue.Message, "not the current version") || strings.Contains(issue.Message, "Consider updating") {
 				hasSchemaWarning = true
 			}
@@ -339,7 +341,7 @@ func TestValidateServerJSON_InvalidSchema_Error(t *testing.T) {
 	// Should have an error issue for schema not available
 	hasSchemaError := false
 	for _, issue := range result.Issues {
-		if issue.Path == "schema" && issue.Severity == validators.ValidationIssueSeverityError {
+		if issue.Path == schemaPath && issue.Severity == validators.ValidationIssueSeverityError {
 			if strings.Contains(issue.Message, "not available") || strings.Contains(issue.Message, "not found") {
 				hasSchemaError = true
 			}
@@ -412,7 +414,7 @@ func TestValidateServerJSON_NonCurrentSchema_Policies(t *testing.T) {
 			schemaErrors := 0
 
 			for _, issue := range result.Issues {
-				if issue.Path == "schema" {
+				if issue.Path == schemaPath {
 					if issue.Severity == validators.ValidationIssueSeverityWarning {
 						hasWarning = true
 						schemaWarnings++
@@ -435,7 +437,7 @@ func TestValidateServerJSON_NonCurrentSchema_Policies(t *testing.T) {
 			// Count schema-related issues (excluding other validation issues)
 			schemaIssueCount := 0
 			for _, issue := range result.Issues {
-				if issue.Path == "schema" && (strings.Contains(issue.Message, "not the current version") || strings.Contains(issue.Message, "current version")) {
+				if issue.Path == schemaPath && (strings.Contains(issue.Message, "not the current version") || strings.Contains(issue.Message, "current version")) {
 					schemaIssueCount++
 				}
 			}
