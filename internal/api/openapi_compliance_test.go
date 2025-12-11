@@ -50,8 +50,9 @@ func TestOpenAPIEndpointCompliance(t *testing.T) {
 		BuildTime: "test",
 	}
 
-	// Register V0 routes exactly like production does
-	router.RegisterV0Routes(api, cfg, nil, nil, versionInfo) // nil service and metrics for schema testing
+	// Register V0 and V0.1 routes exactly like production does
+	router.RegisterV0Routes(api, cfg, nil, nil, versionInfo)   // nil service and metrics for schema testing
+	router.RegisterV0_1Routes(api, cfg, nil, nil, versionInfo) // Register v0.1 routes for compliance
 
 	// Get the OpenAPI schema
 	req := httptest.NewRequest(http.MethodGet, "/openapi.yaml", nil)
