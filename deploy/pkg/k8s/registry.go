@@ -246,6 +246,10 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			Annotations: pulumi.StringMap{
 				"cert-manager.io/cluster-issuer": pulumi.String("letsencrypt-prod"),
 				"kubernetes.io/ingress.class":    pulumi.String("nginx"),
+			// Rate limiting to protect against abuse
+			// Allows 1 request/second sustained, with bursts up to 5 req/sec
+			"nginx.ingress.kubernetes.io/limit-rps":              pulumi.String("1"),
+			"nginx.ingress.kubernetes.io/limit-burst-multiplier": pulumi.String("5"),
 			},
 		},
 		Spec: &networkingv1.IngressSpecArgs{
