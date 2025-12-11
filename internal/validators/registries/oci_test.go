@@ -13,56 +13,60 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		identifier  string
-		expectError bool
-		errorMsg    string
+		name              string
+		identifier        string
+		expectError       bool
+		errorMsg          string
+		mustNotContainMsg string // Error message that must NOT appear (for allowed registries)
 	}{
 		// Allowed registries - use real public images that exist
-		// These should fail with "missing required annotation" (no MCP label)
+		// These should fail with annotation-related errors (missing or mismatched)
 		// NOT with "unsupported registry", "does not exist", or "is private" errors
 		{
-			name:        "Docker Hub should be allowed",
-			identifier:  "docker.io/library/alpine:latest",
-			expectError: true,
-			errorMsg:    "missing required annotation",
+			name:              "Docker Hub should be allowed",
+			identifier:        "docker.io/library/alpine:latest",
+			expectError:       true,
+			errorMsg:          "missing required annotation",
+			mustNotContainMsg: "unsupported OCI registry",
 		},
 		{
-			name:        "Docker Hub without explicit registry should default and be allowed",
-			identifier:  "library/hello-world:latest",
-			expectError: true,
-			errorMsg:    "missing required annotation",
+			name:              "Docker Hub without explicit registry should default and be allowed",
+			identifier:        "library/hello-world:latest",
+			expectError:       true,
+			errorMsg:          "missing required annotation",
+			mustNotContainMsg: "unsupported OCI registry",
 		},
 		{
-			name:        "GHCR should be allowed",
-			identifier:  "ghcr.io/containerbase/base:latest",
-			expectError: true,
-			errorMsg:    "missing required annotation",
+			name:              "GHCR should be allowed",
+			identifier:        "ghcr.io/containerbase/base:latest",
+			expectError:       true,
+			errorMsg:          "missing required annotation",
+			mustNotContainMsg: "unsupported OCI registry",
 		},
 		{
 			name:        "Artifact Registry regional should be allowed",
 			identifier:  "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
 			expectError: true,
-			errorMsg:    "missing required annotation",
+			// This image has an MCP annotation but with a different server name,
+			// so we get "ownership validation failed" instead of "missing required annotation"
+			// Both are acceptable - what matters is the registry is allowed
+			mustNotContainMsg: "unsupported OCI registry",
 		},
 		{
-			name:        "Artifact Registry multi-region should be allowed",
-			identifier:  "us-docker.pkg.dev/berglas/berglas/berglas:latest",
-			expectError: true,
-			errorMsg:    "missing required annotation",
+			name:              "Artifact Registry multi-region should be allowed",
+			identifier:        "us-docker.pkg.dev/berglas/berglas/berglas:latest",
+			expectError:       true,
+			errorMsg:          "missing required annotation",
+			mustNotContainMsg: "unsupported OCI registry",
 		},
 		{
-			name:        "MCR should be allowed",
-			identifier:  "mcr.microsoft.com/dotnet/aspire-dashboard:9.5.0",
-			expectError: true,
-			errorMsg:    "missing required annotation",
+			name:              "MCR should be allowed",
+			identifier:        "mcr.microsoft.com/dotnet/aspire-dashboard:9.5.0",
+			expectError:       true,
+			errorMsg:          "missing required annotation",
+			mustNotContainMsg: "unsupported OCI registry",
 		},
-		{
-			name:        "ACR should be allowed",
-			identifier:  "azurearcjumpstart.azurecr.io/hello-arc:latest",
-			expectError: true,
-			errorMsg:    "missing required annotation",
-		},
+		// Removed ACR test with non-existent host - ACR support is tested elsewhere
 
 		// Disallowed registries
 		{
@@ -114,10 +118,70 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 
 			if tt.expectError {
 				assert.Error(t, err)
-				// Should contain the specific error message
-				assert.Contains(t, err.Error(), tt.errorMsg)
+				// For allowed registries, verify they don't get rejected at the registry check
+				if tt.mustNotContainMsg != "" {
+					assert.NotContains(t, err.Error(), tt.mustNotContainMsg)
+				}
+				// If a specific error message is expected, check for it
+				if tt.errorMsg != "" {
+					assert.Contains(t, err.Error(), tt.errorMsg)
+				}
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateOCI_RegistryPatterns(t *testing.T) {
+	// This test verifies registry pattern matching (wildcards like *.azurecr.io and *.pkg.dev)
+	// without relying on external images that may not exist
+	tests := []struct {
+		name       string
+		identifier string
+		shouldFail bool // true if should fail at registry allowlist check
+	}{
+		{
+			name:       "ACR registry pattern should be allowed",
+			identifier: "myregistry.azurecr.io/test/image:latest",
+			shouldFail: false, // Registry is allowed, will fail later on missing annotation
+		},
+		{
+			name:       "Another ACR registry should be allowed",
+			identifier: "contoso.azurecr.io/app:v1",
+			shouldFail: false,
+		},
+		{
+			name:       "Artifact Registry should be allowed",
+			identifier: "us-west1-docker.pkg.dev/project/repo/image:tag",
+			shouldFail: false,
+		},
+		{
+			name:       "GCR should be rejected at registry check",
+			identifier: "gcr.io/project/image:latest",
+			shouldFail: true, // Should fail at registry allowlist check
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pkg := model.Package{
+				RegistryType: model.RegistryTypeOCI,
+				Identifier:   tt.identifier,
+			}
+
+			ctx := context.Background()
+			err := registries.ValidateOCI(ctx, pkg, "com.example/test")
+
+			// All test cases should error (either at registry check or annotation check)
+			assert.Error(t, err)
+
+			if tt.shouldFail {
+				// Should fail at the registry allowlist check
+				assert.Contains(t, err.Error(), "unsupported OCI registry")
+			} else {
+				// Should NOT fail at registry check (allowed registry)
+				assert.NotContains(t, err.Error(), "unsupported OCI registry")
 			}
 		})
 	}
