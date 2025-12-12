@@ -49,6 +49,64 @@ Specify the transport by setting the `type` property of the `remotes` entry to e
 }
 ```
 
+## URL Template Variables
+
+Remote servers can define URL template variables using `{curly_braces}` notation. This enables multi-tenant deployments where a single server definition can support multiple endpoints with configurable values:
+
+```json server.json highlight={10-17}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.example/acme-analytics",
+  "title": "ACME Analytics",
+  "description": "Real-time business intelligence and reporting platform",
+  "version": "2.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://{tenant_id}.analytics.example.com/mcp",
+      "variables": {
+        "tenant_id": {
+          "description": "Your tenant identifier (e.g., 'us-cell1', 'emea-cell1')",
+          "isRequired": true
+        }
+      }
+    }
+  ]
+}
+```
+
+When configuring this server, users provide their `tenant_id` value, and the URL template gets resolved to the appropriate endpoint (e.g., `https://us-cell1.analytics.example.com/mcp`).
+
+Variables support additional properties like `default`, `choices`, and `isSecret`:
+
+```json server.json highlight={12-22}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.example/multi-region-mcp",
+  "title": "Multi-Region MCP",
+  "description": "MCP server with regional endpoints",
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.example.com/{region}/mcp",
+      "variables": {
+        "region": {
+          "description": "Deployment region",
+          "isRequired": true,
+          "choices": [
+            "us-east-1",
+            "eu-west-1",
+            "ap-southeast-1"
+          ],
+          "default": "us-east-1"
+        }
+      }
+    }
+  ]
+}
+```
+
 ## HTTP Headers
 
 MCP clients can be instructed to send specific HTTP headers by adding the `headers` property to the `remotes` entry:
