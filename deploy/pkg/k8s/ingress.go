@@ -74,6 +74,9 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 					// GCP L4 Passthrough Network Load Balancer does not set X-Forwarded-For
 					// Real client IP comes from TCP connection source with externalTrafficPolicy: Local
 					"use-forwarded-headers": pulumi.String("false"),
+
+					// Set rate limit rejection status code to 429 (Too Many Requests)
+					"limit-req-status-code": pulumi.String("429"),
 				},
 			},
 		},
