@@ -40,6 +40,14 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		return "LoadBalancer"
 	}).(pulumi.StringOutput)
 
+	// Configure replicas based on environment
+	// Staging: 1 replica (sufficient for testing, allows brief downtime during deploys)
+	// Production: 2 replicas (HA, zero-downtime deploys, node-level resilience)
+	replicaCount := 1
+	if environment == "prod" {
+		replicaCount = 2
+	}
+
 	// Install NGINX Ingress Controller
 	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
@@ -50,9 +58,11 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		Namespace: ingressNginxNamespace.Metadata.Name().Elem(),
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
+				"replicaCount": pulumi.Int(replicaCount),
 				"service": pulumi.Map{
-					"type":        serviceType,
-					"annotations": pulumi.Map{},
+					"type":                  serviceType,
+					"externalTrafficPolicy": pulumi.String("Local"),
+					"annotations":           pulumi.Map{},
 				},
 				"config": pulumi.Map{
 					// Disable strict path validation, to work around a bug in ingress-nginx
@@ -60,8 +70,10 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 					// https://github.com/kubernetes/ingress-nginx/issues/11176
 					"strict-validate-path-type": pulumi.String("false"),
 
-					// Use forwarded headers for proper client IP handling
-					"use-forwarded-headers": pulumi.String("true"),
+					// Do NOT use forwarded headers with L4 load balancer
+					// GCP L4 Passthrough Network Load Balancer does not set X-Forwarded-For
+					// Real client IP comes from TCP connection source with externalTrafficPolicy: Local
+					"use-forwarded-headers": pulumi.String("false"),
 				},
 			},
 		},
