@@ -72,6 +72,13 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		},
 		Spec: &v1.DeploymentSpecArgs{
 			Replicas: pulumi.Int(2),
+			Strategy: &v1.DeploymentStrategyArgs{
+				Type: pulumi.String("RollingUpdate"),
+				RollingUpdate: &v1.RollingUpdateDeploymentArgs{
+					MaxUnavailable: pulumi.IntPtr(0), // Never reduce capacity during updates
+					MaxSurge:       pulumi.IntPtr(1), // Create new pods first, then terminate old
+				},
+			},
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
 					"app": pulumi.String("mcp-registry"),
