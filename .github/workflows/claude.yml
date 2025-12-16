@@ -25,43 +25,10 @@ jobs:
       id-token: write
       actions: read
     steps:
-      # Only allow modelcontextprotocol org members to trigger @claude
-      # This enables @claude to work on external fork PRs when triggered by org members
-      # Members list is fetched from modelcontextprotocol/access repo
-      - name: Check if org member
-        run: |
-          ACTOR="${{ github.triggering_actor }}"
-          USERS_URL="https://raw.githubusercontent.com/modelcontextprotocol/access/main/src/config/users.ts"
-
-          # Fetch users.ts and extract GitHub usernames
-          MEMBERS=$(curl -fsSL "$USERS_URL" | grep -oE 'github:\s*"[^"]+"' | sed 's/github:\s*"//;s/"$//')
-
-          if echo "$MEMBERS" | grep -qxF "$ACTOR"; then
-            echo "User $ACTOR is a member of modelcontextprotocol org"
-          else
-            echo "::error::User $ACTOR is not a member of the modelcontextprotocol org. Only org members can trigger @claude."
-            exit 1
-          fi
-
-      # For PR comments, get PR details to checkout the correct branch (including forks)
-      - name: Get PR details
-        id: pr
-        if: github.event.issue.pull_request
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          PR_DATA=$(gh api ${{ github.event.issue.pull_request.url }})
-          echo "number=$(echo "$PR_DATA" | jq -r '.number')" >> $GITHUB_OUTPUT
-          echo "head_ref=$(echo "$PR_DATA" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
-          echo "head_repo=$(echo "$PR_DATA" | jq -r '.head.repo.full_name')" >> $GITHUB_OUTPUT
-          echo "is_fork=$(echo "$PR_DATA" | jq -r '.head.repo.fork')" >> $GITHUB_OUTPUT
-
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           fetch-depth: 1
-          # For fork PRs, checkout via PR ref; otherwise use the branch directly
-          ref: ${{ steps.pr.outputs.is_fork == 'true' && format('refs/pull/{0}/head', steps.pr.outputs.number) || steps.pr.outputs.head_ref || github.ref }}
 
       - name: Run Claude Code
         id: claude
