@@ -524,6 +524,16 @@ components:
           description: "SHA-256 hash of the package file for integrity verification. Required for MCPB packages and optional for other package types. Authors are responsible for generating correct SHA-256 hashes when creating server.json. If present, MCP clients must validate the downloaded file matches the hash before running packages to ensure file integrity."
           example: "fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"
           pattern: "^[a-f0-9]{64}$"
+        architecture:
+          type: string
+          description: "Target OS and architecture for the package (e.g., 'linux-amd64', 'darwin-arm64'). Allows clients to select the appropriate package for their platform without parsing identifiers."
+          examples:
+            - "linux-amd64"
+            - "linux-arm64"
+            - "darwin-amd64"
+            - "darwin-arm64"
+            - "windows-amd64"
+            - "windows-arm64"
         runtimeHint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.

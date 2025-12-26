@@ -33,6 +33,16 @@ const (
 	RuntimeHintDNX    = "dnx"
 )
 
+// Architecture - OS and architecture combinations for packages
+const (
+	ArchLinuxAMD64   = "linux-amd64"
+	ArchLinuxARM64   = "linux-arm64"
+	ArchDarwinAMD64  = "darwin-amd64"
+	ArchDarwinARM64  = "darwin-arm64"
+	ArchWindowsAMD64 = "windows-amd64"
+	ArchWindowsARM64 = "windows-arm64"
+)
+
 // Schema versions
 const (
 	// CurrentSchemaVersion is the current supported schema version date
