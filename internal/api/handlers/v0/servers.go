@@ -42,6 +42,8 @@ type ServerVersionsInput struct {
 }
 
 // RegisterServersEndpoints registers all server-related endpoints with a custom path prefix
+//
+//nolint:cyclop
 func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.RegistryService) {
 	// List servers endpoint
 	huma.Register(api, huma.Operation{
@@ -52,6 +54,10 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		Description: "Get a paginated list of MCP servers from the registry",
 		Tags:        []string{"servers"},
 	}, func(ctx context.Context, input *ListServersInput) (*Response[apiv0.ServerListResponse], error) {
+		if containsNULByte(input.Cursor) {
+			return nil, huma.Error400BadRequest("Invalid cursor: NUL byte not allowed")
+		}
+
 		// Build filter from input parameters
 		filter := &database.ServerFilter{}
 
@@ -119,11 +125,17 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		if err != nil {
 			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
 		}
+		if containsNULByte(serverName) {
+			return nil, huma.Error400BadRequest("Invalid server name: NUL byte not allowed")
+		}
 
 		// URL-decode the version
 		version, err := url.PathUnescape(input.Version)
 		if err != nil {
 			return nil, huma.Error400BadRequest("Invalid version encoding", err)
+		}
+		if containsNULByte(version) {
+			return nil, huma.Error400BadRequest("Invalid version: NUL byte not allowed")
 		}
 
 		var serverResponse *apiv0.ServerResponse
@@ -160,6 +172,9 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		if err != nil {
 			return nil, huma.Error400BadRequest("Invalid server name encoding", err)
 		}
+		if containsNULByte(serverName) {
+			return nil, huma.Error400BadRequest("Invalid server name: NUL byte not allowed")
+		}
 
 		// Get all versions for this server
 		servers, err := registry.GetAllVersionsByServerName(ctx, serverName)
@@ -185,4 +200,8 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			},
 		}, nil
 	})
+}
+
+func containsNULByte(s string) bool {
+	return strings.IndexByte(s, 0) >= 0
 }

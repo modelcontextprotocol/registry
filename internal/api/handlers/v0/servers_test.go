@@ -461,6 +461,8 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 			{"limit too high", "?limit=1000", http.StatusUnprocessableEntity, "validation failed"},
 			{"negative limit", "?limit=-1", http.StatusUnprocessableEntity, "validation failed"},
 			{"invalid updated_since format", "?updated_since=invalid", http.StatusBadRequest, "Invalid updated_since format"},
+			{"cursor contains NUL", "?cursor=%00", http.StatusBadRequest, "Invalid cursor"},
+			{"cursor contains non NUL", "?cursor=server", http.StatusOK, ""},
 			{"future updated_since", "?updated_since=2030-01-01T00:00:00Z", http.StatusOK, ""},
 			{"very old updated_since", "?updated_since=1990-01-01T00:00:00Z", http.StatusOK, ""},
 			{"empty search parameter", "?search=", http.StatusOK, ""},
@@ -487,6 +489,16 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 				}
 			})
 		}
+	})
+
+	t.Run("path parameter NUL byte rejected", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/v0/servers/%00/versions", nil)
+		w := httptest.NewRecorder()
+
+		mux.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "Invalid server name")
 	})
 
 	t.Run("response structure validation", func(t *testing.T) {
