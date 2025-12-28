@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,19 +18,34 @@ import (
 )
 
 func PublishCommand(args []string) error {
-	// Check for server.json file
+	// Parse flags
+	publishFlags := flag.NewFlagSet("publish", flag.ContinueOnError)
+	fileFlag := publishFlags.String("file", "", "Path to server.json file")
+
+	// Parse the flags
+	if err := publishFlags.Parse(args); err != nil {
+		return err
+	}
+
+	// Determine server file path
 	serverFile := "server.json"
-	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
-		serverFile = args[0]
+	if *fileFlag != "" {
+		serverFile = *fileFlag
+	} else if publishFlags.NArg() > 0 {
+		// Support positional argument for backward compatibility
+		serverFile = publishFlags.Arg(0)
 	}
 
 	// Read server.json
 	serverData, err := os.ReadFile(serverFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("server.json not found. Run 'mcp-publisher init' to create one")
+			if serverFile == "server.json" {
+				return fmt.Errorf("server.json not found. Run 'mcp-publisher init' to create one")
+			}
+			return fmt.Errorf("file not found: %s", serverFile)
 		}
-		return fmt.Errorf("failed to read server.json: %w", err)
+		return fmt.Errorf("failed to read %s: %w", serverFile, err)
 	}
 
 	// Validate JSON
