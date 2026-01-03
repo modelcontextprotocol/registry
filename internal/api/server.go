@@ -17,6 +17,26 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
 )
 
+// NulByteValidationMiddleware rejects requests containing NUL bytes in URL path or query parameters
+// This prevents PostgreSQL encoding errors and returns a proper 400 Bad Request
+func NulByteValidationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check URL path for NUL bytes
+		if strings.ContainsRune(r.URL.Path, '\x00') {
+			http.Error(w, "Invalid request: URL path contains null bytes", http.StatusBadRequest)
+			return
+		}
+
+		// Check raw query string for NUL bytes
+		if strings.ContainsRune(r.URL.RawQuery, '\x00') {
+			http.Error(w, "Invalid request: query parameters contain null bytes", http.StatusBadRequest)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 // TrailingSlashMiddleware redirects requests with trailing slashes to their canonical form
 func TrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -67,8 +87,8 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 	})
 
 	// Wrap the mux with middleware stack
-	// Order: TrailingSlash -> CORS -> Mux
-	handler := TrailingSlashMiddleware(corsHandler.Handler(mux))
+	// Order: NulByteValidation -> TrailingSlash -> CORS -> Mux
+	handler := NulByteValidationMiddleware(TrailingSlashMiddleware(corsHandler.Handler(mux)))
 
 	server := &Server{
 		config:   cfg,

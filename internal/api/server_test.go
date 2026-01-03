@@ -3,10 +3,83 @@ package api_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/api"
 )
+
+func TestNulByteValidationMiddleware(t *testing.T) {
+	// Create a simple handler that returns "OK"
+	handler := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	})
+
+	// Wrap with our middleware
+	middleware := api.NulByteValidationMiddleware(handler)
+
+	t.Run("normal path should pass through", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/v0/servers", nil)
+		w := httptest.NewRecorder()
+		middleware.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("path with query params should pass through", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/v0/servers?cursor=abc123", nil)
+		w := httptest.NewRecorder()
+		middleware.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("expected status %d, got %d", http.StatusOK, w.Code)
+		}
+	})
+
+	t.Run("path with NUL byte should return 400", func(t *testing.T) {
+		// Create request with NUL byte in path by manually setting URL
+		req := httptest.NewRequest(http.MethodGet, "/v0/servers/test", nil)
+		req.URL.Path = "/v0/servers/\x00"
+		w := httptest.NewRecorder()
+		middleware.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status %d, got %d", http.StatusBadRequest, w.Code)
+		}
+		if !strings.Contains(w.Body.String(), "URL path contains null bytes") {
+			t.Errorf("expected body to contain error message, got %q", w.Body.String())
+		}
+	})
+
+	t.Run("query with NUL byte should return 400", func(t *testing.T) {
+		// Create request with NUL byte in query by manually setting RawQuery
+		req := httptest.NewRequest(http.MethodGet, "/v0/servers", nil)
+		req.URL.RawQuery = "cursor=\x00"
+		w := httptest.NewRecorder()
+		middleware.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status %d, got %d", http.StatusBadRequest, w.Code)
+		}
+		if !strings.Contains(w.Body.String(), "query parameters contain null bytes") {
+			t.Errorf("expected body to contain error message, got %q", w.Body.String())
+		}
+	})
+
+	t.Run("path with embedded NUL byte should return 400", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/v0/servers/test", nil)
+		req.URL.Path = "/v0/servers/test\x00name"
+		w := httptest.NewRecorder()
+		middleware.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status %d, got %d", http.StatusBadRequest, w.Code)
+		}
+	})
+}
 
 func TestTrailingSlashMiddleware(t *testing.T) {
 	// Create a simple handler that returns "OK"
