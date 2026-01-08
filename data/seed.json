@@ -1,6 +1,34 @@
 [
   {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.charo360/statecli",
+    "description": "Memory and self-awareness layer for AI agents - MCP server for state tracking, replay, and undo",
+    "repository": {
+      "url": "https://github.com/statecli/mcp-server.git",
+      "source": "github"
+    },
+    "version": "0.4.1",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/statecli/mcp-server/main/vscode-extension/icon.svg",
+        "mimeType": "image/svg+xml"
+      }
+    ],
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "statecli-mcp-server",
+        "version": "0.4.1",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": []
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/airtable-mcp-server",
     "description": "Read and write access to Airtable database schemas, tables, and records.",
     "repository": {
