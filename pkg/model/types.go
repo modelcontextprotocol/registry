@@ -24,17 +24,18 @@ type Transport struct {
 //   - NuGet: RegistryType, Identifier (package ID), Version, RegistryBaseURL (optional)
 //   - OCI:   RegistryType, Identifier (full image reference like "ghcr.io/owner/repo:tag")
 //   - MCPB:  RegistryType, Identifier (download URL), Version (optional), FileSHA256 (required)
+//   - ScrapeGraphAI: RegistryType, Identifier (package name), Version, RegistryBaseURL (optional, defaults to PyPI)
 type Package struct {
-	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "nuget", "mcpb")
-	RegistryType string `json:"registryType" minLength:"1" doc:"Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')" example:"npm"`
-	// RegistryBaseURL is the base URL of the package registry (used by npm, pypi, nuget; not used by oci, mcpb)
+	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "nuget", "mcpb", "scrapegraphai")
+	RegistryType string `json:"registryType" minLength:"1" doc:"Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb', 'scrapegraphai')" example:"npm"`
+	// RegistryBaseURL is the base URL of the package registry (used by npm, pypi, nuget, scrapegraphai; not used by oci, mcpb)
 	RegistryBaseURL string `json:"registryBaseUrl,omitempty" format:"uri" doc:"Base URL of the package registry" example:"https://registry.npmjs.org"`
 	// Identifier is the package identifier:
-	//   - For NPM/PyPI/NuGet: package name or ID
+	//   - For NPM/PyPI/NuGet/ScrapeGraphAI: package name or ID
 	//   - For OCI: full image reference (e.g., "ghcr.io/owner/repo:v1.0.0")
 	//   - For MCPB: direct download URL
 	Identifier string `json:"identifier" minLength:"1" doc:"Package identifier - either a package name (for registries) or URL (for direct downloads)" example:"@modelcontextprotocol/server-brave-search"`
-	// Version is the package version (required for npm, pypi, nuget; optional for mcpb; not used by oci where version is in the identifier)
+	// Version is the package version (required for npm, pypi, nuget, scrapegraphai; optional for mcpb; not used by oci where version is in the identifier)
 	Version string `json:"version,omitempty" minLength:"1" doc:"Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')." example:"1.0.2"`
 	// FileSHA256 is the SHA-256 hash for integrity verification (required for mcpb, optional for others)
 	FileSHA256 string `json:"fileSha256,omitempty" pattern:"^[a-f0-9]{64}$" doc:"SHA-256 hash of the package file for integrity verification. Required for MCPB packages and optional for other package types. Authors are responsible for generating correct SHA-256 hashes when creating server.json. If present, MCP clients must validate the downloaded file matches the hash before running packages to ensure file integrity." example:"fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"`

@@ -2,20 +2,22 @@ package model
 
 // Registry Types - supported package registry types
 const (
-	RegistryTypeNPM   = "npm"
-	RegistryTypePyPI  = "pypi"
-	RegistryTypeOCI   = "oci"
-	RegistryTypeNuGet = "nuget"
-	RegistryTypeMCPB  = "mcpb"
+	RegistryTypeNPM         = "npm"
+	RegistryTypePyPI        = "pypi"
+	RegistryTypeOCI         = "oci"
+	RegistryTypeNuGet       = "nuget"
+	RegistryTypeMCPB        = "mcpb"
+	RegistryTypeScrapeGraphAI = "scrapegraphai"
 )
 
 // Registry Base URLs - supported package registry base URLs
 const (
-	RegistryURLNPM    = "https://registry.npmjs.org"
-	RegistryURLPyPI   = "https://pypi.org"
-	RegistryURLNuGet  = "https://api.nuget.org/v3/index.json"
-	RegistryURLGitHub = "https://github.com"
-	RegistryURLGitLab = "https://gitlab.com"
+	RegistryURLNPM       = "https://registry.npmjs.org"
+	RegistryURLPyPI      = "https://pypi.org"
+	RegistryURLNuGet     = "https://api.nuget.org/v3/index.json"
+	RegistryURLGitHub    = "https://github.com"
+	RegistryURLGitLab    = "https://gitlab.com"
+	RegistryURLSmithery  = "https://smithery.ai"
 )
 
 // Transport Types - supported remote transport protocols

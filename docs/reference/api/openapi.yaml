@@ -488,13 +488,14 @@ components:
       properties:
         registryType:
           type: string
-          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')
+          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb', 'scrapegraphai')
           examples:
             - "npm"
             - "pypi"
             - "oci"
             - "nuget"
             - "mcpb"
+            - "scrapegraphai"
         registryBaseUrl:
           type: string
           format: uri
@@ -506,6 +507,7 @@ components:
             - "https://api.nuget.org/v3/index.json"
             - "https://github.com"
             - "https://gitlab.com"
+            - "https://smithery.ai"
         identifier:
           type: string
           description: Package identifier - either a package name (for registries) or URL (for direct downloads)

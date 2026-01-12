@@ -162,6 +162,86 @@ The MCP Registry verifies ownership of Docker/OCI images by checking for an `io.
 LABEL io.modelcontextprotocol.server.name="io.github.username/kubernetes-manager-mcp"
 ```
 
+## ScrapeGraphAI Packages
+
+For ScrapeGraphAI packages, the MCP Registry currently supports packages distributed via:
+- The official PyPI registry (`https://pypi.org`)
+- Smithery (`https://smithery.ai`), which distributes packages via npm
+
+ScrapeGraphAI packages use `"registryType": "scrapegraphai"` in `server.json`. For example:
+
+**Example - ScrapeGraphAI package from PyPI:**
+
+```json server.json highlight={9}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.username/web-scraper-mcp",
+  "title": "Web Scraper",
+  "description": "Scrape and extract data from websites using ScrapeGraphAI",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "scrapegraphai",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "web-scraper-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
+**Example - ScrapeGraphAI package from Smithery:**
+
+```json server.json highlight={9}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.scrapegraphai/scrapegraph-mcp",
+  "title": "ScrapeGraph MCP",
+  "description": "Scrape and extract data from websites using ScrapeGraphAI",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "scrapegraphai",
+      "registryBaseUrl": "https://smithery.ai",
+      "identifier": "@ScrapeGraphAI/scrapegraph-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
+### Ownership Verification
+
+**For PyPI packages:** The MCP Registry verifies ownership by checking for the existence of an `mcp-name: $SERVER_NAME` string in the package README (which becomes the package description on PyPI). The string may be hidden in a comment, but the `$SERVER_NAME` portion **MUST** match the server name from `server.json`.
+
+**For Smithery packages:** The MCP Registry verifies ownership by checking the `mcpName` field in `package.json` (since Smithery uses npm as backend). The `mcpName` property **MUST** match the server name from `server.json`.
+
+**Example for PyPI:**
+
+```markdown README.md highlight={5}
+# Web Scraper MCP Server
+
+This MCP server scrapes and extracts data from websites using ScrapeGraphAI.
+
+<!-- mcp-name: io.github.username/web-scraper-mcp -->
+```
+
+**Example for Smithery (npm):**
+
+```json package.json
+{
+  "name": "@ScrapeGraphAI/scrapegraph-mcp",
+  "version": "1.0.0",
+  "mcpName": "io.scrapegraphai/scrapegraph-mcp"
+}
+```
+
 ## MCPB Packages
 
 For MCPB packages, the MCP Registry currently supports MCPB artifacts hosted via GitHub or GitLab releases.

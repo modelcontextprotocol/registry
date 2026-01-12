@@ -242,19 +242,21 @@
             "https://docker.io",
             "https://api.nuget.org/v3/index.json",
             "https://github.com",
-            "https://gitlab.com"
+            "https://gitlab.com",
+            "https://smithery.ai"
           ],
           "format": "uri",
           "type": "string"
         },
         "registryType": {
-          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')",
+          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb', 'scrapegraphai')",
           "examples": [
             "npm",
             "pypi",
             "oci",
             "nuget",
-            "mcpb"
+            "mcpb",
+            "scrapegraphai"
           ],
           "type": "string"
         },
