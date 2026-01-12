@@ -105,12 +105,8 @@ func validateScrapeGraphAIViaPyPI(ctx context.Context, client *http.Client, pkg 
 // validateScrapeGraphAIViaNPM validates ScrapeGraphAI packages distributed via npm (Smithery uses npm)
 func validateScrapeGraphAIViaNPM(ctx context.Context, client *http.Client, pkg model.Package, serverName string) error {
 	// Use npm registry for validation (Smithery packages are on npm)
-	registryURL := model.RegistryURLNPM
-	if pkg.RegistryBaseURL == model.RegistryURLNPM {
-		registryURL = pkg.RegistryBaseURL
-	}
-
-	requestURL := registryURL + "/" + url.PathEscape(pkg.Identifier) + "/" + url.PathEscape(pkg.Version)
+	// Always use npm registry URL since Smithery uses npm as backend
+	requestURL := model.RegistryURLNPM + "/" + url.PathEscape(pkg.Identifier) + "/" + url.PathEscape(pkg.Version)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -129,10 +125,7 @@ func validateScrapeGraphAIViaNPM(ctx context.Context, client *http.Client, pkg m
 		return fmt.Errorf("ScrapeGraphAI package '%s' not found on npm/Smithery (status: %d)", pkg.Identifier, resp.StatusCode)
 	}
 
-	// Use the same NPMPackageResponse type from npm.go
-	var npmResp struct {
-		MCPName string `json:"mcpName"`
-	}
+	var npmResp NPMPackageResponse
 	if err := json.NewDecoder(resp.Body).Decode(&npmResp); err != nil {
 		return fmt.Errorf("failed to parse ScrapeGraphAI package metadata from npm: %w", err)
 	}
