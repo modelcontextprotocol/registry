@@ -1,0 +1,41 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.blueskylineassets/agent-observability",
+  "description": "Comprehensive logging and monitoring for AI agents. Track events, query logs, access analytics, and monitor costs/token usage.",
+  "repository": {
+    "url": "https://github.com/blueskylineassets/agent-observability.git",
+    "source": "github"
+  },
+  "version": "1.5.0",
+  "homepage": "https://agentobs.manus.space",
+  "license": "MIT",
+  "keywords": [
+    "agent",
+    "observability",
+    "logging",
+    "analytics",
+    "monitoring",
+    "a2a",
+    "ai-agent",
+    "tracing"
+  ],
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "agent-observability",
+      "version": "1.5.0",
+      "runtimeHint": "python",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "AGENT_OBS_API_KEY",
+          "description": "Agent Observability API key. Get one by running: pip install agent-observability && python -m agent_observability.register",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}
