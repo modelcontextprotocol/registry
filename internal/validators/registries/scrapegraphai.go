@@ -26,12 +26,6 @@ type ScrapeGraphAIPackageResponse struct {
 	} `json:"info"`
 }
 
-// NPMPackageResponse represents the structure returned by the NPM registry API
-// (ScrapeGraphAI packages on Smithery are distributed via npm)
-type NPMPackageResponse struct {
-	MCPName string `json:"mcpName"`
-}
-
 // ValidateScrapeGraphAI validates that a ScrapeGraphAI package contains the correct MCP server name
 // ScrapeGraphAI packages can be distributed via PyPI or via Smithery (which uses npm)
 func ValidateScrapeGraphAI(ctx context.Context, pkg model.Package, serverName string) error {
@@ -135,7 +129,10 @@ func validateScrapeGraphAIViaNPM(ctx context.Context, client *http.Client, pkg m
 		return fmt.Errorf("ScrapeGraphAI package '%s' not found on npm/Smithery (status: %d)", pkg.Identifier, resp.StatusCode)
 	}
 
-	var npmResp NPMPackageResponse
+	// Use the same NPMPackageResponse type from npm.go
+	var npmResp struct {
+		MCPName string `json:"mcpName"`
+	}
 	if err := json.NewDecoder(resp.Body).Decode(&npmResp); err != nil {
 		return fmt.Errorf("failed to parse ScrapeGraphAI package metadata from npm: %w", err)
 	}
