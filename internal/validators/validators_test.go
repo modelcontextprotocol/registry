@@ -1627,6 +1627,138 @@ func TestValidate_TransportValidation(t *testing.T) {
 			},
 			expectedError: "invalid remote URL",
 		},
+		// Remote transport variable tests
+		{
+			name: "remote transport with URL variables - valid",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://example.com/mcp/{tenant_id}",
+						Variables: map[string]model.Input{
+							"tenant_id": {
+								Description: "Tenant identifier",
+								IsRequired:  true,
+							},
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "remote transport with multiple URL variables - valid",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://{region}.example.com/mcp/{tenant_id}",
+						Variables: map[string]model.Input{
+							"region": {
+								Description: "Server region",
+								Choices:     []string{"us-east-1", "eu-west-1"},
+							},
+							"tenant_id": {
+								Description: "Tenant identifier",
+								IsRequired:  true,
+							},
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "remote transport with undefined URL variable - invalid",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://example.com/mcp/{tenant_id}",
+						// Missing variables definition
+					},
+				},
+			},
+			expectedError: "template variables in URL",
+		},
+		{
+			name: "remote transport with missing variable in URL - invalid",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://example.com/mcp/{tenant_id}/{region}",
+						Variables: map[string]model.Input{
+							"tenant_id": {
+								Description: "Tenant identifier",
+							},
+							// Missing "region" variable
+						},
+					},
+				},
+			},
+			expectedError: "template variables in URL",
+		},
+		{
+			name: "remote transport SSE with URL variables - valid",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{
+						Type: "sse",
+						URL:  "https://events.example.com/mcp/{api_key}",
+						Variables: map[string]model.Input{
+							"api_key": {
+								Description: "API key for authentication",
+								IsRequired:  true,
+								IsSecret:    true,
+							},
+						},
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "remote transport with variables but no template in URL - valid",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{
+						Type: "streamable-http",
+						URL:  "https://example.com/mcp",
+						Variables: map[string]model.Input{
+							"unused_var": {
+								Description: "This variable is defined but not used",
+							},
+						},
+					},
+				},
+			},
+			expectedError: "", // Valid - variables can be defined but not used
+		},
 	}
 
 	for _, tt := range tests {

@@ -32,7 +32,7 @@ Only trusted public registries are supported. Private registries and alternative
 **Supported registries:**
 - **NPM**: `https://registry.npmjs.org` only
 - **PyPI**: `https://pypi.org` only
-- **NuGet**: `https://api.nuget.org` only
+- **NuGet**: `https://api.nuget.org/v3/index.json` only
 - **Docker/OCI**:
   - Docker Hub (`docker.io`)
   - GitHub Container Registry (`ghcr.io`)

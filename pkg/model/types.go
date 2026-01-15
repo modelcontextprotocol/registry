@@ -8,10 +8,13 @@ const (
 	StatusDeleted    Status = "deleted"
 )
 
+// Transport represents transport configuration for both Package and Remote contexts.
+// For Remote context, the Variables field can be used for URL templating.
 type Transport struct {
-	Type    string          `json:"type" doc:"Transport type (stdio, streamable-http, or sse)" example:"stdio"`
-	URL     string          `json:"url,omitempty" doc:"URL for streamable-http or sse transports" example:"https://api.example.com/mcp"`
-	Headers []KeyValueInput `json:"headers,omitempty" doc:"HTTP headers for streamable-http or sse transports"`
+	Type      string           `json:"type" doc:"Transport type (stdio, streamable-http, or sse)" example:"stdio"`
+	URL       string           `json:"url,omitempty" doc:"URL for streamable-http or sse transports" example:"https://api.example.com/mcp"`
+	Headers   []KeyValueInput  `json:"headers,omitempty" doc:"HTTP headers for streamable-http or sse transports"`
+	Variables map[string]Input `json:"variables,omitempty" doc:"Variables for URL templating in remote transports"`
 }
 
 // Package represents a package configuration.

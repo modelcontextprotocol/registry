@@ -1,6 +1,6 @@
 [
   {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/airtable-mcp-server",
     "description": "Read and write access to Airtable database schemas, tables, and records.",
     "repository": {
@@ -62,7 +62,7 @@
     ]
   },
   {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/airtable-mcp-server",
     "description": "Read and write access to Airtable database schemas, tables, and records.",
     "repository": {
@@ -115,7 +115,7 @@
     ]
   },
   {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/time-mcp-nuget",
     "description": "Get the current UTC time in RFC 3339 format.",
     "repository": {
@@ -136,7 +136,7 @@
     ]
   },
   {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/time-mcp-pypi",
     "description": "Get the current UTC time in RFC 3339 format.",
     "repository": {

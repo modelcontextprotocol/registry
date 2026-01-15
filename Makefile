@@ -1,5 +1,8 @@
 .PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check ko-build ko-rebuild dev-compose dev-down clean publisher generate-schema check-schema
 
+# Use bash for all commands to support pipefail
+SHELL := /bin/bash
+
 # Default target
 help: ## Show this help message
 	@echo "Available targets:"
@@ -33,7 +36,7 @@ test-unit: ## Run unit tests with coverage (requires PostgreSQL)
 	@sleep 3
 	@echo ""
 	@echo "Running unit tests..."
-	@if command -v gotestsum >/dev/null 2>&1; then \
+	@set -o pipefail; if command -v gotestsum >/dev/null 2>&1; then \
 		gotestsum --format pkgname-and-test-fails -- -race -coverprofile=coverage.out -covermode=atomic ./internal/... ./cmd/... 2>&1 | grep -v "ld: warning:"; \
 	else \
 		go test -race -coverprofile=coverage.out -covermode=atomic ./internal/... ./cmd/... 2>&1 | grep -v "ld: warning:" | grep -v "^ld:"; \

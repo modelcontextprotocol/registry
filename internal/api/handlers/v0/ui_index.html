@@ -147,7 +147,7 @@
 
         // Get base URL based on selection
         function getBaseUrl() {
-            const selection = localStorage.getItem('baseUrl') || 'prod';
+            const selection = localStorage.getItem('baseUrl') || 'local';
             const customUrl = localStorage.getItem('customUrl') || '';
 
             switch (selection) {
@@ -166,7 +166,7 @@
 
         // Get server display name
         function getServerName() {
-            const selection = localStorage.getItem('baseUrl') || 'prod';
+            const selection = localStorage.getItem('baseUrl') || 'local';
             const customUrl = localStorage.getItem('customUrl') || '';
 
             switch (selection) {

@@ -16,16 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
 
     - name: Set up Go
-      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
       with:
         go-version-file: 'go.mod'
         cache: true
 
     - name: Run lint
-      uses: golangci/golangci-lint-action@0a35821d5c230e903fcfe077583637dea1b27b47
+      uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20
       with:
         version: v2.4.0
 
@@ -41,6 +41,7 @@ jobs:
         go-version-input: ''
         go-version-file: go.mod
         go-package: ./...
+        repo-checkout: false
 
   # All Tests
   tests:
@@ -48,10 +49,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
 
     - name: Set up Go
-      uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
       with:
         go-version-file: 'go.mod'
         cache: true
@@ -63,7 +64,7 @@ jobs:
       run: make test-all
 
     - name: Upload coverage artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
       with:
         name: coverage-report
         path: |

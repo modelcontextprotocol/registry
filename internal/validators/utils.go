@@ -61,7 +61,13 @@ func replaceTemplateVariables(rawURL string) string {
 		result = strings.ReplaceAll(result, placeholder, replacement)
 	}
 
-	// Handle any remaining {variable} patterns with generic placeholder
+	// Handle any remaining {variable} patterns with context-appropriate placeholders
+	// If the variable is in a port position (after a colon in the host), use a numeric placeholder
+	// Pattern: :/{variable} or :{variable}/ or :{variable} at end
+	portRe := regexp.MustCompile(`:(\{[^}]+\})(/|$)`)
+	result = portRe.ReplaceAllString(result, ":8080$2")
+
+	// Replace any other remaining {variable} patterns with generic placeholder
 	re := regexp.MustCompile(`\{[^}]+\}`)
 	result = re.ReplaceAllString(result, "placeholder")
 
@@ -132,8 +138,11 @@ func IsValidRemoteURL(rawURL string) bool {
 		return false
 	}
 
+	// Replace template variables with placeholders before parsing for localhost check
+	testURL := replaceTemplateVariables(rawURL)
+
 	// Parse the URL to check for localhost restriction
-	u, err := url.Parse(rawURL)
+	u, err := url.Parse(testURL)
 	if err != nil {
 		return false
 	}
@@ -153,8 +162,8 @@ func IsValidRemoteURL(rawURL string) bool {
 
 // IsValidTemplatedURL validates a URL with template variables against available variables
 // For packages: validates that template variables reference package arguments or environment variables
-// For remotes: disallows template variables entirely
-func IsValidTemplatedURL(rawURL string, availableVariables []string, allowTemplates bool) bool {
+// For remotes: validates that template variables reference the transport's variables map
+func IsValidTemplatedURL(rawURL string, availableVariables []string) bool {
 	// First check basic URL structure
 	if !IsValidURL(rawURL) {
 		return false
@@ -166,11 +175,6 @@ func IsValidTemplatedURL(rawURL string, availableVariables []string, allowTempla
 	// If no templates are found, it's a valid static URL
 	if len(templateVars) == 0 {
 		return true
-	}
-
-	// If templates are not allowed (e.g., for remotes), reject URLs with templates
-	if !allowTemplates {
-		return false
 	}
 
 	// Validate that all template variables are available

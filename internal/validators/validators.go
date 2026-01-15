@@ -485,6 +485,20 @@ func collectAvailableVariables(pkg *model.Package) []string {
 	return variables
 }
 
+// collectRemoteTransportVariables extracts available variable names from a remote transport
+func collectRemoteTransportVariables(transport *model.Transport) []string {
+	var variables []string
+
+	// Add variable names from the Variables map
+	for variableName := range transport.Variables {
+		if variableName != "" {
+			variables = append(variables, variableName)
+		}
+	}
+
+	return variables
+}
+
 // validatePackageTransport validates a package's transport with templating support
 func validatePackageTransport(ctx *ValidationContext, transport *model.Transport, availableVariables []string) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
@@ -514,16 +528,15 @@ func validatePackageTransport(ctx *ValidationContext, transport *model.Transport
 				"streamable-transport-url-required",
 			)
 			result.AddIssue(issue)
-		} else if !IsValidTemplatedURL(transport.URL, availableVariables, true) {
-			// Validate URL format with template variable support
+		} else if !IsValidTemplatedURL(transport.URL, availableVariables) {
 			// Check if it's a template variable issue or basic URL issue
 			templateVars := extractTemplateVariables(transport.URL)
 			var err error
 			if len(templateVars) > 0 {
 				err = fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v",
-					ErrInvalidRemoteURL, transport.URL, availableVariables)
+					ErrInvalidPackageTransportURL, transport.URL, availableVariables)
 			} else {
-				err = fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
+				err = fmt.Errorf("%w: %s", ErrInvalidPackageTransportURL, transport.URL)
 			}
 			issue := NewValidationIssueFromError(
 				ValidationIssueTypeSemantic,
@@ -547,7 +560,7 @@ func validatePackageTransport(ctx *ValidationContext, transport *model.Transport
 	return result
 }
 
-// validateRemoteTransport validates a remote transport (no templating allowed)
+// validateRemoteTransport validates a remote transport with optional templating
 func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 
@@ -574,6 +587,30 @@ func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *Vali
 			)
 			result.AddIssue(issue)
 		}
+
+		// Collect available variables from the transport's Variables field
+		availableVariables := collectRemoteTransportVariables(obj)
+
+		// Validate URL format with template variable support
+		if !IsValidTemplatedURL(obj.URL, availableVariables) {
+			// Check if it's a template variable issue or basic URL issue
+			templateVars := extractTemplateVariables(obj.URL)
+      var err error
+			if len(templateVars) > 0 {
+        err = fmt.Errorf("%w: template variables in URL %s reference undefined variables. Available variables: %v",
+					ErrInvalidRemoteURL, obj.URL, availableVariables)
+			} else {
+				err = fmt.Errorf("%w: %s", ErrInvalidRemoteURL, transport.URL)
+			}
+			issue := NewValidationIssueFromError(
+				ValidationIssueTypeSemantic,
+				ctx.Field("url").String(),
+				err,
+				"invalid-templated-url",
+			)
+			result.AddIssue(issue)
+		}
+		return nil
 	default:
 		issue := NewValidationIssue(
 			ValidationIssueTypeSemantic,

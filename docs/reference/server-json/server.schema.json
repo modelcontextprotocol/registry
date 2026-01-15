@@ -156,6 +156,20 @@
         }
       ]
     },
+    "LocalTransport": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/StdioTransport"
+        },
+        {
+          "$ref": "#/definitions/StreamableHttpTransport"
+        },
+        {
+          "$ref": "#/definitions/SseTransport"
+        }
+      ],
+      "description": "Transport protocol configuration for local/package context"
+    },
     "NamedArgument": {
       "allOf": [
         {
@@ -226,7 +240,7 @@
             "https://registry.npmjs.org",
             "https://pypi.org",
             "https://docker.io",
-            "https://api.nuget.org",
+            "https://api.nuget.org/v3/index.json",
             "https://github.com",
             "https://gitlab.com"
           ],
@@ -262,17 +276,7 @@
           "type": "string"
         },
         "transport": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/StdioTransport"
-            },
-            {
-              "$ref": "#/definitions/StreamableHttpTransport"
-            },
-            {
-              "$ref": "#/definitions/SseTransport"
-            }
-          ],
+          "$ref": "#/definitions/LocalTransport",
           "description": "Transport protocol configuration for the package"
         },
         "version": {
@@ -337,6 +341,33 @@
       ],
       "description": "A positional input is a value inserted verbatim into the command line."
     },
+    "RemoteTransport": {
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/StreamableHttpTransport"
+            },
+            {
+              "$ref": "#/definitions/SseTransport"
+            }
+          ]
+        },
+        {
+          "properties": {
+            "variables": {
+              "additionalProperties": {
+                "$ref": "#/definitions/Input"
+              },
+              "description": "Configuration variables that can be referenced in URL template {curly_braces}. The key is the variable name, and the value defines the variable properties.",
+              "type": "object"
+            }
+          },
+          "type": "object"
+        }
+      ],
+      "description": "Transport protocol configuration for remote context - extends StreamableHttpTransport or SseTransport with variables"
+    },
     "Repository": {
       "description": "Repository metadata for the MCP server source code. Enables users and security experts to inspect the code, improving transparency.",
       "properties": {
@@ -373,7 +404,7 @@
       "properties": {
         "$schema": {
           "description": "JSON Schema URI for this server.json format",
-          "example": "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json",
+          "example": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
           "format": "uri",
           "type": "string"
         },
@@ -427,14 +458,7 @@
         },
         "remotes": {
           "items": {
-            "anyOf": [
-              {
-                "$ref": "#/definitions/StreamableHttpTransport"
-              },
-              {
-                "$ref": "#/definitions/SseTransport"
-              }
-            ]
+            "$ref": "#/definitions/RemoteTransport"
           },
           "type": "array"
         },
@@ -487,9 +511,9 @@
           "type": "string"
         },
         "url": {
-          "description": "Server-Sent Events endpoint URL",
+          "description": "Server-Sent Events endpoint URL template. Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI.",
           "example": "https://mcp-fs.example.com/sse",
-          "format": "uri",
+          "pattern": "^https?://[^\\s]+$",
           "type": "string"
         }
       },
@@ -533,8 +557,9 @@
           "type": "string"
         },
         "url": {
-          "description": "URL template for the streamable-http transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.",
+          "description": "URL template for the streamable-http transport. Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI.",
           "example": "https://api.example.com/mcp",
+          "pattern": "^https?://[^\\s]+$",
           "type": "string"
         }
       },

@@ -658,7 +658,7 @@ Only trusted public registries are supported. Private registries and alternative
 **Supported registries:**
 - **NPM**: `https://registry.npmjs.org` only
 - **PyPI**: `https://pypi.org` only
-- **NuGet**: `https://api.nuget.org` only
+- **NuGet**: `https://api.nuget.org/v3/index.json`
 - **Docker/OCI**: `https://docker.io` only
 - **MCPB**: `https://github.com` releases and `https://gitlab.com` releases only
 
@@ -1549,7 +1549,8 @@ Include your server name in your package's README using this format:
 Add a README file to your NuGet package that includes the server name. This can be in a comment if you want to hide it from display elsewhere.
 
 ### How It Works
-- Registry fetches README from `https://api.nuget.org/v3-flatcontainer/{id}/{version}/readme`
+- Registry fetches and cached service index `https://api.nuget.org/v3/index.json`
+- Registry uses `ReadmeUriTemplate/6.13.0` URL template in service index to fetch README
 - Passes if `mcp-name: server-name` is found in the README content
 
 ### Example server.json
@@ -1566,7 +1567,7 @@ Add a README file to your NuGet package that includes the server name. This can 
 }
 ```
 
-The official MCP registry currently only supports the official NuGet registry (`https://api.nuget.org`).
+The official MCP registry currently only supports the official NuGet registry (`https://api.nuget.org/v3/index.json`).
 
 </details>
 
@@ -2341,7 +2342,7 @@ Suppose your MCP server application requires a `mcp start` CLI arguments to star
   "packages": [
     {
       "registry_type": "nuget",
-      "registry_base_url": "https://api.nuget.org",
+      "registry_base_url": "https://api.nuget.org/v3/index.json",
       "identifier": "Knapcode.SampleMcpServer",
       "version": "0.4.0-beta",
       "transport": {
@@ -2578,7 +2579,7 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
   "packages": [
     {
       "registry_type": "nuget",
-      "registry_base_url": "https://api.nuget.org",
+      "registry_base_url": "https://api.nuget.org/v3/index.json",
       "identifier": "Knapcode.SampleMcpServer",
       "version": "0.5.0",
       "runtime_hint": "dnx",

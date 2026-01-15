@@ -1,9 +1,9 @@
 openapi: 3.1.0
 jsonSchemaDialect: "https://json-schema.org/draft/2020-12/schema"
-$id: https://modelcontextprotocol.io/schemas/draft/2025-10-17/server-registry-openapi
+$id: https://modelcontextprotocol.io/schemas/draft/2025-12-01/server-registry-openapi
 info:
   title: MCP Server Registry API
-  version: "2025-10-17"
+  version: "2025-12-01"
   summary: API for discovering and accessing MCP server metadata
   description: |
     Specification for a theoretical REST API that serves up metadata about MCP servers.
@@ -18,7 +18,7 @@ tags:
     description: Operations for publishing MCP servers to the registry
 
 paths:
-  /v0/servers:
+  /v0.1/servers:
     get:
       tags: [servers]
       summary: List MCP servers
@@ -68,7 +68,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerList'
-  /v0/servers/{serverName}/versions:
+  /v0.1/servers/{serverName}/versions:
     get:
       tags: [servers]
       summary: List all versions of an MCP server
@@ -98,7 +98,7 @@ paths:
                   error:
                     type: string
                     example: "Server not found"
-  /v0/servers/{serverName}/versions/{version}:
+  /v0.1/servers/{serverName}/versions/{version}:
     get:
       tags: [servers]
       summary: Get specific MCP server version
@@ -135,6 +135,95 @@ paths:
                   error:
                     type: string
                     example: "Server not found"
+    put:
+      tags: [publish]
+      summary: Update specific MCP server version (Optional)
+      description: |
+        Update a specific version of an MCP server in the registry.
+
+        **Note**: This endpoint is optional for registry implementations and is not implemented by the official MCP registry. It is included in the specification to standardize the update mechanism for registry implementations that choose to support it.
+
+        Authentication mechanism is registry-specific and may vary between implementations.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: serverName
+          in: path
+          required: true
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
+          schema:
+            type: string
+            example: "com.example%2Fmy-server"
+        - name: version
+          in: path
+          required: true
+          description: URL-encoded version to update (e.g., "1.0.0" or "1.0.0%2B20130313144700" for versions with build metadata)
+          schema:
+            type: string
+            example: "1.0.0"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServerDetail'
+      responses:
+        '200':
+          description: Successfully updated server version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired Registry JWT token"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have permission to update this server"
+        '404':
+          description: Server or version not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server version not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to update server version"
+        '501':
+          description: Not Implemented - Registry does not support updates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Updates are not supported by this registry"
     delete:
       tags: [publish]
       summary: Delete specific MCP server version (Optional)
@@ -218,7 +307,7 @@ paths:
                   error:
                     type: string
                     example: "Deletion is not supported by this registry"
-  /v0/publish:
+  /v0.1/publish:
     post:
       tags: [publish]
       summary: Publish MCP server (Optional)
@@ -414,7 +503,7 @@ components:
             - "https://registry.npmjs.org"
             - "https://pypi.org"
             - "https://docker.io"
-            - "https://api.nuget.org"
+            - "https://api.nuget.org/v3/index.json"
             - "https://github.com"
             - "https://gitlab.com"
         identifier:
@@ -440,10 +529,7 @@ components:
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.
           examples: [npx, uvx, docker, dnx]
         transport:
-          anyOf:
-            - $ref: '#/components/schemas/StdioTransport'
-            - $ref: '#/components/schemas/StreamableHttpTransport'
-            - $ref: '#/components/schemas/SseTransport'
+          $ref: '#/components/schemas/LocalTransport'
           description: Transport protocol configuration for the package
         runtimeArguments:
           type: array
@@ -599,8 +685,9 @@ components:
           example: "streamable-http"
         url:
           type: string
-          description: URL template for the streamable-http transport. Variables in {curly_braces} reference argument valueHints, argument names, or environment variable names. After variable substitution, this should produce a valid URI.
+          description: "URL template for the streamable-http transport. Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI."
           example: "https://api.example.com/mcp"
+          pattern: "^https?://[^\\s]+$"
         headers:
           type: array
           description: HTTP headers to include
@@ -620,14 +707,35 @@ components:
           example: "sse"
         url:
           type: string
-          format: uri
-          description: Server-Sent Events endpoint URL
+          description: "Server-Sent Events endpoint URL template. Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI."
           example: "https://mcp-fs.example.com/sse"
+          pattern: "^https?://[^\\s]+$"
         headers:
           type: array
           description: HTTP headers to include
           items:
             $ref: '#/components/schemas/KeyValueInput'
+
+    LocalTransport:
+      anyOf:
+        - $ref: '#/components/schemas/StdioTransport'
+        - $ref: '#/components/schemas/StreamableHttpTransport'
+        - $ref: '#/components/schemas/SseTransport'
+      description: Transport protocol configuration for local/package context
+
+    RemoteTransport:
+      allOf:
+        - anyOf:
+            - $ref: '#/components/schemas/StreamableHttpTransport'
+            - $ref: '#/components/schemas/SseTransport'
+        - type: object
+          properties:
+            variables:
+              type: object
+              description: "Configuration variables that can be referenced in URL template {curly_braces}. The key is the variable name, and the value defines the variable properties."
+              additionalProperties:
+                $ref: '#/components/schemas/Input'
+      description: Transport protocol configuration for remote context - extends StreamableHttpTransport or SseTransport with variables
 
     Icon:
       type: object
@@ -709,7 +817,7 @@ components:
           type: string
           format: uri
           description: JSON Schema URI for this server.json format
-          example: "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json"
+          example: "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json"
         packages:
           type: array
           items:
@@ -717,9 +825,7 @@ components:
         remotes:
           type: array
           items:
-            anyOf:
-              - $ref: '#/components/schemas/StreamableHttpTransport'
-              - $ref: '#/components/schemas/SseTransport'
+            $ref: '#/components/schemas/RemoteTransport'
         _meta:
           type: object
           description: "Extension metadata using reverse DNS namespacing for vendor-specific data"
@@ -741,7 +847,6 @@ components:
       type: object
       required:
         - server
-        - _meta
       properties:
         server:
           $ref: '#/components/schemas/ServerDetail'
