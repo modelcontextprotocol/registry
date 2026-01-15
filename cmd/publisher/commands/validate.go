@@ -34,7 +34,7 @@ func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON
 			_, _ = fmt.Fprintf(os.Stdout, "📋 Migration checklist: %s\n", checklistURL)
 			_, _ = fmt.Fprintf(os.Stdout, "📖 Full changelog with examples: %s\n", migrationURL)
 			_, _ = fmt.Fprintln(os.Stdout)
-			
+
 			// Build formatted error message
 			_, _ = fmt.Fprintf(&formattedMsg, "$schema field is required. Expected current schema: %s. 📋 Migration checklist: %s 📖 Full changelog with examples: %s", currentSchemaURL, checklistURL, migrationURL)
 			return formattedMsg.String() // Only one schema error at a time
@@ -56,11 +56,11 @@ func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON
 			_, _ = fmt.Fprintf(os.Stdout, "📋 Migration checklist: %s\n", checklistURL)
 			_, _ = fmt.Fprintf(os.Stdout, "📖 Full changelog with examples: %s\n", migrationURL)
 			_, _ = fmt.Fprintln(os.Stdout)
-			
+
 			// Build formatted error message - include the original issue message for test compatibility
 			_, _ = fmt.Fprintf(&formattedMsg, "%s. deprecated schema detected: %s. Expected current schema: %s. Migrate to the current schema format for new servers. 📋 Migration checklist: %s 📖 Full changelog with examples: %s", issue.Message, serverJSON.Schema, currentSchemaURL, checklistURL, migrationURL)
 			return formattedMsg.String() // Only one schema error at a time
-		
+
 		case "schema-version-extraction-error":
 			// Invalid schema URL format - also include migration links for consistency
 			// Build formatted error message with migration links
