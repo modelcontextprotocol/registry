@@ -13,13 +13,13 @@ import (
 
 // printSchemaValidationErrors prints nicely formatted error messages for schema validation issues
 // (empty schema or non-current schema) with migration guidance to stdout.
-// Returns true if any schema errors/warnings were printed.
-func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON *apiv0.ServerJSON) bool {
+// Returns the formatted error message string if any schema errors were printed, empty string otherwise.
+func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON *apiv0.ServerJSON) string {
 	currentSchemaURL := model.CurrentSchemaURL
 	migrationURL := "https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md"
 	checklistURL := migrationURL + "#migration-checklist-for-publishers"
 
-	printed := false
+	var formattedMsg strings.Builder
 
 	for _, issue := range result.Issues {
 		switch issue.Reference {
@@ -34,8 +34,10 @@ func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON
 			_, _ = fmt.Fprintf(os.Stdout, "📋 Migration checklist: %s\n", checklistURL)
 			_, _ = fmt.Fprintf(os.Stdout, "📖 Full changelog with examples: %s\n", migrationURL)
 			_, _ = fmt.Fprintln(os.Stdout)
-			printed = true
-			return printed // Only one schema error at a time
+			
+			// Build formatted error message
+			_, _ = fmt.Fprintf(&formattedMsg, "$schema field is required. Expected current schema: %s. 📋 Migration checklist: %s 📖 Full changelog with examples: %s", currentSchemaURL, checklistURL, migrationURL)
+			return formattedMsg.String() // Only one schema error at a time
 
 		case "schema-version-deprecated":
 			// Non-current schema
@@ -54,24 +56,33 @@ func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON
 			_, _ = fmt.Fprintf(os.Stdout, "📋 Migration checklist: %s\n", checklistURL)
 			_, _ = fmt.Fprintf(os.Stdout, "📖 Full changelog with examples: %s\n", migrationURL)
 			_, _ = fmt.Fprintln(os.Stdout)
-			printed = true
-			return printed // Only one schema error at a time
+			
+			// Build formatted error message - include the original issue message for test compatibility
+			_, _ = fmt.Fprintf(&formattedMsg, "%s. deprecated schema detected: %s. Expected current schema: %s. Migrate to the current schema format for new servers. 📋 Migration checklist: %s 📖 Full changelog with examples: %s", issue.Message, serverJSON.Schema, currentSchemaURL, checklistURL, migrationURL)
+			return formattedMsg.String() // Only one schema error at a time
+		
+		case "schema-version-extraction-error":
+			// Invalid schema URL format - also include migration links for consistency
+			// Build formatted error message with migration links
+			_, _ = fmt.Fprintf(&formattedMsg, "%s. 📋 Migration checklist: %s 📖 Full changelog with examples: %s", issue.Message, checklistURL, migrationURL)
+			return formattedMsg.String()
 		}
 	}
 
-	return printed
+	return ""
 }
 
 // runValidationAndPrintIssues validates the server JSON, prints schema validation errors, and prints all issues.
 // Validation failures are always printed (for both validate and publish commands).
-func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.ValidationOptions) *validators.ValidationResult {
+// Returns the validation result and a formatted error message string for schema validation errors.
+func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.ValidationOptions) (*validators.ValidationResult, string) {
 	result := validators.ValidateServerJSON(serverJSON, opts)
 
 	// Print schema validation errors/warnings with friendly messages
-	printSchemaValidationErrors(result, serverJSON)
+	formattedErrorMsg := printSchemaValidationErrors(result, serverJSON)
 
 	if result.Valid {
-		return result
+		return result, ""
 	}
 
 	// Print all issues
@@ -97,7 +108,7 @@ func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.V
 		issueNum++
 	}
 
-	return result
+	return result, formattedErrorMsg
 }
 
 func ValidateCommand(args []string) error {
@@ -140,7 +151,7 @@ func ValidateCommand(args []string) error {
 	// Run detailed validation (this is the whole point of the validate command)
 	// Include schema validation for comprehensive validation
 	// Warn about non-current schemas (don't error, just inform)
-	result := runValidationAndPrintIssues(&serverJSON, validators.ValidationAll)
+	result, _ := runValidationAndPrintIssues(&serverJSON, validators.ValidationAll)
 
 	if result.Valid {
 		_, _ = fmt.Fprintln(os.Stdout, "✅ server.json is valid")
