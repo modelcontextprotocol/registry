@@ -1,9 +1,14 @@
 package commands
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -72,17 +77,14 @@ func printSchemaValidationErrors(result *validators.ValidationResult, serverJSON
 	return ""
 }
 
-// runValidationAndPrintIssues validates the server JSON, prints schema validation errors, and prints all issues.
-// Validation failures are always printed (for both validate and publish commands).
-// Returns the validation result and a formatted error message string for schema validation errors.
-func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.ValidationOptions) (*validators.ValidationResult, string) {
-	result := validators.ValidateServerJSON(serverJSON, opts)
-
+// printValidationIssues prints schema validation errors and all other validation issues.
+// Returns the formatted error message string for schema validation errors (empty string if none).
+func printValidationIssues(result *validators.ValidationResult, serverJSON *apiv0.ServerJSON) string {
 	// Print schema validation errors/warnings with friendly messages
 	formattedErrorMsg := printSchemaValidationErrors(result, serverJSON)
 
 	if result.Valid {
-		return result, ""
+		return formattedErrorMsg
 	}
 
 	// Print all issues
@@ -108,7 +110,7 @@ func runValidationAndPrintIssues(serverJSON *apiv0.ServerJSON, opts validators.V
 		issueNum++
 	}
 
-	return result, formattedErrorMsg
+	return formattedErrorMsg
 }
 
 func ValidateCommand(args []string) error {
@@ -148,15 +150,97 @@ func ValidateCommand(args []string) error {
 		return fmt.Errorf("invalid JSON: %w", err)
 	}
 
-	// Run detailed validation (this is the whole point of the validate command)
-	// Include schema validation for comprehensive validation
-	// Warn about non-current schemas (don't error, just inform)
-	result, _ := runValidationAndPrintIssues(&serverJSON, validators.ValidationAll)
+	// Get registry URL (same pattern as publish)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	tokenPath := filepath.Join(homeDir, TokenFileName)
+	registryURL := DefaultRegistryURL
+	// Try to read registry URL from token file (if it exists)
+	if tokenData, err := os.ReadFile(tokenPath); err == nil {
+		var tokenInfo map[string]string
+		if err := json.Unmarshal(tokenData, &tokenInfo); err == nil {
+			if url := tokenInfo["registry"]; url != "" {
+				registryURL = url
+			}
+		}
+	}
+
+	// Validate via API
+	_, _ = fmt.Fprintf(os.Stdout, "Validating against %s...\n", registryURL)
+	result, err := validateViaAPI(registryURL, serverData)
+	if err != nil {
+		return fmt.Errorf("validation failed: %w", err)
+	}
+
+	// Print validation results using shared formatting logic
+	formattedErrorMsg := printValidationIssues(result, &serverJSON)
 
 	if result.Valid {
 		_, _ = fmt.Fprintln(os.Stdout, "✅ server.json is valid")
 		return nil
 	}
 
+	// Return error with formatted message if available
+	if formattedErrorMsg != "" {
+		return fmt.Errorf("%s", formattedErrorMsg)
+	}
+
 	return fmt.Errorf("validation failed")
+}
+
+// validateViaAPI calls the /validate endpoint on the registry
+func validateViaAPI(registryURL string, serverData []byte) (*validators.ValidationResult, error) {
+	// Parse the server JSON data to ensure it's valid JSON
+	var serverJSON apiv0.ServerJSON
+	err := json.Unmarshal(serverData, &serverJSON)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing server.json file: %w", err)
+	}
+
+	// Convert to JSON
+	jsonData, err := json.Marshal(serverJSON)
+	if err != nil {
+		return nil, fmt.Errorf("error serializing request: %w", err)
+	}
+
+	// Ensure URL ends with / and add validate endpoint
+	if !strings.HasSuffix(registryURL, "/") {
+		registryURL += "/"
+	}
+	validateURL := registryURL + "v0/validate"
+
+	// Create and send request
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, validateURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error sending request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
+	}
+
+	// Parse response - Huma returns ValidationResult directly
+	var result validators.ValidationResult
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("error parsing response: %w", err)
+	}
+
+	return &result, nil
 }
