@@ -29,6 +29,7 @@ Browse the official MCP Registry in your browser!
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [ToolSDK MCP Registry](https://github.com/toolsdk-ai/toolsdk-mcp-registry) - Extends the MCP Registry with **API-based MCP execution, private deployment**, and **secure sandbox isolation**.
+- [Universal Contract AI Interface](https://github.com/nirholas/UCAI) - The open standard for connecting AI agents to blockchain and smart contracts. Generate MCP servers directly in your browser, with built-in security scanning and explanations at `https://mcp.ucai.tech`
 
 ## Adding Your Project
 
