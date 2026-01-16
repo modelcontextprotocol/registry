@@ -214,7 +214,7 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 			name:          "deprecated 2025-07-09 schema should show warning",
 			schema:        "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
 			publishStatus: http.StatusUnprocessableEntity,
-			validationOpts: func(req apiv0.ServerJSON) validators.ValidationResult {
+			validationOpts: func(_ apiv0.ServerJSON) validators.ValidationResult {
 				return validators.ValidationResult{
 					Valid: false,
 					Issues: []validators.ValidationIssue{
@@ -236,7 +236,7 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 			name:          "current 2025-12-11 schema should pass validation",
 			schema:        "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
 			publishStatus: http.StatusCreated,
-			validationOpts: func(req apiv0.ServerJSON) validators.ValidationResult {
+			validationOpts: func(_ apiv0.ServerJSON) validators.ValidationResult {
 				// Should not be called since publish succeeds
 				return validators.ValidationResult{Valid: true}
 			},
@@ -246,7 +246,7 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 			name:          "empty schema should fail validation",
 			schema:        "",
 			publishStatus: http.StatusUnprocessableEntity,
-			validationOpts: func(req apiv0.ServerJSON) validators.ValidationResult {
+			validationOpts: func(_ apiv0.ServerJSON) validators.ValidationResult {
 				return validators.ValidationResult{
 					Valid: false,
 					Issues: []validators.ValidationIssue{
@@ -268,7 +268,7 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 			name:          "custom schema without valid version should fail validation",
 			schema:        "https://example.com/custom.schema.json",
 			publishStatus: http.StatusUnprocessableEntity,
-			validationOpts: func(req apiv0.ServerJSON) validators.ValidationResult {
+			validationOpts: func(_ apiv0.ServerJSON) validators.ValidationResult {
 				return validators.ValidationResult{
 					Valid: false,
 					Issues: []validators.ValidationIssue{
@@ -296,7 +296,7 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 			// Setup mock server
 			server := SetupMockRegistryServer(t,
 				// Publish handler
-				func(w http.ResponseWriter, r *http.Request) {
+				func(w http.ResponseWriter, _ *http.Request) {
 					publishCallCount++
 					if tt.publishStatus == http.StatusCreated {
 						w.WriteHeader(http.StatusCreated)
