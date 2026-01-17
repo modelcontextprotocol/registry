@@ -1,0 +1,422 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://static.modelcontextprotocol.io/schemas/draft/client-registry.json",
+  "title": "MCP Client Registry",
+  "description": "Schema for MCP client capability registry. Tracks BOTH what clients declare to servers (sampling, elicitation, roots) AND which server capabilities clients can consume (tools, resources, prompts, completions, logging). This is intentionally broader than the MCP spec's ClientCapabilities interface. See https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1814",
+  "type": "object",
+  "additionalProperties": {
+    "$ref": "#/definitions/ClientEntry"
+  },
+  "definitions": {
+    "ClientEntry": {
+      "description": "A registered MCP client with its capabilities and metadata.",
+      "type": "object",
+      "required": ["title", "url", "protocolVersion"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Display name of the client (e.g., 'Claude Code', 'Cursor')."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Homepage or documentation URL for the client."
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the client's purpose and features."
+        },
+        "protocolVersion": {
+          "type": "string",
+          "description": "MCP protocol version the client supports (e.g., '2025-06-18', '2025-11-25')."
+        },
+        "category": {
+          "$ref": "#/definitions/ClientCategory",
+          "description": "Primary category of the client."
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Platform"
+          },
+          "description": "Platforms the client runs on."
+        },
+        "transports": {
+          "$ref": "#/definitions/TransportCapabilities",
+          "description": "Transport protocols the client supports."
+        },
+        "authentication": {
+          "$ref": "#/definitions/AuthenticationCapabilities",
+          "description": "Authentication methods the client supports for remote servers."
+        },
+        "resources": {
+          "$ref": "#/definitions/ResourceCapability",
+          "description": "Server resource consumption capabilities."
+        },
+        "prompts": {
+          "$ref": "#/definitions/PromptCapability",
+          "description": "Server prompt consumption capabilities."
+        },
+        "tools": {
+          "$ref": "#/definitions/ToolCapability",
+          "description": "Server tool consumption capabilities."
+        },
+        "sampling": {
+          "$ref": "#/definitions/SamplingCapability",
+          "description": "Client sampling (LLM completion) capabilities exposed to servers."
+        },
+        "elicitation": {
+          "$ref": "#/definitions/ElicitationCapability",
+          "description": "Client elicitation (user input) capabilities exposed to servers."
+        },
+        "roots": {
+          "$ref": "#/definitions/RootsCapability",
+          "description": "Client roots (filesystem) capabilities exposed to servers."
+        },
+        "completions": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Whether client supports argument autocompletion."
+        },
+        "logging": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Whether client receives and displays server log messages."
+        },
+        "instructions": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Whether client uses server instructions to enhance LLM context."
+        },
+        "tasks": {
+          "$ref": "#/definitions/TasksCapability",
+          "description": "Async task capabilities (MCP 2025-11-25+)."
+        },
+        "experimental": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "description": "Experimental or non-standard capabilities."
+        },
+        "metadata": {
+          "$ref": "#/definitions/ClientMetadata",
+          "description": "Additional metadata about the client."
+        }
+      }
+    },
+
+    "CapabilityStatus": {
+      "description": "Status of a capability. Can be a simple presence object (backward compatible) or detailed status.",
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "Simple presence indicates support (backward compatible with mcp-clients.json).",
+          "properties": {},
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "Detailed status with required status field.",
+          "required": ["status"],
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["full", "partial", "unsupported", "untested"],
+              "description": "Support status: full (complete support), partial (with limitations), unsupported (explicitly not supported), untested (unknown)."
+            },
+            "notes": {
+              "type": "string",
+              "description": "Additional notes about the capability (e.g., limitations, version requirements)."
+            },
+            "since": {
+              "type": "string",
+              "description": "Client version when this capability was added."
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "ClientCategory": {
+      "type": "string",
+      "enum": ["ide", "chat", "cli", "automation", "browser-extension", "library", "other"],
+      "description": "Category of the MCP client."
+    },
+
+    "Platform": {
+      "type": "string",
+      "enum": ["windows", "macos", "linux", "web", "ios", "android"],
+      "description": "Platform the client runs on."
+    },
+
+    "TransportCapabilities": {
+      "type": "object",
+      "description": "Transport protocols the client can use to connect to servers.",
+      "properties": {
+        "stdio": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Standard I/O transport (subprocess communication)."
+        },
+        "sse": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Server-Sent Events transport (legacy HTTP streaming)."
+        },
+        "streamableHttp": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Streamable HTTP transport (MCP 2025-03-26+)."
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/CapabilityStatus"
+      }
+    },
+
+    "AuthenticationCapabilities": {
+      "type": "object",
+      "description": "Authentication methods the client supports for remote MCP servers.",
+      "properties": {
+        "oauth": {
+          "$ref": "#/definitions/OAuthCapability",
+          "description": "OAuth authentication support."
+        },
+        "header": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Header-based authentication (API keys, bearer tokens)."
+        },
+        "none": {
+          "$ref": "#/definitions/CapabilityStatus",
+          "description": "Unauthenticated connections."
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/CapabilityStatus"
+      }
+    },
+
+    "OAuthCapability": {
+      "type": "object",
+      "description": "OAuth authentication capabilities with granular feature support.",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "version": {
+          "type": "string",
+          "enum": ["2.0", "2.1"],
+          "description": "OAuth version supported."
+        },
+        "pkce": {
+          "type": "boolean",
+          "description": "Whether client supports PKCE (Proof Key for Code Exchange)."
+        },
+        "dynamicRegistration": {
+          "type": "boolean",
+          "description": "Whether client supports OAuth Dynamic Client Registration (RFC 7591)."
+        },
+        "grantTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["authorization_code", "client_credentials", "refresh_token", "device_code"]
+          },
+          "description": "Supported OAuth grant types."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "ResourceCapability": {
+      "type": "object",
+      "description": "Client's ability to consume server resources.",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "listChanged": {
+          "type": "boolean",
+          "description": "Whether client handles resources/list_changed notifications."
+        },
+        "subscribe": {
+          "type": "boolean",
+          "description": "Whether client supports resource subscriptions."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "PromptCapability": {
+      "type": "object",
+      "description": "Client's ability to consume server prompts.",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "listChanged": {
+          "type": "boolean",
+          "description": "Whether client handles prompts/list_changed notifications."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "ToolCapability": {
+      "type": "object",
+      "description": "Client's ability to consume server tools.",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "listChanged": {
+          "type": "boolean",
+          "description": "Whether client handles tools/list_changed notifications."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "SamplingCapability": {
+      "type": "object",
+      "description": "Client's ability to provide LLM sampling to servers (sampling/createMessage).",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Whether client supports includeContext parameter."
+        },
+        "tools": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Whether client supports tool use in sampling (MCP 2025-11-25+)."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "ElicitationCapability": {
+      "type": "object",
+      "description": "Client's ability to elicit user input for servers.",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "form": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Whether client supports form-based elicitation."
+        },
+        "url": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Whether client supports URL-based elicitation (OAuth flows)."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "RootsCapability": {
+      "type": "object",
+      "description": "Client's ability to expose filesystem roots to servers.",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "listChanged": {
+          "type": "boolean",
+          "description": "Whether client sends roots/list_changed notifications."
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "TasksCapability": {
+      "type": "object",
+      "description": "Client's async task capabilities (MCP 2025-11-25+).",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/CapabilityStatus"
+        },
+        "list": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Whether client supports tasks/list."
+        },
+        "cancel": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "Whether client supports tasks/cancel."
+        },
+        "requests": {
+          "type": "object",
+          "description": "Specifies which request types can be augmented with tasks.",
+          "properties": {
+            "sampling": {
+              "type": "object",
+              "properties": {
+                "createMessage": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Whether sampling/createMessage can be task-augmented."
+                }
+              },
+              "additionalProperties": true,
+              "description": "Task support for sampling-related requests."
+            },
+            "tools": {
+              "type": "object",
+              "properties": {
+                "call": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Whether tools/call can be task-augmented."
+                }
+              },
+              "additionalProperties": true,
+              "description": "Task support for tool-related requests."
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "ClientMetadata": {
+      "type": "object",
+      "description": "Additional metadata about the client.",
+      "properties": {
+        "vendor": {
+          "type": "string",
+          "description": "Company or developer that maintains the client."
+        },
+        "openSource": {
+          "type": "boolean",
+          "description": "Whether the client is open source."
+        },
+        "sourceUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to source code repository."
+        },
+        "license": {
+          "type": "string",
+          "description": "Software license (e.g., 'MIT', 'Apache-2.0')."
+        },
+        "lastVerified": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when capabilities were last verified (ISO 8601 date)."
+        },
+        "conformanceScore": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Percentage of conformance tests passed (0-100)."
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
