@@ -155,5 +155,41 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.konradbachowski/fakturownia-invoiceocean-mcp",
+    "title": "Fakturownia / InvoiceOcean",
+    "description": "Comprehensive MCP server for managing invoices, clients, products, and payments on Fakturownia.pl and InvoiceOcean platforms.",
+    "repository": {
+      "url": "https://github.com/konradbachowski/fakturownia-invoiceocean-mcp.git",
+      "source": "github"
+    },
+    "version": "0.1.0",
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "fakturownia-invoiceocean-mcp",
+        "version": "0.1.0",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "name": "FAKTUROWNIA_API_TOKEN",
+            "description": "Your Fakturownia API token",
+            "isRequired": true,
+            "isSecret": true
+          },
+          {
+            "name": "FAKTUROWNIA_DOMAIN",
+            "description": "Your Fakturownia subdomain (e.g. 'mycompany')",
+            "isRequired": true,
+            "isSecret": false
+          }
+        ]
+      }
+    ]
   }
 ]
