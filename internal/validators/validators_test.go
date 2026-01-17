@@ -33,7 +33,7 @@ func TestValidate(t *testing.T) {
 			expectedError: "$schema field is required",
 		},
 		{
-			name: "Schema version rejects old schema (2025-01-27)",
+			name: "Schema version rejects old schema (2025-01-27) - non-existent version",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      "https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json",
 				Name:        "com.example/test-server",
@@ -44,7 +44,9 @@ func TestValidate(t *testing.T) {
 				},
 				Version: "1.0.0",
 			},
-			expectedError: "schema version https://static.modelcontextprotocol.io/schemas/2025-01-27/server.schema.json is not supported",
+			// This schema version doesn't exist in embedded schemas, so validation should fail
+			// ValidateServerJSON with ValidationSchemaVersionAndSemantic validates that the schema version exists
+			expectedError: "schema version 2025-01-27 not found in embedded schemas",
 		},
 		{
 			name: "Schema version accepts current schema (2025-10-17)",
@@ -750,7 +752,10 @@ func TestValidate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validators.ValidateServerJSON(&tt.serverDetail)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&tt.serverDetail, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
@@ -905,7 +910,10 @@ func TestValidate_RemoteNamespaceMatch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validators.ValidateServerJSON(&tt.serverDetail)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&tt.serverDetail, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -989,7 +997,10 @@ func TestValidate_ServerNameFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validators.ValidateServerJSON(&tt.serverDetail)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&tt.serverDetail, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -1068,7 +1079,10 @@ func TestValidate_MultipleSlashesInServerName(t *testing.T) {
 				Schema: model.CurrentSchemaURL,
 				Name:   tt.serverName,
 			}
-			err := validators.ValidateServerJSON(&serverDetail)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&serverDetail, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -1122,7 +1136,10 @@ func TestValidateArgument_ValidNamedArguments(t *testing.T) {
 	for _, arg := range validCases {
 		t.Run("Valid_"+arg.Name, func(t *testing.T) {
 			server := createValidServerWithArgument(arg)
-			err := validators.ValidateServerJSON(&server)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 			assert.NoError(t, err, "Expected valid argument %+v", arg)
 		})
 	}
@@ -1141,7 +1158,10 @@ func TestValidateArgument_ValidPositionalArguments(t *testing.T) {
 	for i, arg := range positionalCases {
 		t.Run(fmt.Sprintf("ValidPositional_%d", i), func(t *testing.T) {
 			server := createValidServerWithArgument(arg)
-			err := validators.ValidateServerJSON(&server)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 			assert.NoError(t, err, "Expected valid positional argument %+v", arg)
 		})
 	}
@@ -1163,7 +1183,10 @@ func TestValidateArgument_InvalidNamedArgumentNames(t *testing.T) {
 	for _, tc := range invalidNameCases {
 		t.Run("Invalid_"+tc.name, func(t *testing.T) {
 			server := createValidServerWithArgument(tc.arg)
-			err := validators.ValidateServerJSON(&server)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 			assert.Error(t, err, "Expected error for invalid named argument name: %+v", tc.arg)
 		})
 	}
@@ -1211,7 +1234,10 @@ func TestValidateArgument_InvalidValueFields(t *testing.T) {
 	for _, tc := range invalidValueCases {
 		t.Run("Invalid_"+tc.name, func(t *testing.T) {
 			server := createValidServerWithArgument(tc.arg)
-			err := validators.ValidateServerJSON(&server)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 			assert.Error(t, err, "Expected error for argument with value starting with name: %+v", tc.arg)
 		})
 	}
@@ -1267,7 +1293,10 @@ func TestValidateArgument_ValidValueFields(t *testing.T) {
 	for _, tc := range validValueCases {
 		t.Run("Valid_"+tc.name, func(t *testing.T) {
 			server := createValidServerWithArgument(tc.arg)
-			err := validators.ValidateServerJSON(&server)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 			assert.NoError(t, err, "Expected valid argument %+v", tc.arg)
 		})
 	}
@@ -1734,7 +1763,10 @@ func TestValidate_TransportValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validators.ValidateServerJSON(&tt.serverDetail)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&tt.serverDetail, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
@@ -2163,7 +2195,10 @@ func TestValidateTitle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validators.ValidateServerJSON(&tt.serverDetail)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&tt.serverDetail, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {

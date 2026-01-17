@@ -11,13 +11,14 @@ Browse the official MCP Registry in your browser!
 - [MCP Bench](https://mcpbench.ai/)🔎 - Explore the MCP registry with richer filters, community stars, and LLM-generated classification tags.
 - [MCP Registry Database](https://lite.datasette.io/?url=https%3A%2F%2Fraw.githubusercontent.com%2Frosmur%2Fofficial-mcp-registry-database%2Fmain%2Fofficial_mcp_registry.db#/official_mcp_registry/servers)🔎 - A minimal, web browsable, live database of the official MCP Registry [source code](https://github.com/rosmur/official-mcp-registry-database).
 - [TeamSpark AI Server Registry](https://teamsparkai.github.io/ToolCatalog/registry)🔎 - Browse and discover servers from the official MCP Registry ([source code](https://github.com/TeamSparkAI/ToolCatalog)).
+- [MCP Registry UI](https://vemonet.github.io/mcp-registry)🔎 - A fully client‑side app to search, filter, configure, and install servers from MCP Registry APIs ([source code](https://github.com/vemonet/mcp-registry)).
 
 ### MCP Registry Clients
 
 - [REST API](modelcontextprotocol-io/registry-aggregators.mdx) - HTTP API
 - [go-mcp-registry](https://github.com/leefowlercu/go-mcp-registry) - Go SDK
 - [mcp-registry-spec-sdk](https://www.npmjs.com/package/mcp-registry-spec-sdk) - TypeScript client for the MCP Registry
-- [LangChain4j MCP Registry Java client](https://docs.langchain4j.dev/tutorials/mcp/#mcp-registry-client) - Java API 
+- [LangChain4j MCP Registry Java client](https://docs.langchain4j.dev/tutorials/mcp/#mcp-registry-client) - Java API
 
 ### Other
 

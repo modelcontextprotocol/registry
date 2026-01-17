@@ -1,0 +1,69 @@
+name: Sync Schema
+
+on:
+  workflow_dispatch: # Manual trigger
+  # TODO: Add daily schedule later
+  # schedule:
+  #   - cron: '0 2 * * *'  # Run daily at 2 AM UTC
+
+permissions:
+  contents: write
+
+jobs:
+  sync-schema:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout static repo
+        uses: actions/checkout@v4
+        with:
+          repository: modelcontextprotocol/static
+          path: static-repo
+
+      - name: Sync schemas from static repo
+        run: |
+          echo "🔍 Syncing schemas from modelcontextprotocol/static..."
+          mkdir -p internal/validators/schemas
+          
+          # Copy all versioned schema files
+          for dir in static-repo/schemas/*/; do
+            if [ -f "$dir/server.schema.json" ]; then
+              version=$(basename "$dir")
+              # Skip draft directory if it exists
+              if [ "$version" != "draft" ]; then
+                output_file="internal/validators/schemas/${version}.json"
+                if [ ! -f "$output_file" ] || ! cmp -s "$dir/server.schema.json" "$output_file"; then
+                  echo "⬇ Adding/updating ${version}/server.schema.json -> ${version}.json"
+                  cp "$dir/server.schema.json" "$output_file"
+                else
+                  echo "✓ ${version} is already up to date"
+                fi
+              fi
+            fi
+          done
+          
+          echo "✅ Schema sync complete"
+
+      - name: Check for changes
+        id: changes
+        run: |
+          # Check for both modified and untracked files
+          if [ -n "$(git status --porcelain internal/validators/schemas/)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            git status --porcelain internal/validators/schemas/
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to schemas"
+          fi
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add internal/validators/schemas/
+          git commit -m "Sync schemas from modelcontextprotocol/static [skip ci]"
+          git push

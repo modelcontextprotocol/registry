@@ -99,7 +99,10 @@ func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error)
 	var validationFailures []string
 
 	for _, response := range serverResponses {
-		if err := validators.ValidateServerJSON(&response); err != nil {
+		// ValidateServerJSON returns all validation results; using FirstError() to preserve existing behavior
+		// In future, consider logging all issues from result.Issues for better diagnostics
+		result := validators.ValidateServerJSON(&response, validators.ValidationSchemaVersionAndSemantic)
+		if err := result.FirstError(); err != nil {
 			// Log warning and track invalid server instead of failing
 			invalidServers = append(invalidServers, response.Name)
 			validationFailures = append(validationFailures, fmt.Sprintf("Server '%s': %v", response.Name, err))

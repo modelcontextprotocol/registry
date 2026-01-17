@@ -11,7 +11,7 @@ require (
 	github.com/danielgtaylor/huma/v2 v2.34.1
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/go-containerregistry v0.20.7
-	github.com/jackc/pgx/v5 v5.7.6
+	github.com/jackc/pgx/v5 v5.8.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rs/cors v1.11.1
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
@@ -22,7 +22,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.39.0
 	go.opentelemetry.io/otel/sdk v1.39.0
 	go.opentelemetry.io/otel/sdk/metric v1.39.0
-	golang.org/x/mod v0.31.0
+	golang.org/x/mod v0.32.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

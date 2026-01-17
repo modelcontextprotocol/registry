@@ -168,7 +168,10 @@ func validateWithObjectValidator(serverData any) bool {
 		return false
 	}
 
-	if err := validators.ValidateServerJSON(&serverDetail); err != nil {
+	// ValidateServerJSON returns all validation results; using FirstError() to preserve existing behavior
+	// In future, consider displaying all issues from result.Issues for comprehensive feedback
+	result := validators.ValidateServerJSON(&serverDetail, validators.ValidationSchemaVersionAndSemantic)
+	if err := result.FirstError(); err != nil {
 		log.Printf("    Validating with Go Validator: ❌")
 		log.Printf("      Error: %v", err)
 		return false

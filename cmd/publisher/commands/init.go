@@ -58,7 +58,7 @@ func InitCommand() error {
 
 	// Create the server structure
 	server := createServerJSON(
-		name, description, version, repoURL, repoSource, subfolder,
+		model.CurrentSchemaURL, name, description, version, repoURL, repoSource, subfolder,
 		packageType, packageIdentifier, version, envVars,
 	)
 
@@ -327,7 +327,7 @@ func detectPackageIdentifier(serverName string, packageType string) string {
 }
 
 func createServerJSON(
-	name, description, version, repoURL, repoSource, subfolder,
+	currentSchema, name, description, version, repoURL, repoSource, subfolder,
 	packageType, packageIdentifier, packageVersion string,
 	envVars []model.KeyValueInput,
 ) apiv0.ServerJSON {
@@ -406,7 +406,7 @@ func createServerJSON(
 
 	// Create server structure
 	return apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
+		Schema:      currentSchema,
 		Name:        name,
 		Description: description,
 		Repository:  repo,

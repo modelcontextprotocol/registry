@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
-	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 func PublishCommand(args []string) error {
@@ -38,15 +38,20 @@ func PublishCommand(args []string) error {
 		return fmt.Errorf("invalid server.json: %w", err)
 	}
 
-	// Check for deprecated schema and recommend migration
-	// Allow empty schema (will use default) but reject old schemas
-	if serverJSON.Schema != "" && !strings.Contains(serverJSON.Schema, model.CurrentSchemaVersion) {
-		return fmt.Errorf(`deprecated schema detected: %s.
-
-Migrate to the current schema format for new servers.
-
-📋 Migration checklist: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md#migration-checklist-for-publishers
-📖 Full changelog with examples: https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/CHANGELOG.md`, serverJSON.Schema)
+	// Validate schema version (non-empty schema, valid schema, and current schema)
+	// This performs schema version checks without full schema validation
+	// Note: When we enable full validation, use validators.ValidationAll instead
+	result, formattedErrorMsg := runValidationAndPrintIssues(&serverJSON, validators.ValidationSchemaVersionOnly)
+	if !result.Valid {
+		// Return error after printing (all errors already printed by validateServerJSON)
+		// Prefer formatted error message for schema validation errors, otherwise use first error
+		if formattedErrorMsg != "" {
+			return fmt.Errorf("%s", formattedErrorMsg)
+		}
+		if firstErr := result.FirstError(); firstErr != nil {
+			return firstErr
+		}
+		return fmt.Errorf("validation failed")
 	}
 
 	// Load saved token

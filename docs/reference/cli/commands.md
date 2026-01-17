@@ -207,6 +207,45 @@ mcp-publisher login none [--registry=URL]
 - No authentication - for local testing only
 - Only works with local registry instances
 
+### `mcp-publisher validate`
+
+Validate a `server.json` file without publishing.
+
+**Usage:**
+```bash
+mcp-publisher validate [file]
+```
+
+**Arguments:**
+- `file` - Path to server.json file (default: `./server.json`)
+
+**Behavior:**
+- Performs exhaustive validation, reporting all issues at once (not just the first error)
+- Validates JSON syntax and schema compliance
+- Runs semantic validation (business logic checks)
+- Checks for deprecated schema versions and provides migration guidance
+- Includes detailed error locations with JSON paths (e.g., `packages[0].transport.url`)
+- Shows validation issue type (json, schema, semantic, linter)
+- Displays severity level (error, warning, info)
+- Provides schema references showing which validation rule triggered each error
+
+**Example output:**
+```bash
+$ mcp-publisher validate
+✅ server.json is valid
+
+$ mcp-publisher validate custom-server.json
+❌ Validation failed with 2 issue(s):
+
+1. [error] repository.url (schema)
+   '' has invalid format 'uri'
+   Reference: #/definitions/Repository/properties/url/format from: [#/definitions/ServerDetail]/properties/repository/[#/definitions/Repository]/properties/url/format
+
+2. [error] name (semantic)
+   server name must be in format 'dns-namespace/name'
+   Reference: invalid-server-name
+```
+
 ### `mcp-publisher publish`
 
 Publish server to the registry.
