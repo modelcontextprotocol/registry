@@ -213,6 +213,10 @@
           "type": "boolean",
           "description": "Whether client supports OAuth Dynamic Client Registration (RFC 7591)."
         },
+        "clientIdMetadataDocument": {
+          "type": "boolean",
+          "description": "Whether client supports Client ID Metadata Documents (CIMD) - URL-based client IDs where client hosts metadata at a URL instead of using DCR (SEP-991, MCP 2025-11-25+)."
+        },
         "grantTypes": {
           "type": "array",
           "items": {
