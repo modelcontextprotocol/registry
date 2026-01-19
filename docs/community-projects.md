@@ -29,6 +29,7 @@ Browse the official MCP Registry in your browser!
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [ToolSDK MCP Registry](https://github.com/toolsdk-ai/toolsdk-mcp-registry) - Extends the MCP Registry with **API-based MCP execution, private deployment**, and **secure sandbox isolation**.
+- [Bridge MCP](https://github.com/BarhamAgha1/Bridge-MCP) - A powerful local Agent bridge for Claude, enabling full PC control via MCP.
 
 ## Adding Your Project
 
