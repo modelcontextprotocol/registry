@@ -38,8 +38,8 @@ github.com/containerd/stargz-snapshotter/estargz v0.18.1 h1:cy2/lpgBXDA3cDKSyEfN
 github.com/containerd/stargz-snapshotter/estargz v0.18.1/go.mod h1:ALIEqa7B6oVDsrF37GkGN20SuvG/pIMm7FwP7ZmRb0Q=
 github.com/coreos/go-oidc/v3 v3.17.0 h1:hWBGaQfbi0iVviX4ibC7bk8OKT5qNr4klBaCHVNvehc=
 github.com/coreos/go-oidc/v3 v3.17.0/go.mod h1:wqPbKFrVnE90vty060SB40FCJ8fTHTxSwyXJqZH+sI8=
-github.com/danielgtaylor/huma/v2 v2.34.1 h1:EmOJAbzEGfy0wAq/QMQ1YKfEMBEfE94xdBRLPBP0gwQ=
-github.com/danielgtaylor/huma/v2 v2.34.1/go.mod h1:ynwJgLk8iGVgoaipi5tgwIQ5yoFNmiu+QdhU7CEEmhk=
+github.com/danielgtaylor/huma/v2 v2.35.0 h1:FRg3FgVKcMogVhbNY7FjyTwk+p/orLBR3hQBvXXg7dw=
+github.com/danielgtaylor/huma/v2 v2.35.0/go.mod h1:3elp5brzdyyZsPlDVvf6w8RLnklKp3abolr+5op3fP0=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
