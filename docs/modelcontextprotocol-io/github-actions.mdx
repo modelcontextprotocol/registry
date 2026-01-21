@@ -112,7 +112,7 @@ jobs:
           curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
 
       - name: Authenticate to MCP Registry
-        run: mcp-publisher login github --token ${{ secrets.MCP_GITHUB_TOKEN }}
+        run: ./mcp-publisher login github --token ${{ secrets.MCP_GITHUB_TOKEN }}
 
       # Optional:
       # - name: Set version in server.json
@@ -172,9 +172,7 @@ jobs:
       # TODO: Replace `example.com` with your domain name
       # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       - name: Authenticate to MCP Registry
-        run: |
-          echo "${{ secrets.MCP_PRIVATE_KEY }}" > key.pem
-          mcp-publisher login dns --domain example.com --private-key-file key.pem
+        run: ./mcp-publisher login dns --domain example.com --private-key ${{ secrets.MCP_PRIVATE_KEY }}
 
       # Optional:
       # - name: Set version in server.json
@@ -218,6 +216,6 @@ The workflow will run tests, build the package, publish the package to npm, and 
 | Error Message | Action |
 | --- | --- |
 | "Authentication failed" | Ensure `id-token: write` permission is set for OIDC, or check secrets. |
-| "Package validation failed" | Verify your package successfully published to the package registry (e.g., npm, PyPI), and that your package has the [necessary verfication information](./package-types.mdx). |
+| "Package validation failed" | Verify your package successfully published to the package registry (e.g., npm, PyPI), and that your package has the [necessary verification information](./package-types.mdx). |
 
 {/* prettier-ignore-end */}
