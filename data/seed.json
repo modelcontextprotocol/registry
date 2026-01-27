@@ -155,5 +155,34 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "dev.jprox/jprox-mcp",
+    "description": "Japan proxy MCP server for accessing geo-restricted Japanese sites (Mercari, SUUMO, Rakuten, Amazon JP) through residential IPs.",
+    "repository": {
+      "url": "https://github.com/jprox/jprox-mcp.git",
+      "source": "github"
+    },
+    "version": "0.1.3",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "@jprox/mcp",
+        "version": "0.1.3",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "JProx API key. Get free key (1,000 requests/month) at https://jprox.dev",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "JPROX_API_KEY"
+          }
+        ]
+      }
+    ]
   }
 ]
