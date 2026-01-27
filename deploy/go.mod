@@ -5,7 +5,7 @@ go 1.24.11
 require (
 	github.com/pulumi/pulumi-gcp/sdk/v8 v8.41.1
 	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.25.0
-	github.com/pulumi/pulumi/sdk/v3 v3.216.0
+	github.com/pulumi/pulumi/sdk/v3 v3.217.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -76,15 +76,15 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zclconf/go-cty v1.13.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/mod v0.31.0 // indirect
+	golang.org/x/net v0.49.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/term v0.39.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
+	golang.org/x/tools v0.40.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
 	google.golang.org/grpc v1.74.2 // indirect
 	google.golang.org/protobuf v1.36.7 // indirect
