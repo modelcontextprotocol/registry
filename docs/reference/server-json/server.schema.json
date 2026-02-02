@@ -409,7 +409,7 @@
           "type": "string"
         },
         "_meta": {
-          "description": "Optional extension metadata for vendor-specific data. Keys must use reverse-DNS namespacing to avoid collisions. Include as many subdomain levels as necessary for uniqueness.",
+          "description": "Extension metadata using reverse DNS namespacing for vendor-specific data",
           "properties": {
             "io.modelcontextprotocol.registry/publisher-provided": {
               "additionalProperties": true,
@@ -443,7 +443,7 @@
           "type": "array"
         },
         "name": {
-          "description": "Unique MCP server identifier in reverse-DNS format. Must contain exactly one forward slash separating namespace from the server name. Include as many subdomain levels in the namespace as necessary for uniqueness.",
+          "description": "Server name in reverse-DNS format. Must contain exactly one forward slash separating namespace from server name.",
           "example": "io.github.user/weather",
           "maxLength": 200,
           "minLength": 3,
