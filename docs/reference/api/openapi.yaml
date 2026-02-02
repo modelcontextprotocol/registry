@@ -778,7 +778,7 @@ components:
       properties:
         name:
           type: string
-          description: "Server name in reverse-DNS format. Must contain exactly one forward slash separating namespace from server name."
+          description: "Unique MCP server identifier in reverse-DNS format. Must contain exactly one forward slash separating namespace from the server name. Include as many subdomain levels in the namespace as necessary for uniqueness."
           example: "io.github.user/weather"
           minLength: 3
           maxLength: 200
@@ -828,7 +828,7 @@ components:
             $ref: '#/components/schemas/RemoteTransport'
         _meta:
           type: object
-          description: "Extension metadata using reverse DNS namespacing for vendor-specific data"
+          description: "Optional extension metadata for vendor-specific data. Keys must use reverse-DNS namespacing to avoid collisions. Include as many subdomain levels as necessary for uniqueness."
           properties:
             io.modelcontextprotocol.registry/publisher-provided:
               type: object
