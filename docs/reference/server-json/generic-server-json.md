@@ -30,6 +30,13 @@ The optional `_meta` field allows publishers to include custom metadata alongsid
 
 When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions and examples.
 
+## Reverse DNS Namespacing
+
+Both the `_meta` keys and the `name` field in a `server.json` file use reverse DNS format to provide a structured, globally unique namespace.
+
+Reverse DNS components (including subdomains) MAY be included as necessary for uniqueness.
+There is no fixed limit on the number of domain segments, as long as the namespace is derived from a domain name controlled by the publisher.
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->
