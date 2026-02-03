@@ -155,5 +155,36 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://modelcontextprotocol.io/schemas/server.json",
+    "name": "agentmarket",
+    "description": "Real energy data for AI agents. Electricity prices, gas storage, weather. 28M+ records, 50+ countries.",
+    "repository": "https://github.com/stromfee/agentmarket-mcp",
+    "version": "1.0.0",
+    "homepage": "https://agentmarket.cloud",
+    "categories": [
+      "data",
+      "energy",
+      "utilities"
+    ],
+    "tools": [
+      {
+        "name": "get_electricity_price",
+        "description": "Current spot price by bidding zone"
+      },
+      {
+        "name": "get_price_forecast",
+        "description": "24-48h price forecast"
+      },
+      {
+        "name": "get_weather",
+        "description": "Weather data for energy optimization"
+      },
+      {
+        "name": "get_gas_storage",
+        "description": "EU gas storage levels"
+      }
+    ]
   }
 ]
