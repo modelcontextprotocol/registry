@@ -28,7 +28,7 @@ jobs:
         uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
 
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@v0.22.1
+        uses: anchore/sbom-action/download-syft@v0.22.2
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a
@@ -57,7 +57,7 @@ jobs:
         uses: ko-build/setup-ko@v0.9
 
       - name: Log in to Container Registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
