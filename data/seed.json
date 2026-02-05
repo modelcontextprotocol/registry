@@ -155,5 +155,32 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.avax/avalanche-docs",
+    "title": "Avalanche Documentation",
+    "description": "Search and retrieve Avalanche blockchain documentation, integrations, and academy content. Access 1300+ pages of documentation for building on the Avalanche network.",
+    "repository": {
+      "url": "https://github.com/ava-labs/avalanche-docs",
+      "source": "github"
+    },
+    "websiteUrl": "https://build.avax.network",
+    "version": "1.0.0",
+    "icons": [
+      {
+        "src": "https://raw.githubusercontent.com/Airpote/avalanche-mcp-vscode/main/images/icon.png",
+        "mimeType": "image/png",
+        "sizes": [
+          "128x128"
+        ]
+      }
+    ],
+    "remotes": [
+      {
+        "type": "streamable-http",
+        "url": "https://build.avax.network/api/mcp"
+      }
+    ]
   }
 ]
