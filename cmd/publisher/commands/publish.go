@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
 
@@ -36,22 +35,6 @@ func PublishCommand(args []string) error {
 	var serverJSON apiv0.ServerJSON
 	if err := json.Unmarshal(serverData, &serverJSON); err != nil {
 		return fmt.Errorf("invalid server.json: %w", err)
-	}
-
-	// Validate schema version (non-empty schema, valid schema, and current schema)
-	// This performs schema version checks without full schema validation
-	// Note: When we enable full validation, use validators.ValidationAll instead
-	result, formattedErrorMsg := runValidationAndPrintIssues(&serverJSON, validators.ValidationSchemaVersionOnly)
-	if !result.Valid {
-		// Return error after printing (all errors already printed by validateServerJSON)
-		// Prefer formatted error message for schema validation errors, otherwise use first error
-		if formattedErrorMsg != "" {
-			return fmt.Errorf("%s", formattedErrorMsg)
-		}
-		if firstErr := result.FirstError(); firstErr != nil {
-			return firstErr
-		}
-		return fmt.Errorf("validation failed")
 	}
 
 	// Load saved token
@@ -82,8 +65,33 @@ func PublishCommand(args []string) error {
 
 	// Publish to registry
 	_, _ = fmt.Fprintf(os.Stdout, "Publishing to %s...\n", registryURL)
-	response, err := publishToRegistry(registryURL, serverData, token)
+	response, statusCode, err := publishToRegistry(registryURL, serverData, token)
 	if err != nil {
+		// If publish failed with 422, call validate endpoint to show detailed errors
+		if statusCode == http.StatusUnprocessableEntity {
+			_, _ = fmt.Fprintln(os.Stdout, "Validation failed. Checking detailed validation errors...")
+			_, _ = fmt.Fprintln(os.Stdout)
+
+			// Call validate endpoint (same as validate command does)
+			result, validateErr := validateViaAPI(registryURL, serverData)
+			if validateErr != nil {
+				// If validate also fails, return original publish error
+				return fmt.Errorf("publish failed: %w", err)
+			}
+
+			// Print validation results using shared formatting logic
+			formattedErrorMsg := printValidationIssues(result, &serverJSON)
+
+			if !result.Valid {
+				// Return error with formatted message if available
+				if formattedErrorMsg != "" {
+					return fmt.Errorf("%s", formattedErrorMsg)
+				}
+				return fmt.Errorf("validation failed")
+			}
+		}
+
+		// For non-422 errors, return the original error
 		return fmt.Errorf("publish failed: %w", err)
 	}
 
@@ -93,18 +101,18 @@ func PublishCommand(args []string) error {
 	return nil
 }
 
-func publishToRegistry(registryURL string, serverData []byte, token string) (*apiv0.ServerResponse, error) {
+func publishToRegistry(registryURL string, serverData []byte, token string) (*apiv0.ServerResponse, int, error) {
 	// Parse the server JSON data
 	var serverJSON apiv0.ServerJSON
 	err := json.Unmarshal(serverData, &serverJSON)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing server.json file: %w", err)
+		return nil, 0, fmt.Errorf("error parsing server.json file: %w", err)
 	}
 
 	// Convert to JSON
 	jsonData, err := json.Marshal(serverJSON)
 	if err != nil {
-		return nil, fmt.Errorf("error serializing request: %w", err)
+		return nil, 0, fmt.Errorf("error serializing request: %w", err)
 	}
 
 	// Ensure URL ends with the publish endpoint
@@ -116,7 +124,7 @@ func publishToRegistry(registryURL string, serverData []byte, token string) (*ap
 	// Create and send request
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, publishURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return nil, fmt.Errorf("error creating request: %w", err)
+		return nil, 0, fmt.Errorf("error creating request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -124,24 +132,24 @@ func publishToRegistry(registryURL string, serverData []byte, token string) (*ap
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("error sending request: %w", err)
+		return nil, 0, fmt.Errorf("error sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Read response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading response: %w", err)
+		return nil, resp.StatusCode, fmt.Errorf("error reading response: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
+		return nil, resp.StatusCode, fmt.Errorf("server returned status %d: %s", resp.StatusCode, body)
 	}
 
 	var serverResponse apiv0.ServerResponse
 	if err := json.Unmarshal(body, &serverResponse); err != nil {
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
 
-	return &serverResponse, nil
+	return &serverResponse, resp.StatusCode, nil
 }
