@@ -1,6 +1,6 @@
 module github.com/modelcontextprotocol/registry
 
-go 1.24.11
+go 1.24.12
 
 require (
 	cloud.google.com/go/kms v1.25.0
