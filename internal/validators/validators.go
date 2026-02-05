@@ -626,15 +626,10 @@ func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *Vali
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions
+// Note: ValidateServerJSON should be called separately before this function
 func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
 	// Validate publisher extensions in _meta
 	if err := validatePublisherExtensions(req); err != nil {
-		return err
-	}
-
-	// Validate the server detail (includes all nested validation)
-	result := ValidateServerJSON(&req, ValidationSchemaVersionAndSemantic)
-	if err := result.FirstError(); err != nil {
 		return err
 	}
 
@@ -648,13 +643,9 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 	return nil
 }
 
+// ValidateUpdateRequest validates an update request including registry ownership
+// Note: ValidateServerJSON should be called separately before this function
 func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
-	// Validate the server detail (includes all nested validation)
-	result := ValidateServerJSON(&req, ValidationSchemaVersionAndSemantic)
-	if err := result.FirstError(); err != nil {
-		return err
-	}
-
 	if cfg.EnableRegistryValidation && !skipRegistryValidation {
 		if err := validateRegistryOwnership(ctx, req); err != nil {
 			return err
