@@ -135,7 +135,7 @@ func InitMetrics(version string) (ShutdownFunc, *Metrics, error) {
 		return retErr
 	}
 
-	meter := mp.Meter(Namespace, metric.WithSchemaURL(semconv.SchemaURL), metric.WithInstrumentationVersion(runtime.Version()))
+	meter := mp.Meter(Namespace, metric.WithSchemaURL(semconv.SchemaURL), metric.WithInstrumentationVersion(runtime.Version))
 	metrics, err := NewMetrics(meter)
 	return shutdown, metrics, err
 }
