@@ -26,6 +26,10 @@ Browse the official MCP Registry in your browser!
 - [MCP Registry Remote MCP Server](https://github.com/jaw9c/mcp-registry-mcp) - Open Remote MCP server for the Registry at `https://registry-mcp.remote-mcp.com`
 - [MCP Server for MCP Registry](https://github.com/formulahendry/mcp-server-mcp-registry) - MCP Server to discover and search for available MCP servers in the registry
 - [mcp-safety-scanner](https://github.com/TheodorNEngoy/mcp-safety-scanner) - GitHub Action + CLI to scan MCP/tool-server repos for common security footguns (CORS, eval, exec, etc.)
+- [mcp-guard](https://github.com/TheodorNEngoy/mcp-guard) - Reverse proxy that adds secure defaults (CORS allowlist, size limits, optional bearer token) in front of any MCP HTTP endpoint.
+- [mcp-secure-node-starter](https://github.com/TheodorNEngoy/mcp-secure-node-starter) - Secure-by-default Node.js MCP server starter (CORS allowlist, size limits, minimal tools).
+- [mcp-secure-python-starter](https://github.com/TheodorNEngoy/mcp-secure-python-starter) - Secure-by-default Python MCP server starter (CORS allowlist, size limits, optional auth).
+- [mcp-secure-go-starter](https://github.com/TheodorNEngoy/mcp-secure-go-starter) - Secure-by-default Go MCP server starter (CORS allowlist, size limits, optional auth).
 - [mcp-insights](https://github.com/joelverhagen/mcp-insights/) - Analytics and insights for the MCP Registry
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
