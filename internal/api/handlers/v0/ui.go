@@ -10,8 +10,8 @@ import (
 var embedUI string
 
 const (
-	defaultAPIBasePlaceholder = "PLACEHOLDER"
-	defaultAPIBaseValueKey    = "__DEFAULT_API_BASE_VALUE__"
+	defaultAPIBasePlaceholder    = "PLACEHOLDER"
+	defaultAPIBaseValueKey       = "__DEFAULT_API_BASE_VALUE__"
 	defaultAPIBasePlaceholderKey = "__DEFAULT_API_BASE_PLACEHOLDER__"
 )
 
