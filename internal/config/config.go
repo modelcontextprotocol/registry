@@ -11,6 +11,7 @@ type Config struct {
 	DatabaseURL              string `env:"DATABASE_URL" envDefault:"postgres://localhost:5432/mcp-registry?sslmode=disable"`
 	SeedFrom                 string `env:"SEED_FROM" envDefault:""`
 	Version                  string `env:"VERSION" envDefault:"dev"`
+	CustomMCPRegistryURL     string `env:"CUSTOM_MCP_REGISTRY_URL" envDefault:""`
 	GithubClientID           string `env:"GITHUB_CLIENT_ID" envDefault:""`
 	GithubClientSecret       string `env:"GITHUB_CLIENT_SECRET" envDefault:""`
 	JWTPrivateKey            string `env:"JWT_PRIVATE_KEY" envDefault:""`

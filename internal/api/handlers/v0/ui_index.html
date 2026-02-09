@@ -138,6 +138,9 @@
     </div>
 
     <script>
+        window.__DEFAULT_API_BASE__ = "__DEFAULT_API_BASE_VALUE__";
+        window.__DEFAULT_API_BASE_PLACEHOLDER__ = "__DEFAULT_API_BASE_PLACEHOLDER__";
+
         let servers = [];
         let cursorHistory = [];
         let currentCursor = null;
@@ -145,9 +148,21 @@
         let searchTimeout = null;
         let baseUrl = '';
 
+        function getInjectedDefaultBase() {
+            return (window.__DEFAULT_API_BASE__ && window.__DEFAULT_API_BASE__ !== window.__DEFAULT_API_BASE_PLACEHOLDER__)
+                ? window.__DEFAULT_API_BASE__
+                : '';
+        }
+
+        function normalizeBaseUrl(url) {
+            const trimmed = (url || '').trim();
+            return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
+        }
+
         // Get base URL based on selection
         function getBaseUrl() {
-            const selection = localStorage.getItem('baseUrl') || 'local';
+            const defaultApiBase = getInjectedDefaultBase();
+            const selection = (defaultApiBase && !localStorage.getItem('customUrl')) ? 'custom' : (localStorage.getItem('baseUrl') || 'prod');
             const customUrl = localStorage.getItem('customUrl') || '';
 
             switch (selection) {
@@ -158,7 +173,7 @@
                 case 'local':
                     return '';
                 case 'custom':
-                    return customUrl;
+                    return customUrl || defaultApiBase;
                 default:
                     return '';
             }
@@ -166,7 +181,8 @@
 
         // Get server display name
         function getServerName() {
-            const selection = localStorage.getItem('baseUrl') || 'local';
+            const defaultApiBase = getInjectedDefaultBase();
+            const selection = (defaultApiBase && !localStorage.getItem('customUrl')) ? 'custom' : (localStorage.getItem('baseUrl') || 'prod');
             const customUrl = localStorage.getItem('customUrl') || '';
 
             switch (selection) {
@@ -184,6 +200,15 @@
         }
 
         // Initialize base URL and server name
+        if (!localStorage.getItem('baseUrl')) {
+            const defaultApiBase = getInjectedDefaultBase();
+            if (defaultApiBase) {
+                localStorage.setItem('baseUrl', 'custom');
+                localStorage.setItem('customUrl', normalizeBaseUrl(defaultApiBase));
+            } else {
+                localStorage.setItem('baseUrl', 'prod');
+            }
+        }
         baseUrl = getBaseUrl();
         document.getElementById('server-name').textContent = getServerName();
 
@@ -220,9 +245,11 @@
 
         // Debug modal handlers
         document.getElementById('debug-btn').addEventListener('click', () => {
-            const selection = localStorage.getItem('baseUrl') || 'prod';
+            const defaultApiBase = getInjectedDefaultBase();
+            const selection = (defaultApiBase && !localStorage.getItem('customUrl')) ? 'custom' : (localStorage.getItem('baseUrl') || 'prod');
             document.querySelector(`input[name="baseUrl"][value="${selection}"]`).checked = true;
-            document.getElementById('custom-url').value = localStorage.getItem('customUrl') || '';
+            const customUrlValue = localStorage.getItem('customUrl') || (selection === 'custom' ? defaultApiBase : '');
+            document.getElementById('custom-url').value = customUrlValue;
             document.getElementById('custom-url').disabled = selection !== 'custom';
             document.getElementById('debug-modal').classList.remove('hidden');
         });
@@ -233,7 +260,7 @@
 
         document.getElementById('debug-apply').addEventListener('click', () => {
             const selection = document.querySelector('input[name="baseUrl"]:checked').value;
-            const customUrl = document.getElementById('custom-url').value;
+            const customUrl = normalizeBaseUrl(document.getElementById('custom-url').value);
             localStorage.setItem('baseUrl', selection);
             localStorage.setItem('customUrl', customUrl);
             location.reload();
