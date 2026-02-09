@@ -21,6 +21,7 @@ func RegisterV0Routes(
 	v0.RegisterEditEndpoints(api, "/v0", registry, cfg)
 	v0auth.RegisterAuthEndpoints(api, "/v0", cfg)
 	v0.RegisterPublishEndpoint(api, "/v0", registry, cfg)
+	v0.RegisterValidateEndpoint(api, "/v0")
 }
 
 func RegisterV0_1Routes(
@@ -33,4 +34,5 @@ func RegisterV0_1Routes(
 	v0.RegisterEditEndpoints(api, "/v0.1", registry, cfg)
 	v0auth.RegisterAuthEndpoints(api, "/v0.1", cfg)
 	v0.RegisterPublishEndpoint(api, "/v0.1", registry, cfg)
+	v0.RegisterValidateEndpoint(api, "/v0.1")
 }

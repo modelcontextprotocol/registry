@@ -2,10 +2,18 @@ version: 2
 updates:
   - package-ecosystem: gomod
     directory: /
+    groups:
+      opentelemetry:
+        patterns:
+          - "go.opentelemetry.io/*"
     schedule:
       interval: daily
   - package-ecosystem: gomod
     directory: /deploy
+    groups:
+      opentelemetry:
+        patterns:
+          - "go.opentelemetry.io/*"
     schedule:
       interval: daily
   - package-ecosystem: github-actions

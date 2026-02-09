@@ -366,6 +366,24 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedStatus:       http.StatusUnprocessableEntity,
 			expectedError:        "expected string to match pattern",
 		},
+		{
+			name: "invalid schema - version range instead of specific version",
+			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "^1.0.0", // Version range, not allowed
+			},
+			tokenClaims: &auth.JWTClaims{
+				AuthMethod: auth.MethodNone,
+				Permissions: []auth.Permission{
+					{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+				},
+			},
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "Failed to publish server, invalid schema: call /validate for details",
+		},
 	}
 
 	for _, tc := range testCases {

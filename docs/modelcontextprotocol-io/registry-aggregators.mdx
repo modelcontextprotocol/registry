@@ -3,6 +3,10 @@ title: MCP Registry Aggregators
 sidebarTitle: Registry Aggregators
 ---
 
+<Note>
+  The MCP Registry is currently in preview. Breaking changes or data resets may occur before general availability. If you encounter any issues, please report them on [GitHub](https://github.com/modelcontextprotocol/registry/issues).
+</Note>
+
 Aggregators are downstream consumers of the MCP Registry that provide additional value. For example, a server marketplace that provides user ratings and security scanning.
 
 The MCP Registry provides an unauthenticated read-only REST API that aggregators can use to populate their data stores. Aggregators are expected to scrape data on a regular but infrequent basis (e.g., once per hour), and persist the data in their own data store. The MCP Registry **does not provide uptime or data durability guarantees**.

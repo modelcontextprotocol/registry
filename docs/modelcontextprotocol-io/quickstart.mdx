@@ -3,13 +3,17 @@ title: "Quickstart: Publish an MCP Server to the MCP Registry"
 sidebarTitle: "Quickstart: Publish a Server"
 ---
 
+<Note>
+  The MCP Registry is currently in preview. Breaking changes or data resets may occur before general availability. If you encounter any issues, please report them on [GitHub](https://github.com/modelcontextprotocol/registry/issues).
+</Note>
+
 This tutorial will show you how to publish an MCP server written in TypeScript to the MCP Registry using the official `mcp-publisher` CLI tool.
 
 ## Prerequisites
 
 - **Node.js** — This tutorial assumes the MCP server is written in TypeScript.
 - **npm account** — The MCP Registry only hosts metadata, not artifacts. Before publishing to the MCP Registry, we will publish the MCP server's package to npm, so you will need an [npm](https://www.npmjs.com) account.
-- **GitHub account** — The MCP Registry supports [multiple authentication methods](./authentication.mdx). authentication. For simplicity, this tutorial will use GitHub-based authentication, so you will need a [GitHub](https://github.com/) account.
+- **GitHub account** — The MCP Registry supports [multiple authentication methods](./authentication.mdx). For simplicity, this tutorial will use GitHub-based authentication, so you will need a [GitHub](https://github.com/) account.
 
 If you do not have an MCP server written in TypeScript, you can copy the `weather-server-typescript` server from the [`modelcontextprotocol/quickstart-resources` repository](https://github.com/modelcontextprotocol/quickstart-resources) to follow along with this tutorial:
 
