@@ -155,5 +155,22 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.espadaw/agent47",
+    "title": "Agent47",
+    "description": "Unified job aggregator for AI agents across 9+ platforms",
+    "repository": {
+      "url": "https://github.com/espadaw/Agent47",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "remotes": [
+      {
+        "type": "sse",
+        "url": "https://agent47-production.up.railway.app/sse"
+      }
+    ]
   }
 ]
