@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.socalstreet.prwire-mcp-server",
+  "description": "The permissionless newswire for crypto and digital assets. Get latest news, search articles, and submit press releases across 4 crypto publications.",
+  "repository": {
+    "url": "https://github.com/SoCalStreet/prwire-mcp-server.git",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "prwire-mcp-server",
+      "version": "1.0.0",
+      "runtimeHint": "node",
+      "transport": {
+        "type": "sse"
+      }
+    }
+  ]
+}
