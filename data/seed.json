@@ -155,5 +155,56 @@
         }
       }
     ]
+  },{
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.mountainmystic/hedera-hcs-mcp-server",
+    "description": "AI-powered Hedera Consensus Service (HCS) topic intelligence for agents. Query, monitor, and analyze any HCS topic with natural language. Detects anomalies, ranks relevant messages, and returns plain English summaries. Pay per call in HBAR micropayments. Built for the Hedera ecosystem including council members and HBAR network users.",
+    "repository": {
+      "url": "https://github.com/mountainmystic/hedera-hcs-mcp-server.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "hedera-hcs-mcp-server",
+        "version": "1.0.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "Hedera account ID in format 0.0.XXXXXXX. Create at https://portal.hedera.com",
+            "isRequired": true,
+            "isSecret": false,
+            "name": "HEDERA_ACCOUNT_ID"
+          },
+          {
+            "description": "Hedera account private key (ECDSA hex format). Found in HashPack or Hedera portal.",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "HEDERA_PRIVATE_KEY"
+          },
+          {
+            "description": "Hedera network to connect to. Use 'testnet' for development or 'mainnet' for production.",
+            "isRequired": true,
+            "isSecret": false,
+            "name": "HEDERA_NETWORK"
+          },
+          {
+            "description": "OpenAI API key for GPT-4o Mini powered message analysis and summarization.",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "OPENAI_API_KEY"
+          }
+        ]
+      }
+    ]
   }
+```
+
+Once pasted, scroll down and click **"Commit changes"** with the message:
+```
+Add Hedera HCS Intelligence MCP Server
 ]
