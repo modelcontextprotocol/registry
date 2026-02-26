@@ -4,9 +4,22 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 )
 
-func LogoutCommand() error {
+func init() {
+	mcpPublisherCmd.AddCommand(logoutCmd)
+}
+
+var logoutCmd = &cobra.Command{
+	Use:   "logout",
+	Short: "Clear saved authentication",
+	Long:  `This command removes the saved authentication token from your system.`,
+	RunE:  LogoutCommand,
+}
+
+var LogoutCommand = func(_ *cobra.Command, _ []string) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("failed to get home directory: %w", err)
