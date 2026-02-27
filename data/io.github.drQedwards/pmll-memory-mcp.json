@@ -1,0 +1,40 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.drQedwards/pmll-memory-mcp",
+  "title": "PMLL Memory MCP",
+  "version": "0.1.0",
+  "description": "Short-term KV context memory and Q-promise deduplication for Claude agent tasks via peek().",
+  "repository": {
+    "url": "https://github.com/drQedwards/PPM",
+    "source": "github",
+    "id": "1008142203",
+    "subfolder": "mcp"
+  },
+  "websiteUrl": "https://github.com/drQedwards/PPM/tree/main/mcp",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "pmll-memory-mcp",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "PMLL_SILO_SIZE",
+          "description": "Number of KV slots in the PMLL memory silo per session. Defaults to 256.",
+          "isRequired": false,
+          "default": "256"
+        },
+        {
+          "name": "PMLL_SESSION_TTL",
+          "description": "Time-to-live in seconds for memory sessions. Defaults to 3600.",
+          "isRequired": false,
+          "default": "3600"
+        }
+      ]
+    }
+  ]
+}
