@@ -155,5 +155,26 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.entire-vc/evc-team-relay-mcp",
+    "description": "MCP server for reading and writing Obsidian vault documents via EVC Team Relay - a self-hosted CRDT-based collaborative sync server. Supports listing, reading, writing, and searching notes with multi-agent vault access.",
+    "repository": {
+      "url": "https://github.com/entire-vc/evc-team-relay-mcp.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "evc-team-relay-mcp",
+        "version": "1.0.0",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
   }
 ]
