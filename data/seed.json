@@ -155,5 +155,35 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.jacobsd32-cpu/djdagentscore",
+    "description": "Reputation scoring for AI agent wallets on Base L2. Check trust scores (0-100) across 5 dimensions before transacting with autonomous agents.",
+    "repository": {
+      "url": "https://github.com/jacobsd32-cpu/djdagentscore",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "djd-agent-score-mcp",
+        "version": "0.1.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "name": "DJD_API_KEY",
+            "description": "API key for paid endpoints (get_full_score $0.10, get_score_history $0.15, batch_score $0.50). Free endpoints work without a key.",
+            "isRequired": false,
+            "format": "string",
+            "isSecret": true
+          }
+        ]
+      }
+    ]
   }
 ]
