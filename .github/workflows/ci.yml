@@ -38,8 +38,9 @@ jobs:
     - name: Run govulncheck
       uses: golang/govulncheck-action@v1
       with:
-        go-version-input: ''
-        go-version-file: go.mod
+        # Use Go 1.26.1 to pick up crypto/x509 vulnerability fixes (GO-2026-4600, GO-2026-4599).
+        # go.mod stays at go 1.25.8 for golangci-lint compatibility until it supports Go 1.26.
+        go-version-input: '1.26.1'
         go-package: ./...
         repo-checkout: false
 
