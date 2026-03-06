@@ -75,7 +75,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417
         with:
-          go-version-file: 'go.mod'
+          go-version-file: 'deploy/go.mod'
           cache: true
 
       - name: Setup Pulumi
