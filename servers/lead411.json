@@ -1,0 +1,24 @@
+{
+  "name": "lead411",
+  "display_name": "Lead411",
+  "description": "Access Lead411 B2B data and lead intelligence directly from Claude.",
+  "homepage": "https://lead411.com",
+  "icon": "https://api.lead411.com/v3/docs/lead411-icon.png",
+  "manifest": "https://api.lead411.com/v3/docs/lead411.json",
+  "server": {
+    "url": "https://mcp.lead411.com"
+  },
+  "authentication": {
+    "type": "api_key",
+    "header": "X-API-KEY"
+  },
+  "capabilities": [
+    "tools"
+  ],
+  "tags": [
+    "sales",
+    "b2b",
+    "lead-generation",
+    "crm"
+  ]
+}
