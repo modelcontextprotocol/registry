@@ -1,1 +1,75 @@
-
+[
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.domdomegg/airtable-mcp-server",
+    "description": "Read and write access to Airtable database schemas, tables, and records.",
+    "repository": {
+      "url": "https://github.com/domdomegg/airtable-mcp-server.git",
+      "source": "github"
+    },
+    "version": "1.7.2",
+    "icons": [
+      {
+        "src": "https://airtable.com/images/favicon/favicon-32x32.png",
+        "mimeType": "image/png",
+        "sizes": [
+          "32x32"
+        ]
+      }
+    ],
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "airtable-mcp-server",
+        "version": "1.7.2",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "Airtable personal access token.",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "AIRTABLE_API_KEY"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.gpu-bridge/mcp-server",
+    "description": "GPU-Bridge MCP Server \u2014 30 AI services via one MCP tool. LLM inference, image generation, video, speech, audio, embeddings, reranking, PDF parsing, NSFW detection & more. x402-native for autonomous agents paying with USDC on Base.",
+    "repository": {
+      "url": "https://github.com/gpu-bridge/mcp-server.git",
+      "source": "github"
+    },
+    "version": "2.1.0",
+    "icons": [
+      {
+        "src": "https://gpubridge.xyz/favicon.ico",
+        "mimeType": "image/x-icon"
+      }
+    ],
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "@gpu-bridge/mcp-server",
+        "version": "2.1.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "GPU-Bridge API key (get one at https://gpubridge.xyz). Starts with gpub_. Optional if using x402 micropayments.",
+            "isRequired": false,
+            "isSecret": true,
+            "name": "GPUBRIDGE_API_KEY"
+          }
+        ]
+      }
+    ]
+  }
+]
