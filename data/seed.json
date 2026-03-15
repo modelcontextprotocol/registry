@@ -155,5 +155,35 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "com.servicialo/mcp-server",
+    "description": "Open protocol for AI-agent coordination of professional services. Scheduling, identity, delivery verification, and financial settlement.",
+    "repository": {
+      "url": "https://github.com/servicialo/mcp-server.git",
+      "source": "github"
+    },
+    "version": "0.7.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "@servicialo/mcp-server",
+        "version": "0.7.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        }
+      },
+      {
+        "registryType": "pypi",
+        "identifier": "servicialo",
+        "version": "0.7.0",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
   }
 ]
