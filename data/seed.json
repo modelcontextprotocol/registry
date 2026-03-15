@@ -155,5 +155,40 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.walidb212/dltik-mcp-server",
+    "description": "Download TikTok and Douyin videos as MP4, MP3, or photos ZIP — anonymously, without watermark. Supports single downloads, audio extraction, and batch mode (Business plan).",
+    "repository": {
+      "url": "https://github.com/walidb212/dltik.git",
+      "source": "github"
+    },
+    "version": "1.0.1",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "@dltik/mcp-server",
+        "version": "1.0.1",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "name": "DLTIK_API_KEY",
+            "description": "Optional API key for Pro/Business tier (higher rate limits and batch downloads). Get yours at https://dltik.app/pro",
+            "isRequired": false,
+            "isSecret": true
+          },
+          {
+            "name": "DLTIK_LOCALE",
+            "description": "Language for tool descriptions and error messages. Supported: en, fr, es, pt-br, ar, de. Defaults to en.",
+            "isRequired": false,
+            "isSecret": false
+          }
+        ]
+      }
+    ]
   }
 ]
