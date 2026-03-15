@@ -161,7 +161,7 @@
     "name": "io.github.stackbilt-dev/stackbilt-mcp-gateway",
     "description": "AI-powered image generation and full-stack architecture scaffolding. Two products via one MCP connection: img-forge (5 quality tiers from SDXL Lightning to Gemini 3.1 Flash) and Stackbilder (6-mode architecture pipeline). Free tier: 25 credits, no credit card required. OAuth 2.1 with PKCE.",
     "repository": {
-      "url": "https://github.com/Stackbilt-dev/stackbilt-mcp-gateway.git",
+      "url": "https://github.com/Stackbilt-dev/edgestack_v2.git",
       "source": "github"
     },
     "version": "0.2.0",
