@@ -1,0 +1,27 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.strangeadvancedmarketing/adam-framework",
+  "description": "MCP server that exposes Adam Framework vault memory as searchable tools for Claude Desktop, Cursor, Windsurf, or any MCP-compatible client. Gives your AI persistent memory across sessions by reading from a local vault of markdown files. Works with any markdown folder including Obsidian vaults.",
+  "repository": {
+    "url": "https://github.com/strangeadvancedmarketing/Adam",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "adam-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "ADAM_VAULT_PATH",
+          "description": "Path to your vault directory containing markdown memory files. Default: ~/AdamsVault/workspace"
+        }
+      ]
+    }
+  ]
+}
