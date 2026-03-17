@@ -155,5 +155,26 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.stiege/mcp-swarm",
+    "description": "Orchestrate parallel Claude agent workloads via Docker containers. Run N agents simultaneously with functional combinators (map, par, chain, reduce, pipeline), lazy monadic refs, and a natural language type system.",
+    "repository": {
+      "url": "https://github.com/stiege/swarm-mcp.git",
+      "source": "github"
+    },
+    "version": "0.1.1",
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "mcp-swarm",
+        "version": "0.1.1",
+        "runtimeHint": "python",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
   }
 ]
