@@ -155,5 +155,41 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.Sid890-cpu/project-ghost",
+    "description": "Web reading layer for AI agents. Convert any public URL into structured intelligence — entities, business intent, confidence score — in one API call. 80%+ token reduction.",
+    "repository": {
+      "url": "https://github.com/Sid890-cpu/project-ghost.git",
+      "source": "github"
+    },
+    "version": "2.0.0",
+    "icons": [
+      {
+        "src": "https://project-ghost-lilac.vercel.app/favicon.ico",
+        "mimeType": "image/png",
+        "sizes": ["32x32"]
+      }
+    ],
+    "packages": [
+      {
+        "registryType": "other",
+        "identifier": "project-ghost",
+        "version": "2.0.0",
+        "transport": {
+          "type": "http",
+          "url": "https://project-ghost-production.up.railway.app/mcp"
+        },
+        "environmentVariables": [
+          {
+            "description": "Your Ghost API key. Get one free at project-ghost-lilac.vercel.app",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "GHOST_API_KEY"
+          }
+        ]
+      }
+    ]
   }
 ]
