@@ -1,23 +1,20 @@
 {
-  "name": "mcp-ssh-tool",
-  "description": "SSH automation MCP server — remote command execution, file operations, service management over SSH",
-  "license": "MIT",
-  "author": {
-    "name": "Osman Aslan",
-    "url": "https://github.com/oaslananka"
-  },
-  "homepage": "https://github.com/oaslananka/mcp-ssh-tool",
+  "name": "io.github.oaslananka/mcp-ssh-tool",
+  "version": "1.3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oaslananka/mcp-ssh-tool"
+    "url": "https://github.com/oaslananka/mcp-ssh-tool",
+    "source": "github"
   },
   "packages": [
     {
-      "registryType": "npm",
-      "registryBaseUrl": "https://registry.npmjs.org",
-      "name": "mcp-ssh-tool",
-      "version": "latest",
-      "runtimeHint": "npx"
+      "identifier": "mcp-ssh-tool",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "node",
+        "command": "npx",
+        "args": ["mcp-ssh-tool"]
+      }
     }
   ]
 }
