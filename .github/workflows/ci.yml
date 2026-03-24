@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
 
     - name: Set up Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417
       with:
         go-version-file: 'go.mod'
         cache: true
@@ -38,8 +38,9 @@ jobs:
     - name: Run govulncheck
       uses: golang/govulncheck-action@v1
       with:
-        go-version-input: ''
-        go-version-file: go.mod
+        # Use Go 1.26.1 to pick up crypto/x509 vulnerability fixes (GO-2026-4600, GO-2026-4599).
+        # go.mod stays at go 1.25.8 for golangci-lint compatibility until it supports Go 1.26.
+        go-version-input: '1.26.1'
         go-package: ./...
         repo-checkout: false
 
@@ -52,7 +53,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
 
     - name: Set up Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417
       with:
         go-version-file: 'go.mod'
         cache: true
@@ -64,7 +65,7 @@ jobs:
       run: make test-all
 
     - name: Upload coverage artifacts
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
       with:
         name: coverage-report
         path: |
