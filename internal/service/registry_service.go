@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -47,8 +48,8 @@ func (s *registryServiceImpl) ListServers(ctx context.Context, filter *database.
 }
 
 // GetServerByName retrieves the latest version of a server by its server name
-func (s *registryServiceImpl) GetServerByName(ctx context.Context, serverName string) (*apiv0.ServerResponse, error) {
-	serverRecord, err := s.db.GetServerByName(ctx, nil, serverName)
+func (s *registryServiceImpl) GetServerByName(ctx context.Context, serverName string, includeDeleted bool) (*apiv0.ServerResponse, error) {
+	serverRecord, err := s.db.GetServerByName(ctx, nil, serverName, includeDeleted)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +58,8 @@ func (s *registryServiceImpl) GetServerByName(ctx context.Context, serverName st
 }
 
 // GetServerByNameAndVersion retrieves a specific version of a server by server name and version
-func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, serverName string, version string) (*apiv0.ServerResponse, error) {
-	serverRecord, err := s.db.GetServerByNameAndVersion(ctx, nil, serverName, version)
+func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, serverName string, version string, includeDeleted bool) (*apiv0.ServerResponse, error) {
+	serverRecord, err := s.db.GetServerByNameAndVersion(ctx, nil, serverName, version, includeDeleted)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +68,8 @@ func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, ser
 }
 
 // GetAllVersionsByServerName retrieves all versions of a server by server name
-func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, serverName string) ([]*apiv0.ServerResponse, error) {
-	serverRecords, err := s.db.GetAllVersionsByServerName(ctx, nil, serverName)
+func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, serverName string, includeDeleted bool) ([]*apiv0.ServerResponse, error) {
+	serverRecords, err := s.db.GetAllVersionsByServerName(ctx, nil, serverName, includeDeleted)
 	if err != nil {
 		return nil, err
 	}
@@ -152,10 +153,11 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 
 	// Create metadata for the new server
 	officialMeta := &apiv0.RegistryExtensions{
-		Status:      model.StatusActive, /* New versions are active by default */
-		PublishedAt: publishTime,
-		UpdatedAt:   publishTime,
-		IsLatest:    isNewLatest,
+		Status:          model.StatusActive, /* New versions are active by default */
+		StatusChangedAt: publishTime,
+		PublishedAt:     publishTime,
+		UpdatedAt:       publishTime,
+		IsLatest:        isNewLatest,
 	}
 
 	// Insert new server version
@@ -186,17 +188,18 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 }
 
 // UpdateServer updates an existing server with new details
-func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON, newStatus *string) (*apiv0.ServerResponse, error) {
+func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
 	// Wrap the entire operation in a transaction
 	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
-		return s.updateServerInTransaction(ctx, tx, serverName, version, req, newStatus)
+		return s.updateServerInTransaction(ctx, tx, serverName, version, req, statusChange)
 	})
 }
 
 // updateServerInTransaction contains the actual UpdateServer logic within a transaction
-func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON, newStatus *string) (*apiv0.ServerResponse, error) {
+func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
 	// Get current server to check if it's deleted or being deleted
-	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version)
+	// Include deleted servers since we may need to update or restore them
+	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +208,7 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	// 1. Server is currently deleted, OR
 	// 2. Server is being set to deleted status
 	currentlyDeleted := currentServer.Meta.Official != nil && currentServer.Meta.Official.Status == model.StatusDeleted
-	beingDeleted := newStatus != nil && *newStatus == string(model.StatusDeleted)
+	beingDeleted := statusChange != nil && statusChange.NewStatus == model.StatusDeleted
 	skipRegistryValidation := currentlyDeleted || beingDeleted
 
 	// Validate the request, potentially skipping registry validation for deleted servers
@@ -233,8 +236,8 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	}
 
 	// Handle status change if provided
-	if newStatus != nil {
-		updatedWithStatus, err := s.db.SetServerStatus(ctx, tx, serverName, version, *newStatus)
+	if statusChange != nil {
+		updatedWithStatus, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage)
 		if err != nil {
 			return nil, err
 		}
@@ -242,4 +245,79 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	}
 
 	return updatedServerResponse, nil
+}
+
+// UpdateServerStatus updates only the status metadata of a server version
+func (s *registryServiceImpl) UpdateServerStatus(ctx context.Context, serverName, version string, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
+	// Wrap the entire operation in a transaction
+	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
+		return s.updateServerStatusInTransaction(ctx, tx, serverName, version, statusChange)
+	})
+}
+
+// updateServerStatusInTransaction contains the actual UpdateServerStatus logic within a transaction
+func (s *registryServiceImpl) updateServerStatusInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
+	// Get current server to verify it exists and check current status
+	// Include deleted servers since we may need to restore them
+	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
+	if err != nil {
+		return nil, err
+	}
+
+	// Acquire advisory lock to prevent concurrent edits of servers with same name
+	if err := s.db.AcquirePublishLock(ctx, tx, serverName); err != nil {
+		return nil, err
+	}
+
+	// When transitioning to active from deleted, validate remote URLs don't conflict
+	if statusChange.NewStatus == model.StatusActive &&
+		currentServer.Meta.Official != nil &&
+		currentServer.Meta.Official.Status == model.StatusDeleted {
+		if err := s.validateNoDuplicateRemoteURLs(ctx, tx, currentServer.Server); err != nil {
+			return nil, err
+		}
+	}
+
+	// Update only the status metadata
+	return s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage)
+}
+
+// UpdateAllVersionsStatus updates the status metadata of all versions of a server in a single transaction
+func (s *registryServiceImpl) UpdateAllVersionsStatus(ctx context.Context, serverName string, statusChange *StatusChangeRequest) ([]*apiv0.ServerResponse, error) {
+	// Wrap the entire operation in a transaction
+	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) ([]*apiv0.ServerResponse, error) {
+		return s.updateAllVersionsStatusInTransaction(ctx, tx, serverName, statusChange)
+	})
+}
+
+// updateAllVersionsStatusInTransaction contains the actual UpdateAllVersionsStatus logic within a transaction
+func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.Context, tx pgx.Tx, serverName string, statusChange *StatusChangeRequest) ([]*apiv0.ServerResponse, error) {
+	// Acquire advisory lock to prevent concurrent edits of servers with same name
+	if err := s.db.AcquirePublishLock(ctx, tx, serverName); err != nil {
+		return nil, err
+	}
+
+	// When transitioning to active, validate remote URLs for any versions currently deleted
+	if statusChange.NewStatus == model.StatusActive {
+		includeDeleted := true
+
+		// When transitioning to active, it means the current status is either deprecated or deleted, so it should include deleted server also
+		filter := &database.ServerFilter{Name: &serverName, IncludeDeleted: &includeDeleted}
+		versions, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list server versions: %w", err)
+		}
+
+		for _, version := range versions {
+			if version.Meta.Official != nil &&
+				version.Meta.Official.Status == model.StatusDeleted {
+				if err := s.validateNoDuplicateRemoteURLs(ctx, tx, version.Server); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	// Update all versions' status in a single database call
+	return s.db.SetAllVersionsStatus(ctx, tx, serverName, statusChange.NewStatus, statusChange.StatusMessage)
 }

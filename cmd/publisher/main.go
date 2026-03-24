@@ -43,6 +43,8 @@ func main() {
 		err = commands.LogoutCommand()
 	case "publish":
 		err = commands.PublishCommand(os.Args[2:])
+	case "status":
+		err = commands.StatusCommand(os.Args[2:])
 	case "validate":
 		err = commands.ValidateCommand(os.Args[2:])
 	case "--version", "-v", "version":
@@ -73,6 +75,7 @@ func printUsage() {
 	_, _ = fmt.Fprintln(os.Stdout, "  login         Authenticate with the registry")
 	_, _ = fmt.Fprintln(os.Stdout, "  logout        Clear saved authentication")
 	_, _ = fmt.Fprintln(os.Stdout, "  publish       Publish server.json to the registry")
+	_, _ = fmt.Fprintln(os.Stdout, "  status        Update the status of a server version")
 	_, _ = fmt.Fprintln(os.Stdout, "  validate      Validate server.json without publishing")
 	_, _ = fmt.Fprintln(os.Stdout)
 	_, _ = fmt.Fprintln(os.Stdout, "Use 'mcp-publisher <command> --help' for more information about a command.")
@@ -127,6 +130,39 @@ func printCommandHelp(command string) {
 		_, _ = fmt.Fprintln(os.Stdout, "  server.json   Path to the server.json file (default: ./server.json)")
 		_, _ = fmt.Fprintln(os.Stdout)
 		_, _ = fmt.Fprintln(os.Stdout, "You must be logged in before publishing. Run 'mcp-publisher login' first.")
+
+	case "status":
+		_, _ = fmt.Fprintln(os.Stdout, "Update the status of a server version")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "Usage:")
+		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher status --status <active|deprecated|deleted> [flags] <server-name> [version]")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "Flags (must come before positional arguments):")
+		_, _ = fmt.Fprintln(os.Stdout, "  --status string            New status: active, deprecated, or deleted (required)")
+		_, _ = fmt.Fprintln(os.Stdout, "  --message string           Optional message explaining the status change")
+		_, _ = fmt.Fprintln(os.Stdout, "  --all-versions             Apply status change to all versions of the server")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "Arguments:")
+		_, _ = fmt.Fprintln(os.Stdout, "  server-name   Full server name (e.g., io.github.user/my-server)")
+		_, _ = fmt.Fprintln(os.Stdout, "  version       Server version to update (required unless --all-versions is set)")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "Examples:")
+		_, _ = fmt.Fprintln(os.Stdout, "  # Deprecate a specific version")
+		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher status --status deprecated --message \"Please upgrade to 2.0.0\" \\")
+		_, _ = fmt.Fprintln(os.Stdout, "    io.github.user/my-server 1.0.0")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "  # Delete a version with security issues")
+		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher status --status deleted --message \"Critical security vulnerability\" \\")
+		_, _ = fmt.Fprintln(os.Stdout, "    io.github.user/my-server 1.0.0")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "  # Restore a version to active")
+		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher status --status active io.github.user/my-server 1.0.0")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "  # Deprecate all versions")
+		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher status --status deprecated --all-versions --message \"Project archived\" \\")
+		_, _ = fmt.Fprintln(os.Stdout, "    io.github.user/my-server")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "You must be logged in before updating status. Run 'mcp-publisher login' first.")
 
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)

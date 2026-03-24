@@ -61,6 +61,13 @@ paths:
           schema:
             type: string
             example: "1.2.3"
+        - name: include_deleted
+          in: query
+          description: Include deleted servers in results (default false, but always true when updated_since is provided)
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: A list of MCP servers
@@ -81,6 +88,13 @@ paths:
           schema:
             type: string
             example: "com.example%2Fmy-server"
+        - name: include_deleted
+          in: query
+          description: Include deleted servers in results (default false)
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: A list of all versions for the server
@@ -118,6 +132,13 @@ paths:
           schema:
             type: string
             example: "1.0.0"
+        - name: include_deleted
+          in: query
+          description: Include deleted servers in results (default false)
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Detailed server information
@@ -307,6 +328,156 @@ paths:
                   error:
                     type: string
                     example: "Deletion is not supported by this registry"
+  /v0.1/servers/{serverName}/versions/{version}/status:
+    patch:
+      tags: [publish]
+      summary: Update server version status
+      description: |
+        Update the lifecycle status of a specific server version.
+
+        Requires `publish` or `edit` permission for the server namespace.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: serverName
+          in: path
+          required: true
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
+          schema:
+            type: string
+            example: "com.example%2Fmy-server"
+        - name: version
+          in: path
+          required: true
+          description: URL-encoded version to update
+          schema:
+            type: string
+            example: "1.0.0"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdateRequest'
+      responses:
+        '200':
+          description: Successfully updated server status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerResponse'
+        '400':
+          description: Bad request - Invalid status transition or no changes to apply
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No changes to apply: status is already deprecated"
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired Registry JWT token"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have publish or edit permissions for this server"
+        '404':
+          description: Server version not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server version not found"
+  /v0.1/servers/{serverName}/status:
+    patch:
+      tags: [publish]
+      summary: Update status for all server versions
+      description: |
+        Update the lifecycle status of all versions of a server in a single transaction.
+        Either all versions are updated or none on failure.
+
+        Requires `publish` or `edit` permission for the server namespace.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: serverName
+          in: path
+          required: true
+          description: URL-encoded server name (e.g., "com.example%2Fmy-server")
+          schema:
+            type: string
+            example: "com.example%2Fmy-server"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdateRequest'
+      responses:
+        '200':
+          description: Successfully updated all versions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllVersionsStatusResponse'
+        '400':
+          description: Bad request - Invalid status value
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid status value"
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired Registry JWT token"
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "You do not have publish or edit permissions for this server"
+        '404':
+          description: Server not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Server not found"
   /v0.1/publish:
     post:
       tags: [publish]
@@ -863,6 +1034,11 @@ components:
                   enum: ["active", "deprecated", "deleted"]
                   description: Server lifecycle status
                   example: "active"
+                statusMessage:
+                  type: string
+                  description: Optional message explaining the status (e.g., deprecation reason)
+                  example: "Please upgrade to version 2.0.0"
+                  maxLength: 500
                 publishedAt:
                   type: string
                   format: date-time
@@ -879,3 +1055,37 @@ components:
                   example: true
               additionalProperties: false
           additionalProperties: true
+
+    StatusUpdateRequest:
+      description: Request body for updating server status
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: ["active", "deprecated", "deleted"]
+          description: New server lifecycle status
+          example: "deprecated"
+        statusMessage:
+          type: string
+          description: Optional message explaining the status change (e.g., deprecation reason)
+          example: "Please upgrade to version 2.0.0"
+          maxLength: 500
+
+    AllVersionsStatusResponse:
+      description: Response from bulk status update for all versions
+      type: object
+      required:
+        - updatedCount
+        - servers
+      properties:
+        updatedCount:
+          type: integer
+          description: Number of versions updated
+          example: 3
+        servers:
+          type: array
+          description: List of all updated server versions
+          items:
+            $ref: '#/components/schemas/ServerResponse'

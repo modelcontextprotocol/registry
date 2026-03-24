@@ -8,13 +8,13 @@ import (
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
+
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
-	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // EditServerInput represents the input for editing a server
@@ -22,7 +22,6 @@ type EditServerInput struct {
 	Authorization string           `header:"Authorization" doc:"Registry JWT token with edit permissions" required:"true"`
 	ServerName    string           `path:"serverName" doc:"URL-encoded server name" example:"com.example%2Fmy-server"`
 	Version       string           `path:"version" doc:"URL-encoded version to edit" example:"1.0.0"`
-	Status        string           `query:"status" doc:"New status for the server (active, deprecated, deleted)" required:"false" enum:"active,deprecated,deleted"`
 	Body          apiv0.ServerJSON `body:""`
 }
 
@@ -36,8 +35,8 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 		Method:      http.MethodPut,
 		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Edit MCP server",
-		Description: "Update a specific version of an existing MCP server (admin only).",
-		Tags:        []string{"admin"},
+		Description: "Update the configuration of a specific version of an existing MCP server. Requires edit permission for the server. Use PATCH /servers/{serverName}/versions/{version}/status to update status metadata.",
+		Tags:        []string{"servers"},
 		Security: []map[string][]string{
 			{"bearer": {}},
 		},
@@ -69,7 +68,8 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 		}
 
 		// Get current server to check permissions against existing name
-		currentServer, err := registry.GetServerByNameAndVersion(ctx, serverName, version)
+		// Deleted servers return 404 - restore via status endpoint first
+		currentServer, err := registry.GetServerByNameAndVersion(ctx, serverName, version, false)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
@@ -98,28 +98,7 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 			return nil, huma.Error422UnprocessableEntity("Failed to edit server, invalid schema: call /validate for details")
 		}
 
-		// Handle status changes with proper permission validation
-		if input.Status != "" {
-			newStatus := model.Status(input.Status)
-
-			// Prevent undeleting servers - once deleted, they stay deleted
-			if currentServer.Meta.Official != nil &&
-				currentServer.Meta.Official.Status == model.StatusDeleted &&
-				newStatus != model.StatusDeleted {
-				return nil, huma.Error400BadRequest("Cannot change status of deleted server. Deleted servers cannot be undeleted.")
-			}
-
-			// For now, only allow status changes for admins
-			// Future: Implement logic to allow server authors to change active <-> deprecated
-			// but only admins can set to deleted
-		}
-
-		// Update the server using the service
-		var statusPtr *string
-		if input.Status != "" {
-			statusPtr = &input.Status
-		}
-		updatedServer, err := registry.UpdateServer(ctx, serverName, version, &input.Body, statusPtr)
+		updatedServer, err := registry.UpdateServer(ctx, serverName, version, &input.Body, nil)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
