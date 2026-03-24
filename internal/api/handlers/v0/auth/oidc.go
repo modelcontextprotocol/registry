@@ -210,71 +210,97 @@ func (h *OIDCHandler) validateExtraClaims(claims *OIDCClaims) error {
 		return nil // No extra validation required
 	}
 
-	// Parse extra claims configuration
-	var extraClaimsRules []map[string]any
-	if err := json.Unmarshal([]byte(h.config.OIDCExtraClaims), &extraClaimsRules); err != nil {
-		return fmt.Errorf("invalid extra claims configuration: %w", err)
+	extraClaimsRules, err := h.parseExtraClaimsRules()
+	if err != nil {
+		return fmt.Errorf("failed to parse extra claims rules: %w", err)
 	}
 
 	// Validate each rule
 	for _, rule := range extraClaimsRules {
-		for key, expectedValue := range rule {
-			actualValue, exists := claims.ExtraClaims[key]
-			if !exists {
-				return fmt.Errorf("claim validation failed: required claim %s not found", key)
-			}
-
-			//Handle array values
-			if actualArray, ok := actualValue.([]any); ok {
-				// Check if expected value is also an array
-				if expectedArray, ok := expectedValue.([]any); ok {
-					// Both are arrays - check if any actual value exists in expected array
-					found := false
-					for _, actVal := range actualArray {
-						for _, expVal := range expectedArray {
-							if actVal == expVal {
-								found = true
-								break
-							}
-						}
-						if found {
-							break
-						}
-					}
-					if !found {
-						return fmt.Errorf("claim validation failed: %s no matching values found between actual %v and expected %v", key, actualArray, expectedArray)
-					}
-					continue
-				}
-
-				// Expected is scalar, actual is array
-				if len(actualArray) == 1 {
-					// Normalize single-element arrays to scalars
-					actualValue = actualArray[0]
-				} else if len(actualArray) > 1 {
-					// Check if expected value exists in the array
-					found := false
-					for _, item := range actualArray {
-						if item == expectedValue {
-							found = true
-							break
-						}
-					}
-					if !found {
-						return fmt.Errorf("claim validation failed: %s expected %v to be in array %v", key, expectedValue, actualArray)
-					}
-					continue
-				}
-			}
-
-			// Compare values if both are scalars 
-			if actualValue != expectedValue {
-				return fmt.Errorf("claim validation failed: %s expected %v, got %v", key, expectedValue, actualValue)
-			}
+		if err := h.validateSingleRule(claims, rule); err != nil {
+			return fmt.Errorf("claim validation failed for rule %v: %w", rule, err)
 		}
 	}
 
 	return nil
+}
+
+// parseExtraClaimsRules parses the extra claims configuration from JSON
+func (h *OIDCHandler) parseExtraClaimsRules() ([]map[string]any, error) {
+	var extraClaimsRules []map[string]any
+	if err := json.Unmarshal([]byte(h.config.OIDCExtraClaims), &extraClaimsRules); err != nil {
+		return nil, fmt.Errorf("invalid extra claims configuration: %w", err)
+	}
+	return extraClaimsRules, nil
+}
+
+// validateSingleRule validates a single claim rule against the OIDC claims
+func (h *OIDCHandler) validateSingleRule(claims *OIDCClaims, rule map[string]any) error {
+	for key, expectedValue := range rule {
+		actualValue, exists := claims.ExtraClaims[key]
+		if !exists {
+			return fmt.Errorf("claim validation failed: required claim %s not found", key)
+		}
+
+		if err := h.compareClaimValues(key, actualValue, expectedValue); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// compareClaimValues compares actual and expected claim values with support for arrays
+func (h *OIDCHandler) compareClaimValues(key string, actualValue, expectedValue any) error {
+	actualArray, actualIsArray := actualValue.([]any)
+	if actualIsArray {
+		return h.compareArrayClaimValues(key, actualArray, expectedValue)
+	}
+
+	// Compare scalar values
+	if actualValue != expectedValue {
+		return fmt.Errorf("claim validation failed: %s expected %v, got %v", key, expectedValue, actualValue)
+	}
+
+	return nil
+}
+
+// compareArrayClaimValues handles comparison when actual value is an array
+func (h *OIDCHandler) compareArrayClaimValues(key string, actualArray []any, expectedValue any) error {
+	expectedArray, expectedIsArray := expectedValue.([]any)
+	if expectedIsArray {
+		return h.compareArrayToArray(key, actualArray, expectedArray)
+	}
+
+	return h.compareArrayToScalar(key, actualArray, expectedValue)
+}
+
+// compareArrayToArray compares two arrays looking for any matching values
+func (h *OIDCHandler) compareArrayToArray(key string, actualArray, expectedArray []any) error {
+	for _, actVal := range actualArray {
+		for _, expVal := range expectedArray {
+			if actVal == expVal {
+				return nil // Found a match
+			}
+		}
+	}
+	return fmt.Errorf("claim validation failed: %s no matching values found between actual %v and expected %v", key, actualArray, expectedArray)
+}
+
+// compareArrayToScalar compares an array to a scalar value
+func (h *OIDCHandler) compareArrayToScalar(key string, actualArray []any, expectedValue any) error {
+	if len(actualArray) == 1 {
+		// Normalize single-element arrays to scalars and compare
+		return h.compareClaimValues(key, actualArray[0], expectedValue)
+	}
+
+	// Check if expected value exists in the array
+	for _, item := range actualArray {
+		if item == expectedValue {
+			return nil // Found a match
+		}
+	}
+
+	return fmt.Errorf("claim validation failed: %s expected %v to be in array %v", key, expectedValue, actualArray)
 }
 
 // buildPermissions builds permissions based on OIDC claims and configuration
