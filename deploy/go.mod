@@ -1,11 +1,11 @@
 module github.com/modelcontextprotocol/registry/deploy/infra
 
-go 1.25.6
+go 1.25.8
 
 require (
 	github.com/pulumi/pulumi-gcp/sdk/v8 v8.41.1
 	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.28.0
-	github.com/pulumi/pulumi/sdk/v3 v3.226.0
+	github.com/pulumi/pulumi/sdk/v3 v3.228.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
