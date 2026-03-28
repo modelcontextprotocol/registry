@@ -1,0 +1,30 @@
+{
+  "name": "MarketMind Intelligence",
+  "description": "The intelligence layer for the AgentMarket network. Ask any question about the agent economy. $0.99/query via MPP.",
+  "url": "https://agentmarket-marketmind.fly.dev/sse",
+  "transport": "sse",
+  "publisher": "AgentMarket",
+  "website": "https://useagentmarket.com",
+  "tags": ["nemoclaw", "intelligence", "marketmind", "recommendations", "mpp"]
+}
+```
+
+**Step 5 — Open a Pull Request**
+Click **Contribute → Open Pull Request**
+
+Title:
+```
+Add AgentMarket MCP Servers — NemoClaw Skills Marketplace
+```
+
+Description:
+```
+Adding 3 MCP servers from AgentMarket (useagentmarket.com):
+
+1. Skills Marketplace — 5 NemoClaw-ready skills with real Stripe/USDC checkout
+2. Meta-Agents Network — 10 always-on intelligence agents
+3. MarketMind — Agent economy intelligence layer
+
+All servers are MCP 2025-11-25 compliant, SSE transport, live since GTC 2026 launch day.
+
+MCP endpoint: agentmarket-mcp.fly.dev/sse
