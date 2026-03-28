@@ -1,0 +1,9 @@
+{
+  "name": "AgentMarket Meta-Agents",
+  "description": "10 always-on intelligence agents for the NemoClaw ecosystem. Oracle, Smart Router, Budget Guardian, MarketMind and more.",
+  "url": "https://agentmarket-meta.fly.dev/sse",
+  "transport": "sse",
+  "publisher": "AgentMarket",
+  "website": "https://useagentmarket.com",
+  "tags": ["nemoclaw", "meta-agents", "intelligence", "routing", "budget"]
+}
