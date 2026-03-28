@@ -1,0 +1,9 @@
+{
+  "name": "AgentMarket Skills Marketplace",
+  "description": "The first NemoClaw Skills Marketplace. AI agents autonomously discover, purchase and install skills. MCP 2025-11-25 compliant.",
+  "url": "https://agentmarket-mcp.fly.dev/sse",
+  "transport": "sse",
+  "publisher": "AgentMarket",
+  "website": "https://useagentmarket.com",
+  "tags": ["nemoclaw", "skills", "marketplace", "payments", "agents"]
+}
