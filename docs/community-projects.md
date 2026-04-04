@@ -19,6 +19,7 @@ Browse the official MCP Registry in your browser!
 - [go-mcp-registry](https://github.com/leefowlercu/go-mcp-registry) - Go SDK
 - [mcp-registry-spec-sdk](https://www.npmjs.com/package/mcp-registry-spec-sdk) - TypeScript client for the MCP Registry
 - [LangChain4j MCP Registry Java client](https://docs.langchain4j.dev/tutorials/mcp/#mcp-registry-client) - Java API
+- [learnforge-mcp](https://www.npmjs.com/package/learnforge-mcp) - AI-powered adaptive learning MCP server. Generate lessons, quiz yourself, and get Socratic tutoring via Claude Desktop, Cursor, or any MCP client.
 
 ### Other
 
