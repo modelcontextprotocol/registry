@@ -1,0 +1,14 @@
+{
+  "name": "Synapse Layer - Zero-Knowledge Secure Memory",
+  "description": "Privacy-first persistent memory layer for MCP agents with PII sanitization, differential privacy, intent validation and self-healing conflict resolution.",
+  "author": "Synapse Layer",
+  "repository": "https://github.com/SynapseLayer/synapse-layer",
+  "homepage": "https://synapselayer.org",
+  "license": "Apache-2.0",
+  "tags": ["memory", "privacy", "zero-knowledge", "mcp", "long-term-memory", "security"],
+  "tools": ["store_memory", "recall_memory"],
+  "transport": ["stdio"],
+  "language": "python",
+  "version": "1.0.6",
+  "requires": ["synapse-layer>=1.0.6", "mcp[cli]>=1.0.0"]
+}
