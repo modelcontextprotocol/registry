@@ -31,7 +31,7 @@ func TestPublishCommand_Success(t *testing.T) {
 	CreateTestServerJSON(t, serverJSON)
 
 	// Run publish command
-	err := commands.PublishCommand([]string{})
+	err := commands.RunPublishCommand(nil, []string{})
 
 	// Should succeed
 	assert.NoError(t, err)
@@ -89,7 +89,7 @@ func TestPublishCommand_422ValidationFlow(t *testing.T) {
 	CreateTestServerJSON(t, serverJSON)
 
 	// Run publish command
-	err := commands.PublishCommand([]string{})
+	err := commands.RunPublishCommand(nil, []string{})
 
 	// Should fail with validation error
 	require.Error(t, err)
@@ -149,7 +149,7 @@ func TestPublishCommand_422WithMultipleIssues(t *testing.T) {
 	}
 	CreateTestServerJSON(t, serverJSON)
 
-	err := commands.PublishCommand([]string{})
+	err := commands.RunPublishCommand(nil, []string{})
 
 	require.Error(t, err)
 	assert.Equal(t, 1, validateCallCount, "validate endpoint should be called")
@@ -165,7 +165,7 @@ func TestPublishCommand_NoToken(t *testing.T) {
 	}
 	CreateTestServerJSON(t, serverJSON)
 
-	err := commands.PublishCommand([]string{})
+	err := commands.RunPublishCommand(nil, []string{})
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not authenticated")
@@ -193,7 +193,7 @@ func TestPublishCommand_Non422Error(t *testing.T) {
 	}
 	CreateTestServerJSON(t, serverJSON)
 
-	err := commands.PublishCommand([]string{})
+	err := commands.RunPublishCommand(nil, []string{})
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "publish failed")
@@ -337,7 +337,7 @@ func TestPublishCommand_DeprecatedSchema(t *testing.T) {
 			}
 			CreateTestServerJSON(t, serverJSON)
 
-			err := commands.PublishCommand([]string{})
+			err := commands.RunPublishCommand(nil, []string{})
 
 			if tt.expectError {
 				require.Error(t, err, "Expected error for test case: %s", tt.name)

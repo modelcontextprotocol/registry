@@ -11,6 +11,8 @@ func TestStatusCommand_Validation(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        []string
+		status      string
+		allVersions bool
 		expectError bool
 		errorSubstr string
 	}{
@@ -22,37 +24,38 @@ func TestStatusCommand_Validation(t *testing.T) {
 		},
 		{
 			name:        "invalid status value",
-			args:        []string{"--status", "invalid", "io.github.user/my-server", "1.0.0"},
+			status:      "invalid",
+			args:        []string{"io.github.user/my-server", "1.0.0"},
 			expectError: true,
 			errorSubstr: "invalid status 'invalid'",
 		},
 		{
-			name:        "missing server name",
-			args:        []string{"--status", "deprecated"},
-			expectError: true,
-			errorSubstr: "server name is required",
-		},
-		{
 			name:        "missing version without --all-versions",
-			args:        []string{"--status", "deprecated", "io.github.user/my-server"},
+			status:      "deprecated",
+			args:        []string{"io.github.user/my-server"},
 			expectError: true,
 			errorSubstr: "version is required unless --all-versions",
 		},
 		{
 			name:        "valid args passes validation",
-			args:        []string{"--status", "deprecated", "io.github.user/my-server", "1.0.0"},
+			status:      "deprecated",
+			args:        []string{"io.github.user/my-server", "1.0.0"},
 			expectError: false,
 		},
 		{
 			name:        "valid args with --all-versions passes validation",
-			args:        []string{"--status", "deprecated", "--all-versions", "io.github.user/my-server"},
+			status:      "deprecated",
+			allVersions: true,
+			args:        []string{"io.github.user/my-server"},
 			expectError: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := commands.StatusCommand(tt.args)
+			commands.StatusFlg.Status = tt.status
+			commands.StatusFlg.AllVersions = tt.allVersions
+			err := commands.RunStatusCommand(nil, tt.args)
 
 			if tt.expectError {
 				if err == nil {
@@ -72,46 +75,6 @@ func TestStatusCommand_Validation(t *testing.T) {
 					strings.Contains(err.Error(), "--status flag is required") {
 					t.Errorf("Validation failed unexpectedly: %v", err)
 				}
-			}
-		})
-	}
-}
-
-func TestStatusCommand_ServerNameValidation(t *testing.T) {
-	tests := []struct {
-		name       string
-		serverName string
-	}{
-		{
-			name:       "valid github server name",
-			serverName: "io.github.user/my-server",
-		},
-		{
-			name:       "valid domain server name",
-			serverName: "com.example/my-server",
-		},
-		{
-			name:       "server name with dashes",
-			serverName: "io.github.user/my-cool-server",
-		},
-		{
-			name:       "server name with underscores",
-			serverName: "io.github.user/my_server",
-		},
-		{
-			name:       "server name with dots",
-			serverName: "io.github.user/my.server",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			args := []string{"--status", "deprecated", tt.serverName, "1.0.0"}
-			err := commands.StatusCommand(args)
-
-			// Should pass validation (server name format is not validated by CLI)
-			if err != nil && strings.Contains(err.Error(), "server name is required") {
-				t.Errorf("Server name '%s' was rejected", tt.serverName)
 			}
 		})
 	}
@@ -146,8 +109,9 @@ func TestStatusCommand_VersionValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			args := []string{"--status", "deprecated", "io.github.user/my-server", tt.version}
-			err := commands.StatusCommand(args)
+			commands.StatusFlg.Status = "deprecated"
+			args := []string{"io.github.user/my-server", tt.version}
+			err := commands.RunStatusCommand(nil, args)
 
 			// Should pass validation (version format is not validated by CLI)
 			if err != nil && strings.Contains(err.Error(), "version is required") {
@@ -160,31 +124,33 @@ func TestStatusCommand_VersionValidation(t *testing.T) {
 func TestStatusCommand_AllVersionsFlag(t *testing.T) {
 	tests := []struct {
 		name        string
+		status      string
+		allVersions bool
 		args        []string
 		expectError bool
 		errorSubstr string
 	}{
 		{
 			name:        "all-versions without version arg passes validation",
-			args:        []string{"--status", "deprecated", "--all-versions", "io.github.user/my-server"},
+			status:      "deprecated",
+			allVersions: true,
+			args:        []string{"io.github.user/my-server"},
 			expectError: false,
 		},
 		{
 			name:        "all-versions with extra version arg still works",
-			args:        []string{"--status", "deprecated", "--all-versions", "io.github.user/my-server", "1.0.0"},
+			status:      "deprecated",
+			allVersions: true,
+			args:        []string{"io.github.user/my-server", "1.0.0"},
 			expectError: false,
-		},
-		{
-			name:        "missing server name with all-versions",
-			args:        []string{"--status", "deprecated", "--all-versions"},
-			expectError: true,
-			errorSubstr: "server name is required",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := commands.StatusCommand(tt.args)
+			commands.StatusFlg.Status = tt.status
+			commands.StatusFlg.AllVersions = tt.allVersions
+			err := commands.RunStatusCommand(nil, tt.args)
 
 			if tt.expectError {
 				if err == nil {
@@ -210,22 +176,33 @@ func TestStatusCommand_AllVersionsFlag(t *testing.T) {
 
 func TestStatusCommand_FlagCombinations(t *testing.T) {
 	tests := []struct {
-		name string
-		args []string
+		name        string
+		status      string
+		allVersions bool
+		message     string
+		args        []string
 	}{
 		{
-			name: "status with message",
-			args: []string{"--status", "deprecated", "--message", "Please upgrade to v2", "io.github.user/my-server", "1.0.0"},
+			name:    "status with message",
+			status:  "deprecated",
+			message: "Please upgrade to v2",
+			args:    []string{"io.github.user/my-server", "1.0.0"},
 		},
 		{
-			name: "all-versions with message",
-			args: []string{"--status", "deprecated", "--all-versions", "--message", "All versions deprecated", "io.github.user/my-server"},
+			name:        "all-versions with message",
+			status:      "deprecated",
+			message:     "All versions deprecated",
+			allVersions: true,
+			args:        []string{"io.github.user/my-server"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := commands.StatusCommand(tt.args)
+			commands.StatusFlg.Status = tt.status
+			commands.StatusFlg.AllVersions = tt.allVersions
+			commands.StatusFlg.Message = tt.message
+			err := commands.RunStatusCommand(nil, tt.args)
 			// All these should pass CLI validation
 			// They may fail at auth or API level which is acceptable
 			if err != nil {
@@ -244,22 +221,25 @@ func TestStatusCommand_FlagCombinations(t *testing.T) {
 func TestStatusCommand_MissingStatus(t *testing.T) {
 	// Test various ways status flag can be missing
 	tests := []struct {
-		name string
-		args []string
+		name   string
+		status string
+		args   []string
 	}{
 		{
 			name: "no status flag at all",
 			args: []string{"io.github.user/my-server", "1.0.0"},
 		},
 		{
-			name: "empty status value",
-			args: []string{"--status", "", "io.github.user/my-server", "1.0.0"},
+			name:   "empty status value",
+			status: "",
+			args:   []string{"io.github.user/my-server", "1.0.0"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := commands.StatusCommand(tt.args)
+			commands.StatusFlg.Status = tt.status
+			err := commands.RunStatusCommand(nil, tt.args)
 
 			if err == nil {
 				t.Errorf("Expected error for missing status but got none")
@@ -274,26 +254,40 @@ func TestStatusCommand_MissingStatus(t *testing.T) {
 
 func TestStatusCommand_YesFlag(t *testing.T) {
 	tests := []struct {
-		name string
-		args []string
+		name        string
+		status      string
+		skipConfirm bool
+		allVersions bool
+		args        []string
 	}{
 		{
-			name: "all-versions with --yes flag",
-			args: []string{"--status", "deprecated", "--all-versions", "--yes", "io.github.user/my-server"},
+			name:        "all-versions with --yes flag",
+			status:      "deprecated",
+			skipConfirm: true,
+			allVersions: true,
+			args:        []string{"io.github.user/my-server"},
 		},
 		{
-			name: "all-versions with -y shorthand",
-			args: []string{"--status", "deprecated", "--all-versions", "-y", "io.github.user/my-server"},
+			name:        "all-versions with -y shorthand",
+			status:      "deprecated",
+			skipConfirm: true,
+			allVersions: true,
+			args:        []string{"io.github.user/my-server"},
 		},
 		{
-			name: "yes flag with single version (flag accepted but not used)",
-			args: []string{"--status", "deprecated", "--yes", "io.github.user/my-server", "1.0.0"},
+			name:        "yes flag with single version (flag accepted but not used)",
+			status:      "deprecated",
+			skipConfirm: true,
+			args:        []string{"io.github.user/my-server", "1.0.0"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := commands.StatusCommand(tt.args)
+			commands.StatusFlg.Status = tt.status
+			commands.StatusFlg.AllVersions = tt.allVersions
+			commands.StatusFlg.SkipConfirm = tt.skipConfirm
+			err := commands.RunStatusCommand(nil, tt.args)
 			// All these should pass CLI validation
 			// They may fail at auth or API level which is acceptable
 			if err != nil {

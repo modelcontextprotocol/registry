@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 // StatusUpdateRequest represents the request body for status update endpoints
@@ -53,45 +54,70 @@ type ServerListResponse struct {
 	Servers []SingleServerResponse `json:"servers"`
 }
 
-func StatusCommand(args []string) error {
-	// Parse command flags
-	fs := flag.NewFlagSet("status", flag.ExitOnError)
-	status := fs.String("status", "", "New status: active, deprecated, or deleted (required)")
-	message := fs.String("message", "", "Optional status message explaining the change")
-	allVersions := fs.Bool("all-versions", false, "Apply status change to all versions of the server")
-	yes := fs.Bool("yes", false, "Skip confirmation prompt for bulk operations")
-	fs.BoolVar(yes, "y", false, "Skip confirmation prompt for bulk operations (shorthand)")
+type StatusFlags struct {
+	Status      string
+	Message     string
+	AllVersions bool
+	SkipConfirm bool
+}
 
-	if err := fs.Parse(args); err != nil {
-		return err
-	}
+var StatusFlg StatusFlags
 
+func init() {
+	mcpPublisherCmd.AddCommand(statusCmd)
+	statusCmd.Flags().StringVarP(&StatusFlg.Status, "status", "s", "", "New status: active, deprecated, or deleted (required)")
+	statusCmd.Flags().StringVarP(&StatusFlg.Message, "message", "m", "", "Optional status message explaining the change")
+	statusCmd.Flags().BoolVar(&StatusFlg.AllVersions, "all-versions", false, "Apply status change to all versions of the server")
+	statusCmd.Flags().BoolVarP(&StatusFlg.SkipConfirm, "yes", "y", false, "Skip confirmation prompt for bulk operations")
+}
+
+var statusCmd = &cobra.Command{
+	Use:   "status --status <active|deprecated|deleted> [flags] <server-name> [version]",
+	Short: "Update the status of a server version",
+	Args: func(_ *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.New("server name is required")
+		}
+		return nil
+	},
+	Long: `Arguments:
+  server-name   Full server name (e.g., io.github.user/my-server)
+  version       Server version to update (required unless --all-versions is set)`,
+	Example: `  # Deprecate a specific version
+  mcp-publisher status --status deprecated --message "Please upgrade to 2.0.0"
+  io.github.user/my-server 1.0.0
+  # Delete a version with security issues
+  mcp-publisher status --status deleted --message "Critical security vulnerability"
+  io.github.user/my-server 1.0.0
+  # Restore a version to active
+  mcp-publisher status --status active io.github.user/my-server 1.0.0
+  # Deprecate all versions
+  mcp-publisher status --status deprecated --all-versions --message "Project archived"
+  io.github.user/my-server`,
+	RunE: RunStatusCommand,
+}
+
+var RunStatusCommand = func(_ *cobra.Command, args []string) error {
 	// Validate required arguments
-	if *status == "" {
+	if StatusFlg.Status == "" {
 		return errors.New("--status flag is required (active, deprecated, or deleted)")
 	}
 
 	// Validate status value
 	validStatuses := map[string]bool{"active": true, "deprecated": true, "deleted": true}
-	if !validStatuses[*status] {
-		return fmt.Errorf("invalid status '%s'. Must be one of: active, deprecated, deleted", *status)
+	if !validStatuses[StatusFlg.Status] {
+		return fmt.Errorf("invalid status '%s'. Must be one of: active, deprecated, deleted", StatusFlg.Status)
 	}
 
-	// Get server name from positional args
-	remainingArgs := fs.Args()
-	if len(remainingArgs) < 1 {
-		return errors.New("server name is required\n\nUsage: mcp-publisher status --status <active|deprecated|deleted> [flags] <server-name> [version]")
-	}
-
-	serverName := remainingArgs[0]
+	serverName := args[0]
 	var version string
 
 	// Get version if provided (required unless --all-versions is set)
-	if !*allVersions {
-		if len(remainingArgs) < 2 {
+	if !StatusFlg.AllVersions {
+		if len(args) < 2 {
 			return errors.New("version is required unless --all-versions flag is set\n\nUsage: mcp-publisher status --status <active|deprecated|deleted> [flags] <server-name> <version>")
 		}
-		version = remainingArgs[1]
+		version = args[1]
 	}
 
 	// Load saved token
@@ -121,10 +147,10 @@ func StatusCommand(args []string) error {
 	}
 
 	// Update status
-	if *allVersions {
-		return updateAllVersionsStatus(registryURL, serverName, *status, *message, token, *yes)
+	if StatusFlg.AllVersions {
+		return updateAllVersionsStatus(registryURL, serverName, StatusFlg.Status, StatusFlg.Message, token, StatusFlg.SkipConfirm)
 	}
-	return updateVersionStatus(registryURL, serverName, version, *status, *message, token)
+	return updateVersionStatus(registryURL, serverName, version, StatusFlg.Status, StatusFlg.Message, token)
 }
 
 func updateVersionStatus(registryURL, serverName, version, status, statusMessage, token string) error {

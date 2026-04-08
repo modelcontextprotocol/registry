@@ -13,9 +13,25 @@ import (
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
+	"github.com/spf13/cobra"
 )
 
-func InitCommand() error {
+func init() {
+	mcpPublisherCmd.AddCommand(initCmd)
+}
+
+var initCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Create a server.json file template",
+	Long: `This command creates a server.json file in the current directory with
+auto-detected values from your project (package.json, git remote, etc.).
+	
+After running init, edit the generated server.json to customize your
+server's metadata before publishing.`,
+	RunE: runInitCmd,
+}
+
+var runInitCmd = func(_ *cobra.Command, _ []string) error {
 	// Check if server.json already exists
 	if _, err := os.Stat("server.json"); err == nil {
 		return errors.New("server.json already exists")

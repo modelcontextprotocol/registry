@@ -13,9 +13,24 @@ import (
 	"strings"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/spf13/cobra"
 )
 
-func PublishCommand(args []string) error {
+func init() {
+	mcpPublisherCmd.AddCommand(publishCmd)
+}
+
+var publishCmd = &cobra.Command{
+	Use:   "publish [server.json]",
+	Short: "Publish server.json to the registry",
+	Long: `Arguments:
+  server.json   Path to the server.json file (default: ./server.json)
+  
+  You must be logged in before publishing. Run 'mcp-publisher login' first.`,
+	RunE: RunPublishCommand,
+}
+
+var RunPublishCommand = func(_ *cobra.Command, args []string) error {
 	// Check for server.json file
 	serverFile := "server.json"
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
