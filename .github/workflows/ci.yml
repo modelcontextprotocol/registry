@@ -21,13 +21,13 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
       with:
-        go-version-file: 'go.mod'
+        go-version: 'stable'
         cache: true
 
     - name: Run lint
       uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20
       with:
-        version: v2.4.0
+        version: v2.11.4
 
     - name: Validate schemas and examples
       run: make validate
@@ -38,9 +38,7 @@ jobs:
     - name: Run govulncheck
       uses: golang/govulncheck-action@v1
       with:
-        # Use Go 1.26.1 to pick up crypto/x509 vulnerability fixes (GO-2026-4600, GO-2026-4599).
-        # go.mod stays at go 1.25.8 for golangci-lint compatibility until it supports Go 1.26.
-        go-version-input: '1.26.1'
+        go-version-input: 'stable'
         go-package: ./...
         repo-checkout: false
 
@@ -55,7 +53,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
       with:
-        go-version-file: 'go.mod'
+        go-version: 'stable'
         cache: true
 
     - name: Set up ko

@@ -64,7 +64,7 @@ func NewTestDB(t *testing.T) Database {
 	defer cancel()
 
 	// Connect to postgres database
-	adminURI := "postgres://mcpregistry:mcpregistry@localhost:5432/postgres?sslmode=disable"
+	adminURI := "postgres://mcpregistry:mcpregistry@localhost:5432/postgres?sslmode=disable" //nolint:gosec // G101: test database credentials
 	adminConn, err := pgx.Connect(ctx, adminURI)
 	require.NoError(t, err, "Failed to connect to PostgreSQL. Make sure PostgreSQL is running via: docker-compose up -d postgres")
 	defer adminConn.Close(ctx)
