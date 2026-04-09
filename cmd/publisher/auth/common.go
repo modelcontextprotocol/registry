@@ -160,7 +160,7 @@ func parseRawPrivateKey(curve elliptic.Curve, privateKeyBytes []byte) (*ecdsa.Pr
 		return nil, fmt.Errorf("invalid private scalar")
 	}
 
-	x, y := curve.ScalarBaseMult(d.Bytes())
+	x, y := curve.ScalarBaseMult(d.Bytes()) //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 	return &ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
 			Curve: curve,
@@ -192,7 +192,7 @@ func PrintEcdsaP384KeyInfo(pubKey ecdsa.PublicKey) {
 }
 
 func printEcdsaKeyInfo(k string, pubKey ecdsa.PublicKey) {
-	compressed := elliptic.MarshalCompressed(pubKey.Curve, pubKey.X, pubKey.Y)
+	compressed := elliptic.MarshalCompressed(pubKey.Curve, pubKey.X, pubKey.Y) //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 	pubKeyString := base64.StdEncoding.EncodeToString(compressed)
 	fmt.Fprint(os.Stdout, "Expected proof record:\n")
 	fmt.Fprintf(os.Stdout, "v=MCPv1; k=%s; p=%s\n", k, pubKeyString)
