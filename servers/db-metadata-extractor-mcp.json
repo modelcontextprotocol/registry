@@ -1,0 +1,14 @@
+{
+  "name": "db-metadata-extractor-mcp",
+  "description": "Extracts database metadata such as tables, columns, and schema details",
+  "packages": [
+    {
+      "registry_name": "pypi",
+      "name": "db-metadata-extractor-mcp",
+      "version": "1.0.0"
+    }
+  ],
+  "author": {
+    "name": "Karpagavalli"
+  }
+}
