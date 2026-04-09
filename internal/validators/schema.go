@@ -284,7 +284,7 @@ func ConvertJSONPointerToBracketNotation(jsonPointer string) string {
 		// Check if part is a pure number (array index)
 		if _, err := strconv.Atoi(part); err == nil {
 			// It's a numeric index - use bracket notation
-			result.WriteString(fmt.Sprintf("[%s]", part))
+			fmt.Fprintf(&result, "[%s]", part)
 			// Add dot after bracket if next part exists and is a field name (not a number)
 			if i < len(parts)-1 {
 				nextPart := parts[i+1]

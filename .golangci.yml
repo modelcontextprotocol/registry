@@ -66,6 +66,11 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
+    rules:
+      # httptest.NewRequest is idiomatic in tests; noctx is not useful there.
+      - path: _test\.go
+        linters:
+          - noctx
     paths:
       - third_party$
       - builtin$

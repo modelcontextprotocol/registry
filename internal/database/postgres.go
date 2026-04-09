@@ -764,7 +764,6 @@ func hashServerName(name string) int64 {
 		hash ^= uint64(name[i])
 		hash *= prime64
 	}
-	//nolint:gosec // Intentional conversion with masking to 63 bits
 	return int64(hash & 0x7FFFFFFFFFFFFFFF)
 }
 
