@@ -122,7 +122,7 @@ func (o *GitHubOIDCProvider) getOIDCTokenFromGitHub(ctx context.Context) (string
 	fullURL := requestURL + "&audience=mcp-registry"
 
 	// Create the request
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil) //nolint:gosec // G704: URL is from GitHub Actions ACTIONS_ID_TOKEN_REQUEST_URL env var
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -133,7 +133,7 @@ func (o *GitHubOIDCProvider) getOIDCTokenFromGitHub(ctx context.Context) (string
 
 	// Make the request
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint:gosec // G704: URL is from GitHub Actions env var
 	if err != nil {
 		return "", fmt.Errorf("failed to send request: %w", err)
 	}
