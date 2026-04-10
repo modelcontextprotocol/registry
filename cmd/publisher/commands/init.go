@@ -27,7 +27,10 @@ func InitCommand() error {
 	// Try to detect values from environment
 	name := detectServerName(subfolder)
 	description := detectDescription()
-	version := "1.0.0"
+	version := getVersionFromPackageJSON()
+	if version == "" {
+		version = "1.0.0"
+	}
 	repoURL := detectRepoURL()
 	repoSource := MethodGitHub
 	if repoURL != "" && !strings.Contains(repoURL, "github.com") {
@@ -140,9 +143,13 @@ func getNameFromPackageJSON() string {
 		return ""
 	}
 
-	name, ok := pkg["name"].(string)
+	// Prefer mcpName over name, as the server name must match mcpName
+	name, ok := pkg["mcpName"].(string)
 	if !ok || name == "" {
-		return ""
+		name, ok = pkg["name"].(string)
+		if !ok || name == "" {
+			return ""
+		}
 	}
 
 	// Convert npm package name to MCP server name
@@ -154,6 +161,25 @@ func getNameFromPackageJSON() string {
 		}
 	}
 	return fmt.Sprintf("io.github.<your-username>/%s", name)
+}
+
+func getVersionFromPackageJSON() string {
+	data, err := os.ReadFile("package.json")
+	if err != nil {
+		return ""
+	}
+
+	var pkg map[string]any
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return ""
+	}
+
+	version, ok := pkg["version"].(string)
+	if !ok || version == "" {
+		return ""
+	}
+
+	return version
 }
 
 func detectServerName(subfolder string) string {
