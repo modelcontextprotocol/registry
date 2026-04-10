@@ -8,12 +8,14 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 const (
-	gitHubTokenFilePath   = ".mcpregistry_github_token"   // #nosec:G101
-	registryTokenFilePath = ".mcpregistry_registry_token" // #nosec:G101
+	tokenDir              = ".mcpregistry"
+	gitHubTokenFileName   = "github_token"   // #nosec:G101
+	registryTokenFileName = "registry_token" // #nosec:G101
 	// GitHub OAuth URLs
 	GitHubDeviceCodeURL  = "https://github.com/login/device/code"        // #nosec:G101
 	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token" // #nosec:G101
@@ -117,7 +119,7 @@ func (g *GitHubATProvider) NeedsLogin() bool {
 	}
 
 	// Check if GitHub token exists
-	_, statErr := os.Stat(gitHubTokenFilePath)
+	_, statErr := os.Stat(gitHubTokenFilePath())
 	if os.IsNotExist(statErr) {
 		return true
 	}
@@ -305,14 +307,61 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 	return "", fmt.Errorf("device code authorization timed out")
 }
 
+// ensureTokenDir creates the .mcpregistry directory with a .gitignore if it does not exist.
+func ensureTokenDir() error {
+	if err := os.MkdirAll(tokenDir, 0700); err != nil {
+		return fmt.Errorf("failed to create token directory: %w", err)
+	}
+
+	gitignorePath := filepath.Join(tokenDir, ".gitignore")
+	if _, err := os.Stat(gitignorePath); os.IsNotExist(err) {
+		if err := os.WriteFile(gitignorePath, []byte("*\n"), 0600); err != nil {
+			return fmt.Errorf("failed to create .gitignore: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func gitHubTokenFilePath() string {
+	return filepath.Join(tokenDir, gitHubTokenFileName)
+}
+
+func registryTokenFilePath() string {
+	return filepath.Join(tokenDir, registryTokenFileName)
+}
+
+// migrateOldTokenFiles moves tokens from old flat paths to the new directory.
+func migrateOldTokenFiles() {
+	oldPaths := map[string]string{
+		".mcpregistry_github_token":   gitHubTokenFileName,
+		".mcpregistry_registry_token": registryTokenFileName,
+	}
+	for oldPath, newName := range oldPaths {
+		if _, err := os.Stat(oldPath); err == nil {
+			newPath := filepath.Join(tokenDir, newName)
+			if _, err := os.Stat(newPath); os.IsNotExist(err) {
+				_ = os.Rename(oldPath, newPath)
+			} else {
+				_ = os.Remove(oldPath)
+			}
+		}
+	}
+}
+
 // saveToken saves the GitHub access token to a local file
 func saveToken(token string) error {
-	return os.WriteFile(gitHubTokenFilePath, []byte(token), 0600)
+	if err := ensureTokenDir(); err != nil {
+		return err
+	}
+	migrateOldTokenFiles()
+	return os.WriteFile(gitHubTokenFilePath(), []byte(token), 0600)
 }
 
 // readToken reads the GitHub access token from a local file
 func readToken() (string, error) {
-	tokenData, err := os.ReadFile(gitHubTokenFilePath)
+	migrateOldTokenFiles()
+	tokenData, err := os.ReadFile(gitHubTokenFilePath())
 	if err != nil {
 		return "", err
 	}
@@ -420,12 +469,15 @@ func saveRegistryToken(token string, expiresAt int64) error {
 		return fmt.Errorf("failed to marshal token: %w", err)
 	}
 
-	return os.WriteFile(registryTokenFilePath, data, 0600)
+	if err := ensureTokenDir(); err != nil {
+		return err
+	}
+	return os.WriteFile(registryTokenFilePath(), data, 0600)
 }
 
 // readRegistryToken reads the registry JWT token from a local file
 func readRegistryToken() (string, error) {
-	data, err := os.ReadFile(registryTokenFilePath)
+	data, err := os.ReadFile(registryTokenFilePath())
 	if err != nil {
 		return "", err
 	}
@@ -439,7 +491,7 @@ func readRegistryToken() (string, error) {
 	// Check if token has expired
 	if time.Now().Unix() >= storedToken.ExpiresAt {
 		// Token has expired, remove the file
-		os.Remove(registryTokenFilePath)
+		os.Remove(registryTokenFilePath())
 		return "", fmt.Errorf("registry token has expired")
 	}
 

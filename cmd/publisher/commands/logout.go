@@ -25,17 +25,10 @@ func LogoutCommand() error {
 		return fmt.Errorf("failed to remove token: %w", err)
 	}
 
-	// Also clean up legacy token files if they exist
-	legacyFiles := []string{
-		".mcpregistry_github_token",
-		".mcpregistry_registry_token",
-	}
-
-	for _, file := range legacyFiles {
-		path := filepath.Join(homeDir, file)
-		if _, err := os.Stat(path); err == nil {
-			os.Remove(path) // Ignore errors for legacy files
-		}
+	// Clean up .mcpregistry directory (new location) and legacy flat files
+	_ = os.RemoveAll(".mcpregistry")
+	for _, file := range []string{".mcpregistry_github_token", ".mcpregistry_registry_token"} {
+		_ = os.Remove(file)
 	}
 
 	_, _ = fmt.Fprintln(os.Stdout, "✓ Successfully logged out")
