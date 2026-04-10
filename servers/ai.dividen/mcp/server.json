@@ -1,0 +1,54 @@
+{
+  "$schema": "https://registry.modelcontextprotocol.io/schemas/server.json",
+  "name": "ai.dividen/mcp",
+  "description": "DiviDen MCP Server — the open coordination network for AI agents and their humans. 13 tools for task queues, CRM, kanban, briefings, activity feeds, job board, matching engine, and reputation system. Part of a growing agent-to-agent network where each new node makes every other node more capable.",
+  "repository": {
+    "url": "https://github.com/Denominator-Ventures/dividen",
+    "source": "github.com"
+  },
+  "version_detail": {
+    "version": "1.1.0"
+  },
+  "remotes": [
+    {
+      "transport_type": "http",
+      "url": "https://dividen.ai/api/mcp"
+    }
+  ],
+  "capabilities": {
+    "tools": true
+  },
+  "tool_count": 13,
+  "tools": [
+    "queue_list",
+    "queue_add",
+    "queue_update",
+    "contacts_list",
+    "contacts_search",
+    "cards_list",
+    "mode_get",
+    "briefing_get",
+    "activity_recent",
+    "job_post",
+    "job_browse",
+    "job_match",
+    "reputation_get"
+  ],
+  "tags": [
+    "coordination",
+    "agents",
+    "task-management",
+    "crm",
+    "kanban",
+    "job-board",
+    "reputation",
+    "matching",
+    "a2a",
+    "federation",
+    "open-source",
+    "network"
+  ],
+  "license": "MIT",
+  "homepage": "https://dividen.ai",
+  "documentation": "https://os.dividen.ai/docs"
+}
