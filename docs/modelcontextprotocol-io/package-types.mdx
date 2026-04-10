@@ -131,6 +131,7 @@ For Docker/OCI images, the MCP Registry currently supports:
 
 - Docker Hub (`docker.io`)
 - GitHub Container Registry (`ghcr.io`)
+- Quay.io (`quay.io`)
 - Google Artifact Registry (any `*.pkg.dev` domain)
 - Azure Container Registry (`*.azurecr.io`)
 - Microsoft Container Registry (`mcr.microsoft.com`)
@@ -156,7 +157,7 @@ Docker/OCI images use `"registryType": "oci"` in `server.json`. For example:
 }
 ```
 
-The format of `identifier` is `registry/namespace/repository:tag`. For example, `docker.io/user/app:1.0.0` or `ghcr.io/user/app:1.0.0`. The tag can also be specified as a digest.
+The format of `identifier` is `registry/namespace/repository:tag`. For example, `docker.io/user/app:1.0.0`, `ghcr.io/user/app:1.0.0`, or `quay.io/myorg/my-mcp-server:1.0.0`. The tag can also be specified as a digest.
 
 ### Ownership Verification
 

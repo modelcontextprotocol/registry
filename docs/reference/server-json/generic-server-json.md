@@ -264,6 +264,26 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 }
 ```
 
+The same `registryType` / `identifier` pattern works for other supported OCI hosts. For example, an image on Quay.io:
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.example/quay-sample-mcp",
+  "description": "Example MCP server distributed as an OCI image on Quay.io",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "quay.io/myorg/my-mcp-server:1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
 ### Remote Server Example
 
 ```json

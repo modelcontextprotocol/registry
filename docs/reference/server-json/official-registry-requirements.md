@@ -36,6 +36,7 @@ Only trusted public registries are supported. Private registries and alternative
 - **Docker/OCI**:
   - Docker Hub (`docker.io`)
   - GitHub Container Registry (`ghcr.io`)
+  - Quay.io (`quay.io`)
   - Google Artifact Registry (`*.pkg.dev`)
   - Azure Container Registry (`*.azurecr.io`)
   - Microsoft Container Registry (`mcr.microsoft.com`)
