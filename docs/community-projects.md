@@ -29,6 +29,7 @@ Browse the official MCP Registry in your browser!
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [ToolSDK MCP Registry](https://github.com/toolsdk-ai/toolsdk-mcp-registry) - Extends the MCP Registry with **API-based MCP execution, private deployment**, and **secure sandbox isolation**.
+- [MCP-Smart-Memory-Context](https://www.npmjs.com/package/mcp-smart-memory-context) - An intelligent context memory MCP server that provides LLMs with a human-like cognitive architecture. It replaces naive RAG with a structured, 3-tier dynamic memory system featuring dynamic context swapping and semantic eviction for IDEs like VSCode and Cursor.
 
 ## Adding Your Project
 
