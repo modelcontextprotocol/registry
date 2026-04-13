@@ -1,0 +1,23 @@
+{
+  "name": "Universal Agent Economy OS",
+  "description": "Foundational MCP/A2A-native core platform for secure credential injection, native x402 micropayments, and Agent-to-Agent routing.",
+  "homepage": "https://github.com/sommerhussain/agent-economy-os",
+  "url": "https://agent-economy-os-production.up.railway.app",
+  "manifest": "https://agent-economy-os-production.up.railway.app/.well-known/mcp.json",
+  "agentCard": "https://agent-economy-os-production.up.railway.app/.well-known/agent-card.json",
+  "version": "0.1.1",
+  "capabilities": [
+    "x402",
+    "credential-injection",
+    "a2a-routing",
+    "mcp-server",
+    "tools"
+  ],
+  "tags": [
+    "mcp",
+    "a2a",
+    "payments",
+    "proxy",
+    "credentials"
+  ]
+}
