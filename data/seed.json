@@ -155,5 +155,34 @@
         }
       }
     ]
-  }
+  },
+  {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.opensosdata/mcp-server",
+  "description": "Real-time US business entity search across all 53 US jurisdictions -- all 50 states, Washington DC, Puerto Rico, and US Virgin Islands. Search, verify, and check the status of any LLC, corporation, or registered entity. Ideal for KYB compliance, due diligence, and vendor verification.",
+  "repository": {
+    "url": "https://github.com/OpenSOSData/opensosdata-mcp.git",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@opensosdata/mcp-server",
+      "version": "1.0.1",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Your OpenSOSData API key. Get one free at opensosdata.com -- includes 10 free lookups. $0.0314 per lookup after that.",
+          "isRequired": true,
+          "isSecret": true,
+          "name": "OPENSOSDATA_API_KEY"
+        }
+      ]
+    }
+  ]
+}
 ]
