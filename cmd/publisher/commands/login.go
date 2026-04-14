@@ -35,6 +35,13 @@ func tokenFilePath() (string, error) {
 	return filepath.Join(homeDir, ".config", "mcp-publisher", "token.json"), nil
 }
 
+// notAuthenticatedError returns an error guiding the user to log in,
+// with a hint about the token location change for users upgrading.
+func notAuthenticatedError() error {
+	_, _ = fmt.Fprintln(os.Stderr, "hint: token storage moved to ~/.config/mcp-publisher/. If you recently upgraded, please re-login.")
+	return errors.New("not authenticated, run 'mcp-publisher login <method>' first")
+}
+
 // ensureTokenDir creates the token directory (~/.config/mcp-publisher/) if needed.
 func ensureTokenDir() error {
 	homeDir, err := os.UserHomeDir()

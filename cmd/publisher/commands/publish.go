@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -45,7 +44,7 @@ func PublishCommand(args []string) error {
 	tokenData, err := os.ReadFile(tokenPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return errors.New("not authenticated. Run 'mcp-publisher login <method>' first")
+			return notAuthenticatedError()
 		}
 		return fmt.Errorf("failed to read token: %w", err)
 	}

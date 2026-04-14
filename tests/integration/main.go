@@ -76,6 +76,9 @@ func cleanupPublisherAuth() {
 	// Also remove from legacy location
 	legacyTokenPath := filepath.Join(homeDir, ".mcp_publisher_token")
 	os.Remove(legacyTokenPath)
+	// Clean up legacy intermediate token files from cwd
+	os.Remove(".mcpregistry_github_token")
+	os.Remove(".mcpregistry_registry_token")
 }
 
 func publish(examples []example) error {
