@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -95,12 +94,11 @@ func StatusCommand(args []string) error {
 	}
 
 	// Load saved token
-	homeDir, err := os.UserHomeDir()
+	tokenPath, err := tokenFilePath()
 	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
+		return err
 	}
 
-	tokenPath := filepath.Join(homeDir, TokenFileName)
 	tokenData, err := os.ReadFile(tokenPath)
 	if err != nil {
 		if os.IsNotExist(err) {

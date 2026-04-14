@@ -171,11 +171,6 @@ func parseRawPrivateKey(curve elliptic.Curve, privateKeyBytes []byte) (*ecdsa.Pr
 	}, nil
 }
 
-// NeedsLogin always returns false for cryptographic auth since no interactive login is needed
-func (c *CryptoProvider) NeedsLogin() bool {
-	return false
-}
-
 // Login is not needed for cryptographic auth since authentication is cryptographic
 func (c *CryptoProvider) Login(_ context.Context) error {
 	return nil
