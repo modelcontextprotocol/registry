@@ -1,0 +1,39 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.srotzin/hivegate",
+  "title": "HiveGate — Agent Identity, Trust & Settlement",
+  "description": "HiveGate provides autonomous agent infrastructure: W3C DID identity issuance, HAHS 1.0.0 employment contracts, trust scoring, 4-rail USDC settlement on Base L2, and EU AI Act Article 12 audit trail generation. Native integrations with LangChain, CrewAI, AutoGen, MCP, and A2A.",
+  "repository": {
+    "url": "https://github.com/srotzin/hive-agent-sdk",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://hivegate.onrender.com/mcp"
+    }
+  ],
+  "tools": [
+    {
+      "name": "onboard_agent",
+      "description": "Register a new autonomous agent with the Hive network. Returns a W3C DID and API key for the agent."
+    },
+    {
+      "name": "check_trust",
+      "description": "Returns a trust score (0–1000) for a given agent DID based on its behavioral history and credential chain."
+    },
+    {
+      "name": "create_hahs_contract",
+      "description": "Creates a HAHS 1.0.0 employment contract between a hirer agent and a worker agent, including scope, max USDC spend authorization, jurisdiction, and dispute resolution terms."
+    },
+    {
+      "name": "open_vault",
+      "description": "Opens a USDC vault on Base L2 for an agent, enabling 4-rail settlement and micropayment authorization between agents."
+    },
+    {
+      "name": "verify_compliance",
+      "description": "Returns the EU AI Act Article 12 compliance status and audit trail for a given agent DID, including action logs and ATG certification."
+    }
+  ]
+}
