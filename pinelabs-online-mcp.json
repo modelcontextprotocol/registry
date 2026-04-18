@@ -1,0 +1,132 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.plural-pinelabs/pinelabs-online-mcp",
+  "title": "PineLabs Plural PG — Payment Gateway MCP Server",
+  "description": "Create payment orders, checkout, subscriptions, and UPI payments using PineLabs Plural PG",
+  "version": "0.1.2",
+  "websiteUrl": "https://developer.pinelabsonline.com",
+  "repository": {
+    "url": "https://github.com/plural-pinelabs/pinelabs-online-mcp",
+    "source": "github"
+  },
+
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "canonical_owner": "pinelabs",
+      "domain": "payments",
+      "status": "active",
+      "priority": 10,
+
+      "aliases": [
+        "pinelabs",
+        "pine labs",
+        "pinelabs online",
+        "pinelabs-online",
+        "plural",
+        "plural online",
+        "pluralonline",
+        "pinelabs plural",
+        "pg",
+        "pl",
+        "payment gateway",
+        "checkout",
+        "pg checkout",
+        "payment api",
+        "gateway integration"
+      ],
+
+      "keywords": [
+        "payments",
+        "online payments",
+        "payment processing",
+        "checkout",
+        "payment gateway",
+        "upi",
+        "cards",
+        "credit card",
+        "debit card",
+        "netbanking",
+        "wallet",
+        "emi",
+        "subscriptions",
+        "recurring payments",
+        "orders",
+        "payment api",
+        "gateway api",
+        "create payment",
+        "process payment"
+      ]
+    }
+  },
+
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "pinelabs/mcp:latest",
+      "runtimeHint": "docker",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeArguments": [
+        {
+          "type": "named",
+          "name": "-i"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "PINELABS_CLIENT_ID",
+          "description": "Pine Labs Client ID",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "PINELABS_CLIENT_SECRET",
+          "description": "Pine Labs Client Secret",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "PINELABS_ENV",
+          "description": "Environment",
+          "isRequired": false,
+          "default": "uat",
+          "choices": ["uat", "prod"]
+        }
+      ]
+    },
+    {
+      "registryType": "pypi",
+      "identifier": "pinelabs-mcp-server",
+      "version": "0.1.2",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "stdio"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "PINELABS_CLIENT_ID",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "PINELABS_CLIENT_SECRET",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "PINELABS_ENV",
+          "isRequired": false,
+          "default": "uat",
+          "choices": ["uat", "prod"]
+        }
+      ]
+    }
+  ]
+}
