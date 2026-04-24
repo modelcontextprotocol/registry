@@ -272,7 +272,7 @@ func detectRepoURL() string {
 		}
 	}
 
-	return "https://github.com/YOUR_USERNAME/YOUR_REPO"
+	return ""
 }
 
 func detectPackageType() string {

@@ -9,6 +9,10 @@ sidebarTitle: "Quickstart: Publish a Server"
 
 This tutorial will show you how to publish an MCP server written in TypeScript to the MCP Registry using the official `mcp-publisher` CLI tool.
 
+<Note>
+  If you are publishing a non-npm package (PyPI, NuGet, OCI, MCPB), the overall flow is identical, but the ownership-verification step in [Step 1](#step-1-add-verification-information-to-the-package) is different per package type. See [Package Types](./package-types) for the verification mechanism that applies to your package, then return here and follow the remaining steps.
+</Note>
+
 ## Prerequisites
 
 - **Node.js** — This tutorial assumes the MCP server is written in TypeScript.
@@ -279,7 +283,7 @@ You should see your server's metadata in the search results JSON:
 
 | Error Message | Action |
 | --- | --- |
-|"Registry validation failed for package"|Ensure your package includes the required validation information (e.g, `mcpName` property in `package.json`).|
+|"Registry validation failed for package"|Ensure your package includes the required ownership-verification marker for its package type. For npm this is `mcpName` in `package.json`; for PyPI and NuGet it is an `mcp-name: <server-name>` line (or HTML comment) in the package README; for other types see [Package Types](./package-types).|
 |"Invalid or expired Registry JWT token"|Re-authenticate by running `mcp-publisher login github`.|
 |"You do not have permission to publish this server"|Your authentication method doesn't match your server's namespace format. With GitHub auth, your server name must start with `io.github.your-username/`.|
 
