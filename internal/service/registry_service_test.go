@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
@@ -177,7 +178,7 @@ func TestGetServerByName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := service.GetServerByName(ctx, tt.serverName)
+			result, err := service.GetServerByName(ctx, tt.serverName, false)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -270,7 +271,7 @@ func TestGetServerByNameAndVersion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := service.GetServerByNameAndVersion(ctx, tt.serverName, tt.version)
+			result, err := service.GetServerByNameAndVersion(ctx, tt.serverName, tt.version, false)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -366,7 +367,7 @@ func TestGetAllVersionsByServerName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := service.GetAllVersionsByServerName(ctx, tt.serverName)
+			result, err := service.GetAllVersionsByServerName(ctx, tt.serverName, false)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -425,7 +426,7 @@ func TestCreateServerConcurrentVersionsNoRace(t *testing.T) {
 	}
 
 	// Query database to check the final state after all creates complete
-	allVersions, err := service.GetAllVersionsByServerName(ctx, serverName)
+	allVersions, err := service.GetAllVersionsByServerName(ctx, serverName, false)
 	require.NoError(t, err, "failed to get all versions")
 
 	latestCount := 0
@@ -466,7 +467,7 @@ func TestUpdateServer(t *testing.T) {
 		serverName    string
 		version       string
 		updatedServer *apiv0.ServerJSON
-		newStatus     *string
+		statusChange  *StatusChangeRequest
 		expectError   bool
 		errorMsg      string
 		checkResult   func(*testing.T, *apiv0.ServerResponse)
@@ -503,7 +504,9 @@ func TestUpdateServer(t *testing.T) {
 				Description: "Updated with status change",
 				Version:     version,
 			},
-			newStatus:   stringPtr(string(model.StatusDeprecated)),
+			statusChange: &StatusChangeRequest{
+				NewStatus: model.StatusDeprecated,
+			},
 			expectError: false,
 			checkResult: func(t *testing.T, result *apiv0.ServerResponse) {
 				t.Helper()
@@ -528,7 +531,7 @@ func TestUpdateServer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := service.UpdateServer(ctx, tt.serverName, tt.version, tt.updatedServer, tt.newStatus)
+			result, err := service.UpdateServer(ctx, tt.serverName, tt.version, tt.updatedServer, tt.statusChange)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -580,12 +583,14 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 	service.(*registryServiceImpl).cfg.EnableRegistryValidation = originalConfig
 
 	// First, set server to deleted status
-	deletedStatus := string(model.StatusDeleted)
-	_, err = service.UpdateServer(ctx, serverName, version, invalidServer, &deletedStatus)
+	deletedStatusChange := &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	}
+	_, err = service.UpdateServer(ctx, serverName, version, invalidServer, deletedStatusChange)
 	require.NoError(t, err, "should be able to set server to deleted (validation should be skipped)")
 
-	// Verify server is now deleted
-	updatedServer, err := service.GetServerByNameAndVersion(ctx, serverName, version)
+	// Verify server is now deleted (need includeDeleted=true to find it)
+	updatedServer, err := service.GetServerByNameAndVersion(ctx, serverName, version, true)
 	require.NoError(t, err)
 	assert.Equal(t, model.StatusDeleted, updatedServer.Meta.Official.Status)
 
@@ -635,8 +640,10 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 	service.(*registryServiceImpl).cfg.EnableRegistryValidation = originalConfig
 
 	// Update server and set to deleted in same operation - should skip validation
-	newDeletedStatus := string(model.StatusDeleted)
-	result2, err := service.UpdateServer(ctx, "com.example/being-deleted-test", "1.0.0", activeServer, &newDeletedStatus)
+	newDeletedStatusChange := &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	}
+	result2, err := service.UpdateServer(ctx, "com.example/being-deleted-test", "1.0.0", activeServer, newDeletedStatusChange)
 	assert.NoError(t, err, "updating server being set to deleted should skip registry validation")
 	assert.NotNil(t, result2)
 	assert.Equal(t, model.StatusDeleted, result2.Meta.Official.Status)
@@ -767,14 +774,14 @@ func TestVersionComparison(t *testing.T) {
 	}
 
 	// Get the latest version - should be 2.1.0 based on semantic versioning
-	latest, err := service.GetServerByName(ctx, serverName)
+	latest, err := service.GetServerByName(ctx, serverName, false)
 	require.NoError(t, err)
 
 	assert.Equal(t, "2.1.0", latest.Server.Version, "Latest version should be 2.1.0")
 	assert.True(t, latest.Meta.Official.IsLatest)
 
 	// Verify only one version is marked as latest
-	allVersions, err := service.GetAllVersionsByServerName(ctx, serverName)
+	allVersions, err := service.GetAllVersionsByServerName(ctx, serverName, false)
 	require.NoError(t, err)
 
 	latestCount := 0
@@ -784,6 +791,195 @@ func TestVersionComparison(t *testing.T) {
 		}
 	}
 	assert.Equal(t, 1, latestCount, "Exactly one version should be marked as latest")
+}
+
+func TestUpdateServerStatus_ValidateRemoteURLsOnRestoreToActive(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	remoteURL := "https://api.example.com/mcp"
+
+	// Create Server A with a remote URL
+	serverA := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/server-a",
+		Description: "Server A with remote URL",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: remoteURL},
+		},
+	}
+	_, err := service.CreateServer(ctx, serverA)
+	require.NoError(t, err)
+
+	// Delete Server A
+	_, err = service.UpdateServerStatus(ctx, "com.example/server-a", "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	// Create Server B with the same remote URL (should succeed since A is deleted)
+	serverB := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/server-b",
+		Description: "Server B with same remote URL",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: remoteURL},
+		},
+	}
+	_, err = service.CreateServer(ctx, serverB)
+	require.NoError(t, err)
+
+	// Try to restore Server A to active - should fail due to URL conflict
+	_, err = service.UpdateServerStatus(ctx, "com.example/server-a", "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusActive,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "remote URL")
+	assert.Contains(t, err.Error(), "already used by server")
+}
+
+func TestUpdateServerStatus_ValidateRemoteURLsOnRestoreFromDeleted(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	remoteURL := "https://api.deleted.com/mcp"
+
+	// Create Server A with a remote URL and delete it
+	serverA := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/deleted-server",
+		Description: "Server to be deleted",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: remoteURL},
+		},
+	}
+	_, err := service.CreateServer(ctx, serverA)
+	require.NoError(t, err)
+
+	// Delete Server A
+	_, err = service.UpdateServerStatus(ctx, "com.example/deleted-server", "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	// Create Server B with the same remote URL (should succeed since A is deleted)
+	serverB := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/new-server",
+		Description: "New server with same remote URL",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: remoteURL},
+		},
+	}
+	_, err = service.CreateServer(ctx, serverB)
+	require.NoError(t, err)
+
+	// Try to restore deleted server to active - should fail due to URL conflict
+	_, err = service.UpdateServerStatus(ctx, "com.example/deleted-server", "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusActive,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "remote URL")
+	assert.Contains(t, err.Error(), "already used by server")
+}
+
+func TestUpdateAllVersionsStatus_ValidateRemoteURLsOnRestoreToActive(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	remoteURL := "https://api.allversions.com/mcp"
+
+	// Create Server A with multiple versions
+	serverAv1 := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/multi-version-server",
+		Description: "Server A version 1",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: remoteURL},
+		},
+	}
+	_, err := service.CreateServer(ctx, serverAv1)
+	require.NoError(t, err)
+
+	serverAv2 := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/multi-version-server",
+		Description: "Server A version 2",
+		Version:     "2.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: remoteURL},
+		},
+	}
+	_, err = service.CreateServer(ctx, serverAv2)
+	require.NoError(t, err)
+
+	// Delete all versions of Server A
+	_, err = service.UpdateAllVersionsStatus(ctx, "com.example/multi-version-server", &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	// Create Server B with the same remote URL
+	serverB := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/conflicting-server",
+		Description: "Server B with same remote URL",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: remoteURL},
+		},
+	}
+	_, err = service.CreateServer(ctx, serverB)
+	require.NoError(t, err)
+
+	// Try to restore all versions of Server A to active - should fail
+	_, err = service.UpdateAllVersionsStatus(ctx, "com.example/multi-version-server", &StatusChangeRequest{
+		NewStatus: model.StatusActive,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "remote URL")
+	assert.Contains(t, err.Error(), "already used by server")
+}
+
+func TestUpdateServerStatus_NoConflictWhenRestoringWithUniqueURLs(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	// Create and delete a server
+	server := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/unique-url-server",
+		Description: "Server with unique URL",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: "https://unique.example.com/mcp"},
+		},
+	}
+	_, err := service.CreateServer(ctx, server)
+	require.NoError(t, err)
+
+	// Delete the server
+	_, err = service.UpdateServerStatus(ctx, "com.example/unique-url-server", "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	// Restore to active - should succeed since URL is still unique
+	result, err := service.UpdateServerStatus(ctx, "com.example/unique-url-server", "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusActive,
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, model.StatusActive, result.Meta.Official.Status)
 }
 
 // Helper functions

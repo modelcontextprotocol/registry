@@ -71,25 +71,6 @@ func TestEditServerEndpoint(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	// Create a deleted server for undelete testing
-	deletedServer := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "io.github.testuser/deleted-server",
-		Description: "Server that was deleted",
-		Version:     "1.0.0",
-		Repository: &model.Repository{
-			URL:    "https://github.com/testuser/deleted-server",
-			Source: "github",
-			ID:     "testuser/deleted-server",
-		},
-	}
-	_, err = registryService.CreateServer(context.Background(), deletedServer)
-	require.NoError(t, err)
-
-	// Set the server to deleted status
-	_, err = registryService.UpdateServer(context.Background(), deletedServer.Name, deletedServer.Version, deletedServer, stringPtr(string(model.StatusDeleted)))
-	require.NoError(t, err)
-
 	// Create a server with build metadata for URL encoding test
 	buildMetadataServer := &apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
@@ -112,7 +93,6 @@ func TestEditServerEndpoint(t *testing.T) {
 		authClaims     *auth.JWTClaims
 		authHeader     string
 		requestBody    apiv0.ServerJSON
-		statusParam    string
 		expectedStatus int
 		expectedError  string
 		checkResult    func(*testing.T, *apiv0.ServerResponse)
@@ -146,31 +126,6 @@ func TestEditServerEndpoint(t *testing.T) {
 				assert.Equal(t, "io.github.testuser/editable-server", resp.Server.Name)
 				assert.Equal(t, "1.0.0", resp.Server.Version)
 				assert.NotNil(t, resp.Meta.Official)
-			},
-		},
-		{
-			name:       "successful edit with status change",
-			serverName: "io.github.testuser/editable-server",
-			version:    "1.0.0",
-			authClaims: &auth.JWTClaims{
-				AuthMethod:        auth.MethodGitHubAT,
-				AuthMethodSubject: "testuser",
-				Permissions: []auth.Permission{
-					{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.testuser/*"},
-				},
-			},
-			requestBody: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name:        "io.github.testuser/editable-server",
-				Description: "Server with status change",
-				Version:     "1.0.0",
-			},
-			statusParam:    "deprecated",
-			expectedStatus: http.StatusOK,
-			checkResult: func(t *testing.T, resp *apiv0.ServerResponse) {
-				t.Helper()
-				assert.Equal(t, "Server with status change", resp.Server.Description)
-				assert.Equal(t, model.StatusDeprecated, resp.Meta.Official.Status)
 			},
 		},
 		{
@@ -311,27 +266,6 @@ func TestEditServerEndpoint(t *testing.T) {
 			expectedError:  "Version in request body must match URL path parameter",
 		},
 		{
-			name:       "attempt to undelete server should fail",
-			serverName: "io.github.testuser/deleted-server",
-			version:    "1.0.0",
-			authClaims: &auth.JWTClaims{
-				AuthMethod:        auth.MethodGitHubAT,
-				AuthMethodSubject: "testuser",
-				Permissions: []auth.Permission{
-					{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.testuser/*"},
-				},
-			},
-			requestBody: apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name:        "io.github.testuser/deleted-server",
-				Description: "Trying to undelete server",
-				Version:     "1.0.0",
-			},
-			statusParam:    "active", // Trying to change from deleted to active
-			expectedStatus: http.StatusBadRequest,
-			expectedError:  "Cannot change status of deleted server",
-		},
-		{
 			name:       "successful edit of version with build metadata (URL encoded)",
 			serverName: "io.github.testuser/build-metadata-server",
 			version:    "1.0.0+20130313144700",
@@ -381,9 +315,6 @@ func TestEditServerEndpoint(t *testing.T) {
 			encodedServerName := url.PathEscape(tc.serverName)
 			encodedVersion := url.PathEscape(tc.version)
 			requestURL := "/v0/servers/" + encodedServerName + "/versions/" + encodedVersion
-			if tc.statusParam != "" {
-				requestURL += "?status=" + tc.statusParam
-			}
 
 			req := httptest.NewRequest(http.MethodPut, requestURL, bytes.NewReader(requestBody))
 			req.Header.Set("Content-Type", "application/json")
@@ -404,6 +335,9 @@ func TestEditServerEndpoint(t *testing.T) {
 			mux.ServeHTTP(w, req)
 
 			// Check response
+			if tc.expectedStatus != w.Code {
+				t.Logf("Response body: %s", w.Body.String())
+			}
 			assert.Equal(t, tc.expectedStatus, w.Code)
 
 			if tc.expectedError != "" {
@@ -437,12 +371,10 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 	testServers := []struct {
 		name    string
 		version string
-		status  model.Status
 	}{
-		{"com.example/active-server", "1.0.0", model.StatusActive},
-		{"com.example/deprecated-server", "1.0.0", model.StatusDeprecated},
-		{"com.example/multi-version-server", "1.0.0", model.StatusActive},
-		{"com.example/multi-version-server", "2.0.0", model.StatusActive},
+		{"com.example/active-server", "1.0.0"},
+		{"com.example/multi-version-server", "1.0.0"},
+		{"com.example/multi-version-server", "2.0.0"},
 	}
 
 	for _, server := range testServers {
@@ -453,112 +385,12 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 			Version:     server.version,
 		})
 		require.NoError(t, err)
-
-		// Set specific status if not active
-		if server.status != model.StatusActive {
-			_, err = registryService.UpdateServer(context.Background(), server.name, server.version, &apiv0.ServerJSON{
-				Schema:      model.CurrentSchemaURL,
-				Name:        server.name,
-				Description: "Test server for editing",
-				Version:     server.version,
-			}, stringPtr(string(server.status)))
-			require.NoError(t, err)
-		}
 	}
 
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
 	v0.RegisterEditEndpoints(api, "/v0", registryService, cfg)
-
-	t.Run("status transitions", func(t *testing.T) {
-		tests := []struct {
-			name           string
-			serverName     string
-			version        string
-			fromStatus     string
-			toStatus       string
-			expectedStatus int
-			expectedError  string
-		}{
-			{
-				name:           "active to deprecated",
-				serverName:     "com.example/active-server",
-				version:        "1.0.0",
-				toStatus:       "deprecated",
-				expectedStatus: http.StatusOK,
-			},
-			{
-				name:           "deprecated to active",
-				serverName:     "com.example/deprecated-server",
-				version:        "1.0.0",
-				toStatus:       "active",
-				expectedStatus: http.StatusOK,
-			},
-			{
-				name:           "active to deleted",
-				serverName:     "com.example/active-server",
-				version:        "1.0.0",
-				toStatus:       "deleted",
-				expectedStatus: http.StatusOK,
-			},
-			{
-				name:           "invalid status",
-				serverName:     "com.example/active-server",
-				version:        "1.0.0",
-				toStatus:       "invalid_status",
-				expectedStatus: http.StatusUnprocessableEntity,
-				expectedError:  "validation failed",
-			},
-		}
-
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				requestBody := apiv0.ServerJSON{
-					Schema:      model.CurrentSchemaURL,
-					Name:        tt.serverName,
-					Description: "Status transition test",
-					Version:     tt.version,
-				}
-
-				bodyBytes, err := json.Marshal(requestBody)
-				require.NoError(t, err)
-
-				encodedName := url.PathEscape(tt.serverName)
-				requestURL := "/v0/servers/" + encodedName + "/versions/" + tt.version + "?status=" + tt.toStatus
-
-				req := httptest.NewRequest(http.MethodPut, requestURL, bytes.NewReader(bodyBytes))
-				req.Header.Set("Content-Type", "application/json")
-
-				// Generate admin token
-				jwtManager := auth.NewJWTManager(cfg)
-				tokenResponse, err := jwtManager.GenerateTokenResponse(context.Background(), auth.JWTClaims{
-					AuthMethod: auth.MethodNone,
-					Permissions: []auth.Permission{
-						{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
-					},
-				})
-				require.NoError(t, err)
-				req.Header.Set("Authorization", "Bearer "+tokenResponse.RegistryToken)
-
-				w := httptest.NewRecorder()
-				mux.ServeHTTP(w, req)
-
-				assert.Equal(t, tt.expectedStatus, w.Code)
-
-				if tt.expectedError != "" {
-					assert.Contains(t, w.Body.String(), tt.expectedError)
-				}
-
-				if tt.expectedStatus == http.StatusOK {
-					var response apiv0.ServerResponse
-					err := json.NewDecoder(w.Body).Decode(&response)
-					require.NoError(t, err)
-					assert.Equal(t, model.Status(tt.toStatus), response.Meta.Official.Status)
-				}
-			})
-		}
-	})
 
 	t.Run("URL encoding edge cases", func(t *testing.T) {
 		// Create server with special characters
@@ -651,13 +483,70 @@ func TestEditServerEndpointEdgeCases(t *testing.T) {
 		assert.Equal(t, "1.0.0", response.Server.Version)
 
 		// Verify the other version wasn't affected
-		otherVersion, err := registryService.GetServerByNameAndVersion(context.Background(), "com.example/multi-version-server", "2.0.0")
+		otherVersion, err := registryService.GetServerByNameAndVersion(context.Background(), "com.example/multi-version-server", "2.0.0", false)
 		require.NoError(t, err)
 		assert.NotEqual(t, "Updated v1.0.0 specifically", otherVersion.Server.Description)
 	})
-}
 
-// Helper function
-func stringPtr(s string) *string {
-	return &s
+	t.Run("edit preserves status metadata", func(t *testing.T) {
+		// Create a server and set it to deprecated using the service directly
+		deprecatedServer := &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
+			Name:        "com.example/deprecated-for-edit-test",
+			Description: "Server to test edit preserves status",
+			Version:     "1.0.0",
+		}
+		_, err := registryService.CreateServer(context.Background(), deprecatedServer)
+		require.NoError(t, err)
+
+		// Set to deprecated status using UpdateServerStatus
+		statusMsg := "This server is deprecated"
+		_, err = registryService.UpdateServerStatus(context.Background(), deprecatedServer.Name, deprecatedServer.Version, &service.StatusChangeRequest{
+			NewStatus:     model.StatusDeprecated,
+			StatusMessage: &statusMsg,
+		})
+		require.NoError(t, err)
+
+		// Now edit the server description
+		requestBody := apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
+			Name:        "com.example/deprecated-for-edit-test",
+			Description: "Updated description but status should remain deprecated",
+			Version:     "1.0.0",
+		}
+
+		bodyBytes, err := json.Marshal(requestBody)
+		require.NoError(t, err)
+
+		encodedName := url.PathEscape("com.example/deprecated-for-edit-test")
+		requestURL := "/v0/servers/" + encodedName + "/versions/1.0.0"
+
+		req := httptest.NewRequest(http.MethodPut, requestURL, bytes.NewReader(bodyBytes))
+		req.Header.Set("Content-Type", "application/json")
+
+		jwtManager := auth.NewJWTManager(cfg)
+		tokenResponse, err := jwtManager.GenerateTokenResponse(context.Background(), auth.JWTClaims{
+			AuthMethod: auth.MethodNone,
+			Permissions: []auth.Permission{
+				{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
+			},
+		})
+		require.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+tokenResponse.RegistryToken)
+
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response apiv0.ServerResponse
+		err = json.NewDecoder(w.Body).Decode(&response)
+		require.NoError(t, err)
+		assert.Equal(t, "Updated description but status should remain deprecated", response.Server.Description)
+		// Status should still be deprecated
+		assert.Equal(t, model.StatusDeprecated, response.Meta.Official.Status)
+		// Status message should be preserved
+		assert.NotNil(t, response.Meta.Official.StatusMessage)
+		assert.Equal(t, "This server is deprecated", *response.Meta.Official.StatusMessage)
+	})
 }

@@ -66,18 +66,19 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 			errorMsg:          "missing required annotation",
 			mustNotContainMsg: "unsupported OCI registry",
 		},
+		{
+			name:              "Quay.io should be allowed",
+			identifier:        "quay.io/prometheus/node-exporter:v1.7.0",
+			expectError:       true,
+			errorMsg:          "missing required annotation",
+			mustNotContainMsg: "unsupported OCI registry",
+		},
 		// Removed ACR test with non-existent host - ACR support is tested elsewhere
 
 		// Disallowed registries
 		{
 			name:        "GCR should be rejected",
 			identifier:  "gcr.io/test/image:latest",
-			expectError: true,
-			errorMsg:    "unsupported OCI registry",
-		},
-		{
-			name:        "Quay.io should be rejected",
-			identifier:  "quay.io/test/image:latest",
 			expectError: true,
 			errorMsg:    "unsupported OCI registry",
 		},
@@ -134,8 +135,9 @@ func TestValidateOCI_RegistryAllowlist(t *testing.T) {
 }
 
 func TestValidateOCI_RegistryPatterns(t *testing.T) {
-	// This test verifies registry pattern matching (wildcards like *.azurecr.io and *.pkg.dev)
-	// without relying on external images that may not exist
+	// Verifies allowlist behavior: wildcard hosts (*.azurecr.io, *.pkg.dev) and fixed hosts
+	// like quay.io. shouldFail=false means the error must not be "unsupported OCI registry"
+	// (validation may still error later, for example missing annotation or image not found).
 	tests := []struct {
 		name       string
 		identifier string
@@ -154,6 +156,12 @@ func TestValidateOCI_RegistryPatterns(t *testing.T) {
 		{
 			name:       "Artifact Registry should be allowed",
 			identifier: "us-west1-docker.pkg.dev/project/repo/image:tag",
+			shouldFail: false,
+		},
+		{
+			name:       "Quay.io host should be allowed",
+			identifier: "quay.io/nonexistent/mcp-registry-fake-repo:v1",
+			// Past allowlist; fake repo typically yields "does not exist", not unsupported registry
 			shouldFail: false,
 		},
 		{

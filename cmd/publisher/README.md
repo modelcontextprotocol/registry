@@ -21,8 +21,9 @@ make dev-compose  # Start local registry
 
 ### Commands
 - **`init`** - Generate server.json templates with auto-detection
-- **`login`** - Handle authentication (github, dns, http, none)  
+- **`login`** - Handle authentication (github, dns, http, none)
 - **`publish`** - Validate and upload servers to registry
+- **`status`** - Update server lifecycle status (active, deprecated, deleted)
 - **`logout`** - Clear stored credentials
 
 ### Authentication Providers

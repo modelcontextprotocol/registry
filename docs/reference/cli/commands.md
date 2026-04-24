@@ -276,6 +276,51 @@ mcp-publisher publish
 mcp-publisher publish ./config/server.json
 ```
 
+### `mcp-publisher status`
+
+Update the lifecycle status of a published server.
+
+**Usage:**
+```bash
+mcp-publisher status --status <active|deprecated|deleted> [flags] <server-name> [version]
+```
+
+**Flags:**
+- `--status` (required) - New status: `active`, `deprecated`, or `deleted`
+- `--message` - Optional message explaining the status change (not allowed when status is `active`)
+- `--all-versions` - Apply status change to all versions of the server
+- `--yes`, `-y` - Skip confirmation prompt (only applies when using `--all-versions`)
+
+**Arguments:**
+- `server-name` - Full server name (e.g., `io.github.user/my-server`)
+- `version` - Server version to update (required unless `--all-versions` is set)
+
+**Status Values:**
+- `active` - Server is active and visible in default listings
+- `deprecated` - Server is deprecated but still visible with a warning message
+- `deleted` - Server is hidden from default listings
+
+**Examples:**
+```bash
+# Deprecate a specific version
+mcp-publisher status --status deprecated --message "Please upgrade to 2.0.0" \
+  io.github.user/my-server 1.0.0
+
+# Delete a version with security issues
+mcp-publisher status --status deleted --message "Critical security vulnerability" \
+  io.github.user/my-server 1.0.0
+
+# Restore a version to active
+mcp-publisher status --status active io.github.user/my-server 1.0.0
+
+# Deprecate all versions at once
+mcp-publisher status --status deprecated --all-versions --message "Project archived" \
+  io.github.user/my-server
+```
+
+**Requirements:**
+- Must be logged in with `publish` or `edit` permission for the server namespace
+
 ### `mcp-publisher logout`
 
 Clear stored authentication credentials.
@@ -286,17 +331,20 @@ mcp-publisher logout
 ```
 
 **Behavior:**
-- Removes `~/.mcp_publisher_token`
+- Removes `~/.config/mcp-publisher/token.json`
+- Also cleans up legacy token files (`~/.mcp_publisher_token`, `.mcpregistry_*`)
 - Does not revoke tokens on server side
 
 ## Configuration
 
 ### Token Storage
-Authentication tokens stored in `~/.mcp_publisher_token` as JSON:
+Authentication tokens are stored in `~/.config/mcp-publisher/token.json` as JSON:
 ```json
 {
   "token": "jwt-token-here",
-  "registry_url": "https://registry.modelcontextprotocol.io",
-  "expires_at": "2024-12-31T23:59:59Z"
+  "method": "github",
+  "registry": "https://registry.modelcontextprotocol.io"
 }
 ```
+
+> **Note:** Tokens were previously stored in `~/.mcp_publisher_token`. If you are upgrading, run `mcp-publisher logout` followed by `mcp-publisher login` to migrate to the new location.

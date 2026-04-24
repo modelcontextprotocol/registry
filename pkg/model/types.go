@@ -78,13 +78,13 @@ type Input struct {
 }
 
 type InputWithVariables struct {
-	Input     `json:",inline"`
+	Input
 	Variables map[string]Input `json:"variables,omitempty" doc:"A map of variable names to their values. Keys in the input value that are wrapped in {curly_braces} will be replaced with the corresponding variable values."`
 }
 
 type KeyValueInput struct {
-	InputWithVariables `json:",inline"`
-	Name               string `json:"name" doc:"Name of the header or environment variable." example:"SOME_VARIABLE"`
+	InputWithVariables
+	Name string `json:"name" doc:"Name of the header or environment variable." example:"SOME_VARIABLE"`
 }
 
 type ArgumentType string
@@ -95,11 +95,11 @@ const (
 )
 
 type Argument struct {
-	InputWithVariables `json:",inline"`
-	Type               ArgumentType `json:"type" doc:"Argument type: 'positional' or 'named'" example:"positional"`
-	Name               string       `json:"name,omitempty" doc:"The flag name (for named arguments), including any leading dashes. Empty for positional arguments." example:"--port"`
-	ValueHint          string       `json:"valueHint,omitempty" doc:"An identifier for positional arguments. Used in transport URL variable substitution." example:"file_path"`
-	IsRepeated         bool         `json:"isRepeated,omitempty" doc:"Whether the argument can be repeated multiple times."`
+	InputWithVariables
+	Type       ArgumentType `json:"type" doc:"Argument type: 'positional' or 'named'" example:"positional"`
+	Name       string       `json:"name,omitempty" doc:"The flag name (for named arguments), including any leading dashes. Empty for positional arguments." example:"--port"`
+	ValueHint  string       `json:"valueHint,omitempty" doc:"An identifier for positional arguments. Used in transport URL variable substitution." example:"file_path"`
+	IsRepeated bool         `json:"isRepeated,omitempty" doc:"Whether the argument can be repeated multiple times."`
 }
 
 type Icon struct {

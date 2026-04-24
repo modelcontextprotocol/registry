@@ -2,6 +2,39 @@
 
 Changes to the REST API endpoints and responses.
 
+## Unreleased
+
+### Added
+
+#### Server Status Management Endpoints
+
+New endpoints for managing server lifecycle status:
+
+- `PATCH /v0/servers/{serverName}/versions/{version}/status` - Update status of a specific server version
+- `PATCH /v0/servers/{serverName}/status` - Update status of all versions of a server in a single transaction
+
+**Status values:**
+- `active` - Server is active and visible in default listings
+- `deprecated` - Server is deprecated but still visible with a warning message
+- `deleted` - Server is hidden from default listings
+
+**Authentication:** Requires `publish` or `edit` permission for the server namespace.
+
+#### New Response Fields
+
+New fields added to `_meta["io.modelcontextprotocol.registry/official"]` (RegistryExtensions):
+
+- `statusChangedAt` - Timestamp when the server status was last changed
+- `statusMessage` - Optional message explaining status change (e.g., deprecation reason, migration guidance)
+
+#### Server Filtering Enhancements
+
+New `include_deleted` query parameter added to multiple endpoints:
+
+- `GET /v0/servers` - Include deleted servers in list results (default: `false`, automatically `true` when `updated_since` is provided)
+- `GET /v0/servers/{serverName}/versions/{version}` - Include deleted servers in detail results (default: `false`)
+- `GET /v0/servers/{serverName}/versions` - Include deleted servers in version history (default: `false`)
+
 ## 2025-10-17
 
 ### Added

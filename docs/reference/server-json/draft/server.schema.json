@@ -1,6 +1,6 @@
 {
   "$comment": "This file is auto-generated from docs/reference/api/openapi.yaml. Do not edit manually. Run 'make generate-schema' to update.",
-  "$id": "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json",
+  "$id": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/draft/server.schema.json",
   "$ref": "#/definitions/ServerDetail",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
@@ -511,9 +511,9 @@
           "type": "string"
         },
         "url": {
-          "description": "Server-Sent Events endpoint URL template. Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI.",
+          "description": "Server-Sent Events endpoint URL template. Must start with http://, https://, or a template variable (e.g., {baseUrl}). Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI.",
           "example": "https://mcp-fs.example.com/sse",
-          "pattern": "^https?://[^\\s]+$",
+          "pattern": "^(https?://[^\\s]+|\\{[a-zA-Z_][a-zA-Z0-9_]*\\}[^\\s]*)$",
           "type": "string"
         }
       },
@@ -557,9 +557,9 @@
           "type": "string"
         },
         "url": {
-          "description": "URL template for the streamable-http transport. Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI.",
+          "description": "URL template for the streamable-http transport. Must start with http://, https://, or a template variable (e.g., {baseUrl}). Variables in {curly_braces} are resolved based on context: In Package context, they reference argument valueHints, argument names, or environment variable names from the parent Package. In Remote context, they reference variables from the transport's 'variables' object. After variable substitution, this should produce a valid URI.",
           "example": "https://api.example.com/mcp",
-          "pattern": "^https?://[^\\s]+$",
+          "pattern": "^(https?://[^\\s]+|\\{[a-zA-Z_][a-zA-Z0-9_]*\\}[^\\s]*)$",
           "type": "string"
         }
       },

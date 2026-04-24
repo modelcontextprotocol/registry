@@ -4,11 +4,31 @@ Changes to the server.json schema and format.
 
 ## Draft (Unreleased)
 
-This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./server.schema.json) in this repository.
+This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./draft/server.schema.json) in this repository.
 
 ### Changed
 
-- No changes yet.
+#### Transport URL Pattern Now Accepts Template Variables
+
+The `url` field in `StreamableHttpTransport` and `SseTransport` now accepts URLs that start with a template variable (e.g., `{baseUrl}`), in addition to the existing `http://` and `https://` prefixes.
+
+**Example:**
+```json
+{
+  "remotes": [{
+    "type": "streamable-http",
+    "url": "{baseUrl}/mcp",
+    "variables": {
+      "baseUrl": {
+        "description": "Base URL for the MCP server",
+        "isRequired": true
+      }
+    }
+  }]
+}
+```
+
+**Migration:** No changes required. Existing servers continue to work unchanged.
 
 ### Notes
 

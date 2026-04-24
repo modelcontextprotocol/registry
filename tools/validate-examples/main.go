@@ -33,7 +33,7 @@ func main() {
 
 func runValidation() error {
 	// Define what we validate and how
-	expectedServerJSONCount := 15
+	expectedServerJSONCount := 16
 	targets := []validationTarget{
 		{
 			path:          filepath.Join("docs", "reference", "server-json", "generic-server-json.md"),
@@ -57,7 +57,7 @@ func runValidation() error {
 		},
 	}
 
-	schemaPath := filepath.Join("docs", "reference", "server-json", "server.schema.json")
+	schemaPath := filepath.Join("docs", "reference", "server-json", "draft", "server.schema.json")
 	baseSchema, err := compileSchema(schemaPath)
 	if err != nil {
 		return fmt.Errorf("failed to compile server.schema.json: %w", err)

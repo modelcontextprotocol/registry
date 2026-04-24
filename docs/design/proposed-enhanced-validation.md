@@ -421,10 +421,10 @@ The validation system supports testing against draft schemas or custom schema ve
 
 #### Setup Steps
 
-1. **Copy the schema file**: Copy your schema file (e.g., `docs/reference/server-json/server.schema.json`) to `internal/validators/schemas/{version}.json`
+1. **Copy the schema file**: Copy your schema file (e.g., `docs/reference/server-json/draft/server.schema.json`) to `internal/validators/schemas/{version}.json`
    - Example: Copy to `internal/validators/schemas/draft.json` for draft schema testing
    - Ensure the schema file's `$id` field matches: `https://static.modelcontextprotocol.io/schemas/{version}/server.schema.json`
-   - For draft schema, the `$id` should be: `https://static.modelcontextprotocol.io/schemas/draft/server.schema.json`
+   - For draft schema, the `$id` should be: `https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/draft/server.schema.json`
 
 2. **Rebuild**: Recompile the Go binary to embed the new schema file (schemas are embedded at compile time)
 
@@ -473,10 +473,10 @@ To test with a draft schema as if it were the current schema (no warnings/errors
 
 ```bash
 # 1. Copy draft schema
-cp docs/reference/server-json/server.schema.json internal/validators/schemas/draft.json
+cp docs/reference/server-json/draft/server.schema.json internal/validators/schemas/draft.json
 
 # 2. Verify the $id field in draft.json is correct
-# Should be: "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json"
+# Should be: "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/draft/server.schema.json"
 
 # 3. Rebuild
 go build ./...

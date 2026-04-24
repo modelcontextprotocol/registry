@@ -26,5 +26,5 @@ When the draft changes are ready for release:
 
 ## Schema Versioning
 
-- **Draft schema**: `https://static.modelcontextprotocol.io/schemas/draft/server.schema.json` - For in-progress changes, may change without notice.
+- **Draft schema**: `https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/draft/server.schema.json` - For in-progress changes, may change without notice.
 - **Released schemas**: `https://static.modelcontextprotocol.io/schemas/YYYY-MM-DD/server.schema.json` - Stable, versioned by release date.

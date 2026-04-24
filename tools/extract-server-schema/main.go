@@ -13,7 +13,7 @@ import (
 
 const (
 	openAPIPath     = "docs/reference/api/openapi.yaml"
-	schemaOutputDir = "docs/reference/server-json"
+	schemaOutputDir = "docs/reference/server-json/draft"
 )
 
 func main() {
@@ -93,7 +93,7 @@ func main() {
 	// When releasing, the schema is published to a versioned URL (e.g., 2025-10-17)
 	// on https://github.com/modelcontextprotocol/static
 	_ = version // version from OpenAPI spec available if needed
-	schemaID := "https://static.modelcontextprotocol.io/schemas/draft/server.schema.json"
+	schemaID := "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/draft/server.schema.json"
 	jsonSchema := map[string]interface{}{
 		"$comment":    "This file is auto-generated from docs/reference/api/openapi.yaml. Do not edit manually. Run 'make generate-schema' to update.",
 		"$schema":     "http://json-schema.org/draft-07/schema#",
