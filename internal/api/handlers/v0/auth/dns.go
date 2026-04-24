@@ -113,10 +113,12 @@ func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, s
 	return h.CoreAuthHandler.ExchangeToken(ctx, domain, timestamp, signedTimestamp, keyFetcher, allowSubdomains, auth.MethodDNS)
 }
 
-// hasMCPRecord reports whether any of the supplied TXT records contains an MCPv1 proof record.
+// hasMCPRecord reports whether any of the supplied TXT records contains a well-formed
+// MCPv1 proof record. Uses the same strict pattern as the parser so a malformed
+// "v=MCPv1" string at the apex doesn't suppress the misplaced-selector probe.
 func hasMCPRecord(records []string) bool {
 	for _, r := range records {
-		if strings.Contains(r, "v=MCPv1") {
+		if MCPProofRecordPattern.MatchString(r) {
 			return true
 		}
 	}

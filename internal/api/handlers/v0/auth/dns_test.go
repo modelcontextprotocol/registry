@@ -1030,6 +1030,15 @@ func TestDNSAuthHandler_WrongSelectorProbe(t *testing.T) {
 			},
 			expectInError: "no MCP public key found in DNS TXT records",
 		},
+		{
+			name: "malformed MCPv1 string at apex still triggers selector probe",
+			txtRecords: map[string][]string{
+				// Looks like an MCPv1 record but missing the public key field.
+				testDomain:                {"v=MCPv1; k=ed25519"},
+				"_mcp-auth." + testDomain: {mcpRecord},
+			},
+			expectInError: "_mcp-auth." + testDomain,
+		},
 	}
 
 	for _, tt := range tests {

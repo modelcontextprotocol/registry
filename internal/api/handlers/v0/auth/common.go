@@ -25,6 +25,11 @@ import (
 // the failure is actually a "wrong key" situation.
 var ErrSignatureMismatch = errors.New("signature does not match public key")
 
+// MCPProofRecordPattern matches a well-formed MCPv1 DNS/HTTP proof record:
+// "v=MCPv1; k=<algo>; p=<base64-public-key>". Shared so callers checking for the
+// presence of a valid record see exactly what the parser will accept.
+var MCPProofRecordPattern = regexp.MustCompile(`v=MCPv1;\s*k=([^;]+);\s*p=([A-Za-z0-9+/=]+)`)
+
 // CryptoAlgorithm represents the cryptographic algorithm used for a public key
 type CryptoAlgorithm string
 
@@ -307,11 +312,8 @@ func ParseMCPKeysFromStrings(inputs []string) []struct {
 		error
 	}
 
-	// proof record pattern: v=MCPv1; k=<algo>; p=<base64-public-key>
-	cryptoPattern := regexp.MustCompile(`v=MCPv1;\s*k=([^;]+);\s*p=([A-Za-z0-9+/=]+)`)
-
 	for _, record := range inputs {
-		if matches := cryptoPattern.FindStringSubmatch(record); len(matches) == 3 {
+		if matches := MCPProofRecordPattern.FindStringSubmatch(record); len(matches) == 3 {
 			publicKey, err := ParsePublicKey(matches[1], matches[2])
 			publicKeys = append(publicKeys, struct {
 				*PublicKeyInfo
