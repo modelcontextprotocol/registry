@@ -164,6 +164,59 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	return s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
 }
 
+// recalculateLatest picks the highest non-deleted version of the given server and flags it
+// as latest, clearing is_latest on every other row. If every version is deleted, the highest
+// deleted version keeps the flag so admin lookups (GetServerByName with includeDeleted=true)
+// still find the server. Caller must hold the per-server publish lock.
+func (s *registryServiceImpl) recalculateLatest(ctx context.Context, tx pgx.Tx, serverName string) error {
+	versions, err := s.db.GetAllVersionsByServerName(ctx, tx, serverName, true)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return s.db.SetLatestVersion(ctx, tx, serverName, "")
+		}
+		return fmt.Errorf("failed to load versions for latest recalculation: %w", err)
+	}
+
+	winner := pickLatestVersion(versions, false)
+	if winner == nil {
+		// No non-deleted versions — fall back to highest deleted so the server is still
+		// addressable via includeDeleted=true lookups.
+		winner = pickLatestVersion(versions, true)
+	}
+
+	winnerVersion := ""
+	if winner != nil {
+		winnerVersion = winner.Server.Version
+	}
+	return s.db.SetLatestVersion(ctx, tx, serverName, winnerVersion)
+}
+
+// pickLatestVersion returns the highest version from the given slice. If allowDeleted is
+// false, deleted versions are skipped.
+func pickLatestVersion(versions []*apiv0.ServerResponse, allowDeleted bool) *apiv0.ServerResponse {
+	var winner *apiv0.ServerResponse
+	for _, v := range versions {
+		if !allowDeleted && v.Meta.Official != nil && v.Meta.Official.Status == model.StatusDeleted {
+			continue
+		}
+		if winner == nil {
+			winner = v
+			continue
+		}
+		var winnerPublishedAt, candidatePublishedAt time.Time
+		if winner.Meta.Official != nil {
+			winnerPublishedAt = winner.Meta.Official.PublishedAt
+		}
+		if v.Meta.Official != nil {
+			candidatePublishedAt = v.Meta.Official.PublishedAt
+		}
+		if CompareVersions(v.Server.Version, winner.Server.Version, candidatePublishedAt, winnerPublishedAt) > 0 {
+			winner = v
+		}
+	}
+	return winner
+}
+
 // validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
 func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, tx pgx.Tx, serverDetail apiv0.ServerJSON) error {
 	// Check each remote URL in the new server for conflicts
@@ -237,11 +290,14 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 
 	// Handle status change if provided
 	if statusChange != nil {
-		updatedWithStatus, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage)
-		if err != nil {
+		if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
 			return nil, err
 		}
-		return updatedWithStatus, nil
+		if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
+			return nil, err
+		}
+		// Re-read to pick up the possibly updated is_latest flag.
+		return s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
 	}
 
 	return updatedServerResponse, nil
@@ -279,7 +335,14 @@ func (s *registryServiceImpl) updateServerStatusInTransaction(ctx context.Contex
 	}
 
 	// Update only the status metadata
-	return s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage)
+	if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
+		return nil, err
+	}
+	if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
+		return nil, err
+	}
+	// Re-read to pick up the possibly updated is_latest flag.
+	return s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
 }
 
 // UpdateAllVersionsStatus updates the status metadata of all versions of a server in a single transaction
@@ -319,5 +382,12 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 	}
 
 	// Update all versions' status in a single database call
-	return s.db.SetAllVersionsStatus(ctx, tx, serverName, statusChange.NewStatus, statusChange.StatusMessage)
+	if _, err := s.db.SetAllVersionsStatus(ctx, tx, serverName, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
+		return nil, err
+	}
+	if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
+		return nil, err
+	}
+	// Re-read to pick up the possibly updated is_latest flags.
+	return s.db.GetAllVersionsByServerName(ctx, tx, serverName, true)
 }

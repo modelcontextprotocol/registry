@@ -982,6 +982,160 @@ func TestUpdateServerStatus_NoConflictWhenRestoringWithUniqueURLs(t *testing.T) 
 	assert.Equal(t, model.StatusActive, result.Meta.Official.Status)
 }
 
+func TestRecalculateLatest_PromotesNextHighestWhenLatestSoftDeleted(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	serverName := "com.example/delete-latest-server"
+
+	// Publish 1.0.0, then 0.0.59. 1.0.0 is latest.
+	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v1", Version: "1.0.0",
+	})
+	require.NoError(t, err)
+	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v0.0.59", Version: "0.0.59",
+	})
+	require.NoError(t, err)
+
+	// Soft-delete 1.0.0.
+	_, err = service.UpdateServerStatus(ctx, serverName, "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	// 0.0.59 should now be latest.
+	latest, err := service.GetServerByName(ctx, serverName, false)
+	require.NoError(t, err)
+	assert.Equal(t, "0.0.59", latest.Server.Version)
+	assert.True(t, latest.Meta.Official.IsLatest)
+}
+
+func TestRecalculateLatest_ReproFromIssue1081(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	serverName := "com.example/issue-1081-repro"
+
+	// 1. Publish 1.0.0.
+	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v1", Version: "1.0.0",
+	})
+	require.NoError(t, err)
+
+	// 2. Publish 0.0.59 — expected not latest at this point.
+	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v0.0.59", Version: "0.0.59",
+	})
+	require.NoError(t, err)
+
+	// 3. Delete 1.0.0.
+	_, err = service.UpdateServerStatus(ctx, serverName, "1.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	// 4. /versions/latest must not 404.
+	latest, err := service.GetServerByName(ctx, serverName, false)
+	require.NoError(t, err)
+	assert.Equal(t, "0.0.59", latest.Server.Version)
+
+	// 5. Publish 0.0.60 — should become latest because compare now excludes deleted 1.0.0.
+	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v0.0.60", Version: "0.0.60",
+	})
+	require.NoError(t, err)
+
+	latest, err = service.GetServerByName(ctx, serverName, false)
+	require.NoError(t, err)
+	assert.Equal(t, "0.0.60", latest.Server.Version)
+	assert.True(t, latest.Meta.Official.IsLatest)
+
+	// Only one row should be flagged latest.
+	all, err := service.GetAllVersionsByServerName(ctx, serverName, true)
+	require.NoError(t, err)
+	latestCount := 0
+	for _, v := range all {
+		if v.Meta.Official.IsLatest {
+			latestCount++
+		}
+	}
+	assert.Equal(t, 1, latestCount)
+}
+
+func TestRecalculateLatest_AllDeletedKeepsHighestAsLatest(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	serverName := "com.example/all-deleted-server"
+
+	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v1", Version: "1.0.0",
+	})
+	require.NoError(t, err)
+	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v2", Version: "2.0.0",
+	})
+	require.NoError(t, err)
+
+	// Delete all versions in one call.
+	_, err = service.UpdateAllVersionsStatus(ctx, serverName, &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	// Public lookup (includeDeleted=false) must now 404.
+	_, err = service.GetServerByName(ctx, serverName, false)
+	require.ErrorIs(t, err, database.ErrNotFound)
+
+	// Admin lookup (includeDeleted=true) must still find the server: the highest deleted
+	// version keeps is_latest=true so the server remains addressable for restore flows.
+	latest, err := service.GetServerByName(ctx, serverName, true)
+	require.NoError(t, err)
+	assert.Equal(t, "2.0.0", latest.Server.Version)
+	assert.True(t, latest.Meta.Official.IsLatest)
+}
+
+func TestRecalculateLatest_RestoringHigherVersionPromotesIt(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	serverName := "com.example/restore-server"
+
+	// Publish 2.0.0 and 1.0.0 — 2.0.0 is latest.
+	_, err := service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v2", Version: "2.0.0",
+	})
+	require.NoError(t, err)
+	_, err = service.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema: model.CurrentSchemaURL, Name: serverName, Description: "v1", Version: "1.0.0",
+	})
+	require.NoError(t, err)
+
+	// Delete 2.0.0 — 1.0.0 gets promoted.
+	_, err = service.UpdateServerStatus(ctx, serverName, "2.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+	latest, err := service.GetServerByName(ctx, serverName, false)
+	require.NoError(t, err)
+	require.Equal(t, "1.0.0", latest.Server.Version)
+
+	// Restore 2.0.0 — it should reclaim latest.
+	_, err = service.UpdateServerStatus(ctx, serverName, "2.0.0", &StatusChangeRequest{
+		NewStatus: model.StatusActive,
+	})
+	require.NoError(t, err)
+	latest, err = service.GetServerByName(ctx, serverName, false)
+	require.NoError(t, err)
+	assert.Equal(t, "2.0.0", latest.Server.Version)
+	assert.True(t, latest.Meta.Official.IsLatest)
+}
+
 // Helper functions
 func stringPtr(s string) *string {
 	return &s
