@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/modelcontextprotocol/registry/cmd/publisher/commands"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/stretchr/testify/require"
@@ -64,14 +63,19 @@ func SetupMockRegistryServer(t *testing.T, publishHandler func(w http.ResponseWr
 	return server
 }
 
-// SetupTestToken creates a token file pointing to the test server
+// SetupTestToken creates a token file pointing to the test server.
+// It overrides $HOME to a temp directory so tests don't touch real credentials.
 func SetupTestToken(t *testing.T, registryURL, token string) string {
 	t.Helper()
 
-	homeDir, err := os.UserHomeDir()
-	require.NoError(t, err)
+	// Override $HOME so tokenFilePath() resolves to a temp directory
+	tempHome := t.TempDir()
+	t.Setenv("HOME", tempHome)
 
-	tokenPath := filepath.Join(homeDir, commands.TokenFileName)
+	dir := filepath.Join(tempHome, ".config", "mcp-publisher")
+	require.NoError(t, os.MkdirAll(dir, 0700))
+
+	tokenPath := filepath.Join(dir, "token.json")
 	tokenData := map[string]string{
 		"token":    token,
 		"registry": registryURL,
@@ -82,10 +86,6 @@ func SetupTestToken(t *testing.T, registryURL, token string) string {
 
 	err = os.WriteFile(tokenPath, data, 0600)
 	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		_ = os.Remove(tokenPath)
-	})
 
 	return tokenPath
 }

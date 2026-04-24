@@ -1039,6 +1039,11 @@ components:
                   description: Optional message explaining the status (e.g., deprecation reason)
                   example: "Please upgrade to version 2.0.0"
                   maxLength: 500
+                statusChangedAt:
+                  type: string
+                  format: date-time
+                  description: Timestamp when the server status was last updated
+                  example: "2023-12-01T10:30:00Z"
                 publishedAt:
                   type: string
                   format: date-time

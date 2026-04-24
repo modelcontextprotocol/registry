@@ -16,14 +16,44 @@ import (
 )
 
 const (
-	DefaultRegistryURL = "https://registry.modelcontextprotocol.io"
-	TokenFileName      = ".mcp_publisher_token" //nolint:gosec // Not a credential, just a filename
-	MethodGitHub       = "github"
-	MethodGitHubOIDC   = "github-oidc"
-	MethodDNS          = "dns"
-	MethodHTTP         = "http"
-	MethodNone         = "none"
+	DefaultRegistryURL  = "https://registry.modelcontextprotocol.io"
+	LegacyTokenFileName = ".mcp_publisher_token" //nolint:gosec // Not a credential, just a filename
+	MethodGitHub        = "github"
+	MethodGitHubOIDC    = "github-oidc"
+	MethodDNS           = "dns"
+	MethodHTTP          = "http"
+	MethodNone          = "none"
 )
+
+// tokenFilePath returns the path to the token file in the user's config directory
+// (~/.config/mcp-publisher/token.json). It does not create the directory.
+func tokenFilePath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("failed to get home directory: %w", err)
+	}
+	return filepath.Join(homeDir, ".config", "mcp-publisher", "token.json"), nil
+}
+
+// notAuthenticatedError returns an error guiding the user to log in,
+// with a hint about the token location change for users upgrading.
+func notAuthenticatedError() error {
+	_, _ = fmt.Fprintln(os.Stderr, "hint: token storage moved to ~/.config/mcp-publisher/. If you recently upgraded, please re-login.")
+	return errors.New("not authenticated, run 'mcp-publisher login <method>' first")
+}
+
+// ensureTokenDir creates the token directory (~/.config/mcp-publisher/) if needed.
+func ensureTokenDir() error {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return fmt.Errorf("failed to get home directory: %w", err)
+	}
+	dir := filepath.Join(homeDir, ".config", "mcp-publisher")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+	return nil
+}
 
 type CryptoAlgorithm auth.CryptoAlgorithm
 
@@ -130,7 +160,7 @@ func createSigner(flags LoginFlags) (auth.Signer, error) {
 func createAuthProvider(method, registryURL, domain string, token Token, signer auth.Signer) (auth.Provider, error) {
 	switch method {
 	case MethodGitHub:
-		return auth.NewGitHubATProvider(true, registryURL, string(token)), nil
+		return auth.NewGitHubATProvider(registryURL, string(token)), nil
 	case MethodGitHubOIDC:
 		return auth.NewGitHubOIDCProvider(registryURL), nil
 	case MethodDNS:
@@ -226,12 +256,15 @@ Examples:
 		return fmt.Errorf("failed to get token: %w", err)
 	}
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
+	if err := ensureTokenDir(); err != nil {
+		return err
 	}
 
-	tokenPath := filepath.Join(homeDir, TokenFileName)
+	tokenPath, err := tokenFilePath()
+	if err != nil {
+		return err
+	}
+
 	tokenData := map[string]string{
 		"token":    token,
 		"method":   method,

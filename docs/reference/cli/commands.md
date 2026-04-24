@@ -331,17 +331,20 @@ mcp-publisher logout
 ```
 
 **Behavior:**
-- Removes `~/.mcp_publisher_token`
+- Removes `~/.config/mcp-publisher/token.json`
+- Also cleans up legacy token files (`~/.mcp_publisher_token`, `.mcpregistry_*`)
 - Does not revoke tokens on server side
 
 ## Configuration
 
 ### Token Storage
-Authentication tokens stored in `~/.mcp_publisher_token` as JSON:
+Authentication tokens are stored in `~/.config/mcp-publisher/token.json` as JSON:
 ```json
 {
   "token": "jwt-token-here",
-  "registry_url": "https://registry.modelcontextprotocol.io",
-  "expires_at": "2024-12-31T23:59:59Z"
+  "method": "github",
+  "registry": "https://registry.modelcontextprotocol.io"
 }
 ```
+
+> **Note:** Tokens were previously stored in `~/.mcp_publisher_token`. If you are upgrading, run `mcp-publisher logout` followed by `mcp-publisher login` to migrate to the new location.
