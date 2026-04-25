@@ -164,12 +164,13 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	return s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
 }
 
-// validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
+// validateNoDuplicateRemoteURLs checks that no non-deleted server is using the same remote URLs
 func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, tx pgx.Tx, serverDetail apiv0.ServerJSON) error {
 	// Check each remote URL in the new server for conflicts
 	for _, remote := range serverDetail.Remotes {
-		// Use filter to find servers with this remote URL
-		filter := &database.ServerFilter{RemoteURL: &remote.URL}
+		// Use a filter that only returns non-deleted servers with this remote URL
+		includeDeleted := false
+		filter := &database.ServerFilter{RemoteURL: &remote.URL, IncludeDeleted: &includeDeleted}
 
 		conflictingServers, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
 		if err != nil {
