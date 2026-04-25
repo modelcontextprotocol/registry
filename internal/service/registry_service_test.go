@@ -948,7 +948,6 @@ func TestUpdateServerStatus_ValidateRemoteURLsOnRestoreFromDeleted(t *testing.T)
 	assert.Contains(t, err.Error(), "already used by server")
 }
 
-
 func TestUpdateAllVersionsStatus_ValidateRemoteURLsOnRestoreToActive(t *testing.T) {
 	ctx := context.Background()
 	testDB := database.NewTestDB(t)
@@ -1008,7 +1007,6 @@ func TestUpdateAllVersionsStatus_ValidateRemoteURLsOnRestoreToActive(t *testing.
 	assert.Contains(t, err.Error(), "remote URL")
 	assert.Contains(t, err.Error(), "already used by server")
 }
-
 
 func TestUpdateServerStatus_NoConflictWhenRestoringWithUniqueURLs(t *testing.T) {
 	ctx := context.Background()
