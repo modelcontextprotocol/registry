@@ -1,0 +1,14 @@
+{
+  "name": "io.github.azender1/safeagent",
+  "description": "Execution guard for AI agents. Prevents duplicate actions from retries by enforcing exactly-once execution with request-id deduplication, finality gating, and durable receipts.",
+  "version": "0.1.14",
+  "packages": [
+    {
+      "registry_type": "pypi",
+      "identifier": "safeagent-exec-guard",
+      "version": "0.1.14"
+    }
+  ],
+  "repository": "https://github.com/azender1/SafeAgent",
+  "homepage": "https://azender1.github.io/SafeAgent"
+}
