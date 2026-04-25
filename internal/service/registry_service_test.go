@@ -52,6 +52,22 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		require.NoError(t, err, "failed to create server: %v", err)
 	}
 
+	deletedServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/deleted-server",
+		Description: "A deleted server",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: "https://deleted.example.com/mcp"},
+		},
+	}
+	_, err := service.CreateServer(ctx, deletedServer)
+	require.NoError(t, err)
+	_, err = service.UpdateServerStatus(ctx, deletedServer.Name, deletedServer.Version, &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
 	deprecatedServer := &apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/deprecated-server",
@@ -61,7 +77,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			{Type: "streamable-http", URL: "https://deprecated.example.com/mcp"},
 		},
 	}
-	_, err := service.CreateServer(ctx, deprecatedServer)
+	_, err = service.CreateServer(ctx, deprecatedServer)
 	require.NoError(t, err)
 	_, err = service.UpdateServerStatus(ctx, deprecatedServer.Name, deprecatedServer.Version, &StatusChangeRequest{
 		NewStatus: model.StatusDeprecated,
@@ -114,7 +130,20 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			errorMsg:    "remote URL https://api.example.com/mcp is already used by server com.example/existing-server",
 		},
 		{
-			name: "duplicate remote URL used only by deprecated server - should pass",
+			name: "duplicate remote URL used only by deleted server - should pass",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/new-server-with-deleted-conflict",
+				Description: "A new server reusing a deleted remote URL",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://deleted.example.com/mcp"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "duplicate remote URL used by deprecated server - should fail",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
 				Name:        "com.example/new-server-with-deprecated-conflict",
@@ -124,7 +153,8 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 					{Type: "streamable-http", URL: "https://deprecated.example.com/mcp"},
 				},
 			},
-			expectError: false,
+			expectError: true,
+			errorMsg:    "remote URL https://deprecated.example.com/mcp is already used by server com.example/deprecated-server",
 		},
 		{
 			name: "updating same server with same URLs - should pass",
@@ -918,52 +948,6 @@ func TestUpdateServerStatus_ValidateRemoteURLsOnRestoreFromDeleted(t *testing.T)
 	assert.Contains(t, err.Error(), "already used by server")
 }
 
-func TestUpdateServerStatus_ValidateRemoteURLsOnRestoreFromDeprecated(t *testing.T) {
-	ctx := context.Background()
-	testDB := database.NewTestDB(t)
-	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
-
-	remoteURL := "https://api.deprecated.com/mcp"
-
-	// Create Server A with a remote URL and deprecate it.
-	serverA := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "com.example/deprecated-server",
-		Description: "Server to be deprecated",
-		Version:     "1.0.0",
-		Remotes: []model.Transport{
-			{Type: "streamable-http", URL: remoteURL},
-		},
-	}
-	_, err := service.CreateServer(ctx, serverA)
-	require.NoError(t, err)
-
-	_, err = service.UpdateServerStatus(ctx, "com.example/deprecated-server", "1.0.0", &StatusChangeRequest{
-		NewStatus: model.StatusDeprecated,
-	})
-	require.NoError(t, err)
-
-	// Create Server B with the same remote URL (should succeed since A is deprecated).
-	serverB := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "com.example/replacement-server",
-		Description: "Replacement server with same remote URL",
-		Version:     "1.0.0",
-		Remotes: []model.Transport{
-			{Type: "streamable-http", URL: remoteURL},
-		},
-	}
-	_, err = service.CreateServer(ctx, serverB)
-	require.NoError(t, err)
-
-	// Try to restore deprecated server to active - should fail due to URL conflict.
-	_, err = service.UpdateServerStatus(ctx, "com.example/deprecated-server", "1.0.0", &StatusChangeRequest{
-		NewStatus: model.StatusActive,
-	})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "remote URL")
-	assert.Contains(t, err.Error(), "already used by server")
-}
 
 func TestUpdateAllVersionsStatus_ValidateRemoteURLsOnRestoreToActive(t *testing.T) {
 	ctx := context.Background()
@@ -1025,65 +1009,6 @@ func TestUpdateAllVersionsStatus_ValidateRemoteURLsOnRestoreToActive(t *testing.
 	assert.Contains(t, err.Error(), "already used by server")
 }
 
-func TestUpdateAllVersionsStatus_ValidateRemoteURLsOnRestoreFromDeprecatedToActive(t *testing.T) {
-	ctx := context.Background()
-	testDB := database.NewTestDB(t)
-	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
-
-	remoteURL := "https://api.allversions-deprecated.com/mcp"
-
-	// Create Server A with multiple versions.
-	serverAv1 := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "com.example/deprecated-multi-version-server",
-		Description: "Server A version 1",
-		Version:     "1.0.0",
-		Remotes: []model.Transport{
-			{Type: "streamable-http", URL: remoteURL},
-		},
-	}
-	_, err := service.CreateServer(ctx, serverAv1)
-	require.NoError(t, err)
-
-	serverAv2 := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "com.example/deprecated-multi-version-server",
-		Description: "Server A version 2",
-		Version:     "2.0.0",
-		Remotes: []model.Transport{
-			{Type: "streamable-http", URL: remoteURL},
-		},
-	}
-	_, err = service.CreateServer(ctx, serverAv2)
-	require.NoError(t, err)
-
-	// Deprecate all versions of Server A.
-	_, err = service.UpdateAllVersionsStatus(ctx, "com.example/deprecated-multi-version-server", &StatusChangeRequest{
-		NewStatus: model.StatusDeprecated,
-	})
-	require.NoError(t, err)
-
-	// Create Server B with the same remote URL (should succeed since A is deprecated).
-	serverB := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "com.example/active-conflicting-server",
-		Description: "Server B with same remote URL",
-		Version:     "1.0.0",
-		Remotes: []model.Transport{
-			{Type: "streamable-http", URL: remoteURL},
-		},
-	}
-	_, err = service.CreateServer(ctx, serverB)
-	require.NoError(t, err)
-
-	// Try to restore all versions of Server A to active - should fail.
-	_, err = service.UpdateAllVersionsStatus(ctx, "com.example/deprecated-multi-version-server", &StatusChangeRequest{
-		NewStatus: model.StatusActive,
-	})
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "remote URL")
-	assert.Contains(t, err.Error(), "already used by server")
-}
 
 func TestUpdateServerStatus_NoConflictWhenRestoringWithUniqueURLs(t *testing.T) {
 	ctx := context.Background()
