@@ -877,6 +877,40 @@ func (db *PostgreSQL) UnmarkAsLatest(ctx context.Context, tx pgx.Tx, serverName 
 	return nil
 }
 
+// SetLatestVersion sets is_latest=true on the given version and false on all other versions
+// of the same server. Passing an empty version clears is_latest for all rows.
+//
+// The clear and set are issued as separate statements because the unique partial index
+// idx_unique_latest_per_server is non-deferrable and Postgres checks it row-by-row within
+// a single UPDATE, which would trip when flipping one row's flag off and another's on.
+func (db *PostgreSQL) SetLatestVersion(ctx context.Context, tx pgx.Tx, serverName, version string) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	executor := db.getExecutor(tx)
+
+	if _, err := executor.Exec(ctx,
+		`UPDATE servers SET is_latest = false WHERE server_name = $1 AND is_latest = true AND version <> $2`,
+		serverName, version,
+	); err != nil {
+		return fmt.Errorf("failed to clear previous latest version: %w", err)
+	}
+
+	if version == "" {
+		return nil
+	}
+
+	if _, err := executor.Exec(ctx,
+		`UPDATE servers SET is_latest = true WHERE server_name = $1 AND version = $2 AND is_latest = false`,
+		serverName, version,
+	); err != nil {
+		return fmt.Errorf("failed to set latest version: %w", err)
+	}
+
+	return nil
+}
+
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
 	db.pool.Close()
