@@ -8,6 +8,7 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"regexp"
@@ -17,6 +18,17 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
+
+// ErrSignatureMismatch is returned by VerifySignature when the signature is structurally
+// valid but does not verify against the public key. Distinguishing this from structural
+// failures (wrong size, bad key format) lets the caller add fingerprint hints only when
+// the failure is actually a "wrong key" situation.
+var ErrSignatureMismatch = errors.New("signature does not match public key")
+
+// MCPProofRecordPattern matches a well-formed MCPv1 DNS/HTTP proof record:
+// "v=MCPv1; k=<algo>; p=<base64-public-key>". Shared so callers checking for the
+// presence of a valid record see exactly what the parser will accept.
+var MCPProofRecordPattern = regexp.MustCompile(`v=MCPv1;\s*k=([^;]+);\s*p=([A-Za-z0-9+/=]+)`)
 
 // CryptoAlgorithm represents the cryptographic algorithm used for a public key
 type CryptoAlgorithm string
@@ -90,18 +102,72 @@ func DecodeAndValidateSignature(signedTimestamp string) ([]byte, error) {
 }
 
 func VerifySignatureWithKeys(publicKeys []PublicKeyInfo, messageBytes []byte, signature []byte) error {
+	var lastErr error
+	allMismatch := true
 	for _, publicKeyInfo := range publicKeys {
 		err := publicKeyInfo.VerifySignature(messageBytes, signature)
 		if err == nil {
 			return nil
 		}
-
-		if len(publicKeys) == 1 {
-			return err
+		lastErr = err
+		if !errors.Is(err, ErrSignatureMismatch) {
+			allMismatch = false
 		}
 	}
 
-	return fmt.Errorf("signature verification failed")
+	// If at least one key failed for a structural reason (wrong size, unsupported algorithm),
+	// surface that error directly — it's more actionable than a generic "didn't match" message.
+	if !allMismatch {
+		return lastErr
+	}
+
+	// Every key was tried and produced a clean cryptographic mismatch. Include short
+	// fingerprints of every key that was tried so users can tell which published keys the
+	// registry actually saw — the most common cause of this error is a stale record left
+	// behind after a key rotation, which is otherwise indistinguishable from a generic
+	// crypto failure.
+	fingerprints := make([]string, 0, len(publicKeys))
+	for _, publicKeyInfo := range publicKeys {
+		fingerprints = append(fingerprints, publicKeyInfo.Fingerprint())
+	}
+	if len(publicKeys) == 1 {
+		return fmt.Errorf(
+			"signature verification failed (tried published key %s); "+
+				"if this is not the key you are signing with, the published record may be stale",
+			fingerprints[0],
+		)
+	}
+	return fmt.Errorf(
+		"signature verification failed against all %d published keys (tried: %s); "+
+			"if you recently rotated keys, remove any stale records from the apex domain",
+		len(publicKeys), strings.Join(fingerprints, ", "),
+	)
+}
+
+// Fingerprint returns a short, human-readable identifier for the public key.
+// Format: "<algorithm>:<first 8 base64 chars of the raw key>". Public keys are not secret,
+// but truncating keeps error messages readable.
+func (pki *PublicKeyInfo) Fingerprint() string {
+	const prefixLen = 8
+	var raw []byte
+	switch pki.Algorithm {
+	case AlgorithmEd25519:
+		if k, ok := pki.Key.(ed25519.PublicKey); ok {
+			raw = k
+		}
+	case AlgorithmECDSAP384:
+		if k, ok := pki.Key.(ecdsa.PublicKey); ok {
+			raw = elliptic.MarshalCompressed(k.Curve, k.X, k.Y) //nolint:staticcheck // SA1019: matches the encoding used in DNS records
+		}
+	}
+	if len(raw) == 0 {
+		return fmt.Sprintf("%s:unknown", pki.Algorithm)
+	}
+	encoded := base64.StdEncoding.EncodeToString(raw)
+	if len(encoded) > prefixLen {
+		encoded = encoded[:prefixLen]
+	}
+	return fmt.Sprintf("%s:%s", pki.Algorithm, encoded)
 }
 
 // VerifySignature verifies a signature using the appropriate algorithm
@@ -113,7 +179,7 @@ func (pki *PublicKeyInfo) VerifySignature(message, signature []byte) error {
 				return fmt.Errorf("invalid signature size for Ed25519")
 			}
 			if !ed25519.Verify(ed25519Key, message, signature) {
-				return fmt.Errorf("Ed25519 signature verification failed")
+				return fmt.Errorf("Ed25519: %w", ErrSignatureMismatch)
 			}
 			return nil
 		}
@@ -126,7 +192,7 @@ func (pki *PublicKeyInfo) VerifySignature(message, signature []byte) error {
 			s := new(big.Int).SetBytes(signature[48:])
 			digest := sha512.Sum384(message)
 			if !ecdsa.Verify(&ecdsaKey, digest[:], r, s) {
-				return fmt.Errorf("ECDSA P-384 signature verification failed")
+				return fmt.Errorf("ECDSA P-384: %w", ErrSignatureMismatch)
 			}
 			return nil
 		}
@@ -246,11 +312,8 @@ func ParseMCPKeysFromStrings(inputs []string) []struct {
 		error
 	}
 
-	// proof record pattern: v=MCPv1; k=<algo>; p=<base64-public-key>
-	cryptoPattern := regexp.MustCompile(`v=MCPv1;\s*k=([^;]+);\s*p=([A-Za-z0-9+/=]+)`)
-
 	for _, record := range inputs {
-		if matches := cryptoPattern.FindStringSubmatch(record); len(matches) == 3 {
+		if matches := MCPProofRecordPattern.FindStringSubmatch(record); len(matches) == 3 {
 			publicKey, err := ParsePublicKey(matches[1], matches[2])
 			publicKeys = append(publicKeys, struct {
 				*PublicKeyInfo
