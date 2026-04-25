@@ -176,8 +176,11 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 			return fmt.Errorf("failed to check remote URL conflict: %w", err)
 		}
 
-		// Check if any conflicting server has a different name
+		// Only active servers reserve remote URLs.
 		for _, conflictingServer := range conflictingServers {
+			if conflictingServer.Meta.Official != nil && conflictingServer.Meta.Official.Status != model.StatusActive {
+				continue
+			}
 			if conflictingServer.Server.Name != serverDetail.Name {
 				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.Server.Name)
 			}
@@ -269,10 +272,10 @@ func (s *registryServiceImpl) updateServerStatusInTransaction(ctx context.Contex
 		return nil, err
 	}
 
-	// When transitioning to active from deleted, validate remote URLs don't conflict
+	// When transitioning to active from a non-active status, validate remote URLs don't conflict.
 	if statusChange.NewStatus == model.StatusActive &&
 		currentServer.Meta.Official != nil &&
-		currentServer.Meta.Official.Status == model.StatusDeleted {
+		currentServer.Meta.Official.Status != model.StatusActive {
 		if err := s.validateNoDuplicateRemoteURLs(ctx, tx, currentServer.Server); err != nil {
 			return nil, err
 		}
@@ -297,11 +300,10 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 		return nil, err
 	}
 
-	// When transitioning to active, validate remote URLs for any versions currently deleted
+	// When transitioning to active, validate remote URLs for any versions that are currently non-active.
 	if statusChange.NewStatus == model.StatusActive {
 		includeDeleted := true
 
-		// When transitioning to active, it means the current status is either deprecated or deleted, so it should include deleted server also
 		filter := &database.ServerFilter{Name: &serverName, IncludeDeleted: &includeDeleted}
 		versions, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
 		if err != nil {
@@ -310,7 +312,7 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 
 		for _, version := range versions {
 			if version.Meta.Official != nil &&
-				version.Meta.Official.Status == model.StatusDeleted {
+				version.Meta.Official.Status != model.StatusActive {
 				if err := s.validateNoDuplicateRemoteURLs(ctx, tx, version.Server); err != nil {
 					return nil, err
 				}
