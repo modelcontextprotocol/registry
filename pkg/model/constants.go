@@ -7,10 +7,12 @@ const (
 	RegistryTypeOCI   = "oci"
 	RegistryTypeNuGet = "nuget"
 	RegistryTypeMCPB  = "mcpb"
+	RegistryTypeCargo = "cargo"
 )
 
 // Registry Base URLs - supported package registry base URLs
 const (
+	RegistryURLCrates = "https://crates.io"
 	RegistryURLGitHub = "https://github.com"
 	RegistryURLGitLab = "https://gitlab.com"
 	RegistryURLNPM    = "https://registry.npmjs.org"
