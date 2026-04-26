@@ -1804,7 +1804,8 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 		{"invalid_mcpb_no_hash", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMCPB, "", "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb", "", "", true},
 
 		// Invalid registry types (should fail)
-		{"invalid_maven", "io.github.domdomegg/airtable-mcp-server", "maven", model.RegistryURLNPM, "airtable-mcp-server", "1.7.2", "", true},
+		// Maven is now supported, but it must be paired with the official Maven Central base URL.
+		{"invalid_maven_wrong_baseurl", "io.github.domdomegg/airtable-mcp-server", model.RegistryTypeMaven, model.RegistryURLNPM, "io.github.domdomegg:airtable-mcp-server", "1.7.2", "", true},
 		{"invalid_cargo", "io.github.domdomegg/time-mcp-pypi", "cargo", model.RegistryURLPyPI, "time-mcp-pypi", "1.0.1", "", true},
 		{"invalid_gem", "io.github.domdomegg/airtable-mcp-server", "gem", "", "domdomegg/airtable-mcp-server", "1.7.2", "", true},
 		{"invalid_unknown", "io.github.domdomegg/time-mcp-server", "unknown", model.RegistryURLNuGet, "TimeMcpServer", "1.0.2", "", true},

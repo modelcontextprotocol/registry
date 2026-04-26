@@ -7,6 +7,7 @@ const (
 	RegistryTypeOCI   = "oci"
 	RegistryTypeNuGet = "nuget"
 	RegistryTypeMCPB  = "mcpb"
+	RegistryTypeMaven = "maven"
 )
 
 // Registry Base URLs - supported package registry base URLs
@@ -17,6 +18,7 @@ const (
 	RegistryURLNuGet  = "https://api.nuget.org/v3/index.json"
 	RegistryURLPyPI   = "https://pypi.org"
 	RegistryURLQuay   = "https://quay.io"
+	RegistryURLMaven  = "https://repo.maven.apache.org/maven2"
 )
 
 // Transport Types - supported remote transport protocols
@@ -32,6 +34,7 @@ const (
 	RuntimeHintUVX    = "uvx"
 	RuntimeHintDocker = "docker"
 	RuntimeHintDNX    = "dnx"
+	RuntimeHintJBang  = "jbang"
 )
 
 // Schema versions

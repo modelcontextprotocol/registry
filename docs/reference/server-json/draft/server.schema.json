@@ -241,6 +241,7 @@
             "https://pypi.org",
             "https://docker.io",
             "https://api.nuget.org/v3/index.json",
+            "https://repo.maven.apache.org/maven2",
             "https://github.com",
             "https://gitlab.com"
           ],
@@ -248,13 +249,14 @@
           "type": "string"
         },
         "registryType": {
-          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')",
+          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb', 'maven')",
           "examples": [
             "npm",
             "pypi",
             "oci",
             "nuget",
-            "mcpb"
+            "mcpb",
+            "maven"
           ],
           "type": "string"
         },
@@ -271,7 +273,8 @@
             "npx",
             "uvx",
             "docker",
-            "dnx"
+            "dnx",
+            "jbang"
           ],
           "type": "string"
         },

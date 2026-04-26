@@ -423,6 +423,49 @@ The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.
 }
 ```
 
+### Maven (JVM) Package Example
+
+JVM-based MCP servers can be published to Maven Central. The `jbang` runtime
+hint matches the typical `jbang org.example:my-mcp-server:1.0.0` invocation.
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.example/demo-mcp-server",
+  "description": "Sample JVM MCP server published to Maven Central",
+  "repository": {
+    "url": "https://github.com/example/demo-mcp-server",
+    "source": "github",
+    "id": "example-maven-id-0000-1111-222222222222"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "maven",
+      "registryBaseUrl": "https://repo.maven.apache.org/maven2",
+      "identifier": "io.github.example:demo-mcp-server",
+      "version": "1.0.0",
+      "runtimeHint": "jbang",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "tool": "maven-publisher",
+      "version": "1.0.0"
+    }
+  }
+}
+```
+
+Ownership is verified by reading the published POM at
+`https://repo.maven.apache.org/maven2/<group/path>/<artifactId>/<version>/<artifactId>-<version>.pom`.
+Add either an `<mcpName>...</mcpName>` property or an `mcp-name: <serverName>`
+line in the POM `<description>` so the registry can match the package to the
+server name.
+
 ### Complex Docker Server with Multiple Arguments
 
 ```json

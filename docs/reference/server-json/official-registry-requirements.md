@@ -33,6 +33,7 @@ Only trusted public registries are supported. Private registries and alternative
 - **NPM**: `https://registry.npmjs.org` only
 - **PyPI**: `https://pypi.org` only
 - **NuGet**: `https://api.nuget.org/v3/index.json` only
+- **Maven**: `https://repo.maven.apache.org/maven2` only (Maven Central)
 - **Docker/OCI**:
   - Docker Hub (`docker.io`)
   - GitHub Container Registry (`ghcr.io`)
