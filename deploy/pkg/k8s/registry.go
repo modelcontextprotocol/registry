@@ -96,6 +96,22 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
+					// Soft-spread pods across nodes so the PodDisruptionBudget below can't
+					// deadlock a node drain when both pods happen to co-locate.
+					// `ScheduleAnyway` keeps single-node clusters (e.g. constrained dev
+					// envs) schedulable while still preferring spread under normal load.
+					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
+						&corev1.TopologySpreadConstraintArgs{
+							MaxSkew:           pulumi.Int(1),
+							TopologyKey:       pulumi.String("kubernetes.io/hostname"),
+							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+							LabelSelector: &metav1.LabelSelectorArgs{
+								MatchLabels: pulumi.StringMap{
+									"app": pulumi.String("mcp-registry"),
+								},
+							},
+						},
+					},
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:            pulumi.String("mcp-registry"),
@@ -169,6 +185,18 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									Name:  pulumi.String("MCP_REGISTRY_OIDC_PUBLISH_PERMISSIONS"),
 									Value: pulumi.String("*"),
 								},
+							},
+							// StartupProbe protects the DB-retry budget in cmd/registry/main.go:
+							// 30 × 5s = 150s allowed before liveness/readiness take over, which
+							// covers the worst-case retry budget (8 attempts × 10s + ~40s sleep).
+							StartupProbe: &corev1.ProbeArgs{
+								HttpGet: &corev1.HTTPGetActionArgs{
+									Path: pulumi.String("/v0/health"),
+									Port: pulumi.Int(8080),
+								},
+								PeriodSeconds:    pulumi.Int(5),
+								FailureThreshold: pulumi.Int(30),
+								TimeoutSeconds:   pulumi.Int(3),
 							},
 							LivenessProbe: &corev1.ProbeArgs{
 								HttpGet: &corev1.HTTPGetActionArgs{

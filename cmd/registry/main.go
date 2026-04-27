@@ -81,12 +81,7 @@ func main() {
 		}
 		log.Printf("PostgreSQL not reachable (attempt %d/%d): %v — retrying in %s", attempt, maxStartupAttempts, err, backoff)
 		time.Sleep(backoff)
-		if backoff < maxBackoff {
-			backoff *= 2
-			if backoff > maxBackoff {
-				backoff = maxBackoff
-			}
-		}
+		backoff = min(backoff*2, maxBackoff)
 	}
 
 	// Store the PostgreSQL instance for later cleanup
