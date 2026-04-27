@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -85,15 +86,29 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 	})
 }
 
-// createServerInTransaction contains the actual CreateServer logic within a transaction
+// createServerInTransaction contains the actual CreateServer logic within a transaction.
 func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
-	// Validate the request
-	if err := validators.ValidatePublishRequest(ctx, *req, s.cfg); err != nil {
-		return nil, err
+	serverJSON := *req
+
+	// Validate the request. ValidatePublishRequest fans out to npm/PyPI/OCI for
+	// registry-ownership checks with 10s per-host timeouts, so it's the most likely
+	// contributor to publish latency. Log validate_ms on both success and failure
+	// so the next /v0/publish latency alert is diagnostic — a slow upstream that
+	// times out into a validation error is exactly the case we need to see.
+	validateStart := time.Now()
+	validateErr := validators.ValidatePublishRequest(ctx, serverJSON, s.cfg)
+	validateMs := time.Since(validateStart).Milliseconds()
+	if validateErr != nil {
+		slog.WarnContext(ctx, "publish validate failed",
+			"server_name", serverJSON.Name,
+			"version", serverJSON.Version,
+			"validate_ms", validateMs,
+			"error", validateErr.Error(),
+		)
+		return nil, validateErr
 	}
 
 	publishTime := time.Now()
-	serverJSON := *req
 
 	// Acquire advisory lock to prevent concurrent publishes of the same server
 	if err := s.db.AcquirePublishLock(ctx, tx, serverJSON.Name); err != nil {
@@ -161,7 +176,17 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	}
 
 	// Insert new server version
-	return s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
+	resp, err := s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
+	if err != nil {
+		return nil, err
+	}
+
+	slog.InfoContext(ctx, "publish complete",
+		"server_name", serverJSON.Name,
+		"version", serverJSON.Version,
+		"validate_ms", validateMs,
+	)
+	return resp, nil
 }
 
 // recalculateLatest picks the highest non-deleted version of the given server and flags it
