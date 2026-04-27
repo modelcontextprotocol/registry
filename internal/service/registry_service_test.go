@@ -77,7 +77,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			{Type: "streamable-http", URL: "https://deprecated.example.com/mcp"},
 		},
 	}
-	_, err = service.CreateServer(ctx, deprecatedServer)
+	_, err := service.CreateServer(ctx, deprecatedServer)
 	require.NoError(t, err)
 	_, err = service.UpdateServerStatus(ctx, deprecatedServer.Name, deprecatedServer.Version, &StatusChangeRequest{
 		NewStatus: model.StatusDeprecated,
