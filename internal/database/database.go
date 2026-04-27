@@ -57,6 +57,10 @@ type Database interface {
 	CheckVersionExists(ctx context.Context, tx pgx.Tx, serverName, version string) (bool, error)
 	// UnmarkAsLatest marks the current latest version of a server as no longer latest
 	UnmarkAsLatest(ctx context.Context, tx pgx.Tx, serverName string) error
+	// SetLatestVersion sets is_latest=true on the given version and false on all other
+	// versions of the same server. Passing an empty version clears is_latest for all rows.
+	// Callers must hold the per-server publish lock to avoid races.
+	SetLatestVersion(ctx context.Context, tx pgx.Tx, serverName, version string) error
 	// AcquirePublishLock acquires an exclusive advisory lock for publishing a server
 	// This prevents race conditions when multiple versions are published concurrently
 	AcquirePublishLock(ctx context.Context, tx pgx.Tx, serverName string) error

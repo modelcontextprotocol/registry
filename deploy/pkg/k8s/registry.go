@@ -10,6 +10,7 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/networking/v1"
+	policyv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/policy/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
@@ -95,6 +96,22 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
+					// Soft-spread pods across nodes so the PodDisruptionBudget below can't
+					// deadlock a node drain when both pods happen to co-locate.
+					// `ScheduleAnyway` keeps single-node clusters (e.g. constrained dev
+					// envs) schedulable while still preferring spread under normal load.
+					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
+						&corev1.TopologySpreadConstraintArgs{
+							MaxSkew:           pulumi.Int(1),
+							TopologyKey:       pulumi.String("kubernetes.io/hostname"),
+							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+							LabelSelector: &metav1.LabelSelectorArgs{
+								MatchLabels: pulumi.StringMap{
+									"app": pulumi.String("mcp-registry"),
+								},
+							},
+						},
+					},
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:            pulumi.String("mcp-registry"),
@@ -169,6 +186,18 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									Value: pulumi.String("*"),
 								},
 							},
+							// StartupProbe protects the DB-retry budget in cmd/registry/main.go:
+							// 30 × 5s = 150s allowed before liveness/readiness take over, which
+							// covers the worst-case retry budget (8 attempts × 10s + ~40s sleep).
+							StartupProbe: &corev1.ProbeArgs{
+								HttpGet: &corev1.HTTPGetActionArgs{
+									Path: pulumi.String("/v0/health"),
+									Port: pulumi.Int(8080),
+								},
+								PeriodSeconds:    pulumi.Int(5),
+								FailureThreshold: pulumi.Int(30),
+								TimeoutSeconds:   pulumi.Int(3),
+							},
 							LivenessProbe: &corev1.ProbeArgs{
 								HttpGet: &corev1.HTTPGetActionArgs{
 									Path: pulumi.String("/v0/health"),
@@ -187,15 +216,40 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 							},
 							Resources: &corev1.ResourceRequirementsArgs{
 								Requests: pulumi.StringMap{
-									"memory": pulumi.String("128Mi"),
+									"memory": pulumi.String("256Mi"),
 									"cpu":    pulumi.String("100m"),
 								},
 								Limits: pulumi.StringMap{
-									"memory": pulumi.String("256Mi"),
+									"memory": pulumi.String("512Mi"),
 								},
 							},
 						},
 					},
+				},
+			},
+		},
+	}, pulumi.Provider(cluster.Provider))
+	if err != nil {
+		return nil, err
+	}
+
+	// Keep at least one registry pod available during voluntary disruptions
+	// (node drains, evictions, etc.) so a synchronized eviction can't take both
+	// pods down at once.
+	_, err = policyv1.NewPodDisruptionBudget(ctx, "mcp-registry", &policyv1.PodDisruptionBudgetArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String("mcp-registry"),
+			Namespace: pulumi.String("default"),
+			Labels: pulumi.StringMap{
+				"app":         pulumi.String("mcp-registry"),
+				"environment": pulumi.String(environment),
+			},
+		},
+		Spec: &policyv1.PodDisruptionBudgetSpecArgs{
+			MinAvailable: pulumi.Int(1),
+			Selector: &metav1.LabelSelectorArgs{
+				MatchLabels: pulumi.StringMap{
+					"app": pulumi.String("mcp-registry"),
 				},
 			},
 		},

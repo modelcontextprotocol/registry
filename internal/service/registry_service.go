@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -85,15 +86,29 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 	})
 }
 
-// createServerInTransaction contains the actual CreateServer logic within a transaction
+// createServerInTransaction contains the actual CreateServer logic within a transaction.
 func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
-	// Validate the request
-	if err := validators.ValidatePublishRequest(ctx, *req, s.cfg); err != nil {
-		return nil, err
+	serverJSON := *req
+
+	// Validate the request. ValidatePublishRequest fans out to npm/PyPI/OCI for
+	// registry-ownership checks with 10s per-host timeouts, so it's the most likely
+	// contributor to publish latency. Log validate_ms on both success and failure
+	// so the next /v0/publish latency alert is diagnostic — a slow upstream that
+	// times out into a validation error is exactly the case we need to see.
+	validateStart := time.Now()
+	validateErr := validators.ValidatePublishRequest(ctx, serverJSON, s.cfg)
+	validateMs := time.Since(validateStart).Milliseconds()
+	if validateErr != nil {
+		slog.WarnContext(ctx, "publish validate failed",
+			"server_name", serverJSON.Name,
+			"version", serverJSON.Version,
+			"validate_ms", validateMs,
+			"error", validateErr.Error(),
+		)
+		return nil, validateErr
 	}
 
 	publishTime := time.Now()
-	serverJSON := *req
 
 	// Acquire advisory lock to prevent concurrent publishes of the same server
 	if err := s.db.AcquirePublishLock(ctx, tx, serverJSON.Name); err != nil {
@@ -161,7 +176,70 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	}
 
 	// Insert new server version
-	return s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
+	resp, err := s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
+	if err != nil {
+		return nil, err
+	}
+
+	slog.InfoContext(ctx, "publish complete",
+		"server_name", serverJSON.Name,
+		"version", serverJSON.Version,
+		"validate_ms", validateMs,
+	)
+	return resp, nil
+}
+
+// recalculateLatest picks the highest non-deleted version of the given server and flags it
+// as latest, clearing is_latest on every other row. If every version is deleted, the highest
+// deleted version keeps the flag so admin lookups (GetServerByName with includeDeleted=true)
+// still find the server. Caller must hold the per-server publish lock.
+func (s *registryServiceImpl) recalculateLatest(ctx context.Context, tx pgx.Tx, serverName string) error {
+	versions, err := s.db.GetAllVersionsByServerName(ctx, tx, serverName, true)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return s.db.SetLatestVersion(ctx, tx, serverName, "")
+		}
+		return fmt.Errorf("failed to load versions for latest recalculation: %w", err)
+	}
+
+	winner := pickLatestVersion(versions, false)
+	if winner == nil {
+		// No non-deleted versions — fall back to highest deleted so the server is still
+		// addressable via includeDeleted=true lookups.
+		winner = pickLatestVersion(versions, true)
+	}
+
+	winnerVersion := ""
+	if winner != nil {
+		winnerVersion = winner.Server.Version
+	}
+	return s.db.SetLatestVersion(ctx, tx, serverName, winnerVersion)
+}
+
+// pickLatestVersion returns the highest version from the given slice. If allowDeleted is
+// false, deleted versions are skipped.
+func pickLatestVersion(versions []*apiv0.ServerResponse, allowDeleted bool) *apiv0.ServerResponse {
+	var winner *apiv0.ServerResponse
+	for _, v := range versions {
+		if !allowDeleted && v.Meta.Official != nil && v.Meta.Official.Status == model.StatusDeleted {
+			continue
+		}
+		if winner == nil {
+			winner = v
+			continue
+		}
+		var winnerPublishedAt, candidatePublishedAt time.Time
+		if winner.Meta.Official != nil {
+			winnerPublishedAt = winner.Meta.Official.PublishedAt
+		}
+		if v.Meta.Official != nil {
+			candidatePublishedAt = v.Meta.Official.PublishedAt
+		}
+		if CompareVersions(v.Server.Version, winner.Server.Version, candidatePublishedAt, winnerPublishedAt) > 0 {
+			winner = v
+		}
+	}
+	return winner
 }
 
 // validateNoDuplicateRemoteURLs checks that no non-deleted server is using the same remote URLs
@@ -238,11 +316,14 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 
 	// Handle status change if provided
 	if statusChange != nil {
-		updatedWithStatus, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage)
-		if err != nil {
+		if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
 			return nil, err
 		}
-		return updatedWithStatus, nil
+		if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
+			return nil, err
+		}
+		// Re-read to pick up the possibly updated is_latest flag.
+		return s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
 	}
 
 	return updatedServerResponse, nil
@@ -280,7 +361,14 @@ func (s *registryServiceImpl) updateServerStatusInTransaction(ctx context.Contex
 	}
 
 	// Update only the status metadata
-	return s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage)
+	if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
+		return nil, err
+	}
+	if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
+		return nil, err
+	}
+	// Re-read to pick up the possibly updated is_latest flag.
+	return s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
 }
 
 // UpdateAllVersionsStatus updates the status metadata of all versions of a server in a single transaction
@@ -302,7 +390,7 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 	if statusChange.NewStatus == model.StatusActive {
 		includeDeleted := true
 
-		// When transitioning to active, it means the current status is either deprecated or deleted, so it should include deleted server also
+		// Include deleted versions so we can revalidate any currently deleted versions before restoring them to active.
 		filter := &database.ServerFilter{Name: &serverName, IncludeDeleted: &includeDeleted}
 		versions, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
 		if err != nil {
@@ -320,5 +408,12 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 	}
 
 	// Update all versions' status in a single database call
-	return s.db.SetAllVersionsStatus(ctx, tx, serverName, statusChange.NewStatus, statusChange.StatusMessage)
+	if _, err := s.db.SetAllVersionsStatus(ctx, tx, serverName, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
+		return nil, err
+	}
+	if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
+		return nil, err
+	}
+	// Re-read to pick up the possibly updated is_latest flags.
+	return s.db.GetAllVersionsByServerName(ctx, tx, serverName, true)
 }

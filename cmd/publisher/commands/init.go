@@ -132,6 +132,26 @@ func detectSubfolder() string {
 	return filepath.ToSlash(relPath)
 }
 
+// getMcpNameFromPackageJSON returns the `mcpName` field from package.json, or
+// "" if not set. mcpName is the authoritative MCP server name when present —
+// see docs/modelcontextprotocol-io/quickstart.mdx.
+func getMcpNameFromPackageJSON() string {
+	data, err := os.ReadFile("package.json")
+	if err != nil {
+		return ""
+	}
+
+	var pkg map[string]any
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return ""
+	}
+
+	if mcpName, ok := pkg["mcpName"].(string); ok && mcpName != "" {
+		return mcpName
+	}
+	return ""
+}
+
 func getNameFromPackageJSON() string {
 	data, err := os.ReadFile("package.json")
 	if err != nil {
@@ -143,17 +163,13 @@ func getNameFromPackageJSON() string {
 		return ""
 	}
 
-	// Prefer mcpName over name, as the server name must match mcpName
-	name, ok := pkg["mcpName"].(string)
+	name, ok := pkg["name"].(string)
 	if !ok || name == "" {
-		name, ok = pkg["name"].(string)
-		if !ok || name == "" {
-			return ""
-		}
+		return ""
 	}
 
 	// Convert npm package name to MCP server name
-	// @org/package -> io.npm.org/package
+	// @org/package -> io.github.org/package
 	if strings.HasPrefix(name, "@") {
 		parts := strings.Split(name[1:], "/")
 		if len(parts) == 2 {
@@ -183,6 +199,13 @@ func getVersionFromPackageJSON() string {
 }
 
 func detectServerName(subfolder string) string {
+	// mcpName in package.json is the authoritative server name when set, so it
+	// takes precedence over names inferred from the git remote or the npm
+	// `name` field.
+	if name := getMcpNameFromPackageJSON(); name != "" {
+		return name
+	}
+
 	// Try to get from git remote
 	repoURL := detectRepoURL()
 	if repoURL != "" && strings.Contains(repoURL, "github.com") {
