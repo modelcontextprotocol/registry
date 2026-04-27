@@ -133,79 +133,73 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 		}
 	}()
 
+	// runPhase times fn into *ms and, on error, stashes the phase name + error
+	// onto the closed-over failedPhase / err. Returns true on success so callers
+	// can `if !runPhase(...) { return nil, err }`.
+	runPhase := func(name string, ms *int64, fn func() error) bool {
+		t := time.Now()
+		e := fn()
+		*ms = time.Since(t).Milliseconds()
+		if e != nil {
+			failedPhase = name
+			err = e
+			return false
+		}
+		return true
+	}
+
 	// Validate the request — registry-ownership checks fan out to npm/PyPI/OCI with
 	// 10s per-host timeouts. Was historically the most likely slow phase; now any
 	// phase can be the slow one when the connection pool is starved.
-	t := time.Now()
-	if vErr := validators.ValidatePublishRequest(ctx, serverJSON, s.cfg); vErr != nil {
-		validateMs = time.Since(t).Milliseconds()
-		failedPhase = phaseValidate
-		err = vErr
+	if !runPhase(phaseValidate, &validateMs, func() error {
+		return validators.ValidatePublishRequest(ctx, serverJSON, s.cfg)
+	}) {
 		return nil, err
 	}
-	validateMs = time.Since(t).Milliseconds()
 
 	publishTime := time.Now()
 
 	// Acquire advisory lock to prevent concurrent publishes of the same server
-	t = time.Now()
-	if lErr := s.db.AcquirePublishLock(ctx, tx, serverJSON.Name); lErr != nil {
-		lockMs = time.Since(t).Milliseconds()
-		failedPhase = phaseAcquireLock
-		err = lErr
+	if !runPhase(phaseAcquireLock, &lockMs, func() error {
+		return s.db.AcquirePublishLock(ctx, tx, serverJSON.Name)
+	}) {
 		return nil, err
 	}
-	lockMs = time.Since(t).Milliseconds()
 
 	// Check for duplicate remote URLs
-	t = time.Now()
-	if rErr := s.validateNoDuplicateRemoteURLs(ctx, tx, serverJSON); rErr != nil {
-		remotesMs = time.Since(t).Milliseconds()
-		failedPhase = phaseValidateRemoteURLs
-		err = rErr
+	if !runPhase(phaseValidateRemoteURLs, &remotesMs, func() error {
+		return s.validateNoDuplicateRemoteURLs(ctx, tx, serverJSON)
+	}) {
 		return nil, err
 	}
-	remotesMs = time.Since(t).Milliseconds()
 
 	// Version checks: count, exists, current-latest (small DB lookups, but on a
-	// starved pool any of them stalls until a connection is free)
-	t = time.Now()
-	versionCount, vcErr := s.db.CountServerVersions(ctx, tx, serverJSON.Name)
-	if vcErr != nil && !errors.Is(vcErr, database.ErrNotFound) {
-		versionChecksMs = time.Since(t).Milliseconds()
-		failedPhase = phaseVersionChecks
-		err = vcErr
+	// starved pool any of them stalls until a connection is free). Bundled under
+	// one phase since they share a logical step.
+	var currentLatest *apiv0.ServerResponse
+	if !runPhase(phaseVersionChecks, &versionChecksMs, func() error {
+		versionCount, e := s.db.CountServerVersions(ctx, tx, serverJSON.Name)
+		if e != nil && !errors.Is(e, database.ErrNotFound) {
+			return e
+		}
+		if versionCount >= maxServerVersionsPerServer {
+			return database.ErrMaxServersReached
+		}
+		versionExists, e := s.db.CheckVersionExists(ctx, tx, serverJSON.Name, serverJSON.Version)
+		if e != nil {
+			return e
+		}
+		if versionExists {
+			return database.ErrInvalidVersion
+		}
+		currentLatest, e = s.db.GetCurrentLatestVersion(ctx, tx, serverJSON.Name)
+		if e != nil && !errors.Is(e, database.ErrNotFound) {
+			return e
+		}
+		return nil
+	}) {
 		return nil, err
 	}
-	if versionCount >= maxServerVersionsPerServer {
-		versionChecksMs = time.Since(t).Milliseconds()
-		failedPhase = phaseVersionChecks
-		err = database.ErrMaxServersReached
-		return nil, err
-	}
-
-	versionExists, veErr := s.db.CheckVersionExists(ctx, tx, serverJSON.Name, serverJSON.Version)
-	if veErr != nil {
-		versionChecksMs = time.Since(t).Milliseconds()
-		failedPhase = phaseVersionChecks
-		err = veErr
-		return nil, err
-	}
-	if versionExists {
-		versionChecksMs = time.Since(t).Milliseconds()
-		failedPhase = phaseVersionChecks
-		err = database.ErrInvalidVersion
-		return nil, err
-	}
-
-	currentLatest, clErr := s.db.GetCurrentLatestVersion(ctx, tx, serverJSON.Name)
-	if clErr != nil && !errors.Is(clErr, database.ErrNotFound) {
-		versionChecksMs = time.Since(t).Milliseconds()
-		failedPhase = phaseVersionChecks
-		err = clErr
-		return nil, err
-	}
-	versionChecksMs = time.Since(t).Milliseconds()
 
 	// Determine if this version should be marked as latest
 	isNewLatest := true
@@ -224,14 +218,11 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 
 	// Unmark old latest version if needed
 	if isNewLatest && currentLatest != nil {
-		t = time.Now()
-		if uErr := s.db.UnmarkAsLatest(ctx, tx, serverJSON.Name); uErr != nil {
-			unmarkMs = time.Since(t).Milliseconds()
-			failedPhase = phaseUnmarkLatest
-			err = uErr
+		if !runPhase(phaseUnmarkLatest, &unmarkMs, func() error {
+			return s.db.UnmarkAsLatest(ctx, tx, serverJSON.Name)
+		}) {
 			return nil, err
 		}
-		unmarkMs = time.Since(t).Milliseconds()
 	}
 
 	// Create metadata for the new server
@@ -244,13 +235,14 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	}
 
 	// Insert new server version
-	t = time.Now()
-	resp, err = s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
-	createMs = time.Since(t).Milliseconds()
-	if err != nil {
-		failedPhase = phaseDBCreate
+	if !runPhase(phaseDBCreate, &createMs, func() error {
+		var e error
+		resp, e = s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
+		return e
+	}) {
+		return nil, err
 	}
-	return resp, err
+	return resp, nil
 }
 
 // recalculateLatest picks the highest non-deleted version of the given server and flags it
