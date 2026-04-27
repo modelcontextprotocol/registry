@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/compute"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
-	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/organizations"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/projects"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
@@ -65,6 +65,10 @@ func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) 
 // GKE node roles required for log shipping (fluentbit-gke) and metrics scraping
 // (managed Prometheus). New GCP projects no longer auto-grant Editor to the default
 // compute SA, so these have to be set explicitly or every pod log/metric is dropped.
+//
+// The IAM bindings depend on Cloud Resource Manager API being enabled (managed below
+// via projects.NewService) — without it, projects.NewIAMMember fails with
+// IAM_PERMISSION_DENIED-style errors masquerading as SERVICE_DISABLED.
 func grantNodeServiceAccountRoles(ctx *pulumi.Context, projectID string, gcpProvider *gcp.Provider) error {
 	invokeOpts := []pulumi.InvokeOption{}
 	resourceOpts := []pulumi.ResourceOption{}
@@ -73,14 +77,31 @@ func grantNodeServiceAccountRoles(ctx *pulumi.Context, projectID string, gcpProv
 		resourceOpts = append(resourceOpts, pulumi.Provider(gcpProvider))
 	}
 
-	project, err := organizations.LookupProject(ctx, &organizations.LookupProjectArgs{
-		ProjectId: pulumi.StringRef(projectID),
-	}, invokeOpts...)
+	// Ensure the Cloud Resource Manager API is enabled. projects.NewIAMMember calls
+	// SetIamPolicy under the hood, which lives behind this API. DisableOnDestroy is
+	// false so a Pulumi destroy/refactor never accidentally disables a shared API
+	// that other resources (and humans) rely on.
+	crmAPI, err := projects.NewService(ctx, "crm-api", &projects.ServiceArgs{
+		Project:                  pulumi.String(projectID),
+		Service:                  pulumi.String("cloudresourcemanager.googleapis.com"),
+		DisableOnDestroy:         pulumi.Bool(false),
+		DisableDependentServices: pulumi.Bool(false),
+	}, resourceOpts...)
 	if err != nil {
-		return fmt.Errorf("failed to look up project number for node SA bindings: %w", err)
+		return fmt.Errorf("failed to ensure cloudresourcemanager.googleapis.com is enabled: %w", err)
 	}
 
-	nodeSA := fmt.Sprintf("serviceAccount:%s-compute@developer.gserviceaccount.com", project.Number)
+	// Get the default compute SA email directly from the Compute API instead of
+	// constructing it from the project number — avoids needing CRM API just for
+	// the project lookup, and matches whatever GCP actually returns.
+	defaultSA, err := compute.GetDefaultServiceAccount(ctx, &compute.GetDefaultServiceAccountArgs{
+		Project: pulumi.StringRef(projectID),
+	}, invokeOpts...)
+	if err != nil {
+		return fmt.Errorf("failed to look up default compute service account: %w", err)
+	}
+
+	nodeSA := "serviceAccount:" + defaultSA.Email
 
 	roles := []string{
 		"roles/logging.logWriter",
@@ -89,13 +110,16 @@ func grantNodeServiceAccountRoles(ctx *pulumi.Context, projectID string, gcpProv
 		"roles/stackdriver.resourceMetadata.writer",
 	}
 
+	bindingOpts := make([]pulumi.ResourceOption, 0, len(resourceOpts)+1)
+	bindingOpts = append(bindingOpts, resourceOpts...)
+	bindingOpts = append(bindingOpts, pulumi.DependsOn([]pulumi.Resource{crmAPI}))
 	for _, role := range roles {
 		name := fmt.Sprintf("node-sa-%s", strings.ReplaceAll(strings.TrimPrefix(role, "roles/"), ".", "-"))
 		_, err := projects.NewIAMMember(ctx, name, &projects.IAMMemberArgs{
 			Project: pulumi.String(projectID),
 			Role:    pulumi.String(role),
 			Member:  pulumi.String(nodeSA),
-		}, resourceOpts...)
+		}, bindingOpts...)
 		if err != nil {
 			return fmt.Errorf("failed to grant %s to node SA: %w", role, err)
 		}
