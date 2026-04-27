@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -16,6 +17,18 @@ import (
 )
 
 const maxServerVersionsPerServer = 10000
+
+// Publish phase names used for the structured "publish complete"/"publish failed" log
+// emitted from createServerInTransaction. Kept as constants because version_checks is
+// reported from multiple branches.
+const (
+	phaseValidate           = "validate"
+	phaseAcquireLock        = "acquire_lock"
+	phaseValidateRemoteURLs = "validate_remote_urls"
+	phaseVersionChecks      = "version_checks"
+	phaseUnmarkLatest       = "unmark_latest"
+	phaseDBCreate           = "db_create"
+)
 
 // registryServiceImpl implements the RegistryService interface using our Database
 type registryServiceImpl struct {
@@ -85,49 +98,109 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 	})
 }
 
-// createServerInTransaction contains the actual CreateServer logic within a transaction
-func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
-	// Validate the request
-	if err := validators.ValidatePublishRequest(ctx, *req, s.cfg); err != nil {
+// createServerInTransaction contains the actual CreateServer logic within a transaction.
+// Phases are individually timed and emitted as a single structured log event per call so
+// we can tell which step dominates publish latency (registry-ownership HTTP calls in
+// `validate`, advisory-lock contention in `acquire_lock`, or the JSONB insert in `db_create`).
+func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (resp *apiv0.ServerResponse, err error) {
+	start := time.Now()
+	serverJSON := *req
+	var (
+		validateMs, lockMs, remotesMs, versionChecksMs, unmarkMs, createMs int64
+		failedPhase                                                        string
+	)
+
+	defer func() {
+		attrs := []any{
+			"server_name", serverJSON.Name,
+			"version", serverJSON.Version,
+			"total_ms", time.Since(start).Milliseconds(),
+			"validate_ms", validateMs,
+			"lock_ms", lockMs,
+			"remotes_ms", remotesMs,
+			"version_checks_ms", versionChecksMs,
+			"unmark_ms", unmarkMs,
+			"create_ms", createMs,
+		}
+		if err != nil {
+			attrs = append(attrs, "failed_phase", failedPhase, "error", err.Error())
+			slog.WarnContext(ctx, "publish failed", attrs...)
+		} else {
+			slog.InfoContext(ctx, "publish complete", attrs...)
+		}
+	}()
+
+	// Validate the request — this includes registry-ownership checks that fan out
+	// to npm/PyPI/OCI/etc with 10s timeouts each, so it's the most likely slow phase.
+	t := time.Now()
+	if vErr := validators.ValidatePublishRequest(ctx, *req, s.cfg); vErr != nil {
+		validateMs = time.Since(t).Milliseconds()
+		failedPhase = phaseValidate
+		err = vErr
 		return nil, err
 	}
+	validateMs = time.Since(t).Milliseconds()
 
 	publishTime := time.Now()
-	serverJSON := *req
 
 	// Acquire advisory lock to prevent concurrent publishes of the same server
-	if err := s.db.AcquirePublishLock(ctx, tx, serverJSON.Name); err != nil {
+	t = time.Now()
+	if lErr := s.db.AcquirePublishLock(ctx, tx, serverJSON.Name); lErr != nil {
+		lockMs = time.Since(t).Milliseconds()
+		failedPhase = phaseAcquireLock
+		err = lErr
 		return nil, err
 	}
+	lockMs = time.Since(t).Milliseconds()
 
 	// Check for duplicate remote URLs
-	if err := s.validateNoDuplicateRemoteURLs(ctx, tx, serverJSON); err != nil {
+	t = time.Now()
+	if rErr := s.validateNoDuplicateRemoteURLs(ctx, tx, serverJSON); rErr != nil {
+		remotesMs = time.Since(t).Milliseconds()
+		failedPhase = phaseValidateRemoteURLs
+		err = rErr
 		return nil, err
 	}
+	remotesMs = time.Since(t).Milliseconds()
 
-	// Check we haven't exceeded the maximum versions allowed for a server
-	versionCount, err := s.db.CountServerVersions(ctx, tx, serverJSON.Name)
-	if err != nil && !errors.Is(err, database.ErrNotFound) {
+	// Version checks: count, exists, current-latest (all small DB lookups)
+	t = time.Now()
+	versionCount, vcErr := s.db.CountServerVersions(ctx, tx, serverJSON.Name)
+	if vcErr != nil && !errors.Is(vcErr, database.ErrNotFound) {
+		versionChecksMs = time.Since(t).Milliseconds()
+		failedPhase = phaseVersionChecks
+		err = vcErr
 		return nil, err
 	}
 	if versionCount >= maxServerVersionsPerServer {
-		return nil, database.ErrMaxServersReached
+		versionChecksMs = time.Since(t).Milliseconds()
+		failedPhase = phaseVersionChecks
+		err = database.ErrMaxServersReached
+		return nil, err
 	}
 
-	// Check this isn't a duplicate version
-	versionExists, err := s.db.CheckVersionExists(ctx, tx, serverJSON.Name, serverJSON.Version)
-	if err != nil {
+	versionExists, veErr := s.db.CheckVersionExists(ctx, tx, serverJSON.Name, serverJSON.Version)
+	if veErr != nil {
+		versionChecksMs = time.Since(t).Milliseconds()
+		failedPhase = phaseVersionChecks
+		err = veErr
 		return nil, err
 	}
 	if versionExists {
-		return nil, database.ErrInvalidVersion
-	}
-
-	// Get current latest version to determine if new version should be latest
-	currentLatest, err := s.db.GetCurrentLatestVersion(ctx, tx, serverJSON.Name)
-	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		versionChecksMs = time.Since(t).Milliseconds()
+		failedPhase = phaseVersionChecks
+		err = database.ErrInvalidVersion
 		return nil, err
 	}
+
+	currentLatest, clErr := s.db.GetCurrentLatestVersion(ctx, tx, serverJSON.Name)
+	if clErr != nil && !errors.Is(clErr, database.ErrNotFound) {
+		versionChecksMs = time.Since(t).Milliseconds()
+		failedPhase = phaseVersionChecks
+		err = clErr
+		return nil, err
+	}
+	versionChecksMs = time.Since(t).Milliseconds()
 
 	// Determine if this version should be marked as latest
 	isNewLatest := true
@@ -146,9 +219,14 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 
 	// Unmark old latest version if needed
 	if isNewLatest && currentLatest != nil {
-		if err := s.db.UnmarkAsLatest(ctx, tx, serverJSON.Name); err != nil {
+		t = time.Now()
+		if uErr := s.db.UnmarkAsLatest(ctx, tx, serverJSON.Name); uErr != nil {
+			unmarkMs = time.Since(t).Milliseconds()
+			failedPhase = phaseUnmarkLatest
+			err = uErr
 			return nil, err
 		}
+		unmarkMs = time.Since(t).Milliseconds()
 	}
 
 	// Create metadata for the new server
@@ -161,7 +239,13 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	}
 
 	// Insert new server version
-	return s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
+	t = time.Now()
+	resp, err = s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
+	createMs = time.Since(t).Milliseconds()
+	if err != nil {
+		failedPhase = phaseDBCreate
+	}
+	return resp, err
 }
 
 // recalculateLatest picks the highest non-deleted version of the given server and flags it

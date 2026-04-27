@@ -3,9 +3,12 @@ package gcp
 import (
 	"encoding/base64"
 	"fmt"
+	"strings"
 
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/organizations"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/projects"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
@@ -56,6 +59,49 @@ func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) 
 	}
 
 	return nil, nil
+}
+
+// grantNodeServiceAccountRoles grants the default compute service account the standard
+// GKE node roles required for log shipping (fluentbit-gke) and metrics scraping
+// (managed Prometheus). New GCP projects no longer auto-grant Editor to the default
+// compute SA, so these have to be set explicitly or every pod log/metric is dropped.
+func grantNodeServiceAccountRoles(ctx *pulumi.Context, projectID string, gcpProvider *gcp.Provider) error {
+	invokeOpts := []pulumi.InvokeOption{}
+	resourceOpts := []pulumi.ResourceOption{}
+	if gcpProvider != nil {
+		invokeOpts = append(invokeOpts, pulumi.Provider(gcpProvider))
+		resourceOpts = append(resourceOpts, pulumi.Provider(gcpProvider))
+	}
+
+	project, err := organizations.LookupProject(ctx, &organizations.LookupProjectArgs{
+		ProjectId: pulumi.StringRef(projectID),
+	}, invokeOpts...)
+	if err != nil {
+		return fmt.Errorf("failed to look up project number for node SA bindings: %w", err)
+	}
+
+	nodeSA := fmt.Sprintf("serviceAccount:%s-compute@developer.gserviceaccount.com", project.Number)
+
+	roles := []string{
+		"roles/logging.logWriter",
+		"roles/monitoring.metricWriter",
+		"roles/monitoring.viewer",
+		"roles/stackdriver.resourceMetadata.writer",
+	}
+
+	for _, role := range roles {
+		name := fmt.Sprintf("node-sa-%s", strings.ReplaceAll(strings.TrimPrefix(role, "roles/"), ".", "-"))
+		_, err := projects.NewIAMMember(ctx, name, &projects.IAMMemberArgs{
+			Project: pulumi.String(projectID),
+			Role:    pulumi.String(role),
+			Member:  pulumi.String(nodeSA),
+		}, resourceOpts...)
+		if err != nil {
+			return fmt.Errorf("failed to grant %s to node SA: %w", role, err)
+		}
+	}
+
+	return nil
 }
 
 // CreateCluster creates a Google Kubernetes Engine cluster
@@ -150,6 +196,13 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	nodePool, err := container.NewNodePool(ctx, nodePoolName, nodePoolArgs, nodePoolOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create node pool: %w", err)
+	}
+
+	// Grant the default compute service account the standard GKE node roles so the
+	// fluentbit-gke and managed Prometheus collectors can ship logs and metrics.
+	// Without these, every pod log line and time series fails with IAM_PERMISSION_DENIED.
+	if err := grantNodeServiceAccountRoles(ctx, projectID, gcpProvider); err != nil {
+		return nil, err
 	}
 
 	// Create Kubernetes provider using the cluster directly

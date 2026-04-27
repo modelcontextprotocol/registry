@@ -10,6 +10,7 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/networking/v1"
+	policyv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/policy/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
@@ -187,15 +188,40 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 							},
 							Resources: &corev1.ResourceRequirementsArgs{
 								Requests: pulumi.StringMap{
-									"memory": pulumi.String("128Mi"),
+									"memory": pulumi.String("256Mi"),
 									"cpu":    pulumi.String("100m"),
 								},
 								Limits: pulumi.StringMap{
-									"memory": pulumi.String("256Mi"),
+									"memory": pulumi.String("512Mi"),
 								},
 							},
 						},
 					},
+				},
+			},
+		},
+	}, pulumi.Provider(cluster.Provider))
+	if err != nil {
+		return nil, err
+	}
+
+	// Keep at least one registry pod available during voluntary disruptions
+	// (node drains, evictions, etc.) so a synchronized eviction can't take both
+	// pods down at once.
+	_, err = policyv1.NewPodDisruptionBudget(ctx, "mcp-registry", &policyv1.PodDisruptionBudgetArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String("mcp-registry"),
+			Namespace: pulumi.String("default"),
+			Labels: pulumi.StringMap{
+				"app":         pulumi.String("mcp-registry"),
+				"environment": pulumi.String(environment),
+			},
+		},
+		Spec: &policyv1.PodDisruptionBudgetSpecArgs{
+			MinAvailable: pulumi.Int(1),
+			Selector: &metav1.LabelSelectorArgs{
+				MatchLabels: pulumi.StringMap{
+					"app": pulumi.String("mcp-registry"),
 				},
 			},
 		},
