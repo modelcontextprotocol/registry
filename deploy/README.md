@@ -65,8 +65,20 @@ Pre-requisites:
 
 1. Create a project: `gcloud projects create mcp-registry-prod`
 2. Set the project: `gcloud config set project mcp-registry-prod`
-3. Enable required APIs: `gcloud services enable storage.googleapis.com && gcloud services enable container.googleapis.com`
-4. Create a service account with necessary permissions, and get the key:
+3. Enable the bootstrap APIs needed before Pulumi can run. The remaining APIs
+   (`cloudresourcemanager`, `compute`, `container`, `logging`, `monitoring`) are
+   adopted as Pulumi-managed `projects.Service` resources by `ensureRequiredAPIs`
+   in `pkg/providers/gcp/provider.go`, so they self-heal against drift but still
+   need to be reachable on the very first deploy:
+   ```bash
+   gcloud services enable storage.googleapis.com         # for the Pulumi state bucket below
+   gcloud services enable cloudresourcemanager.googleapis.com  # for the IAM bindings Pulumi creates
+   gcloud services enable container.googleapis.com       # for the GKE cluster
+   ```
+4. Create the Pulumi service account and grant it the roles required to manage
+   the deploy. `projectIamAdmin` is needed because the deploy creates IAM bindings
+   on the project (for the default compute SA). The other four are general
+   resource management:
    ```bash
    gcloud iam service-accounts create pulumi-svc
    sleep 10
@@ -74,6 +86,7 @@ Pre-requisites:
    gcloud projects add-iam-policy-binding mcp-registry-prod --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" --role="roles/compute.admin"
    gcloud projects add-iam-policy-binding mcp-registry-prod --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" --role="roles/storage.admin"
    gcloud projects add-iam-policy-binding mcp-registry-prod --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" --role="roles/storage.hmacKeyAdmin"
+   gcloud projects add-iam-policy-binding mcp-registry-prod --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" --role="roles/resourcemanager.projectIamAdmin"
    gcloud iam service-accounts add-iam-policy-binding $(gcloud projects describe mcp-registry-prod --format="value(projectNumber)")-compute@developer.gserviceaccount.com --member="serviceAccount:pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser"
    gcloud iam service-accounts keys create sa-key.json --iam-account=pulumi-svc@mcp-registry-prod.iam.gserviceaccount.com
    ```

@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/compute"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
-	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/organizations"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/projects"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
@@ -61,10 +61,75 @@ func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) 
 	return nil, nil
 }
 
+// ensureRequiredAPIs adopts the GCP APIs the deploy depends on as Pulumi-managed
+// services. Encoding them as Pulumi resources makes the dependency explicit and
+// protects against drift (an org policy reset or accidental disable).
+//
+// Note: bootstrap APIs (storage, cloudresourcemanager, container — see
+// deploy/README.md) must already be enabled before this runs, because the
+// resources that need them are created earlier in the stack. For those, this
+// function adopts them into Pulumi state after the fact. For the rest (logging,
+// monitoring), the adoption happens before any consumer runs.
+//
+// DisableOnDestroy and DisableDependentServices are both false — a Pulumi destroy
+// or refactor must never disable a shared API that other resources (and humans)
+// rely on. Enable-only.
+//
+// Returns the Cloud Resource Manager API resource specifically, since the node-SA
+// IAM bindings need to DependsOn it (SetIamPolicy is gated on CRM).
+func ensureRequiredAPIs(ctx *pulumi.Context, projectID string, resourceOpts []pulumi.ResourceOption) (*projects.Service, error) {
+	// Service Usage API (which projects.NewService itself uses) is enabled by default
+	// on GCP projects, so we don't need to manage it here.
+
+	// CRM is created explicitly (not in the loop below) because callers need a
+	// direct reference to it for DependsOn — projects.NewIAMMember calls
+	// SetIamPolicy under the hood, which is gated on CRM.
+	crm, err := projects.NewService(ctx, "crm-api", &projects.ServiceArgs{
+		Project:                  pulumi.String(projectID),
+		Service:                  pulumi.String("cloudresourcemanager.googleapis.com"),
+		DisableOnDestroy:         pulumi.Bool(false),
+		DisableDependentServices: pulumi.Bool(false),
+	}, resourceOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to ensure cloudresourcemanager.googleapis.com is enabled: %w", err)
+	}
+
+	otherAPIs := []struct {
+		resourceName string
+		serviceName  string
+	}{
+		// Required for compute.GetDefaultServiceAccount and the GKE cluster.
+		{"compute-api", "compute.googleapis.com"},
+		// Required for the GKE cluster.
+		{"container-api", "container.googleapis.com"},
+		// Required for fluentbit-gke to ship container logs.
+		{"logging-api", "logging.googleapis.com"},
+		// Required for the managed Prometheus collector to ship metrics.
+		{"monitoring-api", "monitoring.googleapis.com"},
+	}
+
+	for _, api := range otherAPIs {
+		_, err := projects.NewService(ctx, api.resourceName, &projects.ServiceArgs{
+			Project:                  pulumi.String(projectID),
+			Service:                  pulumi.String(api.serviceName),
+			DisableOnDestroy:         pulumi.Bool(false),
+			DisableDependentServices: pulumi.Bool(false),
+		}, resourceOpts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to ensure %s is enabled: %w", api.serviceName, err)
+		}
+	}
+	return crm, nil
+}
+
 // grantNodeServiceAccountRoles grants the default compute service account the standard
 // GKE node roles required for log shipping (fluentbit-gke) and metrics scraping
 // (managed Prometheus). New GCP projects no longer auto-grant Editor to the default
 // compute SA, so these have to be set explicitly or every pod log/metric is dropped.
+//
+// The IAM bindings depend on Cloud Resource Manager API being enabled (managed by
+// ensureRequiredAPIs above) — without it, projects.NewIAMMember fails because
+// SetIamPolicy lives behind that API.
 func grantNodeServiceAccountRoles(ctx *pulumi.Context, projectID string, gcpProvider *gcp.Provider) error {
 	invokeOpts := []pulumi.InvokeOption{}
 	resourceOpts := []pulumi.ResourceOption{}
@@ -73,14 +138,22 @@ func grantNodeServiceAccountRoles(ctx *pulumi.Context, projectID string, gcpProv
 		resourceOpts = append(resourceOpts, pulumi.Provider(gcpProvider))
 	}
 
-	project, err := organizations.LookupProject(ctx, &organizations.LookupProjectArgs{
-		ProjectId: pulumi.StringRef(projectID),
-	}, invokeOpts...)
+	crmAPI, err := ensureRequiredAPIs(ctx, projectID, resourceOpts)
 	if err != nil {
-		return fmt.Errorf("failed to look up project number for node SA bindings: %w", err)
+		return err
 	}
 
-	nodeSA := fmt.Sprintf("serviceAccount:%s-compute@developer.gserviceaccount.com", project.Number)
+	// Get the default compute SA email directly from the Compute API instead of
+	// constructing it from the project number — avoids needing CRM API just for
+	// the project lookup, and matches whatever GCP actually returns.
+	defaultSA, err := compute.GetDefaultServiceAccount(ctx, &compute.GetDefaultServiceAccountArgs{
+		Project: pulumi.StringRef(projectID),
+	}, invokeOpts...)
+	if err != nil {
+		return fmt.Errorf("failed to look up default compute service account: %w", err)
+	}
+
+	nodeSA := "serviceAccount:" + defaultSA.Email
 
 	roles := []string{
 		"roles/logging.logWriter",
@@ -89,13 +162,16 @@ func grantNodeServiceAccountRoles(ctx *pulumi.Context, projectID string, gcpProv
 		"roles/stackdriver.resourceMetadata.writer",
 	}
 
+	bindingOpts := make([]pulumi.ResourceOption, 0, len(resourceOpts)+1)
+	bindingOpts = append(bindingOpts, resourceOpts...)
+	bindingOpts = append(bindingOpts, pulumi.DependsOn([]pulumi.Resource{crmAPI}))
 	for _, role := range roles {
 		name := fmt.Sprintf("node-sa-%s", strings.ReplaceAll(strings.TrimPrefix(role, "roles/"), ".", "-"))
 		_, err := projects.NewIAMMember(ctx, name, &projects.IAMMemberArgs{
 			Project: pulumi.String(projectID),
 			Role:    pulumi.String(role),
 			Member:  pulumi.String(nodeSA),
-		}, resourceOpts...)
+		}, bindingOpts...)
 		if err != nil {
 			return fmt.Errorf("failed to grant %s to node SA: %w", role, err)
 		}
