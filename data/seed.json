@@ -137,19 +137,21 @@
   },
   {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-    "name": "io.github.domdomegg/time-mcp-pypi",
-    "description": "Get the current UTC time in RFC 3339 format.",
+    "name": "io.github.votronghoang-dyor/mcp-smart-long-context-wiki-obsidian",
+    "title": "MCP Smart Long Context Wiki Obsidian",
+    "description": "MCP server for long-context knowledge retrieval and Obsidian-style wiki integration.",
     "repository": {
-      "url": "https://github.com/domdomegg/time-mcp-pypi.git",
+      "url": "https://github.com/VoTrongHoang-Dyor/MCP-Smart-Long-Context-Wiki-Obsidian.git",
       "source": "github"
     },
-    "version": "1.0.6",
+    "version": "1.2.0",
+    "websiteUrl": "https://github.com/VoTrongHoang-Dyor/MCP-Smart-Long-Context-Wiki-Obsidian/blob/397ebc224dfda0e66af9410e047872cb83ed0749/README.md",
     "packages": [
       {
-        "registryType": "pypi",
-        "identifier": "time-mcp-pypi",
-        "version": "1.0.6",
-        "runtimeHint": "python",
+        "registryType": "npm",
+        "identifier": "mcp-smart-long-context-wiki-obsidian",
+        "version": "1.2.0",
+        "runtimeHint": "npx",
         "transport": {
           "type": "stdio"
         }
