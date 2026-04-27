@@ -41,6 +41,15 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				{Type: "streamable-http", URL: "https://api.microsoft.com/mcp"},
 			},
 		},
+		"deleted": {
+			Schema:      model.CurrentSchemaURL,
+			Name:        "com.example/deleted-server",
+			Description: "A deleted server",
+			Version:     "1.0.0",
+			Remotes: []model.Transport{
+				{Type: "streamable-http", URL: "https://deleted.example.com/mcp"},
+			},
+		},
 	}
 
 	testDB := database.NewTestDB(t)
@@ -50,23 +59,14 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 	for _, server := range existingServers {
 		_, err := service.CreateServer(ctx, server)
 		require.NoError(t, err, "failed to create server: %v", err)
-	}
 
-	deletedServer := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "com.example/deleted-server",
-		Description: "A deleted server",
-		Version:     "1.0.0",
-		Remotes: []model.Transport{
-			{Type: "streamable-http", URL: "https://deleted.example.com/mcp"},
-		},
+		if server.Name == "com.example/deleted-server" {
+			_, err = service.UpdateServerStatus(ctx, server.Name, server.Version, &StatusChangeRequest{
+				NewStatus: model.StatusDeleted,
+			})
+			require.NoError(t, err)
+		}
 	}
-	_, err := service.CreateServer(ctx, deletedServer)
-	require.NoError(t, err)
-	_, err = service.UpdateServerStatus(ctx, deletedServer.Name, deletedServer.Version, &StatusChangeRequest{
-		NewStatus: model.StatusDeleted,
-	})
-	require.NoError(t, err)
 
 	deprecatedServer := &apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
