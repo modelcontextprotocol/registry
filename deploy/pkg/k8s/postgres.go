@@ -59,6 +59,26 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 				"storage": map[string]any{
 					"size": "50Gi",
 				},
+				// Enable pg_stat_statements so we can attribute slow time to specific
+				// queries (the 2026-04-27 incident took an EXPLAIN-the-one-query-I-saw
+				// approach because we had no aggregate visibility). CNPG triggers a PG
+				// restart on shared_preload_libraries change — with instances: 1 this
+				// is brief downtime. CREATE EXTENSION still needs to run once as a
+				// superuser on existing clusters; new clusters get it via the
+				// postInitApplicationSQL hook below.
+				"postgresql": map[string]any{
+					"shared_preload_libraries": []any{"pg_stat_statements"},
+					"parameters": map[string]any{
+						"pg_stat_statements.track": "all",
+					},
+				},
+				"bootstrap": map[string]any{
+					"initdb": map[string]any{
+						"postInitApplicationSQL": []any{
+							"CREATE EXTENSION IF NOT EXISTS pg_stat_statements",
+						},
+					},
+				},
 			},
 		},
 	}, pulumi.Provider(cluster.Provider), pulumi.DependsOnInputs(cloudNativePG.Ready), pulumi.RetainOnDelete(true))
