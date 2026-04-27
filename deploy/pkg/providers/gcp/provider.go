@@ -62,10 +62,14 @@ func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) 
 }
 
 // ensureRequiredAPIs adopts the GCP APIs the deploy depends on as Pulumi-managed
-// services. Every resource we create here is already implicitly enabled by other
-// API calls, but encoding them as Pulumi resources makes the dependency explicit,
-// protects against drift (an org policy reset or accidental disable), and lets a
-// fresh project bootstrap without manual prereqs.
+// services. Encoding them as Pulumi resources makes the dependency explicit and
+// protects against drift (an org policy reset or accidental disable).
+//
+// Note: bootstrap APIs (storage, cloudresourcemanager, container — see
+// deploy/README.md) must already be enabled before this runs, because the
+// resources that need them are created earlier in the stack. For those, this
+// function adopts them into Pulumi state after the fact. For the rest (logging,
+// monitoring), the adoption happens before any consumer runs.
 //
 // DisableOnDestroy and DisableDependentServices are both false — a Pulumi destroy
 // or refactor must never disable a shared API that other resources (and humans)
@@ -75,14 +79,25 @@ func createGCPProvider(ctx *pulumi.Context, name string) (*gcp.Provider, error) 
 // IAM bindings need to DependsOn it (SetIamPolicy is gated on CRM).
 func ensureRequiredAPIs(ctx *pulumi.Context, projectID string, resourceOpts []pulumi.ResourceOption) (*projects.Service, error) {
 	// Service Usage API (which projects.NewService itself uses) is enabled by default
-	// on GCP projects, so we don't need to manage it here. The list below is in
-	// rough dependency order though Pulumi resolves the actual graph.
-	apis := []struct {
+	// on GCP projects, so we don't need to manage it here.
+
+	// CRM is created explicitly (not in the loop below) because callers need a
+	// direct reference to it for DependsOn — projects.NewIAMMember calls
+	// SetIamPolicy under the hood, which is gated on CRM.
+	crm, err := projects.NewService(ctx, "crm-api", &projects.ServiceArgs{
+		Project:                  pulumi.String(projectID),
+		Service:                  pulumi.String("cloudresourcemanager.googleapis.com"),
+		DisableOnDestroy:         pulumi.Bool(false),
+		DisableDependentServices: pulumi.Bool(false),
+	}, resourceOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to ensure cloudresourcemanager.googleapis.com is enabled: %w", err)
+	}
+
+	otherAPIs := []struct {
 		resourceName string
 		serviceName  string
 	}{
-		// Required for projects.NewIAMMember (SetIamPolicy).
-		{"crm-api", "cloudresourcemanager.googleapis.com"},
 		// Required for compute.GetDefaultServiceAccount and the GKE cluster.
 		{"compute-api", "compute.googleapis.com"},
 		// Required for the GKE cluster.
@@ -93,9 +108,8 @@ func ensureRequiredAPIs(ctx *pulumi.Context, projectID string, resourceOpts []pu
 		{"monitoring-api", "monitoring.googleapis.com"},
 	}
 
-	var crm *projects.Service
-	for _, api := range apis {
-		svc, err := projects.NewService(ctx, api.resourceName, &projects.ServiceArgs{
+	for _, api := range otherAPIs {
+		_, err := projects.NewService(ctx, api.resourceName, &projects.ServiceArgs{
 			Project:                  pulumi.String(projectID),
 			Service:                  pulumi.String(api.serviceName),
 			DisableOnDestroy:         pulumi.Bool(false),
@@ -103,9 +117,6 @@ func ensureRequiredAPIs(ctx *pulumi.Context, projectID string, resourceOpts []pu
 		}, resourceOpts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to ensure %s is enabled: %w", api.serviceName, err)
-		}
-		if api.resourceName == "crm-api" {
-			crm = svc
 		}
 	}
 	return crm, nil
