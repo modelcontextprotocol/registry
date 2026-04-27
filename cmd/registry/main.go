@@ -79,7 +79,7 @@ func main() {
 			log.Printf("Failed to connect to PostgreSQL after %d attempts: %v", attempt, err)
 			return
 		}
-		log.Printf("PostgreSQL not reachable (attempt %d/%d): %v — retrying in %s", attempt, maxStartupAttempts, err, backoff)
+		log.Printf("PostgreSQL not reachable (attempt %d/%d): %v, retrying in %s", attempt, maxStartupAttempts, err, backoff)
 		time.Sleep(backoff)
 		backoff = min(backoff*2, maxBackoff)
 	}

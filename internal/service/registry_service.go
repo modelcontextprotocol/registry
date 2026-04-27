@@ -92,13 +92,21 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 
 	// Validate the request. ValidatePublishRequest fans out to npm/PyPI/OCI for
 	// registry-ownership checks with 10s per-host timeouts, so it's the most likely
-	// contributor to publish latency — log how long it took so the next /v0/publish
-	// latency alert is diagnostic without grepping the rest of the code.
+	// contributor to publish latency. Log validate_ms on both success and failure
+	// so the next /v0/publish latency alert is diagnostic — a slow upstream that
+	// times out into a validation error is exactly the case we need to see.
 	validateStart := time.Now()
-	if err := validators.ValidatePublishRequest(ctx, *req, s.cfg); err != nil {
-		return nil, err
-	}
+	validateErr := validators.ValidatePublishRequest(ctx, serverJSON, s.cfg)
 	validateMs := time.Since(validateStart).Milliseconds()
+	if validateErr != nil {
+		slog.WarnContext(ctx, "publish validate failed",
+			"server_name", serverJSON.Name,
+			"version", serverJSON.Version,
+			"validate_ms", validateMs,
+			"error", validateErr.Error(),
+		)
+		return nil, validateErr
+	}
 
 	publishTime := time.Now()
 
