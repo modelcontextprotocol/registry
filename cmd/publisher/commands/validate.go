@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -151,19 +150,15 @@ func ValidateCommand(args []string) error {
 	}
 
 	// Get registry URL (same pattern as publish)
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
-	}
-
-	tokenPath := filepath.Join(homeDir, TokenFileName)
 	registryURL := DefaultRegistryURL
 	// Try to read registry URL from token file (if it exists)
-	if tokenData, err := os.ReadFile(tokenPath); err == nil {
-		var tokenInfo map[string]string
-		if err := json.Unmarshal(tokenData, &tokenInfo); err == nil {
-			if url := tokenInfo["registry"]; url != "" {
-				registryURL = url
+	if tokenPath, err := tokenFilePath(); err == nil {
+		if tokenData, err := os.ReadFile(tokenPath); err == nil {
+			var tokenInfo map[string]string
+			if err := json.Unmarshal(tokenData, &tokenInfo); err == nil {
+				if url := tokenInfo["registry"]; url != "" {
+					registryURL = url
+				}
 			}
 		}
 	}

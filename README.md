@@ -54,7 +54,7 @@ The setup can be configured with environment variables in [docker-compose.yml](.
 <details>
 <summary>Alternative: Running a pre-built Docker image</summary>
 
-Pre-built Docker images are automatically published to GitHub Container Registry:
+Pre-built Docker images are automatically published to GitHub Container Registry. Note that the image does not bundle PostgreSQL, so you need to run your own and point the registry at it via `MCP_REGISTRY_DATABASE_URL` (see [docker-compose.yml](./docker-compose.yml) for a working example):
 
 ```bash
 # Run latest stable release

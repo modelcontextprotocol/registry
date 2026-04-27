@@ -51,6 +51,12 @@ Successfully authenticated!
 
 DNS authentication is a domain-based authentication method that relies on a DNS TXT record.
 
+<Warning>
+  The TXT record must be placed on the **apex** of your domain (e.g. `example.com`), **not** under a selector like `_mcp-auth.example.com` or `_mcp-registry.example.com`. MCP DNS auth follows SPF-style placement (apex), not DKIM-style (selector). If you put the record under a selector, the registry will not see it and authentication will fail with a generic signature error.
+
+  If you rotate keys, also remember to remove the previous TXT record from the apex — a stale record left behind will be tried first and cause verification to fail.
+</Warning>
+
 To perform DNS authentication using the `mcp-publisher` CLI tool, run the following commands in your server project directory to generate a TXT record based on a public/private key pair:
 
 <CodeGroup>

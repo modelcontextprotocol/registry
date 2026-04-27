@@ -38,12 +38,6 @@ func (o *GitHubOIDCProvider) GetToken(ctx context.Context) (string, error) {
 	return registryToken, nil
 }
 
-// NeedsLogin always returns false for OIDC since the token is provided by GitHub Actions
-func (o *GitHubOIDCProvider) NeedsLogin() bool {
-	// OIDC tokens are provided by GitHub Actions runtime, no interactive login needed
-	return false
-}
-
 // Login is not needed for OIDC since tokens are provided by GitHub Actions
 func (o *GitHubOIDCProvider) Login(_ context.Context) error {
 	// No interactive login needed for OIDC

@@ -36,6 +36,7 @@ Only trusted public registries are supported. Private registries and alternative
 - **Docker/OCI**:
   - Docker Hub (`docker.io`)
   - GitHub Container Registry (`ghcr.io`)
+  - Quay.io (`quay.io`)
   - Google Artifact Registry (`*.pkg.dev`)
   - Azure Container Registry (`*.azurecr.io`)
   - Microsoft Container Registry (`mcr.microsoft.com`)
@@ -67,6 +68,28 @@ When publishing to the official registry, **only data under the specific key `io
 ```
 
 **Size limit:** The publisher-provided extension is limited to 4KB (4096 bytes) of JSON. If the marshaled JSON exceeds this limit, publishing will fail with an error indicating the actual size.
+
+#### Recommended: Namespaced Subkeys
+
+When your `publisher-provided` metadata gets large or comes from multiple sources (e.g. GitHub-specific hints alongside your own CI tool's metadata), grouping keys under reverse-DNS subkeys is a useful convention to avoid accidental collisions:
+
+```jsonc
+{
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "com.github": {
+        "serverDisplayName": "My Server"
+      },
+      "io.example.ci-publisher": {
+        "tool": "ci-publisher",
+        "version": "1.0.0"
+      }
+    }
+  }
+}
+```
+
+This is **not enforced**; flat keys work fine for simple cases, and existing examples in this repo use the flat form. Use the namespaced form when organizing metadata from more than one source.
 
 ### Registry API Metadata vs server.json Metadata
 

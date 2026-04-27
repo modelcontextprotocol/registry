@@ -3,6 +3,7 @@ package database_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -1731,6 +1732,152 @@ func TestPostgreSQL_IncludeDeletedFilter(t *testing.T) {
 		results, _, err = db.ListServers(ctx, nil, filter, "", 10)
 		require.NoError(t, err)
 		assert.Len(t, results, 3, "Should get all versions including deleted")
+	})
+}
+
+// TestMigration014_HealIsLatest exercises migrations/014_heal_is_latest.sql against
+// synthetic broken states by re-running its SQL after seeding rows directly. The migration
+// itself ran via the template DB; since it's idempotent (only matches servers with no
+// non-deleted is_latest row), re-running it here only acts on the rows we just broke.
+func TestMigration014_HealIsLatest(t *testing.T) {
+	db := database.NewTestDB(t)
+	ctx := context.Background()
+
+	migrationSQL, err := os.ReadFile("migrations/014_heal_is_latest.sql")
+	require.NoError(t, err)
+
+	createVersion := func(t *testing.T, name, version string, publishedAt time.Time, status model.Status, isLatest bool) {
+		t.Helper()
+		serverJSON := &apiv0.ServerJSON{
+			Schema:      model.CurrentSchemaURL,
+			Name:        name,
+			Description: "test",
+			Version:     version,
+		}
+		officialMeta := &apiv0.RegistryExtensions{
+			Status:          status,
+			StatusChangedAt: publishedAt,
+			PublishedAt:     publishedAt,
+			UpdatedAt:       publishedAt,
+			IsLatest:        isLatest,
+		}
+		_, err := db.CreateServer(ctx, nil, serverJSON, officialMeta)
+		require.NoError(t, err)
+	}
+
+	runHeal := func(t *testing.T) {
+		t.Helper()
+		err := db.InTransaction(ctx, func(ctx context.Context, tx pgx.Tx) error {
+			_, err := tx.Exec(ctx, string(migrationSQL))
+			return err
+		})
+		require.NoError(t, err)
+	}
+
+	versionState := func(t *testing.T, name, version string) (model.Status, bool) {
+		t.Helper()
+		v, err := db.GetServerByNameAndVersion(ctx, nil, name, version, true)
+		require.NoError(t, err)
+		return v.Meta.Official.Status, v.Meta.Official.IsLatest
+	}
+
+	t.Run("kubernetes-mcp-server scenario picks highest semver", func(t *testing.T) {
+		name := "io.test/k8s-scenario"
+		base := time.Now().Add(-10 * time.Hour)
+		// 1.0.0 published first, then 0.0.50, 0.0.51, 0.0.59, 0.0.60, 0.0.61.
+		// 1.0.0 was the original latest and got soft-deleted, leaving is_latest stranded.
+		createVersion(t, name, "1.0.0", base, model.StatusDeleted, true)
+		createVersion(t, name, "0.0.50", base.Add(1*time.Hour), model.StatusActive, false)
+		createVersion(t, name, "0.0.51", base.Add(2*time.Hour), model.StatusActive, false)
+		createVersion(t, name, "0.0.59", base.Add(3*time.Hour), model.StatusActive, false)
+		createVersion(t, name, "0.0.60", base.Add(4*time.Hour), model.StatusActive, false)
+		createVersion(t, name, "0.0.61", base.Add(5*time.Hour), model.StatusActive, false)
+
+		runHeal(t)
+
+		_, isLatest := versionState(t, name, "1.0.0")
+		assert.False(t, isLatest, "deleted 1.0.0 should no longer be latest")
+		_, isLatest = versionState(t, name, "0.0.61")
+		assert.True(t, isLatest, "highest active version should become latest")
+		for _, v := range []string{"0.0.50", "0.0.51", "0.0.59", "0.0.60"} {
+			_, isLatest := versionState(t, name, v)
+			assert.False(t, isLatest, "version %s should not be latest", v)
+		}
+	})
+
+	t.Run("backport scenario picks highest semver not most recent", func(t *testing.T) {
+		// Published 2.0.0 (deleted), then 1.0.1 hotfix, then 1.0.0 (older patch backported later).
+		// Most-recent-published would pick 1.0.0; semver-aware picks 1.0.1.
+		name := "io.test/backport-scenario"
+		base := time.Now().Add(-10 * time.Hour)
+		createVersion(t, name, "2.0.0", base, model.StatusDeleted, true)
+		createVersion(t, name, "1.0.1", base.Add(1*time.Hour), model.StatusActive, false)
+		createVersion(t, name, "1.0.0", base.Add(2*time.Hour), model.StatusActive, false)
+
+		runHeal(t)
+
+		_, isLatest := versionState(t, name, "1.0.1")
+		assert.True(t, isLatest, "1.0.1 should win on semver despite 1.0.0 being published more recently")
+		_, isLatest = versionState(t, name, "1.0.0")
+		assert.False(t, isLatest)
+	})
+
+	t.Run("no is_latest row at all gets healed", func(t *testing.T) {
+		// Defensive case: nothing flagged latest, but active versions exist.
+		name := "io.test/no-latest-flag"
+		base := time.Now().Add(-10 * time.Hour)
+		createVersion(t, name, "1.0.0", base, model.StatusActive, false)
+		createVersion(t, name, "1.1.0", base.Add(1*time.Hour), model.StatusActive, false)
+
+		runHeal(t)
+
+		_, isLatest := versionState(t, name, "1.1.0")
+		assert.True(t, isLatest)
+		_, isLatest = versionState(t, name, "1.0.0")
+		assert.False(t, isLatest)
+	})
+
+	t.Run("all-deleted server is left untouched", func(t *testing.T) {
+		// No non-deleted version → nothing to promote, leave existing flags alone so the
+		// server remains addressable via includeDeleted=true admin lookups.
+		name := "io.test/all-deleted"
+		base := time.Now().Add(-10 * time.Hour)
+		createVersion(t, name, "1.0.0", base, model.StatusDeleted, true)
+		createVersion(t, name, "2.0.0", base.Add(1*time.Hour), model.StatusDeleted, false)
+
+		runHeal(t)
+
+		_, isLatest := versionState(t, name, "1.0.0")
+		assert.True(t, isLatest, "all-deleted server should keep its existing latest flag")
+		_, isLatest = versionState(t, name, "2.0.0")
+		assert.False(t, isLatest)
+	})
+
+	t.Run("healthy server is left untouched", func(t *testing.T) {
+		name := "io.test/healthy"
+		base := time.Now().Add(-10 * time.Hour)
+		createVersion(t, name, "1.0.0", base, model.StatusActive, false)
+		createVersion(t, name, "2.0.0", base.Add(1*time.Hour), model.StatusActive, true)
+
+		runHeal(t)
+
+		_, isLatest := versionState(t, name, "2.0.0")
+		assert.True(t, isLatest)
+		_, isLatest = versionState(t, name, "1.0.0")
+		assert.False(t, isLatest)
+	})
+
+	t.Run("non-semver versions fall back to published_at", func(t *testing.T) {
+		name := "io.test/non-semver"
+		base := time.Now().Add(-10 * time.Hour)
+		createVersion(t, name, "rolling", base, model.StatusDeleted, true)
+		createVersion(t, name, "build-100", base.Add(1*time.Hour), model.StatusActive, false)
+		createVersion(t, name, "build-200", base.Add(2*time.Hour), model.StatusActive, false)
+
+		runHeal(t)
+
+		_, isLatest := versionState(t, name, "build-200")
+		assert.True(t, isLatest, "without semver, most recently published wins")
 	})
 }
 

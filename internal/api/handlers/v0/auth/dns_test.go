@@ -546,7 +546,7 @@ func TestDNSAuthHandler_ExchangeToken_ECDSAP384(t *testing.T) {
 			timestamp:       time.Now().UTC().Format(time.RFC3339),
 			signedTimestamp: "abcdef1234", // too short for ECDSA P-384
 			expectError:     true,
-			errorContains:   "signature verification failed", // general error when trying all keys
+			errorContains:   "invalid signature size for ECDSA P-384",
 		},
 		{
 			name:      "wrong ECDSA P-384 key for signature",
@@ -989,4 +989,101 @@ func TestDNSAuthHandler_Mixed_Algorithm_Support(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotNil(t, result)
 	})
+}
+
+// TestDNSAuthHandler_WrongSelectorProbe covers the case where the user mistakenly placed
+// the MCPv1 TXT record under a selector (e.g. _mcp-auth.<domain>) instead of the apex,
+// which has been a recurring source of confusion (#385, #1103, #1126).
+func TestDNSAuthHandler_WrongSelectorProbe(t *testing.T) {
+	cfg := &config.Config{
+		JWTPrivateKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+	}
+
+	publicKey, _, err := ed25519.GenerateKey(nil)
+	require.NoError(t, err)
+	publicKeyB64 := base64.StdEncoding.EncodeToString(publicKey)
+	mcpRecord := fmt.Sprintf("v=MCPv1; k=ed25519; p=%s", publicKeyB64)
+
+	tests := []struct {
+		name          string
+		txtRecords    map[string][]string
+		expectInError string
+	}{
+		{
+			name: "record placed at _mcp-auth selector",
+			txtRecords: map[string][]string{
+				"_mcp-auth." + testDomain: {mcpRecord},
+			},
+			expectInError: "_mcp-auth." + testDomain,
+		},
+		{
+			name: "record placed at _mcp-registry selector",
+			txtRecords: map[string][]string{
+				"_mcp-registry." + testDomain: {mcpRecord},
+			},
+			expectInError: "_mcp-registry." + testDomain,
+		},
+		{
+			name: "no record anywhere falls through to standard error",
+			txtRecords: map[string][]string{
+				testDomain: {"v=spf1 ~all"},
+			},
+			expectInError: "no MCP public key found in DNS TXT records",
+		},
+		{
+			name: "malformed MCPv1 string at apex still triggers selector probe",
+			txtRecords: map[string][]string{
+				// Looks like an MCPv1 record but missing the public key field.
+				testDomain:                {"v=MCPv1; k=ed25519"},
+				"_mcp-auth." + testDomain: {mcpRecord},
+			},
+			expectInError: "_mcp-auth." + testDomain,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			handler := auth.NewDNSAuthHandler(cfg)
+			handler.SetResolver(&MockDNSResolver{txtRecords: tt.txtRecords})
+
+			timestamp := time.Now().UTC().Format(time.RFC3339)
+			_, err := handler.ExchangeToken(context.Background(), testDomain, timestamp, hex.EncodeToString(make([]byte, 64)))
+
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.expectInError)
+		})
+	}
+}
+
+// TestDNSAuthHandler_StaleKeyFingerprintInError covers #1126: when only one apex record is
+// published and it doesn't match the key being signed with (the typical "rotated and forgot
+// to update DNS" failure), the error message should include a fingerprint of the published
+// key so the user can tell their CLI is signing with a different key than what's published.
+func TestDNSAuthHandler_StaleKeyFingerprintInError(t *testing.T) {
+	cfg := &config.Config{
+		JWTPrivateKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+	}
+
+	stalePublicKey, _, err := ed25519.GenerateKey(nil)
+	require.NoError(t, err)
+	stalePublicKeyB64 := base64.StdEncoding.EncodeToString(stalePublicKey)
+
+	_, currentPrivateKey, err := ed25519.GenerateKey(nil)
+	require.NoError(t, err)
+
+	handler := auth.NewDNSAuthHandler(cfg)
+	handler.SetResolver(&MockDNSResolver{
+		txtRecords: map[string][]string{
+			testDomain: {fmt.Sprintf("v=MCPv1; k=ed25519; p=%s", stalePublicKeyB64)},
+		},
+	})
+
+	timestamp := time.Now().UTC().Format(time.RFC3339)
+	signature := ed25519.Sign(currentPrivateKey, []byte(timestamp))
+	_, err = handler.ExchangeToken(context.Background(), testDomain, timestamp, hex.EncodeToString(signature))
+
+	require.Error(t, err)
+	expectedFingerprint := "ed25519:" + stalePublicKeyB64[:8]
+	assert.Contains(t, err.Error(), expectedFingerprint, "error should expose the published key's fingerprint")
+	assert.Contains(t, err.Error(), "stale", "error should hint at the stale-record cause")
 }

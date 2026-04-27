@@ -62,10 +62,6 @@ func (p *NoneProvider) GetToken(ctx context.Context) (string, error) {
 	return p.token, nil
 }
 
-func (p *NoneProvider) NeedsLogin() bool {
-	return false
-}
-
 func (p *NoneProvider) Login(_ context.Context) error {
 	// No login needed for anonymous auth
 	return nil

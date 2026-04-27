@@ -27,7 +27,10 @@ func InitCommand() error {
 	// Try to detect values from environment
 	name := detectServerName(subfolder)
 	description := detectDescription()
-	version := "1.0.0"
+	version := getVersionFromPackageJSON()
+	if version == "" {
+		version = "1.0.0"
+	}
 	repoURL := detectRepoURL()
 	repoSource := MethodGitHub
 	if repoURL != "" && !strings.Contains(repoURL, "github.com") {
@@ -129,6 +132,26 @@ func detectSubfolder() string {
 	return filepath.ToSlash(relPath)
 }
 
+// getMcpNameFromPackageJSON returns the `mcpName` field from package.json, or
+// "" if not set. mcpName is the authoritative MCP server name when present —
+// see docs/modelcontextprotocol-io/quickstart.mdx.
+func getMcpNameFromPackageJSON() string {
+	data, err := os.ReadFile("package.json")
+	if err != nil {
+		return ""
+	}
+
+	var pkg map[string]any
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return ""
+	}
+
+	if mcpName, ok := pkg["mcpName"].(string); ok && mcpName != "" {
+		return mcpName
+	}
+	return ""
+}
+
 func getNameFromPackageJSON() string {
 	data, err := os.ReadFile("package.json")
 	if err != nil {
@@ -146,7 +169,7 @@ func getNameFromPackageJSON() string {
 	}
 
 	// Convert npm package name to MCP server name
-	// @org/package -> io.npm.org/package
+	// @org/package -> io.github.org/package
 	if strings.HasPrefix(name, "@") {
 		parts := strings.Split(name[1:], "/")
 		if len(parts) == 2 {
@@ -156,7 +179,33 @@ func getNameFromPackageJSON() string {
 	return fmt.Sprintf("io.github.<your-username>/%s", name)
 }
 
+func getVersionFromPackageJSON() string {
+	data, err := os.ReadFile("package.json")
+	if err != nil {
+		return ""
+	}
+
+	var pkg map[string]any
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return ""
+	}
+
+	version, ok := pkg["version"].(string)
+	if !ok || version == "" {
+		return ""
+	}
+
+	return version
+}
+
 func detectServerName(subfolder string) string {
+	// mcpName in package.json is the authoritative server name when set, so it
+	// takes precedence over names inferred from the git remote or the npm
+	// `name` field.
+	if name := getMcpNameFromPackageJSON(); name != "" {
+		return name
+	}
+
 	// Try to get from git remote
 	repoURL := detectRepoURL()
 	if repoURL != "" && strings.Contains(repoURL, "github.com") {
@@ -246,7 +295,7 @@ func detectRepoURL() string {
 		}
 	}
 
-	return "https://github.com/YOUR_USERNAME/YOUR_REPO"
+	return ""
 }
 
 func detectPackageType() string {
