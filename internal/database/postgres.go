@@ -45,9 +45,13 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 		return nil, fmt.Errorf("failed to parse PostgreSQL config: %w", err)
 	}
 
-	// Configure pool for stability-focused defaults
-	config.MaxConns = 30                      // Handle good concurrent load
-	config.MinConns = 5                       // Keep connections warm for fast response
+	// Configure pool for stability-focused defaults.
+	// MaxConns was 30 per pod (60 total across 2 replicas) which saturated under
+	// the 2026-04-28 scraper bursts (15 req/s on /v0/servers caused queue blowup
+	// even though individual queries were fast). 60 per pod gives 120 total,
+	// leaving 80 of PG max_connections=200 for autovacuum/admin/headroom.
+	config.MaxConns = 60                      // Handle scraper-burst concurrent load
+	config.MinConns = 10                      // Keep connections warm for fast response
 	config.MaxConnIdleTime = 30 * time.Minute // Keep connections available for bursts
 	config.MaxConnLifetime = 2 * time.Hour    // Refresh connections regularly for stability
 
