@@ -1150,6 +1150,104 @@ func TestPostgreSQL_PerformanceScenarios(t *testing.T) {
 		// Should have retrieved all servers including the ones we just created
 		assert.GreaterOrEqual(t, len(allResults), serverCount)
 	})
+
+	t.Run("compound cursor across versions of same server", func(t *testing.T) {
+		// Insert multiple versions of two servers so cursor pagination has to
+		// correctly seek across the (server_name, version) boundary. This is the
+		// case that the row-constructor cursor predicate `(server_name, version) > ($1, $2)`
+		// has to handle — the OR-decomposed form had the same semantics but a
+		// linear-scan plan; this test pins the semantic behaviour so a future
+		// rewrite can't silently break it.
+		serverA := "com.example/cursor-test-a"
+		serverB := "com.example/cursor-test-b"
+		versionsA := []string{"1.0.0", "2.0.0", "3.0.0"}
+		versionsB := []string{"1.0.0", "2.0.0"}
+
+		// First mark the latest version of each as latest=true; older ones false
+		// so the pkey + uniqueness constraints are satisfied.
+		mkServer := func(name, version string, isLatest bool) {
+			_, err := db.CreateServer(ctx, nil, &apiv0.ServerJSON{
+				Name: name, Description: "compound cursor test", Version: version,
+			}, &apiv0.RegistryExtensions{
+				Status:          model.StatusActive,
+				StatusChangedAt: timeNow, PublishedAt: timeNow, UpdatedAt: timeNow,
+				IsLatest: isLatest,
+			})
+			require.NoError(t, err)
+		}
+		for i, v := range versionsA {
+			mkServer(serverA, v, i == len(versionsA)-1)
+		}
+		for i, v := range versionsB {
+			mkServer(serverB, v, i == len(versionsB)-1)
+		}
+
+		// Filter to just the two servers we just created so unrelated rows in the
+		// shared test DB don't bleed in.
+		filterTo := func(rs []*apiv0.ServerResponse) []*apiv0.ServerResponse {
+			out := make([]*apiv0.ServerResponse, 0, len(rs))
+			for _, r := range rs {
+				if r.Server.Name == serverA || r.Server.Name == serverB {
+					out = append(out, r)
+				}
+			}
+			return out
+		}
+
+		// Cursor at (serverA, "1.0.0") must skip 1.0.0 and return 2.0.0, 3.0.0,
+		// then both versions of serverB. Specifically tests the compound predicate:
+		// without it, the OR form would still skip 1.0.0 correctly but the version
+		// boundary of (serverA, "3.0.0") → (serverB, "1.0.0") is what depends on
+		// the second-column comparison.
+		results, _, err := db.ListServers(ctx, nil, nil, serverA+":1.0.0", 100)
+		require.NoError(t, err)
+		got := filterTo(results)
+		require.Len(t, got, 4, "expected 4 rows after cursor at A:1.0.0")
+		assert.Equal(t, serverA, got[0].Server.Name)
+		assert.Equal(t, "2.0.0", got[0].Server.Version)
+		assert.Equal(t, serverA, got[1].Server.Name)
+		assert.Equal(t, "3.0.0", got[1].Server.Version)
+		assert.Equal(t, serverB, got[2].Server.Name)
+		assert.Equal(t, "1.0.0", got[2].Server.Version)
+		assert.Equal(t, serverB, got[3].Server.Name)
+		assert.Equal(t, "2.0.0", got[3].Server.Version)
+
+		// Cursor at the *last* version of serverA must cross the server boundary
+		// and return serverB rows only.
+		results, _, err = db.ListServers(ctx, nil, nil, serverA+":3.0.0", 100)
+		require.NoError(t, err)
+		got = filterTo(results)
+		require.Len(t, got, 2, "expected 2 rows after cursor at A:3.0.0")
+		assert.Equal(t, serverB, got[0].Server.Name)
+		assert.Equal(t, "1.0.0", got[0].Server.Version)
+		assert.Equal(t, serverB, got[1].Server.Name)
+		assert.Equal(t, "2.0.0", got[1].Server.Version)
+
+		// Page-by-page traversal with size=2 must produce the same global ordering
+		// (A 1.0.0, A 2.0.0, A 3.0.0, B 1.0.0, B 2.0.0).
+		var paged []*apiv0.ServerResponse
+		cursor := ""
+		for {
+			rs, next, err := db.ListServers(ctx, nil,
+				&database.ServerFilter{SubstringName: stringPtr("cursor-test-")},
+				cursor, 2)
+			require.NoError(t, err)
+			paged = append(paged, rs...)
+			if next == "" || len(rs) < 2 {
+				break
+			}
+			cursor = next
+		}
+		require.Len(t, paged, 5)
+		want := []struct{ name, version string }{
+			{serverA, "1.0.0"}, {serverA, "2.0.0"}, {serverA, "3.0.0"},
+			{serverB, "1.0.0"}, {serverB, "2.0.0"},
+		}
+		for i, w := range want {
+			assert.Equal(t, w.name, paged[i].Server.Name, "row %d name", i)
+			assert.Equal(t, w.version, paged[i].Server.Version, "row %d version", i)
+		}
+	})
 }
 
 func TestPostgreSQL_NewStatusFields(t *testing.T) {

@@ -127,7 +127,16 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 	return conditions, args, argIndex
 }
 
-// addCursorCondition adds pagination cursor condition to WHERE clause
+// addCursorCondition adds pagination cursor condition to WHERE clause.
+//
+// The compound cursor uses a row-constructor comparison so PostgreSQL can seek
+// directly into the (server_name, version) B-tree index. The OR-decomposed form
+// `server_name > X OR (server_name = X AND version > Y)` is logically equivalent
+// but PostgreSQL's planner cannot use it for an index seek — it scans the index
+// from the start and filters everything before the cursor, making cost grow
+// linearly with cursor depth (a 20K-row table at a deep cursor took ~760ms in
+// prod). The row-constructor form `(server_name, version) > (X, Y)` is special-
+// cased and stays constant-time regardless of cursor depth.
 func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 	if cursor == "" {
 		return "", nil, argIndex
@@ -138,9 +147,8 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 	if len(parts) == 2 {
 		cursorServerName := parts[0]
 		cursorVersion := parts[1]
-		// Use compound condition: (server_name > cursor_name) OR (server_name = cursor_name AND version > cursor_version)
-		condition := fmt.Sprintf("(server_name > $%d OR (server_name = $%d AND version > $%d))", argIndex, argIndex+1, argIndex+2)
-		return condition, []any{cursorServerName, cursorServerName, cursorVersion}, argIndex + 3
+		condition := fmt.Sprintf("(server_name, version) > ($%d, $%d)", argIndex, argIndex+1)
+		return condition, []any{cursorServerName, cursorVersion}, argIndex + 2
 	}
 
 	// Fallback for malformed cursor - treat as server name only for backwards compatibility
