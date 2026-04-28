@@ -303,7 +303,6 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 	// Check each remote URL in the new server for conflicts
 	for _, remote := range serverDetail.Remotes {
 		// Use filter to find servers with this remote URL
-		
 		filter := &database.ServerFilter{RemoteURL: &remote.URL}
 
 		conflictingServers, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
