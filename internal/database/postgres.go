@@ -96,7 +96,15 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		argIndex++
 	}
 	if filter.RemoteURL != nil {
-		conditions = append(conditions, fmt.Sprintf("EXISTS (SELECT 1 FROM jsonb_array_elements(value->'remotes') AS remote WHERE remote->>'url' = $%d)", argIndex))
+		// Use a JSONB containment predicate so the planner can use the GIN index
+		// idx_servers_json_remotes on (value -> 'remotes'). The previously-used
+		// EXISTS / jsonb_array_elements / ->> form is logically equivalent but
+		// the planner can't translate the per-row array unfolding into a GIN
+		// search — it falls back to scanning every row. validateNoDuplicateRemoteURLs
+		// in the publish path ran this filter and was measured at ~10s on prod's
+		// 21K-row table on 2026-04-28; the containment form is GIN-indexable and
+		// completes in low single-digit ms.
+		conditions = append(conditions, fmt.Sprintf("value -> 'remotes' @> jsonb_build_array(jsonb_build_object('url', $%d::text))", argIndex))
 		args = append(args, *filter.RemoteURL)
 		argIndex++
 	}
