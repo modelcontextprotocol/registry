@@ -298,13 +298,13 @@ func pickLatestVersion(versions []*apiv0.ServerResponse, allowDeleted bool) *api
 	return winner
 }
 
-// validateNoDuplicateRemoteURLs checks that no non-deleted server is using the same remote URLs
+// validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
 func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, tx pgx.Tx, serverDetail apiv0.ServerJSON) error {
 	// Check each remote URL in the new server for conflicts
 	for _, remote := range serverDetail.Remotes {
-		// Use a filter that only returns non-deleted servers with this remote URL
-		includeDeleted := false
-		filter := &database.ServerFilter{RemoteURL: &remote.URL, IncludeDeleted: &includeDeleted}
+		// Use filter to find servers with this remote URL
+		
+		filter := &database.ServerFilter{RemoteURL: &remote.URL}
 
 		conflictingServers, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
 		if err != nil {
@@ -446,7 +446,7 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 	if statusChange.NewStatus == model.StatusActive {
 		includeDeleted := true
 
-		// Include deleted versions so we can revalidate any currently deleted versions before restoring them to active.
+		// When transitioning to active, it means the current status is either deprecated or deleted, so it should include deleted server also
 		filter := &database.ServerFilter{Name: &serverName, IncludeDeleted: &includeDeleted}
 		versions, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
 		if err != nil {
