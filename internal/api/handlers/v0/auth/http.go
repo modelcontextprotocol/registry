@@ -76,14 +76,28 @@ func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error
 		return nil, err
 	}
 
+	// Try each non-blocked address in order, falling through on dial failure.
+	// Without this, a stale public AAAA record that no longer routes (or any
+	// individually-unreachable IP) breaks auth where the default transport
+	// would have recovered by trying the next answer.
 	var d net.Dialer
+	var lastErr error
+	allBlocked := true
 	for _, ip := range ips {
 		if isBlockedIP(ip.IP) {
 			continue
 		}
-		return d.DialContext(ctx, network, net.JoinHostPort(ip.IP.String(), port))
+		allBlocked = false
+		conn, dialErr := d.DialContext(ctx, network, net.JoinHostPort(ip.IP.String(), port))
+		if dialErr == nil {
+			return conn, nil
+		}
+		lastErr = dialErr
 	}
-	return nil, fmt.Errorf("dial %s: refusing to connect to private or loopback address", host)
+	if allBlocked {
+		return nil, fmt.Errorf("dial %s: refusing to connect to private or loopback address", host)
+	}
+	return nil, fmt.Errorf("dial %s: all resolved public addresses failed: %w", host, lastErr)
 }
 
 // isBlockedIP reports whether an IP must not be dialled by the namespace
