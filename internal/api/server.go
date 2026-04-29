@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -71,9 +72,11 @@ func TrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only redirect if the path is not "/" and ends with a "/"
 		if r.URL.Path != "/" && strings.HasSuffix(r.URL.Path, "/") {
-			// Create a copy of the URL and remove the trailing slash
+			// path.Clean both removes the trailing slash and collapses any
+			// leading "//" to "/", which prevents an open-redirect via a
+			// protocol-relative path like "//evil.com/" (GHSA-v8vw-gw5j-w7m6).
 			newURL := *r.URL
-			newURL.Path = strings.TrimSuffix(r.URL.Path, "/")
+			newURL.Path = path.Clean(r.URL.Path)
 
 			// Use 308 Permanent Redirect to preserve the request method
 			http.Redirect(w, r, newURL.String(), http.StatusPermanentRedirect)
