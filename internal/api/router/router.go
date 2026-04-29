@@ -196,12 +196,17 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 			w.Header().Set("X-Frame-Options", "DENY")
+			// connect-src is unrestricted because the UI exposes a base-URL
+			// selector (prod / staging / custom) that issues cross-origin
+			// XHRs to whichever target the operator picks. Constraining
+			// connect-src would silently break that affordance. The other
+			// directives still meaningfully limit the page's attack surface.
 			w.Header().Set("Content-Security-Policy",
 				"default-src 'self'; "+
 					"script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "+
 					"style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "+
 					"img-src 'self' data:; "+
-					"connect-src 'self'; "+
+					"connect-src *; "+
 					"frame-ancestors 'none'; "+
 					"base-uri 'self'; "+
 					"form-action 'self'")
