@@ -59,6 +59,21 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 				"storage": map[string]any{
 					"size": "50Gi",
 				},
+				// Explicit resource budget. PG was previously unlimited which made
+				// node-level OOM behaviour unpredictable. With max_connections=200
+				// the worst-case per-connection memory (~10–15MB each) plus
+				// shared_buffers and overhead lands around 3–4GiB; 4Gi limit gives
+				// headroom for query workspaces (work_mem) and OS-level effects.
+				"resources": map[string]any{
+					"requests": map[string]any{
+						"memory": "512Mi",
+						"cpu":    "200m",
+					},
+					"limits": map[string]any{
+						"memory": "4Gi",
+						"cpu":    "1500m",
+					},
+				},
 				// Enable pg_stat_statements so we can attribute slow time to specific
 				// queries (the 2026-04-27 incident took an EXPLAIN-the-one-query-I-saw
 				// approach because we had no aggregate visibility). CNPG triggers a PG
@@ -66,10 +81,16 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 				// is brief downtime. CREATE EXTENSION still needs to run once as a
 				// superuser on existing clusters; new clusters get it via the
 				// postInitApplicationSQL hook below.
+				//
+				// max_connections raised from default 100 to 200 because the registry
+				// pgxpool was bumped from 30 to 60 per pod (120 total across 2 pods)
+				// + ~10 reserved for PG internals and ad-hoc admin = 130, with 70
+				// headroom for future scale or burst.
 				"postgresql": map[string]any{
 					"shared_preload_libraries": []any{"pg_stat_statements"},
 					"parameters": map[string]any{
 						"pg_stat_statements.track": "all",
+						"max_connections":          "200",
 					},
 				},
 				"bootstrap": map[string]any{
