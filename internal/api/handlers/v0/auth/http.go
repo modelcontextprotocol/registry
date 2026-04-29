@@ -100,17 +100,27 @@ func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error
 	return nil, fmt.Errorf("dial %s: all resolved public addresses failed: %w", host, lastErr)
 }
 
+// cgnatRange covers RFC 6598 Carrier-Grade NAT (100.64.0.0/10), which the
+// stdlib does not classify via any Is* helper but is reachable on some
+// cloud / mobile networks where it shadows internal infrastructure.
+var cgnatRange = func() *net.IPNet {
+	_, n, _ := net.ParseCIDR("100.64.0.0/10")
+	return n
+}()
+
 // isBlockedIP reports whether an IP must not be dialled by the namespace
 // verification fetcher. Covers loopback (127/8, ::1), RFC1918 + ULA via
 // IsPrivate, link-local (169.254/16, fe80::/10 — includes cloud metadata
-// 169.254.169.254), and unspecified (0.0.0.0, ::).
+// 169.254.169.254), unspecified (0.0.0.0, ::), all multicast (admin-scoped
+// 239/8 and ff00::/8 in addition to link-local-multicast), and CGNAT.
 func isBlockedIP(ip net.IP) bool {
 	if ip == nil {
 		return true
 	}
 	return ip.IsLoopback() || ip.IsPrivate() ||
-		ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
-		ip.IsUnspecified()
+		ip.IsLinkLocalUnicast() || ip.IsMulticast() ||
+		ip.IsUnspecified() ||
+		cgnatRange.Contains(ip)
 }
 
 // NewDefaultHTTPKeyFetcherWithClient creates a new HTTP key fetcher with a custom HTTP client.

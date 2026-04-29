@@ -24,10 +24,19 @@ func TestIsBlockedIP(t *testing.T) {
 		// Blocked — unspecified
 		{"0.0.0.0", true},
 		{"::", true},
+		// Blocked — admin-scoped and broader multicast
+		{"239.0.0.1", true},
+		{"ff00::1", true},
+		// Blocked — Carrier-Grade NAT (RFC 6598)
+		{"100.64.0.1", true},
+		{"100.127.255.254", true},
 		// Allowed — public
 		{"1.1.1.1", false},
 		{"8.8.8.8", false},
 		{"2606:4700:4700::1111", false},
+		// Allowed — outside CGNAT range
+		{"100.63.255.255", false},
+		{"100.128.0.1", false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.ip, func(t *testing.T) {
