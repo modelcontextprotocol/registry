@@ -80,7 +80,13 @@ func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error
 	// Without this, a stale public AAAA record that no longer routes (or any
 	// individually-unreachable IP) breaks auth where the default transport
 	// would have recovered by trying the next answer.
-	var d net.Dialer
+	//
+	// Each attempt is bounded by perIPDialTimeout so that a single hanging
+	// address can't consume the whole http.Client budget. This is a
+	// simpler substitute for Happy Eyeballs (parallel A/AAAA racing) — we
+	// fail fast and try the next answer instead of racing them.
+	const perIPDialTimeout = 3 * time.Second
+
 	var lastErr error
 	allBlocked := true
 	for _, ip := range ips {
@@ -88,7 +94,10 @@ func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error
 			continue
 		}
 		allBlocked = false
-		conn, dialErr := d.DialContext(ctx, network, net.JoinHostPort(ip.IP.String(), port))
+		dialCtx, cancel := context.WithTimeout(ctx, perIPDialTimeout)
+		var d net.Dialer
+		conn, dialErr := d.DialContext(dialCtx, network, net.JoinHostPort(ip.IP.String(), port))
+		cancel()
 		if dialErr == nil {
 			return conn, nil
 		}
