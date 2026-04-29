@@ -54,8 +54,17 @@ func ValidateMCPB(ctx context.Context, pkg model.Package, _ string) error {
 		return fmt.Errorf("MCPB package URL must contain 'mcp': %s", pkg.Identifier)
 	}
 
-	// Verify the file exists and is publicly accessible
-	client := &http.Client{Timeout: 10 * time.Second}
+	// Verify the file exists and is publicly accessible. Refuse to follow
+	// redirects: the URL allowlist (github.com / gitlab.com) only constrains
+	// the FIRST hop, and a 30x bouncing through CDN/release-asset hosts
+	// could otherwise be steered toward attacker infrastructure or
+	// internal-only endpoints reached via DNS quirks.
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, pkg.Identifier, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -69,7 +78,15 @@ func ValidateMCPB(ctx context.Context, pkg model.Package, _ string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	// GitHub serves release assets via a 302 to a signed S3 URL; a HEAD that
+	// returns 200 directly OR a 302 with a Location header is acceptable.
+	// Any other 3xx without a usable Location is treated as inaccessible.
+	switch {
+	case resp.StatusCode == http.StatusOK:
+		// fine
+	case resp.StatusCode >= 300 && resp.StatusCode < 400 && resp.Header.Get("Location") != "":
+		// fine — first-hop allowlist + we don't actually need the body
+	default:
 		return fmt.Errorf("MCPB package '%s' is not publicly accessible (status: %d)", pkg.Identifier, resp.StatusCode)
 	}
 
