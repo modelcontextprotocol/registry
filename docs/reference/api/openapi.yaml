@@ -659,13 +659,14 @@ components:
       properties:
         registryType:
           type: string
-          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')
+          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb', 'maven')
           examples:
             - "npm"
             - "pypi"
             - "oci"
             - "nuget"
             - "mcpb"
+            - "maven"
         registryBaseUrl:
           type: string
           format: uri
@@ -675,6 +676,7 @@ components:
             - "https://pypi.org"
             - "https://docker.io"
             - "https://api.nuget.org/v3/index.json"
+            - "https://repo.maven.apache.org/maven2"
             - "https://github.com"
             - "https://gitlab.com"
         identifier:
@@ -698,7 +700,7 @@ components:
         runtimeHint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.
-          examples: [npx, uvx, docker, dnx]
+          examples: [npx, uvx, docker, dnx, jbang]
         transport:
           $ref: '#/components/schemas/LocalTransport'
           description: Transport protocol configuration for the package
