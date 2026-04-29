@@ -118,8 +118,13 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		argIndex++
 	}
 	if filter.SubstringName != nil {
-		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d", argIndex))
-		args = append(args, "%"+*filter.SubstringName+"%")
+		// Escape LIKE metacharacters so that user input cannot expand into
+		// wildcard matches (e.g. `?search=_` matching every single-char name,
+		// `?search=%` matching everything). Order matters: backslashes must be
+		// escaped first so subsequent escape backslashes are not double-escaped.
+		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(*filter.SubstringName)
+		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", argIndex))
+		args = append(args, "%"+escaped+"%")
 		argIndex++
 	}
 	if filter.Version != nil {
