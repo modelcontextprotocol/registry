@@ -155,5 +155,22 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.getcyphrex/cyphrex-mcp",
+    "title": "Cyphrex",
+    "description": "Blockchain SSN for AI agents. MCP-native identity, behavior enforcement, and immutable audit trail.",
+    "repository": {
+      "url": "https://github.com/getcyphrex/cyphrex-mcp",
+      "source": "github"
+    },
+    "version": "0.1.0",
+    "remotes": [
+      {
+        "type": "streamable-http",
+        "url": "https://mcp.cyphrex.io/mcp"
+      }
+    ]
   }
 ]
