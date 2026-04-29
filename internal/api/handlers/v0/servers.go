@@ -186,7 +186,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			log.Printf("get server details (%s/%s) failed: %v", serverName, version, err)
+			log.Printf("get server details (%q/%q) failed: %v", serverName, version, err)
 			return nil, huma.Error500InternalServerError("Failed to get server details")
 		}
 
@@ -216,7 +216,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			log.Printf("get server versions (%s) failed: %v", serverName, err)
+			log.Printf("get server versions (%q) failed: %v", serverName, err)
 			return nil, huma.Error500InternalServerError("Failed to get server versions")
 		}
 

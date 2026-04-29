@@ -75,7 +75,7 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			log.Printf("edit: get current server (%s/%s) failed: %v", serverName, version, err)
+			log.Printf("edit: get current server (%q/%q) failed: %v", serverName, version, err)
 			return nil, huma.Error500InternalServerError("Failed to get current server")
 		}
 
