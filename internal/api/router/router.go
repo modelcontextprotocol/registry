@@ -97,6 +97,7 @@ func WithSkipPaths(paths ...string) MiddlewareOption {
 // handle404 returns a helpful 404 error with suggestions for common mistakes
 func handle404(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/problem+json")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(http.StatusNotFound)
 
 	path := r.URL.Path
