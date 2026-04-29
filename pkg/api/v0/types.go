@@ -39,7 +39,7 @@ type ServerJSON struct {
 	Description string            `json:"description" minLength:"1" maxLength:"100" doc:"Clear human-readable explanation of server functionality." example:"MCP server providing weather data and forecasts via OpenWeatherMap API"`
 	Title       string            `json:"title,omitempty" minLength:"1" maxLength:"100" doc:"Optional human-readable title or display name for the MCP server." example:"Weather API"`
 	Repository  *model.Repository `json:"repository,omitempty" doc:"Optional repository metadata for the MCP server source code."`
-	Version     string            `json:"version" doc:"Version string for this server. SHOULD follow semantic versioning." example:"1.0.2"`
+	Version     string            `json:"version" minLength:"1" maxLength:"255" doc:"Version string for this server. SHOULD follow semantic versioning." example:"1.0.2"`
 	WebsiteURL  string            `json:"websiteUrl,omitempty" format:"uri" doc:"Optional URL to the server's homepage, documentation, or project website." example:"https://modelcontextprotocol.io/examples"`
 	Icons       []model.Icon      `json:"icons,omitempty" doc:"Optional set of sized icons that the client can display in a user interface."`
 	Packages    []model.Package   `json:"packages,omitempty" doc:"Array of package configurations"`

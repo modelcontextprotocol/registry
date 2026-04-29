@@ -688,6 +688,7 @@ components:
           description: "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')."
           example: "1.0.2"
           minLength: 1
+          maxLength: 255
           not:
             const: "latest"
         fileSha256:
