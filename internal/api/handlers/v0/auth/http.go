@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -34,6 +35,9 @@ type DefaultHTTPKeyFetcher struct {
 
 // NewDefaultHTTPKeyFetcher creates a new HTTP key fetcher with timeout
 func NewDefaultHTTPKeyFetcher() *DefaultHTTPKeyFetcher {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialContext = safeDialContext
+
 	return &DefaultHTTPKeyFetcher{
 		client: &http.Client{
 			Timeout: 10 * time.Second,
@@ -42,8 +46,57 @@ func NewDefaultHTTPKeyFetcher() *DefaultHTTPKeyFetcher {
 			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
+			Transport: transport,
 		},
 	}
+}
+
+// safeDialContext resolves the target hostname and refuses to dial loopback,
+// private (RFC1918, ULA), link-local, or unspecified addresses. Combined with
+// IsValidDomain rejecting IP literals, this neutralises SSRF abuse of the
+// well-known fetcher: an attacker cannot reach internal HTTPS services
+// (Kubernetes API server, internal admin panels, internal DNS-resolved hosts)
+// even if they control DNS for an attacker domain.
+//
+// The hostname is resolved once here; we then dial the resolved IP directly,
+// which pins the connection against DNS rebinding (a TOCTOU where the resolver
+// returns a public IP to a pre-flight check and an internal IP to the actual
+// dial). TLS SNI and the Host header continue to use the original hostname
+// since they are set by http.Transport from the request URL, not the dial
+// address.
+func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return nil, err
+	}
+
+	var resolver net.Resolver
+	ips, err := resolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return nil, err
+	}
+
+	var d net.Dialer
+	for _, ip := range ips {
+		if isBlockedIP(ip.IP) {
+			continue
+		}
+		return d.DialContext(ctx, network, net.JoinHostPort(ip.IP.String(), port))
+	}
+	return nil, fmt.Errorf("dial %s: refusing to connect to private or loopback address", host)
+}
+
+// isBlockedIP reports whether an IP must not be dialled by the namespace
+// verification fetcher. Covers loopback (127/8, ::1), RFC1918 + ULA via
+// IsPrivate, link-local (169.254/16, fe80::/10 — includes cloud metadata
+// 169.254.169.254), and unspecified (0.0.0.0, ::).
+func isBlockedIP(ip net.IP) bool {
+	if ip == nil {
+		return true
+	}
+	return ip.IsLoopback() || ip.IsPrivate() ||
+		ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() ||
+		ip.IsUnspecified()
 }
 
 // NewDefaultHTTPKeyFetcherWithClient creates a new HTTP key fetcher with a custom HTTP client.

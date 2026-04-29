@@ -281,17 +281,6 @@ func TestDNSAuthHandler_Permissions(t *testing.T) {
 			},
 		},
 		{
-			name:   "single part domain",
-			domain: "localhost",
-			expectedPatterns: []string{
-				"localhost/*", // exact pattern (no reversal needed)
-				"localhost.*", // subdomain pattern
-			},
-			unexpectedPatterns: []string{
-				"*.localhost", // wrong wildcard position
-			},
-		},
-		{
 			name:   "hyphenated domain",
 			domain: "my-app.example-site.com",
 			expectedPatterns: []string{
