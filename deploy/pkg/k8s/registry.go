@@ -185,6 +185,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									Name:  pulumi.String("MCP_REGISTRY_OIDC_PUBLISH_PERMISSIONS"),
 									Value: pulumi.String("*"),
 								},
+								&corev1.EnvVarArgs{
+									Name: pulumi.String("MCP_REGISTRY_GITHUB_OIDC_AUDIENCE"),
+									Value: pulumi.String(func() string {
+										if environment == "prod" {
+											return "https://registry.modelcontextprotocol.io"
+										}
+										return "https://" + environment + ".registry.modelcontextprotocol.io"
+									}()),
+								},
 							},
 							// StartupProbe protects the DB-retry budget in cmd/registry/main.go:
 							// 30 × 5s = 150s allowed before liveness/readiness take over, which
