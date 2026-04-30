@@ -26,7 +26,8 @@ func (m *MockOIDCValidator) ValidateToken(ctx context.Context, token string, aud
 
 func TestGitHubOIDCHandler_ExchangeToken(t *testing.T) {
 	cfg := &config.Config{
-		JWTPrivateKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", // 32 bytes hex
+		JWTPrivateKey:      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", // 32 bytes hex
+		GitHubOIDCAudience: "https://registry.test",
 	}
 
 	handler := auth.NewGitHubOIDCHandler(cfg)
@@ -118,9 +119,82 @@ func TestGitHubOIDCHandler_ExchangeToken(t *testing.T) {
 	}
 }
 
+func TestGitHubOIDCHandler_AudienceBinding(t *testing.T) {
+	t.Run("empty audience config fails closed", func(t *testing.T) {
+		cfg := &config.Config{
+			JWTPrivateKey:      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+			GitHubOIDCAudience: "",
+		}
+		handler := auth.NewGitHubOIDCHandler(cfg)
+		// Validator should never be called — the audience precondition rejects first.
+		handler.SetValidator(&MockOIDCValidator{
+			validateFunc: func(_ context.Context, _ string, _ string) (*auth.GitHubOIDCClaims, error) {
+				t.Fatal("validator must not be called when audience is unconfigured")
+				return nil, fmt.Errorf("unreachable")
+			},
+		})
+
+		_, err := handler.ExchangeToken(context.Background(), "any-token")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no audience configured")
+	})
+
+	t.Run("configured audience is what the validator sees", func(t *testing.T) {
+		cfg := &config.Config{
+			JWTPrivateKey:      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+			GitHubOIDCAudience: "https://registry.example.com",
+		}
+		handler := auth.NewGitHubOIDCHandler(cfg)
+
+		var seenAudience string
+		handler.SetValidator(&MockOIDCValidator{
+			validateFunc: func(_ context.Context, _ string, audience string) (*auth.GitHubOIDCClaims, error) {
+				seenAudience = audience
+				return &auth.GitHubOIDCClaims{
+					RegisteredClaims: jwt.RegisteredClaims{
+						Subject:   "repo:octo-org/octo-repo:environment:prod",
+						ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+						Audience:  jwt.ClaimStrings{audience},
+					},
+					RepositoryOwner: "octo-org",
+				}, nil
+			},
+		})
+
+		_, err := handler.ExchangeToken(context.Background(), "any-token")
+		require.NoError(t, err)
+		assert.Equal(t, "https://registry.example.com", seenAudience)
+	})
+
+	t.Run("token issued for another deployment is rejected", func(t *testing.T) {
+		cfg := &config.Config{
+			JWTPrivateKey:      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+			GitHubOIDCAudience: "https://registry.modelcontextprotocol.io",
+		}
+		handler := auth.NewGitHubOIDCHandler(cfg)
+
+		// The mock validator does what the real one does: reject if the
+		// expected audience is not present in the token's aud claim.
+		handler.SetValidator(&MockOIDCValidator{
+			validateFunc: func(_ context.Context, _ string, expected string) (*auth.GitHubOIDCClaims, error) {
+				tokenAudience := "https://attacker-registry.example" //nolint:gosec // G101 false positive: URL string, not a credential
+				if expected != tokenAudience {
+					return nil, fmt.Errorf("invalid audience: expected %s, got [%s]", expected, tokenAudience)
+				}
+				return &auth.GitHubOIDCClaims{RepositoryOwner: "octo-org"}, nil
+			},
+		})
+
+		_, err := handler.ExchangeToken(context.Background(), "captured-token")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid audience")
+	})
+}
+
 func TestBuildPermissionsFromOIDC(t *testing.T) {
 	cfg := &config.Config{
-		JWTPrivateKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+		JWTPrivateKey:      "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+		GitHubOIDCAudience: "https://registry.test",
 	}
 	handler := auth.NewGitHubOIDCHandler(cfg)
 

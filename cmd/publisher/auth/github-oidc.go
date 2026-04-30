@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 )
 
 type GitHubOIDCProvider struct {
@@ -23,8 +25,13 @@ func NewGitHubOIDCProvider(registryURL string) Provider {
 
 // GetToken retrieves the registry JWT token using GitHub Actions OIDC token
 func (o *GitHubOIDCProvider) GetToken(ctx context.Context) (string, error) {
+	audience, err := audienceFromRegistryURL(o.registryURL)
+	if err != nil {
+		return "", fmt.Errorf("invalid --registry URL: %w", err)
+	}
+
 	// Get OIDC token from GitHub Actions endpoint
-	oidcToken, err := o.getOIDCTokenFromGitHub(ctx)
+	oidcToken, err := o.getOIDCTokenFromGitHub(ctx, audience)
 	if err != nil {
 		return "", fmt.Errorf("failed to get OIDC token from GitHub: %w", err)
 	}
@@ -99,8 +106,8 @@ func (o *GitHubOIDCProvider) exchangeOIDCTokenForRegistry(ctx context.Context, o
 	return tokenResp.RegistryToken, nil
 }
 
-// getOIDCTokenFromGitHub fetches the OIDC token from GitHub Actions endpoint
-func (o *GitHubOIDCProvider) getOIDCTokenFromGitHub(ctx context.Context) (string, error) {
+// getOIDCTokenFromGitHub fetches the OIDC token from GitHub Actions endpoint.
+func (o *GitHubOIDCProvider) getOIDCTokenFromGitHub(ctx context.Context, audience string) (string, error) {
 	// Check for required environment variables
 	requestToken := os.Getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
 	if requestToken == "" {
@@ -113,7 +120,7 @@ func (o *GitHubOIDCProvider) getOIDCTokenFromGitHub(ctx context.Context) (string
 	}
 
 	// Build the full URL with audience parameter
-	fullURL := requestURL + "&audience=mcp-registry"
+	fullURL := requestURL + "&audience=" + url.QueryEscape(audience)
 
 	// Create the request
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil) //nolint:gosec // G704: URL is from GitHub Actions ACTIONS_ID_TOKEN_REQUEST_URL env var
@@ -157,4 +164,20 @@ func (o *GitHubOIDCProvider) getOIDCTokenFromGitHub(ctx context.Context) (string
 	}
 
 	return tokenResp.Value, nil
+}
+
+// audienceFromRegistryURL returns scheme + lowercased host for the given URL.
+func audienceFromRegistryURL(registryURL string) (string, error) {
+	registryURL = strings.TrimSpace(registryURL)
+	if registryURL == "" {
+		return "", fmt.Errorf("registry URL is empty")
+	}
+	u, err := url.Parse(registryURL)
+	if err != nil {
+		return "", fmt.Errorf("parse %q: %w", registryURL, err)
+	}
+	if u.Scheme == "" || u.Host == "" {
+		return "", fmt.Errorf("registry URL must include scheme and host: %q", registryURL)
+	}
+	return u.Scheme + "://" + strings.ToLower(u.Host), nil
 }
