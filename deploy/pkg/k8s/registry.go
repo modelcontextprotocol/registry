@@ -185,6 +185,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									Name:  pulumi.String("MCP_REGISTRY_OIDC_PUBLISH_PERMISSIONS"),
 									Value: pulumi.String("*"),
 								},
+								&corev1.EnvVarArgs{
+									Name: pulumi.String("MCP_REGISTRY_GITHUB_OIDC_AUDIENCE"),
+									Value: pulumi.String(func() string {
+										if environment == "prod" {
+											return "https://registry.modelcontextprotocol.io"
+										}
+										return "https://" + environment + ".registry.modelcontextprotocol.io"
+									}()),
+								},
 							},
 							// StartupProbe protects the DB-retry budget in cmd/registry/main.go:
 							// 30 × 5s = 150s allowed before liveness/readiness take over, which
@@ -215,12 +224,20 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 								TimeoutSeconds:      pulumi.Int(3),
 							},
 							Resources: &corev1.ResourceRequirementsArgs{
+								// Memory was 256Mi/512Mi when pgxpool MaxConns was 30. After
+								// #1221 doubled MaxConns to 60 per pod, peak per-pod memory
+								// shifted from ~330MB to ~450MB under scraper load and one
+								// pod was OOMKilled at 17:01 UTC on 2026-04-29. pgxpool keeps
+								// per-connection state (prepared statement cache, scratch
+								// buffers, row iteration state) so memory scales roughly
+								// linearly with the connection count. Doubled both request
+								// and limit to match.
 								Requests: pulumi.StringMap{
-									"memory": pulumi.String("256Mi"),
+									"memory": pulumi.String("512Mi"),
 									"cpu":    pulumi.String("100m"),
 								},
 								Limits: pulumi.StringMap{
-									"memory": pulumi.String("512Mi"),
+									"memory": pulumi.String("1Gi"),
 								},
 							},
 						},

@@ -3,6 +3,7 @@ package v0
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -74,7 +75,8 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			return nil, huma.Error500InternalServerError("Failed to get current server", err)
+			log.Printf("edit: get current server (%q/%q) failed: %v", serverName, version, err)
+			return nil, huma.Error500InternalServerError("Failed to get current server")
 		}
 
 		// Verify edit permissions for this server using the existing server name

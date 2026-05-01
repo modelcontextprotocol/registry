@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -122,7 +123,8 @@ func RegisterStatusEndpoints(api huma.API, pathPrefix string, registry service.R
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server version not found")
 			}
-			return nil, huma.Error500InternalServerError("Failed to get server", err)
+			log.Printf("status: get server (%q/%q) failed: %v", serverName, version, err)
+			return nil, huma.Error500InternalServerError("Failed to get server")
 		}
 
 		// Verify publish or edit permissions for this server
@@ -228,7 +230,8 @@ func RegisterAllVersionsStatusEndpoints(api huma.API, pathPrefix string, registr
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			return nil, huma.Error500InternalServerError("Failed to get server", err)
+			log.Printf("status: get server (%q) failed: %v", serverName, err)
+			return nil, huma.Error500InternalServerError("Failed to get server")
 		}
 
 		// Verify publish or edit permissions for this server
@@ -243,7 +246,8 @@ func RegisterAllVersionsStatusEndpoints(api huma.API, pathPrefix string, registr
 		// Fetch all versions to validate the bulk status transition
 		allVersions, err := registry.GetAllVersionsByServerName(ctx, serverName, true)
 		if err != nil {
-			return nil, huma.Error500InternalServerError("Failed to get server versions", err)
+			log.Printf("status: get all versions (%q) failed: %v", serverName, err)
+			return nil, huma.Error500InternalServerError("Failed to get server versions")
 		}
 
 		// Validate bulk status transition - reject if no changes would occur

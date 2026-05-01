@@ -282,6 +282,7 @@
         "version": {
           "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '\u003e=1.2.3', '1.x', '1.*').",
           "example": "1.0.2",
+          "maxLength": 255,
           "minLength": 1,
           "not": {
             "const": "latest"

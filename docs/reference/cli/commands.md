@@ -72,6 +72,13 @@ mcp-publisher login github-oidc [--registry=URL]
 - Requires `id-token: write` permission in workflow
 - No browser interaction needed
 
+The CLI derives the OIDC `aud` claim from `--registry` (scheme + host, e.g.
+`https://registry.modelcontextprotocol.io`) so tokens are bound to the specific
+deployment they were minted for. Self-hosters must set
+`MCP_REGISTRY_GITHUB_OIDC_AUDIENCE` on the registry to the matching value;
+publishers running an older `mcp-publisher` will fail with `invalid audience`
+and need to upgrade.
+
 Also see [the guide to publishing from GitHub Actions](../../modelcontextprotocol-io/github-actions.mdx).
 
 #### DNS Verification

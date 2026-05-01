@@ -473,17 +473,6 @@ func TestHTTPAuthHandler_Permissions(t *testing.T) {
 			},
 		},
 		{
-			name:   "single part domain",
-			domain: "localhost",
-			expectedPatterns: []string{
-				"localhost/*", // exact pattern only (no reversal needed)
-			},
-			unexpectedPatterns: []string{
-				"localhost.*", // HTTP should not grant subdomain permissions
-				"*.localhost", // wrong wildcard position
-			},
-		},
-		{
 			name:   "hyphenated domain",
 			domain: "my-app.example-site.com",
 			expectedPatterns: []string{

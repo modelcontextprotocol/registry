@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -52,8 +53,13 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	url := fmt.Sprintf("%s/pypi/%s/%s/json", pkg.RegistryBaseURL, pkg.Identifier, pkg.Version)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	// PathEscape so an identifier that smuggles "/" or ".." cannot redirect
+	// the metadata fetch to a different package than the one being claimed.
+	fetchURL := fmt.Sprintf("%s/pypi/%s/%s/json",
+		pkg.RegistryBaseURL,
+		url.PathEscape(pkg.Identifier),
+		url.PathEscape(pkg.Version))
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fetchURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

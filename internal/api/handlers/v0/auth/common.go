@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net"
 	"regexp"
 	"strings"
 	"time"
@@ -373,6 +374,18 @@ func ReverseString(domain string) string {
 
 func IsValidDomain(domain string) bool {
 	if len(domain) == 0 || len(domain) > 253 {
+		return false
+	}
+
+	// Reject IP literals — this auth method proves domain ownership, not IP
+	// ownership, and IP literals are an SSRF vector into internal networks.
+	if net.ParseIP(domain) != nil {
+		return false
+	}
+
+	// Require at least one dot — rejects single-label names like "localhost"
+	// or "kubernetes" that resolve only inside private networks.
+	if !strings.Contains(domain, ".") {
 		return false
 	}
 
