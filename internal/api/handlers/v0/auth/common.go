@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net"
 	"regexp"
@@ -19,6 +20,11 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
+
+func readBody(r io.Reader) string {
+	b, _ := io.ReadAll(r)
+	return string(b)
+}
 
 // ErrSignatureMismatch is returned by VerifySignature when the signature is structurally
 // valid but does not verify against the public key. Distinguishing this from structural

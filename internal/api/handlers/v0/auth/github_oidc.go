@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/big"
 	"net/http"
 	"strings"
@@ -149,8 +148,7 @@ func (v *GitHubOIDCValidator) fetchJWKS(ctx context.Context) (*JWKS, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("JWKS endpoint returned status %d: %s", resp.StatusCode, body)
+		return nil, fmt.Errorf("JWKS endpoint returned status %d: %s", resp.StatusCode, readBody(resp.Body))
 	}
 
 	var jwks JWKS
