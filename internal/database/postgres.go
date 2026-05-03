@@ -198,7 +198,6 @@ func (db *PostgreSQL) ListServers(
 		whereConditions = append(whereConditions, cursorCondition)
 		args = append(args, cursorArgs...)
 	}
-	_ = argIndex // Silence unused variable warning
 
 	// Build the WHERE clause
 	whereClause := ""
