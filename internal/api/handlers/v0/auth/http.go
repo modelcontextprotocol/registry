@@ -109,27 +109,65 @@ func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error
 	return nil, fmt.Errorf("dial %s: all resolved public addresses failed: %w", host, lastErr)
 }
 
+// mustCIDR parses a CIDR literal at init; panics on malformed input so a
+// typo surfaces at startup rather than letting a nil *IPNet through to the
+// blocklist check (which would silently fail-open).
+func mustCIDR(s string) *net.IPNet {
+	_, n, err := net.ParseCIDR(s)
+	if err != nil {
+		panic(fmt.Sprintf("auth: invalid CIDR %q: %v", s, err))
+	}
+	return n
+}
+
 // cgnatRange covers RFC 6598 Carrier-Grade NAT (100.64.0.0/10), which the
 // stdlib does not classify via any Is* helper but is reachable on some
 // cloud / mobile networks where it shadows internal infrastructure.
-var cgnatRange = func() *net.IPNet {
-	_, n, _ := net.ParseCIDR("100.64.0.0/10")
-	return n
-}()
+var cgnatRange = mustCIDR("100.64.0.0/10")
+
+// blockedIPv6Prefixes are IPv6 ranges that either embed an arbitrary IPv4
+// address (and therefore tunnel into RFC1918 / cloud-metadata space on
+// hosts with the corresponding routing) or are routed into site-local
+// internal networks. None of these are caught by Go's per-class Is*
+// helpers.
+//
+//	2002::/16       RFC 3056 6to4 — bits 16-47 are an IPv4 address
+//	64:ff9b::/96    RFC 6052 NAT64 well-known — low 32 bits are IPv4
+//	64:ff9b:1::/48  RFC 8215 NAT64 local-use — same IPv4-embedding shape
+//	fec0::/10       RFC 3879 site-local (deprecated, still routed by some
+//	                stacks)
+var blockedIPv6Prefixes = []*net.IPNet{
+	mustCIDR("2002::/16"),
+	mustCIDR("64:ff9b::/96"),
+	mustCIDR("64:ff9b:1::/48"),
+	mustCIDR("fec0::/10"),
+}
 
 // isBlockedIP reports whether an IP must not be dialled by the namespace
 // verification fetcher. Covers loopback (127/8, ::1), RFC1918 + ULA via
 // IsPrivate, link-local (169.254/16, fe80::/10 — includes cloud metadata
 // 169.254.169.254), unspecified (0.0.0.0, ::), all multicast (admin-scoped
-// 239/8 and ff00::/8 in addition to link-local-multicast), and CGNAT.
+// 239/8 and ff00::/8 in addition to link-local-multicast), CGNAT, and
+// IPv6 prefix families that tunnel to or embed arbitrary IPv4 addresses
+// (see blockedIPv6Prefixes). IPv4-mapped IPv6 (::ffff:0:0/96) is handled
+// implicitly: the stdlib Is* helpers honour the To4() fast-path, so e.g.
+// ::ffff:10.0.0.1 is correctly classified as IsPrivate.
 func isBlockedIP(ip net.IP) bool {
 	if ip == nil {
 		return true
 	}
-	return ip.IsLoopback() || ip.IsPrivate() ||
+	if ip.IsLoopback() || ip.IsPrivate() ||
 		ip.IsLinkLocalUnicast() || ip.IsMulticast() ||
 		ip.IsUnspecified() ||
-		cgnatRange.Contains(ip)
+		cgnatRange.Contains(ip) {
+		return true
+	}
+	for _, p := range blockedIPv6Prefixes {
+		if p.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }
 
 // NewDefaultHTTPKeyFetcherWithClient creates a new HTTP key fetcher with a custom HTTP client.
