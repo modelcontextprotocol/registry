@@ -1,0 +1,23 @@
+﻿{
+  "id": "samarth-23-eng/india-mcp-gst",
+  "name": "India MCP - GST Server",
+  "description": "MCP server for India's GST system. Validate GSTINs, search HSN codes, calculate GST amounts, and get filing deadlines. First MCP server for Indian tax infrastructure.",
+  "repository": "https://github.com/Samarth-23-eng/India-MCP",
+  "homepage": "https://github.com/Samarth-23-eng/India-MCP",
+  "author": "Samarth-23-eng",
+  "license": "MIT",
+  "tags": ["india", "gst", "tax", "gstin", "hsn", "finance"],
+  "tools": [
+    "validate_gstin",
+    "search_hsn_code",
+    "get_gst_rate_by_hsn",
+    "calculate_gst",
+    "get_filing_deadlines"
+  ],
+  "runtime": "node",
+  "installation": {
+    "type": "stdio",
+    "command": "node",
+    "args": ["dist/servers/gst-server-entry.js"]
+  }
+}
