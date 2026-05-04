@@ -122,7 +122,7 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GitHub API error (status %d): %s", resp.StatusCode, readBody(resp.Body))
+		return nil, fmt.Errorf("GitHub API error (status %d): %s", resp.StatusCode, readErrorBody(resp.Body))
 	}
 
 	var user GitHubUserOrOrg
@@ -150,7 +150,7 @@ func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, username string, 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GitHub API error (status %d): %s", resp.StatusCode, readBody(resp.Body))
+		return nil, fmt.Errorf("GitHub API error (status %d): %s", resp.StatusCode, readErrorBody(resp.Body))
 	}
 
 	var orgs []GitHubUserOrOrg

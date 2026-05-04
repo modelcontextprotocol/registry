@@ -148,7 +148,7 @@ func (v *GitHubOIDCValidator) fetchJWKS(ctx context.Context) (*JWKS, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("JWKS endpoint returned status %d: %s", resp.StatusCode, readBody(resp.Body))
+		return nil, fmt.Errorf("JWKS endpoint returned status %d: %s", resp.StatusCode, readErrorBody(resp.Body))
 	}
 
 	var jwks JWKS

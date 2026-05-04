@@ -21,8 +21,12 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
 
-func readBody(r io.Reader) string {
-	b, _ := io.ReadAll(r)
+// readErrorBody reads an upstream error response body for inclusion in an
+// error message. The cap protects against a misbehaving upstream returning a
+// huge body — error diagnostics never need more than a few KB.
+func readErrorBody(r io.Reader) string {
+	const maxErrorBodySize = 8 * 1024
+	b, _ := io.ReadAll(io.LimitReader(r, maxErrorBodySize))
 	return string(b)
 }
 
