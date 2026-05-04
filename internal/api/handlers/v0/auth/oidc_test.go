@@ -63,7 +63,7 @@ func TestOIDCHandler_ExchangeToken(t *testing.T) {
 				"email":              "admin@modelcontextprotocol.io",
 				"email_verified":     true,
 				"hd":                 "modelcontextprotocol.io",
-				"preferred_username": "admin", //nolint:goconst // role label repeated across test fixtures, not a constant
+				"preferred_username": "admin",
 			}),
 			token:         "valid-oidc-token",
 			expectedError: false,
@@ -84,7 +84,7 @@ func TestOIDCHandler_ExchangeToken(t *testing.T) {
 			name:   "scalar expected matches array claim",
 			config: testOIDCConfig(`[{"groups":"admin"}]`),
 			mockValidator: mockValidator(map[string]any{
-				"groups": []any{"admin", "users", "developers"}, //nolint:goconst // claim key repeated across fixtures, not a constant
+				"groups": []any{"admin", "users", "developers"},
 			}),
 			token:         "scalar-expected-array-actual-match",
 			expectedError: false,
