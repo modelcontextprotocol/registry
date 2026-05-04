@@ -224,13 +224,45 @@ func (h *OIDCHandler) validateExtraClaims(claims *OIDCClaims) error {
 				return fmt.Errorf("claim validation failed: required claim %s not found", key)
 			}
 
-			if actualValue != expectedValue {
+			if !claimMatches(actualValue, expectedValue) {
 				return fmt.Errorf("claim validation failed: %s expected %v, got %v", key, expectedValue, actualValue)
 			}
 		}
 	}
 
 	return nil
+}
+
+// claimMatches reports whether a claim value satisfies the expected configuration.
+// Both sides may be a scalar or a slice; for slice-typed claims (groups, roles, scp,
+// aud, etc.) any single overlap is treated as a match, mirroring how OIDC consumers
+// normally interpret list claims.
+func claimMatches(actual, expected any) bool {
+	actualList := toAnySlice(actual)
+	expectedList := toAnySlice(expected)
+	for _, e := range expectedList {
+		for _, a := range actualList {
+			if a == e {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func toAnySlice(v any) []any {
+	switch s := v.(type) {
+	case []any:
+		return s
+	case []string:
+		out := make([]any, len(s))
+		for i, x := range s {
+			out[i] = x
+		}
+		return out
+	default:
+		return []any{v}
+	}
 }
 
 // buildPermissions builds permissions based on OIDC claims and configuration
