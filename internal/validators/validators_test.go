@@ -13,6 +13,8 @@ import (
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
+const websiteURLInvalidCharErrSubstr = "websiteUrl contains an invalid character"
+
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -485,6 +487,98 @@ func TestValidate(t *testing.T) {
 				WebsiteURL: "ht tp://example.com/docs",
 			},
 			expectedError: "invalid websiteUrl:",
+		},
+		{
+			name: "server with websiteUrl containing double quote",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: `https://example.com/"oops`,
+			},
+			expectedError: websiteURLInvalidCharErrSubstr,
+		},
+		{
+			name: "server with websiteUrl containing single quote",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/it's",
+			},
+			expectedError: websiteURLInvalidCharErrSubstr,
+		},
+		{
+			name: "server with websiteUrl containing angle brackets",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/<x>",
+			},
+			expectedError: websiteURLInvalidCharErrSubstr,
+		},
+		{
+			name: "server with websiteUrl containing space",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/has space",
+			},
+			expectedError: websiteURLInvalidCharErrSubstr,
+		},
+		{
+			name: "server with websiteUrl containing newline",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/has\nnewline",
+			},
+			// url.Parse rejects ASCII control chars before our character-set
+			// check runs; either path produces a validation error.
+			expectedError: "invalid websiteUrl:",
+		},
+		{
+			name: "server with websiteUrl with percent-encoded special chars is accepted",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				WebsiteURL: "https://example.com/path/?q=hello%20world&r=a%22b",
+			},
+			expectedError: "",
 		},
 		{
 			name: "server with websiteUrl that matches namespace domain",

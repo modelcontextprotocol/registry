@@ -2,7 +2,9 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -18,6 +20,12 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
 )
+
+// statusClientClosed mirrors NGINX's non-standard 499 — used for requests
+// where the client disconnected before we finished. Distinguishing these from
+// real server errors keeps the availability metric meaningful under bursts of
+// scraper traffic that time out and reconnect.
+const statusClientClosed = 499
 
 // Middleware configuration options
 type middlewareConfig struct {
@@ -67,6 +75,22 @@ func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...Middleware
 		duration := time.Since(start).Seconds()
 		statusCode := ctx.Status()
 
+		// If the client disconnected before the handler finished, the handler
+		// likely converted the resulting context.Canceled into a huma 5xx and
+		// tried to write a response to a closed socket. NGINX records that
+		// case as a 499 (client closed). Without this remap we count it as a
+		// server error: a single ServiceNow-style burst that times out a
+		// few thousand list-servers requests inflates http_errors_total even
+		// though no client ever saw a 5xx, and the availability alert fires
+		// on what is effectively just slow responses.
+		//
+		// Only context.Canceled is remapped — context.DeadlineExceeded would
+		// indicate a server-side timeout we set ourselves and should still
+		// count as a server error if/when we add per-request deadlines.
+		if reqErr := ctx.Context().Err(); reqErr != nil && errors.Is(reqErr, context.Canceled) {
+			statusCode = statusClientClosed
+		}
+
 		// Combine common and custom attributes
 		attrs := []attribute.KeyValue{
 			attribute.String("method", method),
@@ -77,7 +101,9 @@ func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...Middleware
 		// Record metrics
 		metrics.Requests.Add(ctx.Context(), 1, metric.WithAttributes(attrs...))
 
-		if statusCode >= 400 {
+		// Skip the error counter for client-closed requests so the availability
+		// metric reflects server-visible errors only.
+		if statusCode >= 400 && statusCode != statusClientClosed {
 			metrics.ErrorCount.Add(ctx.Context(), 1, metric.WithAttributes(attrs...))
 		}
 

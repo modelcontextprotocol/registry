@@ -195,6 +195,20 @@ func validateWebsiteURL(ctx *ValidationContext, websiteURL string) *ValidationRe
 		result.AddIssue(issue)
 	}
 
+	// Reject characters that aren't valid in a URI per RFC 3986 and that have
+	// caused rendering issues when websiteUrl flows into the catalogue UI's
+	// href attributes. Publishers should percent-encode these in the source URL.
+	if i := strings.IndexAny(websiteURL, "\"'<> \t\n\r"); i >= 0 {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Sprintf("websiteUrl contains an invalid character %q at position %d: %s", websiteURL[i], i, websiteURL),
+			ValidationIssueSeverityError,
+			"website-url-invalid-characters",
+		)
+		result.AddIssue(issue)
+	}
+
 	return result
 }
 

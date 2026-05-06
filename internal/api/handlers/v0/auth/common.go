@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net"
 	"regexp"
@@ -19,6 +20,15 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
+
+// readErrorBody reads an upstream error response body for inclusion in an
+// error message. The cap protects against a misbehaving upstream returning a
+// huge body — error diagnostics never need more than a few KB.
+func readErrorBody(r io.Reader) string {
+	const maxErrorBodySize = 8 * 1024
+	b, _ := io.ReadAll(io.LimitReader(r, maxErrorBodySize))
+	return string(b)
+}
 
 // ErrSignatureMismatch is returned by VerifySignature when the signature is structurally
 // valid but does not verify against the public key. Distinguishing this from structural
