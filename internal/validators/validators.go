@@ -647,6 +647,15 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 		return err
 	}
 
+	// Probe publisher-supplied repository URL for public reachability so 404s
+	// like https://github.com/pgahq/mcp-pga-com (issue #395) are caught at
+	// publish time instead of leaking into production listings.
+	if cfg.EnableRepositoryReachabilityCheck {
+		if err := validateRepositoryReachability(ctx, req); err != nil {
+			return err
+		}
+	}
+
 	// Validate registry ownership for all packages if validation is enabled
 	if cfg.EnableRegistryValidation {
 		if err := validateRegistryOwnership(ctx, req); err != nil {
@@ -666,6 +675,16 @@ func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *confi
 		}
 	}
 
+	return nil
+}
+
+func validateRepositoryReachability(ctx context.Context, req apiv0.ServerJSON) error {
+	if req.Repository == nil || req.Repository.URL == "" {
+		return nil
+	}
+	if err := ProbeRepositoryReachable(ctx, req.Repository.URL); err != nil {
+		return fmt.Errorf("repository reachability check failed: %w", err)
+	}
 	return nil
 }
 
