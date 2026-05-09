@@ -195,11 +195,11 @@ func validateViaAPI(registryURL string, serverData []byte) (*validators.Validati
 		return nil, fmt.Errorf("error parsing server.json file: %w", err)
 	}
 
-	// Convert to JSON
-	jsonData, err := json.Marshal(serverJSON)
-	if err != nil {
-		return nil, fmt.Errorf("error serializing request: %w", err)
+	var compactBuf bytes.Buffer
+	if err := json.Compact(&compactBuf, serverData); err != nil {
+		return nil, fmt.Errorf("error compacting JSON: %w", err)
 	}
+	jsonData := compactBuf.Bytes()
 
 	// Ensure URL ends with / and add validate endpoint
 	if !strings.HasSuffix(registryURL, "/") {
