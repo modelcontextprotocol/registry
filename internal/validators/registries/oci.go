@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -106,10 +105,13 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		if errors.As(err, &transportErr) {
 			switch transportErr.StatusCode {
 			case http.StatusTooManyRequests:
-				// Rate limited - skip validation to avoid blocking publishers
-				// This is intentional: we prioritize UX over strict validation during high traffic
-				log.Printf("Skipping OCI validation for %s due to rate limiting", pkg.Identifier)
-				return nil
+				// Fail closed: a 429 means we could not verify the
+				// `io.modelcontextprotocol.server.name` label on the image, which is
+				// the only ownership proof we apply to OCI packages. Returning nil
+				// here would let a publisher bind their server record to an arbitrary
+				// public image they do not control, which is the bug this branch
+				// used to have. Surface the rate-limit as a retryable error instead.
+				return fmt.Errorf("OCI registry is currently rate-limiting validations for '%s'; please retry shortly", pkg.Identifier)
 			case http.StatusNotFound:
 				return fmt.Errorf("OCI image '%s' does not exist in the registry", pkg.Identifier)
 			case http.StatusUnauthorized, http.StatusForbidden:
