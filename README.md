@@ -151,3 +151,36 @@ Check out [community projects](docs/community-projects.md) to explore notable re
 ## More documentation
 
 See the [documentation](./docs) for more details if your question has not been answered here!
+
+## Vina Test
+
+Follow these steps to set up the environment and verify the service.
+
+1. Clone the Repository
+
+Clone the project to your local machine using the following command:
+
+```bash
+git clone <repository-url>
+```
+
+2. Install Prerequisites
+
+Ensure all required dependencies listed in the Prerequisites section are installed on your system.
+
+3. Launch Development Environment
+
+Open your terminal and run the following command to start the services using Docker Compose:
+```
+make dev-compose
+```
+
+4. Verify API Endpoints
+
+Once the services are up and running, you can test the following URLs to verify the responses:
+| Goal | Endpoint URL |
+| :--- | :--- |
+| **Health Check** | `http://localhost:8081/v0.1/ping` |
+| **List All Servers** | `http://localhost:8081/v0.1/servers` |
+| **Get Latest Version** | `http://localhost:8081/v0.1/servers/io.figma%2Fmcp-server/versions/latest` |
+| **Get Specific Version** | `http://localhost:8081/v0.1/servers/io.figma%2Fmcp-server/versions/1.0.0` |
