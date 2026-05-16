@@ -155,5 +155,33 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.misaelcalvillo/whaber-oracle",
+    "description": "Ground truth operational layer for urban transfers in LatAm. Verified place nodes, carrier ANT compliance (7-doc gate), safe pickup points, and operational windows for hotel and airport transfers in Quito, Ecuador. The execution certificate layer for agentic commerce: Visa/MC resolve how the agent pays — Whaber Oracle resolves whether the physical service happened. Place Graph v3.2 · 20 zones · 478 POIs · MCP Streamable HTTP.",
+    "repository": {
+      "url": "https://github.com/MisaelCalvillo/whaber.git",
+      "source": "github"
+    },
+    "version": "1.3.0",
+    "packages": [
+      {
+        "registryType": "http",
+        "identifier": "https://oracle.whaber.ai/mcp/v1",
+        "transport": {
+          "type": "http",
+          "url": "https://oracle.whaber.ai/mcp/v1"
+        },
+        "environmentVariables": [
+          {
+            "name": "WHABER_API_KEY",
+            "description": "Bearer token for partner access. Discovery tools (query_place_safety, get_safe_pickup_point, calculate_ops_window, get_hotel_context, resolver_direccion) are open. Action tools require partner authentication. Contact cv@whaber.ai for access.",
+            "isRequired": false,
+            "isSecret": true
+          }
+        ]
+      }
+    ]
   }
 ]
