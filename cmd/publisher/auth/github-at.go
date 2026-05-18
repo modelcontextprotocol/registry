@@ -229,8 +229,13 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 			return "", err
 		}
 
-		if tokenResp.Error == "authorization_pending" {
-			// User hasn't authorized yet, wait and retry
+		// Per RFC 8628 §3.5, both authorization_pending and slow_down indicate
+		// the client should keep polling. slow_down additionally requires that
+		// the polling interval be increased by 5 seconds.
+		if tokenResp.Error == "authorization_pending" || tokenResp.Error == "slow_down" {
+			if tokenResp.Error == "slow_down" {
+				interval += 5
+			}
 			time.Sleep(time.Duration(interval) * time.Second)
 			continue
 		}
