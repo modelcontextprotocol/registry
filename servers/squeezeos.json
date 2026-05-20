@@ -1,0 +1,9 @@
+{
+    "name": "SqueezeOS",
+    "description": "Institutional AI market intelligence for autonomous agents. Real-time squeeze scanner, options flow, IWM 0DTE, multi-engine AI council verdicts, signal marketplace, agent hiring, prediction futures market, and agent-to-agent conditional settlement. Pay-per-call with RLUSD (XRPL) or USDC (Base). 23 tools. Zero simulation.",
+    "url": "https://lively-fascination-production-41fa.up.railway.app/mcp",
+    "homepage": "https://www.scriptmasterlabs.com",
+    "author": "Script Master Labs",
+    "license": "MIT",
+    "tags": ["finance", "market-data", "trading", "ai-agents", "x402", "xrpl", "rlusd", "usdc", "options-flow", "signal-marketplace"]
+}
