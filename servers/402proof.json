@@ -1,0 +1,9 @@
+{
+    "name": "402Proof",
+    "description": "x402/HTTP 402 payment compliance firewall and AI Agent Credit Bureau. World's first agent reputation scoring system (300-850). Verify RLUSD (XRPL) or USDC (Base) payments, issue access tokens, agent passport, loyalty tiers, portable attestation JWTs. Zero custody.",
+    "url": "https://four02proof.onrender.com/mcp",
+    "homepage": "https://four02proof.onrender.com",
+    "author": "Script Master Labs",
+    "license": "MIT",
+    "tags": ["payment", "x402", "xrpl", "rlusd", "usdc", "ai-agents", "credit-bureau", "middleware", "http-402", "compliance"]
+}
