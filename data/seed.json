@@ -1,6 +1,48 @@
 [
   {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.qinzhenshuo-source/code-tools-mcp",
+    "description": "A utility MCP server providing JSON formatting, Base64/URL encoding, hashing, JWT decoding, regex testing, timestamp conversion, text transforms, color conversion, diff generation, and random generation.",
+    "repository": {
+      "url": "https://github.com/qinzhenshuo-source/code-tools-mcp.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "@langlangshan/code-tools-mcp",
+        "version": "1.0.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.qinzhenshuo-source/security-headers-mcp",
+    "description": "Security auditing MCP server: checks SSL/TLS certificates, security headers (HSTS, CSP, CORS, etc.), and generates vulnerability reports with severity scoring.",
+    "repository": {
+      "url": "https://github.com/qinzhenshuo-source/security-headers-mcp.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "security-headers-mcp",
+        "version": "1.0.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/airtable-mcp-server",
     "description": "Read and write access to Airtable database schemas, tables, and records.",
     "repository": {
