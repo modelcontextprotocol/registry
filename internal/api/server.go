@@ -71,14 +71,54 @@ func TrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only redirect if the path is not "/" and ends with a "/"
 		if r.URL.Path != "/" && strings.HasSuffix(r.URL.Path, "/") {
-			// Create a copy of the URL and remove the trailing slash
-			newURL := *r.URL
-			newURL.Path = strings.TrimSuffix(r.URL.Path, "/")
+			// Remove the trailing slash from the path
+			newPath := strings.TrimSuffix(r.URL.Path, "/")
+			
+			// Construct redirect URL safely - only use path and query to prevent open redirect
+			redirectURL := newPath
+			if r.URL.RawQuery != "" {
+				redirectURL += "?" + r.URL.RawQuery
+			}
 
 			// Use 308 Permanent Redirect to preserve the request method
-			http.Redirect(w, r, newURL.String(), http.StatusPermanentRedirect)
+			http.Redirect(w, r, redirectURL, http.StatusPermanentRedirect)
 			return
 		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+// SecurityHeadersMiddleware adds security-related HTTP headers
+func SecurityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// HSTS: Enforce HTTPS for 1 year, including subdomains
+		// Only set if the request is over HTTPS or in production
+		if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {
+			w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+
+		// Content Security Policy: Restrict resource loading to prevent XSS
+		// Note: This is a baseline policy. Adjust based on specific application needs.
+		csp := "default-src 'self'; " +
+			"script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; " +
+			"style-src 'self' 'unsafe-inline'; " +
+			"img-src 'self' data: https:; " +
+			"font-src 'self' data:; " +
+			"connect-src 'self' https://registry.modelcontextprotocol.io https://staging.registry.modelcontextprotocol.io; " +
+			"frame-ancestors 'self'; " +
+			"base-uri 'self'; " +
+			"form-action 'self'"
+		w.Header().Set("Content-Security-Policy", csp)
+
+		// X-Content-Type-Options: Prevent MIME type sniffing
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
+		// X-Frame-Options: Prevent clickjacking
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+
+		// Referrer-Policy: Control referrer information
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
 
 		next.ServeHTTP(w, r)
 	})
@@ -116,8 +156,11 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 	})
 
 	// Wrap the mux with middleware stack
-	// Order: NulByteValidation -> TrailingSlash -> CORS -> Mux
-	handler := NulByteValidationMiddleware(TrailingSlashMiddleware(corsHandler.Handler(mux)))
+	// Order: NulByteValidation -> TrailingSlash -> SecurityHeaders -> CORS -> Mux
+	handler := NulByteValidationMiddleware(
+		TrailingSlashMiddleware(
+			SecurityHeadersMiddleware(
+				corsHandler.Handler(mux))))
 
 	server := &Server{
 		config:   cfg,

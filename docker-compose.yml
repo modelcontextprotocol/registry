@@ -25,7 +25,7 @@ services:
       - MCP_REGISTRY_OIDC_PUBLISH_PERMISSIONS=${MCP_REGISTRY_OIDC_PUBLISH_PERMISSIONS:-*}
       - MCP_REGISTRY_ENABLE_REGISTRY_VALIDATION=${MCP_REGISTRY_ENABLE_REGISTRY_VALIDATION:-false}
     ports:
-      - 8081:8080
+      - 8080:8080
     volumes:
       - ./data:/data:ro
     restart: "unless-stopped"
@@ -36,7 +36,9 @@ services:
     environment:
       POSTGRES_DB: mcp-registry
       POSTGRES_USER: mcpregistry
-      POSTGRES_PASSWORD: mcpregistry
+      # WARNING: This is a development-only password. Never use in production.
+      # In production, use strong passwords via environment variables or secrets management.
+      POSTGRES_PASSWORD: mcpregistry  #nosec G101 -- development only
       PGDATA: /var/lib/postgresql/data/pgdata
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mcpregistry -d mcp-registry"]

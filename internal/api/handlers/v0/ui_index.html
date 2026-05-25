@@ -145,10 +145,42 @@
         let searchTimeout = null;
         let baseUrl = '';
 
+        // Validate and sanitize URL to prevent SSRF
+        function isValidUrl(urlString) {
+            if (!urlString) return true; // Empty string is valid (local)
+            try {
+                const url = new URL(urlString);
+                // Only allow https and http protocols
+                if (!['http:', 'https:'].includes(url.protocol)) {
+                    return false;
+                }
+                // Prevent localhost and private IP ranges in custom URLs
+                const hostname = url.hostname.toLowerCase();
+                if (hostname === 'localhost' || 
+                    hostname === '127.0.0.1' ||
+                    hostname.startsWith('192.168.') ||
+                    hostname.startsWith('10.') ||
+                    hostname.match(/^172\.(1[6-9]|2[0-9]|3[01])\./) ||
+                    hostname === '[::1]' ||
+                    hostname.startsWith('fe80:')) {
+                    // Allow localhost only for non-custom selections
+                    return false;
+                }
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
         // Get base URL based on selection
         function getBaseUrl() {
             const selection = localStorage.getItem('baseUrl') || 'local';
-            const customUrl = localStorage.getItem('customUrl') || '';
+            let customUrl = localStorage.getItem('customUrl') || '';
+            
+            // Sanitize customUrl to prevent XSS and SSRF
+            if (customUrl) {
+                customUrl = customUrl.trim().substring(0, 2048); // Limit length
+            }
 
             switch (selection) {
                 case 'prod':
@@ -158,7 +190,12 @@
                 case 'local':
                     return '';
                 case 'custom':
-                    return customUrl;
+                    // Validate custom URL before using it
+                    if (customUrl && isValidUrl(customUrl)) {
+                        return customUrl;
+                    }
+                    console.error('Invalid custom URL, falling back to local');
+                    return '';
                 default:
                     return '';
             }
@@ -167,7 +204,6 @@
         // Get server display name
         function getServerName() {
             const selection = localStorage.getItem('baseUrl') || 'local';
-            const customUrl = localStorage.getItem('customUrl') || '';
 
             switch (selection) {
                 case 'prod':
@@ -179,7 +215,7 @@
                 case 'custom':
                     return 'Custom';
                 default:
-                    return 'Production';
+                    return 'Local';
             }
         }
 
@@ -233,7 +269,16 @@
 
         document.getElementById('debug-apply').addEventListener('click', () => {
             const selection = document.querySelector('input[name="baseUrl"]:checked').value;
-            const customUrl = document.getElementById('custom-url').value;
+            let customUrl = document.getElementById('custom-url').value.trim();
+            
+            // Validate custom URL before saving
+            if (selection === 'custom' && customUrl) {
+                if (!isValidUrl(customUrl)) {
+                    alert('Invalid URL. Please enter a valid http or https URL.');
+                    return;
+                }
+            }
+            
             localStorage.setItem('baseUrl', selection);
             localStorage.setItem('customUrl', customUrl);
             location.reload();

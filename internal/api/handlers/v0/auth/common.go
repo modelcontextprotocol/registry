@@ -178,6 +178,8 @@ func (pki *PublicKeyInfo) VerifySignature(message, signature []byte) error {
 			if len(signature) != ed25519.SignatureSize {
 				return fmt.Errorf("invalid signature size for Ed25519")
 			}
+			// Note: ed25519.Verify uses constant-time comparison internally (crypto/internal/edwards25519)
+			// to prevent timing attacks. This is secure against observable timing discrepancies.
 			if !ed25519.Verify(ed25519Key, message, signature) {
 				return fmt.Errorf("Ed25519: %w", ErrSignatureMismatch)
 			}
@@ -191,6 +193,8 @@ func (pki *PublicKeyInfo) VerifySignature(message, signature []byte) error {
 			r := new(big.Int).SetBytes(signature[:48])
 			s := new(big.Int).SetBytes(signature[48:])
 			digest := sha512.Sum384(message)
+			// Note: ecdsa.Verify uses constant-time comparison for the final verification
+			// to prevent timing side-channel attacks.
 			if !ecdsa.Verify(&ecdsaKey, digest[:], r, s) {
 				return fmt.Errorf("ECDSA P-384: %w", ErrSignatureMismatch)
 			}

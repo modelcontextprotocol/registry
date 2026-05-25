@@ -352,6 +352,8 @@ jobs:
       - name: Verify staging DB is functional
         run: |
           # Create a verification pod
+          # Note: PGPASSWORD is dynamically retrieved from Kubernetes secret at runtime,
+          # not hardcoded. This is secure as it uses kubectl to fetch from the cluster's secret store.
           kubectl run pg-verify-$(date +%s) \
             --image=postgres:15 \
             --rm -i --restart=Never \

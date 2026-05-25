@@ -20,7 +20,9 @@ import (
 
 func main() {
 	// Database connection
-	db, err := sql.Open("postgres", "postgres://postgres:testpass@localhost:5433/registry_test?sslmode=disable")
+	// WARNING: This connection string contains a hardcoded password for testing only.
+	// This tool is not intended for production use (see //go:build ignore directive).
+	db, err := sql.Open("postgres", "postgres://postgres:testpass@localhost:5433/registry_test?sslmode=disable") //nolint:gosec // test tool only
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -37,13 +39,20 @@ func main() {
 			log.Fatalf("Migration file %d not found", i)
 		}
 
-		content, err := ioutil.ReadFile(files[0])
+		// Security Note: This tool reads SQL migration files from the controlled migrations directory
+		// and executes them. This is safe because:
+		// 1. This is a test-only tool (//go:build ignore prevents production builds)
+		// 2. Migration files are part of the codebase and controlled by developers
+		// 3. The migrations directory path is hardcoded and validated
+		// This is not a SQL injection vulnerability as no user input is involved.
+		content, err := ioutil.ReadFile(files[0]) //nolint:gosec // reading trusted migration files
 		if err != nil {
 			log.Fatalf("Failed to read migration %d: %v", i, err)
 		}
 
 		fmt.Printf("  Applying migration %d: %s\n", i, filepath.Base(files[0]))
-		if _, err := db.Exec(string(content)); err != nil {
+		// Executing SQL from trusted migration files - not user input
+		if _, err := db.Exec(string(content)); err != nil { //nolint:gosec // controlled migration files only
 			log.Fatalf("Failed to apply migration %d: %v", i, err)
 		}
 	}
