@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.benbird316/sureguard",
+  "title": "SureGuard",
+  "description": "Security gatekeeping for AI coding agents. Protect your workspace with Sentinel (shield/sandbox/chain analysis) and Inspector (code quality gating).",
+  "repository": {
+    "url": "https://github.com/benbird316/SureGuard",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "sureguard",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
