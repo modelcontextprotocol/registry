@@ -155,5 +155,82 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.AutomateLab-tech/seo-performance-mcp",
+    "description": "Post-publish SEO performance MCP. Unifies Google Search Console, Matomo, GA4, Clarity, and AI-citation signals per URL and emits a verdict (refresh / expand / merge / kill / double_down / hold) per post with reason codes.",
+    "repository": {
+      "url": "https://github.com/AutomateLab-tech/seo-performance-mcp",
+      "source": "github"
+    },
+    "version": "0.5.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "@automatelab/seo-performance-mcp",
+        "version": "0.5.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "URL of your site XML sitemap (e.g. https://example.com/sitemap.xml)",
+            "isRequired": true,
+            "name": "POSTS_SITEMAP_URL"
+          },
+          {
+            "description": "Base64-encoded Google service account JSON with Search Console read access",
+            "isRequired": false,
+            "isSecret": true,
+            "name": "GSC_SERVICE_ACCOUNT_JSON"
+          },
+          {
+            "description": "Google Search Console property (e.g. sc-domain:example.com)",
+            "isRequired": false,
+            "name": "GSC_SITE_URL"
+          },
+          {
+            "description": "Matomo instance base URL",
+            "isRequired": false,
+            "name": "MATOMO_URL"
+          },
+          {
+            "description": "Matomo authentication token",
+            "isRequired": false,
+            "isSecret": true,
+            "name": "MATOMO_TOKEN"
+          },
+          {
+            "description": "Matomo site ID (numeric)",
+            "isRequired": false,
+            "name": "MATOMO_SITE_ID"
+          },
+          {
+            "description": "GA4 property ID (numeric)",
+            "isRequired": false,
+            "name": "GA4_PROPERTY_ID"
+          },
+          {
+            "description": "Base64-encoded Google service account JSON with GA4 read access",
+            "isRequired": false,
+            "isSecret": true,
+            "name": "GA4_SERVICE_ACCOUNT_JSON"
+          },
+          {
+            "description": "Microsoft Clarity project ID",
+            "isRequired": false,
+            "name": "CLARITY_PROJECT_ID"
+          },
+          {
+            "description": "Microsoft Clarity API token",
+            "isRequired": false,
+            "isSecret": true,
+            "name": "CLARITY_API_TOKEN"
+          }
+        ]
+      }
+    ]
   }
 ]
