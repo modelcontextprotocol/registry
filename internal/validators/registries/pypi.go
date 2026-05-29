@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -86,8 +85,7 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 	description := pypiResp.Info.Description
 
 	// Check for mcp-name: format (more specific)
-	mcpNamePattern := "mcp-name: " + serverName
-	if strings.Contains(description, mcpNamePattern) {
+	if ReadmeDeclaresMCPName(description, serverName) {
 		return nil // Found as mcp-name: format
 	}
 

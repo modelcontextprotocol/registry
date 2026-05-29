@@ -238,8 +238,7 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 		readmeContent := string(readmeBytes)
 
 		// Check for mcp-name: format (more specific)
-		mcpNamePattern := "mcp-name: " + serverName
-		if strings.Contains(readmeContent, mcpNamePattern) {
+		if ReadmeDeclaresMCPName(readmeContent, serverName) {
 			return ValidReadme, nil // Found as mcp-name: format
 		}
 
