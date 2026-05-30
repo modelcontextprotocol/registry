@@ -255,3 +255,37 @@ openssl dgst -sha256 image-processor.mcpb
 ```
 
 The MCP Registry does not validate this hash; however, MCP clients **do** validate the hash before installation to ensure file integrity. Downstream registries may also implement their own validation.
+
+## Go Packages
+
+For Go packages, the MCP Registry currently supports modules hosted on GitHub and resolved through the official Go module proxy (`https://proxy.golang.org`).
+
+Go packages use `"registryType": "go"` in `server.json`, with the module path as the `identifier`. For example:
+
+```json server.json highlight={9}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.username/audit-mcp",
+  "title": "Audit",
+  "description": "Audit MCP traffic",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "go",
+      "identifier": "github.com/username/audit-mcp",
+      "version": "v1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
+The `version` is the Go module version (e.g. `v1.0.0`, including the leading `v`), and the registry confirms it exists on the Go module proxy.
+
+### Ownership Verification
+
+Go modules are identified by their source location, so ownership is verified through the publisher's GitHub namespace rather than an embedded marker. A server published under the `io.github.<owner>` namespace **MUST** use a module path rooted at `github.com/<owner>/...` (the owner is compared case-insensitively). Because the publisher already authenticates for the `io.github.<owner>` namespace, matching the module owner proves ownership.
+
+Non-GitHub module paths are not yet supported.
