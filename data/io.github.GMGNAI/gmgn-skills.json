@@ -1,0 +1,31 @@
+[
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.GMGNAI/gmgn-skills",
+    "description": "With GMGN Agent Skills, you can use AI agents to query real-time trending token rankings across multiple chains, token fundamentals, social media signals, live trading activity, new tokens in Trenches, top holders, top traders, smart money positions, KOL holdings, insider wallets, bundled wallet exposure, and other professional on-chain analytics. It also supports market orders, limit orders, advanced take-profit/stop-loss strategy orders, one-command cooking orders (buy + condition orders in a single flow), and wallet management — including real-time holdings, recent P&L, and transaction history — all through natural language.",
+    "repository": {
+      "url": "https://github.com/GMGNAI/gmgn-skills.git",
+      "source": "github"
+    },
+    "version": "1.0.1",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "gmgn-cli",
+        "version": "1.0.1",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "GMGN API Key. Apply at https://gmgn.ai/ai",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "GMGN_API_KEY"
+          }
+        ]
+      }
+    ]
+  }
+]
