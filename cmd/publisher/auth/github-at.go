@@ -17,6 +17,17 @@ const (
 	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token" // #nosec:G101
 )
 
+const (
+	// defaultPollInterval is the initial device-flow polling interval in
+	// seconds, per RFC 8628 §3.5.
+	defaultPollInterval = 5
+	// maxPollInterval caps how large the polling interval may grow. RFC 8628
+	// §3.5 mandates a 5-second increase on each slow_down but leaves the
+	// maximum to the implementation; this prevents a misbehaving auth server
+	// from growing the interval unboundedly.
+	maxPollInterval = 60
+)
+
 // DeviceCodeResponse represents the response from GitHub's device code endpoint
 type DeviceCodeResponse struct {
 	DeviceCode      string `json:"device_code"`
@@ -46,6 +57,16 @@ type GitHubATProvider struct {
 	registryURL   string
 	providedToken string // Token provided via --token flag or MCP_GITHUB_TOKEN env var
 	githubToken   string // In-memory GitHub token set by Login()
+
+	// accessTokenURL is the GitHub access-token polling endpoint. It is a field
+	// (rather than the package constant) so tests can point it at a mock server.
+	accessTokenURL string
+	// pollInterval is the initial polling interval in seconds. Defaults to
+	// defaultPollInterval; overridable in tests to avoid real delays.
+	pollInterval int
+	// sleep abstracts time.Sleep so tests can run without real delays and
+	// assert the back-off sequence. Defaults to time.Sleep.
+	sleep func(time.Duration)
 }
 
 // ServerHealthResponse represents the response from the health endpoint
@@ -62,8 +83,11 @@ func NewGitHubATProvider(registryURL, token string) Provider {
 	}
 
 	return &GitHubATProvider{
-		registryURL:   registryURL,
-		providedToken: token,
+		registryURL:    registryURL,
+		providedToken:  token,
+		accessTokenURL: GitHubAccessTokenURL,
+		pollInterval:   defaultPollInterval,
+		sleep:          time.Sleep,
 	}
 }
 
@@ -199,12 +223,12 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 	}
 
 	// Default polling interval and expiration time
-	interval := 5    // seconds
+	interval := g.pollInterval
 	expiresIn := 900 // 15 minutes
 	deadline := time.Now().Add(time.Duration(expiresIn) * time.Second)
 
 	for time.Now().Before(deadline) {
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, g.accessTokenURL, bytes.NewBuffer(jsonData))
 		if err != nil {
 			return "", err
 		}
@@ -235,8 +259,11 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 		if tokenResp.Error == "authorization_pending" || tokenResp.Error == "slow_down" {
 			if tokenResp.Error == "slow_down" {
 				interval += 5
+				if interval > maxPollInterval {
+					interval = maxPollInterval
+				}
 			}
-			time.Sleep(time.Duration(interval) * time.Second)
+			g.sleep(time.Duration(interval) * time.Second)
 			continue
 		}
 
