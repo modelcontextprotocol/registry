@@ -2,6 +2,8 @@ package registries_test
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -59,6 +61,43 @@ func TestEscapeGoModulePath(t *testing.T) {
 			}
 			if !tc.wantErr && got != tc.want {
 				t.Errorf("EscapeGoModulePath(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestValidateGoModuleExists(t *testing.T) {
+	cases := []struct {
+		name       string
+		status     int
+		wantErr    bool
+		wantSubstr string
+	}{
+		{"found", http.StatusOK, false, ""},
+		{"not found", http.StatusNotFound, true, "not found"},
+		{"gone", http.StatusGone, true, "not found"},
+		{"server error", http.StatusInternalServerError, true, "unexpected status"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var gotPath string
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotPath = r.URL.Path
+				w.WriteHeader(tc.status)
+			}))
+			defer srv.Close()
+
+			err := registries.ValidateGoModuleExists(context.Background(), srv.URL, "github.com/Alice/mcp-foo", "v1.0.0")
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("ValidateGoModuleExists() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if tc.wantErr && !strings.Contains(err.Error(), tc.wantSubstr) {
+				t.Errorf("error = %q, want substring %q", err.Error(), tc.wantSubstr)
+			}
+			// The module path is case-encoded for the proxy ('Alice' -> '!alice').
+			if want := "/github.com/!alice/mcp-foo/@v/v1.0.0.info"; gotPath != want {
+				t.Errorf("proxy request path = %q, want %q", gotPath, want)
 			}
 		})
 	}

@@ -19,6 +19,7 @@ var (
 const (
 	goGitHubNamespacePrefix = "io.github."
 	goGitHubModulePrefix    = "github.com/"
+	goProxyRequestTimeout   = 10 * time.Second
 )
 
 // ValidateGo validates that a Go module package is owned by the publisher and
@@ -58,7 +59,7 @@ func ValidateGo(ctx context.Context, pkg model.Package, serverName string) error
 		return err
 	}
 
-	return validateGoModuleExists(ctx, pkg.RegistryBaseURL, pkg.Identifier, pkg.Version)
+	return ValidateGoModuleExists(ctx, pkg.RegistryBaseURL, pkg.Identifier, pkg.Version)
 }
 
 // ValidateGoModuleOwnership checks that the module path is rooted at the GitHub
@@ -85,9 +86,9 @@ func ValidateGoModuleOwnership(modulePath, serverName string) error {
 	return nil
 }
 
-// validateGoModuleExists confirms the module version is available on the Go
-// module proxy.
-func validateGoModuleExists(ctx context.Context, baseURL, modulePath, version string) error {
+// ValidateGoModuleExists confirms the module version is available on the Go
+// module proxy at baseURL.
+func ValidateGoModuleExists(ctx context.Context, baseURL, modulePath, version string) error {
 	escapedModule, err := EscapeGoModulePath(modulePath)
 	if err != nil {
 		return fmt.Errorf("invalid Go module path '%s': %w", modulePath, err)
@@ -99,7 +100,7 @@ func validateGoModuleExists(ctx context.Context, baseURL, modulePath, version st
 
 	requestURL := fmt.Sprintf("%s/%s/@v/%s.info", strings.TrimRight(baseURL, "/"), escapedModule, escapedVersion)
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := &http.Client{Timeout: goProxyRequestTimeout}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
