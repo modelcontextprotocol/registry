@@ -10,12 +10,10 @@ The MCP registry provides MCP clients with a list of MCP servers, like an app st
 
 **2025-09-08 update**: The registry has launched in preview 🎉 ([announcement blog post](https://blog.modelcontextprotocol.io/posts/2025-09-08-mcp-registry-preview/)). While the system is now more stable, this is still a preview release and breaking changes or data resets may occur. A general availability (GA) release will follow later. We'd love your feedback in [GitHub discussions](https://github.com/modelcontextprotocol/registry/discussions/new?category=ideas) or in the [#registry-dev Discord](https://discord.com/channels/1358869848138059966/1369487942862504016) ([joining details here](https://modelcontextprotocol.io/community/communication)).
 
-Current maintainers:
-- **Tadas Antanavicius** (PulseMCP) [@tadasant](https://github.com/tadasant) — Lead
-- **Radoslav (Rado) Dimitrov** (Stacklok) [@rdimitrov](https://github.com/rdimitrov) — Lead
+Registry Working Group:
+- **Tadas Antanavicius** (PulseMCP) [@tadasant](https://github.com/tadasant)
+- **Radoslav (Rado) Dimitrov** (Stacklok) [@rdimitrov](https://github.com/rdimitrov)
 - **Bob Dickinson** (TeamSpark) [@BobDickinson](https://github.com/BobDickinson)
-
-Collaborators (push access, not maintainers):
 - **Preeti (Pree) Dewani** (Ravenmail) [@pree-dew](https://github.com/pree-dew)
 
 ## Contributing
