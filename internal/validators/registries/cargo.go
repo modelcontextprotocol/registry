@@ -21,10 +21,12 @@ var (
 
 // CargoReadmeMetaResponse is the structure returned by the crates.io readme metadata endpoint.
 //
-// crates.io's /api/v1/crates/{name}/{version}/readme endpoint returns 200 OK with a JSON
-// body containing a `url` field that points to the rendered README on the static CDN —
-// rather than emitting a 302 redirect. Validators must follow the pointer to retrieve
-// the actual README content.
+// With `Accept: application/json`, crates.io's /api/v1/crates/{name}/{version}/readme
+// endpoint returns 200 OK with a JSON body containing a `url` field that points to the
+// rendered README on the static CDN. (Without the Accept header, or via HEAD, the same
+// endpoint emits a 302 redirect to the CDN URL — the validator uses the JSON path so
+// that crates.io controls where the README lives.) Validators must follow the pointer
+// to retrieve the actual README content.
 type CargoReadmeMetaResponse struct {
 	URL string `json:"url"`
 }
@@ -69,6 +71,14 @@ func ValidateCargo(ctx context.Context, pkg model.Package, serverName string) er
 			pkg.RegistryBaseURL, model.RegistryTypeCargo, model.RegistryURLCrates)
 	}
 
+	return validateCargoREADME(ctx, pkg, serverName)
+}
+
+// validateCargoREADME performs the two-call README fetch and the mcp-name token
+// check. It is split out from ValidateCargo so that httptest-based tests can
+// drive the HTTP pipeline against a mock server (exposed via export_test.go),
+// bypassing the exact-baseURL guard that ValidateCargo enforces for callers.
+func validateCargoREADME(ctx context.Context, pkg model.Package, serverName string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 	// crates.io's crawler policy expects a non-generic User-Agent identifying the source.
 	userAgent := "MCP-Registry-Validator/1.0 (https://registry.modelcontextprotocol.io)"
@@ -93,6 +103,10 @@ func ValidateCargo(ctx context.Context, pkg model.Package, serverName string) er
 	defer metaResp.Body.Close()
 
 	if metaResp.StatusCode != http.StatusOK {
+		// 5xx from the metadata endpoint is upstream availability, not a missing crate.
+		if metaResp.StatusCode >= 500 && metaResp.StatusCode < 600 {
+			return fmt.Errorf("crates.io upstream error fetching metadata for cargo package '%s' (status: %d) — likely transient, retry later", pkg.Identifier, metaResp.StatusCode)
+		}
 		return fmt.Errorf("cargo package '%s' metadata fetch failed (status: %d)", pkg.Identifier, metaResp.StatusCode)
 	}
 
@@ -118,10 +132,14 @@ func ValidateCargo(ctx context.Context, pkg model.Package, serverName string) er
 	}
 	defer readmeResp.Body.Close()
 
-	// Missing crates and missing versions surface as 403 (S3 default for missing keys),
-	// not 404. Treat any non-200 as "not found" — matches the shape of the npm/PyPI
-	// validators and surfaces the actual status code for debugging.
+	// Missing crates and missing versions surface as 403 from static.crates.io
+	// (S3's default for missing keys), not 404. 5xx from the CDN is upstream
+	// availability — surface it as transient so callers can distinguish retryable
+	// failures from genuinely missing crates.
 	if readmeResp.StatusCode != http.StatusOK {
+		if readmeResp.StatusCode >= 500 && readmeResp.StatusCode < 600 {
+			return fmt.Errorf("crates.io upstream error fetching README for cargo package '%s' version '%s' (status: %d) — likely transient, retry later", pkg.Identifier, pkg.Version, readmeResp.StatusCode)
+		}
 		return fmt.Errorf("cargo package '%s' version '%s' not found on crates.io (status: %d)", pkg.Identifier, pkg.Version, readmeResp.StatusCode)
 	}
 

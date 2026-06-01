@@ -2,6 +2,11 @@ package registries_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators/registries"
@@ -174,4 +179,101 @@ func TestValidateCargo_ServerNameFormats(t *testing.T) {
 			assert.Contains(t, err.Error(), tt.serverName)
 		})
 	}
+}
+
+// TestValidateCargo_PositivePathMock exercises the success branch: a README
+// that contains the exact mcp-name token must return no error. Uses httptest
+// to stand in for crates.io, so the test is hermetic — it doesn't depend on
+// any live crate publishing a specific mcp-name line or on network reachability.
+// Calls the test-only ValidateCargoREADME shim so the mock URL can take the
+// place of https://crates.io without tripping the exact-baseURL guard.
+func TestValidateCargo_PositivePathMock(t *testing.T) {
+	ctx := context.Background()
+	const serverName = "io.github.test/positive-path"
+
+	var mock *httptest.Server
+	mock = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/readme") {
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(map[string]string{
+				"url": mock.URL + "/static-readme",
+			}); err != nil {
+				t.Fatalf("encode meta response: %v", err)
+			}
+			return
+		}
+		// Rendered README HTML containing the mcp-name token.
+		fmt.Fprintf(w, "<html><body><p>some content</p><p>mcp-name: %s</p></body></html>", serverName)
+	}))
+	defer mock.Close()
+
+	pkg := model.Package{
+		RegistryType:    model.RegistryTypeCargo,
+		RegistryBaseURL: mock.URL,
+		Identifier:      "test-crate",
+		Version:         "0.1.0",
+	}
+
+	err := registries.ValidateCargoREADME(ctx, pkg, serverName)
+	assert.NoError(t, err, "validator should accept a README containing the exact mcp-name token")
+}
+
+// TestValidateCargo_LivePositivePath is the live anchor — it validates against
+// rust-faf-mcp v0.3.1 on real crates.io, the first crate published with the
+// mcp-name token as visible markdown (v0.3.0 used a hidden HTML comment, which
+// crates.io strips during README rendering — see package-types.mdx for the
+// cargo-specific gotcha). Complements TestValidateCargo_PositivePathMock:
+// the mock proves the validator works in principle (hermetic, fast); the live
+// anchor proves it works against the real crates.io API + static CDN pipeline.
+//
+// If this test ever starts failing, check (in order):
+//  1. Has rust-faf-mcp v0.3.1 been yanked or replaced?
+//  2. Did crates.io change its README rendering pipeline (e.g., start
+//     stripping markdown lines that look like email-like tokens)?
+//  3. Is the test machine network-blocked from crates.io or static.crates.io?
+func TestValidateCargo_LivePositivePath(t *testing.T) {
+	ctx := context.Background()
+
+	pkg := model.Package{
+		RegistryType: model.RegistryTypeCargo,
+		Identifier:   "rust-faf-mcp",
+		Version:      "0.3.1",
+	}
+
+	err := registries.ValidateCargo(ctx, pkg, "io.github.Wolfe-Jam/rust-faf-mcp")
+	assert.NoError(t, err, "validator should accept the live rust-faf-mcp v0.3.1 crate (the canonical live anchor for cargo positive-path)")
+}
+
+// TestValidateCargo_TransientUpstreamError exercises the 5xx-as-transient branch:
+// a 502/503 from static.crates.io is upstream availability, not "crate missing",
+// and the error message must signal a retryable failure rather than imply the
+// crate doesn't exist (the previous behavior, flagged in PR #1207 review).
+func TestValidateCargo_TransientUpstreamError(t *testing.T) {
+	ctx := context.Background()
+
+	var mock *httptest.Server
+	mock = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/readme") {
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"url": mock.URL + "/static-readme",
+			})
+			return
+		}
+		// Simulate static.crates.io 502 — upstream blip, not a missing crate.
+		http.Error(w, "bad gateway", http.StatusBadGateway)
+	}))
+	defer mock.Close()
+
+	pkg := model.Package{
+		RegistryType:    model.RegistryTypeCargo,
+		RegistryBaseURL: mock.URL,
+		Identifier:      "test-crate",
+		Version:         "0.1.0",
+	}
+
+	err := registries.ValidateCargoREADME(ctx, pkg, "io.github.test/transient")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "transient")
+	assert.NotContains(t, err.Error(), "not found", "transient upstream errors should not be reported as 'not found'")
 }
