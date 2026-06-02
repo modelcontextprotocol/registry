@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/validators/registries"
@@ -276,4 +278,134 @@ func TestValidateCargo_TransientUpstreamError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "transient")
 	assert.NotContains(t, err.Error(), "not found", "transient upstream errors should not be reported as 'not found'")
+}
+
+// TestValidateCargoCombinedFixture exercises path-encoding and the full status
+// matrix in one httptest fixture — the same pattern praised by @P4ST4S on
+// PR #1321 for Go modules. One server dispatches on the crate identifier
+// embedded in the URL path; wrong encoding routes to the fallback 500, which
+// breaks the appropriate assertion. The explicit path assertion (assert.Equal
+// on lastMetaPath) also catches encoding regressions directly.
+func TestValidateCargoCombinedFixture(t *testing.T) {
+	ctx := context.Background()
+	const serverName = "io.github.test/combined"
+
+	tests := []struct {
+		name            string
+		crateName       string
+		version         string
+		metaStatus      int
+		readmeStatus    int
+		readmeBody      string
+		wantErr         bool
+		wantContains    []string
+		wantNotContains []string
+	}{
+		{
+			name:         "happy_path_visible_token",
+			crateName:    "combined-happy",
+			version:      "0.1.0",
+			metaStatus:   http.StatusOK,
+			readmeStatus: http.StatusOK,
+			readmeBody:   fmt.Sprintf("<html><body><p>mcp-name: %s</p></body></html>", serverName),
+		},
+		{
+			name:         "metadata_404",
+			crateName:    "combined-meta404",
+			version:      "0.1.0",
+			metaStatus:   http.StatusNotFound,
+			wantErr:      true,
+			wantContains: []string{"metadata fetch failed", "status: 404"},
+		},
+		{
+			name:         "readme_403_s3_not_found",
+			crateName:    "combined-readme403",
+			version:      "0.1.0",
+			metaStatus:   http.StatusOK,
+			readmeStatus: http.StatusForbidden,
+			wantErr:      true,
+			wantContains: []string{"not found", "status: 403"},
+		},
+		{
+			name:         "readme_502_transient",
+			crateName:    "combined-readme502",
+			version:      "0.1.0",
+			metaStatus:   http.StatusOK,
+			readmeStatus: http.StatusBadGateway,
+			wantErr:      true,
+			wantContains:    []string{"transient"},
+			wantNotContains: []string{"not found"},
+		},
+	}
+
+	// lastMetaPath captures the metadata request path seen by the handler so
+	// each sub-test can assert the exact url.PathEscape-encoded form.
+	var lastMetaPath atomic.Value
+	lastMetaPath.Store("")
+
+	var srv *httptest.Server
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for i := range tests {
+			tt := &tests[i]
+			metaPath   := fmt.Sprintf("/api/v1/crates/%s/%s/readme",
+				url.PathEscape(tt.crateName), url.PathEscape(tt.version))
+			staticPath := "/readme-static/" + url.PathEscape(tt.crateName)
+
+			if r.URL.Path == metaPath {
+				lastMetaPath.Store(r.URL.Path)
+				if tt.metaStatus != http.StatusOK {
+					http.Error(w, "simulated non-200", tt.metaStatus)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(map[string]string{"url": srv.URL + staticPath})
+				return
+			}
+			if r.URL.Path == staticPath {
+				if tt.readmeStatus != http.StatusOK {
+					http.Error(w, "simulated non-200", tt.readmeStatus)
+					return
+				}
+				fmt.Fprint(w, tt.readmeBody)
+				return
+			}
+		}
+		http.Error(w, "unexpected path: "+r.URL.Path, http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	for i := range tests {
+		tt := tests[i]
+		lastMetaPath.Store("")
+		t.Run(tt.name, func(t *testing.T) {
+			wantMetaPath := fmt.Sprintf("/api/v1/crates/%s/%s/readme",
+				url.PathEscape(tt.crateName), url.PathEscape(tt.version))
+
+			pkg := model.Package{
+				RegistryType:    model.RegistryTypeCargo,
+				RegistryBaseURL: srv.URL,
+				Identifier:      tt.crateName,
+				Version:         tt.version,
+			}
+
+			err := registries.ValidateCargoREADME(ctx, pkg, serverName)
+
+			// Assert encode step: the validator must have requested exactly the
+			// url.PathEscape-encoded path; wrong encoding hits the fallback 500.
+			assert.Equal(t, wantMetaPath, lastMetaPath.Load().(string),
+				"meta request path must be exactly the url.PathEscape-encoded form")
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				for _, want := range tt.wantContains {
+					assert.Contains(t, err.Error(), want)
+				}
+				for _, notWant := range tt.wantNotContains {
+					assert.NotContains(t, err.Error(), notWant)
+				}
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
