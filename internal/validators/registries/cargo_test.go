@@ -327,12 +327,12 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			wantContains: []string{"not found", "status: 403"},
 		},
 		{
-			name:         "readme_502_transient",
-			crateName:    "combined-readme502",
-			version:      "0.1.0",
-			metaStatus:   http.StatusOK,
-			readmeStatus: http.StatusBadGateway,
-			wantErr:      true,
+			name:            "readme_502_transient",
+			crateName:       "combined-readme502",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusBadGateway,
+			wantErr:         true,
 			wantContains:    []string{"transient"},
 			wantNotContains: []string{"not found"},
 		},
@@ -347,7 +347,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		for i := range tests {
 			tt := &tests[i]
-			metaPath   := fmt.Sprintf("/api/v1/crates/%s/%s/readme",
+			metaPath := fmt.Sprintf("/api/v1/crates/%s/%s/readme",
 				url.PathEscape(tt.crateName), url.PathEscape(tt.version))
 			staticPath := "/readme-static/" + url.PathEscape(tt.crateName)
 
