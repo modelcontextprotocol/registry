@@ -237,10 +237,10 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 
 		readmeContent := string(readmeBytes)
 
-		// Check for mcp-name: format (more specific)
-		mcpNamePattern := "mcp-name: " + serverName
-		if strings.Contains(readmeContent, mcpNamePattern) {
-			return ValidReadme, nil // Found as mcp-name: format
+		// Check for the mcp-name: <server-name> ownership token (boundary-anchored
+		// to avoid prefix confusion — see containsMCPNameToken).
+		if containsMCPNameToken(readmeContent, serverName) {
+			return ValidReadme, nil
 		}
 
 		return InvalidReadme, nil

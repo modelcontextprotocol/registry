@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -85,10 +84,10 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 	// Check description (README) content
 	description := pypiResp.Info.Description
 
-	// Check for mcp-name: format (more specific)
-	mcpNamePattern := "mcp-name: " + serverName
-	if strings.Contains(description, mcpNamePattern) {
-		return nil // Found as mcp-name: format
+	// Check for the mcp-name: <server-name> ownership token (boundary-anchored to
+	// avoid prefix confusion — see containsMCPNameToken).
+	if containsMCPNameToken(description, serverName) {
+		return nil
 	}
 
 	return fmt.Errorf("PyPI package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
