@@ -151,10 +151,11 @@ func TestValidateCargo_RejectsMCPBOnlyFields(t *testing.T) {
 
 // Server names follow io.github.OWNER/REPO and may contain dots, slashes,
 // hyphens, underscores, and digits. None of these get HTML-escaped during
-// README rendering, so substring match against the rendered HTML is reliable.
-// These tests exercise format variations against a real crate that doesn't
-// declare any mcp-name (serde) — every case fails ownership, but we verify
-// the failure error preserves the exact server name unchanged.
+// README rendering, so a boundary-anchored match against the rendered HTML is
+// reliable. This is a hermetic POSITIVE test: each format variation is placed in
+// a mock README as the exact mcp-name token and must validate successfully, so
+// it actually exercises the match (the earlier version used a token-less live
+// crate, where every case failed and the assertion was satisfied trivially).
 func TestValidateCargo_ServerNameFormats(t *testing.T) {
 	ctx := context.Background()
 
@@ -166,19 +167,33 @@ func TestValidateCargo_ServerNameFormats(t *testing.T) {
 		{name: "multiple hyphens", serverName: "io.github.example/multi-hyphen-test-name"},
 		{name: "underscore", serverName: "io.github.example/snake_case_name"},
 		{name: "numeric suffix", serverName: "io.github.example/server-v2"},
+		{name: "dotted name segment", serverName: "io.github.example/group.tool"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			serverName := tt.serverName
+			var mock *httptest.Server
+			mock = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if strings.HasSuffix(r.URL.Path, "/readme") {
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]string{"url": mock.URL + "/static-readme"})
+					return
+				}
+				// Token on its own line; the trailing newline is the boundary.
+				fmt.Fprintf(w, "<html><body>\nmcp-name: %s\n</body></html>", serverName)
+			}))
+			defer mock.Close()
+
 			pkg := model.Package{
-				RegistryType: model.RegistryTypeCargo,
-				Identifier:   "serde",
-				Version:      "1.0.219",
+				RegistryType:    model.RegistryTypeCargo,
+				RegistryBaseURL: mock.URL,
+				Identifier:      "fmt-crate",
+				Version:         "0.1.0",
 			}
 
-			err := registries.ValidateCargo(ctx, pkg, tt.serverName)
-			assert.Error(t, err)
-			assert.Contains(t, err.Error(), tt.serverName)
+			err := registries.ValidateCargoREADME(ctx, pkg, serverName)
+			assert.NoError(t, err, "server name %q should validate when present as an exact mcp-name token", serverName)
 		})
 	}
 }
@@ -197,11 +212,10 @@ func TestValidateCargo_PositivePathMock(t *testing.T) {
 	mock = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/readme") {
 			w.Header().Set("Content-Type", "application/json")
-			if err := json.NewEncoder(w).Encode(map[string]string{
-				"url": mock.URL + "/static-readme",
-			}); err != nil {
-				t.Fatalf("encode meta response: %v", err)
-			}
+			// Encode of a static map cannot fail; ignore the error rather than
+			// calling t.Fatalf from this (server) goroutine, which is not the test
+			// goroutine and would truncate the response instead of failing cleanly.
+			_ = json.NewEncoder(w).Encode(map[string]string{"url": mock.URL + "/static-readme"})
 			return
 		}
 		// Rendered README HTML containing the mcp-name token.
@@ -280,6 +294,34 @@ func TestValidateCargo_TransientUpstreamError(t *testing.T) {
 	assert.NotContains(t, err.Error(), "not found", "transient upstream errors should not be reported as 'not found'")
 }
 
+// TestValidateCargo_RejectsForeignReadmeHost is the SSRF guard: the README
+// pointer returned by the metadata endpoint must be on an allowed host. Here the
+// (mock) metadata endpoint points the README at an unrelated host; the validator
+// must refuse to fetch it rather than follow the pointer anywhere crates.io names.
+// The ".invalid" host never resolves, so a regression that dropped the host check
+// would fail to connect rather than silently pass — but the assertion targets the
+// explicit "unexpected host" refusal, which happens before any fetch.
+func TestValidateCargo_RejectsForeignReadmeHost(t *testing.T) {
+	ctx := context.Background()
+
+	mock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"url": "http://internal.invalid/secret-readme"})
+	}))
+	defer mock.Close()
+
+	pkg := model.Package{
+		RegistryType:    model.RegistryTypeCargo,
+		RegistryBaseURL: mock.URL,
+		Identifier:      "evil-crate",
+		Version:         "0.1.0",
+	}
+
+	err := registries.ValidateCargoREADME(ctx, pkg, "io.github.test/evil")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unexpected host", "a README URL on a foreign host must be refused (SSRF guard)")
+}
+
 // TestValidateCargoCombinedFixture exercises path-encoding and the full status
 // matrix in one httptest fixture — the same pattern praised by @P4ST4S on
 // PR #1321 for Go modules. One server dispatches on the crate identifier
@@ -297,6 +339,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 		metaStatus      int
 		readmeStatus    int
 		readmeBody      string
+		versionExists   bool // response for the /api/v1/crates/{n}/{v} existence probe (403 disambiguation)
 		wantErr         bool
 		wantContains    []string
 		wantNotContains []string
@@ -310,7 +353,11 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			readmeBody:   fmt.Sprintf("<html><body><p>mcp-name: %s</p></body></html>", serverName),
 		},
 		{
-			name:         "metadata_404",
+			// Defensive branch: crates.io's metadata endpoint returns 200 (with a
+			// CDN url) even for missing crates, so it does NOT 404 in practice for a
+			// missing crate — the real missing-crate path is readme_403_missing below.
+			// This case only covers what we'd report if the API ever did 404.
+			name:         "metadata_404_defensive",
 			crateName:    "combined-meta404",
 			version:      "0.1.0",
 			metaStatus:   http.StatusNotFound,
@@ -318,13 +365,39 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			wantContains: []string{"metadata fetch failed", "status: 404"},
 		},
 		{
-			name:         "readme_403_s3_not_found",
-			crateName:    "combined-readme403",
-			version:      "0.1.0",
-			metaStatus:   http.StatusOK,
-			readmeStatus: http.StatusForbidden,
-			wantErr:      true,
-			wantContains: []string{"not found", "status: 403"},
+			// Real missing-crate/version path: CDN 403 + existence probe 404.
+			name:            "readme_403_missing",
+			crateName:       "combined-readme403-missing",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusForbidden,
+			versionExists:   false,
+			wantErr:         true,
+			wantContains:    []string{"not found"},
+			wantNotContains: []string{"has no rendered README"},
+		},
+		{
+			// Crate/version exists but has no rendered README: CDN 403 + existence
+			// probe 200. Must NOT be reported as "not found".
+			name:            "readme_403_no_readme",
+			crateName:       "combined-readme403-noreadme",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusForbidden,
+			versionExists:   true,
+			wantErr:         true,
+			wantContains:    []string{"has no rendered README"},
+			wantNotContains: []string{"not found"},
+		},
+		{
+			name:            "readme_429_transient",
+			crateName:       "combined-readme429",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusTooManyRequests,
+			wantErr:         true,
+			wantContains:    []string{"transient"},
+			wantNotContains: []string{"not found"},
 		},
 		{
 			name:            "readme_502_transient",
@@ -335,6 +408,18 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			wantErr:         true,
 			wantContains:    []string{"transient"},
 			wantNotContains: []string{"not found"},
+		},
+		{
+			// Prefix confusion: README declares a LONGER name; a claim for the
+			// shorter serverName must be rejected by the boundary-anchored match.
+			name:         "prefix_confusion_rejected",
+			crateName:    "combined-prefix",
+			version:      "0.1.0",
+			metaStatus:   http.StatusOK,
+			readmeStatus: http.StatusOK,
+			readmeBody:   fmt.Sprintf("<html><body><p>mcp-name: %s-extended</p></body></html>", serverName),
+			wantErr:      true,
+			wantContains: []string{"ownership validation failed"},
 		},
 	}
 
@@ -349,6 +434,8 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			tt := &tests[i]
 			metaPath := fmt.Sprintf("/api/v1/crates/%s/%s/readme",
 				url.PathEscape(tt.crateName), url.PathEscape(tt.version))
+			versionPath := fmt.Sprintf("/api/v1/crates/%s/%s",
+				url.PathEscape(tt.crateName), url.PathEscape(tt.version))
 			staticPath := "/readme-static/" + url.PathEscape(tt.crateName)
 
 			if r.URL.Path == metaPath {
@@ -359,6 +446,16 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 				}
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(map[string]string{"url": srv.URL + staticPath})
+				return
+			}
+			// Existence probe used to disambiguate a README 403.
+			if r.URL.Path == versionPath {
+				if tt.versionExists {
+					w.Header().Set("Content-Type", "application/json")
+					_ = json.NewEncoder(w).Encode(map[string]any{"version": map[string]string{"num": tt.version}})
+				} else {
+					http.Error(w, "not found", http.StatusNotFound)
+				}
 				return
 			}
 			if r.URL.Path == staticPath {
