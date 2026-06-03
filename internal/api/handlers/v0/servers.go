@@ -3,6 +3,7 @@ package v0
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -131,7 +132,8 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		// Get paginated results with filtering
 		servers, nextCursor, err := registry.ListServers(ctx, filter, input.Cursor, input.Limit)
 		if err != nil {
-			return nil, huma.Error500InternalServerError("Failed to get registry list", err)
+			log.Printf("list servers failed: %v", err)
+			return nil, huma.Error500InternalServerError("Failed to get registry list")
 		}
 
 		// Convert []*ServerResponse to []ServerResponse
@@ -184,7 +186,8 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			return nil, huma.Error500InternalServerError("Failed to get server details", err)
+			log.Printf("get server details (%q/%q) failed: %v", serverName, version, err)
+			return nil, huma.Error500InternalServerError("Failed to get server details")
 		}
 
 		return &Response[apiv0.ServerResponse]{
@@ -213,7 +216,8 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			return nil, huma.Error500InternalServerError("Failed to get server versions", err)
+			log.Printf("get server versions (%q) failed: %v", serverName, err)
+			return nil, huma.Error500InternalServerError("Failed to get server versions")
 		}
 
 		// Convert []*ServerResponse to []ServerResponse

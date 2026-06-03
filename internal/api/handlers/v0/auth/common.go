@@ -10,7 +10,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
+	"net"
 	"regexp"
 	"strings"
 	"time"
@@ -18,6 +20,15 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/auth"
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
+
+// readErrorBody reads an upstream error response body for inclusion in an
+// error message. The cap protects against a misbehaving upstream returning a
+// huge body — error diagnostics never need more than a few KB.
+func readErrorBody(r io.Reader) string {
+	const maxErrorBodySize = 8 * 1024
+	b, _ := io.ReadAll(io.LimitReader(r, maxErrorBodySize))
+	return string(b)
+}
 
 // ErrSignatureMismatch is returned by VerifySignature when the signature is structurally
 // valid but does not verify against the public key. Distinguishing this from structural
@@ -373,6 +384,18 @@ func ReverseString(domain string) string {
 
 func IsValidDomain(domain string) bool {
 	if len(domain) == 0 || len(domain) > 253 {
+		return false
+	}
+
+	// Reject IP literals — this auth method proves domain ownership, not IP
+	// ownership, and IP literals are an SSRF vector into internal networks.
+	if net.ParseIP(domain) != nil {
+		return false
+	}
+
+	// Require at least one dot — rejects single-label names like "localhost"
+	// or "kubernetes" that resolve only inside private networks.
+	if !strings.Contains(domain, ".") {
 		return false
 	}
 

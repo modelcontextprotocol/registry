@@ -45,9 +45,13 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 		return nil, fmt.Errorf("failed to parse PostgreSQL config: %w", err)
 	}
 
-	// Configure pool for stability-focused defaults
-	config.MaxConns = 30                      // Handle good concurrent load
-	config.MinConns = 5                       // Keep connections warm for fast response
+	// Configure pool for stability-focused defaults.
+	// MaxConns was 30 per pod (60 total across 2 replicas) which saturated under
+	// the 2026-04-28 scraper bursts (15 req/s on /v0/servers caused queue blowup
+	// even though individual queries were fast). 60 per pod gives 120 total,
+	// leaving 80 of PG max_connections=200 for autovacuum/admin/headroom.
+	config.MaxConns = 60                      // Handle scraper-burst concurrent load
+	config.MinConns = 10                      // Keep connections warm for fast response
 	config.MaxConnIdleTime = 30 * time.Minute // Keep connections available for bursts
 	config.MaxConnLifetime = 2 * time.Hour    // Refresh connections regularly for stability
 
@@ -96,7 +100,15 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		argIndex++
 	}
 	if filter.RemoteURL != nil {
-		conditions = append(conditions, fmt.Sprintf("EXISTS (SELECT 1 FROM jsonb_array_elements(value->'remotes') AS remote WHERE remote->>'url' = $%d)", argIndex))
+		// Use a JSONB containment predicate so the planner can use the GIN index
+		// idx_servers_json_remotes on (value -> 'remotes'). The previously-used
+		// EXISTS / jsonb_array_elements / ->> form is logically equivalent but
+		// the planner can't translate the per-row array unfolding into a GIN
+		// search — it falls back to scanning every row. validateNoDuplicateRemoteURLs
+		// in the publish path ran this filter and was measured at ~10s on prod's
+		// 21K-row table on 2026-04-28; the containment form is GIN-indexable and
+		// completes in low single-digit ms.
+		conditions = append(conditions, fmt.Sprintf("value -> 'remotes' @> jsonb_build_array(jsonb_build_object('url', $%d::text))", argIndex))
 		args = append(args, *filter.RemoteURL)
 		argIndex++
 	}
@@ -106,8 +118,13 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		argIndex++
 	}
 	if filter.SubstringName != nil {
-		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d", argIndex))
-		args = append(args, "%"+*filter.SubstringName+"%")
+		// Escape LIKE metacharacters so that user input cannot expand into
+		// wildcard matches (e.g. `?search=_` matching every single-char name,
+		// `?search=%` matching everything). Order matters: backslashes must be
+		// escaped first so subsequent escape backslashes are not double-escaped.
+		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(*filter.SubstringName)
+		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", argIndex))
+		args = append(args, "%"+escaped+"%")
 		argIndex++
 	}
 	if filter.Version != nil {
@@ -127,7 +144,16 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 	return conditions, args, argIndex
 }
 
-// addCursorCondition adds pagination cursor condition to WHERE clause
+// addCursorCondition adds pagination cursor condition to WHERE clause.
+//
+// The compound cursor uses a row-constructor comparison so PostgreSQL can seek
+// directly into the (server_name, version) B-tree index. The OR-decomposed form
+// `server_name > X OR (server_name = X AND version > Y)` is logically equivalent
+// but PostgreSQL's planner cannot use it for an index seek — it scans the index
+// from the start and filters everything before the cursor, making cost grow
+// linearly with cursor depth (a 20K-row table at a deep cursor took ~760ms in
+// prod). The row-constructor form `(server_name, version) > (X, Y)` is special-
+// cased and stays constant-time regardless of cursor depth.
 func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 	if cursor == "" {
 		return "", nil, argIndex
@@ -138,9 +164,8 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 	if len(parts) == 2 {
 		cursorServerName := parts[0]
 		cursorVersion := parts[1]
-		// Use compound condition: (server_name > cursor_name) OR (server_name = cursor_name AND version > cursor_version)
-		condition := fmt.Sprintf("(server_name > $%d OR (server_name = $%d AND version > $%d))", argIndex, argIndex+1, argIndex+2)
-		return condition, []any{cursorServerName, cursorServerName, cursorVersion}, argIndex + 3
+		condition := fmt.Sprintf("(server_name, version) > ($%d, $%d)", argIndex, argIndex+1)
+		return condition, []any{cursorServerName, cursorVersion}, argIndex + 2
 	}
 
 	// Fallback for malformed cursor - treat as server name only for backwards compatibility
@@ -173,7 +198,6 @@ func (db *PostgreSQL) ListServers(
 		whereConditions = append(whereConditions, cursorCondition)
 		args = append(args, cursorArgs...)
 	}
-	_ = argIndex // Silence unused variable warning
 
 	// Build the WHERE clause
 	whereClause := ""

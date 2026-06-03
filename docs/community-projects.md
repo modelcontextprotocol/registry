@@ -20,6 +20,13 @@ Browse the official MCP Registry in your browser!
 - [mcp-registry-spec-sdk](https://www.npmjs.com/package/mcp-registry-spec-sdk) - TypeScript client for the MCP Registry
 - [LangChain4j MCP Registry Java client](https://docs.langchain4j.dev/tutorials/mcp/#mcp-registry-client) - Java API
 
+### Registry Implementations
+
+Self-hostable servers that implement the MCP Registry API specification.
+
+- [ToolSDK MCP Registry](https://github.com/toolsdk-ai/toolsdk-mcp-registry) - Extends the MCP Registry with **API-based MCP execution, private deployment**, and **secure sandbox isolation**.
+- [ToolHive Registry Server](https://github.com/stacklok/toolhive-registry-server) - Enterprise-grade MCP Registry API implementation with Kubernetes-native CRD discovery, OIDC/JWT claim-based access control, multi-source aggregation (Git, K8s, upstream registries), SIEM-compliant audit logging, and OpenTelemetry observability.
+
 ### Other
 
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
@@ -28,7 +35,6 @@ Browse the official MCP Registry in your browser!
 - [mcp-insights](https://github.com/joelverhagen/mcp-insights/) - Analytics and insights for the MCP Registry
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
-- [ToolSDK MCP Registry](https://github.com/toolsdk-ai/toolsdk-mcp-registry) - Extends the MCP Registry with **API-based MCP execution, private deployment**, and **secure sandbox isolation**.
 
 ## Adding Your Project
 

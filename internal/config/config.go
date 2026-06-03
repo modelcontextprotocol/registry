@@ -17,6 +17,8 @@ type Config struct {
 	EnableAnonymousAuth      bool   `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 	EnableRegistryValidation bool   `env:"ENABLE_REGISTRY_VALIDATION" envDefault:"true"`
 
+	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
+
 	// OIDC Configuration
 	OIDCEnabled      bool   `env:"OIDC_ENABLED" envDefault:"false"`
 	OIDCIssuer       string `env:"OIDC_ISSUER" envDefault:""`

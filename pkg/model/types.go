@@ -35,7 +35,7 @@ type Package struct {
 	//   - For MCPB: direct download URL
 	Identifier string `json:"identifier" minLength:"1" doc:"Package identifier - either a package name (for registries) or URL (for direct downloads)" example:"@modelcontextprotocol/server-brave-search"`
 	// Version is the package version (required for npm, pypi, nuget; optional for mcpb; not used by oci where version is in the identifier)
-	Version string `json:"version,omitempty" minLength:"1" doc:"Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')." example:"1.0.2"`
+	Version string `json:"version,omitempty" minLength:"1" maxLength:"255" doc:"Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*')." example:"1.0.2"`
 	// FileSHA256 is the SHA-256 hash for integrity verification (required for mcpb, optional for others)
 	FileSHA256 string `json:"fileSha256,omitempty" pattern:"^[a-f0-9]{64}$" doc:"SHA-256 hash of the package file for integrity verification. Required for MCPB packages and optional for other package types. Authors are responsible for generating correct SHA-256 hashes when creating server.json. If present, MCP clients must validate the downloaded file matches the hash before running packages to ensure file integrity." example:"fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"`
 	// RunTimeHint suggests the appropriate runtime for the package

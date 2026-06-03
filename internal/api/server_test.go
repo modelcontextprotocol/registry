@@ -232,6 +232,22 @@ func TestTrailingSlashMiddleware(t *testing.T) {
 			expectedLocation: "/v0/servers?limit=10",
 			expectRedirect:   true,
 		},
+		{
+			// Regression test for GHSA-v8vw-gw5j-w7m6: a protocol-relative
+			// path like "//evil.com/" must not redirect off-host.
+			name:             "protocol-relative path should not redirect off-host",
+			path:             "//evil.com/",
+			expectedStatus:   http.StatusPermanentRedirect,
+			expectedLocation: "/evil.com",
+			expectRedirect:   true,
+		},
+		{
+			name:             "path with multiple leading slashes should be collapsed",
+			path:             "///evil.com/foo/",
+			expectedStatus:   http.StatusPermanentRedirect,
+			expectedLocation: "/evil.com/foo",
+			expectRedirect:   true,
+		},
 	}
 
 	for _, tt := range tests {

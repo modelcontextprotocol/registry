@@ -2,7 +2,9 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -18,6 +20,12 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
 )
+
+// statusClientClosed mirrors NGINX's non-standard 499 — used for requests
+// where the client disconnected before we finished. Distinguishing these from
+// real server errors keeps the availability metric meaningful under bursts of
+// scraper traffic that time out and reconnect.
+const statusClientClosed = 499
 
 // Middleware configuration options
 type middlewareConfig struct {
@@ -67,6 +75,22 @@ func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...Middleware
 		duration := time.Since(start).Seconds()
 		statusCode := ctx.Status()
 
+		// If the client disconnected before the handler finished, the handler
+		// likely converted the resulting context.Canceled into a huma 5xx and
+		// tried to write a response to a closed socket. NGINX records that
+		// case as a 499 (client closed). Without this remap we count it as a
+		// server error: a single ServiceNow-style burst that times out a
+		// few thousand list-servers requests inflates http_errors_total even
+		// though no client ever saw a 5xx, and the availability alert fires
+		// on what is effectively just slow responses.
+		//
+		// Only context.Canceled is remapped — context.DeadlineExceeded would
+		// indicate a server-side timeout we set ourselves and should still
+		// count as a server error if/when we add per-request deadlines.
+		if reqErr := ctx.Context().Err(); reqErr != nil && errors.Is(reqErr, context.Canceled) {
+			statusCode = statusClientClosed
+		}
+
 		// Combine common and custom attributes
 		attrs := []attribute.KeyValue{
 			attribute.String("method", method),
@@ -77,7 +101,9 @@ func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...Middleware
 		// Record metrics
 		metrics.Requests.Add(ctx.Context(), 1, metric.WithAttributes(attrs...))
 
-		if statusCode >= 400 {
+		// Skip the error counter for client-closed requests so the availability
+		// metric reflects server-visible errors only.
+		if statusCode >= 400 && statusCode != statusClientClosed {
 			metrics.ErrorCount.Add(ctx.Context(), 1, metric.WithAttributes(attrs...))
 		}
 
@@ -97,6 +123,7 @@ func WithSkipPaths(paths ...string) MiddlewareOption {
 // handle404 returns a helpful 404 error with suggestions for common mistakes
 func handle404(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/problem+json")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(http.StatusNotFound)
 
 	path := r.URL.Path
@@ -187,8 +214,28 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 	// Add UI and 404 handler for all other routes
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
-			// Serve UI at root
+			// Serve UI at root. The page renders publisher-controlled content
+			// (server names, descriptions, repository URLs) — server-side
+			// validation plus a JS escape function are the primary XSS
+			// defences; these headers are defence-in-depth in case any of
+			// those slip.
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("X-Content-Type-Options", "nosniff")
+			w.Header().Set("X-Frame-Options", "DENY")
+			// connect-src is unrestricted because the UI exposes a base-URL
+			// selector (prod / staging / custom) that issues cross-origin
+			// XHRs to whichever target the operator picks. Constraining
+			// connect-src would silently break that affordance. The other
+			// directives still meaningfully limit the page's attack surface.
+			w.Header().Set("Content-Security-Policy",
+				"default-src 'self'; "+
+					"script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "+
+					"style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "+
+					"img-src 'self' data:; "+
+					"connect-src *; "+
+					"frame-ancestors 'none'; "+
+					"base-uri 'self'; "+
+					"form-action 'self'")
 			_, err := w.Write([]byte(v0.GetUIHTML()))
 			if err != nil {
 				http.Error(w, "Failed to write response", http.StatusInternalServerError)

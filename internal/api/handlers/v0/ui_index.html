@@ -423,13 +423,13 @@
                 ${server.repository?.url ? `
                     <div>
                         <span class="font-medium">Repository:</span>
-                        <a href="${escapeHtml(server.repository.url)}" target="_blank" class="text-blue-600 hover:underline break-all" onclick="event.stopPropagation()">${escapeHtml(server.repository.url)}</a>
+                        <a href="${escapeAttr(server.repository.url)}" target="_blank" class="text-blue-600 hover:underline break-all" onclick="event.stopPropagation()">${escapeHtml(server.repository.url)}</a>
                     </div>
                 ` : ''}
                 ${server.websiteUrl ? `
                     <div>
                         <span class="font-medium">Website:</span>
-                        <a href="${escapeHtml(server.websiteUrl)}" target="_blank" class="text-blue-600 hover:underline break-all" onclick="event.stopPropagation()">${escapeHtml(server.websiteUrl)}</a>
+                        <a href="${escapeAttr(server.websiteUrl)}" target="_blank" class="text-blue-600 hover:underline break-all" onclick="event.stopPropagation()">${escapeHtml(server.websiteUrl)}</a>
                     </div>
                 ` : ''}
                 <div>
@@ -491,10 +491,24 @@
         });
 
         // Utility functions
+        // Safe for element-text contexts only: encodes `&`, `<`, `>`. Does NOT
+        // encode `"` or `'`, so it is unsafe inside attribute values — use
+        // escapeAttr there.
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Safe for HTML attribute values per OWASP attribute-encoding rule.
+        function escapeAttr(text) {
+            if (text == null) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
 
         function formatDate(dateStr) {
