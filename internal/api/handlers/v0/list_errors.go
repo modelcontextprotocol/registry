@@ -8,8 +8,8 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-// listServersError maps ListServers failures; client disconnects must not log as 500s.
-func listServersError(ctx context.Context, err error) error {
+// ListServersError maps ListServers failures; client disconnects must not log as 500s.
+func ListServersError(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}

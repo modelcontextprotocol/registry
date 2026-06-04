@@ -132,7 +132,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		// Get paginated results with filtering
 		servers, nextCursor, err := registry.ListServers(ctx, filter, input.Cursor, input.Limit)
 		if err != nil {
-			return nil, listServersError(ctx, err)
+			return nil, ListServersError(ctx, err)
 		}
 
 		// Convert []*ServerResponse to []ServerResponse
