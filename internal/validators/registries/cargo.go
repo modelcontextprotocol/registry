@@ -331,5 +331,11 @@ func validateCargoREADME(ctx context.Context, pkg model.Package, serverName stri
 		return nil
 	}
 
+	// If the token IS present but glued to a trailing character, explain that
+	// rather than telling the publisher to add a token they can already see.
+	if trailing, glued := mcpNameTokenGluedTrailing(string(body), serverName); glued {
+		return fmt.Errorf("cargo package '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, or an HTML tag — put it on its own line and publish a new version", pkg.Identifier, serverName, trailing)
+	}
+
 	return fmt.Errorf("cargo package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
 }

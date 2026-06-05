@@ -436,6 +436,18 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			wantErr:      true,
 			wantContains: []string{"ownership validation failed"},
 		},
+		{
+			// Token present but glued to a trailing period — the error must explain
+			// the boundary cause, not tell the publisher to add a token they can see.
+			name:         "glued_trailing_period_explained",
+			crateName:    "combined-glued",
+			version:      "0.1.0",
+			metaStatus:   http.StatusOK,
+			readmeStatus: http.StatusOK,
+			readmeBody:   fmt.Sprintf("<html><body><p>mcp-name: %s.</p></body></html>", serverName),
+			wantErr:      true,
+			wantContains: []string{"immediately followed by", `"."`},
+		},
 	}
 
 	// lastMetaPath captures the metadata request path seen by the handler so
