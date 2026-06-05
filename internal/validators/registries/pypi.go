@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -85,10 +84,16 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 	// Check description (README) content
 	description := pypiResp.Info.Description
 
-	// Check for mcp-name: format (more specific)
-	mcpNamePattern := "mcp-name: " + serverName
-	if strings.Contains(description, mcpNamePattern) {
-		return nil // Found as mcp-name: format
+	// Check for the mcp-name: <server-name> ownership token (boundary-anchored to
+	// avoid prefix confusion — see containsMCPNameToken).
+	if containsMCPNameToken(description, serverName) {
+		return nil
+	}
+
+	// If the token IS present but glued to a trailing character, say so — otherwise
+	// the publisher sees "must appear as mcp-name: X" while looking at exactly that.
+	if trailing, glued := mcpNameTokenGluedTrailing(description, serverName); glued {
+		return fmt.Errorf("PyPI package '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and republish", pkg.Identifier, serverName, trailing)
 	}
 
 	return fmt.Errorf("PyPI package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
