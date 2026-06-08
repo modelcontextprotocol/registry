@@ -28,6 +28,7 @@ type ServerFilter struct {
 	SubstringName  *string    // for substring search on name
 	Version        *string    // for exact version matching
 	IsLatest       *bool      // for filtering latest versions only
+	Status         *string    // for exact status filtering (e.g. "active")
 	IncludeDeleted *bool      // for including deleted packages in results (default: exclude)
 }
 

@@ -137,7 +137,11 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		args = append(args, *filter.IsLatest)
 		argIndex++
 	}
-	if filter.IncludeDeleted == nil || !*filter.IncludeDeleted {
+	if filter.Status != nil {
+		conditions = append(conditions, fmt.Sprintf("status = $%d", argIndex))
+		args = append(args, *filter.Status)
+		argIndex++
+	} else if filter.IncludeDeleted == nil || !*filter.IncludeDeleted {
 		conditions = append(conditions, "status != 'deleted'")
 	}
 

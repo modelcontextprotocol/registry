@@ -52,6 +52,22 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		require.NoError(t, err, "failed to create server: %v", err)
 	}
 
+	// Create a deprecated server with a remote URL to test that deprecated servers
+	// do not block URL reuse (issue #1193).
+	deprecatedServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/deprecated-server",
+		Description: "A deprecated server",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: "https://api.deprecated.example.com/mcp"},
+		},
+	}
+	_, err := service.CreateServer(ctx, deprecatedServer)
+	require.NoError(t, err, "failed to create deprecated server")
+	_, err = service.SetAllVersionsStatus(ctx, "com.example/deprecated-server", model.StatusDeprecated, nil)
+	require.NoError(t, err, "failed to deprecate server")
+
 	tests := []struct {
 		name         string
 		serverDetail apiv0.ServerJSON
@@ -106,6 +122,19 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				Version:     "1.1.0", // Different version
 				Remotes: []model.Transport{
 					{Type: "streamable-http", URL: "https://api.example.com/mcp"}, // Same URL as before
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "duplicate URL from deprecated server - should pass (issue #1193)",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/new-server-reuse-deprecated-url",
+				Description: "A new server reusing a deprecated server's URL",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://api.deprecated.example.com/mcp"}, // Same URL as deprecated server
 				},
 			},
 			expectError: false,

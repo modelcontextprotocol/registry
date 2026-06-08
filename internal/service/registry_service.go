@@ -300,10 +300,12 @@ func pickLatestVersion(versions []*apiv0.ServerResponse, allowDeleted bool) *api
 
 // validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
 func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, tx pgx.Tx, serverDetail apiv0.ServerJSON) error {
-	// Check each remote URL in the new server for conflicts
+	// Check each remote URL in the new server for conflicts.
+	// Only check active servers — deleted and deprecated servers should not block URL reuse.
 	for _, remote := range serverDetail.Remotes {
-		// Use filter to find servers with this remote URL
-		filter := &database.ServerFilter{RemoteURL: &remote.URL}
+		// Use filter to find active servers with this remote URL
+		activeStatus := string(model.StatusActive)
+		filter := &database.ServerFilter{RemoteURL: &remote.URL, Status: &activeStatus}
 
 		conflictingServers, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
 		if err != nil {
