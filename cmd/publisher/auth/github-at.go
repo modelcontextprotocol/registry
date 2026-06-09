@@ -229,8 +229,10 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 			return "", err
 		}
 
-		if tokenResp.Error == "authorization_pending" {
-			// User hasn't authorized yet, wait and retry
+		if tokenResp.Error == "authorization_pending" || tokenResp.Error == "slow_down" {
+			if tokenResp.Error == "slow_down" {
+				interval += 5
+			}
 			time.Sleep(time.Duration(interval) * time.Second)
 			continue
 		}
