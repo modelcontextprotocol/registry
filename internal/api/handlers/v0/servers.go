@@ -3,7 +3,6 @@ package v0
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -185,8 +184,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			log.Printf("get server details (%q/%q) failed: %v", serverName, version, err)
-			return nil, huma.Error500InternalServerError("Failed to get server details")
+			return nil, RegistryError(ctx, err, "get server details ("+serverName+"/"+version+")", "Failed to get server details")
 		}
 
 		return &Response[apiv0.ServerResponse]{
@@ -215,8 +213,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			if err.Error() == errRecordNotFound || errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
 			}
-			log.Printf("get server versions (%q) failed: %v", serverName, err)
-			return nil, huma.Error500InternalServerError("Failed to get server versions")
+			return nil, RegistryError(ctx, err, "get server versions ("+serverName+")", "Failed to get server versions")
 		}
 
 		// Convert []*ServerResponse to []ServerResponse
