@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schema/model-context-protocol/server.json",
+  "name": "buywhere-catalog",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "buywhere-api",
+      "version": "0.1.0",
+      "transport": {
+        "type": "http"
+      }
+    }
+  ],
+  "description": "BuyWhere product catalog MCP server — search, compare, and ingest product data across merchants via natural language. Connects to PostgreSQL with full-text search.",
+  "repository": {
+    "url": "https://github.com/BuyWhere/buywhere.git",
+    "source": "github"
+  }
+}
