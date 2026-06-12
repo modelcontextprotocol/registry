@@ -1,15 +1,15 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.BuyWhere/buywhere-api",
-  "description": "BuyWhere product catalog MCP server — search, compare, and ingest product data across merchants via natural language. Connects to PostgreSQL with full-text search.",
+  "description": "BuyWhere product catalog API for AI agents — search, compare, and ingest products across 6 markets.",
+  "version": "0.1.0",
   "repository": {
-    "url": "https://github.com/BuyWhere/buywhere.git",
+    "url": "https://github.com/BuyWhere/buywhere",
     "source": "github"
   },
-  "version": "0.1.0",
   "remotes": [
     {
-      "type": "http",
+      "type": "streamable-http",
       "url": "https://api.buywhere.ai/mcp"
     }
   ]
