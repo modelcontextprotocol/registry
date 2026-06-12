@@ -65,7 +65,7 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 	}
 	_, err := service.CreateServer(ctx, deprecatedServer)
 	require.NoError(t, err, "failed to create deprecated server")
-	_, err = service.SetAllVersionsStatus(ctx, "com.example/deprecated-server", model.StatusDeprecated, nil)
+	_, err = service.UpdateAllVersionsStatus(ctx, "com.example/deprecated-server", &StatusChangeRequest{NewStatus: model.StatusDeprecated})
 	require.NoError(t, err, "failed to deprecate server")
 
 	tests := []struct {
