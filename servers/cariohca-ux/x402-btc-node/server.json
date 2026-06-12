@@ -1,0 +1,39 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "cariohca-ux/x402-btc-node",
+  "description": "Bitcoin full node data for AI agents via MCP. 17 tools: fees, mempool, transactions, whales, SEC trades, Reddit, AI summarization. 3 free tools, paid via x402 USDC on Base mainnet.",
+  "title": "IRONCLAW BTC Node",
+  "version": "1.0.0",
+  "categories": ["Cryptocurrency", "Blockchain", "Developer Tools"],
+  "tags": ["bitcoin", "blockchain", "x402", "micropayments", "usdc", "crypto", "ai-agents"],
+  "repository": {
+    "url": "https://github.com/cariohca-ux/x402-btc-node",
+    "source": "github"
+  },
+  "license": "MIT",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.btcnode.uk/sse"
+    }
+  ],
+  "tools": [
+    {"name": "btc_info", "description": "Blockchain info (height, difficulty, peers)", "cost": 0},
+    {"name": "btc_fees", "description": "Fee rate estimates (high/medium/low sat/vB)", "cost": 0},
+    {"name": "btc_mempool", "description": "Mempool status (pending tx, size MB)", "cost": 0},
+    {"name": "btc_tx", "description": "Transaction lookup by hash", "cost": 0.001},
+    {"name": "btc_addr", "description": "Address portfolio (balance, UTXOs, history)", "cost": 0.001},
+    {"name": "btc_trace", "description": "Transaction flow tracing (2 hops)", "cost": 0.001},
+    {"name": "btc_fees_predict", "description": "Fee rate prediction", "cost": 0.001},
+    {"name": "btc_whales", "description": "Large Bitcoin movement alerts (10K+ BTC)", "cost": 0.001},
+    {"name": "sec_insider", "description": "SEC insider trades (Form 4/3/5)", "cost": 0.001},
+    {"name": "web_scrape", "description": "URL to clean markdown", "cost": 0.001},
+    {"name": "ai_summarize", "description": "AI text summarization", "cost": 0.001},
+    {"name": "systems_theory", "description": "Systems theory analysis (6 lenses)", "cost": 0.001},
+    {"name": "game_theory", "description": "Game theory analysis", "cost": 0.001},
+    {"name": "capital_flows", "description": "Capital flow tracing across markets", "cost": 0.001},
+    {"name": "reddit_hot", "description": "Hot posts from any subreddit", "cost": 0.001},
+    {"name": "reddit_search", "description": "Search Reddit by keyword", "cost": 0.001},
+    {"name": "reddit_trending", "description": "Trending topics on Reddit", "cost": 0.001}
+  ]
+}
