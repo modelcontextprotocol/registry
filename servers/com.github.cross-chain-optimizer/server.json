@@ -1,0 +1,46 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.github.cross-chain-optimizer",
+  "description": "Find the mathematically optimal cross-chain EVM token swap route using True Execution Cost (TEC) analysis. Compares 1inch and Li.Fi aggregators across Ethereum, Arbitrum, Base, Optimism, and Polygon. Gated by L402 Lightning Network micropayment (~10 sats per query).",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/BatElPeretz/optimizer-api-crypto",
+    "source": "https://github.com/BatElPeretz/optimizer-api-crypto/blob/main/mcp/server.py"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "git+https://github.com/BatElPeretz/optimizer-api-crypto",
+      "version": "0.1.0",
+      "runtimeHint": "python",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp/server.py",
+          "description": "MCP server entry point"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "OPTIMIZER_API_URL",
+          "description": "Base URL of the deployed Cross-Chain Route Optimizer API",
+          "required": true,
+          "example": "https://optimizer-api-crypto.onrender.com"
+        },
+        {
+          "name": "OPTIMIZER_MACAROON",
+          "description": "L402 macaroon token obtained after paying a Lightning invoice. Leave empty on first run.",
+          "required": false
+        },
+        {
+          "name": "OPTIMIZER_PREIMAGE",
+          "description": "64-char hex preimage from your Lightning wallet after paying. Set together with OPTIMIZER_MACAROON.",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
