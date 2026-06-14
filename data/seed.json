@@ -155,5 +155,26 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.icohangar-ops/codehealth-mcp",
+    "description": "AI-powered codebase health analysis - detects dead code, circular dependencies, coupling issues, and architectural drift. 6 MCP tools for Claude Desktop, Cursor, Windsurf.",
+    "repository": {
+      "url": "https://github.com/icohangar-ops/codehealth-mcp.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "codehealth-mcp",
+        "version": "1.0.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
   }
 ]
