@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	// Regular expressions for validating repository URLs
-	// These regex patterns ensure the URL is in the format of a valid GitHub or GitLab repository
-	// For example:	// - GitHub: https://github.com/user/repo
+	// Regular expressions for validating repository URLs.
+	// GitHub repository URLs are owner/repo. GitLab also supports nested groups,
+	// so accept two or more non-empty path segments there.
 	githubURLRegex = regexp.MustCompile(`^https?://(www\.)?github\.com/[\w.-]+/[\w.-]+/?$`)
-	gitlabURLRegex = regexp.MustCompile(`^https?://(www\.)?gitlab\.com/[\w.-]+/[\w.-]+/?$`)
+	gitlabURLRegex = regexp.MustCompile(`^https?://(www\.)?gitlab\.com/(?:[\w.-]+/)+[\w.-]+/?$`)
 )
 
 // IsValidRepositoryURL checks if the given URL is valid for the specified repository source
