@@ -155,5 +155,21 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "work.agentexchange/aeo-oracle",
+    "description": "AEO Oracle for autonomous marketing agents. Requires HTTP 402 via USDC.",
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "agent-exchange-aeo",
+        "version": "1.0.0",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
   }
 ]
