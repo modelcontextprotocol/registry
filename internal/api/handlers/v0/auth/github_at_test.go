@@ -22,8 +22,28 @@ import (
 
 const (
 	githubUserEndpoint = "/user"
-	githubOrgsEndpoint = "/users/testuser/orgs"
+	// githubOrgsEndpoint is the endpoint used to list the authenticated user's org
+	// memberships (with role). It replaces the old public-only /users/{user}/orgs.
+	githubOrgsEndpoint = "/user/memberships/orgs"
 )
+
+// orgMembership mirrors a single entry of GET /user/memberships/orgs for use in
+// mock GitHub API responses. Role is "admin" (Owner) or "member".
+type orgMembership struct {
+	State        string                 `json:"state"`
+	Role         string                 `json:"role"`
+	Organization v0auth.GitHubUserOrOrg `json:"organization"`
+}
+
+// adminMemberships wraps orgs as active "admin"-role memberships, the shape the
+// memberships endpoint returns for an org Owner.
+func adminMemberships(orgs []v0auth.GitHubUserOrOrg) []orgMembership {
+	memberships := make([]orgMembership, 0, len(orgs))
+	for _, org := range orgs {
+		memberships = append(memberships, orgMembership{State: "active", Role: "admin", Organization: org})
+	}
+	return memberships
+}
 
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
 	// Create test handler with mock config
@@ -96,12 +116,12 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user) //nolint:errcheck
 			case githubOrgsEndpoint:
-				orgs := []v0auth.GitHubUserOrOrg{
+				memberships := adminMemberships([]v0auth.GitHubUserOrOrg{
 					{Login: "test-org-1", ID: 1},
 					{Login: "test-org-2", ID: 2},
-				}
+				})
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(orgs) //nolint:errcheck
+				json.NewEncoder(w).Encode(memberships) //nolint:errcheck
 			default:
 				w.WriteHeader(http.StatusNotFound)
 			}
@@ -225,10 +245,9 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 				}
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user) //nolint:errcheck
-			case "/users/user with spaces/orgs":
-				orgs := []v0auth.GitHubUserOrOrg{}
+			case githubOrgsEndpoint:
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(orgs) //nolint:errcheck
+				json.NewEncoder(w).Encode([]orgMembership{}) //nolint:errcheck
 			}
 		}))
 		defer mockServer.Close()
@@ -264,12 +283,12 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user) //nolint:errcheck
 			case githubOrgsEndpoint:
-				orgs := []v0auth.GitHubUserOrOrg{
+				memberships := adminMemberships([]v0auth.GitHubUserOrOrg{
 					{Login: "valid-org", ID: 1},
 					{Login: "org with spaces", ID: 2}, // Invalid name
-				}
+				})
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(orgs) //nolint:errcheck
+				json.NewEncoder(w).Encode(memberships) //nolint:errcheck
 			}
 		}))
 		defer mockServer.Close()
@@ -291,6 +310,81 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "testuser", claims.AuthMethodSubject)
 		assert.Empty(t, claims.Permissions) // No permissions because one org has invalid name
+	})
+
+	t.Run("member-role org is not granted, only admin orgs", func(t *testing.T) {
+		// The user is an Owner (admin) of one org and an ordinary member of another.
+		// Only the org they administer should yield a publish permission.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				memberships := []orgMembership{
+					{State: "active", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "admin-org", ID: 1}},
+					{State: "active", Role: "member", Organization: v0auth.GitHubUserOrOrg{Login: "member-org", ID: 2}},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(memberships) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.NoError(t, err)
+		require.NotNil(t, response)
+
+		jwtManager := auth.NewJWTManager(cfg)
+		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
+		require.NoError(t, err)
+
+		patterns := make([]string, 0, len(claims.Permissions))
+		for _, perm := range claims.Permissions {
+			patterns = append(patterns, perm.ResourcePattern)
+		}
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.admin-org/*"}, patterns)
+		assert.NotContains(t, patterns, "io.github.member-org/*")
+	})
+
+	t.Run("missing read:org scope (403) still grants personal namespace", func(t *testing.T) {
+		// A minimal token without read:org authenticates fine but is forbidden from
+		// reading org memberships. Personal-namespace publishing must still work.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(`{"message": "Token does not have the required scope"}`)) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.NoError(t, err)
+		require.NotNil(t, response)
+
+		jwtManager := auth.NewJWTManager(cfg)
+		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
+		require.NoError(t, err)
+		assert.Len(t, claims.Permissions, 1)
+		assert.Equal(t, "io.github.testuser/*", claims.Permissions[0].ResourcePattern)
 	})
 
 	t.Run("malformed JSON response", func(t *testing.T) {
@@ -537,9 +631,9 @@ func TestValidGitHubNames(t *testing.T) {
 					}
 					w.Header().Set("Content-Type", "application/json")
 					json.NewEncoder(w).Encode(user) //nolint:errcheck
-				case "/users/" + tc.username + "/orgs":
+				case githubOrgsEndpoint:
 					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(tc.orgs) //nolint:errcheck
+					json.NewEncoder(w).Encode(adminMemberships(tc.orgs)) //nolint:errcheck
 				}
 			}))
 			defer mockServer.Close()

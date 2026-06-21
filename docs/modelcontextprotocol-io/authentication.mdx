@@ -47,6 +47,14 @@ Successfully authenticated!
 ✓ Successfully logged in
 ```
 
+### Personal vs. organization namespaces
+
+GitHub authentication always grants your personal namespace, `io.github.<your-username>/*`.
+
+To publish under an **organization** namespace (`io.github.<orgname>/*`), you must be an **Owner** of that organization. Ordinary org membership is no longer sufficient: the registry checks your membership role and only grants the org namespace to admins. This prevents anyone who merely belongs to an org from publishing — or overwriting — servers under the org's name.
+
+If you authenticate with a Personal Access Token (for example in CI), the token must include the `read:org` scope for the registry to see your organization role. A token without `read:org` can still publish to your personal namespace, but org publishing will be silently unavailable. The token needs **no** repository scopes — the registry never reads or writes your code.
+
 ## DNS Authentication
 
 DNS authentication is a domain-based authentication method that relies on a DNS TXT record.

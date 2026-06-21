@@ -74,8 +74,9 @@ func (h *GitHubHandler) ExchangeToken(ctx context.Context, githubToken string) (
 		return nil, fmt.Errorf("failed to get GitHub user: %w", err)
 	}
 
-	// Get user's organizations
-	orgs, err := h.getGitHubUserOrgs(ctx, user.Login, githubToken)
+	// Get the organizations the user administers. Org namespaces are only granted
+	// to org Owners (membership role "admin"), not to ordinary members.
+	orgs, err := h.getGitHubAdminOrgs(ctx, githubToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get GitHub organizations: %w", err)
 	}
@@ -133,8 +134,67 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 	return &user, nil
 }
 
-func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, username string, token string) ([]GitHubUserOrOrg, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.baseURL+"/users/"+username+"/orgs", nil)
+// githubOrgRoleAdmin is the membership role GitHub returns for an organization
+// Owner. It is the only role we treat as carrying publish authority for the org
+// namespace. (GitHub has no org-level "maintainer" role; org membership is either
+// "admin" (Owner) or "member".)
+const githubOrgRoleAdmin = "admin"
+
+// orgMembershipsPageSize is the page size we request when listing the user's org
+// memberships. 100 is GitHub's maximum.
+const orgMembershipsPageSize = 100
+
+// githubOrgMembership is one entry from GET /user/memberships/orgs: the
+// authenticated user's membership in a single organization, including their role.
+type githubOrgMembership struct {
+	State        string          `json:"state"`
+	Role         string          `json:"role"`
+	Organization GitHubUserOrOrg `json:"organization"`
+}
+
+// getGitHubAdminOrgs returns the organizations in which the authenticated user is
+// an Owner (membership role "admin").
+//
+// This deliberately uses GET /user/memberships/orgs rather than
+// GET /users/{username}/orgs. The latter only returns *public* memberships and
+// carries no role, so it cannot distinguish an Owner from an ordinary member —
+// historically every org a user belonged to was granted publish access to its
+// namespace regardless of the user's role. The memberships endpoint returns the
+// caller's role per org (and includes private memberships), letting us grant the
+// org namespace only to people who actually administer the org.
+//
+// The endpoint requires the read:org scope. A minimal token used only for
+// personal-namespace publishing won't have it and will get a 403 here; that is
+// treated as "no admin orgs" (see fetchOrgMembershipsPage) so personal publishing
+// keeps working without asking users to over-scope their token.
+func (h *GitHubHandler) getGitHubAdminOrgs(ctx context.Context, token string) ([]GitHubUserOrOrg, error) {
+	var adminOrgs []GitHubUserOrOrg
+
+	for page := 1; ; page++ {
+		memberships, err := h.fetchOrgMembershipsPage(ctx, token, page)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, m := range memberships {
+			if m.Role == githubOrgRoleAdmin {
+				adminOrgs = append(adminOrgs, m.Organization)
+			}
+		}
+
+		if len(memberships) < orgMembershipsPageSize {
+			break
+		}
+	}
+
+	return adminOrgs, nil
+}
+
+// fetchOrgMembershipsPage fetches a single page of the authenticated user's
+// active organization memberships.
+func (h *GitHubHandler) fetchOrgMembershipsPage(ctx context.Context, token string, page int) ([]githubOrgMembership, error) {
+	url := fmt.Sprintf("%s/user/memberships/orgs?state=active&per_page=%d&page=%d", h.baseURL, orgMembershipsPageSize, page)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -145,20 +205,27 @@ func (h *GitHubHandler) getGitHubUserOrgs(ctx context.Context, username string, 
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user organizations: %w", err)
+		return nil, fmt.Errorf("failed to get user organization memberships: %w", err)
 	}
 	defer resp.Body.Close()
+
+	// A token without the read:org scope can still authenticate (GET /user works)
+	// but cannot read org memberships, yielding a 403. Treat that as "no admin
+	// orgs" so personal-namespace publishing keeps working with a minimal token.
+	if resp.StatusCode == http.StatusForbidden {
+		return nil, nil
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("GitHub API error (status %d): %s", resp.StatusCode, readErrorBody(resp.Body))
 	}
 
-	var orgs []GitHubUserOrOrg
-	if err := json.NewDecoder(resp.Body).Decode(&orgs); err != nil {
-		return nil, fmt.Errorf("failed to decode organizations response: %w", err)
+	var memberships []githubOrgMembership
+	if err := json.NewDecoder(resp.Body).Decode(&memberships); err != nil {
+		return nil, fmt.Errorf("failed to decode organization memberships response: %w", err)
 	}
 
-	return orgs, nil
+	return memberships, nil
 }
 
 // buildPermissions builds permissions based on GitHub user and their organizations
@@ -181,7 +248,7 @@ func (h *GitHubHandler) buildPermissions(username string, orgs []GitHubUserOrOrg
 		ResourcePattern: fmt.Sprintf("io.github.%s/*", username),
 	})
 
-	// Add permissions for each organization
+	// Add permissions for each organization the user administers (Owner role)
 	for _, org := range orgs {
 		permissions = append(permissions, auth.Permission{
 			Action:          auth.PermissionActionPublish,
