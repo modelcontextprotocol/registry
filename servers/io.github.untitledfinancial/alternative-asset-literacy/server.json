@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.untitledfinancial/alternative-asset-literacy",
+  "title": "Alternative Asset Literacy",
+  "description": "Research-backed financial education platform covering alternative assets, DeFi, behavioral economics, art investing, ESG & climate finance, and gender lens investing. 13 tools: glossary lookup/search/browse across 351 terms, module discovery, user profile routing, platform overview, institutional research papers (43 papers from IMF, BIS, World Bank, Federal Reserve), geographic intelligence by investment topic, HNW submarket data by city, investor audience profiling, audience matching, and advisor client gift bundle generation. Built for high-net-worth women investors, female entrepreneurs, ESG investors, DeFi investors, and the wealth management advisors who serve them. Educational content only — not financial advice.",
+  "repository": {
+    "url": "https://github.com/untitledfinancial/alternative-asset-literacy-mcp",
+    "source": "github"
+  },
+  "version_detail": {
+    "version": "1.0.0"
+  },
+  "remotes": [
+    {
+      "transport_type": "http",
+      "url": "https://alternativeassetliteracy.com/mcp"
+    }
+  ]
+}
