@@ -312,6 +312,39 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		assert.Empty(t, claims.Permissions) // No permissions because one org has invalid name
 	})
 
+	t.Run("malformed JSON response", func(t *testing.T) {
+		// Create mock GitHub API server that returns invalid JSON
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == githubUserEndpoint {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte(`{invalid json`)) //nolint:errcheck
+			}
+		}))
+		defer mockServer.Close()
+
+		// Create handler and set mock server URL
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		// Test token exchange
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-token")
+
+		require.Error(t, err)
+		assert.Nil(t, response)
+		assert.Contains(t, err.Error(), "failed to decode")
+	})
+}
+
+func TestGitHubHandler_ExchangeToken_OrgRoles(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{
+		JWTPrivateKey: hex.EncodeToString(testSeed),
+	}
+
 	t.Run("member-role org is not granted, only admin orgs", func(t *testing.T) {
 		// The user is an Owner (admin) of one org and an ordinary member of another.
 		// Only the org they administer should yield a publish permission.
@@ -385,29 +418,6 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		require.NoError(t, err)
 		assert.Len(t, claims.Permissions, 1)
 		assert.Equal(t, "io.github.testuser/*", claims.Permissions[0].ResourcePattern)
-	})
-
-	t.Run("malformed JSON response", func(t *testing.T) {
-		// Create mock GitHub API server that returns invalid JSON
-		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == githubUserEndpoint {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(`{invalid json`)) //nolint:errcheck
-			}
-		}))
-		defer mockServer.Close()
-
-		// Create handler and set mock server URL
-		handler := v0auth.NewGitHubHandler(cfg)
-		handler.SetBaseURL(mockServer.URL)
-
-		// Test token exchange
-		ctx := context.Background()
-		response, err := handler.ExchangeToken(ctx, "valid-token")
-
-		require.Error(t, err)
-		assert.Nil(t, response)
-		assert.Contains(t, err.Error(), "failed to decode")
 	})
 }
 
