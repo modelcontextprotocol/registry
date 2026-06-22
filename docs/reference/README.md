@@ -19,4 +19,4 @@ Technical specifications and quick lookups for the MCP Registry.
 
 ## Quick Reference
 
-- [FAQ](./faq.md)
+- [FAQ](../modelcontextprotocol-io/faq.mdx)
