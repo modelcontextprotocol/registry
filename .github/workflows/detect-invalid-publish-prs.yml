@@ -42,7 +42,10 @@ jobs:
               echo "Author association '$AUTHOR_ASSOCIATION' is trusted; not flagging."
               ;;
             *)
-              mapfile -t FILES < <(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')
+              # Use the paginated REST endpoint: `gh pr view --json files` caps
+              # at 100 files with no pagination, which could truncate a large PR
+              # and cause a false match.
+              mapfile -t FILES < <(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
               if [ "${#FILES[@]}" -gt 0 ]; then
                 # Flag only if the PR touches *exclusively* publish-attempt files
                 # (servers/** and/or data/seed.json) and nothing else, so that

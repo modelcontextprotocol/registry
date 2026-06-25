@@ -107,12 +107,20 @@ jobs:
           esac
 
           # Idempotency: if a maintainer reopens after we labeled it, leave it be.
-          if gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' | grep -qx "invalid"; then
+          # Capture into a var first so a transient gh failure can't fail open
+          # (an errored fetch piped to grep would otherwise look "not labeled").
+          labels="$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' || true)"
+          if printf '%s\n' "$labels" | grep -qx "invalid"; then
             echo "PR #$PR_NUMBER already labeled 'invalid'; skipping."
             exit 0
           fi
 
-          mapfile -t FILES < <(gh pr view "$PR_NUMBER" --json files --jq '.files[].path')
+          # Paginated REST endpoint (gh pr view --json files caps at 100, no pagination).
+          mapfile -t FILES < <(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "No files for PR #$PR_NUMBER; skipping."
+            exit 0
+          fi
           publish_attempt=0
           other=0
           for f in "${FILES[@]}"; do
