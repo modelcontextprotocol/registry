@@ -136,8 +136,9 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 
 // githubOrgRoleAdmin is the membership role GitHub returns for an organization
 // Owner. It is the only role we treat as carrying publish authority for the org
-// namespace. (GitHub has no org-level "maintainer" role; org membership is either
-// "admin" (Owner) or "member".)
+// namespace. (GitHub has no org-level "maintainer" role. GET /user/memberships/orgs
+// returns role "admin" (Owner), "member", or "billing_manager"; only "admin"
+// carries publish authority, so the other two are intentionally not granted.)
 const githubOrgRoleAdmin = "admin"
 
 // orgMembershipsPageSize is the page size we request when listing the user's org
@@ -209,10 +210,20 @@ func (h *GitHubHandler) fetchOrgMembershipsPage(ctx context.Context, token strin
 	}
 	defer resp.Body.Close()
 
-	// A token without the read:org scope can still authenticate (GET /user works)
-	// but cannot read org memberships, yielding a 403. Treat that as "no admin
-	// orgs" so personal-namespace publishing keeps working with a minimal token.
+	// GitHub returns 403 here for two very different reasons, which we must not
+	// conflate:
+	//  1. The token lacks the read:org scope. This is the common, benign case for a
+	//     minimal personal-publishing token: GET /user still works, but org
+	//     memberships are forbidden. We degrade gracefully to "no admin orgs" so
+	//     personal-namespace publishing keeps working without over-scoping.
+	//  2. Rate limiting. GitHub signals primary/secondary rate limits with 403 (or
+	//     429), setting X-RateLimit-Remaining: 0 and/or Retry-After. Degrading here
+	//     would silently strip a legitimate Owner's org grant, so we fail closed
+	//     (return an error) rather than mistake a throttle for "not an admin".
 	if resp.StatusCode == http.StatusForbidden {
+		if resp.Header.Get("X-RateLimit-Remaining") == "0" || resp.Header.Get("Retry-After") != "" {
+			return nil, fmt.Errorf("GitHub API rate limit exceeded while listing org memberships (status 403): %s", readErrorBody(resp.Body))
+		}
 		return nil, nil
 	}
 

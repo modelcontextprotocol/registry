@@ -419,6 +419,113 @@ func TestGitHubHandler_ExchangeToken_OrgRoles(t *testing.T) {
 		assert.Len(t, claims.Permissions, 1)
 		assert.Equal(t, "io.github.testuser/*", claims.Permissions[0].ResourcePattern)
 	})
+
+	t.Run("admin org on a later page is still granted (pagination)", func(t *testing.T) {
+		// Page 1 is a full page (100) of member-role orgs; the only admin org is on
+		// page 2. The pagination loop must not stop at the first page, or the Owner's
+		// org grant would be silently dropped.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.Header().Set("Content-Type", "application/json")
+				if r.URL.Query().Get("page") == "1" {
+					page1 := make([]orgMembership, 0, 100)
+					for i := 0; i < 100; i++ {
+						page1 = append(page1, orgMembership{
+							State: "active", Role: "member",
+							Organization: v0auth.GitHubUserOrOrg{Login: fmt.Sprintf("member-org-%d", i), ID: 1000 + i},
+						})
+					}
+					json.NewEncoder(w).Encode(page1) //nolint:errcheck
+					return
+				}
+				// page 2: a single admin org, signalling the last (short) page.
+				page2 := []orgMembership{
+					{State: "active", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "late-admin-org", ID: 2}},
+				}
+				json.NewEncoder(w).Encode(page2) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.NoError(t, err)
+		require.NotNil(t, response)
+
+		jwtManager := auth.NewJWTManager(cfg)
+		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
+		require.NoError(t, err)
+
+		patterns := make([]string, 0, len(claims.Permissions))
+		for _, perm := range claims.Permissions {
+			patterns = append(patterns, perm.ResourcePattern)
+		}
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.late-admin-org/*"}, patterns)
+	})
+
+	t.Run("memberships server error fails closed (no token issued)", func(t *testing.T) {
+		// A 5xx (or any non-200, non-scope-403) from the memberships endpoint must
+		// abort the exchange rather than silently degrade to personal-only perms.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.WriteHeader(http.StatusInternalServerError)
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.Error(t, err)
+		assert.Nil(t, response)
+	})
+
+	t.Run("rate-limit 403 fails closed (not treated as missing scope)", func(t *testing.T) {
+		// A 403 with X-RateLimit-Remaining: 0 is a throttle, not a missing-scope
+		// signal. Degrading would strip a real Owner's org grant, so it must error.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.Header().Set("X-RateLimit-Remaining", "0")
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(`{"message": "API rate limit exceeded"}`)) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.Error(t, err)
+		assert.Nil(t, response)
+	})
 }
 
 func TestJWTTokenValidation(t *testing.T) {
