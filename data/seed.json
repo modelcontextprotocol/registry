@@ -137,6 +137,31 @@
   },
   {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "com.monasfinancial/signals",
+    "description": "Real-time crypto signals, market regime analysis, and Bull/Bear AI research debates from Monas Financial's autonomous trading research team. Tools: get_fear_greed, get_regime, get_movers, get_signals, get_bull_thesis, get_bear_thesis, verify_key.",
+    "repository": {
+      "url": "https://github.com/chronicinternet-1/monas-financial-mcp.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "websiteUrl": "https://monasfinancial.com",
+    "remotes": [
+      {
+        "transportType": "streamable-http",
+        "url": "https://mcp.monasfinancial.com",
+        "environmentVariables": [
+          {
+            "name": "api_key",
+            "description": "Monas Financial API key. Pass as the api_key argument in tool calls, or via Authorization: Bearer header. Required for signal, thesis, and movers tools.",
+            "isRequired": false,
+            "isSecret": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/time-mcp-pypi",
     "description": "Get the current UTC time in RFC 3339 format.",
     "repository": {
