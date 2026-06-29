@@ -73,6 +73,15 @@ This extension describes only what evidence was checked. A server's declared cap
 
 The example above shows the receipt shape at the format level, which any registry or client can read. The official registry currently preserves only the `io.modelcontextprotocol.registry/publisher-provided` key, so a publisher-asserted receipt is carried nested under that key when publishing there; see [official registry requirements](./official-registry-requirements.md#security-scan-receipts).
 
+#### Render invariant
+
+A client MUST NOT surface a `clean` claim for a receipt unless both of the following hold, and a displayed claim MUST name the covered `scan_scope` so the user sees what was actually evaluated:
+
+- The receipt binds to the current artifact: the receipt's `scanned_artifact_digest` equals the digest of the package or artifact the client is about to install or display. A receipt whose `scanned_artifact_digest` is missing, malformed (not `algorithm:hex`), or does not match the current artifact does not bind, and the client MUST treat it as `inconclusive` (reason `artifact_digest_mismatch`) rather than rendering `clean`.
+- The receipt names a non-empty `scan_scope`. A receipt with an absent or empty `scan_scope` does not say what was evaluated and MUST NOT be rendered as `clean`.
+
+Because `scan_scope` records only the surfaces that were actually checked, a `clean` receipt that omits a surface (for example a `["dependency", "package"]` receipt that never assessed `handler-validation`) MUST NOT be presented as a global clean badge; the displayed claim names the covered scope, and the unassessed surface stays representable as `inconclusive` with `inconclusive_reason: "scope_excludes_handler_validation"` rather than collapsing into `clean`.
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->
