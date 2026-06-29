@@ -6,6 +6,14 @@ Changes to the server.json schema and format.
 
 This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./draft/server.schema.json) in this repository.
 
+### Added
+
+#### Optional `io.modelcontextprotocol.registry/security-scan` Extension Metadata
+
+A new optional `_meta` extension, `io.modelcontextprotocol.registry/security-scan`, defines an array of scanner-neutral security scan receipts. Each receipt is evidence-scoped: it binds a `verdict` (`clean`, `warnings`, `findings`, or `inconclusive`) to a specific `scanner`, `rule_set_ref`, `policy_profile`, and `scanned_artifact_digest`, with an explicit `scan_scope` recording what was evaluated. `inconclusive` is first-class and pairs with a machine-readable `inconclusive_reason`. The `attestation` field distinguishes `publisher-asserted`, `registry-attested`, and `third-party-attested` receipts. Signatures are intentionally out of scope for this version.
+
+This field is additive and optional; existing `server.json` documents remain valid. See the [format specification](./generic-server-json.md#security-scan-receipts-iomodelcontextprotocolregistrysecurity-scan) for details.
+
 ### Changed
 
 #### Transport URL Pattern Now Accepts Template Variables

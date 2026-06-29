@@ -30,6 +30,49 @@ The optional `_meta` field allows publishers to include custom metadata alongsid
 
 When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions and examples.
 
+### Security scan receipts (`io.modelcontextprotocol.registry/security-scan`)
+
+The optional `io.modelcontextprotocol.registry/security-scan` extension carries an array of scanner-neutral security scan receipts. Each receipt is evidence-scoped: it records a verdict bound to a specific scanner, rule set, policy profile, and scanned artifact digest, rather than asserting a server-level safety property. The `scanner` and `rule_set_ref` fields are open strings, so any community scanner can produce receipts; the registry does not endorse any particular one.
+
+```jsonc
+{
+  "_meta": {
+    "io.modelcontextprotocol.registry/security-scan": [
+      {
+        "scanner": "example-scanner",
+        "scanner_version": "1.2.3",
+        "rule_set_ref": "example-ruleset@sha256:...",
+        "policy_profile": "default-mcp-registry-v1",
+        "scanned_artifact_ref": "pkg:npm/example/server@1.0.0",
+        "scanned_artifact_digest": "sha256:...",
+        "scan_scope": ["dependency", "package"],
+        "verdict": "clean",
+        "scanned_at": "2026-06-28T00:00:00Z",
+        "freshness_expires_at": "2026-07-28T00:00:00Z",
+        "evidence_ref": "https://example.org/report.json",
+        "evidence_digest": "sha256:...",
+        "attestation": "publisher-asserted"
+      }
+    ]
+  }
+}
+```
+
+A `clean` verdict means clean only under the named `scanner_version`, `rule_set_ref`, `policy_profile`, and `scanned_artifact_digest`, for the surfaces listed in `scan_scope`. It does not mean the server is globally safe.
+
+The `scanned_artifact_digest` binds the verdict to exact bytes, and `scan_scope` records what was actually evaluated (for example `dependency`, `package`, or `handler-validation`). These two fields encode an invariant for clients:
+
+- Do not render `clean` unless the receipt binds to the current package or artifact digest, and the displayed claim names the covered `scan_scope`.
+- A dependency or package scan can be `clean` while handler-side validation remains unassessed, so a receipt that did not cover that surface should keep the reason machine-readable (for example `verdict: "inconclusive"` with `inconclusive_reason: "scope_excludes_handler_validation"`) rather than implying a global clean badge.
+
+`verdict` is one of `clean`, `warnings`, `findings`, or `inconclusive`. `inconclusive` is first-class: it covers reports that cannot bind to the current artifact, use an unsupported package type, or omit handler-side checks, and these should not collapse into `clean` or `findings`. When `verdict` is `inconclusive`, `inconclusive_reason` carries one of `artifact_digest_mismatch`, `unsupported_package_type`, `scope_excludes_handler_validation`, `evidence_unavailable`, or `stale_scan`.
+
+`attestation` distinguishes who asserts the receipt: `publisher-asserted` (self-asserted by the publisher), `registry-attested`, or `third-party-attested`. Signatures are intentionally left out of this version; `attestation` together with `evidence_digest` provides a verifiability hook without pulling in key distribution.
+
+This extension describes only what evidence was checked. A server's declared capability posture (what authority it exposes) is a separate concern and is not part of a scan receipt.
+
+The example above shows the receipt shape at the format level, which any registry or client can read. The official registry currently preserves only the `io.modelcontextprotocol.registry/publisher-provided` key, so a publisher-asserted receipt is carried nested under that key when publishing there; see [official registry requirements](./official-registry-requirements.md#security-scan-receipts).
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->
