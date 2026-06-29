@@ -427,6 +427,142 @@
                 "version": "1.2.3"
               },
               "type": "object"
+            },
+            "io.modelcontextprotocol.registry/security-scan": {
+              "description": "Optional scanner-neutral security scan receipts. Each receipt is scoped to the scanned artifact, scanner version, rule set, policy profile, scan scope, and evidence reference; a clean verdict is not a global safety claim.",
+              "items": {
+                "additionalProperties": true,
+                "properties": {
+                  "attestation": {
+                    "description": "Who asserts or attests the receipt. This does not define signature or key-distribution semantics.",
+                    "enum": [
+                      "publisher-asserted",
+                      "registry-attested",
+                      "third-party-attested"
+                    ],
+                    "example": "third-party-attested",
+                    "type": "string"
+                  },
+                  "evidenceDigest": {
+                    "description": "Digest of the evidence referenced by evidenceRef.",
+                    "example": "sha256:def456...",
+                    "maxLength": 200,
+                    "pattern": "^[a-z0-9][a-z0-9+.-]*:.+$",
+                    "type": "string"
+                  },
+                  "evidenceRef": {
+                    "description": "URL for the full machine-readable report or attestation evidence.",
+                    "example": "https://example.org/report.json",
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "freshnessExpiresAt": {
+                    "description": "Timestamp after which clients should treat the receipt as stale unless refreshed.",
+                    "example": "2026-07-28T00:00:00Z",
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "inconclusiveReason": {
+                    "description": "Machine-readable reason when the verdict is inconclusive. Omit or set to other only when no more specific value applies.",
+                    "enum": [
+                      "artifact_digest_mismatch",
+                      "unsupported_package_type",
+                      "scope_excludes_handler_validation",
+                      "evidence_unavailable",
+                      "stale_scan",
+                      "scanner_error",
+                      "policy_not_supported",
+                      "other"
+                    ],
+                    "example": "scope_excludes_handler_validation",
+                    "type": "string"
+                  },
+                  "policyProfile": {
+                    "description": "Policy profile or scan configuration used to evaluate the artifact.",
+                    "example": "default-mcp-registry-v1",
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "ruleSetRef": {
+                    "description": "Scanner-specific rule set reference, preferably pinned by digest.",
+                    "example": "agent-threat-rules@sha256:abc123...",
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "scanScope": {
+                    "description": "Machine-readable list of surfaces evaluated by this scan. This describes what was checked, not every capability the server exposes.",
+                    "example": [
+                      "dependency",
+                      "package"
+                    ],
+                    "items": {
+                      "enum": [
+                        "dependency",
+                        "package",
+                        "source",
+                        "handler-validation",
+                        "runtime-behavior",
+                        "configuration",
+                        "unknown"
+                      ],
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "scannedArtifactDigest": {
+                    "description": "Digest of the artifact that was scanned. Registry clients should only display artifact-bound claims when this digest matches the current package or artifact.",
+                    "example": "sha256:abc123...",
+                    "maxLength": 200,
+                    "pattern": "^[a-z0-9][a-z0-9+.-]*:.+$",
+                    "type": "string"
+                  },
+                  "scannedArtifactRef": {
+                    "description": "Package URL, image reference, source archive reference, or other stable identifier for the artifact that was scanned.",
+                    "example": "pkg:npm/@modelcontextprotocol/server-filesystem@1.0.2",
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "scannedAt": {
+                    "description": "Timestamp when the scan was performed.",
+                    "example": "2026-06-28T00:00:00Z",
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "scanner": {
+                    "description": "Name or identifier of the scanner that produced the receipt.",
+                    "example": "example-scanner",
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "scannerVersion": {
+                    "description": "Version of the scanner that produced the receipt.",
+                    "example": "1.2.3",
+                    "maxLength": 100,
+                    "type": "string"
+                  },
+                  "verdict": {
+                    "description": "Scanner verdict for the stated artifact, rule set, policy profile, and scan scope.",
+                    "enum": [
+                      "clean",
+                      "warnings",
+                      "findings",
+                      "inconclusive"
+                    ],
+                    "example": "warnings",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "scannedArtifactDigest",
+                  "scanScope",
+                  "verdict",
+                  "attestation"
+                ],
+                "type": "object"
+              },
+              "type": "array"
             }
           },
           "type": "object"

@@ -30,6 +30,43 @@ The optional `_meta` field allows publishers to include custom metadata alongsid
 
 When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions and examples.
 
+### Optional Security Scan Receipts
+
+Generic registries and subregistries may expose scanner-neutral security scan receipts under `_meta["io.modelcontextprotocol.registry/security-scan"]`.
+
+Each receipt is scoped to the evidence that produced it. A `clean` verdict means the stated artifact was clean for the listed scanner, scanner version, rule set, policy profile, and scan scope. It is not a global claim that the server is safe.
+
+```jsonc
+{
+  "_meta": {
+    "io.modelcontextprotocol.registry/security-scan": [
+      {
+        "scanner": "example-scanner",
+        "scannerVersion": "1.2.3",
+        "ruleSetRef": "agent-threat-rules@sha256:abc123...",
+        "policyProfile": "default-mcp-registry-v1",
+        "scannedArtifactRef": "pkg:npm/@modelcontextprotocol/server-filesystem@1.0.2",
+        "scannedArtifactDigest": "sha256:abc123...",
+        "scanScope": ["dependency", "package"],
+        "verdict": "warnings",
+        "inconclusiveReason": "scope_excludes_handler_validation",
+        "scannedAt": "2026-06-28T00:00:00Z",
+        "freshnessExpiresAt": "2026-07-28T00:00:00Z",
+        "evidenceRef": "https://example.org/report.json",
+        "evidenceDigest": "sha256:def456...",
+        "attestation": "third-party-attested"
+      }
+    ]
+  }
+}
+```
+
+Registry clients should only display artifact-bound security claims when `scannedArtifactDigest` matches the current package or artifact. Clients should also include the displayed `scanScope`, because a dependency or package scan can be clean while handler-side validation remains unassessed.
+
+Use `verdict: "inconclusive"` with an `inconclusiveReason` when the receipt cannot support a stronger claim, such as `artifact_digest_mismatch`, `unsupported_package_type`, `scope_excludes_handler_validation`, `evidence_unavailable`, or `stale_scan`.
+
+The `attestation` field distinguishes self-asserted publisher metadata from registry- or third-party-attested receipts. It does not define signature or key-distribution semantics.
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->

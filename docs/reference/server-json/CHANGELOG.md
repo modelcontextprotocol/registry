@@ -6,6 +6,14 @@ Changes to the server.json schema and format.
 
 This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./draft/server.schema.json) in this repository.
 
+### Added
+
+#### Security Scan Receipt Metadata
+
+The `_meta` field can now document optional scanner-neutral security scan receipts under `io.modelcontextprotocol.registry/security-scan`.
+
+Each receipt is scoped to a scanned artifact digest, scan scope, verdict, attestation, and optional evidence reference/digest. The shape keeps `clean` scoped to the exact artifact, scanner, rule set, policy profile, and scan scope instead of making a global server-safety claim. `inconclusiveReason` provides machine-readable failure modes such as artifact digest mismatch, unsupported package type, excluded handler-validation scope, unavailable evidence, and stale scans.
+
 ### Changed
 
 #### Transport URL Pattern Now Accepts Template Variables
