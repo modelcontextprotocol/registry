@@ -57,15 +57,6 @@ func validScanReceipt() map[string]any {
 	}
 }
 
-// cloneReceipt makes a shallow copy so each case mutates independently.
-func cloneReceipt(base map[string]any) map[string]any {
-	out := make(map[string]any, len(base))
-	for k, v := range base {
-		out[k] = v
-	}
-	return out
-}
-
 // TestSecurityScanReceiptSchema is the downstream-client test for the
 // io.modelcontextprotocol.registry/security-scan extension added in #1404.
 // It confirms the draft schema accepts a clean receipt that binds to a
