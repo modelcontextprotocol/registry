@@ -1,0 +1,47 @@
+{
+  "name": "KORE API",
+  "description": "AI compliance verification, scoring & strategy simulation. 13 universal infrastructure services for AI agents. Pay-per-use billing. Free API key at /v1/register.",
+  "url": "https://triumphant-enthusiasm-production-625b.up.railway.app",
+  "source_url": "https://github.com/Amondieu/DysonCode",
+  "license": "MIT",
+  "tags": [
+    "compliance",
+    "scoring",
+    "simulation",
+    "billing",
+    "hallucination-guard",
+    "context-compression",
+    "cross-agent-memory",
+    "token-routing",
+    "prompt-security",
+    "task-decomposition",
+    "semantic-diff",
+    "claim-provenance",
+    "embedding-cache",
+    "agent-sandbox",
+    "audit-log",
+    "ai-agents",
+    "infrastructure"
+  ],
+  "author": {
+    "name": "Amondieu",
+    "url": "https://github.com/Amondieu"
+  },
+  "capabilities": {
+    "tools": {
+      "guard": "Hallucination detection against source documents",
+      "compress": "3-5x semantic context compression",
+      "route": "11-provider token cost arbitrage",
+      "memory": "Cross-agent Qdrant-backed memory store",
+      "normalize": "Prompt injection detection + cleanup",
+      "score": "Multi-candidate output quality ranking",
+      "split": "Complex task decomposition into subtasks",
+      "diff": "Semantic diff between text outputs",
+      "provenance": "EU AI Act compliant HMAC hash chain certificates",
+      "embed": "LRU-cached all-MiniLM text embeddings",
+      "sandbox": "Secure Python code execution (30s timeout)",
+      "verify": "Answer verification against source documents",
+      "audit": "Immutable HMAC-SHA256 chained audit trail"
+    }
+  }
+}
