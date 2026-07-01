@@ -25,7 +25,7 @@ jobs:
         cache: true
 
     - name: Run lint
-      uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee
+      uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a
       with:
         version: v2.11.4
 
@@ -57,7 +57,7 @@ jobs:
         cache: true
 
     - name: Set up ko
-      uses: ko-build/setup-ko@v0.9
+      uses: ko-build/setup-ko@v0.10
 
     - name: Run all tests
       run: make test-all
