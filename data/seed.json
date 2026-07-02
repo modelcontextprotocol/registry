@@ -1,159 +1,188 @@
-[
-  {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-    "name": "io.github.domdomegg/airtable-mcp-server",
-    "description": "Read and write access to Airtable database schemas, tables, and records.",
-    "repository": {
-      "url": "https://github.com/domdomegg/airtable-mcp-server.git",
-      "source": "github"
+﻿[
+    {
+        "$schema":  "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+        "name":  "io.github.domdomegg/airtable-mcp-server",
+        "description":  "Read and write access to Airtable database schemas, tables, and records.",
+        "repository":  {
+                           "url":  "https://github.com/domdomegg/airtable-mcp-server.git",
+                           "source":  "github"
+                       },
+        "version":  "1.7.2",
+        "icons":  [
+                      {
+                          "src":  "https://airtable.com/images/favicon/favicon-32x32.png",
+                          "mimeType":  "image/png",
+                          "sizes":  [
+                                        "32x32"
+                                    ]
+                      }
+                  ],
+        "packages":  [
+                         {
+                             "registryType":  "npm",
+                             "identifier":  "airtable-mcp-server",
+                             "version":  "1.7.2",
+                             "runtimeHint":  "npx",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           },
+                             "environmentVariables":  [
+                                                          {
+                                                              "description":  "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
+                                                              "isRequired":  true,
+                                                              "isSecret":  true,
+                                                              "name":  "AIRTABLE_API_KEY"
+                                                          }
+                                                      ]
+                         },
+                         {
+                             "registryType":  "oci",
+                             "identifier":  "docker.io/domdomegg/airtable-mcp-server:1.7.2",
+                             "runtimeHint":  "docker",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           },
+                             "environmentVariables":  [
+                                                          {
+                                                              "description":  "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
+                                                              "isRequired":  true,
+                                                              "isSecret":  true,
+                                                              "name":  "AIRTABLE_API_KEY"
+                                                          }
+                                                      ]
+                         },
+                         {
+                             "registryType":  "mcpb",
+                             "identifier":  "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
+                             "fileSha256":  "8220de07a08ebe908f04da139ea03dbfe29758141347e945da60535fb7bcca20",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           }
+                         }
+                     ]
     },
-    "version": "1.7.2",
-    "icons": [
-      {
-        "src": "https://airtable.com/images/favicon/favicon-32x32.png",
-        "mimeType": "image/png",
-        "sizes": [
-          "32x32"
-        ]
-      }
-    ],
-    "packages": [
-      {
-        "registryType": "npm",
-        "identifier": "airtable-mcp-server",
-        "version": "1.7.2",
-        "runtimeHint": "npx",
-        "transport": {
-          "type": "stdio"
-        },
-        "environmentVariables": [
-          {
-            "description": "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
-            "isRequired": true,
-            "isSecret": true,
-            "name": "AIRTABLE_API_KEY"
-          }
-        ]
-      },
-      {
-        "registryType": "oci",
-        "identifier": "docker.io/domdomegg/airtable-mcp-server:1.7.2",
-        "runtimeHint": "docker",
-        "transport": {
-          "type": "stdio"
-        },
-        "environmentVariables": [
-          {
-            "description": "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
-            "isRequired": true,
-            "isSecret": true,
-            "name": "AIRTABLE_API_KEY"
-          }
-        ]
-      },
-      {
-        "registryType": "mcpb",
-        "identifier": "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.2/airtable-mcp-server.mcpb",
-        "fileSha256": "8220de07a08ebe908f04da139ea03dbfe29758141347e945da60535fb7bcca20",
-        "transport": {
-          "type": "stdio"
-        }
-      }
-    ]
-  },
-  {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-    "name": "io.github.domdomegg/airtable-mcp-server",
-    "description": "Read and write access to Airtable database schemas, tables, and records.",
-    "repository": {
-      "url": "https://github.com/domdomegg/airtable-mcp-server.git",
-      "source": "github"
+    {
+        "$schema":  "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+        "name":  "io.github.domdomegg/airtable-mcp-server",
+        "description":  "Read and write access to Airtable database schemas, tables, and records.",
+        "repository":  {
+                           "url":  "https://github.com/domdomegg/airtable-mcp-server.git",
+                           "source":  "github"
+                       },
+        "version":  "1.7.3",
+        "packages":  [
+                         {
+                             "registryType":  "npm",
+                             "identifier":  "airtable-mcp-server",
+                             "version":  "1.7.3",
+                             "runtimeHint":  "npx",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           },
+                             "environmentVariables":  [
+                                                          {
+                                                              "description":  "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
+                                                              "isRequired":  true,
+                                                              "isSecret":  true,
+                                                              "name":  "AIRTABLE_API_KEY"
+                                                          }
+                                                      ]
+                         },
+                         {
+                             "registryType":  "oci",
+                             "identifier":  "docker.io/domdomegg/airtable-mcp-server:1.7.3",
+                             "runtimeHint":  "docker",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           },
+                             "environmentVariables":  [
+                                                          {
+                                                              "description":  "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
+                                                              "isRequired":  true,
+                                                              "isSecret":  true,
+                                                              "name":  "AIRTABLE_API_KEY"
+                                                          }
+                                                      ]
+                         },
+                         {
+                             "registryType":  "mcpb",
+                             "identifier":  "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.3/airtable-mcp-server.mcpb",
+                             "fileSha256":  "0f28a9129cfebd262dfb77854c872355d21401bb3e056575b3027081f5d570ca",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           }
+                         }
+                     ]
     },
-    "version": "1.7.3",
-    "packages": [
-      {
-        "registryType": "npm",
-        "identifier": "airtable-mcp-server",
-        "version": "1.7.3",
-        "runtimeHint": "npx",
-        "transport": {
-          "type": "stdio"
-        },
-        "environmentVariables": [
-          {
-            "description": "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
-            "isRequired": true,
-            "isSecret": true,
-            "name": "AIRTABLE_API_KEY"
-          }
-        ]
-      },
-      {
-        "registryType": "oci",
-        "identifier": "docker.io/domdomegg/airtable-mcp-server:1.7.3",
-        "runtimeHint": "docker",
-        "transport": {
-          "type": "stdio"
-        },
-        "environmentVariables": [
-          {
-            "description": "Airtable personal access token (e.g., pat123.abc123). Create at https://airtable.com/create/tokens/new with scopes: schema.bases:read, data.records:read, and optionally schema.bases:write and data.records:write.",
-            "isRequired": true,
-            "isSecret": true,
-            "name": "AIRTABLE_API_KEY"
-          }
-        ]
-      },
-      {
-        "registryType": "mcpb",
-        "identifier": "https://github.com/domdomegg/airtable-mcp-server/releases/download/v1.7.3/airtable-mcp-server.mcpb",
-        "fileSha256": "0f28a9129cfebd262dfb77854c872355d21401bb3e056575b3027081f5d570ca",
-        "transport": {
-          "type": "stdio"
-        }
-      }
-    ]
-  },
-  {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-    "name": "io.github.domdomegg/time-mcp-nuget",
-    "description": "Get the current UTC time in RFC 3339 format.",
-    "repository": {
-      "url": "https://github.com/domdomegg/time-mcp-nuget.git",
-      "source": "github"
+    {
+        "$schema":  "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+        "name":  "io.github.domdomegg/time-mcp-nuget",
+        "description":  "Get the current UTC time in RFC 3339 format.",
+        "repository":  {
+                           "url":  "https://github.com/domdomegg/time-mcp-nuget.git",
+                           "source":  "github"
+                       },
+        "version":  "1.0.8",
+        "packages":  [
+                         {
+                             "registryType":  "nuget",
+                             "identifier":  "TimeMcpServer",
+                             "version":  "1.0.8",
+                             "runtimeHint":  "dnx",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           }
+                         }
+                     ]
     },
-    "version": "1.0.8",
-    "packages": [
-      {
-        "registryType": "nuget",
-        "identifier": "TimeMcpServer",
-        "version": "1.0.8",
-        "runtimeHint": "dnx",
-        "transport": {
-          "type": "stdio"
-        }
-      }
-    ]
-  },
-  {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-    "name": "io.github.domdomegg/time-mcp-pypi",
-    "description": "Get the current UTC time in RFC 3339 format.",
-    "repository": {
-      "url": "https://github.com/domdomegg/time-mcp-pypi.git",
-      "source": "github"
+    {
+        "$schema":  "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+        "name":  "io.github.domdomegg/time-mcp-pypi",
+        "description":  "Get the current UTC time in RFC 3339 format.",
+        "repository":  {
+                           "url":  "https://github.com/domdomegg/time-mcp-pypi.git",
+                           "source":  "github"
+                       },
+        "version":  "1.0.6",
+        "packages":  [
+                         {
+                             "registryType":  "pypi",
+                             "identifier":  "time-mcp-pypi",
+                             "version":  "1.0.6",
+                             "runtimeHint":  "python",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           }
+                         }
+                     ]
     },
-    "version": "1.0.6",
-    "packages": [
-      {
-        "registryType": "pypi",
-        "identifier": "time-mcp-pypi",
-        "version": "1.0.6",
-        "runtimeHint": "python",
-        "transport": {
-          "type": "stdio"
-        }
-      }
-    ]
-  }
+    {
+        "$schema":  "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+        "name":  "io.github.ccantynz-alt/gatetest",
+        "description":  "91-module code quality gate for AI-assisted code review. Scan local repos for security vulnerabilities, reliability bugs, money-float errors, import cycles, PII leaks, and 80+ more patterns. Auto-fix with Claude. Nuclear-tier per-finding diagnosis. Replaces SonarQube, Snyk, ESLint, Lighthouse, and 10+ other tools in one unified gate.",
+        "repository":  {
+                           "url":  "https://github.com/crclabs-hq/gatetest.git",
+                           "source":  "github"
+                       },
+        "version":  "1.0.0",
+        "packages":  [
+                         {
+                             "registryType":  "npm",
+                             "identifier":  "@gatetest/mcp-server",
+                             "version":  "1.0.0",
+                             "runtimeHint":  "npx",
+                             "transport":  {
+                                               "type":  "stdio"
+                                           },
+                             "environmentVariables":  [
+                                                          {
+                                                              "name":  "ANTHROPIC_API_KEY",
+                                                              "description":  "Claude API key. Enables fix_issue (AI-driven auto-fix) and explain_finding (Nuclear-tier per-finding diagnosis). Optional — scanning tools work without it.",
+                                                              "isRequired":  false,
+                                                              "isSecret":  true
+                                                          }
+                                                      ]
+                         }
+                     ]
+    }
 ]
