@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -21,8 +22,14 @@ func newNPMMock(versionStatus int, versionBody string, packageStatus int) *httpt
 		// Route on the escaped path: a scoped name like @scope/pkg is sent as the
 		// single segment @scope%2Fpkg, and decoding it would wrongly split it in two.
 		parts := strings.Split(strings.Trim(r.URL.EscapedPath(), "/"), "/")
+		// Pin the method per endpoint (GET fetch, HEAD probe) so a method
+		// regression in the validator surfaces as a 405 instead of passing.
 		switch len(parts) {
 		case 2: // /{name}/{version}
+			if r.Method != http.MethodGet {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
 			if versionStatus != http.StatusOK {
 				w.WriteHeader(versionStatus)
 				return
@@ -30,6 +37,10 @@ func newNPMMock(versionStatus int, versionBody string, packageStatus int) *httpt
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = io.WriteString(w, versionBody)
 		case 1: // /{name}  (package-existence probe)
+			if r.Method != http.MethodHead {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
 			w.WriteHeader(packageStatus)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
@@ -89,6 +100,31 @@ func TestValidateNPM_VersionNotFoundProbeInconclusive(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "transient")
 	assert.NotContains(t, err.Error(), "not found", "an inconclusive probe must not assert the package is missing")
+}
+
+// TestValidateNPM_ProbeDeadlineBounded: a hung probe must be cut off by the
+// probe's own short deadline instead of riding out the client's full 10s
+// timeout, and the cutoff must read as inconclusive rather than "not found".
+func TestValidateNPM_ProbeDeadlineBounded(t *testing.T) {
+	ctx := context.Background()
+	mock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(strings.Trim(r.URL.EscapedPath(), "/"), "/")
+		if len(parts) == 2 { // version fetch
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		// Package probe: hang until the client gives up.
+		<-r.Context().Done()
+	}))
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypeNPM, RegistryBaseURL: mock.URL, Identifier: "demo-pkg", Version: "1.0.0"}
+	start := time.Now()
+	err := registries.ValidateNPMPackage(ctx, pkg, "io.github.test/demo")
+	elapsed := time.Since(start)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "transient", "a probe cut off by its deadline is inconclusive, not 'not found'")
+	assert.Less(t, elapsed, 8*time.Second, "a hung probe must be bounded by the probe deadline, not the client timeout")
 }
 
 // TestValidateNPM_ScopedVersionNotYetVisible covers scoped names (@scope/name), the
@@ -262,6 +298,12 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 			}
 
 			err := registries.ValidateNPM(ctx, pkg, tt.serverName)
+
+			// A live 429/5xx from the registry is inconclusive, not a failure
+			// of the case under test.
+			if err != nil && strings.Contains(err.Error(), "retry later") {
+				t.Skipf("transient registry response: %v", err)
+			}
 
 			if tt.expectError {
 				assert.Error(t, err)

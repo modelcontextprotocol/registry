@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -21,8 +22,14 @@ func newPyPIMock(versionStatus int, versionBody string, packageStatus int) *http
 		// Route on the escaped path so an identifier containing an encoded
 		// separator is not silently re-split into extra segments.
 		parts := strings.Split(strings.Trim(r.URL.EscapedPath(), "/"), "/")
+		// Pin the method per endpoint (GET fetch, HEAD probe) so a method
+		// regression in the validator surfaces as a 405 instead of passing.
 		switch len(parts) {
 		case 4: // /pypi/{name}/{version}/json
+			if r.Method != http.MethodGet {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
 			if versionStatus != http.StatusOK {
 				w.WriteHeader(versionStatus)
 				return
@@ -30,6 +37,10 @@ func newPyPIMock(versionStatus int, versionBody string, packageStatus int) *http
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = io.WriteString(w, versionBody)
 		case 3: // /pypi/{name}/json  (package-existence probe)
+			if r.Method != http.MethodHead {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
 			w.WriteHeader(packageStatus)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
@@ -90,6 +101,31 @@ func TestValidatePyPI_VersionNotFoundProbeInconclusive(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "transient")
 	assert.NotContains(t, err.Error(), "not found", "an inconclusive probe must not assert the package is missing")
+}
+
+// TestValidatePyPI_ProbeDeadlineBounded: a hung probe must be cut off by the
+// probe's own short deadline instead of riding out the client's full 10s
+// timeout, and the cutoff must read as inconclusive rather than "not found".
+func TestValidatePyPI_ProbeDeadlineBounded(t *testing.T) {
+	ctx := context.Background()
+	mock := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(strings.Trim(r.URL.EscapedPath(), "/"), "/")
+		if len(parts) == 4 { // version fetch
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		// Package probe: hang until the client gives up.
+		<-r.Context().Done()
+	}))
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypePyPI, RegistryBaseURL: mock.URL, Identifier: "demo-pkg", Version: "1.0.0"}
+	start := time.Now()
+	err := registries.ValidatePyPIPackage(ctx, pkg, "io.github.test/demo")
+	elapsed := time.Since(start)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "transient", "a probe cut off by its deadline is inconclusive, not 'not found'")
+	assert.Less(t, elapsed, 8*time.Second, "a hung probe must be bounded by the probe deadline, not the client timeout")
 }
 
 // TestValidatePyPI_VersionEndpointRateLimited: a 429 on the version fetch is reported
@@ -203,6 +239,12 @@ func TestValidatePyPI_RealPackages(t *testing.T) {
 			}
 
 			err := registries.ValidatePyPI(ctx, pkg, tt.serverName)
+
+			// A live 429/5xx from the registry is inconclusive, not a failure
+			// of the case under test.
+			if err != nil && strings.Contains(err.Error(), "retry later") {
+				t.Skipf("transient registry response: %v", err)
+			}
 
 			if tt.expectError {
 				assert.Error(t, err)

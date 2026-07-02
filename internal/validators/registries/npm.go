@@ -154,6 +154,11 @@ func npmVersion404Error(ctx context.Context, client *http.Client, pkg model.Pack
 // of version, with a HEAD request to the package-level endpoint (/{name}). Only
 // the status code is used, so HEAD avoids downloading the (large) packument.
 func probeNPMPackage(ctx context.Context, client *http.Client, baseURL, identifier string) npmPackageState {
+	// The probe only refines the 404 error message, so it must not extend the
+	// validator's worst case by another full client timeout.
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	probeURL := baseURL + "/" + url.PathEscape(identifier)
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, probeURL, nil)
 	if err != nil {

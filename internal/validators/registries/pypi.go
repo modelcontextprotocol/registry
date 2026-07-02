@@ -164,6 +164,11 @@ func pypiVersion404Error(ctx context.Context, client *http.Client, pkg model.Pac
 // with a HEAD request to the package-level endpoint (/pypi/{name}/json). Only the
 // status code is used, so HEAD avoids downloading the (large) all-versions body.
 func probePyPIPackage(ctx context.Context, client *http.Client, baseURL, identifier string) pypiPackageState {
+	// The probe only refines the 404 error message, so it must not extend the
+	// validator's worst case by another full client timeout.
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	probeURL := fmt.Sprintf("%s/pypi/%s/json", baseURL, url.PathEscape(identifier))
 	req, err := http.NewRequestWithContext(ctx, http.MethodHead, probeURL, nil)
 	if err != nil {
