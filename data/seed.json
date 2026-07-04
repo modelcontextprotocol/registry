@@ -155,5 +155,40 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.surendranb/google-analytics-mcp",
+    "description": "Google Analytics 4 MCP server for AI agents and agentic workflows with schema discovery, server-side aggregation, and analysis-ready defaults.",
+    "repository": {
+      "url": "https://github.com/surendranb/google-analytics-mcp.git",
+      "source": "github"
+    },
+    "version": "2.4.1",
+    "packages": [
+      {
+        "registryType": "pypi",
+        "identifier": "google-analytics-mcp",
+        "version": "2.4.1",
+        "runtimeHint": "uvx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "Absolute path to your Google Cloud service account JSON key with GA4 property access.",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "GOOGLE_APPLICATION_CREDENTIALS"
+          },
+          {
+            "description": "Numeric GA4 Property ID to query, for example 123456789.",
+            "isRequired": true,
+            "isSecret": false,
+            "name": "GA4_PROPERTY_ID"
+          }
+        ]
+      }
+    ]
   }
 ]
