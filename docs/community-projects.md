@@ -29,6 +29,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 
 ### Other
 
+- [mastyf.ai](https://github.com/mastyf-ai/mastyf.ai) - Runtime MCP proxy with multi-agent policy enforcement, prompt injection detection, secret scanning, and full audit trail
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
 - [MCP Registry Remote MCP Server](https://github.com/jaw9c/mcp-registry-mcp) - Open Remote MCP server for the Registry at `https://registry-mcp.remote-mcp.com`
 - [MCP Server for MCP Registry](https://github.com/formulahendry/mcp-server-mcp-registry) - MCP Server to discover and search for available MCP servers in the registry
