@@ -27,6 +27,14 @@ Self-hostable servers that implement the MCP Registry API specification.
 - [ToolSDK MCP Registry](https://github.com/toolsdk-ai/toolsdk-mcp-registry) - Extends the MCP Registry with **API-based MCP execution, private deployment**, and **secure sandbox isolation**.
 - [ToolHive Registry Server](https://github.com/stacklok/toolhive-registry-server) - Enterprise-grade MCP Registry API implementation with Kubernetes-native CRD discovery, OIDC/JWT claim-based access control, multi-source aggregation (Git, K8s, upstream registries), SIEM-compliant audit logging, and OpenTelemetry observability.
 
+### Developer Tools
+
+- [mcp-probe](https://github.com/alvabillwu/mcp-probe) - Probe and inspect any MCP server from the CLI -- discover tools, resources, prompts, and invoke tools with zero dependencies.
+- [mcp-guard](https://github.com/alvabillwu/mcp-guard) - Security scanner for MCP server tool manifests -- detect dangerous capabilities before you connect.
+- [mcpindex](https://github.com/alvabillwu/mcpindex) - Searchable index and discovery tool for MCP servers -- aggregate from any registry, dedupe, merge, and relevance-search.
+- [mcp-compliance-lite](https://github.com/alvabillwu/mcp-compliance-lite) - MCP spec conformance tester -- validate JSON-RPC compliance, tool schemas, and error codes against the MCP spec.
+- [mcp-factory](https://github.com/alvabillwu/mcp-factory) - MCP server scaffolding CLI -- generate complete MCP server projects with one command.
+
 ### Other
 
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
