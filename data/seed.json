@@ -155,5 +155,23 @@
         }
       }
     ]
-  }
+  },
+  {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "kbag",
+  "description": "Lovable MCP server for kbag.se integrations and tools.",
+  "repository": {
+    "url": "https://smithery.ai/servers/serveall7208/kbag",
+    "source": "smithery"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "smithery",
+      "identifier": "kbag",
+      "version": "1.0.0"
+    }
+  ]
+}
 ]
+
