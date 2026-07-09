@@ -155,5 +155,23 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.meelad-diggit/kordic-crm",
+    "title": "Kordic CRM",
+    "description": "Full-featured CRM integration for managing leads, pipeline stages, contacts, accounts, payments, and sales analytics. Create and update records, track follow-ups, move deals through the pipeline, and get real-time workspace insights — all through natural conversation.",
+    "repository": {
+      "url": "https://github.com/meelad-diggit/kordic-modelcontextprotocol.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "websiteUrl": "https://kordic.io",
+    "remotes": [
+      {
+        "type": "streamable-http",
+        "url": "https://mcp.kordic.io/mcp"
+      }
+    ]
   }
 ]
