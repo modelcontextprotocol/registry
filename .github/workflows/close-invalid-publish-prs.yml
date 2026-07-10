@@ -1,0 +1,141 @@
+name: Close invalid publish PRs
+
+# Stage 2 of 2 (see detect-invalid-publish-prs.yml for stage 1).
+#
+# Runs in the trusted base-repo context (triggered by workflow_run, not by the
+# PR itself), so it has a write token. It picks up the PR number flagged by
+# stage 1 and, after independently re-validating the PR from the API, posts a
+# comment pointing at the publishing docs, labels it `invalid`, and closes it.
+#
+# Trust boundary: the ONLY thing crossing from the untrusted stage is the PR
+# number (sanitized to digits below). We re-derive every decision (state,
+# author, changed files) here, so a wrong/stale artifact can never cause us to
+# close a PR that doesn't actually match.
+
+on:
+  workflow_run:
+    workflows: ["Detect invalid publish PRs"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write # labels on PRs go through the issues API
+  actions: read # needed to list/download the stage-1 artifact
+
+jobs:
+  close:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      COMMENT_BODY: |
+        Hi @__AUTHOR__ 👋 — thanks for your interest in the MCP Registry!
+
+        It looks like this PR is trying to publish an MCP server by adding or editing files in this repository (under `servers/` or in `data/seed.json`). That isn't how servers get published, so I'm closing this PR automatically.
+
+        **Servers are published with the [`mcp-publisher`](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/quickstart.mdx) CLI**, not by opening a pull request against this repo. The CLI verifies that you own your namespace and submits your `server.json` directly to the live registry API.
+
+        To publish your server, follow the **[Publishing Quickstart](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/quickstart.mdx)**. In short:
+
+        ```bash
+        # Build the publisher CLI
+        make publisher
+
+        # Authenticate (e.g. via GitHub) and publish your server.json
+        ./bin/mcp-publisher login github
+        ./bin/mcp-publisher publish
+        ```
+
+        Note: `data/seed.json` is seed data for **local development only** — adding entries there does not publish anything to the registry.
+
+        If you believe this was closed in error, please leave a comment and a maintainer will take a look. 🙇
+
+        _This is an automated message._
+
+    steps:
+      - name: Check for flagged-pr artifact
+        id: check
+        run: |
+          set -euo pipefail
+          names="$(gh api "repos/$GH_REPO/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[].name' || true)"
+          if printf '%s\n' "$names" | grep -qx "flagged-pr"; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No flagged-pr artifact on run $RUN_ID; nothing to do."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download flagged PR number
+        if: steps.check.outputs.found == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: flagged-pr
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Re-validate and close
+        if: steps.check.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+
+          # Sanitize: the only cross-boundary input. Keep digits only.
+          PR_NUMBER="$(tr -dc '0-9' < pr-number.txt)"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No valid PR number in artifact; skipping."
+            exit 0
+          fi
+          echo "Re-validating PR #$PR_NUMBER"
+
+          state="$(gh pr view "$PR_NUMBER" --json state --jq '.state')"
+          if [ "$state" != "OPEN" ]; then
+            echo "PR #$PR_NUMBER is $state, not OPEN; skipping."
+            exit 0
+          fi
+
+          assoc="$(gh pr view "$PR_NUMBER" --json authorAssociation --jq '.authorAssociation')"
+          case "$assoc" in
+            MEMBER|OWNER|COLLABORATOR)
+              echo "Author association '$assoc' is trusted; skipping."
+              exit 0
+              ;;
+          esac
+
+          # Idempotency: if a maintainer reopens after we labeled it, leave it be.
+          # Capture into a var first so a transient gh failure can't fail open
+          # (an errored fetch piped to grep would otherwise look "not labeled").
+          labels="$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name' || true)"
+          if printf '%s\n' "$labels" | grep -qx "invalid"; then
+            echo "PR #$PR_NUMBER already labeled 'invalid'; skipping."
+            exit 0
+          fi
+
+          # Paginated REST endpoint (gh pr view --json files caps at 100, no pagination).
+          mapfile -t FILES < <(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          if [ "${#FILES[@]}" -eq 0 ]; then
+            echo "No files for PR #$PR_NUMBER; skipping."
+            exit 0
+          fi
+          publish_attempt=0
+          other=0
+          for f in "${FILES[@]}"; do
+            if [[ "$f" == servers/* || "$f" == "data/seed.json" ]]; then
+              publish_attempt=1
+            else
+              other=1
+            fi
+          done
+          if [ "$publish_attempt" -ne 1 ] || [ "$other" -ne 0 ]; then
+            echo "PR #$PR_NUMBER no longer matches the publish-attempt pattern; skipping."
+            exit 0
+          fi
+
+          author="$(gh pr view "$PR_NUMBER" --json author --jq '.author.login')"
+          body="${COMMENT_BODY//__AUTHOR__/$author}"
+
+          echo "Commenting on, labeling, and closing PR #$PR_NUMBER"
+          gh pr comment "$PR_NUMBER" --body "$body"
+          gh pr edit "$PR_NUMBER" --add-label "invalid" || echo "Could not add label; continuing."
+          gh pr close "$PR_NUMBER"
