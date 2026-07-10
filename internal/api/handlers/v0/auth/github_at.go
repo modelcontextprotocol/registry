@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -57,13 +58,24 @@ func RegisterGitHubATEndpoint(api huma.API, pathPrefix string, cfg *config.Confi
 	}, func(ctx context.Context, input *GitHubTokenExchangeInput) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.ExchangeToken(ctx, input.Body.GitHubToken)
 		if err != nil {
-			return nil, huma.Error401Unauthorized("Token exchange failed", err)
+			return nil, tokenExchangeError(err)
 		}
 
 		return &v0.Response[auth.TokenResponse]{
 			Body: *response,
 		}, nil
 	})
+}
+
+// tokenExchangeError maps an internal ExchangeToken failure to a client-facing
+// 401 without leaking internal detail. huma serializes extra error args into the
+// response body, and the wrapped err here can include the raw upstream GitHub
+// response body captured by readErrorBody — so passing it to huma would echo that
+// detail back to the caller (CWE-209). We log it server-side (like the sibling
+// handlers in servers.go) and return only a generic message.
+func tokenExchangeError(err error) error {
+	log.Printf("github-at token exchange failed: %v", err)
+	return huma.Error401Unauthorized("Token exchange failed")
 }
 
 // ExchangeToken exchanges a GitHub OAuth token for a Registry JWT token
@@ -136,14 +148,25 @@ func (h *GitHubHandler) getGitHubUser(ctx context.Context, token string) (*GitHu
 
 // githubOrgRoleAdmin is the membership role GitHub returns for an organization
 // Owner. It is the only role we treat as carrying publish authority for the org
-// namespace. (GitHub has no org-level "maintainer" role. GET /user/memberships/orgs
-// returns role "admin" (Owner), "member", or "billing_manager"; only "admin"
-// carries publish authority, so the other two are intentionally not granted.)
+// namespace. GET /user/memberships/orgs reports the caller's role as either
+// "admin" (Owner) or "member" (GitHub has no org-level "maintainer" role); only
+// "admin" carries publish authority, so a "member" is intentionally not granted.
 const githubOrgRoleAdmin = "admin"
+
+// githubMembershipStateActive is the membership state for an accepted (as opposed
+// to merely invited/pending) org membership. We only honor active memberships so a
+// not-yet-accepted owner invitation never grants the org namespace.
+const githubMembershipStateActive = "active"
 
 // orgMembershipsPageSize is the page size we request when listing the user's org
 // memberships. 100 is GitHub's maximum.
 const orgMembershipsPageSize = 100
+
+// maxOrgMembershipPages bounds the pagination loop. At orgMembershipsPageSize=100
+// this covers 10,000 org memberships — far beyond any real user — and exists only
+// as a backstop so a misbehaving or redirected upstream cannot drive an unbounded
+// number of requests.
+const maxOrgMembershipPages = 100
 
 // githubOrgMembership is one entry from GET /user/memberships/orgs: the
 // authenticated user's membership in a single organization, including their role.
@@ -171,24 +194,32 @@ type githubOrgMembership struct {
 func (h *GitHubHandler) getGitHubAdminOrgs(ctx context.Context, token string) ([]GitHubUserOrOrg, error) {
 	var adminOrgs []GitHubUserOrOrg
 
-	for page := 1; ; page++ {
+	for page := 1; page <= maxOrgMembershipPages; page++ {
 		memberships, err := h.fetchOrgMembershipsPage(ctx, token, page)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, m := range memberships {
-			if m.Role == githubOrgRoleAdmin {
+			// state=active is already requested in the query string, but re-check it
+			// here as defense in depth: if that param is ever dropped or changed, this
+			// keeps a pending (not-yet-accepted) owner invitation from being granted
+			// the org namespace.
+			if m.State == githubMembershipStateActive && m.Role == githubOrgRoleAdmin {
 				adminOrgs = append(adminOrgs, m.Organization)
 			}
 		}
 
+		// A short page is the last page: return the complete result.
 		if len(memberships) < orgMembershipsPageSize {
-			break
+			return adminOrgs, nil
 		}
 	}
 
-	return adminOrgs, nil
+	// Every page up to the cap was full. A real user never has this many org
+	// memberships, so rather than return a possibly-truncated set (which would
+	// silently strip a legitimate Owner's grant), fail closed.
+	return nil, fmt.Errorf("org memberships exceeded %d pages; refusing to issue a possibly-truncated grant", maxOrgMembershipPages)
 }
 
 // fetchOrgMembershipsPage fetches a single page of the authenticated user's
@@ -224,6 +255,13 @@ func (h *GitHubHandler) fetchOrgMembershipsPage(ctx context.Context, token strin
 		if resp.Header.Get("X-RateLimit-Remaining") == "0" || resp.Header.Get("Retry-After") != "" {
 			return nil, fmt.Errorf("GitHub API rate limit exceeded while listing org memberships (status 403): %s", readErrorBody(resp.Body))
 		}
+		// A SAML/SSO-enforced org returns 403 with an X-GitHub-SSO header when the
+		// token has not been SSO-authorized. That is an Owner being blocked, not a
+		// missing scope, so fail closed rather than silently dropping the org grant
+		// (which would degrade a legitimate Owner to personal-only with no signal).
+		if resp.Header.Get("X-GitHub-SSO") != "" {
+			return nil, fmt.Errorf("GitHub org memberships require SSO authorization for this token (status 403): %s", readErrorBody(resp.Body))
+		}
 		return nil, nil
 	}
 
@@ -241,26 +279,27 @@ func (h *GitHubHandler) fetchOrgMembershipsPage(ctx context.Context, token strin
 
 // buildPermissions builds permissions based on GitHub user and their organizations
 func (h *GitHubHandler) buildPermissions(username string, orgs []GitHubUserOrOrg) []auth.Permission {
-	permissions := []auth.Permission{}
-
-	// Assert user and org names match expected regex, to harden against people doing weird things in names
+	// Assert the username matches the expected regex, to harden against people doing
+	// weird things in names. The username is the caller's own identity, so if it is
+	// invalid we grant nothing.
 	if !isValidGitHubName(username) {
 		return nil
 	}
-	for _, org := range orgs {
-		if !isValidGitHubName(org.Login) {
-			return nil
-		}
-	}
 
 	// Add permission for user's own namespace
-	permissions = append(permissions, auth.Permission{
+	permissions := []auth.Permission{{
 		Action:          auth.PermissionActionPublish,
 		ResourcePattern: fmt.Sprintf("io.github.%s/*", username),
-	})
+	}}
 
-	// Add permissions for each organization the user administers (Owner role)
+	// Add permissions for each organization the user administers (Owner role). Skip
+	// any org whose name fails validation rather than rejecting the whole set, so one
+	// unexpected org name can't strip the caller's personal namespace or their other
+	// (valid) org grants.
 	for _, org := range orgs {
+		if !isValidGitHubName(org.Login) {
+			continue
+		}
 		permissions = append(permissions, auth.Permission{
 			Action:          auth.PermissionActionPublish,
 			ResourcePattern: fmt.Sprintf("io.github.%s/*", org.Login),

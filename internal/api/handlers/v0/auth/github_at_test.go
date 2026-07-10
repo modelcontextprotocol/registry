@@ -45,6 +45,59 @@ func adminMemberships(orgs []v0auth.GitHubUserOrOrg) []orgMembership {
 	return memberships
 }
 
+// newMockGitHubServer returns a mock GitHub API server that serves a fixed
+// "testuser" on /user and delegates the org-memberships endpoint to orgsHandler.
+// It keeps individual test cases small (only the memberships behavior varies),
+// which also keeps their cyclomatic complexity down.
+func newMockGitHubServer(orgsHandler http.HandlerFunc) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case githubUserEndpoint:
+			user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(user) //nolint:errcheck
+		case githubOrgsEndpoint:
+			orgsHandler(w, r)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+}
+
+// grantedPatterns exchanges the token and returns the resource patterns granted
+// in the resulting JWT.
+func grantedPatterns(t *testing.T, cfg *config.Config, server *httptest.Server) []string {
+	t.Helper()
+	handler := v0auth.NewGitHubHandler(cfg)
+	handler.SetBaseURL(server.URL)
+
+	ctx := context.Background()
+	response, err := handler.ExchangeToken(ctx, "valid-github-token")
+	require.NoError(t, err)
+	require.NotNil(t, response)
+
+	claims, err := auth.NewJWTManager(cfg).ValidateToken(ctx, response.RegistryToken)
+	require.NoError(t, err)
+
+	patterns := make([]string, 0, len(claims.Permissions))
+	for _, perm := range claims.Permissions {
+		patterns = append(patterns, perm.ResourcePattern)
+	}
+	return patterns
+}
+
+// assertExchangeFailsClosed asserts that a token exchange against server returns
+// an error and no token (used for the fail-closed 403 variants).
+func assertExchangeFailsClosed(t *testing.T, cfg *config.Config, server *httptest.Server) {
+	t.Helper()
+	handler := v0auth.NewGitHubHandler(cfg)
+	handler.SetBaseURL(server.URL)
+
+	response, err := handler.ExchangeToken(context.Background(), "valid-github-token")
+	require.Error(t, err)
+	assert.Nil(t, response)
+}
+
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
 	// Create test handler with mock config
 	testSeed := make([]byte, ed25519.SeedSize)
@@ -309,7 +362,15 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
 		require.NoError(t, err)
 		assert.Equal(t, "testuser", claims.AuthMethodSubject)
-		assert.Empty(t, claims.Permissions) // No permissions because one org has invalid name
+
+		// The invalid org is skipped, but the personal namespace and the valid org
+		// are still granted — one weird org name must not strip everything else.
+		patterns := make([]string, 0, len(claims.Permissions))
+		for _, perm := range claims.Permissions {
+			patterns = append(patterns, perm.ResourcePattern)
+		}
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.valid-org/*"}, patterns)
+		assert.NotContains(t, patterns, "io.github.org with spaces/*")
 	})
 
 	t.Run("malformed JSON response", func(t *testing.T) {
@@ -528,6 +589,82 @@ func TestGitHubHandler_ExchangeToken_OrgRoles(t *testing.T) {
 	})
 }
 
+func TestGitHubHandler_ExchangeToken_MembershipFiltering(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	t.Run("pending admin membership is not granted (state filter)", func(t *testing.T) {
+		// A user invited as an Owner but who has not accepted has role "admin" with
+		// state "pending". They are not an Owner yet, so the org must not be granted
+		// even if the state=active query filter is somehow bypassed.
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			memberships := []orgMembership{
+				{State: "pending", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "pending-org", ID: 1}},
+				{State: "active", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "active-org", ID: 2}},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(memberships) //nolint:errcheck
+		})
+		defer server.Close()
+
+		patterns := grantedPatterns(t, cfg, server)
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.active-org/*"}, patterns)
+		assert.NotContains(t, patterns, "io.github.pending-org/*")
+	})
+
+	t.Run("billing_manager role is not granted", func(t *testing.T) {
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			memberships := []orgMembership{
+				{State: "active", Role: "billing_manager", Organization: v0auth.GitHubUserOrOrg{Login: "billing-org", ID: 1}},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(memberships) //nolint:errcheck
+		})
+		defer server.Close()
+
+		patterns := grantedPatterns(t, cfg, server)
+		assert.Equal(t, []string{"io.github.testuser/*"}, patterns)
+	})
+}
+
+func TestGitHubHandler_ExchangeToken_403FailClosed(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	t.Run("Retry-After 403 fails closed (secondary rate limit)", func(t *testing.T) {
+		// A 403 carrying only Retry-After (no X-RateLimit-Remaining: 0) is a secondary
+		// rate limit, not a missing scope. Degrading would strip a real Owner's grant.
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Retry-After", "60")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{"message": "You have exceeded a secondary rate limit"}`)) //nolint:errcheck
+		})
+		defer server.Close()
+
+		assertExchangeFailsClosed(t, cfg, server)
+	})
+
+	t.Run("SSO-enforced 403 fails closed (not treated as missing scope)", func(t *testing.T) {
+		// A SAML/SSO-enforced org returns 403 with X-GitHub-SSO when the token is not
+		// SSO-authorized. That is an Owner being blocked, so it must fail closed rather
+		// than silently degrade to personal-only.
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("X-GitHub-SSO", "required; two_factor_authentication=false")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{"message": "Resource protected by organization SAML enforcement."}`)) //nolint:errcheck
+		})
+		defer server.Close()
+
+		assertExchangeFailsClosed(t, cfg, server)
+	})
+}
+
 func TestJWTTokenValidation(t *testing.T) {
 	testSeed := make([]byte, ed25519.SeedSize)
 	_, err := rand.Read(testSeed)
@@ -732,7 +869,16 @@ func TestValidGitHubNames(t *testing.T) {
 			orgs: []v0auth.GitHubUserOrOrg{
 				{Login: "invalid org", ID: 1},
 			},
-			wantPerms: 0, // Should return nil if any name is invalid
+			wantPerms: 1, // Personal namespace kept; the invalid org is skipped
+		},
+		{
+			name:     "valid username with one valid and one invalid org",
+			username: "valid-user",
+			orgs: []v0auth.GitHubUserOrOrg{
+				{Login: "valid-org", ID: 1},
+				{Login: "invalid org", ID: 2},
+			},
+			wantPerms: 2, // Personal + valid org; the invalid org is skipped
 		},
 	}
 
