@@ -199,7 +199,11 @@ jobs:
 You may need to add a secret depending on which authentication method you choose:
 
 - **GitHub OIDC Authentication**: No dedicated secret necessary.
-- **GitHub PAT Authentication**: Add a `MCP_GITHUB_TOKEN` secret with a GitHub Personal Access Token (PAT) that has the `read:org` scope. `read:org` is what lets the registry confirm you are an **Owner** of the organization before granting its namespace; the token needs **no** repository scopes (the registry never reads or writes your code), and no other scopes are required — `read:user` is not needed, and a bare token still authenticates and publishes to your personal namespace. For an **organization** token, store it as an **Environment secret** on the `mcp-registry-publish` environment rather than a plain repository secret — see "Securing your registry token in CI" below for why this matters and how to configure the environment.
+- **GitHub PAT Authentication**: Add a `MCP_GITHUB_TOKEN` secret with a GitHub Personal Access Token. The registry only needs to read your organization role to confirm you are an **Owner** before granting its namespace, so grant the minimum for that and **no** repository scopes (the registry never reads or writes your code):
+  - **Classic PAT**: the `read:org` scope (`read:user` is *not* needed; a bare token still authenticates and publishes to your personal namespace).
+  - **Fine-grained PAT**: the **Organization permissions → Members → Read-only** permission (the equivalent of `read:org`). Without it you'll get your personal namespace only. A fine-grained PAT is scoped to one resource owner, so create it for the organization you're publishing to.
+
+  For an **organization** token, store it as an **Environment secret** on the `mcp-registry-publish` environment rather than a plain repository secret — see "Securing your registry token in CI" below for why this matters and how to configure the environment.
 - **DNS Authentication**: Add a `MCP_PRIVATE_KEY` secret with your Ed25519 private key.
 
 You may also need to add secrets for your package registry. For example, the workflow above needs an `NPM_TOKEN` secret with your npm token.

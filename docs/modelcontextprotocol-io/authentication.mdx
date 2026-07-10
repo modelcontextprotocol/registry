@@ -53,7 +53,12 @@ GitHub authentication always grants your personal namespace, `io.github.<your-us
 
 To publish under an **organization** namespace (`io.github.<orgname>/*`), you must be an **Owner** of that organization. Ordinary org membership is no longer sufficient: the registry checks your membership role and only grants the org namespace to admins. This prevents anyone who merely belongs to an org from publishing — or overwriting — servers under the org's name.
 
-If you authenticate with a Personal Access Token (for example in CI), the token must include the `read:org` scope for the registry to see your organization role. A token without `read:org` can still publish to your personal namespace, but org publishing will be silently unavailable. The token needs **no** repository scopes — the registry never reads or writes your code.
+If you authenticate with a Personal Access Token (for example in CI), the token must let the registry read your organization role. A token that can't will still publish to your personal namespace, but org publishing will be silently unavailable. The exact requirement depends on the token type:
+
+- **Classic PAT**: grant the `read:org` scope.
+- **Fine-grained PAT**: grant the **Organization permissions → Members → Read-only** permission (the fine-grained equivalent of `read:org`). Without it, GitHub returns no organization membership for the token and you'll get your personal namespace only. Note that a fine-grained PAT is bound to a single resource owner, so it can only see the organization it was created for.
+
+Either way the token needs **no** repository scopes — the registry never reads or writes your code.
 
 ## DNS Authentication
 
