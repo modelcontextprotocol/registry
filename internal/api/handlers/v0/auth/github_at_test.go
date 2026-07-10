@@ -665,6 +665,34 @@ func TestGitHubHandler_ExchangeToken_403FailClosed(t *testing.T) {
 	})
 }
 
+func TestGitHubHandler_ExchangeToken_PaginationCap(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	t.Run("all-full pages past the cap fails closed", func(t *testing.T) {
+		// Every page comes back full (100), so the loop never sees a short final page
+		// and runs to maxOrgMembershipPages. Rather than return a possibly-truncated
+		// org set, the exchange must fail closed (error, no token).
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			page := make([]orgMembership, 0, 100)
+			for i := 0; i < 100; i++ {
+				page = append(page, orgMembership{
+					State: "active", Role: "member",
+					Organization: v0auth.GitHubUserOrOrg{Login: fmt.Sprintf("org-%d", i), ID: i},
+				})
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(page) //nolint:errcheck
+		})
+		defer server.Close()
+
+		assertExchangeFailsClosed(t, cfg, server)
+	})
+}
+
 func TestJWTTokenValidation(t *testing.T) {
 	testSeed := make([]byte, ed25519.SeedSize)
 	_, err := rand.Read(testSeed)

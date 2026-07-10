@@ -255,10 +255,15 @@ func (h *GitHubHandler) fetchOrgMembershipsPage(ctx context.Context, token strin
 		if resp.Header.Get("X-RateLimit-Remaining") == "0" || resp.Header.Get("Retry-After") != "" {
 			return nil, fmt.Errorf("GitHub API rate limit exceeded while listing org memberships (status 403): %s", readErrorBody(resp.Body))
 		}
-		// A SAML/SSO-enforced org returns 403 with an X-GitHub-SSO header when the
-		// token has not been SSO-authorized. That is an Owner being blocked, not a
-		// missing scope, so fail closed rather than silently dropping the org grant
-		// (which would degrade a legitimate Owner to personal-only with no signal).
+		// Best-effort defense: GitHub uses the X-GitHub-SSO header to signal that a
+		// resource is behind SAML/SSO the token hasn't been authorized for. If we see
+		// it, treat that as an Owner being blocked (not a missing scope) and fail
+		// closed rather than silently degrading them to personal-only. NOTE: we have
+		// not confirmed that the memberships *list* endpoint emits this header on SSO
+		// enforcement (it may instead just omit the SSO-protected org); this check is
+		// safe either way — if the header is absent we fall through to the same
+		// graceful degrade as before — but it is not a proven guarantee that every
+		// SSO-blocked Owner is caught here.
 		if resp.Header.Get("X-GitHub-SSO") != "" {
 			return nil, fmt.Errorf("GitHub org memberships require SSO authorization for this token (status 403): %s", readErrorBody(resp.Body))
 		}
