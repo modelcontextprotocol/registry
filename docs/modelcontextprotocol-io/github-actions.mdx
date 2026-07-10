@@ -196,10 +196,10 @@ jobs:
 
 ## Step 2: Add Secrets
 
-You may need to add a secret to the repository depending on which authentication method you choose:
+You may need to add a secret depending on which authentication method you choose:
 
 - **GitHub OIDC Authentication**: No dedicated secret necessary.
-- **GitHub PAT Authentication**: Add a `MCP_GITHUB_TOKEN` secret with a GitHub Personal Access Token (PAT) that has `read:org` and `read:user` scopes. The `read:org` scope is what lets the registry confirm you are an **Owner** of the organization before granting its namespace; the token needs **no** repository scopes (the registry never reads or writes your code).
+- **GitHub PAT Authentication**: Add a `MCP_GITHUB_TOKEN` secret with a GitHub Personal Access Token (PAT) that has the `read:org` scope. `read:org` is what lets the registry confirm you are an **Owner** of the organization before granting its namespace; the token needs **no** repository scopes (the registry never reads or writes your code), and no other scopes are required — `read:user` is not needed, and a bare token still authenticates and publishes to your personal namespace. For an **organization** token, store it as an **Environment secret** on the `mcp-registry-publish` environment rather than a plain repository secret — see "Securing your registry token in CI" below for why this matters and how to configure the environment.
 - **DNS Authentication**: Add a `MCP_PRIVATE_KEY` secret with your Ed25519 private key.
 
 You may also need to add secrets for your package registry. For example, the workflow above needs an `NPM_TOKEN` secret with your npm token.
@@ -212,7 +212,7 @@ Whichever token you use to authenticate, treat it as a high-value credential. Wh
 
 GitHub gives you the tools to close that gap. We recommend, in increasing order of strength:
 
-1. **Store the token as an [Environment secret](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments), not a repository or organization secret.** A job only receives it when it declares `environment:` (as the PAT example above does).
+1. **Store the token as an [Environment secret](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments), not a repository or organization secret.** A job can only read an environment secret when it declares `environment:` (as the PAT example above does). Note that the `environment:` key alone protects nothing: if the environment does not exist yet, GitHub **auto-creates it with no protection rules** on first run, and a job that declares `environment:` still also receives ordinary repository and organization secrets. The protection comes from storing the token *as a secret on that environment* and configuring the environment (steps 2–3 below) — not from the `environment:` key by itself.
 2. **Restrict that environment to your default branch and/or release tags** with a [deployment branch rule](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments#deployment-branches-and-tags), and protect that branch with [required pull request reviews](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches). Now only reviewed, maintainer-approved code can ever reach the token.
 3. **(Strongest) Add a [required reviewer](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments#required-reviewers) to the environment** so each publish pauses for an explicit human approval.
 
