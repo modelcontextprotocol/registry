@@ -109,6 +109,7 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 			http.MethodGet,
 			http.MethodPost,
 			http.MethodPut,
+			http.MethodPatch,
 			http.MethodDelete,
 			http.MethodOptions,
 		},
@@ -145,6 +146,12 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 	}
 
 	return server
+}
+
+// Handler returns the fully wrapped HTTP handler (middleware stack plus routes).
+// Exposed so tests can exercise the middleware, e.g. CORS, without binding a port.
+func (s *Server) Handler() http.Handler {
+	return s.server.Handler
 }
 
 // Start begins listening for incoming HTTP requests
