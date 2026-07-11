@@ -8,11 +8,11 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-func clientClosedRequest(ctx context.Context, err error) (error, bool) {
+func clientClosedRequest(ctx context.Context, err error) (bool, error) {
 	if errors.Is(err, context.Canceled) || errors.Is(ctx.Err(), context.Canceled) {
-		return huma.NewError(499, "Client closed request", err), true
+		return true, huma.NewError(499, "Client closed request", err)
 	}
-	return nil, false
+	return false, nil
 }
 
 // ListServersError maps ListServers failures; client disconnects must not log as 500s.
@@ -20,7 +20,7 @@ func ListServersError(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}
-	if cerr, ok := clientClosedRequest(ctx, err); ok {
+	if ok, cerr := clientClosedRequest(ctx, err); ok {
 		return cerr
 	}
 	log.Printf("list servers failed: %v", err)
@@ -35,7 +35,7 @@ func GetServerDetailsError(ctx context.Context, err error, serverName, version s
 	if err == nil {
 		return nil
 	}
-	if cerr, ok := clientClosedRequest(ctx, err); ok {
+	if ok, cerr := clientClosedRequest(ctx, err); ok {
 		return cerr
 	}
 	log.Printf("get server details (%q/%q) failed: %v", serverName, version, err)
@@ -47,7 +47,7 @@ func GetServerVersionsError(ctx context.Context, err error, serverName string) e
 	if err == nil {
 		return nil
 	}
-	if cerr, ok := clientClosedRequest(ctx, err); ok {
+	if ok, cerr := clientClosedRequest(ctx, err); ok {
 		return cerr
 	}
 	log.Printf("get server versions (%q) failed: %v", serverName, err)
