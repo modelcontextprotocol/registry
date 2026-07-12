@@ -201,6 +201,12 @@ func validateViaAPI(registryURL string, serverData []byte) (*validators.Validati
 		return nil, fmt.Errorf("error serializing request: %w", err)
 	}
 
+	// Validate JSON encoding to detect encoding corruption
+	// (e.g. on Windows with non-UTF-8 codepage in Git Bash/MSYS)
+	if err := validatePublishData(jsonData); err != nil {
+		return nil, fmt.Errorf("validation data encoding error: %w", err)
+	}
+
 	// Ensure URL ends with / and add validate endpoint
 	if !strings.HasSuffix(registryURL, "/") {
 		registryURL += "/"

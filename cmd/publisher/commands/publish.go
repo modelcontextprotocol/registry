@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"unicode/utf8"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
@@ -112,6 +113,12 @@ func publishToRegistry(registryURL string, serverData []byte, token string) (*ap
 		return nil, 0, fmt.Errorf("error serializing request: %w", err)
 	}
 
+	// Validate JSON encoding before sending to prevent publishing
+	// corrupted data on systems with non-UTF-8 codepage environments.
+	if err := validatePublishData(jsonData); err != nil {
+		return nil, 0, fmt.Errorf("publish data validation failed: %w", err)
+	}
+
 	// Ensure URL ends with the publish endpoint
 	if !strings.HasSuffix(registryURL, "/") {
 		registryURL += "/"
@@ -149,4 +156,35 @@ func publishToRegistry(registryURL string, serverData []byte, token string) (*ap
 	}
 
 	return &serverResponse, resp.StatusCode, nil
+}
+
+// validatePublishData checks that JSON data is clean before sending to the registry.
+// This catches encoding corruption that can occur on Windows systems when running
+// under Git Bash / MSYS with a non-UTF-8 ANSI codepage (e.g. zh-CN CP-936/GBK).
+//
+// The check validates:
+//  1. Data is valid UTF-8
+//  2. No JSON-escaped lone surrogates (\udc00-\udfff) appear in the data
+func validatePublishData(data []byte) error {
+	// Check for valid UTF-8 encoding
+	if !utf8.Valid(data) {
+		return fmt.Errorf("server.json contains invalid UTF-8 encoding - this may indicate system encoding corruption. Try running mcp-publisher from PowerShell or CMD instead of Git Bash")
+	}
+
+	// Check for JSON-escaped lone surrogates (e.g. \udc94, \uddff).
+	// These indicate bytes that were misinterpreted through the system codepage
+	// instead of being treated as raw UTF-8.
+	//
+	// We look for the escape prefix \udc-\udf in the marshaled JSON output.
+	// Lone surrogates (U+DC00-U+DFFF) are never valid content in server metadata
+	// and always indicate encoding corruption.
+	lower := bytes.ToLower(data)
+	if bytes.Contains(lower, []byte(`\udc`)) ||
+		bytes.Contains(lower, []byte(`\udd`)) ||
+		bytes.Contains(lower, []byte(`\ude`)) ||
+		bytes.Contains(lower, []byte(`\udf`)) {
+		return fmt.Errorf("server.json contains encoding corruption (lone surrogate characters detected) - this may be caused by non-UTF-8 system codepage. Try running mcp-publisher from PowerShell or CMD instead of Git Bash")
+	}
+
+	return nil
 }
