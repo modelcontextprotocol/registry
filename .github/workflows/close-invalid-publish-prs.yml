@@ -95,7 +95,10 @@ jobs:
             exit 0
           fi
 
-          assoc="$(gh pr view "$PR_NUMBER" --json authorAssociation --jq '.authorAssociation')"
+          # Use the REST endpoint: `gh pr view --json` does not expose an
+          # authorAssociation field, so calling it there exits non-zero and,
+          # under `set -euo pipefail`, aborts the job before we ever close.
+          assoc="$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER" --jq '.author_association')"
           case "$assoc" in
             MEMBER|OWNER|COLLABORATOR)
               echo "Author association '$assoc' is trusted; skipping."
