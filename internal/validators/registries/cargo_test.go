@@ -340,6 +340,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 		readmeStatus    int
 		readmeBody      string
 		versionExists   bool // response for the /api/v1/crates/{n}/{v} existence probe (403 disambiguation)
+		versionProbe    int  // if non-zero, the existence probe returns this status (overrides versionExists)
 		wantErr         bool
 		wantContains    []string
 		wantNotContains []string
@@ -377,8 +378,9 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			wantNotContains: []string{"has no rendered README"},
 		},
 		{
-			// Crate/version exists but has no rendered README: CDN 403 + existence
-			// probe 200. Must NOT be reported as "not found".
+			// Crate/version exists but the README CDN 403s: existence probe 200.
+			// Must NOT be reported as "not found", and must not flatly assert the
+			// README is absent (a 403 isn't definitive proof of that).
 			name:            "readme_403_no_readme",
 			crateName:       "combined-readme403-noreadme",
 			version:         "0.1.0",
@@ -386,7 +388,20 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			readmeStatus:    http.StatusForbidden,
 			versionExists:   true,
 			wantErr:         true,
-			wantContains:    []string{"has no rendered README"},
+			wantContains:    []string{"exists on crates.io", "could not be retrieved"},
+			wantNotContains: []string{"not found"},
+		},
+		{
+			// CDN 403 + the existence probe itself is rate-limited (429): existence
+			// is undetermined, so report transient/retryable, NOT "not found".
+			name:            "readme_403_probe_transient",
+			crateName:       "combined-readme403-probe429",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusForbidden,
+			versionProbe:    http.StatusTooManyRequests,
+			wantErr:         true,
+			wantContains:    []string{"transient"},
 			wantNotContains: []string{"not found"},
 		},
 		{
@@ -421,6 +436,18 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			wantErr:      true,
 			wantContains: []string{"ownership validation failed"},
 		},
+		{
+			// Token present but glued to a trailing period — the error must explain
+			// the boundary cause, not tell the publisher to add a token they can see.
+			name:         "glued_trailing_period_explained",
+			crateName:    "combined-glued",
+			version:      "0.1.0",
+			metaStatus:   http.StatusOK,
+			readmeStatus: http.StatusOK,
+			readmeBody:   fmt.Sprintf("<html><body><p>mcp-name: %s.</p></body></html>", serverName),
+			wantErr:      true,
+			wantContains: []string{"immediately followed by", `"."`},
+		},
 	}
 
 	// lastMetaPath captures the metadata request path seen by the handler so
@@ -450,10 +477,13 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			}
 			// Existence probe used to disambiguate a README 403.
 			if r.URL.Path == versionPath {
-				if tt.versionExists {
+				switch {
+				case tt.versionProbe != 0:
+					http.Error(w, "simulated probe status", tt.versionProbe)
+				case tt.versionExists:
 					w.Header().Set("Content-Type", "application/json")
 					_ = json.NewEncoder(w).Encode(map[string]any{"version": map[string]string{"num": tt.version}})
-				} else {
+				default:
 					http.Error(w, "not found", http.StatusNotFound)
 				}
 				return

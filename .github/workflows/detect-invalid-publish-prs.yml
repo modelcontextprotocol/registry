@@ -1,0 +1,82 @@
+name: Detect invalid publish PRs
+
+# Stage 1 of 2 (see close-invalid-publish-prs.yml for stage 2).
+#
+# Some contributors try to "publish" a server by opening a PR that adds files
+# under servers/ or edits data/seed.json. That is not how publishing works -
+# servers are published with the mcp-publisher CLI against the live registry
+# API. This job only DETECTS such PRs. It runs from the (untrusted) PR context
+# with a read-only token, so it cannot comment on or close anything. When it
+# finds a match it records just the PR number as an artifact; the privileged
+# stage-2 workflow picks that up via workflow_run and acts on it.
+#
+# We never check out or run the PR's code - we only read changed file paths.
+
+on:
+  pull_request:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      AUTHOR_ASSOCIATION: ${{ github.event.pull_request.author_association }}
+    steps:
+      - name: Classify PR
+        id: classify
+        run: |
+          set -euo pipefail
+          match=false
+
+          # Maintainers may legitimately touch these files (e.g. dev seed data),
+          # so never flag their PRs.
+          case "$AUTHOR_ASSOCIATION" in
+            MEMBER|OWNER|COLLABORATOR)
+              echo "Author association '$AUTHOR_ASSOCIATION' is trusted; not flagging."
+              ;;
+            *)
+              # Use the paginated REST endpoint: `gh pr view --json files` caps
+              # at 100 files with no pagination, which could truncate a large PR
+              # and cause a false match.
+              mapfile -t FILES < <(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+              if [ "${#FILES[@]}" -gt 0 ]; then
+                # Flag only if the PR touches *exclusively* publish-attempt files
+                # (servers/** and/or data/seed.json) and nothing else, so that
+                # legit PRs touching seed data alongside real code are left alone.
+                publish_attempt=0
+                other=0
+                for f in "${FILES[@]}"; do
+                  if [[ "$f" == servers/* || "$f" == "data/seed.json" ]]; then
+                    publish_attempt=1
+                  else
+                    echo "Non-publish file changed: $f"
+                    other=1
+                  fi
+                done
+                if [ "$publish_attempt" -eq 1 ] && [ "$other" -eq 0 ]; then
+                  match=true
+                fi
+              fi
+              ;;
+          esac
+
+          echo "PR #$PR_NUMBER match=$match"
+          echo "match=$match" >> "$GITHUB_OUTPUT"
+          if [ "$match" = "true" ]; then
+            echo "$PR_NUMBER" > pr-number.txt
+          fi
+
+      - name: Record flagged PR number
+        if: steps.classify.outputs.match == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4
+        with:
+          name: flagged-pr
+          path: pr-number.txt
+          retention-days: 1

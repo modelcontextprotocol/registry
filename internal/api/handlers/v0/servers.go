@@ -132,8 +132,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		// Get paginated results with filtering
 		servers, nextCursor, err := registry.ListServers(ctx, filter, input.Cursor, input.Limit)
 		if err != nil {
-			log.Printf("list servers failed: %v", err)
-			return nil, huma.Error500InternalServerError("Failed to get registry list")
+			return nil, ListServersError(ctx, err)
 		}
 
 		// Convert []*ServerResponse to []ServerResponse
