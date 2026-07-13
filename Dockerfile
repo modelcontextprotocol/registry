@@ -16,6 +16,11 @@ COPY --from=builder /app/registry .
 COPY data ./data
 COPY data /data
 
+# 在 Local 根目錄建立獨立的 `enterprise-allowlist.json` 進行版控
+# 在這裡強行將它複製並蓋掉容器內部的 seed.json！
+COPY enterprise-allowlist.json ./data/seed.json
+COPY enterprise-allowlist.json /data/seed.json
+
 EXPOSE 8080
 
 # ✨ 終極核心：強制指定工作目錄在 /app，並且執行 ./registry

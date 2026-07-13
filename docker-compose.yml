@@ -27,7 +27,9 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./data:/data:ro
+      # - ./data:/data:ro
+      - ./enterprise-allowlist.json:/app/data/seed.json  # <-- 強制掛載妳的企業白名單
+      - ./enterprise-allowlist.json:/data/seed.json       # <-- 雙重保險
     restart: "unless-stopped"
 
   postgres:

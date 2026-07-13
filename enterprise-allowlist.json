@@ -1,6 +1,44 @@
 [
   {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.figma/mcp-server",
+    "description": "Figma MCP Server for design tool integration.",
+    "repository": {
+      "url": "https://github.com/figma/mcp-server.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "icons": [
+      {
+        "src": "https://static.figma.com/app/icon/1/favicon.png",
+        "mimeType": "image/png",
+        "sizes": [
+          "32x32"
+        ]
+      }
+    ],
+    "packages": [
+      {
+        "registryType": "npm",
+        "identifier": "@figma/mcp-server",
+        "version": "1.0.0",
+        "runtimeHint": "npx",
+        "transport": {
+          "type": "stdio"
+        },
+        "environmentVariables": [
+          {
+            "description": "Figma API token for authentication",
+            "isRequired": true,
+            "isSecret": true,
+            "name": "FIGMA_API_TOKEN"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.domdomegg/airtable-mcp-server",
     "description": "Read and write access to Airtable database schemas, tables, and records.",
     "repository": {
