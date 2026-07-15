@@ -96,7 +96,7 @@ func main() {
 	schemaID := "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/draft/server.schema.json"
 	jsonSchema := map[string]interface{}{
 		"$comment":    "This file is auto-generated from docs/reference/api/openapi.yaml. Do not edit manually. Run 'make generate-schema' to update.",
-		"$schema":     "http://json-schema.org/draft-07/schema#",
+		"$schema":     "https://json-schema.org/draft/2020-12/schema",
 		"$id":         schemaID,
 		"title":       "server.json defining a Model Context Protocol (MCP) server",
 		"$ref":        "#/definitions/ServerDetail",
