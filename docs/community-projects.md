@@ -29,6 +29,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 
 ### Other
 
+- [Find MCP](https://github.com/agentage/find-mcp) - MCP server to discover and search 17,000+ servers synced from the registry, remote at `https://catalog.agentage.io/mcp` or via npm [`@agentage/find-mcp`](https://www.npmjs.com/package/@agentage/find-mcp)
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
 - [MCP Registry Remote MCP Server](https://github.com/jaw9c/mcp-registry-mcp) - Open Remote MCP server for the Registry at `https://registry-mcp.remote-mcp.com`
 - [MCP Server for MCP Registry](https://github.com/formulahendry/mcp-server-mcp-registry) - MCP Server to discover and search for available MCP servers in the registry
