@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"net"
 	"net/url"
 	"regexp"
 	"strings"
@@ -147,10 +148,21 @@ func IsValidRemoteURL(rawURL string) bool {
 		return false
 	}
 
-	// Reject localhost URLs for remotes (security/production concerns)
+	// Reject localhost / loopback / private / link-local hosts for remotes
+	// (security/production concerns). The previous check only matched the literal
+	// "localhost", "127.0.0.1" and "*.localhost", so IP forms slipped through:
+	// IPv6 loopback ([::1]), the rest of 127.0.0.0/8, the unspecified address
+	// (0.0.0.0, [::]), IPv4-mapped loopback ([::ffff:127.0.0.1]), and RFC1918 /
+	// link-local addresses (e.g. 169.254.169.254).
 	hostname := u.Hostname()
-	if hostname == "localhost" || hostname == "127.0.0.1" || strings.HasSuffix(hostname, ".localhost") {
+	if hostname == "localhost" || strings.HasSuffix(hostname, ".localhost") {
 		return false
+	}
+	if ip := net.ParseIP(hostname); ip != nil {
+		if ip.IsLoopback() || ip.IsUnspecified() || ip.IsPrivate() ||
+			ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+			return false
+		}
 	}
 
 	if u.Scheme != "https" {
