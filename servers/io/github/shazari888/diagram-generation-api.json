@@ -1,0 +1,19 @@
+{
+  "name": "io.github.shazari888/diagram-generation-api",
+  "version": "1.0.0",
+  "description": "AI-powered diagram generation API that converts natural language descriptions into professional diagrams in seconds. Supports Mermaid, D2, PlantUML, and GraphViz formats with SVG, PNG, and PDF outputs.",
+  "homepage": "https://github.com/Shazari888/diagram-generation-api",
+  "remotes": {
+    "https://diagram-generation-api.vercel.app": {
+      "transport": "http",
+      "auth": "bearer"
+    }
+  },
+  "tools": [
+    {
+      "name": "generate_diagram",
+      "title": "Generate Diagram",
+      "description": "Generates professional diagrams from natural language descriptions. Supports Mermaid (flowcharts, sequence diagrams ), D2 (architecture diagrams), PlantUML (UML diagrams), and GraphViz (graph visualizations). Returns SVG, PNG, or PDF output. Perfect for creating flowcharts, architecture diagrams, entity relationships, system designs, and more. Ideal for autonomous agents that need to visualize complex systems or workflows."
+    }
+  ]
+}
