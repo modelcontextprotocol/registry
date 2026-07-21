@@ -22,13 +22,14 @@ var (
 
 // ServerFilter defines filtering options for server queries
 type ServerFilter struct {
-	Name           *string    // for finding versions of same server
-	RemoteURL      *string    // for duplicate URL detection
-	UpdatedSince   *time.Time // for incremental sync filtering
-	SubstringName  *string    // for substring search on name
-	Version        *string    // for exact version matching
-	IsLatest       *bool      // for filtering latest versions only
-	IncludeDeleted *bool      // for including deleted packages in results (default: exclude)
+	Name                 *string    // for finding versions of same server
+	RemoteURL            *string    // for duplicate URL detection
+	UpdatedSince         *time.Time // for incremental sync filtering
+	SubstringName        *string    // for substring search on name
+	SubstringDescription *string    // for substring search on description
+	Version              *string    // for exact version matching
+	IsLatest             *bool      // for filtering latest versions only
+	IncludeDeleted       *bool      // for including deleted packages in results (default: exclude)
 }
 
 // Database defines the interface for database operations
