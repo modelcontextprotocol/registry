@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"net"
 	"net/url"
 	"regexp"
 	"strings"
@@ -147,9 +148,10 @@ func IsValidRemoteURL(rawURL string) bool {
 		return false
 	}
 
-	// Reject localhost URLs for remotes (security/production concerns)
-	hostname := u.Hostname()
-	if hostname == "localhost" || hostname == "127.0.0.1" || strings.HasSuffix(hostname, ".localhost") {
+	// Reject localhost/loopback/unspecified/private/link-local hosts for remotes
+	// (security/production concerns - a remote must point at a real, publicly
+	// reachable, non-internal endpoint).
+	if isDisallowedRemoteHost(u.Hostname()) {
 		return false
 	}
 
@@ -158,6 +160,26 @@ func IsValidRemoteURL(rawURL string) bool {
 	}
 
 	return true
+}
+
+// isDisallowedRemoteHost reports whether hostname is not allowed as a remote
+// URL host because it is loopback, unspecified, private, or link-local.
+//
+// hostname may be an IP literal - including bracketed IPv6 forms already
+// stripped of their brackets by url.URL.Hostname (e.g. "::1"), and
+// IPv4-mapped IPv6 forms (e.g. "::ffff:127.0.0.1") - or a DNS name. IP
+// literals are checked with net.ParseIP and net.IP's classification methods
+// so every notation for loopback/private/link-local addresses is caught, not
+// just the literal strings "127.0.0.1" and "::1" the previous check used.
+// DNS names fall back to the pre-existing "localhost" / "*.localhost" string
+// checks, since resolving them here would require a network round trip
+// during validation.
+func isDisallowedRemoteHost(hostname string) bool {
+	if ip := net.ParseIP(hostname); ip != nil {
+		return ip.IsLoopback() || ip.IsUnspecified() || ip.IsPrivate() || ip.IsLinkLocalUnicast()
+	}
+
+	return hostname == "localhost" || strings.HasSuffix(hostname, ".localhost")
 }
 
 // IsValidTemplatedURL validates a URL with template variables against available variables
