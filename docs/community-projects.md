@@ -36,6 +36,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [polygraph](https://polygraph.so) - Independent behavioral security grades (A–F) for MCP servers from an open, reproducible harness, published as an adoption-ranked index with per-server reports
+- [kriya](https://github.com/sandeepshekhar26/kriya-console) - On-device AI agent governance with deny-by-default egress control, secret scanning, and signed offline-verifiable audit records for Claude Code and other agents
 
 ## Adding Your Project
 
