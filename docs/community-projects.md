@@ -36,6 +36,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [polygraph](https://polygraph.so) - Independent behavioral security grades (A–F) for MCP servers from an open, reproducible harness, published as an adoption-ranked index with per-server reports
+- [mastyf.ai](https://github.com/mastyf-ai/mastyf.ai) - Open-source runtime security proxy that intercepts every MCP tools/call and enforces policy against 18 attack classes (prompt injection, SSRF, shell injection, credential exfil, SQL injection) using a YAML policy engine with trust scoring for npm MCP packages
 
 ## Adding Your Project
 
