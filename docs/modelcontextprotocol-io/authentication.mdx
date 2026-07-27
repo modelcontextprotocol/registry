@@ -53,7 +53,18 @@ GitHub authentication always grants your personal namespace, `io.github.<your-us
 
 To publish under an **organization** namespace (`io.github.<orgname>/*`), you must be an **Owner** of that organization. Ordinary org membership is no longer sufficient: the registry checks your membership role and only grants the org namespace to admins. This prevents anyone who merely belongs to an org from publishing — or overwriting — servers under the org's name.
 
-If you authenticate with a Personal Access Token (for example in CI), the token must let the registry read your organization role. A token that can't will still publish to your personal namespace, but org publishing will be silently unavailable. The exact requirement depends on the token type:
+<Warning>
+  **`mcp-publisher login github` cannot currently publish to an organization namespace.**
+
+  The interactive device flow authenticates against a GitHub App, and GitHub App user tokens cannot read organization memberships — GitHub returns an empty list, so the registry sees no organizations you own and grants only your personal namespace. This affects everyone, regardless of your role in the organization or whether your membership is public. Tracking issue: [#1468](https://github.com/modelcontextprotocol/registry/issues/1468).
+
+  To publish an organization server today, use one of the two paths that can prove your organization role:
+
+  - **[GitHub Actions](./github-actions)** — publishes via OIDC, which is unaffected.
+  - **A Personal Access Token** — `mcp-publisher login github --token <YOUR_TOKEN>`, meeting the requirements below.
+</Warning>
+
+If you authenticate with a Personal Access Token (in CI, or to work around the limitation above), the token must let the registry read your organization role. A token that can't will still publish to your personal namespace, but org publishing will be silently unavailable. The exact requirement depends on the token type:
 
 - **Classic PAT**: grant the `read:org` scope.
 - **Fine-grained PAT**: grant the **Organization permissions → Members → Read-only** permission (the fine-grained equivalent of `read:org`). Without it, GitHub returns no organization membership for the token and you'll get your personal namespace only. Note that a fine-grained PAT is bound to a single resource owner, so it can only see the organization it was created for.
