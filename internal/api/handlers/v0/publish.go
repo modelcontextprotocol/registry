@@ -73,6 +73,10 @@ func RegisterPublishEndpoint(api huma.API, pathPrefix string, registry service.R
 	})
 }
 
+// orgNamespaceDocsURL documents which credentials can prove a GitHub organization role,
+// and is where an operator should look when an org-namespace publish is refused.
+const orgNamespaceDocsURL = "https://modelcontextprotocol.io/registry/authentication"
+
 // buildPermissionErrorMessage creates a detailed error message showing what permissions
 // the user has and what they're trying to publish
 func buildPermissionErrorMessage(attemptedResource string, permissions []auth.Permission) string {
@@ -91,9 +95,17 @@ func buildPermissionErrorMessage(attemptedResource string, permissions []auth.Pe
 	}
 	errorMsg += ". Attempting to publish: " + attemptedResource
 
-	// Add helpful hint for GitHub organization publishing issues
+	// Add guidance for GitHub namespace failures. An org namespace is granted from the
+	// caller's org *role*, and only some credential types can prove that role — so the
+	// actionable advice is which credential to authenticate with, not how to configure
+	// GitHub. (Publicising org membership, which this hint used to recommend, stopped
+	// being relevant when the role check replaced the public-membership lookup.)
 	if strings.HasPrefix(attemptedResource, "io.github.") {
-		errorMsg += ". If you're trying to publish to a GitHub organization, you may need to make your organization membership public in your GitHub settings: https://docs.github.com/en/account-and-profile/how-tos/organization-membership/publicizing-or-hiding-organization-membership"
+		errorMsg += ". Publishing under a GitHub organization namespace requires both that you are an Owner of that organization" +
+			" and that you authenticate with a credential that can read your organization role." +
+			" The interactive 'mcp-publisher login github' flow cannot read organization roles; instead publish from GitHub Actions" +
+			" (which uses OIDC), or run 'mcp-publisher login github --token <classic PAT with the read:org scope>'." +
+			" See " + orgNamespaceDocsURL
 	}
 
 	return errorMsg
