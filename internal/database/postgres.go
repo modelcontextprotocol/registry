@@ -45,9 +45,13 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 		return nil, fmt.Errorf("failed to parse PostgreSQL config: %w", err)
 	}
 
-	// Configure pool for stability-focused defaults
-	config.MaxConns = 30                      // Handle good concurrent load
-	config.MinConns = 5                       // Keep connections warm for fast response
+	// Configure pool for stability-focused defaults.
+	// MaxConns was 30 per pod (60 total across 2 replicas) which saturated under
+	// the 2026-04-28 scraper bursts (15 req/s on /v0/servers caused queue blowup
+	// even though individual queries were fast). 60 per pod gives 120 total,
+	// leaving 80 of PG max_connections=200 for autovacuum/admin/headroom.
+	config.MaxConns = 60                      // Handle scraper-burst concurrent load
+	config.MinConns = 10                      // Keep connections warm for fast response
 	config.MaxConnIdleTime = 30 * time.Minute // Keep connections available for bursts
 	config.MaxConnLifetime = 2 * time.Hour    // Refresh connections regularly for stability
 
@@ -79,6 +83,96 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	}, nil
 }
 
+// buildFilterConditions constructs WHERE clause conditions from a ServerFilter
+//
+//nolint:unparam // argIndex is always 1 currently but kept for API flexibility
+func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any, int) {
+	var conditions []string
+	var args []any
+
+	if filter == nil {
+		return conditions, args, argIndex
+	}
+
+	if filter.Name != nil {
+		conditions = append(conditions, fmt.Sprintf("server_name = $%d", argIndex))
+		args = append(args, *filter.Name)
+		argIndex++
+	}
+	if filter.RemoteURL != nil {
+		// Use a JSONB containment predicate so the planner can use the GIN index
+		// idx_servers_json_remotes on (value -> 'remotes'). The previously-used
+		// EXISTS / jsonb_array_elements / ->> form is logically equivalent but
+		// the planner can't translate the per-row array unfolding into a GIN
+		// search — it falls back to scanning every row. validateNoDuplicateRemoteURLs
+		// in the publish path ran this filter and was measured at ~10s on prod's
+		// 21K-row table on 2026-04-28; the containment form is GIN-indexable and
+		// completes in low single-digit ms.
+		conditions = append(conditions, fmt.Sprintf("value -> 'remotes' @> jsonb_build_array(jsonb_build_object('url', $%d::text))", argIndex))
+		args = append(args, *filter.RemoteURL)
+		argIndex++
+	}
+	if filter.UpdatedSince != nil {
+		conditions = append(conditions, fmt.Sprintf("updated_at > $%d", argIndex))
+		args = append(args, *filter.UpdatedSince)
+		argIndex++
+	}
+	if filter.SubstringName != nil {
+		// Escape LIKE metacharacters so that user input cannot expand into
+		// wildcard matches (e.g. `?search=_` matching every single-char name,
+		// `?search=%` matching everything). Order matters: backslashes must be
+		// escaped first so subsequent escape backslashes are not double-escaped.
+		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(*filter.SubstringName)
+		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", argIndex))
+		args = append(args, "%"+escaped+"%")
+		argIndex++
+	}
+	if filter.Version != nil {
+		conditions = append(conditions, fmt.Sprintf("version = $%d", argIndex))
+		args = append(args, *filter.Version)
+		argIndex++
+	}
+	if filter.IsLatest != nil {
+		conditions = append(conditions, fmt.Sprintf("is_latest = $%d", argIndex))
+		args = append(args, *filter.IsLatest)
+		argIndex++
+	}
+	if filter.IncludeDeleted == nil || !*filter.IncludeDeleted {
+		conditions = append(conditions, "status != 'deleted'")
+	}
+
+	return conditions, args, argIndex
+}
+
+// addCursorCondition adds pagination cursor condition to WHERE clause.
+//
+// The compound cursor uses a row-constructor comparison so PostgreSQL can seek
+// directly into the (server_name, version) B-tree index. The OR-decomposed form
+// `server_name > X OR (server_name = X AND version > Y)` is logically equivalent
+// but PostgreSQL's planner cannot use it for an index seek — it scans the index
+// from the start and filters everything before the cursor, making cost grow
+// linearly with cursor depth (a 20K-row table at a deep cursor took ~760ms in
+// prod). The row-constructor form `(server_name, version) > (X, Y)` is special-
+// cased and stays constant-time regardless of cursor depth.
+func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
+	if cursor == "" {
+		return "", nil, argIndex
+	}
+
+	// Parse cursor format: "serverName:version"
+	parts := strings.SplitN(cursor, ":", 2)
+	if len(parts) == 2 {
+		cursorServerName := parts[0]
+		cursorVersion := parts[1]
+		condition := fmt.Sprintf("(server_name, version) > ($%d, $%d)", argIndex, argIndex+1)
+		return condition, []any{cursorServerName, cursorVersion}, argIndex + 2
+	}
+
+	// Fallback for malformed cursor - treat as server name only for backwards compatibility
+	condition := fmt.Sprintf("server_name > $%d", argIndex)
+	return condition, []any{cursor}, argIndex + 1
+}
+
 func (db *PostgreSQL) ListServers(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -94,63 +188,15 @@ func (db *PostgreSQL) ListServers(
 		return nil, "", ctx.Err()
 	}
 
-	// Build WHERE clause for filtering using dedicated columns
-	var whereConditions []string
-	args := []any{}
+	// Build WHERE clause conditions
 	argIndex := 1
+	whereConditions, args, argIndex := buildFilterConditions(filter, argIndex)
 
-	// Add filters using dedicated columns for better performance
-	if filter != nil {
-		if filter.Name != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("server_name = $%d", argIndex))
-			args = append(args, *filter.Name)
-			argIndex++
-		}
-		if filter.RemoteURL != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("EXISTS (SELECT 1 FROM jsonb_array_elements(value->'remotes') AS remote WHERE remote->>'url' = $%d)", argIndex))
-			args = append(args, *filter.RemoteURL)
-			argIndex++
-		}
-		if filter.UpdatedSince != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("updated_at > $%d", argIndex))
-			args = append(args, *filter.UpdatedSince)
-			argIndex++
-		}
-		if filter.SubstringName != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("server_name ILIKE $%d", argIndex))
-			args = append(args, "%"+*filter.SubstringName+"%")
-			argIndex++
-		}
-		if filter.Version != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("version = $%d", argIndex))
-			args = append(args, *filter.Version)
-			argIndex++
-		}
-		if filter.IsLatest != nil {
-			whereConditions = append(whereConditions, fmt.Sprintf("is_latest = $%d", argIndex))
-			args = append(args, *filter.IsLatest)
-			argIndex++
-		}
-	}
-
-	// Add cursor pagination using compound serverName:version cursor
-	if cursor != "" {
-		// Parse cursor format: "serverName:version"
-		parts := strings.SplitN(cursor, ":", 2)
-		if len(parts) == 2 {
-			cursorServerName := parts[0]
-			cursorVersion := parts[1]
-
-			// Use compound condition: (server_name > cursor_name) OR (server_name = cursor_name AND version > cursor_version)
-			whereConditions = append(whereConditions, fmt.Sprintf("(server_name > $%d OR (server_name = $%d AND version > $%d))", argIndex, argIndex+1, argIndex+2))
-			args = append(args, cursorServerName, cursorServerName, cursorVersion)
-			argIndex += 3
-		} else {
-			// Fallback for malformed cursor - treat as server name only for backwards compatibility
-			whereConditions = append(whereConditions, fmt.Sprintf("server_name > $%d", argIndex))
-			args = append(args, cursor)
-			argIndex++
-		}
+	// Add cursor pagination
+	cursorCondition, cursorArgs, argIndex := addCursorCondition(cursor, argIndex)
+	if cursorCondition != "" {
+		whereConditions = append(whereConditions, cursorCondition)
+		args = append(args, cursorArgs...)
 	}
 
 	// Build the WHERE clause
@@ -161,7 +207,7 @@ func (db *PostgreSQL) ListServers(
 
 	// Query servers table with hybrid column/JSON data
 	query := fmt.Sprintf(`
-        SELECT server_name, version, status, published_at, updated_at, is_latest, value
+        SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value
         FROM servers
         %s
         ORDER BY server_name, version
@@ -178,11 +224,12 @@ func (db *PostgreSQL) ListServers(
 	var results []*apiv0.ServerResponse
 	for rows.Next() {
 		var serverName, version, status string
-		var publishedAt, updatedAt time.Time
+		var statusChangedAt, publishedAt, updatedAt time.Time
+		var statusMessage *string
 		var isLatest bool
 		var valueJSON []byte
 
-		err := rows.Scan(&serverName, &version, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
+		err := rows.Scan(&serverName, &version, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 		if err != nil {
 			return nil, "", fmt.Errorf("failed to scan server row: %w", err)
 		}
@@ -198,10 +245,12 @@ func (db *PostgreSQL) ListServers(
 			Server: serverJSON,
 			Meta: apiv0.ResponseMeta{
 				Official: &apiv0.RegistryExtensions{
-					Status:      model.Status(status),
-					PublishedAt: publishedAt,
-					UpdatedAt:   updatedAt,
-					IsLatest:    isLatest,
+					Status:          model.Status(status),
+					StatusChangedAt: statusChangedAt,
+					StatusMessage:   statusMessage,
+					PublishedAt:     publishedAt,
+					UpdatedAt:       updatedAt,
+					IsLatest:        isLatest,
 				},
 			},
 		}
@@ -224,25 +273,41 @@ func (db *PostgreSQL) ListServers(
 }
 
 // GetServerByName retrieves the latest version of a server by server name
-func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error) {
+func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName string, includeDeleted bool) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	query := `
-		SELECT server_name, version, status, published_at, updated_at, is_latest, value
+	// Build filter conditions
+	isLatest := true
+	filter := &ServerFilter{
+		Name:           &serverName,
+		IsLatest:       &isLatest,
+		IncludeDeleted: &includeDeleted,
+	}
+
+	argIndex := 1
+	whereConditions, args, _ := buildFilterConditions(filter, argIndex)
+
+	whereClause := ""
+	if len(whereConditions) > 0 {
+		whereClause = "WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	query := fmt.Sprintf(`
+		SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value
 		FROM servers
-		WHERE server_name = $1 AND is_latest = true
+		%s
 		ORDER BY published_at DESC
 		LIMIT 1
-	`
+	`, whereClause)
 
 	var name, version, status string
-	var publishedAt, updatedAt time.Time
-	var isLatest bool
+	var statusChangedAt, publishedAt, updatedAt time.Time
+	var statusMessage *string
 	var valueJSON []byte
 
-	err := db.getExecutor(tx).QueryRow(ctx, query, serverName).Scan(&name, &version, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
+	err := db.getExecutor(tx).QueryRow(ctx, query, args...).Scan(&name, &version, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -261,10 +326,12 @@ func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName
 		Server: serverJSON,
 		Meta: apiv0.ResponseMeta{
 			Official: &apiv0.RegistryExtensions{
-				Status:      model.Status(status),
-				PublishedAt: publishedAt,
-				UpdatedAt:   updatedAt,
-				IsLatest:    isLatest,
+				Status:          model.Status(status),
+				StatusChangedAt: statusChangedAt,
+				StatusMessage:   statusMessage,
+				PublishedAt:     publishedAt,
+				UpdatedAt:       updatedAt,
+				IsLatest:        isLatest,
 			},
 		},
 	}
@@ -273,24 +340,40 @@ func (db *PostgreSQL) GetServerByName(ctx context.Context, tx pgx.Tx, serverName
 }
 
 // GetServerByNameAndVersion retrieves a specific version of a server by server name and version
-func (db *PostgreSQL) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string) (*apiv0.ServerResponse, error) {
+func (db *PostgreSQL) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string, includeDeleted bool) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	query := `
-		SELECT server_name, version, status, published_at, updated_at, is_latest, value
+	// Build filter conditions
+	filter := &ServerFilter{
+		Name:           &serverName,
+		Version:        &version,
+		IncludeDeleted: &includeDeleted,
+	}
+
+	argIndex := 1
+	whereConditions, args, _ := buildFilterConditions(filter, argIndex)
+
+	whereClause := ""
+	if len(whereConditions) > 0 {
+		whereClause = "WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	query := fmt.Sprintf(`
+		SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value
 		FROM servers
-		WHERE server_name = $1 AND version = $2
+		%s
 		LIMIT 1
-	`
+	`, whereClause)
 
 	var name, vers, status string
-	var publishedAt, updatedAt time.Time
+	var statusChangedAt, publishedAt, updatedAt time.Time
+	var statusMessage *string
 	var isLatest bool
 	var valueJSON []byte
 
-	err := db.getExecutor(tx).QueryRow(ctx, query, serverName, version).Scan(&name, &vers, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
+	err := db.getExecutor(tx).QueryRow(ctx, query, args...).Scan(&name, &vers, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -309,10 +392,12 @@ func (db *PostgreSQL) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, 
 		Server: serverJSON,
 		Meta: apiv0.ResponseMeta{
 			Official: &apiv0.RegistryExtensions{
-				Status:      model.Status(status),
-				PublishedAt: publishedAt,
-				UpdatedAt:   updatedAt,
-				IsLatest:    isLatest,
+				Status:          model.Status(status),
+				StatusChangedAt: statusChangedAt,
+				StatusMessage:   statusMessage,
+				PublishedAt:     publishedAt,
+				UpdatedAt:       updatedAt,
+				IsLatest:        isLatest,
 			},
 		},
 	}
@@ -321,19 +406,33 @@ func (db *PostgreSQL) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, 
 }
 
 // GetAllVersionsByServerName retrieves all versions of a server by server name
-func (db *PostgreSQL) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string) ([]*apiv0.ServerResponse, error) {
+func (db *PostgreSQL) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string, includeDeleted bool) ([]*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	query := `
-		SELECT server_name, version, status, published_at, updated_at, is_latest, value
-		FROM servers
-		WHERE server_name = $1
-		ORDER BY published_at DESC
-	`
+	// Build filter conditions
+	filter := &ServerFilter{
+		Name:           &serverName,
+		IncludeDeleted: &includeDeleted,
+	}
 
-	rows, err := db.getExecutor(tx).Query(ctx, query, serverName)
+	argIndex := 1
+	whereConditions, args, _ := buildFilterConditions(filter, argIndex)
+
+	whereClause := ""
+	if len(whereConditions) > 0 {
+		whereClause = "WHERE " + strings.Join(whereConditions, " AND ")
+	}
+
+	query := fmt.Sprintf(`
+		SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value
+		FROM servers
+		%s
+		ORDER BY published_at DESC
+	`, whereClause)
+
+	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query server versions: %w", err)
 	}
@@ -342,11 +441,12 @@ func (db *PostgreSQL) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx,
 	var results []*apiv0.ServerResponse
 	for rows.Next() {
 		var name, version, status string
-		var publishedAt, updatedAt time.Time
+		var statusChangedAt, publishedAt, updatedAt time.Time
+		var statusMessage *string
 		var isLatest bool
 		var valueJSON []byte
 
-		err := rows.Scan(&name, &version, &status, &publishedAt, &updatedAt, &isLatest, &valueJSON)
+		err := rows.Scan(&name, &version, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest, &valueJSON)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan server row: %w", err)
 		}
@@ -362,10 +462,12 @@ func (db *PostgreSQL) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx,
 			Server: serverJSON,
 			Meta: apiv0.ResponseMeta{
 				Official: &apiv0.RegistryExtensions{
-					Status:      model.Status(status),
-					PublishedAt: publishedAt,
-					UpdatedAt:   updatedAt,
-					IsLatest:    isLatest,
+					Status:          model.Status(status),
+					StatusChangedAt: statusChangedAt,
+					StatusMessage:   statusMessage,
+					PublishedAt:     publishedAt,
+					UpdatedAt:       updatedAt,
+					IsLatest:        isLatest,
 				},
 			},
 		}
@@ -407,20 +509,21 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, serverJSON *a
 
 	// Insert the new server version using composite primary key
 	insertQuery := `
-		INSERT INTO servers (server_name, version, status, published_at, updated_at, is_latest, value)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO servers (server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 
 	_, err = db.getExecutor(tx).Exec(ctx, insertQuery,
 		serverJSON.Name,
 		serverJSON.Version,
 		string(officialMeta.Status),
+		officialMeta.StatusChangedAt,
+		officialMeta.StatusMessage,
 		officialMeta.PublishedAt,
 		officialMeta.UpdatedAt,
 		officialMeta.IsLatest,
 		valueJSON,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
 	}
@@ -463,14 +566,15 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 		UPDATE servers
 		SET value = $1, updated_at = NOW()
 		WHERE server_name = $2 AND version = $3
-		RETURNING server_name, version, status, published_at, updated_at, is_latest
+		RETURNING server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest
 	`
 
 	var name, vers, status string
-	var publishedAt, updatedAt time.Time
+	var statusChangedAt, publishedAt, updatedAt time.Time
+	var statusMessage *string
 	var isLatest bool
 
-	err = db.getExecutor(tx).QueryRow(ctx, query, valueJSON, serverName, version).Scan(&name, &vers, &status, &publishedAt, &updatedAt, &isLatest)
+	err = db.getExecutor(tx).QueryRow(ctx, query, valueJSON, serverName, version).Scan(&name, &vers, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -483,10 +587,12 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 		Server: *serverJSON,
 		Meta: apiv0.ResponseMeta{
 			Official: &apiv0.RegistryExtensions{
-				Status:      model.Status(status),
-				PublishedAt: publishedAt,
-				UpdatedAt:   updatedAt,
-				IsLatest:    isLatest,
+				Status:          model.Status(status),
+				StatusChangedAt: statusChangedAt,
+				StatusMessage:   statusMessage,
+				PublishedAt:     publishedAt,
+				UpdatedAt:       updatedAt,
+				IsLatest:        isLatest,
 			},
 		},
 	}
@@ -495,25 +601,31 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 }
 
 // SetServerStatus updates the status of a specific server version
-func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status string) (*apiv0.ServerResponse, error) {
+func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status model.Status, statusMessage *string) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
 
-	// Update the status column
+	// Update the status and related fields
+	// Only update status_changed_at when status actually changes
 	query := `
 		UPDATE servers
-		SET status = $1, updated_at = NOW()
+		SET
+			status = $1,
+			status_changed_at = CASE WHEN status != $1::varchar THEN NOW() ELSE status_changed_at END,
+			updated_at = NOW(),
+			status_message = $4
 		WHERE server_name = $2 AND version = $3
-		RETURNING server_name, version, status, value, published_at, updated_at, is_latest
+		RETURNING server_name, version, status, value, published_at, updated_at, is_latest, status_changed_at, status_message
 	`
 
 	var name, vers, currentStatus string
-	var publishedAt, updatedAt time.Time
+	var publishedAt, updatedAt, statusChangedAt time.Time
 	var isLatest bool
 	var valueJSON []byte
+	var resultStatusMessage *string
 
-	err := db.getExecutor(tx).QueryRow(ctx, query, status, serverName, version).Scan(&name, &vers, &currentStatus, &valueJSON, &publishedAt, &updatedAt, &isLatest)
+	err := db.getExecutor(tx).QueryRow(ctx, query, string(status), serverName, version, statusMessage).Scan(&name, &vers, &currentStatus, &valueJSON, &publishedAt, &updatedAt, &isLatest, &statusChangedAt, &resultStatusMessage)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -532,15 +644,89 @@ func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName
 		Server: serverJSON,
 		Meta: apiv0.ResponseMeta{
 			Official: &apiv0.RegistryExtensions{
-				Status:      model.Status(currentStatus),
-				PublishedAt: publishedAt,
-				UpdatedAt:   updatedAt,
-				IsLatest:    isLatest,
+				Status:          model.Status(currentStatus),
+				StatusChangedAt: statusChangedAt,
+				StatusMessage:   resultStatusMessage,
+				PublishedAt:     publishedAt,
+				UpdatedAt:       updatedAt,
+				IsLatest:        isLatest,
 			},
 		},
 	}
 
 	return serverResponse, nil
+}
+
+// SetAllVersionsStatus updates the status of all versions of a server in a single query
+func (db *PostgreSQL) SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serverName string, status model.Status, statusMessage *string) ([]*apiv0.ServerResponse, error) {
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	// Update the status and related fields for all versions
+	// Only update rows where status or status_message actually changes
+	// Only update status_changed_at when status actually changes
+	query := `
+		UPDATE servers
+		SET
+			status = $1,
+			status_changed_at = CASE WHEN status != $1::varchar THEN NOW() ELSE status_changed_at END,
+			updated_at = NOW(),
+			status_message = $2
+		WHERE server_name = $3
+			AND (status != $1::varchar OR status_message IS DISTINCT FROM $2)
+		RETURNING server_name, version, status, value, published_at, updated_at, is_latest, status_changed_at, status_message
+	`
+
+	rows, err := db.getExecutor(tx).Query(ctx, query, string(status), statusMessage, serverName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update all server versions status: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*apiv0.ServerResponse
+	for rows.Next() {
+		var name, vers, currentStatus string
+		var publishedAt, updatedAt, statusChangedAt time.Time
+		var isLatest bool
+		var valueJSON []byte
+		var resultStatusMessage *string
+
+		if err := rows.Scan(&name, &vers, &currentStatus, &valueJSON, &publishedAt, &updatedAt, &isLatest, &statusChangedAt, &resultStatusMessage); err != nil {
+			return nil, fmt.Errorf("failed to scan server row: %w", err)
+		}
+
+		// Unmarshal the JSON data
+		var serverJSON apiv0.ServerJSON
+		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
+		}
+
+		serverResponse := &apiv0.ServerResponse{
+			Server: serverJSON,
+			Meta: apiv0.ResponseMeta{
+				Official: &apiv0.RegistryExtensions{
+					Status:          model.Status(currentStatus),
+					StatusChangedAt: statusChangedAt,
+					StatusMessage:   resultStatusMessage,
+					PublishedAt:     publishedAt,
+					UpdatedAt:       updatedAt,
+					IsLatest:        isLatest,
+				},
+			},
+		}
+		results = append(results, serverResponse)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating server rows: %w", err)
+	}
+
+	if len(results) == 0 {
+		return nil, ErrNotFound
+	}
+
+	return results, nil
 }
 
 // InTransaction executes a function within a database transaction
@@ -602,7 +788,6 @@ func hashServerName(name string) int64 {
 		hash ^= uint64(name[i])
 		hash *= prime64
 	}
-	//nolint:gosec // Intentional conversion with masking to 63 bits
 	return int64(hash & 0x7FFFFFFFFFFFFFFF)
 }
 
@@ -615,7 +800,7 @@ func (db *PostgreSQL) GetCurrentLatestVersion(ctx context.Context, tx pgx.Tx, se
 	executor := db.getExecutor(tx)
 
 	query := `
-		SELECT server_name, version, status, value, published_at, updated_at, is_latest
+		SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value
 		FROM servers
 		WHERE server_name = $1 AND is_latest = true
 	`
@@ -623,11 +808,12 @@ func (db *PostgreSQL) GetCurrentLatestVersion(ctx context.Context, tx pgx.Tx, se
 	row := executor.QueryRow(ctx, query, serverName)
 
 	var name, version, status string
-	var publishedAt, updatedAt time.Time
+	var statusChangedAt, publishedAt, updatedAt time.Time
+	var statusMessage *string
 	var isLatest bool
 	var jsonValue []byte
 
-	err := row.Scan(&name, &version, &status, &jsonValue, &publishedAt, &updatedAt, &isLatest)
+	err := row.Scan(&name, &version, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest, &jsonValue)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -646,9 +832,12 @@ func (db *PostgreSQL) GetCurrentLatestVersion(ctx context.Context, tx pgx.Tx, se
 		Server: serverJSON,
 		Meta: apiv0.ResponseMeta{
 			Official: &apiv0.RegistryExtensions{
-				PublishedAt: publishedAt,
-				UpdatedAt:   updatedAt,
-				IsLatest:    isLatest,
+				Status:          model.Status(status),
+				StatusChangedAt: statusChangedAt,
+				StatusMessage:   statusMessage,
+				PublishedAt:     publishedAt,
+				UpdatedAt:       updatedAt,
+				IsLatest:        isLatest,
 			},
 		},
 	}
@@ -707,6 +896,40 @@ func (db *PostgreSQL) UnmarkAsLatest(ctx context.Context, tx pgx.Tx, serverName 
 	_, err := executor.Exec(ctx, query, serverName)
 	if err != nil {
 		return fmt.Errorf("failed to unmark latest version: %w", err)
+	}
+
+	return nil
+}
+
+// SetLatestVersion sets is_latest=true on the given version and false on all other versions
+// of the same server. Passing an empty version clears is_latest for all rows.
+//
+// The clear and set are issued as separate statements because the unique partial index
+// idx_unique_latest_per_server is non-deferrable and Postgres checks it row-by-row within
+// a single UPDATE, which would trip when flipping one row's flag off and another's on.
+func (db *PostgreSQL) SetLatestVersion(ctx context.Context, tx pgx.Tx, serverName, version string) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+
+	executor := db.getExecutor(tx)
+
+	if _, err := executor.Exec(ctx,
+		`UPDATE servers SET is_latest = false WHERE server_name = $1 AND is_latest = true AND version <> $2`,
+		serverName, version,
+	); err != nil {
+		return fmt.Errorf("failed to clear previous latest version: %w", err)
+	}
+
+	if version == "" {
+		return nil
+	}
+
+	if _, err := executor.Exec(ctx,
+		`UPDATE servers SET is_latest = true WHERE server_name = $1 AND version = $2 AND is_latest = false`,
+		serverName, version,
+	); err != nil {
+		return fmt.Errorf("failed to set latest version: %w", err)
 	}
 
 	return nil

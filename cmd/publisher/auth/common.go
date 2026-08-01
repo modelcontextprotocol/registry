@@ -160,7 +160,7 @@ func parseRawPrivateKey(curve elliptic.Curve, privateKeyBytes []byte) (*ecdsa.Pr
 		return nil, fmt.Errorf("invalid private scalar")
 	}
 
-	x, y := curve.ScalarBaseMult(d.Bytes())
+	x, y := curve.ScalarBaseMult(d.Bytes()) //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 	return &ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
 			Curve: curve,
@@ -169,11 +169,6 @@ func parseRawPrivateKey(curve elliptic.Curve, privateKeyBytes []byte) (*ecdsa.Pr
 		},
 		D: d,
 	}, nil
-}
-
-// NeedsLogin always returns false for cryptographic auth since no interactive login is needed
-func (c *CryptoProvider) NeedsLogin() bool {
-	return false
 }
 
 // Login is not needed for cryptographic auth since authentication is cryptographic
@@ -192,7 +187,7 @@ func PrintEcdsaP384KeyInfo(pubKey ecdsa.PublicKey) {
 }
 
 func printEcdsaKeyInfo(k string, pubKey ecdsa.PublicKey) {
-	compressed := elliptic.MarshalCompressed(pubKey.Curve, pubKey.X, pubKey.Y)
+	compressed := elliptic.MarshalCompressed(pubKey.Curve, pubKey.X, pubKey.Y) //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 	pubKeyString := base64.StdEncoding.EncodeToString(compressed)
 	fmt.Fprint(os.Stdout, "Expected proof record:\n")
 	fmt.Fprintf(os.Stdout, "v=MCPv1; k=%s; p=%s\n", k, pubKeyString)

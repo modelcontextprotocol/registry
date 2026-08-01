@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math/big"
 	"net/http"
 	"strings"
@@ -149,8 +148,7 @@ func (v *GitHubOIDCValidator) fetchJWKS(ctx context.Context) (*JWKS, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("JWKS endpoint returned status %d: %s", resp.StatusCode, body)
+		return nil, fmt.Errorf("JWKS endpoint returned status %d: %s", resp.StatusCode, readErrorBody(resp.Body))
 	}
 
 	var jwks JWKS
@@ -252,8 +250,10 @@ func RegisterGitHubOIDCEndpoint(api huma.API, pathPrefix string, cfg *config.Con
 
 // ExchangeToken exchanges a GitHub OIDC token for a Registry JWT token
 func (h *GitHubOIDCHandler) ExchangeToken(ctx context.Context, oidcToken string) (*auth.TokenResponse, error) {
-	// Validate OIDC token with audience "mcp-registry"
-	claims, err := h.validator.ValidateToken(ctx, oidcToken, "mcp-registry")
+	if h.config.GitHubOIDCAudience == "" {
+		return nil, fmt.Errorf("GitHub OIDC exchange disabled: this deployment has no audience configured")
+	}
+	claims, err := h.validator.ValidateToken(ctx, oidcToken, h.config.GitHubOIDCAudience)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate OIDC token: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -71,9 +72,11 @@ func TrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only redirect if the path is not "/" and ends with a "/"
 		if r.URL.Path != "/" && strings.HasSuffix(r.URL.Path, "/") {
-			// Create a copy of the URL and remove the trailing slash
+			// path.Clean both removes the trailing slash and collapses any
+			// leading "//" to "/", which prevents an open-redirect via a
+			// protocol-relative path like "//evil.com/" (GHSA-v8vw-gw5j-w7m6).
 			newURL := *r.URL
-			newURL.Path = strings.TrimSuffix(r.URL.Path, "/")
+			newURL.Path = path.Clean(r.URL.Path)
 
 			// Use 308 Permanent Redirect to preserve the request method
 			http.Redirect(w, r, newURL.String(), http.StatusPermanentRedirect)
@@ -106,6 +109,7 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 			http.MethodGet,
 			http.MethodPost,
 			http.MethodPut,
+			http.MethodPatch,
 			http.MethodDelete,
 			http.MethodOptions,
 		},
@@ -127,10 +131,27 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 			Addr:              cfg.ServerAddress,
 			Handler:           handler,
 			ReadHeaderTimeout: 10 * time.Second,
+			ReadTimeout:       30 * time.Second,
+			// WriteTimeout intentionally not set: the publish path runs
+			// outbound package validators sequentially (npm/pypi/nuget up to
+			// 10s each, OCI up to 30s), so any tight cap could cut off a
+			// legitimate multi-package publish mid-response — surfacing as a
+			// truncated read to the publisher even when the DB commit
+			// succeeded. Slow-response-read DoS is bounded upstream by
+			// NGINX ingress timeouts and the per-IP rate limit. Revisit once
+			// validators are parallelised or per-request package counts are
+			// bounded.
+			IdleTimeout: 120 * time.Second,
 		},
 	}
 
 	return server
+}
+
+// Handler returns the fully wrapped HTTP handler (middleware stack plus routes).
+// Exposed so tests can exercise the middleware, e.g. CORS, without binding a port.
+func (s *Server) Handler() http.Handler {
+	return s.server.Handler
 }
 
 // Start begins listening for incoming HTTP requests

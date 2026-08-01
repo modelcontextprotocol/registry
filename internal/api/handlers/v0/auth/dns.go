@@ -75,6 +75,11 @@ func RegisterDNSEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 	})
 }
 
+// commonWrongSelectors lists subdomain prefixes that users frequently mistake for the
+// MCP DNS auth record location (DKIM-style intuition). MCP DNS auth uses the apex,
+// like SPF — see #385, #1103, #1126 for the recurring confusion.
+var commonWrongSelectors = []string{"_mcp-auth", "_mcp-registry"}
+
 // ExchangeToken exchanges DNS signature for a Registry JWT token
 func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, signedTimestamp string) (*auth.TokenResponse, error) {
 	keyFetcher := func(ctx context.Context, domain string) ([]string, error) {
@@ -90,9 +95,63 @@ func (h *DNSAuthHandler) ExchangeToken(ctx context.Context, domain, timestamp, s
 		if err != nil {
 			return nil, fmt.Errorf("failed to lookup DNS TXT records: %w", err)
 		}
+
+		if !hasMCPRecord(txtRecords) {
+			if found := h.findMisplacedSelector(timeoutCtx, domain); found != "" {
+				return nil, fmt.Errorf(
+					"no MCPv1 TXT record at %q, but one was found at %q — "+
+						"MCP DNS auth requires the record at the apex domain, not under a selector",
+					domain, found,
+				)
+			}
+		}
+
 		return txtRecords, nil
 	}
 
 	allowSubdomains := true
 	return h.CoreAuthHandler.ExchangeToken(ctx, domain, timestamp, signedTimestamp, keyFetcher, allowSubdomains, auth.MethodDNS)
+}
+
+// hasMCPRecord reports whether any of the supplied TXT records contains a well-formed
+// MCPv1 proof record. Uses the same strict pattern as the parser so a malformed
+// "v=MCPv1" string at the apex doesn't suppress the misplaced-selector probe.
+func hasMCPRecord(records []string) bool {
+	for _, r := range records {
+		if MCPProofRecordPattern.MatchString(r) {
+			return true
+		}
+	}
+	return false
+}
+
+// findMisplacedSelector probes a small fixed set of common wrong selectors and returns the
+// first one that holds an MCPv1 record, or "" if none do. Lookups run in parallel with a
+// short individual timeout so a slow/missing zone never delays the response by much.
+func (h *DNSAuthHandler) findMisplacedSelector(ctx context.Context, domain string) string {
+	type result struct {
+		name  string
+		found bool
+	}
+	results := make(chan result, len(commonWrongSelectors))
+	for _, selector := range commonWrongSelectors {
+		name := selector + "." + domain
+		go func(name string) {
+			lookupCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+			defer cancel()
+			records, err := h.resolver.LookupTXT(lookupCtx, name)
+			if err != nil {
+				results <- result{name: name, found: false}
+				return
+			}
+			results <- result{name: name, found: hasMCPRecord(records)}
+		}(name)
+	}
+	for range commonWrongSelectors {
+		r := <-results
+		if r.found {
+			return r.name
+		}
+	}
+	return ""
 }

@@ -57,15 +57,31 @@ func main() {
 	// Initialize configuration
 	cfg := config.NewConfig()
 
-	// Create a context with timeout for PostgreSQL connection
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Connect to PostgreSQL
-	db, err = database.NewPostgreSQL(ctx, cfg.DatabaseURL)
-	if err != nil {
-		log.Printf("Failed to connect to PostgreSQL: %v", err)
-		return
+	// Connect to PostgreSQL with bounded retry. The DB endpoint can flap briefly
+	// during voluntary disruptions (node drains, rollouts) and without retry the
+	// pod exits cleanly, restarts, then races with the still-recovering service
+	// — turning a transient blip into a multi-minute outage.
+	const (
+		maxStartupAttempts = 8
+		perAttemptTimeout  = 10 * time.Second
+		initialBackoff     = 1 * time.Second
+		maxBackoff         = 8 * time.Second
+	)
+	backoff := initialBackoff
+	for attempt := 1; ; attempt++ {
+		attemptCtx, attemptCancel := context.WithTimeout(context.Background(), perAttemptTimeout)
+		db, err = database.NewPostgreSQL(attemptCtx, cfg.DatabaseURL)
+		attemptCancel()
+		if err == nil {
+			break
+		}
+		if attempt >= maxStartupAttempts {
+			log.Printf("Failed to connect to PostgreSQL after %d attempts: %v", attempt, err)
+			return
+		}
+		log.Printf("PostgreSQL not reachable (attempt %d/%d): %v, retrying in %s", attempt, maxStartupAttempts, err, backoff)
+		time.Sleep(backoff)
+		backoff = min(backoff*2, maxBackoff)
 	}
 
 	// Store the PostgreSQL instance for later cleanup

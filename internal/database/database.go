@@ -7,6 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // Common database errors
@@ -21,12 +22,13 @@ var (
 
 // ServerFilter defines filtering options for server queries
 type ServerFilter struct {
-	Name          *string    // for finding versions of same server
-	RemoteURL     *string    // for duplicate URL detection
-	UpdatedSince  *time.Time // for incremental sync filtering
-	SubstringName *string    // for substring search on name
-	Version       *string    // for exact version matching
-	IsLatest      *bool      // for filtering latest versions only
+	Name           *string    // for finding versions of same server
+	RemoteURL      *string    // for duplicate URL detection
+	UpdatedSince   *time.Time // for incremental sync filtering
+	SubstringName  *string    // for substring search on name
+	Version        *string    // for exact version matching
+	IsLatest       *bool      // for filtering latest versions only
+	IncludeDeleted *bool      // for including deleted packages in results (default: exclude)
 }
 
 // Database defines the interface for database operations
@@ -36,15 +38,17 @@ type Database interface {
 	// UpdateServer updates an existing server record
 	UpdateServer(ctx context.Context, tx pgx.Tx, serverName, version string, serverJSON *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
 	// SetServerStatus updates the status of a specific server version
-	SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status string) (*apiv0.ServerResponse, error)
+	SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status model.Status, statusMessage *string) (*apiv0.ServerResponse, error)
+	// SetAllVersionsStatus updates the status of all versions of a server in a single query
+	SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serverName string, status model.Status, statusMessage *string) ([]*apiv0.ServerResponse, error)
 	// ListServers retrieve server entries with optional filtering
 	ListServers(ctx context.Context, tx pgx.Tx, filter *ServerFilter, cursor string, limit int) ([]*apiv0.ServerResponse, string, error)
 	// GetServerByName retrieve a single server by its name
-	GetServerByName(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error)
+	GetServerByName(ctx context.Context, tx pgx.Tx, serverName string, includeDeleted bool) (*apiv0.ServerResponse, error)
 	// GetServerByNameAndVersion retrieve specific version of a server by server name and version
-	GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string) (*apiv0.ServerResponse, error)
+	GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string, includeDeleted bool) (*apiv0.ServerResponse, error)
 	// GetAllVersionsByServerName retrieve all versions of a server by server name
-	GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string) ([]*apiv0.ServerResponse, error)
+	GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string, includeDeleted bool) ([]*apiv0.ServerResponse, error)
 	// GetCurrentLatestVersion retrieve the current latest version of a server by server name
 	GetCurrentLatestVersion(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error)
 	// CountServerVersions count the number of versions for a server
@@ -53,6 +57,10 @@ type Database interface {
 	CheckVersionExists(ctx context.Context, tx pgx.Tx, serverName, version string) (bool, error)
 	// UnmarkAsLatest marks the current latest version of a server as no longer latest
 	UnmarkAsLatest(ctx context.Context, tx pgx.Tx, serverName string) error
+	// SetLatestVersion sets is_latest=true on the given version and false on all other
+	// versions of the same server. Passing an empty version clears is_latest for all rows.
+	// Callers must hold the per-server publish lock to avoid races.
+	SetLatestVersion(ctx context.Context, tx pgx.Tx, serverName, version string) error
 	// AcquirePublishLock acquires an exclusive advisory lock for publishing a server
 	// This prevents race conditions when multiple versions are published concurrently
 	AcquirePublishLock(ctx context.Context, tx pgx.Tx, serverName string) error

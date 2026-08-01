@@ -20,6 +20,8 @@ The official registry has some more endpoints and restrictions on top of this. S
 - **`POST /v0.1/publish`** - Publish new server (optional, registry-specific authentication)
 - **`PUT /v0.1/servers/{serverName}/versions/{version}`** - Update specific server version (optional, not implemented by official registry)
 - **`DELETE /v0.1/servers/{serverName}/versions/{version}`** - Delete specific server version (optional, not implemented by official registry)
+- **`PATCH /v0.1/servers/{serverName}/versions/{version}/status`** - Update server version status (optional)
+- **`PATCH /v0.1/servers/{serverName}/status`** - Update status for all versions (optional)
 
 Server names and version strings should be URL-encoded in paths.
 

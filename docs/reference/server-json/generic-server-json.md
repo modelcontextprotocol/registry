@@ -8,7 +8,7 @@ Also see:
 
 ## Browse the Complete Schema
 
-**📋 View the full specification interactively**: Open [server.schema.json](./server.schema.json) in a schema viewer like [json-schema.app](https://json-schema.app/view/%23?url=https%3A%2F%2Fstatic.modelcontextprotocol.io%2Fschemas%2F2025-09-29%2Fserver.schema.json).
+**📋 View the full specification interactively**: Open [server.schema.json](./draft/server.schema.json) in a schema viewer like [json-schema.app](https://json-schema.app/view/%23?url=https%3A%2F%2Fstatic.modelcontextprotocol.io%2Fschemas%2F2025-09-29%2Fserver.schema.json).
 
 The schema contains all field definitions, validation rules, examples, and detailed descriptions.
 
@@ -264,6 +264,26 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
 }
 ```
 
+The same `registryType` / `identifier` pattern works for other supported OCI hosts. For example, an image on Quay.io:
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.example/quay-sample-mcp",
+  "description": "Example MCP server distributed as an OCI image on Quay.io",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "quay.io/myorg/my-mcp-server:1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
 ### Remote Server Example
 
 ```json
@@ -349,6 +369,35 @@ This will essentially instruct the MCP client to execute `dnx Knapcode.SampleMcp
       }
     }
   }
+}
+```
+
+### Cargo (Rust) Package Example
+
+`cargo install <crate>` places the binary on PATH (via `~/.cargo/bin`); MCP clients invoke it directly by name. There is no single-shot equivalent of `npx` (npm), `uvx` (PyPI), or `dnx` (NuGet, .NET 10 SDK) for cargo — install once, run by name.
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.example/widget-mcp",
+  "description": "Rust-native MCP server",
+  "title": "Widget",
+  "repository": {
+    "url": "https://github.com/example/widget-mcp",
+    "source": "github"
+  },
+  "version": "0.3.0",
+  "packages": [
+    {
+      "registryType": "cargo",
+      "registryBaseUrl": "https://crates.io",
+      "identifier": "widget-mcp",
+      "version": "0.3.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
 }
 ```
 

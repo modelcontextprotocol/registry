@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -50,6 +51,9 @@ type ReadmeState int
 const (
 	ValidReadme ReadmeState = iota
 	InvalidReadme
+	// GluedReadme: the literal token is present but glued to a trailing character
+	// (so the boundary-anchored match rejected it as a prefix of a longer name).
+	GluedReadme
 	NoReadme
 )
 
@@ -98,6 +102,8 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 		return nil
 	case InvalidReadme:
 		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed. The server name '%s' must appear as 'mcp-name: %s' in the package README. Add it to your README and publish a new package version", pkg.Identifier, pkg.Version, serverName, serverName)
+	case GluedReadme:
+		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed: found 'mcp-name: %s' in the README, but it is immediately followed by another character rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and publish a new package version", pkg.Identifier, pkg.Version, serverName)
 	case NoReadme:
 		// Continue to check if package exists
 	default:
@@ -209,9 +215,11 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 		return NoReadme, fmt.Errorf("failed to get README URL template: %w", err)
 	}
 
-	// Replace placeholders in the template
-	readmeURL := strings.ReplaceAll(readmeURLTemplate, "{lower_id}", lowerID)
-	readmeURL = strings.ReplaceAll(readmeURL, "{lower_version}", lowerVersion)
+	// Replace placeholders in the template. PathEscape both the id and version
+	// so a publisher cannot smuggle "/" / ".." through the template into a
+	// fetch against an unrelated package's README.
+	readmeURL := strings.ReplaceAll(readmeURLTemplate, "{lower_id}", url.PathEscape(lowerID))
+	readmeURL = strings.ReplaceAll(readmeURL, "{lower_version}", url.PathEscape(lowerVersion))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, readmeURL, nil)
 	if err != nil {
 		return NoReadme, fmt.Errorf("failed to create NuGet README request: %w", err)
@@ -234,10 +242,13 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 
 		readmeContent := string(readmeBytes)
 
-		// Check for mcp-name: format (more specific)
-		mcpNamePattern := "mcp-name: " + serverName
-		if strings.Contains(readmeContent, mcpNamePattern) {
-			return ValidReadme, nil // Found as mcp-name: format
+		// Check for the mcp-name: <server-name> ownership token (boundary-anchored
+		// to avoid prefix confusion — see containsMCPNameToken).
+		if containsMCPNameToken(readmeContent, serverName) {
+			return ValidReadme, nil
+		}
+		if _, glued := mcpNameTokenGluedTrailing(readmeContent, serverName); glued {
+			return GluedReadme, nil
 		}
 
 		return InvalidReadme, nil
@@ -266,8 +277,10 @@ func validatePackageExists(ctx context.Context, lowerID, lowerVersion string, cl
 		return PackageIDNotFound, fmt.Errorf("failed to get Package Base URL: %w", err)
 	}
 
-	// Fetch the package content index to check if package ID and version exist
-	indexURL := fmt.Sprintf("%s/%s/index.json", strings.TrimRight(packageBaseURL, "/"), lowerID)
+	// Fetch the package content index to check if package ID and version exist.
+	// PathEscape so an identifier that smuggles "/" or ".." cannot redirect
+	// the metadata fetch to a different package than the one being claimed.
+	indexURL := fmt.Sprintf("%s/%s/index.json", strings.TrimRight(packageBaseURL, "/"), url.PathEscape(lowerID))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, indexURL, nil)
 	if err != nil {

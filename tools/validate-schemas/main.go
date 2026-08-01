@@ -25,7 +25,7 @@ func main() {
 }
 
 func runValidation() error {
-	basePath := filepath.Join("docs", "reference", "server-json")
+	basePath := filepath.Join("docs", "reference", "server-json", "draft")
 
 	schemas := []struct {
 		name string

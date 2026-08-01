@@ -8,10 +8,6 @@ type Provider interface {
 	// It returns the token string and any error encountered
 	GetToken(ctx context.Context) (string, error)
 
-	// NeedsLogin checks if a new login is required
-	// This can check for existing tokens, expiry, etc.
-	NeedsLogin() bool
-
 	// Login performs the authentication flow
 	// This might involve user interaction, device flows, etc.
 	Login(ctx context.Context) error

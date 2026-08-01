@@ -23,16 +23,16 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Setup Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
         with:
-          go-version-file: 'go.mod'
+          go-version: 'stable'
           cache: true
 
       - name: Setup Pulumi
-        uses: pulumi/actions@8582a9e8cc630786854029b4e09281acd6794b58
+        uses: pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d
         with:
           pulumi-version: ${{ env.PULUMI_VERSION }}
 

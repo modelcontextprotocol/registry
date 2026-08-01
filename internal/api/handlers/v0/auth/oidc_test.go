@@ -31,7 +31,7 @@ func TestOIDCHandler_ExchangeToken(t *testing.T) {
 		token         string
 		expectedError bool
 	}{
-		{
+		{ //nolint:gosec // G101: test data, not real credentials
 			name: "successful token exchange with publish permissions",
 			config: &config.Config{
 				OIDCEnabled:      true,

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
 
@@ -17,7 +18,7 @@ type PermissionAction string
 
 const (
 	PermissionActionPublish PermissionAction = "publish"
-	// Intended for admins taking moderation actions only, at least for now
+	// PermissionActionEdit allows editing server configuration.
 	PermissionActionEdit PermissionAction = "edit"
 )
 
@@ -80,10 +81,17 @@ func (j *JWTManager) GenerateTokenResponse(_ context.Context, claims JWTClaims) 
 		}
 	}
 
-	// Check permissions against denylist, provided they are not an admin
+	// Check permissions against denylist, provided they are not an admin.
+	// Probe two synthetic resources per blocked namespace so that both the
+	// slash-suffix patterns (e.g. com.evil/*) and the dot-wildcard patterns
+	// (e.g. com.evil.mailer.* — granted to a subdomain claimant) are
+	// detected. Probing only "<blocked>/test" misses the dot-wildcard form
+	// because the prefix match against "com.evil.mailer." does not start
+	// with "com.evil/test".
 	if !hasGlobalPermissions {
 		for _, blockedNamespace := range BlockedNamespaces {
-			if j.HasPermission(blockedNamespace+"/test", PermissionActionPublish, claims.Permissions) {
+			if j.HasPermission(blockedNamespace+"/test", PermissionActionPublish, claims.Permissions) ||
+				j.HasPermission(blockedNamespace+".test/x", PermissionActionPublish, claims.Permissions) {
 				return nil, fmt.Errorf("your namespace is blocked. raise an issue at https://github.com/modelcontextprotocol/registry/ if you think this is a mistake")
 			}
 		}
@@ -128,7 +136,6 @@ func (j *JWTManager) ValidateToken(_ context.Context, tokenString string) (*JWTC
 		jwt.WithValidMethods([]string{"EdDSA"}),
 		jwt.WithExpirationRequired(),
 	)
-
 	// Validate token
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)

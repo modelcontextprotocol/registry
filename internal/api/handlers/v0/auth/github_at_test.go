@@ -22,8 +22,81 @@ import (
 
 const (
 	githubUserEndpoint = "/user"
-	githubOrgsEndpoint = "/users/testuser/orgs"
+	// githubOrgsEndpoint is the endpoint used to list the authenticated user's org
+	// memberships (with role). It replaces the old public-only /users/{user}/orgs.
+	githubOrgsEndpoint = "/user/memberships/orgs"
 )
+
+// orgMembership mirrors a single entry of GET /user/memberships/orgs for use in
+// mock GitHub API responses. Role is "admin" (Owner) or "member".
+type orgMembership struct {
+	State        string                 `json:"state"`
+	Role         string                 `json:"role"`
+	Organization v0auth.GitHubUserOrOrg `json:"organization"`
+}
+
+// adminMemberships wraps orgs as active "admin"-role memberships, the shape the
+// memberships endpoint returns for an org Owner.
+func adminMemberships(orgs []v0auth.GitHubUserOrOrg) []orgMembership {
+	memberships := make([]orgMembership, 0, len(orgs))
+	for _, org := range orgs {
+		memberships = append(memberships, orgMembership{State: "active", Role: "admin", Organization: org})
+	}
+	return memberships
+}
+
+// newMockGitHubServer returns a mock GitHub API server that serves a fixed
+// "testuser" on /user and delegates the org-memberships endpoint to orgsHandler.
+// It keeps individual test cases small (only the memberships behavior varies),
+// which also keeps their cyclomatic complexity down.
+func newMockGitHubServer(orgsHandler http.HandlerFunc) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case githubUserEndpoint:
+			user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(user) //nolint:errcheck
+		case githubOrgsEndpoint:
+			orgsHandler(w, r)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+}
+
+// grantedPatterns exchanges the token and returns the resource patterns granted
+// in the resulting JWT.
+func grantedPatterns(t *testing.T, cfg *config.Config, server *httptest.Server) []string {
+	t.Helper()
+	handler := v0auth.NewGitHubHandler(cfg)
+	handler.SetBaseURL(server.URL)
+
+	ctx := context.Background()
+	response, err := handler.ExchangeToken(ctx, "valid-github-token")
+	require.NoError(t, err)
+	require.NotNil(t, response)
+
+	claims, err := auth.NewJWTManager(cfg).ValidateToken(ctx, response.RegistryToken)
+	require.NoError(t, err)
+
+	patterns := make([]string, 0, len(claims.Permissions))
+	for _, perm := range claims.Permissions {
+		patterns = append(patterns, perm.ResourcePattern)
+	}
+	return patterns
+}
+
+// assertExchangeFailsClosed asserts that a token exchange against server returns
+// an error and no token (used for the fail-closed 403 variants).
+func assertExchangeFailsClosed(t *testing.T, cfg *config.Config, server *httptest.Server) {
+	t.Helper()
+	handler := v0auth.NewGitHubHandler(cfg)
+	handler.SetBaseURL(server.URL)
+
+	response, err := handler.ExchangeToken(context.Background(), "valid-github-token")
+	require.Error(t, err)
+	assert.Nil(t, response)
+}
 
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
 	// Create test handler with mock config
@@ -96,12 +169,12 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user) //nolint:errcheck
 			case githubOrgsEndpoint:
-				orgs := []v0auth.GitHubUserOrOrg{
+				memberships := adminMemberships([]v0auth.GitHubUserOrOrg{
 					{Login: "test-org-1", ID: 1},
 					{Login: "test-org-2", ID: 2},
-				}
+				})
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(orgs) //nolint:errcheck
+				json.NewEncoder(w).Encode(memberships) //nolint:errcheck
 			default:
 				w.WriteHeader(http.StatusNotFound)
 			}
@@ -225,10 +298,9 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 				}
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user) //nolint:errcheck
-			case "/users/user with spaces/orgs":
-				orgs := []v0auth.GitHubUserOrOrg{}
+			case githubOrgsEndpoint:
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(orgs) //nolint:errcheck
+				json.NewEncoder(w).Encode([]orgMembership{}) //nolint:errcheck
 			}
 		}))
 		defer mockServer.Close()
@@ -264,12 +336,12 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 				w.Header().Set("Content-Type", "application/json")
 				json.NewEncoder(w).Encode(user) //nolint:errcheck
 			case githubOrgsEndpoint:
-				orgs := []v0auth.GitHubUserOrOrg{
+				memberships := adminMemberships([]v0auth.GitHubUserOrOrg{
 					{Login: "valid-org", ID: 1},
 					{Login: "org with spaces", ID: 2}, // Invalid name
-				}
+				})
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(orgs) //nolint:errcheck
+				json.NewEncoder(w).Encode(memberships) //nolint:errcheck
 			}
 		}))
 		defer mockServer.Close()
@@ -290,7 +362,15 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
 		require.NoError(t, err)
 		assert.Equal(t, "testuser", claims.AuthMethodSubject)
-		assert.Empty(t, claims.Permissions) // No permissions because one org has invalid name
+
+		// The invalid org is skipped, but the personal namespace and the valid org
+		// are still granted — one weird org name must not strip everything else.
+		patterns := make([]string, 0, len(claims.Permissions))
+		for _, perm := range claims.Permissions {
+			patterns = append(patterns, perm.ResourcePattern)
+		}
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.valid-org/*"}, patterns)
+		assert.NotContains(t, patterns, "io.github.org with spaces/*")
 	})
 
 	t.Run("malformed JSON response", func(t *testing.T) {
@@ -314,6 +394,302 @@ func TestGitHubHandler_ExchangeToken(t *testing.T) {
 		require.Error(t, err)
 		assert.Nil(t, response)
 		assert.Contains(t, err.Error(), "failed to decode")
+	})
+}
+
+func TestGitHubHandler_ExchangeToken_OrgRoles(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{
+		JWTPrivateKey: hex.EncodeToString(testSeed),
+	}
+
+	t.Run("member-role org is not granted, only admin orgs", func(t *testing.T) {
+		// The user is an Owner (admin) of one org and an ordinary member of another.
+		// Only the org they administer should yield a publish permission.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				memberships := []orgMembership{
+					{State: "active", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "admin-org", ID: 1}},
+					{State: "active", Role: "member", Organization: v0auth.GitHubUserOrOrg{Login: "member-org", ID: 2}},
+				}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(memberships) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.NoError(t, err)
+		require.NotNil(t, response)
+
+		jwtManager := auth.NewJWTManager(cfg)
+		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
+		require.NoError(t, err)
+
+		patterns := make([]string, 0, len(claims.Permissions))
+		for _, perm := range claims.Permissions {
+			patterns = append(patterns, perm.ResourcePattern)
+		}
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.admin-org/*"}, patterns)
+		assert.NotContains(t, patterns, "io.github.member-org/*")
+	})
+
+	t.Run("missing read:org scope (403) still grants personal namespace", func(t *testing.T) {
+		// A minimal token without read:org authenticates fine but is forbidden from
+		// reading org memberships. Personal-namespace publishing must still work.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(`{"message": "Token does not have the required scope"}`)) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.NoError(t, err)
+		require.NotNil(t, response)
+
+		jwtManager := auth.NewJWTManager(cfg)
+		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
+		require.NoError(t, err)
+		assert.Len(t, claims.Permissions, 1)
+		assert.Equal(t, "io.github.testuser/*", claims.Permissions[0].ResourcePattern)
+	})
+
+	t.Run("admin org on a later page is still granted (pagination)", func(t *testing.T) {
+		// Page 1 is a full page (100) of member-role orgs; the only admin org is on
+		// page 2. The pagination loop must not stop at the first page, or the Owner's
+		// org grant would be silently dropped.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.Header().Set("Content-Type", "application/json")
+				if r.URL.Query().Get("page") == "1" {
+					page1 := make([]orgMembership, 0, 100)
+					for i := 0; i < 100; i++ {
+						page1 = append(page1, orgMembership{
+							State: "active", Role: "member",
+							Organization: v0auth.GitHubUserOrOrg{Login: fmt.Sprintf("member-org-%d", i), ID: 1000 + i},
+						})
+					}
+					json.NewEncoder(w).Encode(page1) //nolint:errcheck
+					return
+				}
+				// page 2: a single admin org, signalling the last (short) page.
+				page2 := []orgMembership{
+					{State: "active", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "late-admin-org", ID: 2}},
+				}
+				json.NewEncoder(w).Encode(page2) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.NoError(t, err)
+		require.NotNil(t, response)
+
+		jwtManager := auth.NewJWTManager(cfg)
+		claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
+		require.NoError(t, err)
+
+		patterns := make([]string, 0, len(claims.Permissions))
+		for _, perm := range claims.Permissions {
+			patterns = append(patterns, perm.ResourcePattern)
+		}
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.late-admin-org/*"}, patterns)
+	})
+
+	t.Run("memberships server error fails closed (no token issued)", func(t *testing.T) {
+		// A 5xx (or any non-200, non-scope-403) from the memberships endpoint must
+		// abort the exchange rather than silently degrade to personal-only perms.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.WriteHeader(http.StatusInternalServerError)
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.Error(t, err)
+		assert.Nil(t, response)
+	})
+
+	t.Run("rate-limit 403 fails closed (not treated as missing scope)", func(t *testing.T) {
+		// A 403 with X-RateLimit-Remaining: 0 is a throttle, not a missing-scope
+		// signal. Degrading would strip a real Owner's org grant, so it must error.
+		mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			switch r.URL.Path {
+			case githubUserEndpoint:
+				user := v0auth.GitHubUserOrOrg{Login: "testuser", ID: 12345}
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(user) //nolint:errcheck
+			case githubOrgsEndpoint:
+				w.Header().Set("X-RateLimit-Remaining", "0")
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(`{"message": "API rate limit exceeded"}`)) //nolint:errcheck
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}))
+		defer mockServer.Close()
+
+		handler := v0auth.NewGitHubHandler(cfg)
+		handler.SetBaseURL(mockServer.URL)
+
+		ctx := context.Background()
+		response, err := handler.ExchangeToken(ctx, "valid-github-token")
+		require.Error(t, err)
+		assert.Nil(t, response)
+	})
+}
+
+func TestGitHubHandler_ExchangeToken_MembershipFiltering(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	t.Run("pending admin membership is not granted (state filter)", func(t *testing.T) {
+		// A user invited as an Owner but who has not accepted has role "admin" with
+		// state "pending". They are not an Owner yet, so the org must not be granted
+		// even if the state=active query filter is somehow bypassed.
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			memberships := []orgMembership{
+				{State: "pending", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "pending-org", ID: 1}},
+				{State: "active", Role: "admin", Organization: v0auth.GitHubUserOrOrg{Login: "active-org", ID: 2}},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(memberships) //nolint:errcheck
+		})
+		defer server.Close()
+
+		patterns := grantedPatterns(t, cfg, server)
+		assert.ElementsMatch(t, []string{"io.github.testuser/*", "io.github.active-org/*"}, patterns)
+		assert.NotContains(t, patterns, "io.github.pending-org/*")
+	})
+
+	t.Run("billing_manager role is not granted", func(t *testing.T) {
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			memberships := []orgMembership{
+				{State: "active", Role: "billing_manager", Organization: v0auth.GitHubUserOrOrg{Login: "billing-org", ID: 1}},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(memberships) //nolint:errcheck
+		})
+		defer server.Close()
+
+		patterns := grantedPatterns(t, cfg, server)
+		assert.Equal(t, []string{"io.github.testuser/*"}, patterns)
+	})
+}
+
+func TestGitHubHandler_ExchangeToken_403FailClosed(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	t.Run("Retry-After 403 fails closed (secondary rate limit)", func(t *testing.T) {
+		// A 403 carrying only Retry-After (no X-RateLimit-Remaining: 0) is a secondary
+		// rate limit, not a missing scope. Degrading would strip a real Owner's grant.
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Retry-After", "60")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{"message": "You have exceeded a secondary rate limit"}`)) //nolint:errcheck
+		})
+		defer server.Close()
+
+		assertExchangeFailsClosed(t, cfg, server)
+	})
+
+	t.Run("SSO-enforced 403 fails closed (not treated as missing scope)", func(t *testing.T) {
+		// A SAML/SSO-enforced org returns 403 with X-GitHub-SSO when the token is not
+		// SSO-authorized. That is an Owner being blocked, so it must fail closed rather
+		// than silently degrade to personal-only.
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("X-GitHub-SSO", "required; two_factor_authentication=false")
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{"message": "Resource protected by organization SAML enforcement."}`)) //nolint:errcheck
+		})
+		defer server.Close()
+
+		assertExchangeFailsClosed(t, cfg, server)
+	})
+}
+
+func TestGitHubHandler_ExchangeToken_PaginationCap(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	t.Run("all-full pages past the cap fails closed", func(t *testing.T) {
+		// Every page comes back full (100), so the loop never sees a short final page
+		// and runs to maxOrgMembershipPages. Rather than return a possibly-truncated
+		// org set, the exchange must fail closed (error, no token).
+		server := newMockGitHubServer(func(w http.ResponseWriter, _ *http.Request) {
+			page := make([]orgMembership, 0, 100)
+			for i := 0; i < 100; i++ {
+				page = append(page, orgMembership{
+					State: "active", Role: "member",
+					Organization: v0auth.GitHubUserOrOrg{Login: fmt.Sprintf("org-%d", i), ID: i},
+				})
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(page) //nolint:errcheck
+		})
+		defer server.Close()
+
+		assertExchangeFailsClosed(t, cfg, server)
 	})
 }
 
@@ -521,7 +897,16 @@ func TestValidGitHubNames(t *testing.T) {
 			orgs: []v0auth.GitHubUserOrOrg{
 				{Login: "invalid org", ID: 1},
 			},
-			wantPerms: 0, // Should return nil if any name is invalid
+			wantPerms: 1, // Personal namespace kept; the invalid org is skipped
+		},
+		{
+			name:     "valid username with one valid and one invalid org",
+			username: "valid-user",
+			orgs: []v0auth.GitHubUserOrOrg{
+				{Login: "valid-org", ID: 1},
+				{Login: "invalid org", ID: 2},
+			},
+			wantPerms: 2, // Personal + valid org; the invalid org is skipped
 		},
 	}
 
@@ -537,9 +922,9 @@ func TestValidGitHubNames(t *testing.T) {
 					}
 					w.Header().Set("Content-Type", "application/json")
 					json.NewEncoder(w).Encode(user) //nolint:errcheck
-				case "/users/" + tc.username + "/orgs":
+				case githubOrgsEndpoint:
 					w.Header().Set("Content-Type", "application/json")
-					json.NewEncoder(w).Encode(tc.orgs) //nolint:errcheck
+					json.NewEncoder(w).Encode(adminMemberships(tc.orgs)) //nolint:errcheck
 				}
 			}))
 			defer mockServer.Close()

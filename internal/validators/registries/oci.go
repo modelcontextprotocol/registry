@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -33,6 +32,8 @@ var allowedOCIRegistries = map[string]bool{
 	"index.docker.io":      true, // Docker Hub index
 	// GitHub Container Registry
 	"ghcr.io": true,
+	// Red Hat Quay
+	"quay.io": true,
 	// Microsoft Container Registry
 	"mcr.microsoft.com": true,
 	// Google Artifact Registry (*.pkg.dev pattern handled in isAllowedRegistry)
@@ -49,6 +50,7 @@ var allowedOCIRegistries = map[string]bool{
 // Supported registries:
 //   - Docker Hub (docker.io)
 //   - GitHub Container Registry (ghcr.io)
+//   - Quay.io (quay.io)
 //   - Google Artifact Registry (*.pkg.dev)
 //   - Microsoft Container Registry (mcr.microsoft.com)
 func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) error {
@@ -103,10 +105,13 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 		if errors.As(err, &transportErr) {
 			switch transportErr.StatusCode {
 			case http.StatusTooManyRequests:
-				// Rate limited - skip validation to avoid blocking publishers
-				// This is intentional: we prioritize UX over strict validation during high traffic
-				log.Printf("Skipping OCI validation for %s due to rate limiting", pkg.Identifier)
-				return nil
+				// Fail closed: a 429 means we could not verify the
+				// `io.modelcontextprotocol.server.name` label on the image, which is
+				// the only ownership proof we apply to OCI packages. Returning nil
+				// here would let a publisher bind their server record to an arbitrary
+				// public image they do not control, which is the bug this branch
+				// used to have. Surface the rate-limit as a retryable error instead.
+				return fmt.Errorf("OCI registry is currently rate-limiting validations for '%s'; please retry shortly", pkg.Identifier)
 			case http.StatusNotFound:
 				return fmt.Errorf("OCI image '%s' does not exist in the registry", pkg.Identifier)
 			case http.StatusUnauthorized, http.StatusForbidden:

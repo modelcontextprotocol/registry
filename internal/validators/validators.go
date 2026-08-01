@@ -195,6 +195,20 @@ func validateWebsiteURL(ctx *ValidationContext, websiteURL string) *ValidationRe
 		result.AddIssue(issue)
 	}
 
+	// Reject characters that aren't valid in a URI per RFC 3986 and that have
+	// caused rendering issues when websiteUrl flows into the catalogue UI's
+	// href attributes. Publishers should percent-encode these in the source URL.
+	if i := strings.IndexAny(websiteURL, "\"'<> \t\n\r"); i >= 0 {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Sprintf("websiteUrl contains an invalid character %q at position %d: %s", websiteURL[i], i, websiteURL),
+			ValidationIssueSeverityError,
+			"website-url-invalid-characters",
+		)
+		result.AddIssue(issue)
+	}
+
 	return result
 }
 
@@ -626,15 +640,10 @@ func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *Vali
 }
 
 // ValidatePublishRequest validates a complete publish request including extensions
+// Note: ValidateServerJSON should be called separately before this function
 func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
 	// Validate publisher extensions in _meta
 	if err := validatePublisherExtensions(req); err != nil {
-		return err
-	}
-
-	// Validate the server detail (includes all nested validation)
-	result := ValidateServerJSON(&req, ValidationSchemaVersionAndSemantic)
-	if err := result.FirstError(); err != nil {
 		return err
 	}
 
@@ -648,13 +657,9 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 	return nil
 }
 
+// ValidateUpdateRequest validates an update request including registry ownership
+// Note: ValidateServerJSON should be called separately before this function
 func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
-	// Validate the server detail (includes all nested validation)
-	result := ValidateServerJSON(&req, ValidationSchemaVersionAndSemantic)
-	if err := result.FirstError(); err != nil {
-		return err
-	}
-
 	if cfg.EnableRegistryValidation && !skipRegistryValidation {
 		if err := validateRegistryOwnership(ctx, req); err != nil {
 			return err
