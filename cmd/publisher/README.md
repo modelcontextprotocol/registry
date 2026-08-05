@@ -44,4 +44,3 @@ Optional: enables `dns` and `http` methods to sign out-of-process without direct
 - **`main.go`** - CLI setup and command routing
 - **`commands/`** - Command implementations with auto-detection logic
 - **`auth/`** - Authentication provider implementations
-- **`build.sh`** - Cross-platform build script
