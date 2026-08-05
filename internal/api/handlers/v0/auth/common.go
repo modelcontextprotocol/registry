@@ -89,6 +89,12 @@ func ValidateDomainAndTimestamp(domain, timestamp string) (*time.Time, error) {
 		return nil, fmt.Errorf("invalid domain format")
 	}
 
+	if isGitHubPagesDomain(domain) {
+		return nil, fmt.Errorf(
+			"github.io domains cannot be used with DNS/HTTP authentication; " +
+				"use GitHub authentication for io.github.* namespaces")
+	}
+
 	ts, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid timestamp format: %w", err)
@@ -380,6 +386,18 @@ func ReverseString(domain string) string {
 		parts[i], parts[j] = parts[j], parts[i]
 	}
 	return strings.Join(parts, ".")
+}
+
+// isGitHubPagesDomain reports whether domain is github.io or a subdomain of it.
+// GitHub Pages serves <name>.github.io from the <name>/<name>.github.io repository,
+// so the HTTP proof only demonstrates push access to that one repository. For an
+// organization that is a far weaker bar than the org-Owner ("admin") check the
+// GitHub authentication method enforces for io.github.<org>/* namespaces — accepting
+// the proof here would let any member with write access to the Pages repo mint the
+// whole org namespace. Users of io.github.* namespaces authenticate via GitHub.
+func isGitHubPagesDomain(domain string) bool {
+	d := strings.ToLower(domain)
+	return d == "github.io" || strings.HasSuffix(d, ".github.io")
 }
 
 func IsValidDomain(domain string) bool {
