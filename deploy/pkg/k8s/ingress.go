@@ -90,10 +90,6 @@ proxy_cache_background_update on;
 proxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;
 add_header X-Registry-Cache $upstream_cache_status always;
 `),
-					// ingress-nginx disables response buffering by default, but NGINX
-					// needs it to populate the on-disk proxy cache.
-					"proxy-buffering": pulumi.String("on"),
-
 					// Disable strict path validation, to work around a bug in ingress-nginx
 					// https://cert-manager.io/docs/releases/release-notes/release-notes-1.18/#acme-http01-challenge-paths-now-use-pathtype-exact-in-ingress-routes
 					// https://github.com/kubernetes/ingress-nginx/issues/11176

@@ -392,6 +392,9 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				"environment": pulumi.String(environment),
 			},
 			Annotations: pulumi.StringMap{
+				// ingress-nginx disables response buffering by default, but NGINX
+				// needs it to populate the on-disk proxy cache for these paths.
+				"nginx.ingress.kubernetes.io/proxy-buffering": pulumi.String("on"),
 				// Limits are maintained independently by each ingress-nginx replica.
 				// At two production replicas this permits up to 1,200 requests/minute
 				// per source IP, while a single replica still accommodates the observed
