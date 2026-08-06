@@ -65,6 +65,31 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 					"annotations":           pulumi.Map{},
 				},
 				"config": pulumi.Map{
+					// Cache the public list endpoints at the ingress. Registry consumers
+					// repeatedly walk the same cursor pages, so sending every walk to the
+					// application needlessly consumes application CPU and database pool
+					// connections. The cache is intentionally short-lived so newly
+					// published servers become visible quickly.
+					//
+					// Use a variable cache zone so this global location snippet remains a
+					// no-op for publish, auth, mutation, and individual-server routes.
+					"http-snippet": pulumi.String(`
+proxy_cache_path /tmp/registry-read-cache levels=1:2 keys_zone=registry_read_cache:20m max_size=1g inactive=5m use_temp_path=off;
+map "$request_method:$uri" $registry_read_cache_zone {
+    default off;
+    ~^GET:/v0(?:\.1)?/servers$ registry_read_cache;
+}
+`),
+					"location-snippet": pulumi.String(`
+proxy_cache $registry_read_cache_zone;
+proxy_cache_key "$scheme$request_method$host$request_uri";
+proxy_cache_valid 200 30s;
+proxy_cache_lock on;
+proxy_cache_lock_timeout 5s;
+proxy_cache_background_update on;
+proxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;
+add_header X-Registry-Cache $upstream_cache_status always;
+`),
 					// Disable strict path validation, to work around a bug in ingress-nginx
 					// https://cert-manager.io/docs/releases/release-notes/release-notes-1.18/#acme-http01-challenge-paths-now-use-pathtype-exact-in-ingress-routes
 					// https://github.com/kubernetes/ingress-nginx/issues/11176
