@@ -1310,3 +1310,50 @@ func TestHTTPAuthHandler_Algorithm_Support(t *testing.T) {
 		assert.Contains(t, err.Error(), "invalid signature size for Ed25519")
 	})
 }
+
+// TestHTTPAuthHandler_HTMLFallbackDiagnostic covers the most common HTTP-auth setup mistake:
+// the domain answers /.well-known/mcp-registry-auth with its index page instead of the proof
+// record. The response is a healthy 200, so the publisher's own checks look fine and the
+// resulting error needs to name the real cause rather than just "no public key found".
+func TestHTTPAuthHandler_HTMLFallbackDiagnostic(t *testing.T) {
+	cfg := &config.Config{
+		JWTPrivateKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+	}
+	const domain = "example.com"
+	timestamp := time.Now().UTC().Format(time.RFC3339)
+
+	tests := []struct {
+		name          string
+		body          string
+		errorContains string
+	}{
+		{
+			name:          "doctype fallback page",
+			body:          "<!DOCTYPE html>\n<html lang=\"en\"><head><title>My Site</title></head><body>Hello</body></html>",
+			errorContains: "returned an HTML page rather than a proof record",
+		},
+		{
+			name:          "html tag without doctype",
+			body:          "<html><body>404 not found</body></html>",
+			errorContains: "returned an HTML page rather than a proof record",
+		},
+		{
+			name:          "non-html garbage still gets the generic error",
+			body:          "not a proof record",
+			errorContains: "no MCP public key found in HTTP response",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			handler := auth.NewHTTPAuthHandler(cfg)
+			handler.SetFetcher(&MockHTTPKeyFetcher{
+				keyResponses: map[string]string{domain: tt.body},
+			})
+
+			_, err := handler.ExchangeToken(context.Background(), domain, timestamp, "00")
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tt.errorContains)
+		})
+	}
+}

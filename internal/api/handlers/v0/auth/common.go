@@ -284,6 +284,20 @@ func (h *CoreAuthHandler) ExchangeToken(
 	if len(publicKeysAndErrors) == 0 {
 		switch authMethod {
 		case auth.MethodHTTP:
+			// A 200 from /.well-known/mcp-registry-auth does not mean the domain is serving a proof
+			// record. Static hosts and SPAs routinely answer unknown paths with their index page, so
+			// the publisher sees a healthy-looking 200 and a generic failure here. Naming the actual
+			// cause saves a round of guesswork, in the same spirit as the misplaced-selector hint the
+			// DNS handler gives.
+			if body, isHTML := firstHTMLBody(keyStrings); isHTML {
+				return nil, fmt.Errorf(
+					"no MCP public key found in HTTP response: /.well-known/mcp-registry-auth returned an "+
+						"HTML page rather than a proof record (starts with %q) — this is usually a "+
+						"catch-all route serving the site index for an unknown path; it must serve "+
+						"text/plain containing \"v=MCPv1; k=<algo>; p=<base64-public-key>\"",
+					body,
+				)
+			}
 			return nil, fmt.Errorf("no MCP public key found in HTTP response")
 		case auth.MethodDNS:
 			return nil, fmt.Errorf("no MCP public key found in DNS TXT records")
@@ -420,4 +434,24 @@ func IsValidDomain(domain string) bool {
 	// Check for valid characters and structure
 	domainPattern := regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*$`)
 	return domainPattern.MatchString(domain)
+}
+
+// firstHTMLBody reports whether any fetched key string is actually a web page rather than a
+// proof record, returning a short prefix of it for the error message. Content-Type is not
+// available at this layer, and fallback routes do not reliably set it anyway, so this sniffs
+// the body.
+func firstHTMLBody(keyStrings []string) (string, bool) {
+	for _, k := range keyStrings {
+		trimmed := strings.TrimSpace(k)
+		lower := strings.ToLower(trimmed)
+		if strings.HasPrefix(lower, "<!doctype html") || strings.HasPrefix(lower, "<html") {
+			const maxLen = 60
+			preview := strings.Join(strings.Fields(trimmed), " ")
+			if len(preview) > maxLen {
+				preview = preview[:maxLen] + "…"
+			}
+			return preview, true
+		}
+	}
+	return "", false
 }
