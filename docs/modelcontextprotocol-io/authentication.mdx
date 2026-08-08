@@ -319,3 +319,21 @@ mcp-publisher login http azure-key-vault --domain="${MY_DOMAIN}" --vault "${MY_K
 ```
 
 </CodeGroup>
+
+<Warning>
+  **Check what the URL actually returns, not just that it returns something.** Many static hosts and
+  single-page apps answer unknown paths with their index page, so
+  `https://example.com/.well-known/mcp-registry-auth` can reply `200 text/html` with your whole
+  homepage — and a status-code check, a browser visit, and a plain `curl` all look fine.
+
+  Confirm the body and the content type before logging in:
+
+  ```bash
+  curl -sS -D- -o- "https://${MY_DOMAIN}/.well-known/mcp-registry-auth" | grep -iE '^content-type|^v=MCPv1'
+  ```
+
+  You want a `text/plain` content type and your `v=MCPv1; k=…; p=…` line. If you get HTML back, the
+  file isn't being routed — a common cause is a catch-all/fallback rule that takes precedence over
+  static files. Some hosts also require dotted directories like `.well-known` to be explicitly
+  included in the deployed output.
+</Warning>
