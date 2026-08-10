@@ -6,6 +6,12 @@
     "type": "git",
     "url": "https://github.com/decisionrules"
   },
+  "icons": [
+    {
+      "src": "https://worthy-deer-b71b61c421.media.strapiapp.com/logo_dr_hexagon_9450d15423.png",
+      "mimeType": "image/png"
+    }
+  ],
   "remotes": [
     {
       "type": "sse",
