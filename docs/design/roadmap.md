@@ -6,9 +6,15 @@ This roadmap may occasionally drift out of date. Please review [Issues](https://
 
 ## Current Status
 
+> [!NOTE]
+> **The phase labelling below is out of date as of 2026-08-10.** The registry launched in preview on
+> 2025-09-08 and the v0.1 API entered a freeze on 2025-10-24, so "Go-Live" has already happened. The
+> phases are retained for historical context. See
+> [Issues](https://github.com/modelcontextprotocol/registry/issues) for current work.
+
 The initial version of the MCP Registry is actively being developed. The initial focus is on delivering a REST API to which server creators can publish, and aggregator/marketplace consumers can ETL.
 
-## Phase 1: MVP/Go-Live (Current Focus)
+## Phase 1: MVP/Go-Live
 
 See the [go-live blocker issues](https://github.com/modelcontextprotocol/registry/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22go-live%20blocker%22).
 

@@ -25,13 +25,13 @@ The registry serves as the authoritative metadata repository for publicly-availa
 - Use mechanisms like DNS verification, OAuth to provide base layer of authentication and trust
 - Implement rate limiting, field validation, and blacklisting to prevent abuse
 
-## 6. Reusable, Extensible Shapes; Not Infrastructure
+## 5. Reusable, Extensible Shapes; Not Infrastructure
 
 - API shapes (OpenAPI, server.json) designed for reuse
 - Enable private/internal registries using same formats
 - Don't mandate infrastructure reuse - focus on interface compatibility
 
-## 7. Progressive Enhancement
+## 6. Progressive Enhancement
 
 - Start with MVP that provides immediate value
 - Build foundation that supports future features

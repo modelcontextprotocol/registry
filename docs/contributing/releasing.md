@@ -5,8 +5,8 @@
 1. **Go to GitHub**: Navigate to https://github.com/modelcontextprotocol/registry/releases
 2. **Click "Draft a new release"**
 3. **Choose a tag**: Click "Choose a tag" and type a new semantic version that follows the last one available (e.g., `v1.0.0`)
-5. **Generate notes**: Click "Generate release notes" to auto-populate the name and description
-6. **Publish**: Click "Publish release"
+4. **Generate notes**: Click "Generate release notes" to auto-populate the name and description
+5. **Publish**: Click "Publish release"
 
 The release workflow will automatically:
 - Build binaries for 6 platforms (Linux, macOS, Windows × amd64, arm64)

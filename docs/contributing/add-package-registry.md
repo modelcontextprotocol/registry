@@ -51,6 +51,5 @@ These steps may evolve as additional validations or details are discovered and m
       - Add corresponding unit tests: `internal/validators/registries/yourregistry_test.go`
       - Register your validator in `internal/validators/validators.go`
    - Update the publishing documentation:
-      - Add a new publishing guide: `docs/guides/publishing/publish-[yourregistry].md`, following the pattern of existing publishing guides (e.g., `publish-npm.md`, `publish-pypi.md`)
-      - Include instructions on how to prepare packages for your registry, including any specific validation requirements
-      - Update `docs/guides/publishing/README.md` to reference your new publishing guide
+      - Add a section for your registry to `docs/modelcontextprotocol-io/package-types.mdx`, following the pattern of the existing registries (npm, PyPI, NuGet, ...)
+      - Include instructions on how to prepare packages for your registry, and an `### Ownership Verification` subsection describing the validation your registry requires
