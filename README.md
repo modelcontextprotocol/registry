@@ -32,9 +32,9 @@ Often (but not always) ideas flow through this pipeline:
 #### Pre-requisites
 
 - **Docker**
-- **Go 1.26.x** (matching the `go` directive in [go.mod](./go.mod))
+- **Go** - version per the `go` directive in [go.mod](./go.mod); the Go toolchain fetches it for you
 - **ko** - Container image builder for Go ([installation instructions](https://ko.build/install/))
-- **golangci-lint v2.11.4** (the version pinned in [CI](./.github/workflows/ci.yml))
+- **golangci-lint** - version per the `golangci-lint-action` pin in [ci.yml](./.github/workflows/ci.yml), so local lint matches CI
 
 #### Running the server
 
