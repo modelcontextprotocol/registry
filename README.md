@@ -32,9 +32,9 @@ Often (but not always) ideas flow through this pipeline:
 #### Pre-requisites
 
 - **Docker**
-- **Go 1.24.x**
+- **Go** - version per the `go` directive in [go.mod](./go.mod); the Go toolchain fetches it for you
 - **ko** - Container image builder for Go ([installation instructions](https://ko.build/install/))
-- **golangci-lint v2.4.0**
+- **golangci-lint** - version per the `golangci-lint-action` pin in [ci.yml](./.github/workflows/ci.yml), so local lint matches CI
 
 #### Running the server
 
@@ -94,7 +94,8 @@ See [the publisher guide](./docs/modelcontextprotocol-io/quickstart.mdx) for mor
 #### Other commands
 
 ```bash
-# Run lint, unit tests and integration tests
+# Run lint, schema validation, and all tests
+# Note: this also runs `make dev-down`, stopping any running dev-compose environment
 make check
 ```
 
@@ -110,7 +111,8 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 
 ```
 ├── cmd/                     # Application entry points
-│   └── publisher/           # Server publishing tool
+│   ├── publisher/           # Server publishing tool
+│   └── registry/            # Registry API server
 ├── data/                    # Seed data
 ├── deploy/                  # Deployment configuration (Pulumi)
 ├── docs/                    # Documentation
@@ -119,6 +121,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   ├── auth/                # Authentication (GitHub OAuth, JWT, namespace blocking)
 │   ├── config/              # Configuration management
 │   ├── database/            # Data persistence (PostgreSQL)
+│   ├── importer/            # Seed data import
 │   ├── service/             # Business logic
 │   ├── telemetry/           # Metrics and monitoring
 │   └── validators/          # Input validation
