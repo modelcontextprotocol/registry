@@ -27,13 +27,13 @@ Releases do not automatically deploy to production. To deploy a release:
 
 1. Update `mcp-registry:imageTag` in `deploy/Pulumi.gcpProd.yaml` to the desired version (e.g., `1.2.3` - note: no 'v' prefix)
 2. Commit and push the change to the `main` branch (either through a PR or by pushing directly to main)
-3. The [deploy-production.yml](../../../.github/workflows/deploy-production.yml) workflow will automatically trigger and deploy the specified version
+3. The [deploy-production.yml](../../.github/workflows/deploy-production.yml) workflow will automatically trigger and deploy the specified version
 
-See the [deployment documentation](../../../deploy/README.md) for more details.
+See the [deployment documentation](../../deploy/README.md) for more details.
 
 ## Staging
 
-Staging auto-deploys from `main` via [deploy-staging.yml](../../../.github/workflows/deploy-staging.yml). It always runs the latest `main` branch code.
+Staging auto-deploys from `main` via [deploy-staging.yml](../../.github/workflows/deploy-staging.yml). It always runs the latest `main` branch code.
 
 ## Rollback
 
