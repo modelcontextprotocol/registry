@@ -155,5 +155,26 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.OV3RK177/kairos-mcp-server",
+    "description": "First-party DePIN supply telemetry API. 745 networks, 171 with first-party feeds, 43 with no free public feed. Every value carries source + as_of + verify_url. Self-register for $5 free credits.",
+    "repository": {
+      "url": "https://github.com/OV3RK177/kairos-mcp-server.git",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "packages": [
+      {
+        "registryType": "remote",
+        "identifier": "https://kairossignal.com/mcp/",
+        "version": "1.0.0",
+        "transport": {
+          "type": "http",
+          "url": "https://kairossignal.com/mcp/"
+        }
+      }
+    ]
   }
 ]
