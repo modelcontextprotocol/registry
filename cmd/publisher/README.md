@@ -14,8 +14,11 @@ make publisher
 make dev-compose  # Start local registry
 ./bin/mcp-publisher init
 ./bin/mcp-publisher login none --registry=http://localhost:8080
-./bin/mcp-publisher publish --registry=http://localhost:8080
+./bin/mcp-publisher publish
 ```
+
+`publish` takes the registry URL from the token saved by `login`, so it accepts no `--registry`
+flag — passing one would be read as the `server.json` path.
 
 ## Architecture
 
@@ -24,6 +27,7 @@ make dev-compose  # Start local registry
 - **`login`** - Handle authentication (github, dns, http, none)
 - **`publish`** - Validate and upload servers to registry
 - **`status`** - Update server lifecycle status (active, deprecated, deleted)
+- **`validate`** - Validate server.json without publishing
 - **`logout`** - Clear stored credentials
 
 ### Authentication Providers
