@@ -1,0 +1,16 @@
+{
+  "$schema": "https://registry.modelcontextprotocol.io/schema/server.json",
+  "name": "io.decisionrules/mcp-server",
+  "description": "MCP server for DecisionRules business rules engine to evaluate decision tables, automate workflows, and execute decision logic.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/decisionrules"
+  },
+  "remotes": [
+    {
+      "type": "sse",
+      "url": "https://api.decisionrules.io/mcp"
+    }
+  ],
+  "version": "1.0.0"
+}
