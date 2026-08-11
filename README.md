@@ -1,5 +1,7 @@
 # MCP Registry
 
+[![MCP Toplist](https://mcptoplist.com/badge/mcp.so%2Fregistry%2Fmodelcontextprotocol.svg)](https://mcptoplist.com/server/mcp.so%2Fregistry%2Fmodelcontextprotocol)
+
 The MCP registry provides MCP clients with a list of MCP servers, like an app store for MCP servers.
 
 [**📤 Publish my MCP server**](docs/modelcontextprotocol-io/quickstart.mdx) | [**⚡️ Live API docs**](https://registry.modelcontextprotocol.io/docs) | [**👀 Ecosystem vision**](docs/design/ecosystem-vision.md) | 📖 **[Full documentation](./docs)**
