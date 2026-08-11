@@ -185,6 +185,10 @@ Open the generated `server.json` file, and you should see contents like:
 }
 ```
 
+<Note>
+  Free-form text fields are validated at publish time. In the current schema, `description` and `title` are limited to 100 characters each, `name` to 200, and version strings to 255. A longer value causes `mcp-publisher publish` to fail with a schema validation error.
+</Note>
+
 Edit the contents as necessary:
 
 ```diff server.json
