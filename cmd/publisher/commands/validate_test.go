@@ -136,6 +136,20 @@ func TestValidateCommand_DeprecatedSchema(t *testing.T) {
 	assert.Contains(t, err.Error(), "Migration checklist:")
 }
 
+func TestValidateCommand_AcceptsUTF8BOM(t *testing.T) {
+	// Windows tools such as PowerShell's Out-File write UTF-8 with a leading
+	// byte order mark; RFC 8259 permits parsers to ignore it.
+	server := SetupMockRegistryServer(t, nil, nil)
+	SetupTestToken(t, server.URL, "test-token")
+
+	bom := []byte{0xEF, 0xBB, 0xBF}
+	body := []byte(`{"$schema":"` + model.CurrentSchemaURL + `","name":"com.example/test","description":"A test server","version":"1.0.0"}`)
+	createRawServerJSON(t, append(bom, body...))
+
+	err := commands.ValidateCommand([]string{})
+	assert.NoError(t, err)
+}
+
 func TestValidateCommand_NoServerFile(t *testing.T) {
 	server := SetupMockRegistryServer(t, nil, nil)
 	SetupTestToken(t, server.URL, "test-token")
