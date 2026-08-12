@@ -36,6 +36,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [polygraph](https://polygraph.so) - Independent behavioral security grades (A–F) for MCP servers from an open, reproducible harness, published as an adoption-ranked index with per-server reports
+- [mcp-server-audit](https://github.com/Yveshby27/mcp-server-audit) - Pre-install validation CLI for MCP servers. Runs 4 install-time checks (handshake, descriptor, capabilities, tool schemas) against any server before adding it to your client config.
 
 ## Adding Your Project
 
