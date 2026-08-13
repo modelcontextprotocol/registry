@@ -17,3 +17,4 @@ The MCP registry provides MCP clients with a list of MCP servers, like an app st
 - 📖 [Reference](./reference/) - Technical specifications
 - 🔧 [Contributing guides](./contributing/) - How to contribute
 - 🔒 [Administration](./administration/) - Admin operations
+- 🤝 [Community projects](./community-projects.md) - Notable registry-related work from the community

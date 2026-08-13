@@ -16,7 +16,7 @@ When onboarding a new maintainer, complete the following steps:
 
 ### 3. README.md
 
-- [ ] Add them to the "Current key maintainers" section in [README.md](../../README.md)
+- [ ] Add them to the "Registry Working Group" section in [README.md](../../README.md)
 
 ### 4. Discord
 

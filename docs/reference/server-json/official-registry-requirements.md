@@ -23,7 +23,7 @@ See the [publishing guide](../../modelcontextprotocol-io/quickstart.mdx) for aut
 
 All packages must include metadata proving the publisher owns them. This prevents impersonation and ensures authenticity (see more reasoning in [#96](https://github.com/modelcontextprotocol/registry/issues/96)).
 
-For detailed verification requirements for each registry type, see the [publishing guide](../../modelcontextprotocol-io/quickstart.mdx).
+For detailed verification requirements for each registry type, see [package types](../../modelcontextprotocol-io/package-types.mdx), which has an "Ownership Verification" section per registry.
 
 ## Restricted Registry Base URLs
 
