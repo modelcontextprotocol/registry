@@ -14,7 +14,7 @@
   ],
   "remotes": [
     {
-      "type": "sse",
+      "type": "streamable-http",
       "url": "https://api.decisionrules.io/mcp"
     }
   ],
