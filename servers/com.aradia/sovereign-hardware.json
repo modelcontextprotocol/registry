@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/data/server.schema.json",
+  "name": "com.aradia/sovereign-hardware",
+  "title": "Aradia Sovereign AI Infrastructure",
+  "description": "Autonomous MCP interface for querying on-premise NVIDIA DGX private AI Agent hardware specs, modeling CapEx token ROI, executing M2M procurement, and onboarding into the Aradia Partner Program.",
+  "version": "1.0.0",
+  "websiteUrl": "https://aradia.com",
+  "repository": {
+    "url": "https://github.com/ARADIA-systems",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "sse",
+      "url": "https://aradia.com/api/a2a/mcp-endpoint.php"
+    }
+  ]
+}
