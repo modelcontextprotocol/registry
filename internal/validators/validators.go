@@ -119,8 +119,32 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *V
 func validateRepository(ctx *ValidationContext, obj *model.Repository) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 
-	// Skip validation if repository is nil or empty (optional field)
-	if obj == nil || (obj.URL == "" && obj.Source == "") {
+	// The repository field is optional, but its required fields must be present
+	// when the repository object itself is provided.
+	if obj == nil {
+		return result
+	}
+	if obj.URL == "" {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.Field("url").String(),
+			"repository url is required when repository is provided",
+			ValidationIssueSeverityError,
+			"repository-url-required",
+		)
+		result.AddIssue(issue)
+	}
+	if obj.Source == "" {
+		issue := NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.Field("source").String(),
+			"repository source is required when repository is provided",
+			ValidationIssueSeverityError,
+			"repository-source-required",
+		)
+		result.AddIssue(issue)
+	}
+	if !result.Valid {
 		return result
 	}
 
