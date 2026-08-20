@@ -48,12 +48,24 @@ jobs:
               mapfile -t FILES < <(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
               if [ "${#FILES[@]}" -gt 0 ]; then
                 # Flag only if the PR touches *exclusively* publish-attempt files
-                # (servers/** and/or data/seed.json) and nothing else, so that
-                # legit PRs touching seed data alongside real code are left alone.
+                # and nothing else, so that legit PRs touching seed data
+                # alongside real code are left alone.
+                #
+                # Keep this list in sync with the copy in stage 2. It stays an
+                # explicit list rather than a broad `**/server.json` glob:
+                # because we require *every* file to match, an over-broad
+                # pattern would auto-close a legitimate single-file PR.
+                # data/servers/** is here because #1524 put its server.json
+                # there - a natural guess next to data/seed.json - and slipped
+                # through the original servers/**-only list.
                 publish_attempt=0
                 other=0
                 for f in "${FILES[@]}"; do
-                  if [[ "$f" == servers/* || "$f" == "data/seed.json" ]]; then
+                  if [[ "$f" == servers/* \
+                     || "$f" == data/servers/* \
+                     || "$f" == "data/seed.json" \
+                     || "$f" == "server.json" \
+                     || "$f" == "servers.json" ]]; then
                     publish_attempt=1
                   else
                     echo "Non-publish file changed: $f"
