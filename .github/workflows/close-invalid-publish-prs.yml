@@ -34,7 +34,7 @@ jobs:
       COMMENT_BODY: |
         Hi @__AUTHOR__ 👋 — thanks for your interest in the MCP Registry!
 
-        It looks like this PR is trying to publish an MCP server by adding or editing files in this repository (under `servers/` or in `data/seed.json`). That isn't how servers get published, so I'm closing this PR automatically.
+        It looks like this PR is trying to publish an MCP server by adding or editing server files in this repository (under `servers/`, `data/servers/`, or in `data/seed.json`). That isn't how servers get published, so I'm closing this PR automatically.
 
         **Servers are published with the [`mcp-publisher`](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/quickstart.mdx) CLI**, not by opening a pull request against this repo. The CLI verifies that you own your namespace and submits your `server.json` directly to the live registry API.
 
@@ -121,10 +121,15 @@ jobs:
             echo "No files for PR #$PR_NUMBER; skipping."
             exit 0
           fi
+          # Keep this list in sync with the copy in stage 1.
           publish_attempt=0
           other=0
           for f in "${FILES[@]}"; do
-            if [[ "$f" == servers/* || "$f" == "data/seed.json" ]]; then
+            if [[ "$f" == servers/* \
+               || "$f" == data/servers/* \
+               || "$f" == "data/seed.json" \
+               || "$f" == "server.json" \
+               || "$f" == "servers.json" ]]; then
               publish_attempt=1
             else
               other=1

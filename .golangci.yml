@@ -22,7 +22,7 @@ linters:
     - gocyclo
     - godox
     - gomoddirectives
-    - gomodguard
+    - gomodguard_v2
     - goprintffuncname
     - gosec
     - grouper
@@ -55,6 +55,10 @@ linters:
       max-complexity: 20
     dupl:
       threshold: 300
+    goconst:
+      # Repeated literals in tests are fixture data ("1.0.0", "Test server", ...);
+      # hoisting them into constants hurts readability more than it helps.
+      ignore-tests: true
     gocognit:
       min-complexity: 51
     nestif:
