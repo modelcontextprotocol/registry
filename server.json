@@ -1,0 +1,19 @@
+{
+  "id": "io.github.parveshsharma/mcp-marketplace-sample",
+  "name": "mcp-marketplace-sample",
+  "version": "0.1.0",
+  "description": "Exposes local workspace weather mapping and dynamic training notes logging functionality.",
+  "publisher": "parveshsharma",
+  "location": {
+    "type": "registry",
+    "package": "pip:mcp-marketplace-sample"
+  },
+  "configuration": {
+    "command": "mcp-sample-tool",
+    "args": []
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": true
+  }
+}
