@@ -43,7 +43,7 @@ func RegisterNoneEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 		Path:        pathPrefix + "/auth/none",
 		Summary:     "Get anonymous Registry JWT (Development/Testing Only)",
 		Description: "Get a short-lived Registry JWT token for publishing and editing servers in the io.modelcontextprotocol.anonymous/* namespace. This endpoint is intended for local development and automated testing only.",
-		Tags:        []string{"auth"},
+		Tags:        []string{tagAuth},
 	}, func(ctx context.Context, _ *struct{}) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.GetAnonymousToken(ctx)
 		if err != nil {

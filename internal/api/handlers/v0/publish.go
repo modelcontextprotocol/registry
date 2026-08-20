@@ -32,7 +32,7 @@ func RegisterPublishEndpoint(api huma.API, pathPrefix string, registry service.R
 		Description: "Publish a new MCP server to the registry or update an existing one",
 		Tags:        []string{"publish"},
 		Security: []map[string][]string{
-			{"bearer": {}},
+			{securitySchemeBearer: {}},
 		},
 	}, func(ctx context.Context, input *PublishServerInput) (*Response[apiv0.ServerResponse], error) {
 		// Extract bearer token
