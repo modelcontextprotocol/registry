@@ -74,6 +74,7 @@ func (t *publishTimings) log(ctx context.Context, serverJSON apiv0.ServerJSON, t
 	attrs := []any{
 		"server_name", serverJSON.Name,
 		"version", serverJSON.Version,
+		"api_version", apiVersionFromContext(ctx),
 		"total_ms", totalMs,
 		"validate_ms", t.validateMs,
 		"pool_wait_ms", t.poolWaitMs,
@@ -89,6 +90,28 @@ func (t *publishTimings) log(ctx context.Context, serverJSON apiv0.ServerJSON, t
 	} else {
 		slog.InfoContext(ctx, "publish complete", attrs...)
 	}
+}
+
+// apiVersionKey carries the API version prefix a request arrived on. Both /v0 and
+// /v0.1 are registered against the same service instance, so nothing below the
+// handler can otherwise tell them apart — and the publish log's "version" field
+// is the server's own semver, not the API version.
+type apiVersionKey struct{}
+
+// ContextWithAPIVersion tags ctx with the API version prefix the request arrived
+// on, for attribution in the publish log.
+func ContextWithAPIVersion(ctx context.Context, apiVersion string) context.Context {
+	return context.WithValue(ctx, apiVersionKey{}, apiVersion)
+}
+
+// apiVersionFromContext returns the tagged API version. Callers that do not tag
+// the context — the importer, tests — report "unknown" rather than an empty
+// value that reads as missing data.
+func apiVersionFromContext(ctx context.Context) string {
+	if v, ok := ctx.Value(apiVersionKey{}).(string); ok && v != "" {
+		return v
+	}
+	return "unknown"
 }
 
 // registryServiceImpl implements the RegistryService interface using our Database

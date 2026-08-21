@@ -290,3 +290,38 @@ func TestCreateServerLogsValidationFailureWithPhase(t *testing.T) {
 	assert.Contains(t, out, "failed_phase=validate", "the event must name validate as the failing phase")
 	assert.Equal(t, 1, strings.Count(out, "publish failed"), "exactly one event per publish")
 }
+
+// Both /v0 and /v0.1 route to the same service methods, so without an explicit
+// tag the publish log cannot say which API version a slow publish arrived on.
+// The log's existing "version" field is the server's semver, not the API version.
+func TestCreateServerLogsAPIVersionFromContext(t *testing.T) {
+	logs := capturePublishLogs(t)
+	svc := NewRegistryService(&slowBeginDB{}, &config.Config{EnableRegistryValidation: false})
+
+	_, err := svc.CreateServer(ContextWithAPIVersion(context.Background(), "/v0.1"), &apiv0.ServerJSON{
+		Name:        "io.github.example/api-version-test",
+		Description: "server used to assert the API version is attributed",
+		Version:     "1.0.0",
+	})
+	require.NoError(t, err)
+
+	assert.Contains(t, logs(), "api_version=/v0.1",
+		"the publish log must report which API version the request arrived on")
+}
+
+// Callers that do not tag the context (importer, tests, future callers) must not
+// produce a blank field that reads as missing data.
+func TestCreateServerLogsUnknownAPIVersionWhenUntagged(t *testing.T) {
+	logs := capturePublishLogs(t)
+	svc := NewRegistryService(&slowBeginDB{}, &config.Config{EnableRegistryValidation: false})
+
+	_, err := svc.CreateServer(context.Background(), &apiv0.ServerJSON{
+		Name:        "io.github.example/api-version-absent",
+		Description: "server used to assert the untagged default",
+		Version:     "1.0.0",
+	})
+	require.NoError(t, err)
+
+	assert.Contains(t, logs(), "api_version=unknown",
+		"an untagged context should report unknown rather than an empty value")
+}
