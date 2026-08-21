@@ -1,6 +1,7 @@
 package validators_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -442,6 +443,90 @@ func TestValidateServerJSON_NonCurrentSchema_Policies(t *testing.T) {
 				}
 			}
 			assert.Equal(t, tt.expectIssueCount, schemaIssueCount, "Schema issue count should match expected")
+		})
+	}
+}
+
+// TestValidateServerJSON_MaxLengthFeedback ensures publishers get an explicit, actionable
+// error when a string field exceeds the schema's maxLength, instead of the upstream
+// jsonschema library's terse "expected length <= N". See issue #1184.
+func TestValidateServerJSON_MaxLengthFeedback(t *testing.T) {
+	const observedLen = 312
+	longDescription := strings.Repeat("x", observedLen)
+
+	serverJSON := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example.test/server",
+		Version:     "1.0.0",
+		Description: longDescription,
+		Repository: &model.Repository{
+			URL:    "https://github.com/example/server",
+			Source: "github",
+		},
+	}
+
+	result := validators.ValidateServerJSON(serverJSON, validators.ValidationAll)
+	assert.False(t, result.Valid, "Description over maxLength should fail validation")
+
+	var descIssue *validators.ValidationIssue
+	for i := range result.Issues {
+		issue := &result.Issues[i]
+		if issue.Path == "description" && issue.Type == validators.ValidationIssueTypeSchema {
+			descIssue = issue
+			break
+		}
+	}
+	if !assert.NotNil(t, descIssue, "Should have a schema validation issue at path 'description'") {
+		return
+	}
+
+	// The new message must explicitly name the field, report observed length, restate
+	// the max, and suggest a truncated value. Avoid hardcoding the schema's max here so
+	// this test isn't brittle to schema bumps — but verify the format pieces are present.
+	msg := descIssue.Message
+	assert.Contains(t, msg, `field "description" is too long`, "should name the field")
+	assert.Contains(t, msg, fmt.Sprintf("%d chars", observedLen), "should report observed length")
+	assert.Regexp(t, `\(max \d+\)`, msg, "should restate the max length from the schema")
+	assert.Contains(t, msg, "Truncate to:", "should offer a truncation suggestion")
+	assert.Contains(t, msg, "...", "truncation suggestion should end with an ellipsis")
+	assert.NotContains(t, msg, "length must be <=", "should replace the raw jsonschema phrasing")
+}
+
+func TestExtractFieldName(t *testing.T) {
+	cases := []struct {
+		path string
+		want string
+	}{
+		{"", ""},
+		{"description", "description"},
+		{"packages[0].description", "description"},
+		{"packages[0]", "packages"},
+		{"remotes[0].headers[1].name", "name"},
+	}
+	for _, c := range cases {
+		t.Run(c.path, func(t *testing.T) {
+			assert.Equal(t, c.want, validators.ExtractFieldNameForTest(c.path))
+		})
+	}
+}
+
+func TestTruncateForSuggestion(t *testing.T) {
+	cases := []struct {
+		name   string
+		input  string
+		maxLen int
+		want   string
+	}{
+		{"shorter than max returns original", "hello", 10, "hello"},
+		{"exact length returns original", "hello", 5, "hello"},
+		{"longer than max gets ellipsis", "abcdefghij", 6, "abc..."},
+		{"unicode safe truncation", "αβγδεζηθικ", 5, "αβ..."},
+		{"max too small for ellipsis returns prefix", "abcdef", 2, "ab"},
+		{"zero max returns empty", "abc", 0, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			assert.Equal(t, c.want, validators.TruncateForSuggestionForTest(c.input, c.maxLen))
 		})
 	}
 }
