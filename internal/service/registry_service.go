@@ -30,6 +30,65 @@ const (
 	phaseDBCreate           = "db_create"
 )
 
+// publishTimings accumulates the per-phase durations reported on the single
+// structured "publish complete"/"publish failed" event emitted per publish.
+//
+// CreateServer records the phases that run before the transaction opens
+// (validate) plus the wait for a pool connection; createServerInTransaction
+// records the phases inside it. Splitting it that way is deliberate: the previous
+// shape started its clock after pool.Begin had already returned, so a publish
+// that spent 40s waiting for a free connection logged total_ms=200 and looked
+// healthy. That is why the HTTP histogram and these logs disagreed — over 7 days
+// the histogram saw 17 publishes above 10s while no logged publish exceeded 6.5s.
+// pool_wait_ms is the missing time.
+//
+// total_ms covers the whole CreateServer call, so any time not accounted for by
+// the named phases is transaction commit plus overhead.
+type publishTimings struct {
+	validateMs      int64
+	poolWaitMs      int64
+	lockMs          int64
+	remotesMs       int64
+	versionChecksMs int64
+	unmarkMs        int64
+	createMs        int64
+	failedPhase     string
+}
+
+// run times fn into *ms. On failure it records which phase failed and returns
+// the error so the caller can abort.
+func (t *publishTimings) run(name string, ms *int64, fn func() error) error {
+	started := time.Now()
+	err := fn()
+	*ms = time.Since(started).Milliseconds()
+	if err != nil {
+		t.failedPhase = name
+	}
+	return err
+}
+
+// log emits the one structured event for this publish.
+func (t *publishTimings) log(ctx context.Context, serverJSON apiv0.ServerJSON, totalMs int64, err error) {
+	attrs := []any{
+		"server_name", serverJSON.Name,
+		"version", serverJSON.Version,
+		"total_ms", totalMs,
+		"validate_ms", t.validateMs,
+		"pool_wait_ms", t.poolWaitMs,
+		"lock_ms", t.lockMs,
+		"remotes_ms", t.remotesMs,
+		"version_checks_ms", t.versionChecksMs,
+		"unmark_ms", t.unmarkMs,
+		"create_ms", t.createMs,
+	}
+	if err != nil {
+		attrs = append(attrs, "failed_phase", t.failedPhase, "error", err.Error())
+		slog.WarnContext(ctx, "publish failed", attrs...)
+	} else {
+		slog.InfoContext(ctx, "publish complete", attrs...)
+	}
+}
+
 // registryServiceImpl implements the RegistryService interface using our Database
 type registryServiceImpl struct {
 	db  database.Database
@@ -91,85 +150,62 @@ func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, se
 }
 
 // CreateServer creates a new server version
-func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error) {
-	// Wrap the entire operation in a transaction
-	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
-		return s.createServerInTransaction(ctx, tx, req)
-	})
-}
-
-// createServerInTransaction contains the actual CreateServer logic within a transaction.
-//
-// Phases are individually timed and emitted as a single structured log event per call.
-// During the 2026-04-27 incident the validate-only timing (the previous shape) hid
-// pool-exhaustion stalls in acquire_lock / version_checks / db_create — we saw 50s+
-// total publish times even though validate_ms was a few hundred ms. With every phase
-// reported the next slow publish tells us which step to blame.
-func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON) (resp *apiv0.ServerResponse, err error) {
+func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.ServerJSON) (resp *apiv0.ServerResponse, err error) {
 	start := time.Now()
 	serverJSON := *req
-	var (
-		validateMs, lockMs, remotesMs, versionChecksMs, unmarkMs, createMs int64
-		failedPhase                                                        string
-	)
+	timings := &publishTimings{}
 
 	defer func() {
-		attrs := []any{
-			"server_name", serverJSON.Name,
-			"version", serverJSON.Version,
-			"total_ms", time.Since(start).Milliseconds(),
-			"validate_ms", validateMs,
-			"lock_ms", lockMs,
-			"remotes_ms", remotesMs,
-			"version_checks_ms", versionChecksMs,
-			"unmark_ms", unmarkMs,
-			"create_ms", createMs,
-		}
-		if err != nil {
-			attrs = append(attrs, "failed_phase", failedPhase, "error", err.Error())
-			slog.WarnContext(ctx, "publish failed", attrs...)
-		} else {
-			slog.InfoContext(ctx, "publish complete", attrs...)
-		}
+		timings.log(ctx, serverJSON, time.Since(start).Milliseconds(), err)
 	}()
 
-	// runPhase times fn into *ms and, on error, stashes the phase name + error
-	// onto the closed-over failedPhase / err. Returns true on success so callers
-	// can `if !runPhase(...) { return nil, err }`.
-	runPhase := func(name string, ms *int64, fn func() error) bool {
-		t := time.Now()
-		e := fn()
-		*ms = time.Since(t).Milliseconds()
-		if e != nil {
-			failedPhase = name
-			err = e
-			return false
-		}
-		return true
-	}
-
-	// Validate the request — registry-ownership checks fan out to npm/PyPI/OCI with
-	// 10s per-host timeouts. Was historically the most likely slow phase; now any
-	// phase can be the slow one when the connection pool is starved.
-	if !runPhase(phaseValidate, &validateMs, func() error {
+	// Registry-ownership validation fans out to npm/PyPI/NuGet/Cargo/OCI/MCPB with
+	// a 10s timeout per host. It runs before the transaction opens so those
+	// round-trips never hold a pgxpool connection. Inside the transaction, a burst
+	// of publishes each waiting on a third-party registry would occupy connections
+	// while doing no database work, starving the pool and stalling unrelated
+	// requests in pool.Begin. Nothing here reads our own database, so hoisting it
+	// introduces no race; the per-server advisory lock was already taken after
+	// validation, and still is.
+	if err = timings.run(phaseValidate, &timings.validateMs, func() error {
 		return validators.ValidatePublishRequest(ctx, serverJSON, s.cfg)
-	}) {
+	}); err != nil {
 		return nil, err
 	}
 
+	// Everything from here needs the database. InTransaction calls pool.Begin
+	// before invoking this callback, so the gap between these two timestamps is
+	// exactly how long the publish waited for a free connection.
+	beforeBegin := time.Now()
+	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
+		timings.poolWaitMs = time.Since(beforeBegin).Milliseconds()
+		return s.createServerInTransaction(ctx, tx, req, timings)
+	})
+}
+
+// createServerInTransaction contains the actual CreateServer logic that needs the
+// database. Registry-ownership validation deliberately happens in CreateServer,
+// before the transaction opens — see the comment there.
+//
+// Each phase is timed into the shared publishTimings so CreateServer can emit one
+// structured log event per publish. During the 2026-04-27 incident a validate-only
+// timing hid pool-exhaustion stalls in acquire_lock / version_checks / db_create;
+// with every phase reported the next slow publish says which step to blame.
+func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx pgx.Tx, req *apiv0.ServerJSON, t *publishTimings) (resp *apiv0.ServerResponse, err error) {
+	serverJSON := *req
 	publishTime := time.Now()
 
 	// Acquire advisory lock to prevent concurrent publishes of the same server
-	if !runPhase(phaseAcquireLock, &lockMs, func() error {
+	if err = t.run(phaseAcquireLock, &t.lockMs, func() error {
 		return s.db.AcquirePublishLock(ctx, tx, serverJSON.Name)
-	}) {
+	}); err != nil {
 		return nil, err
 	}
 
 	// Check for duplicate remote URLs
-	if !runPhase(phaseValidateRemoteURLs, &remotesMs, func() error {
+	if err = t.run(phaseValidateRemoteURLs, &t.remotesMs, func() error {
 		return s.validateNoDuplicateRemoteURLs(ctx, tx, serverJSON)
-	}) {
+	}); err != nil {
 		return nil, err
 	}
 
@@ -177,7 +213,7 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	// starved pool any of them stalls until a connection is free). Bundled under
 	// one phase since they share a logical step.
 	var currentLatest *apiv0.ServerResponse
-	if !runPhase(phaseVersionChecks, &versionChecksMs, func() error {
+	if err = t.run(phaseVersionChecks, &t.versionChecksMs, func() error {
 		versionCount, e := s.db.CountServerVersions(ctx, tx, serverJSON.Name)
 		if e != nil && !errors.Is(e, database.ErrNotFound) {
 			return e
@@ -197,7 +233,7 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 			return e
 		}
 		return nil
-	}) {
+	}); err != nil {
 		return nil, err
 	}
 
@@ -218,9 +254,9 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 
 	// Unmark old latest version if needed
 	if isNewLatest && currentLatest != nil {
-		if !runPhase(phaseUnmarkLatest, &unmarkMs, func() error {
+		if err = t.run(phaseUnmarkLatest, &t.unmarkMs, func() error {
 			return s.db.UnmarkAsLatest(ctx, tx, serverJSON.Name)
-		}) {
+		}); err != nil {
 			return nil, err
 		}
 	}
@@ -235,11 +271,11 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 	}
 
 	// Insert new server version
-	if !runPhase(phaseDBCreate, &createMs, func() error {
+	if err = t.run(phaseDBCreate, &t.createMs, func() error {
 		var e error
 		resp, e = s.db.CreateServer(ctx, tx, &serverJSON, officialMeta)
 		return e
-	}) {
+	}); err != nil {
 		return nil, err
 	}
 	return resp, nil
@@ -345,7 +381,13 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	beingDeleted := statusChange != nil && statusChange.NewStatus == model.StatusDeleted
 	skipRegistryValidation := currentlyDeleted || beingDeleted
 
-	// Validate the request, potentially skipping registry validation for deleted servers
+	// Unlike the publish path, this registry validation still runs inside the
+	// transaction, so its external HTTP calls hold a pool connection. It cannot
+	// simply be hoisted: skipRegistryValidation is derived from the
+	// GetServerByNameAndVersion read above, so moving validation out needs a
+	// second read before the transaction and a decision about the race in whether
+	// to skip. Left as-is because the edit path carries a small fraction of
+	// publish traffic; revisit if it shows up in pool_wait_ms.
 	if err := validators.ValidateUpdateRequest(ctx, *req, s.cfg, skipRegistryValidation); err != nil {
 		return nil, err
 	}
