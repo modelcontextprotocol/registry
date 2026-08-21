@@ -200,6 +200,46 @@ func TestCreateServerReportsTimeWaitingForAPoolConnection(t *testing.T) {
 		"pool_wait_ms must cover the time pool.Begin blocked, otherwise a starved pool is invisible in the logs")
 }
 
+// failingBeginDB never hands out a connection: InTransaction blocks and then
+// fails without invoking the transaction body, the way pool.Begin behaves when a
+// starved pool hits the context deadline.
+type failingBeginDB struct {
+	countingDB
+	beginDelay time.Duration
+	beginErr   error
+}
+
+func (d *failingBeginDB) InTransaction(context.Context, func(context.Context, pgx.Tx) error) error {
+	time.Sleep(d.beginDelay)
+	return d.beginErr
+}
+
+// The worst pool starvation ends with Begin failing on the context deadline, and
+// then the transaction body never runs. Recording the wait only from inside that
+// body would report pool_wait_ms=0 with no failing phase for precisely the case
+// this instrumentation exists to catch.
+func TestCreateServerReportsPoolWaitWhenBeginNeverSucceeds(t *testing.T) {
+	logs := capturePublishLogs(t)
+	const beginDelay = 150 * time.Millisecond
+	db := &failingBeginDB{beginDelay: beginDelay, beginErr: context.DeadlineExceeded}
+	svc := NewRegistryService(db, &config.Config{EnableRegistryValidation: false})
+
+	_, err := svc.CreateServer(context.Background(), &apiv0.ServerJSON{
+		Name:        "io.github.example/begin-failure",
+		Description: "server used to assert a failed Begin is still attributed",
+		Version:     "1.0.0",
+	})
+	require.Error(t, err)
+
+	out := logs()
+	poolWaitMs, ok := phaseValueFromLog(t, out, "pool_wait_ms")
+	require.True(t, ok, "the publish log must report pool_wait_ms")
+	assert.GreaterOrEqual(t, poolWaitMs, beginDelay.Milliseconds(),
+		"the wait before Begin failed must still be reported, otherwise the worst starvation logs as zero")
+	assert.Contains(t, out, "failed_phase="+phasePoolBegin,
+		"a publish that never got a connection must be attributed to acquiring one, not to an empty phase")
+}
+
 // The log event moved out of the transaction body, so the deferred logger has to
 // observe errors raised inside it too — otherwise failures after the transaction
 // opens would stop being reported. Guards that, rather than driving new code.
