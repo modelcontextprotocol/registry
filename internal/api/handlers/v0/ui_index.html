@@ -20,7 +20,7 @@
             <div class="flex gap-6 text-sm">
                 <a href="https://github.com/modelcontextprotocol/registry" target="_blank" class="text-blue-600 hover:text-blue-700 font-medium">GitHub</a>
                 <a href="https://github.com/modelcontextprotocol/registry/tree/main/docs" target="_blank" class="text-blue-600 hover:text-blue-700 font-medium">Docs</a>
-                <a href="/docs" class="text-blue-600 hover:text-blue-700 font-medium">API Reference</a>
+                <a href="{{UI_BASE_PATH}}/docs" class="text-blue-600 hover:text-blue-700 font-medium">API Reference</a>
             </div>
         </header>
 
@@ -156,11 +156,11 @@
                 case 'staging':
                     return 'https://staging.registry.modelcontextprotocol.io';
                 case 'local':
-                    return '';
+                    return '{{UI_BASE_PATH}}';
                 case 'custom':
                     return customUrl;
                 default:
-                    return '';
+                    return '{{UI_BASE_PATH}}';
             }
         }
 
@@ -197,7 +197,8 @@
             if (!latestOnly) params.set('all', '1');
             if (currentCursor) params.set('cursor', currentCursor);
 
-            const newUrl = params.toString() ? `?${params.toString()}` : '/';
+            const base = '{{UI_BASE_PATH}}' || '/';
+            const newUrl = params.toString() ? `${base}?${params.toString()}` : base;
             history.pushState({cursor: currentCursor, search, latestOnly}, '', newUrl);
         }
 
