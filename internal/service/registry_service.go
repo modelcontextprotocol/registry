@@ -19,10 +19,12 @@ import (
 const maxServerVersionsPerServer = 10000
 
 // Publish phase names emitted on the structured "publish complete"/"publish failed"
-// log from createServerInTransaction. Constants because version_checks is reported
-// from multiple branches.
+// log. validate and pool_begin happen in CreateServer, before or while acquiring the
+// transaction; the rest inside createServerInTransaction. Constants because
+// version_checks is reported from multiple branches.
 const (
 	phaseValidate           = "validate"
+	phasePoolBegin          = "pool_begin"
 	phaseAcquireLock        = "acquire_lock"
 	phaseValidateRemoteURLs = "validate_remote_urls"
 	phaseVersionChecks      = "version_checks"
@@ -177,10 +179,22 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 	// before invoking this callback, so the gap between these two timestamps is
 	// exactly how long the publish waited for a free connection.
 	beforeBegin := time.Now()
-	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
+	gotConnection := false
+	resp, err = database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
+		gotConnection = true
 		timings.poolWaitMs = time.Since(beforeBegin).Milliseconds()
 		return s.createServerInTransaction(ctx, tx, req, timings)
 	})
+	if !gotConnection {
+		// Begin never handed us a connection, so the callback above did not run and
+		// no phase inside the transaction was reached. This is the shape the worst
+		// starvation takes — Begin blocking until the context deadline — so record
+		// the whole elapsed wait and name the phase, rather than reporting zero
+		// against an empty phase for the exact case this instrumentation targets.
+		timings.poolWaitMs = time.Since(beforeBegin).Milliseconds()
+		timings.failedPhase = phasePoolBegin
+	}
+	return resp, err
 }
 
 // createServerInTransaction contains the actual CreateServer logic that needs the
