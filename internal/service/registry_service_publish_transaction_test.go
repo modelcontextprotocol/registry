@@ -180,8 +180,8 @@ func (d *slowBeginDB) CreateServer(_ context.Context, _ pgx.Tx, serverJSON *apiv
 // pool.Begin before invoking the transaction body, and the old timing started
 // inside that body. A publish stalled 40s on a starved pool therefore logged
 // total_ms=200 and looked healthy, which is why the HTTP metric and these logs
-// disagreed. pool_wait_ms has to account for it.
-func TestCreateServerReportsTimeWaitingForAPoolConnection(t *testing.T) {
+// disagreed. tx_begin_ms has to account for it.
+func TestCreateServerReportsTransactionBeginLatency(t *testing.T) {
 	logs := capturePublishLogs(t)
 	const beginDelay = 150 * time.Millisecond
 	db := &slowBeginDB{beginDelay: beginDelay}
@@ -194,10 +194,10 @@ func TestCreateServerReportsTimeWaitingForAPoolConnection(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	poolWaitMs, ok := phaseValueFromLog(t, logs(), "pool_wait_ms")
-	require.True(t, ok, "the publish log must report pool_wait_ms")
-	assert.GreaterOrEqual(t, poolWaitMs, beginDelay.Milliseconds(),
-		"pool_wait_ms must cover the time pool.Begin blocked, otherwise a starved pool is invisible in the logs")
+	txBeginMs, ok := phaseValueFromLog(t, logs(), "tx_begin_ms")
+	require.True(t, ok, "the publish log must report tx_begin_ms")
+	assert.GreaterOrEqual(t, txBeginMs, beginDelay.Milliseconds(),
+		"tx_begin_ms must cover the time pool.Begin blocked, otherwise a starved pool is invisible in the logs")
 }
 
 // failingBeginDB never hands out a connection: InTransaction blocks and then
@@ -216,9 +216,9 @@ func (d *failingBeginDB) InTransaction(context.Context, func(context.Context, pg
 
 // The worst pool starvation ends with Begin failing on the context deadline, and
 // then the transaction body never runs. Recording the wait only from inside that
-// body would report pool_wait_ms=0 with no failing phase for precisely the case
+// body would report tx_begin_ms=0 with no failing phase for precisely the case
 // this instrumentation exists to catch.
-func TestCreateServerReportsPoolWaitWhenBeginNeverSucceeds(t *testing.T) {
+func TestCreateServerReportsBeginLatencyWhenBeginNeverSucceeds(t *testing.T) {
 	logs := capturePublishLogs(t)
 	const beginDelay = 150 * time.Millisecond
 	db := &failingBeginDB{beginDelay: beginDelay, beginErr: context.DeadlineExceeded}
@@ -232,11 +232,11 @@ func TestCreateServerReportsPoolWaitWhenBeginNeverSucceeds(t *testing.T) {
 	require.Error(t, err)
 
 	out := logs()
-	poolWaitMs, ok := phaseValueFromLog(t, out, "pool_wait_ms")
-	require.True(t, ok, "the publish log must report pool_wait_ms")
-	assert.GreaterOrEqual(t, poolWaitMs, beginDelay.Milliseconds(),
+	txBeginMs, ok := phaseValueFromLog(t, out, "tx_begin_ms")
+	require.True(t, ok, "the publish log must report tx_begin_ms")
+	assert.GreaterOrEqual(t, txBeginMs, beginDelay.Milliseconds(),
 		"the wait before Begin failed must still be reported, otherwise the worst starvation logs as zero")
-	assert.Contains(t, out, "failed_phase="+phasePoolBegin,
+	assert.Contains(t, out, "failed_phase="+phaseTxBegin,
 		"a publish that never got a connection must be attributed to acquiring one, not to an empty phase")
 }
 
@@ -324,4 +324,43 @@ func TestCreateServerLogsUnknownAPIVersionWhenUntagged(t *testing.T) {
 
 	assert.Contains(t, logs(), "api_version=unknown",
 		"an untagged context should report unknown rather than an empty value")
+}
+
+// commitFailureDB runs the transaction body successfully and then fails the
+// commit, the way PostgreSQL.InTransaction behaves when tx.Commit errors after
+// the callback returned nil.
+type commitFailureDB struct {
+	slowBeginDB
+	commitErr error
+}
+
+func (d *commitFailureDB) InTransaction(ctx context.Context, fn func(ctx context.Context, tx pgx.Tx) error) error {
+	d.transactions++
+	if err := fn(ctx, nil); err != nil {
+		return err
+	}
+	return d.commitErr
+}
+
+// Every timed phase can succeed and the publish still fail, because the commit
+// happens after the transaction body returns and is not one of the phases. That
+// left the outer logger reporting a failure with no phase attached — the same
+// unattributed-failure gap as a failed Begin, at the other end of the transaction.
+func TestCreateServerAttributesACommitFailure(t *testing.T) {
+	logs := capturePublishLogs(t)
+	db := &commitFailureDB{commitErr: errors.New("failed to commit transaction: connection reset by peer")}
+	svc := NewRegistryService(db, &config.Config{EnableRegistryValidation: false})
+
+	_, err := svc.CreateServer(context.Background(), &apiv0.ServerJSON{
+		Name:        "io.github.example/commit-failure",
+		Description: "server used to assert a commit failure is attributed",
+		Version:     "1.0.0",
+	})
+	require.Error(t, err)
+
+	out := logs()
+	assert.Contains(t, out, "failed_phase="+phaseCommit,
+		"a publish that failed only at commit must name the commit phase")
+	assert.NotContains(t, out, `failed_phase=""`,
+		"the log must never report a failure with no phase attached")
 }
