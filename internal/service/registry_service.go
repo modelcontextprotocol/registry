@@ -19,36 +19,43 @@ import (
 const maxServerVersionsPerServer = 10000
 
 // Publish phase names emitted on the structured "publish complete"/"publish failed"
-// log. validate and pool_begin happen in CreateServer, before or while acquiring the
+// log. validate and tx_begin happen in CreateServer, before or while starting the
 // transaction; the rest inside createServerInTransaction. Constants because
 // version_checks is reported from multiple branches.
 const (
 	phaseValidate           = "validate"
-	phasePoolBegin          = "pool_begin"
+	phaseTxBegin            = "tx_begin"
 	phaseAcquireLock        = "acquire_lock"
 	phaseValidateRemoteURLs = "validate_remote_urls"
 	phaseVersionChecks      = "version_checks"
 	phaseUnmarkLatest       = "unmark_latest"
 	phaseDBCreate           = "db_create"
+	phaseCommit             = "commit"
 )
 
 // publishTimings accumulates the per-phase durations reported on the single
 // structured "publish complete"/"publish failed" event emitted per publish.
 //
-// CreateServer records the phases that run before the transaction opens
-// (validate) plus the wait for a pool connection; createServerInTransaction
-// records the phases inside it. Splitting it that way is deliberate: the previous
-// shape started its clock after pool.Begin had already returned, so a publish
-// that spent 40s waiting for a free connection logged total_ms=200 and looked
-// healthy. That is why the HTTP histogram and these logs disagreed — over 7 days
-// the histogram saw 17 publishes above 10s while no logged publish exceeded 6.5s.
-// pool_wait_ms is the missing time.
+// CreateServer records the phases that run before the transaction body starts
+// (validate, tx_begin); createServerInTransaction records the phases inside it.
+// Splitting it that way is deliberate: the previous shape started its clock after
+// pool.Begin had already returned, so a publish that spent 40s getting a
+// connection logged total_ms=200 and looked healthy. That is why the HTTP
+// histogram and these logs disagreed — over 7 days the histogram saw 17 publishes
+// above 10s while no logged publish exceeded 6.5s.
+//
+// tx_begin_ms is that missing time, but note what it covers: pgxpool's Begin both
+// acquires a pooled connection and issues BEGIN over the wire, so this figure is
+// acquisition *plus* one database round-trip. BEGIN is normally sub-millisecond,
+// so a large value still points at acquisition — but it is not proof on its own,
+// and a slow database or network inflates it too. Isolating the two would mean
+// timing pool.Acquire inside the database layer.
 //
 // total_ms covers the whole CreateServer call, so any time not accounted for by
 // the named phases is transaction commit plus overhead.
 type publishTimings struct {
 	validateMs      int64
-	poolWaitMs      int64
+	txBeginMs       int64
 	lockMs          int64
 	remotesMs       int64
 	versionChecksMs int64
@@ -77,7 +84,7 @@ func (t *publishTimings) log(ctx context.Context, serverJSON apiv0.ServerJSON, t
 		"api_version", apiVersionFromContext(ctx),
 		"total_ms", totalMs,
 		"validate_ms", t.validateMs,
-		"pool_wait_ms", t.poolWaitMs,
+		"tx_begin_ms", t.txBeginMs,
 		"lock_ms", t.lockMs,
 		"remotes_ms", t.remotesMs,
 		"version_checks_ms", t.versionChecksMs,
@@ -200,22 +207,29 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 
 	// Everything from here needs the database. InTransaction calls pool.Begin
 	// before invoking this callback, so the gap between these two timestamps is
-	// exactly how long the publish waited for a free connection.
+	// how long it took to get a transaction started — connection acquisition plus
+	// the BEGIN round-trip. See the note on publishTimings.
 	beforeBegin := time.Now()
 	gotConnection := false
 	resp, err = database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
 		gotConnection = true
-		timings.poolWaitMs = time.Since(beforeBegin).Milliseconds()
+		timings.txBeginMs = time.Since(beforeBegin).Milliseconds()
 		return s.createServerInTransaction(ctx, tx, req, timings)
 	})
-	if !gotConnection {
-		// Begin never handed us a connection, so the callback above did not run and
-		// no phase inside the transaction was reached. This is the shape the worst
-		// starvation takes — Begin blocking until the context deadline — so record
-		// the whole elapsed wait and name the phase, rather than reporting zero
-		// against an empty phase for the exact case this instrumentation targets.
-		timings.poolWaitMs = time.Since(beforeBegin).Milliseconds()
-		timings.failedPhase = phasePoolBegin
+	switch {
+	case !gotConnection:
+		// Begin never handed us a transaction, so the callback above did not run and
+		// no phase inside it was reached. This is the shape the worst starvation
+		// takes — Begin blocking until the context deadline — so record the whole
+		// elapsed time and name the phase, rather than reporting zero against an
+		// empty phase for the exact case this instrumentation targets.
+		timings.txBeginMs = time.Since(beforeBegin).Milliseconds()
+		timings.failedPhase = phaseTxBegin
+	case err != nil && timings.failedPhase == "":
+		// Every timed phase succeeded but InTransaction still failed, which leaves
+		// only the commit: it runs after the callback returns and is not one of the
+		// phases. Without this the log would report a failure with no phase at all.
+		timings.failedPhase = phaseCommit
 	}
 	return resp, err
 }
@@ -424,7 +438,9 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	// GetServerByNameAndVersion read above, so moving validation out needs a
 	// second read before the transaction and a decision about the race in whether
 	// to skip. Left as-is because the edit path carries a small fraction of
-	// publish traffic; revisit if it shows up in pool_wait_ms.
+	// publish traffic. Note it emits no phase log of its own, so there is no
+	// tx_begin_ms to watch here — use mcp_registry_http_request_duration for the
+	// edit routes if this needs revisiting.
 	if err := validators.ValidateUpdateRequest(ctx, *req, s.cfg, skipRegistryValidation); err != nil {
 		return nil, err
 	}
