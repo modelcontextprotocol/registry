@@ -27,6 +27,15 @@ New fields added to `_meta["io.modelcontextprotocol.registry/official"]` (Regist
 - `statusChangedAt` - Timestamp when the server status was last changed
 - `statusMessage` - Optional message explaining status change (e.g., deprecation reason, migration guidance)
 
+#### Search matches the description
+
+`GET /v0/servers?search=` now matches a server's `description` as well as its name; a term found in
+either field returns the server. Previously only the name was matched, so a server whose name is a
+product name rather than a category name could not be found by its own subject.
+
+This widens what an existing query returns — a search that matched nothing but names before may now
+return additional servers.
+
 #### Server Filtering Enhancements
 
 New `include_deleted` query parameter added to multiple endpoints:

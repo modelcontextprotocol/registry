@@ -41,6 +41,16 @@ func TestListServersEndpoint(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// Its subject appears only in the description, never in a name — the case
+	// that returned nothing before search covered the description.
+	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/server-gamma",
+		Description: "Weather forecasts for pilots",
+		Version:     "1.0.0",
+	})
+	require.NoError(t, err)
+
 	// Create API
 	mux := http.NewServeMux()
 	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
@@ -57,7 +67,7 @@ func TestListServersEndpoint(t *testing.T) {
 			name:           "list all servers",
 			queryParams:    "",
 			expectedStatus: http.StatusOK,
-			expectedCount:  2,
+			expectedCount:  3,
 		},
 		{
 			name:           "list with limit",
@@ -66,8 +76,14 @@ func TestListServersEndpoint(t *testing.T) {
 			expectedCount:  1,
 		},
 		{
-			name:           "search servers",
+			name:           "search servers by name",
 			queryParams:    "?search=alpha",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+		},
+		{
+			name:           "search servers by description",
+			queryParams:    "?search=weather",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 		},
@@ -75,7 +91,7 @@ func TestListServersEndpoint(t *testing.T) {
 			name:           "filter latest only",
 			queryParams:    "?version=latest",
 			expectedStatus: http.StatusOK,
-			expectedCount:  2,
+			expectedCount:  3,
 		},
 		{
 			name:           "invalid limit",
