@@ -28,6 +28,9 @@ func PublishCommand(args []string) error {
 		}
 		return fmt.Errorf("failed to read server.json: %w", err)
 	}
+	if err := validateJSONUnicode(serverFile, serverData); err != nil {
+		return err
+	}
 
 	// Validate JSON
 	var serverJSON apiv0.ServerJSON
@@ -99,6 +102,10 @@ func PublishCommand(args []string) error {
 }
 
 func publishToRegistry(registryURL string, serverData []byte, token string) (*apiv0.ServerResponse, int, error) {
+	if err := validateJSONUnicode("server.json", serverData); err != nil {
+		return nil, 0, err
+	}
+
 	// Parse the server JSON data
 	var serverJSON apiv0.ServerJSON
 	err := json.Unmarshal(serverData, &serverJSON)

@@ -64,8 +64,8 @@ func (d Signer) GetSignedTimestamp(ctx context.Context) (*string, []byte, error)
 	fmt.Fprintln(os.Stdout, "Successfully read the public key from Key Vault.")
 	auth.PrintEcdsaP384KeyInfo(ecdsa.PublicKey{
 		Curve: elliptic.P384(),
-		X:     new(big.Int).SetBytes(keyResp.Key.X),
-		Y:     new(big.Int).SetBytes(keyResp.Key.Y),
+		X:     new(big.Int).SetBytes(keyResp.Key.X), //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
+		Y:     new(big.Int).SetBytes(keyResp.Key.Y), //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 	})
 
 	timestamp := auth.GetTimestamp()

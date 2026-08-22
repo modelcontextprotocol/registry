@@ -1,5 +1,26 @@
 # MCP Registry Technical Architecture
 
+> [!WARNING]
+> **This document has drifted from the shipped system and is kept as a design record.**
+> For the architecture as deployed, see [deploy/README.md](../../deploy/README.md); for the API as
+> implemented, see the [API reference](../reference/api/official-registry-api.md).
+>
+> Known inaccuracies below, as of 2026-08-10:
+> - The registry is not deployed via a Helm chart. It is a plain Kubernetes `Deployment` created by
+>   Pulumi; Helm is used only for third-party components (ingress-nginx, cert-manager,
+>   cloudnative-pg, k8up, monitoring).
+> - The database diagram shows a `StatefulSet` on port `27017` (MongoDB). The database is PostgreSQL
+>   on `5432`, provisioned by the CloudNativePG operator.
+> - The DNS verification sequence (`mcp verify-domain`, `POST /verify-domain`,
+>   `POST /verify-domain/check`, server-issued challenge tokens) describes a design that was never
+>   built. The shipped flow signs a timestamp with the operator's key and posts it to
+>   `POST /v0/auth/dns`, with the public key published in a `v=MCPv1; k=...; p=...` TXT record.
+> - No `/admin/*` routes exist. Admin actions use the regular server endpoints with an
+>   admin-permissioned token.
+> - The CLI is `mcp-publisher`, not `mcp`, and publishing posts to `/v0/publish`.
+> - The database stores servers and server extensions only; it holds no user authentication state
+>   and no DNS verification records.
+
 This document describes the technical architecture of the MCP Registry, including system components, deployment strategies, and data flows.
 
 ## System Overview

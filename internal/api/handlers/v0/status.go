@@ -83,9 +83,9 @@ func RegisterStatusEndpoints(api huma.API, pathPrefix string, registry service.R
 		Path:        pathPrefix + "/servers/{serverName}/versions/{version}/status",
 		Summary:     "Update MCP server status",
 		Description: "Update the status metadata of a specific version of an MCP server. Requires publish or edit permission for the server. This endpoint allows changing status and status message without requiring the full server configuration.",
-		Tags:        []string{"servers"},
+		Tags:        []string{tagServers},
 		Security: []map[string][]string{
-			{"bearer": {}},
+			{securitySchemeBearer: {}},
 		},
 	}, func(ctx context.Context, input *UpdateServerStatusInput) (*Response[apiv0.ServerResponse], error) {
 		// Extract bearer token
@@ -198,9 +198,9 @@ func RegisterAllVersionsStatusEndpoints(api huma.API, pathPrefix string, registr
 		Path:        pathPrefix + "/servers/{serverName}/status",
 		Summary:     "Update status for all versions of an MCP server",
 		Description: "Update the status metadata of all versions of an MCP server in a single transaction. Requires publish or edit permission for the server. Either all versions are updated or none on failure.",
-		Tags:        []string{"servers"},
+		Tags:        []string{tagServers},
 		Security: []map[string][]string{
-			{"bearer": {}},
+			{securitySchemeBearer: {}},
 		},
 	}, func(ctx context.Context, input *UpdateAllVersionsStatusInput) (*Response[UpdateAllVersionsStatusResponse], error) {
 		// Extract bearer token

@@ -32,7 +32,8 @@ See the [README](README.md#quick-start) for prerequisites and instructions on ru
 ### Running checks
 
 ```bash
-# Run lint, unit tests and integration tests
+# Run lint, schema validation, and all tests
+# Note: this also runs `make dev-down`, stopping any running dev-compose environment
 make check
 ```
 
