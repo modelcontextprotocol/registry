@@ -180,6 +180,70 @@ A Rust-native MCP server for widget operations.
 
 **Cargo-specific gotcha:** Unlike PyPI and NuGet (which preserve HTML comments in their README rendering), **crates.io strips HTML comments during markdown→HTML conversion**. The `<!-- mcp-name: ... -->` hidden-comment form that works for PyPI/NuGet **does not work for cargo** — the token will not appear in the rendered HTML the validator inspects. Cargo authors must include the `mcp-name:` token as visible markdown text. A simple bullet in the Links section is the recommended pattern.
 
+## RubyGems (Ruby) Packages
+
+For RubyGems packages, the MCP Registry currently supports the official rubygems.org registry (`https://rubygems.org`) only.
+
+RubyGems packages use `"registryType": "rubygems"` in `server.json`. For example:
+
+```json server.json highlight={9}
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.username/widget-mcp",
+  "title": "Widget",
+  "description": "Ruby-native MCP server",
+  "version": "1.2.3",
+  "packages": [
+    {
+      "registryType": "rubygems",
+      "identifier": "widget-mcp",
+      "version": "1.2.3",
+      "runtimeHint": "gem",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
+### Runtime Model
+
+RubyGems has a single-shot runner: `gem exec`, which ships with RubyGems 3.4.8+ (bundled with Ruby 3.2.2 and later). MCP clients should invoke RubyGems-based servers as:
+
+```
+gem exec --silent --conservative --gem <identifier> -v <version> <command> [args]
+```
+
+Use the package `identifier` as `<command>`. `gem exec` runs the gem's executable of that name, or the gem's only executable when it is named differently. A gem with several executables, none named after the gem, cannot be started this way, so name the server's executable after the gem.
+
+Both flags matter:
+
+- `--silent` keeps RubyGems output (such as first-run install progress) off stdout. Without it, install output corrupts the stdio transport's JSON-RPC handshake. `--quiet` is not enough: it still prints "Building native extensions" to stdout. Note that `--silent` also hides RubyGems errors: a missing gem or version exits non-zero with nothing on stderr, so rerun without it to diagnose a failed start.
+- `--conservative` uses an already-installed matching version and runs fully offline; without it, every invocation performs remote dependency resolution against rubygems.org and fails when offline.
+
+Options must precede the command token; everything after it is passed to the server. Do not insert `--` before the command: the `gem` CLI treats what follows `--` as build arguments, so `gem exec` fails with "Please specify an executable to run". The example above sets `"runtimeHint": "gem"` accordingly.
+
+Two behaviors to be aware of:
+
+- Since RubyGems 3.5.19, `gem exec` installs the gem and its dependencies into the user's regular `GEM_HOME`. There is no isolated store, and RubyGems provides no cleanup mechanism for these installs.
+- A pre-existing Ruby >= 3.2.2 is required (or an older Ruby whose RubyGems has been updated to 3.4.8+). Unlike `npx` (Node.js bundles npm) or `uvx` (uv can provision Python), there is no mechanism to provision Ruby itself.
+
+### Ownership Verification
+
+The MCP Registry verifies ownership of RubyGems packages by checking the gemspec metadata for an `mcp_name` entry. Its value **MUST** match the server name from `server.json`. Add one line to your gemspec and publish:
+
+```ruby widget-mcp.gemspec highlight={5}
+Gem::Specification.new do |spec|
+  spec.name    = "widget-mcp"
+  spec.version = "1.2.3"
+
+  spec.metadata["mcp_name"] = "io.github.username/widget-mcp"
+end
+```
+
+The registry reads this from the rubygems.org version API (`/api/v2/rubygems/{name}/versions/{version}.json`), so no README changes are needed. If a version is published for several platforms, set `mcp_name` in every platform build: rubygems.org chooses which build that API returns. The README-token approach used for PyPI, NuGet, and cargo is not applicable to RubyGems: rubygems.org has no README API, and gemspec metadata is the first-class, author-controlled field for this kind of information.
+
 ## Docker/OCI Images
 
 For Docker/OCI images, the MCP Registry currently supports:
