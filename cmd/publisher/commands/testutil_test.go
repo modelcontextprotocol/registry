@@ -95,9 +95,7 @@ func SetupTestToken(t *testing.T, registryURL, token string) string {
 func CreateTestServerJSON(t *testing.T, serverJSON apiv0.ServerJSON) (string, string) {
 	t.Helper()
 
-	tempDir, err := os.MkdirTemp("", "mcp-publisher-test")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tempDir) })
+	tempDir := t.TempDir()
 
 	jsonData, err := json.MarshalIndent(serverJSON, "", "  ")
 	require.NoError(t, err)
