@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -64,6 +67,9 @@ func InitCommand() error {
 		model.CurrentSchemaURL, name, description, version, repoURL, repoSource, subfolder,
 		packageType, packageIdentifier, version, envVars,
 	)
+	if server.Repository != nil {
+		server.Repository.ID = detectRepoID(repoSource, repoURL)
+	}
 
 	// Write to file
 	jsonData, err := json.MarshalIndent(server, "", "  ")
@@ -245,6 +251,83 @@ func buildGitHubServerName(repoURL, subfolder string) string {
 	}
 
 	return fmt.Sprintf("io.github.%s/%s", owner, repo)
+}
+
+// githubAPIBaseURL is a variable so the tests can point it at a stub server.
+var githubAPIBaseURL = "https://api.github.com"
+
+// parseGitHubOwnerRepo pulls owner/repo out of a github.com web URL, which is
+// the only shape `detectRepoURL` produces for GitHub (it rewrites the SSH form
+// and strips `.git`). Anything else — a different host, a bare path, a URL with
+// extra segments — returns ok=false rather than a guess.
+func parseGitHubOwnerRepo(repoURL string) (owner, repo string, ok bool) {
+	u, err := url.Parse(repoURL)
+	if err != nil {
+		return "", "", false
+	}
+	if strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.") != "github.com" {
+		return "", "", false
+	}
+	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", false
+	}
+	return parts[0], strings.TrimSuffix(parts[1], ".git"), true
+}
+
+// detectRepoID resolves the forge's own identifier for the repository, which
+// `repository.id` exists to carry.
+//
+// A URL is not a stable pointer: renaming or transferring a GitHub repo leaves
+// the registered `repository.url` resolving only through GitHub's redirect,
+// which the REST API follows but GraphQL does not, so the source link rots for
+// consumers. The numeric ID does not move (#1484). Recording it at init time
+// costs one request and makes the entry re-resolvable later even if the URL has
+// gone stale.
+//
+// Deliberately best effort: `init` is otherwise fully offline, so being off the
+// network, rate limited, or pointed at a private repo leaves the field empty
+// instead of failing the command. `GITHUB_TOKEN` is used when present, mostly
+// so a rate-limited developer still gets the ID.
+func detectRepoID(repoSource, repoURL string) string {
+	if repoSource != MethodGitHub {
+		return ""
+	}
+	owner, repo, ok := parseGitHubOwnerRepo(repoURL)
+	if !ok {
+		return ""
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(
+		ctx, http.MethodGet,
+		fmt.Sprintf("%s/repos/%s/%s", githubAPIBaseURL, owner, repo), nil,
+	)
+	if err != nil {
+		return ""
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return ""
+	}
+
+	var body struct {
+		ID int64 `json:"id"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil || body.ID == 0 {
+		return ""
+	}
+	return strconv.FormatInt(body.ID, 10)
 }
 
 func detectDescription() string {
