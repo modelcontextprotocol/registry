@@ -82,6 +82,12 @@ A client MUST NOT surface a `clean` claim for a receipt unless both of the follo
 
 Because `scan_scope` records only the surfaces that were actually checked, a `clean` receipt that omits a surface (for example a `["dependency", "package"]` receipt that never assessed `handler-validation`) MUST NOT be presented as a global clean badge; the displayed claim names the covered scope, and the unassessed surface stays representable as `inconclusive` with `inconclusive_reason: "scope_excludes_handler_validation"` rather than collapsing into `clean`.
 
+#### Scope boundary: name custody
+
+`scan_scope` records surfaces internal to a fixed artifact — for example `dependency`, `package`, or `handler-validation`. It does not, and cannot, cover who controls the *name* the artifact is published under. A receipt bound to `scanned_artifact_digest` `D` stays joinable, with `verdict: "clean"` and `freshness_expires_at` still in the future, through events that leave those bytes byte-identical while changing custody of the name: an ownership transfer to a different maintainer set, removal or relocation of the source repository, an unpublish that frees a name carrying accumulated installs, or a removed name republished by a different party. Registry-population measurement motivates this boundary rather than asserting it: a substantial share of ownership and source-control changes arrive with no same-day artifact publish, so a digest-bound `clean` receipt keeps matching after custody has already moved.
+
+Custody is therefore a distinct axis, not a surface a scanner assesses, so it is not modelled as a `scan_scope` value or an `inconclusive_reason` in this version. A client MUST NOT infer any guarantee about name custody, ownership continuity, or source-link availability from a content-scoped receipt; those properties, if surfaced at all, belong to a separate event-stream signal with its own publisher rather than to a point-in-time receipt.
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->
