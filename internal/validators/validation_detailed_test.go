@@ -163,6 +163,12 @@ func TestValidateServerJSON_ContextPaths(t *testing.T) {
 						Type: model.ArgumentTypeNamed,
 						Name: "invalid name", // Error in second package's argument
 					},
+					{
+						Type: "", // Error: argument type outside the enum
+					},
+					{
+						Type: model.ArgumentTypePositional, // Error: positional without value or valueHint
+					},
 				},
 			},
 		},
@@ -180,6 +186,16 @@ func TestValidateServerJSON_ContextPaths(t *testing.T) {
 	// Should have issues at specific nested paths
 	assert.True(t, issuePaths["packages[0].version"], "Should have issue at packages[0].version")
 	assert.True(t, issuePaths["packages[1].runtimeArguments[0].name"], "Should have issue at packages[1].runtimeArguments[0].name")
+	assert.True(t, issuePaths["packages[1].runtimeArguments[1].type"], "Should have issue at packages[1].runtimeArguments[1].type")
+	assert.True(t, issuePaths["packages[1].runtimeArguments[2]"], "Should have issue at packages[1].runtimeArguments[2]")
+
+	// Pin the API-visible references for the argument checks
+	issueRefs := make(map[string]string)
+	for _, issue := range result.Issues {
+		issueRefs[issue.Path] = issue.Reference
+	}
+	assert.Equal(t, "invalid-argument-type", issueRefs["packages[1].runtimeArguments[1].type"])
+	assert.Equal(t, "positional-argument-value-or-hint-required", issueRefs["packages[1].runtimeArguments[2]"])
 }
 
 func TestValidateServerJSON_RefResolution(t *testing.T) {
