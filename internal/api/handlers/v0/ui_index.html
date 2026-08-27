@@ -288,6 +288,7 @@
                 header.onclick = () => toggleDetails(card, item);
                 header.innerHTML = `
                     <div class="flex items-start justify-between gap-3 mb-2">
+                        ${renderIcon(server)}
                         <h3 class="font-semibold text-gray-900 text-base flex-1 min-w-0 break-all">${escapeHtml(server.name)}</h3>
                         <span class="text-xs text-gray-500 font-medium whitespace-nowrap">v${escapeHtml(server.version)}</span>
                     </div>
@@ -353,6 +354,7 @@
                 header.onclick = () => toggleDetails(card, item);
                 header.innerHTML = `
                     <div class="flex items-start justify-between gap-3 mb-2">
+                        ${renderIcon(server)}
                         <h3 class="font-semibold text-gray-900 text-base flex-1 min-w-0">${escapeHtml(server.name)}</h3>
                         <span class="text-xs text-gray-500 font-medium whitespace-nowrap">v${escapeHtml(server.version)}</span>
                     </div>
@@ -509,6 +511,58 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        // Icons are optional and come from `server.icons` in server.json.
+        // The publish API already rejects non-HTTPS icon sources, but this UI can
+        // be pointed at a staging, local or custom API base URL, so the scheme is
+        // re-checked here rather than trusted.
+        function isSafeIconSrc(src) {
+            if (typeof src !== 'string') return false;
+            try {
+                return new URL(src, window.location.href).protocol === 'https:';
+            } catch {
+                return false;
+            }
+        }
+
+        // Smallest icon at least as large as the rendered size, so it stays crisp
+        // without pulling a needlessly large file. Scalable icons win outright.
+        // `theme: 'dark'` means "for a dark background"; this UI is light, so those
+        // are used only when nothing else is available.
+        const ICON_RENDER_PX = 40;
+
+        function iconScore(icon) {
+            const sizes = Array.isArray(icon.sizes) ? icon.sizes : [];
+            if (sizes.includes('any')) return 0;
+            const widths = sizes
+                .map((s) => parseInt(String(s).split('x')[0], 10))
+                .filter((n) => Number.isFinite(n) && n > 0);
+            if (!widths.length) return ICON_RENDER_PX * 100;
+            const atLeast = widths.filter((w) => w >= ICON_RENDER_PX);
+            return atLeast.length
+                ? Math.min(...atLeast)
+                : ICON_RENDER_PX * 100 + (ICON_RENDER_PX - Math.max(...widths));
+        }
+
+        function pickIcon(server) {
+            const icons = Array.isArray(server?.icons) ? server.icons : [];
+            const usable = icons.filter((i) => i && isSafeIconSrc(i.src));
+            if (!usable.length) return null;
+            const preferred = usable.filter((i) => i.theme !== 'dark');
+            const pool = preferred.length ? preferred : usable;
+            return pool.reduce((best, i) => (iconScore(i) < iconScore(best) ? i : best));
+        }
+
+        // alt is intentionally empty: the icon sits beside the server name, so
+        // announcing it again is noise for screen readers. A broken or blocked
+        // image removes itself rather than leaving a placeholder in the layout.
+        function renderIcon(server) {
+            const icon = pickIcon(server);
+            if (!icon) return '';
+            return `<img src="${escapeAttr(icon.src)}" alt=""
+                    class="w-10 h-10 rounded flex-shrink-0 object-contain bg-white border border-gray-200"
+                    loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`;
         }
 
         function formatDate(dateStr) {
