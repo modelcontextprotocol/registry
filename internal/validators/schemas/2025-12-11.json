@@ -239,6 +239,7 @@
           "examples": [
             "https://registry.npmjs.org",
             "https://pypi.org",
+            "https://crates.io",
             "https://docker.io",
             "https://api.nuget.org/v3/index.json",
             "https://github.com",
@@ -252,6 +253,7 @@
           "examples": [
             "npm",
             "pypi",
+            "cargo",
             "oci",
             "nuget",
             "mcpb"

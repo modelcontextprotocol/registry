@@ -109,7 +109,17 @@ The `GET /v0.1/servers/{serverName}/versions` endpoint returns all versions of a
 
 **Authentication:** Requires `publish` or `edit` permission for the server namespace.
 
+#### Validation endpoint
+- POST `/v0.1/validate` - Validate a `server.json` without publishing it. Used by `mcp-publisher validate`.
+
+#### Service endpoints
+- GET `/v0.1/ping` - Liveness check
+- GET `/v0.1/version` - Registry version information
+
 #### Admin endpoints
 - GET `/metrics` - Prometheus metrics endpoint
 - GET `/v0.1/health` - Basic health check endpoint
 - PUT `/v0.1/servers/{serverName}/versions/{version}` - Edit specific server version
+
+Note that `/v0.1/validate`, `/v0.1/ping`, `/v0.1/version` and `/v0.1/health` are not described in
+[openapi.yaml](./openapi.yaml), which covers the server and publish endpoints only.

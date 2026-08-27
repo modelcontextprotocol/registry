@@ -11,8 +11,8 @@ The MCP registry provides MCP clients with a list of MCP servers, like an app st
 **2025-09-08 update**: The registry has launched in preview 🎉 ([announcement blog post](https://blog.modelcontextprotocol.io/posts/2025-09-08-mcp-registry-preview/)). While the system is now more stable, this is still a preview release and breaking changes or data resets may occur. A general availability (GA) release will follow later. We'd love your feedback in [GitHub discussions](https://github.com/modelcontextprotocol/registry/discussions/new?category=ideas) or in the [#registry-dev Discord](https://discord.com/channels/1358869848138059966/1369487942862504016) ([joining details here](https://modelcontextprotocol.io/community/communication)).
 
 Registry Working Group:
+- **Radoslav (Rado) Dimitrov** (Stacklok) [@rdimitrov](https://github.com/rdimitrov) - WG Lead
 - **Tadas Antanavicius** (PulseMCP) [@tadasant](https://github.com/tadasant)
-- **Radoslav (Rado) Dimitrov** (Stacklok) [@rdimitrov](https://github.com/rdimitrov)
 - **Bob Dickinson** (TeamSpark) [@BobDickinson](https://github.com/BobDickinson)
 - **Preeti (Pree) Dewani** (Ravenmail) [@pree-dew](https://github.com/pree-dew)
 
@@ -32,9 +32,9 @@ Often (but not always) ideas flow through this pipeline:
 #### Pre-requisites
 
 - **Docker**
-- **Go 1.24.x**
+- **Go** - version per the `go` directive in [go.mod](./go.mod); the Go toolchain fetches it for you
 - **ko** - Container image builder for Go ([installation instructions](https://ko.build/install/))
-- **golangci-lint v2.4.0**
+- **golangci-lint** - version per the `golangci-lint-action` pin in [ci.yml](./.github/workflows/ci.yml), so local lint matches CI
 
 #### Running the server
 
@@ -94,7 +94,8 @@ See [the publisher guide](./docs/modelcontextprotocol-io/quickstart.mdx) for mor
 #### Other commands
 
 ```bash
-# Run lint, unit tests and integration tests
+# Run lint, schema validation, and all tests
+# Note: this also runs `make dev-down`, stopping any running dev-compose environment
 make check
 ```
 
@@ -110,7 +111,8 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 
 ```
 ├── cmd/                     # Application entry points
-│   └── publisher/           # Server publishing tool
+│   ├── publisher/           # Server publishing tool
+│   └── registry/            # Registry API server
 ├── data/                    # Seed data
 ├── deploy/                  # Deployment configuration (Pulumi)
 ├── docs/                    # Documentation
@@ -119,6 +121,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   ├── auth/                # Authentication (GitHub OAuth, JWT, namespace blocking)
 │   ├── config/              # Configuration management
 │   ├── database/            # Data persistence (PostgreSQL)
+│   ├── importer/            # Seed data import
 │   ├── service/             # Business logic
 │   ├── telemetry/           # Metrics and monitoring
 │   └── validators/          # Input validation

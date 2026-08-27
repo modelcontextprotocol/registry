@@ -174,7 +174,7 @@ mcp-publisher login dns --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
 MY_DOMAIN="example.com"
 
 PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')"
-mcp-publisher login dns --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
+mcp-publisher login dns --algorithm ecdsap384 --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
 ```
 
 ```bash Google KMS
@@ -298,7 +298,7 @@ mcp-publisher login http --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
 ```bash ECDSA P-384
 MY_DOMAIN="example.com"
 PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')"
-mcp-publisher login http --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
+mcp-publisher login http --algorithm ecdsap384 --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
 ```
 
 ```bash Google KMS
