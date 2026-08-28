@@ -3,9 +3,11 @@ package commands
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseGitHubOwnerRepo(t *testing.T) {
@@ -53,25 +55,46 @@ func TestDetectRepoID(t *testing.T) {
 		githubAPIBaseURL = srv.URL
 		defer func() { githubAPIBaseURL = originalBaseURL }()
 
-		assert.Equal(t, "123456789", detectRepoID(MethodGitHub, "https://github.com/acme/weather"))
+		id, err := detectRepoID(MethodGitHub, "https://github.com/acme/weather")
+		require.NoError(t, err)
+		assert.Equal(t, "123456789", id)
 		assert.Equal(t, "/repos/acme/weather", gotPath)
 	})
 
 	t.Run("stays empty rather than failing init when the lookup does not work", func(t *testing.T) {
-		srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			w.WriteHeader(http.StatusNotFound)
-		}))
-		defer srv.Close()
-		t.Setenv("GITHUB_TOKEN", "")
+		// A failed lookup leaves the field empty, but it reports why, so init can
+		// say so on stderr instead of silently producing a GitHub entry that
+		// serializes exactly like a non-GitHub one.
+		for _, status := range []int{http.StatusNotFound, http.StatusForbidden} {
+			t.Run(http.StatusText(status), func(t *testing.T) {
+				srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					w.WriteHeader(status)
+				}))
+				defer srv.Close()
+				t.Setenv("GITHUB_TOKEN", "")
 
-		originalBaseURL := githubAPIBaseURL
-		githubAPIBaseURL = srv.URL
-		defer func() { githubAPIBaseURL = originalBaseURL }()
+				originalBaseURL := githubAPIBaseURL
+				githubAPIBaseURL = srv.URL
+				defer func() { githubAPIBaseURL = originalBaseURL }()
 
-		// 404 / private / rate limited.
-		assert.Empty(t, detectRepoID(MethodGitHub, "https://github.com/acme/weather"))
-		// Non-GitHub sources are never looked up, so no request is made at all.
-		assert.Empty(t, detectRepoID("gitlab", "https://gitlab.com/acme/weather"))
-		assert.Empty(t, detectRepoID(MethodGitHub, ""))
+				// 404 is private or missing, 403 is rate limited.
+				id, err := detectRepoID(MethodGitHub, "https://github.com/acme/weather")
+				assert.Empty(t, id)
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), strconv.Itoa(status))
+			})
+		}
+
+		// Non-GitHub sources are never looked up, so no request is made at all —
+		// and the empty ID is correct there, so there is nothing to report.
+		id, err := detectRepoID("gitlab", "https://gitlab.com/acme/weather")
+		assert.Empty(t, id)
+		assert.NoError(t, err)
+
+		// A GitHub source we cannot even build a request for is still a GitHub
+		// entry that ended up without its ID.
+		id, err = detectRepoID(MethodGitHub, "")
+		assert.Empty(t, id)
+		assert.Error(t, err)
 	})
 }
