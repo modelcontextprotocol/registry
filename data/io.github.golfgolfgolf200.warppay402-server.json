@@ -1,0 +1,15 @@
+{
+  "$schema": "https://registry.modelcontextprotocol.io/schema/server.json",
+  "name": "io.github.golfgolfgolf200/warppay402-server",
+  "description": "Ultra-low-cost pay-per-use AI tools monetized via x402 USDC micropayments on Base Mainnet and Solana.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/golfgolfgolf200/warppay402-server"
+  },
+  "version": "1.0.0",
+  "transports": {
+    "sse": {
+      "url": "https://api.warppay402.com/mcp?v=2"
+    }
+  }
+}
