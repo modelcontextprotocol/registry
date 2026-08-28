@@ -68,7 +68,14 @@ func InitCommand() error {
 		packageType, packageIdentifier, version, envVars,
 	)
 	if server.Repository != nil {
-		server.Repository.ID = detectRepoID(repoSource, repoURL)
+		id, err := detectRepoID(repoSource, repoURL)
+		if err != nil {
+			// An empty `id` on a GitHub source is indistinguishable from a
+			// non-GitHub entry once serialized, so report the gap while there
+			// is still someone around to read it.
+			_, _ = fmt.Fprintf(os.Stderr, "warning: could not resolve repository.id (%v); publishing without it\n", err)
+		}
+		server.Repository.ID = id
 	}
 
 	// Write to file
@@ -289,13 +296,17 @@ func parseGitHubOwnerRepo(repoURL string) (owner, repo string, ok bool) {
 // network, rate limited, or pointed at a private repo leaves the field empty
 // instead of failing the command. `GITHUB_TOKEN` is used when present, mostly
 // so a rate-limited developer still gets the ID.
-func detectRepoID(repoSource, repoURL string) string {
+//
+// The returned error is why a GitHub lookup came back without an ID, for the
+// caller to warn about; a non-GitHub source has nothing to resolve, so it
+// returns an empty ID and no error.
+func detectRepoID(repoSource, repoURL string) (string, error) {
 	if repoSource != MethodGitHub {
-		return ""
+		return "", nil
 	}
 	owner, repo, ok := parseGitHubOwnerRepo(repoURL)
 	if !ok {
-		return ""
+		return "", fmt.Errorf("%q is not a github.com repository URL", repoURL)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -305,7 +316,7 @@ func detectRepoID(repoSource, repoURL string) string {
 		fmt.Sprintf("%s/repos/%s/%s", githubAPIBaseURL, owner, repo), nil,
 	)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
@@ -314,20 +325,23 @@ func detectRepoID(repoSource, repoURL string) string {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return ""
+		return "", err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return ""
+		return "", fmt.Errorf("GET /repos/%s/%s returned %s", owner, repo, resp.Status)
 	}
 
 	var body struct {
 		ID int64 `json:"id"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil || body.ID == 0 {
-		return ""
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return "", err
 	}
-	return strconv.FormatInt(body.ID, 10)
+	if body.ID == 0 {
+		return "", errors.New("response carried no repository id")
+	}
+	return strconv.FormatInt(body.ID, 10), nil
 }
 
 func detectDescription() string {
