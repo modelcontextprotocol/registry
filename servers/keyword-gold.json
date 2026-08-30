@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "ai_studio/keyword-steroids-gold",
+  "displayName": "keyword-steroids-gold \u2014 We Build Bridges",
+  "description": "Keyword Steroids Gold \u2014 HE gap finder: hl=iw gl=il suggest (free) + Related + PAA + Jaccard clustering + bsearch gap scan (region=il lang=he). Fork of chukhraiartur/seo-keyword-research-tool.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "keyword-steroids-gold",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
