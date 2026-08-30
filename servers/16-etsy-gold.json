@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "ai_studio/etsy-gold",
+  "displayName": "etsy-gold — We Build Bridges",
+  "description": "Etsy Gold — 18 seller-ops tools via Etsy OpenAPI v3: listings CRUD, variant bulk price/qty by SKU, receipts, A-F grade + whole-shop audit ranked worst-first, photo upload, shipping profiles, conversations read, tracking fulfillment, taxonomy finder, profit calculator, tag gap. BYOK ETSY_ACCESS_TOKEN + ETSY_SHOP_ID for your own shop. $29 once vs eRank $9.99/mo.",
+  "version": "1.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "etsy-gold",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
