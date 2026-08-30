@@ -1,0 +1,7 @@
+{
+  "name": "com.eqiqs.workplace-dynamics",
+  "version": "1.0.0",
+  "description": "EQIQs Workplace Dynamics & Psychometric Compatibility Scoring",
+  "transport": "http",
+  "url": "https://adgmsnwjynqkhawhioil.supabase.co/functions/v1/mcp-server"
+}
