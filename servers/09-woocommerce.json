@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "ai_studio/woocommerce-gold",
+  "displayName": "woocommerce-gold \u2014 We Build Bridges",
+  "description": "WooCommerce Gold \u2014 20 tools for Woo REST wc/v3 (products/orders/coupons/customers/reports) BYOK WC_STORE_URL + CONSUMER_KEY/SECRET. Reuse GeLi 236\u2605 31-tool shape.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "woocommerce-gold",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
