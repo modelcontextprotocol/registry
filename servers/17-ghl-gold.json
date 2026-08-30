@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "ai_studio/ghl-gold",
+  "displayName": "ghl-gold \u2014 We Build Bridges",
+  "description": "GoHighLevel Gold — 11 tools via official LeadConnector API v2: contacts bulk upsert/search, pipeline moves, conversations, calendar, bulk tags, custom fields, agency sub-account switcher, workflows, pipeline snapshots, workflow bulk enrollment, and conversation summaries.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "ghl-gold",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
