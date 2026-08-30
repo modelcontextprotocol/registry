@@ -155,5 +155,33 @@
         }
       }
     ]
+  },  ,
+  {
+    "name": "com.eqiqs.workplace-dynamics",
+    "description": "MCP server providing workplace dynamic scoring, team compatibility tools, and psychometric profile analytics.",
+    "repository": {
+      "url": "https://github.com",
+      "source": "github"
+    },
+    "version": "1.0.0",
+    "icons": [
+      {
+        "src": "https://eqiqs.com",
+        "mimeType": "image/x-icon",
+        "sizes": [
+          "32x32"
+        ]
+      }
+    ],
+    "packages": [
+      {
+        "registryType": "http",
+        "identifier": "eqiqs-mcp-server",
+        "version": "1.0.0",
+        "runtimeHint": "http",
+        "url": "https://supabase.co"
+      }
+    ]
   }
+
 ]
