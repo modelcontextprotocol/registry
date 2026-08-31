@@ -1,0 +1,10 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "name": "io.github.kilawattcloud/kilawatt-mcp-server",
+  "description": "Zero-quota GPU compute orchestration and dry-run node allocation for Kilawatt Cloud.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KilaWattCloud/kilawatt-mcp-server"
+  },
+  "website": "https://kilawattcloud.dev"
+}
