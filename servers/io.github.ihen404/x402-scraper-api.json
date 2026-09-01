@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ihen404/x402-scraper-api",
+  "title": "x402 Paywalled Web Scraper API",
+  "description": "Autonomous web scraper service protected by HTTP 402 USDC micropayments on Base.",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ihen404/x402-scraper-api"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "x402-scraper-api",
+      "version": "1.0.0"
+    }
+  ]
+}
