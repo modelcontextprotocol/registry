@@ -40,10 +40,25 @@ func TestIsValidRemoteURL_LoopbackAndPrivateAddresses(t *testing.T) {
 		{name: "IPv6 unique local address", url: "https://[fc00::1]/", valid: false},
 		{name: "IPv6 link-local unicast", url: "https://[fe80::1]/", valid: false},
 
+		// Case and trailing-dot variants - DNS is case-insensitive and the
+		// root dot is equivalent to its absence.
+		{name: "uppercase localhost", url: "https://LOCALHOST/", valid: false},
+		{name: "mixed-case localhost subdomain", url: "https://Foo.LOCALHOST/", valid: false},
+		{name: "localhost with trailing root dot", url: "https://localhost./", valid: false},
+
+		// Shared address space and non-unicast - not publicly routable
+		{name: "CGNAT 100.64.0.0/10", url: "https://100.64.0.1/", valid: false},
+		{name: "CGNAT upper range", url: "https://100.127.255.255/", valid: false},
+		{name: "IPv4 multicast", url: "https://224.0.0.1/", valid: false},
+		{name: "IPv4 broadcast", url: "https://255.255.255.255/", valid: false},
+		{name: "IPv6 link-local multicast", url: "https://[ff02::1]/", valid: false},
+
 		// Sanity checks - must not overblock legitimate remotes
 		{name: "public hostname", url: "https://example.com/mcp", valid: true},
 		{name: "public IPv4 address", url: "https://8.8.8.8/mcp", valid: true},
 		{name: "public IPv6 address", url: "https://[2001:4860:4860::8888]/mcp", valid: true},
+		{name: "just below CGNAT range", url: "https://100.63.255.255/mcp", valid: true},
+		{name: "just above CGNAT range", url: "https://100.128.0.1/mcp", valid: true},
 		{name: "http scheme still rejected regardless of host", url: "http://example.com/mcp", valid: false},
 	}
 
