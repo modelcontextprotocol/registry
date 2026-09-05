@@ -63,6 +63,8 @@ jobs:
                 for f in "${FILES[@]}"; do
                   if [[ "$f" == servers/* \
                      || "$f" == data/servers/* \
+                     || "$f" == data/data/servers/* \
+                     || "$f" =~ ^data/[^/]*server\.json$ \
                      || "$f" == "data/seed.json" \
                      || "$f" == "server.json" \
                      || "$f" == "servers.json" ]]; then
