@@ -20,8 +20,7 @@ import (
 )
 
 func TestImportService_LocalFile(t *testing.T) {
-	// Create a temporary seed file
-	tempFile := filepath.Join(os.TempDir(), "test_import_seed.json")
+	tempFile := filepath.Join(t.TempDir(), "test_import_seed.json")
 	seedData := []*apiv0.ServerJSON{
 		{
 			Schema:      model.CurrentSchemaURL,
@@ -41,7 +40,6 @@ func TestImportService_LocalFile(t *testing.T) {
 
 	err = os.WriteFile(tempFile, jsonData, 0600)
 	require.NoError(t, err)
-	defer os.Remove(tempFile)
 
 	// Create registry service
 	testDB := database.NewTestDB(t)
@@ -187,6 +185,14 @@ func TestImportService_ErrorHandling(t *testing.T) {
 	registryService := service.NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
 	importerService := importer.NewService(registryService)
 
+	errorDir := t.TempDir()
+	missingFile := filepath.Join(errorDir, "non-existent-file.json")
+	invalidFile := filepath.Join(errorDir, "invalid.json")
+
+	invalidJSON := []byte("{invalid json}")
+	err := os.WriteFile(invalidFile, invalidJSON, 0600)
+	require.NoError(t, err)
+
 	tests := []struct {
 		name        string
 		path        string
@@ -195,13 +201,13 @@ func TestImportService_ErrorHandling(t *testing.T) {
 	}{
 		{
 			name:        "non-existent local file",
-			path:        "/tmp/non-existent-file.json",
+			path:        missingFile,
 			expectError: true,
 			errorMsg:    "failed to read seed data",
 		},
 		{
 			name:        "invalid JSON file",
-			path:        "/tmp/invalid.json",
+			path:        invalidFile,
 			expectError: true,
 			errorMsg:    "failed to read seed data",
 		},
@@ -211,22 +217,6 @@ func TestImportService_ErrorHandling(t *testing.T) {
 			expectError: true,
 			errorMsg:    "failed to read seed data",
 		},
-	}
-
-	// Create invalid JSON file for testing
-	invalidJSON := []byte("{invalid json}")
-	tempFile, err := os.CreateTemp("", "invalid-*.json")
-	require.NoError(t, err)
-	defer os.Remove(tempFile.Name())
-	err = os.WriteFile(tempFile.Name(), invalidJSON, 0600)
-	require.NoError(t, err)
-
-	// Update test case to use temp file
-	for i := range tests {
-		if tests[i].path == "/tmp/invalid.json" {
-			tests[i].path = tempFile.Name()
-			break
-		}
 	}
 
 	for _, tt := range tests {
