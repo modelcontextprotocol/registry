@@ -34,6 +34,10 @@ fi
 
 # Require an explicit choice, so that a forgotten VERSION cannot silently take
 # down every version of a server.
+if [ -n "$ALL_VERSIONS" ] && [ "$ALL_VERSIONS" != "true" ]; then
+    echo "Error: ALL_VERSIONS must be exactly true when set." >&2
+    exit 1
+fi
 if [ -n "$VERSION" ] && [ -n "$ALL_VERSIONS" ]; then
     echo "Error: set either VERSION or ALL_VERSIONS, not both." >&2
     exit 1
