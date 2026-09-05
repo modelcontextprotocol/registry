@@ -17,6 +17,31 @@ const (
 	GitHubAccessTokenURL = "https://github.com/login/oauth/access_token" // #nosec:G101
 )
 
+const (
+	// defaultPollInterval is the initial device-flow polling interval in
+	// seconds, per RFC 8628 §3.5.
+	defaultPollInterval = 5
+	// maxPollInterval caps how large the polling interval may grow. RFC 8628
+	// §3.5 mandates a 5-second increase on each slow_down but leaves the
+	// maximum to the implementation; this prevents a misbehaving auth server
+	// from growing the interval unboundedly.
+	maxPollInterval = 60
+	// defaultExpiresIn is the device-code lifetime in seconds used when the
+	// device-code response omits expires_in.
+	defaultExpiresIn = 900
+	// maxExpiresIn caps the device-code lifetime a response may claim. It sits
+	// well past GitHub's documented 15 minutes; the cap stops a misbehaving or
+	// hostile response from pushing the deadline (and the polling loop) far
+	// into the future.
+	maxExpiresIn = 3600
+	// incorrectDeviceCodeGraceRetries is the total number of extra polls a
+	// single login may spend on incorrect_device_code before giving up — a
+	// budget for the whole login, not per occurrence. cli/cli#9302 reports the
+	// same error for a code that had just been issued; a genuinely invalid code
+	// still fails, only a few seconds later.
+	incorrectDeviceCodeGraceRetries = 2
+)
+
 // DeviceCodeResponse represents the response from GitHub's device code endpoint
 type DeviceCodeResponse struct {
 	DeviceCode      string `json:"device_code"`
@@ -32,6 +57,24 @@ type AccessTokenResponse struct {
 	TokenType   string `json:"token_type"`
 	Scope       string `json:"scope"`
 	Error       string `json:"error,omitempty"`
+	// ErrorDescription and ErrorURI accompany Error in GitHub's responses;
+	// surfacing them turns opaque failures like "incorrect_device_code" into
+	// diagnosable reports.
+	ErrorDescription string `json:"error_description,omitempty"`
+	ErrorURI         string `json:"error_uri,omitempty"`
+}
+
+// errorDetail renders Error together with any error_description and error_uri
+// GitHub returned, so failures reach the user diagnosable rather than opaque.
+func (r AccessTokenResponse) errorDetail() string {
+	detail := r.Error
+	if r.ErrorDescription != "" {
+		detail += ": " + r.ErrorDescription
+	}
+	if r.ErrorURI != "" {
+		detail += " (" + r.ErrorURI + ")"
+	}
+	return detail
 }
 
 // RegistryTokenResponse represents the response from registry's token exchange endpoint
@@ -46,6 +89,24 @@ type GitHubATProvider struct {
 	registryURL   string
 	providedToken string // Token provided via --token flag or MCP_GITHUB_TOKEN env var
 	githubToken   string // In-memory GitHub token set by Login()
+
+	// accessTokenURL is the GitHub access-token polling endpoint. It is a field
+	// (rather than the package constant) so tests can point it at a mock server.
+	accessTokenURL string
+	// deviceCodeURL is the GitHub device-code endpoint, a field for the same
+	// reason as accessTokenURL.
+	deviceCodeURL string
+	// pollInterval is the initial polling interval in seconds. Defaults to
+	// defaultPollInterval; overridable in tests to avoid real delays. Updated
+	// from the device-code response's interval when GitHub returns one.
+	pollInterval int
+	// expiresIn is the device-code lifetime in seconds. Defaults to
+	// defaultExpiresIn; updated from the device-code response's expires_in
+	// when GitHub returns one.
+	expiresIn int
+	// sleep abstracts time.Sleep so tests can run without real delays and
+	// assert the back-off sequence. Defaults to time.Sleep.
+	sleep func(time.Duration)
 }
 
 // ServerHealthResponse represents the response from the health endpoint
@@ -62,8 +123,13 @@ func NewGitHubATProvider(registryURL, token string) Provider {
 	}
 
 	return &GitHubATProvider{
-		registryURL:   registryURL,
-		providedToken: token,
+		registryURL:    registryURL,
+		providedToken:  token,
+		accessTokenURL: GitHubAccessTokenURL,
+		deviceCodeURL:  GitHubDeviceCodeURL,
+		pollInterval:   defaultPollInterval,
+		expiresIn:      defaultExpiresIn,
+		sleep:          time.Sleep,
 	}
 }
 
@@ -149,7 +215,7 @@ func (g *GitHubATProvider) requestDeviceCode(ctx context.Context) (string, strin
 		return "", "", "", err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, GitHubDeviceCodeURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, g.deviceCodeURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return "", "", "", err
 	}
@@ -178,6 +244,21 @@ func (g *GitHubATProvider) requestDeviceCode(ctx context.Context) (string, strin
 		return "", "", "", err
 	}
 
+	// Per RFC 8628 §3.2 interval and expires_in are bound to this device code,
+	// so reset any pacing left over from a previous code before adopting them.
+	// Clamp both: a hostile or buggy response must not grow the interval past
+	// maxPollInterval (the invariant maxPollInterval exists for) nor push the
+	// deadline unboundedly into the future, and clamping also keeps the
+	// derived time.Duration well clear of int64 overflow.
+	g.pollInterval = defaultPollInterval
+	g.expiresIn = defaultExpiresIn
+	if deviceCodeResp.Interval > 0 {
+		g.pollInterval = min(deviceCodeResp.Interval, maxPollInterval)
+	}
+	if deviceCodeResp.ExpiresIn > 0 {
+		g.expiresIn = min(deviceCodeResp.ExpiresIn, maxExpiresIn)
+	}
+
 	return deviceCodeResp.DeviceCode, deviceCodeResp.UserCode, deviceCodeResp.VerificationURI, nil
 }
 
@@ -198,13 +279,28 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 		return "", err
 	}
 
-	// Default polling interval and expiration time
-	interval := 5    // seconds
-	expiresIn := 900 // 15 minutes
+	// Pacing comes from the device-code response (via requestDeviceCode),
+	// falling back to GitHub's documented defaults.
+	interval := g.pollInterval
+	expiresIn := g.expiresIn
+	// Zero-value fallback: providers built directly rather than through
+	// requestDeviceCode (the test seam) carry no lifetime. Keep this guard.
+	if expiresIn <= 0 {
+		expiresIn = defaultExpiresIn
+	}
 	deadline := time.Now().Add(time.Duration(expiresIn) * time.Second)
 
+	graceRetries := 0
+	// serverErrorInterval grows the wait between consecutive 5xx retries and is
+	// reset by any other response.
+	serverErrorInterval := interval
+	// lastErr holds the most recent retryable failure so a deadline reached
+	// mid-retry reports that diagnostic instead of a bare "timed out". It is
+	// cleared whenever polling recovers, so a genuine user timeout after a
+	// recovered blip still reports plainly.
+	var lastErr error
 	for time.Now().Before(deadline) {
-		req, err := http.NewRequestWithContext(ctx, http.MethodPost, GitHubAccessTokenURL, bytes.NewBuffer(jsonData))
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, g.accessTokenURL, bytes.NewBuffer(jsonData))
 		if err != nil {
 			return "", err
 		}
@@ -223,20 +319,61 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 			return "", err
 		}
 
+		// A transient 5xx must not abandon a login the user may already have
+		// approved in the browser. Each consecutive 5xx grows the wait by 5s up
+		// to maxPollInterval, so a sustained outage costs a couple of dozen
+		// requests rather than hundreds; the deadline bounds the number of
+		// these retries.
+		if resp.StatusCode >= http.StatusInternalServerError {
+			lastErr = fmt.Errorf("token endpoint returned %d", resp.StatusCode)
+			serverErrorInterval = min(serverErrorInterval+5, maxPollInterval)
+			g.sleep(time.Duration(serverErrorInterval) * time.Second)
+			continue
+		}
+		serverErrorInterval = interval
+
+		// Anything else outside 200 is not a device-flow answer: surface the
+		// status and body rather than failing later on a JSON parse error.
+		if resp.StatusCode != http.StatusOK {
+			return "", fmt.Errorf("token endpoint returned %d: %s", resp.StatusCode, body)
+		}
+
 		var tokenResp AccessTokenResponse
 		err = json.Unmarshal(body, &tokenResp)
 		if err != nil {
 			return "", err
 		}
 
-		if tokenResp.Error == "authorization_pending" {
-			// User hasn't authorized yet, wait and retry
-			time.Sleep(time.Duration(interval) * time.Second)
+		// Per RFC 8628 §3.5, both authorization_pending and slow_down indicate
+		// the client should keep polling. slow_down additionally requires that
+		// the polling interval be increased by 5 seconds.
+		if tokenResp.Error == "authorization_pending" || tokenResp.Error == "slow_down" {
+			if tokenResp.Error == "slow_down" {
+				interval += 5
+				if interval > maxPollInterval {
+					interval = maxPollInterval
+				}
+			}
+			lastErr = nil
+			g.sleep(time.Duration(interval) * time.Second)
 			continue
 		}
 
 		if tokenResp.Error != "" {
-			return "", fmt.Errorf("token request failed: %s", tokenResp.Error)
+			failure := fmt.Errorf("token request failed: %s", tokenResp.errorDetail())
+
+			// incorrect_device_code has been reported for codes that were in
+			// fact valid (cli/cli#9302; cause never confirmed), so spend a
+			// couple of grace polls before abandoning a login the user may
+			// have approved.
+			if tokenResp.Error == "incorrect_device_code" && graceRetries < incorrectDeviceCodeGraceRetries {
+				graceRetries++
+				lastErr = failure
+				g.sleep(time.Duration(interval) * time.Second)
+				continue
+			}
+
+			return "", failure
 		}
 
 		if tokenResp.AccessToken != "" {
@@ -247,6 +384,9 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 		return "", fmt.Errorf("failed to obtain access token")
 	}
 
+	if lastErr != nil {
+		return "", fmt.Errorf("device code authorization timed out; last response: %w", lastErr)
+	}
 	return "", fmt.Errorf("device code authorization timed out")
 }
 
