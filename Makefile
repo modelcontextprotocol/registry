@@ -18,15 +18,13 @@ publisher: ## Build the publisher tool with version info
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
 
 # Schema generation targets
-generate-schema: ## Generate server.schema.json from openapi.yaml
-	@mkdir -p bin
-	go build -o bin/extract-server-schema ./tools/extract-server-schema
-	@./bin/extract-server-schema
+SCHEMA_DIR := docs/reference/server-json
 
-check-schema: ## Check if server.schema.json is in sync with openapi.yaml
-	@mkdir -p bin
-	go build -o bin/extract-server-schema ./tools/extract-server-schema
-	@./bin/extract-server-schema -check
+generate-schema: ## Generate server.schema.json from schema.ts (TypeScript source of truth)
+	cd $(SCHEMA_DIR) && npm ci && npm run generate
+
+check-schema: ## Check server.schema.json + openapi.yaml are in sync with schema.ts
+	cd $(SCHEMA_DIR) && npm ci && npm run check && npm run validate
 
 # Test targets
 test-unit: ## Run unit tests with coverage (requires PostgreSQL)

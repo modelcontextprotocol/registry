@@ -29,6 +29,15 @@ jobs:
       with:
         version: v2.13.1
 
+    # Node is required by `make validate`: the server.json JSON Schema is
+    # generated from docs/reference/server-json/schema.ts and checked for drift.
+    - name: Set up Node.js
+      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: docs/reference/server-json/package-lock.json
+
     - name: Validate schemas and examples
       run: make validate
 

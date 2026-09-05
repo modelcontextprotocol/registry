@@ -1,0 +1,6 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.user/weather",
+  "description": "MCP server providing weather data and forecasts.",
+  "version": "1.0.2"
+}

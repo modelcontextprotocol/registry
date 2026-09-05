@@ -1,0 +1,32 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.user/remote-weather",
+  "description": "Remote MCP server reachable over streamable HTTP.",
+  "version": "2.1.0",
+  "title": "Remote Weather",
+  "websiteUrl": "https://modelcontextprotocol.io/examples",
+  "repository": {
+    "url": "https://github.com/modelcontextprotocol/servers",
+    "source": "github",
+    "subfolder": "src/weather"
+  },
+  "icons": [
+    {
+      "src": "https://example.com/icon.png",
+      "mimeType": "image/png",
+      "sizes": ["48x48", "96x96"]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://{host}/mcp",
+      "headers": [
+        { "name": "Authorization", "isSecret": true, "isRequired": true }
+      ],
+      "variables": {
+        "host": { "description": "API host", "default": "api.example.com" }
+      }
+    }
+  ]
+}
