@@ -51,6 +51,19 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		_, err := service.CreateServer(ctx, server)
 		require.NoError(t, err, "failed to create server: %v", err)
 	}
+	deprecatedServer := &apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/deprecated-server",
+		Description: "A deprecated server",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{Type: "streamable-http", URL: "https://old.example.com/mcp"},
+		},
+	}
+	_, err := service.CreateServer(ctx, deprecatedServer)
+	require.NoError(t, err)
+	_, err = service.UpdateServerStatus(ctx, deprecatedServer.Name, deprecatedServer.Version, &StatusChangeRequest{NewStatus: model.StatusDeprecated})
+	require.NoError(t, err)
 
 	tests := []struct {
 		name         string
@@ -96,6 +109,19 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			},
 			expectError: true,
 			errorMsg:    "remote URL https://api.example.com/mcp is already used by server com.example/existing-server",
+		},
+		{
+			name: "duplicate remote URL on deprecated server - should pass",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/replacement-server",
+				Description: "A replacement server",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://old.example.com/mcp"},
+				},
+			},
+			expectError: false,
 		},
 		{
 			name: "updating same server with same URLs - should pass",

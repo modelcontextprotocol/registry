@@ -312,6 +312,9 @@ func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context,
 
 		// Check if any conflicting server has a different name
 		for _, conflictingServer := range conflictingServers {
+			if conflictingServer.Meta.Official != nil && conflictingServer.Meta.Official.Status != model.StatusActive {
+				continue
+			}
 			if conflictingServer.Server.Name != serverDetail.Name {
 				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.Server.Name)
 			}
