@@ -87,11 +87,11 @@ func validateNPMPackage(ctx context.Context, pkg model.Package, serverName strin
 	}
 
 	if npmResp.MCPName == "" {
-		return fmt.Errorf("NPM package '%s' is missing required 'mcpName' field. Add this to your package.json: \"mcpName\": \"%s\"", pkg.Identifier, serverName)
+		return fmt.Errorf("NPM package '%s' version '%s' is missing required 'mcpName' field. Add this to your package.json: \"mcpName\": \"%s\"", pkg.Identifier, pkg.Version, serverName)
 	}
 
 	if npmResp.MCPName != serverName {
-		return fmt.Errorf("NPM package ownership validation failed. Expected mcpName '%s', got '%s'", serverName, npmResp.MCPName)
+		return fmt.Errorf("NPM package '%s' version '%s' ownership validation failed. Expected mcpName '%s', got '%s'", pkg.Identifier, pkg.Version, serverName, npmResp.MCPName)
 	}
 
 	return nil
