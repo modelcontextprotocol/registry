@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -1241,8 +1242,8 @@ func TestValidateArgument_ValidNamedArguments(t *testing.T) {
 
 func TestValidateArgument_ValidPositionalArguments(t *testing.T) {
 	positionalCases := []model.Argument{
-		{Type: model.ArgumentTypePositional, Name: "anything with spaces"},
-		{Type: model.ArgumentTypePositional, Name: "anything<with>brackets"},
+		{Type: model.ArgumentTypePositional, Name: "anything with spaces", ValueHint: "target_dir"},
+		{Type: model.ArgumentTypePositional, Name: "anything<with>brackets", ValueHint: "target_dir"},
 		{
 			InputWithVariables: model.InputWithVariables{Input: model.Input{Value: "--port 8080"}},
 			Type:               model.ArgumentTypePositional,
@@ -1394,6 +1395,105 @@ func TestValidateArgument_ValidValueFields(t *testing.T) {
 			assert.NoError(t, err, "Expected valid argument %+v", tc.arg)
 		})
 	}
+}
+
+func TestValidateArgument_InvalidArgumentType(t *testing.T) {
+	invalidTypeCases := []struct {
+		name string
+		arg  model.Argument
+	}{
+		{
+			// Same shape as live entry io.github.Jordan-Horner/symbols@1.0.1
+			// (there under packageArguments): name and value are set, so only
+			// the type check can fire
+			"empty_type",
+			model.Argument{
+				InputWithVariables: model.InputWithVariables{Input: model.Input{Value: "mcp"}},
+				Type:               "",
+				Name:               "command",
+			},
+		},
+		{"literal", model.Argument{Type: "literal"}},
+		{"flag", model.Argument{Type: "flag", Name: "--verbose"}},
+		{"environment", model.Argument{Type: "environment", Name: "API_KEY"}},
+		// Type values are case-sensitive: "Positional" is not "positional"
+		{"uppercase_positional", model.Argument{Type: "Positional"}},
+	}
+
+	for _, tc := range invalidTypeCases {
+		t.Run("Invalid_"+tc.name, func(t *testing.T) {
+			server := createValidServerWithArgument(tc.arg)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
+			require.Error(t, err, "Expected error for invalid argument type: %+v", tc.arg)
+			assert.Contains(t, err.Error(), "argument type must be 'positional' or 'named'")
+		})
+	}
+}
+
+func TestValidateArgument_PositionalValueOrHint(t *testing.T) {
+	positionalCases := []struct {
+		name        string
+		arg         model.Argument
+		expectError bool
+	}{
+		{
+			"missing_value_and_value_hint",
+			model.Argument{Type: model.ArgumentTypePositional},
+			true,
+		},
+		{
+			"value_only",
+			model.Argument{
+				InputWithVariables: model.InputWithVariables{Input: model.Input{Value: "input.txt"}},
+				Type:               model.ArgumentTypePositional,
+			},
+			false,
+		},
+		{
+			"value_hint_only",
+			model.Argument{Type: model.ArgumentTypePositional, ValueHint: "file_path"},
+			false,
+		},
+		{
+			"value_and_value_hint",
+			model.Argument{
+				InputWithVariables: model.InputWithVariables{Input: model.Input{Value: "input.txt"}},
+				Type:               model.ArgumentTypePositional,
+				ValueHint:          "file_path",
+			},
+			false,
+		},
+	}
+
+	for _, tc := range positionalCases {
+		t.Run(tc.name, func(t *testing.T) {
+			server := createValidServerWithArgument(tc.arg)
+			// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+			// In future, consider using result.Issues for comprehensive error reporting
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
+			if tc.expectError {
+				require.Error(t, err, "Expected error for positional argument without value or valueHint: %+v", tc.arg)
+				assert.Contains(t, err.Error(), "positional argument must provide a value or a valueHint")
+			} else {
+				assert.NoError(t, err, "Expected valid positional argument %+v", tc.arg)
+			}
+		})
+	}
+
+	// The same check must apply to arguments under packageArguments
+	t.Run("missing_value_and_value_hint_in_package_arguments", func(t *testing.T) {
+		server := createValidServerWithPackageArgument(model.Argument{Type: model.ArgumentTypePositional})
+		// ValidateServerJSON returns all validation results; using FirstError() to preserve existing test behavior
+		// In future, consider using result.Issues for comprehensive error reporting
+		result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+		err := result.FirstError()
+		require.Error(t, err, "Expected error for positional package argument without value or valueHint")
+		assert.Contains(t, err.Error(), "positional argument must provide a value or a valueHint")
+	})
 }
 
 // Helper function to create a valid server with a specific argument for testing
@@ -1978,6 +2078,15 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 			},
 		},
 	}
+}
+
+// createValidServerWithPackageArgument is createValidServerWithArgument with the
+// argument under packageArguments instead of runtimeArguments
+func createValidServerWithPackageArgument(arg model.Argument) apiv0.ServerJSON {
+	server := createValidServerWithArgument(arg)
+	server.Packages[0].RuntimeArguments = nil
+	server.Packages[0].PackageArguments = []model.Argument{arg}
+	return server
 }
 
 func TestValidateTitle(t *testing.T) {
