@@ -36,6 +36,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [polygraph](https://polygraph.so) - Independent behavioral security grades (A–F) for MCP servers from an open, reproducible harness, published as an adoption-ranked index with per-server reports
+- [PulseFeed MCP Drift Watch](https://pulsefeed.dev/mcp/drift) - Daily external diff of the whole registry population, recording what changed in a server *after* it was listed: package ownership transferred, install script added in a later version, repository removed, package unpublished, a removed name republished by someone else. Free JSON/RSS feed filterable to your own packages, a README badge, and webhook alerts; series runs from 2026-07-30 and each day's manifest is timestamped into Bitcoin.
 
 ## Adding Your Project
 
