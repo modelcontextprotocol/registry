@@ -1286,6 +1286,47 @@ func TestValidateArgument_InvalidNamedArgumentNames(t *testing.T) {
 	}
 }
 
+func TestValidateArgument_ValueHintOnNamedArgument(t *testing.T) {
+	// valueHint identifies a positional slot, so a named argument must not carry
+	// one. The schema misses this (the argument union branches allow extra
+	// properties), so the semantic validator is the enforcement point.
+	t.Run("named_with_valueHint_rejected", func(t *testing.T) {
+		arg := model.Argument{
+			Type:      model.ArgumentTypeNamed,
+			Name:      "--port",
+			ValueHint: "port_number",
+		}
+		server := createValidServerWithArgument(arg)
+		result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+		assert.Error(t, result.FirstError(), "named argument carrying valueHint should be rejected")
+	})
+
+	t.Run("package_named_with_valueHint_rejected", func(t *testing.T) {
+		arg := model.Argument{
+			Type:      model.ArgumentTypeNamed,
+			Name:      "--port",
+			ValueHint: "port_number",
+		}
+		server := createValidServerWithArgument(arg)
+		server.Packages[0].RuntimeArguments = nil
+		server.Packages[0].PackageArguments = []model.Argument{arg}
+		result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+		assert.Error(t, result.FirstError(), "named package argument carrying valueHint should be rejected")
+	})
+
+	// A positional argument with a valueHint stays valid (no regression).
+	t.Run("positional_with_valueHint_valid", func(t *testing.T) {
+		arg := model.Argument{
+			InputWithVariables: model.InputWithVariables{Input: model.Input{Value: "/etc/config.json"}},
+			Type:               model.ArgumentTypePositional,
+			ValueHint:          "config_path",
+		}
+		server := createValidServerWithArgument(arg)
+		result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+		assert.NoError(t, result.FirstError(), "positional argument with valueHint should remain valid")
+	})
+}
+
 func TestValidateArgument_InvalidValueFields(t *testing.T) {
 	invalidValueCases := []struct {
 		name string
