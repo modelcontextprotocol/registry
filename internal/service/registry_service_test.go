@@ -1136,6 +1136,74 @@ func TestRecalculateLatest_RestoringHigherVersionPromotesIt(t *testing.T) {
 	assert.True(t, latest.Meta.Official.IsLatest)
 }
 
+// TestReadNormalizesLegacySchemaVersion covers issue #783: servers published under an
+// older server.json schema are stored with that publish-time $schema, but the registry
+// re-serializes every record into the current struct shape on read. Serving the stale
+// $schema makes strict clients fail validation, so all read paths must advertise the
+// current schema URL.
+func TestReadNormalizesLegacySchemaVersion(t *testing.T) {
+	ctx := context.Background()
+	testDB := database.NewTestDB(t)
+	service := NewRegistryService(testDB, &config.Config{EnableRegistryValidation: false})
+
+	// A pre-current schema version (real value observed on the live API in issue #783).
+	const legacySchemaURL = "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json"
+	require.NotEqual(t, model.CurrentSchemaURL, legacySchemaURL, "legacy fixture must differ from current schema")
+
+	now := time.Now()
+	legacy := &apiv0.ServerJSON{
+		Schema:      legacySchemaURL,
+		Name:        "com.example/legacy-schema-server",
+		Description: "Published under an older schema version",
+		Version:     "1.0.0",
+	}
+
+	// Seed directly through the database so the stored $schema is the legacy value
+	// (the publish path enforces the current schema, so it cannot create this state).
+	_, err := testDB.CreateServer(ctx, nil, legacy, &apiv0.RegistryExtensions{
+		Status:          model.StatusActive,
+		StatusChangedAt: now,
+		PublishedAt:     now,
+		UpdatedAt:       now,
+		IsLatest:        true,
+	})
+	require.NoError(t, err, "failed to seed legacy-schema server")
+
+	t.Run("GetServerByName", func(t *testing.T) {
+		got, err := service.GetServerByName(ctx, legacy.Name, false)
+		require.NoError(t, err)
+		assert.Equal(t, model.CurrentSchemaURL, got.Server.Schema)
+	})
+
+	t.Run("GetServerByNameAndVersion", func(t *testing.T) {
+		got, err := service.GetServerByNameAndVersion(ctx, legacy.Name, legacy.Version, false)
+		require.NoError(t, err)
+		assert.Equal(t, model.CurrentSchemaURL, got.Server.Schema)
+	})
+
+	t.Run("GetAllVersionsByServerName", func(t *testing.T) {
+		got, err := service.GetAllVersionsByServerName(ctx, legacy.Name, false)
+		require.NoError(t, err)
+		require.NotEmpty(t, got)
+		for _, s := range got {
+			assert.Equal(t, model.CurrentSchemaURL, s.Server.Schema)
+		}
+	})
+
+	t.Run("ListServers", func(t *testing.T) {
+		got, _, err := service.ListServers(ctx, nil, "", 100)
+		require.NoError(t, err)
+		var found bool
+		for _, s := range got {
+			if s.Server.Name == legacy.Name {
+				found = true
+				assert.Equal(t, model.CurrentSchemaURL, s.Server.Schema)
+			}
+		}
+		require.True(t, found, "seeded server should appear in ListServers")
+	})
+}
+
 // Helper functions
 func stringPtr(s string) *string {
 	return &s
