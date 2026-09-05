@@ -103,6 +103,25 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
+			name: "reject publish with empty repository",
+			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "example/test-server",
+				Description: "A test server",
+				Repository:  &model.Repository{},
+				Version:     "1.0.0",
+			},
+			tokenClaims: &auth.JWTClaims{
+				AuthMethod: auth.MethodNone,
+				Permissions: []auth.Permission{
+					{Action: auth.PermissionActionPublish, ResourcePattern: "example/*"},
+				},
+			},
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "Failed to publish server, invalid schema: call /validate for details",
+		},
+		{
 			name:        "missing authorization header",
 			requestBody: apiv0.ServerJSON{},
 			authHeader:  "", // Empty auth header
