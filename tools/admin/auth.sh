@@ -1,6 +1,8 @@
 #!/bin/bash
 # Simple OIDC authentication helper using gcloud
 
+set -euo pipefail
+
 REGISTRY_URL="${REGISTRY_URL:-https://registry.modelcontextprotocol.io}"
 
 if ! gcloud projects list &> /dev/null; then
