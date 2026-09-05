@@ -41,7 +41,7 @@ paths:
             type: integer
         - name: search
           in: query
-          description: Search servers by name (substring match)
+          description: Search servers by name or description (substring match)
           required: false
           schema:
             type: string
