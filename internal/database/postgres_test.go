@@ -246,6 +246,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 		remoteURL   string
 		isLatest    bool
 		publishedAt time.Time
+		description string
 	}{
 		{
 			name:        "com.example/server-a",
@@ -254,6 +255,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 			remoteURL:   "https://api-a.example.com/mcp",
 			isLatest:    true,
 			publishedAt: time.Now().Add(-2 * time.Hour),
+			description: "Provides real-time weather forecasts",
 		},
 		{
 			name:        "com.example/server-b",
@@ -262,6 +264,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 			remoteURL:   "https://api-b.example.com/mcp",
 			isLatest:    true,
 			publishedAt: time.Now().Add(-1 * time.Hour),
+			description: "Translates text between languages",
 		},
 		{
 			name:        "com.example/server-c",
@@ -270,6 +273,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 			remoteURL:   "https://api-c.example.com/mcp",
 			isLatest:    true,
 			publishedAt: time.Now().Add(-30 * time.Minute),
+			description: "A deprecated utility server",
 		},
 	}
 
@@ -277,7 +281,7 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 	for _, server := range testServers {
 		serverJSON := &apiv0.ServerJSON{
 			Name:        server.name,
-			Description: "Test server for listing",
+			Description: server.description,
 			Version:     server.version,
 			Remotes: []model.Transport{
 				{Type: "http", URL: server.remoteURL},
@@ -336,6 +340,44 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 			},
 			limit:         10,
 			expectedCount: 3,
+		},
+		{
+			name: "filter by substring description",
+			filter: &database.ServerFilter{
+				SubstringDescription: stringPtr("weather"),
+			},
+			limit:         10,
+			expectedCount: 1,
+			expectedNames: []string{"com.example/server-a"},
+		},
+		{
+			name: "substring description filter is case-insensitive substring, not exact match",
+			filter: &database.ServerFilter{
+				SubstringDescription: stringPtr("LANGUAGES"),
+			},
+			limit:         10,
+			expectedCount: 1,
+			expectedNames: []string{"com.example/server-b"},
+		},
+		{
+			name: "combined name+description search (the ?search= case) matches on description alone",
+			filter: &database.ServerFilter{
+				SubstringName:        stringPtr("weather"), // does not match any server_name
+				SubstringDescription: stringPtr("weather"), // matches server-a's description
+			},
+			limit:         10,
+			expectedCount: 1,
+			expectedNames: []string{"com.example/server-a"},
+		},
+		{
+			name: "combined name+description search matches on name alone",
+			filter: &database.ServerFilter{
+				SubstringName:        stringPtr("server-b"),       // matches server-b's name
+				SubstringDescription: stringPtr("no-such-phrase"), // matches nothing
+			},
+			limit:         10,
+			expectedCount: 1,
+			expectedNames: []string{"com.example/server-b"},
 		},
 		{
 			name: "filter by version",
