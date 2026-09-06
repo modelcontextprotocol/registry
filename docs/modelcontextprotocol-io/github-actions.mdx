@@ -11,6 +11,8 @@ sidebarTitle: GitHub Actions
 
 In your server project directory, create a `.github/workflows/publish-mcp.yml` file. Here is an example for npm-based local server, but the MCP Registry publishing steps are the same for all package types:
 
+**Important: Pin the version and verify the signature.** When running a downloaded binary in a job holding your publishing credential, always pin to an explicit released version (never `latest`, which is mutable) and verify the signature before extracting. Look up the latest `mcp-publisher` version on [the releases page](https://github.com/modelcontextprotocol/registry/releases).
+
 <CodeGroup>
 
 ```yaml OIDC authentication (recommended)
@@ -54,9 +56,25 @@ jobs:
 
       ### Publish MCP server:
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
       - name: Install mcp-publisher
+        env:
+          MCP_PUBLISHER_VERSION: v1.8.1
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          export OS=$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          curl -fsSL -o mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_${OS}.tar.gz"
+          curl -fsSL -o mcp-publisher.tar.gz.sigstore.json \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_${OS}.tar.gz.sigstore.json"
+          cosign verify-blob \
+            --bundle mcp-publisher.tar.gz.sigstore.json \
+            --certificate-identity-regexp="^https://github.com/modelcontextprotocol/registry/\.github/workflows/release\.yml@refs/tags/v[0-9]" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            mcp-publisher.tar.gz
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+          rm mcp-publisher.tar.gz mcp-publisher.tar.gz.sigstore.json
 
       - name: Authenticate to MCP Registry
         run: ./mcp-publisher login github-oidc
@@ -115,9 +133,25 @@ jobs:
 
       ### Publish MCP server:
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
       - name: Install mcp-publisher
+        env:
+          MCP_PUBLISHER_VERSION: v1.8.1
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          export OS=$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          curl -fsSL -o mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_${OS}.tar.gz"
+          curl -fsSL -o mcp-publisher.tar.gz.sigstore.json \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_${OS}.tar.gz.sigstore.json"
+          cosign verify-blob \
+            --bundle mcp-publisher.tar.gz.sigstore.json \
+            --certificate-identity-regexp="^https://github.com/modelcontextprotocol/registry/\.github/workflows/release\.yml@refs/tags/v[0-9]" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            mcp-publisher.tar.gz
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+          rm mcp-publisher.tar.gz mcp-publisher.tar.gz.sigstore.json
 
       - name: Authenticate to MCP Registry
         run: ./mcp-publisher login github --token ${{ secrets.MCP_GITHUB_TOKEN }}
@@ -172,9 +206,25 @@ jobs:
 
       ### Publish MCP server:
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
       - name: Install mcp-publisher
+        env:
+          MCP_PUBLISHER_VERSION: v1.8.1
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          export OS=$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          curl -fsSL -o mcp-publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_${OS}.tar.gz"
+          curl -fsSL -o mcp-publisher.tar.gz.sigstore.json \
+            "https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}/mcp-publisher_${OS}.tar.gz.sigstore.json"
+          cosign verify-blob \
+            --bundle mcp-publisher.tar.gz.sigstore.json \
+            --certificate-identity-regexp="^https://github.com/modelcontextprotocol/registry/\.github/workflows/release\.yml@refs/tags/v[0-9]" \
+            --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+            mcp-publisher.tar.gz
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+          rm mcp-publisher.tar.gz mcp-publisher.tar.gz.sigstore.json
 
       # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       # TODO: Replace `example.com` with your domain name
