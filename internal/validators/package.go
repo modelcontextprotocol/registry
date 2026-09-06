@@ -25,6 +25,8 @@ func ValidatePackage(ctx context.Context, pkg model.Package, serverName string) 
 		return registries.ValidateMCPB(ctx, pkg, serverName)
 	case model.RegistryTypeCargo:
 		return registries.ValidateCargo(ctx, pkg, serverName)
+	case model.RegistryTypeGo:
+		return registries.ValidateGo(ctx, pkg, serverName)
 	default:
 		return fmt.Errorf("unsupported registry type: %s", pkg.RegistryType)
 	}
