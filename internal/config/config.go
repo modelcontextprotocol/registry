@@ -16,6 +16,9 @@ type Config struct {
 	JWTPrivateKey            string `env:"JWT_PRIVATE_KEY" envDefault:""`
 	EnableAnonymousAuth      bool   `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 	EnableRegistryValidation bool   `env:"ENABLE_REGISTRY_VALIDATION" envDefault:"true"`
+	// EnableRepositoryReachabilityCheck probes the publisher-supplied repository.url
+	// at publish time and rejects 4xx/5xx. Disable for offline development.
+	EnableRepositoryReachabilityCheck bool `env:"ENABLE_REPOSITORY_REACHABILITY_CHECK" envDefault:"true"`
 
 	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
 
