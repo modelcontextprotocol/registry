@@ -155,5 +155,26 @@
         }
       }
     ]
+  },
+  {
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name": "io.github.autokeren/ghostfox",
+    "description": "Self-hosted stealth browser for AI agents: fingerprint-coherent Firefox engine (touch-coherent Android and desktop personas, engine-level anti-detect) with a Rust MCP runtime. Navigate, click, type, screenshot and extract the web without getting flagged \u2014 with every session recorded as evidence.",
+    "repository": {
+      "url": "https://github.com/autokeren/ghostfox.git",
+      "source": "github"
+    },
+    "websiteUrl": "https://github.com/autokeren/ghostfox",
+    "version": "0.2.0",
+    "packages": [
+      {
+        "registryType": "oci",
+        "identifier": "ghcr.io/autokeren/ghostfox:0.2.0",
+        "runtimeHint": "docker",
+        "transport": {
+          "type": "stdio"
+        }
+      }
+    ]
   }
 ]
