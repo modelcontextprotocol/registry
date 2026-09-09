@@ -1,0 +1,7 @@
+{
+  "$schema": "../schema.json",
+  "name": "voxaphone",
+  "description": "Sub-800ms zero-data-at-rest voice execution substrate for autonomous telephony.",
+  "repository": "https://github.com/rajpoothannan760-collab/VOXAphone",
+  "vendor": "Voxana AI"
+}
