@@ -1,0 +1,20 @@
+name: agent-data-pro
+description: Premium research articles for AI agents on Blockchain, DeFi, and Crypto Markets (x402 on Base), plus free live cryptocurrency price data.
+repository: https://github.com/OrionSmithers/agent-data-pro
+homepage: https://agentdatapro.com
+license: MIT
+author:
+  name: OrionSmithers
+  url: https://github.com/OrionSmithers
+categories:
+  - blockchain
+  - cryptocurrency
+  - research
+tags:
+  - mcp
+  - x402
+  - ai-agents
+  - crypto
+  - defi
+remote:
+  url: https://agentdatapro.com/mcp
