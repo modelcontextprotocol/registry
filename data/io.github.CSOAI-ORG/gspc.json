@@ -1,0 +1,83 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.CSOAI-ORG/gspc",
+  "displayName": "Council of AI \u2014 GSPC Measurement Tools",
+  "description": "Independent AI-governance measurement body. 8 free readers + 4 x402-metered evidence tools.",
+  "version": "1.4.0",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/CSOAI-ORG/councilof-ai",
+    "source": "github"
+  },
+  "homepage": "https://councilof.ai",
+  "icons": [
+    {
+      "src": "https://councilof.ai/favicon.ico",
+      "sizes": [
+        "32x32"
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://councilof.ai/mcp"
+    }
+  ],
+  "tools": [
+    {
+      "name": "board_totals",
+      "description": "Get GSPC board totals from GET /api/gspc"
+    },
+    {
+      "name": "get_axis",
+      "description": "Get one axis row from the GSPC board"
+    },
+    {
+      "name": "verify_card",
+      "description": "Verify a signed measurement card under the published key"
+    },
+    {
+      "name": "list_cards",
+      "description": "List signed cards from /signed/card_index.json"
+    },
+    {
+      "name": "get_root",
+      "description": "Get the public Merkle root from /root.json"
+    },
+    {
+      "name": "get_card",
+      "description": "Get one public-root card by sha256"
+    },
+    {
+      "name": "verify_inclusion",
+      "description": "Check a sha256 against the public-root merkle"
+    },
+    {
+      "name": "x402_trust",
+      "description": "Get x402 catalog trust snapshot"
+    },
+    {
+      "name": "commission_card",
+      "description": "PAID (x402) \u2014 Commission one signed receipt"
+    },
+    {
+      "name": "art50_marking_evidence",
+      "description": "PAID (x402) \u2014 Article 50 marking evidence"
+    },
+    {
+      "name": "rwa_evidence",
+      "description": "PAID (x402) \u2014 Per-request signed RWA evidence"
+    },
+    {
+      "name": "receipts_batch",
+      "description": "PAID (x402) \u2014 Historical batch of receipts"
+    }
+  ],
+  "provider": {
+    "name": "CSOAI Ltd",
+    "url": "https://councilof.ai",
+    "companyNumber": "16939677",
+    "jurisdiction": "GB"
+  }
+}
