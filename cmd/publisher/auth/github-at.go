@@ -77,6 +77,20 @@ func (r AccessTokenResponse) errorDetail() string {
 	return detail
 }
 
+func decodeAccessTokenResponse(statusCode int, body []byte) (AccessTokenResponse, error) {
+	var tokenResp AccessTokenResponse
+	// OAuth errors may use HTTP 400 (RFC 6749 §5.2), not just HTTP 200.
+	if statusCode != http.StatusOK && statusCode != http.StatusBadRequest {
+		return tokenResp, fmt.Errorf("token endpoint returned %d: %s", statusCode, body)
+	}
+
+	err := json.Unmarshal(body, &tokenResp)
+	if statusCode == http.StatusBadRequest && (err != nil || tokenResp.Error == "") {
+		return tokenResp, fmt.Errorf("token endpoint returned %d: %s", statusCode, body)
+	}
+	return tokenResp, err
+}
+
 // RegistryTokenResponse represents the response from registry's token exchange endpoint
 type RegistryTokenResponse struct {
 	RegistryToken string `json:"registry_token"`
@@ -332,14 +346,7 @@ func (g *GitHubATProvider) pollForToken(ctx context.Context, deviceCode string) 
 		}
 		serverErrorInterval = interval
 
-		// Anything else outside 200 is not a device-flow answer: surface the
-		// status and body rather than failing later on a JSON parse error.
-		if resp.StatusCode != http.StatusOK {
-			return "", fmt.Errorf("token endpoint returned %d: %s", resp.StatusCode, body)
-		}
-
-		var tokenResp AccessTokenResponse
-		err = json.Unmarshal(body, &tokenResp)
+		tokenResp, err := decodeAccessTokenResponse(resp.StatusCode, body)
 		if err != nil {
 			return "", err
 		}

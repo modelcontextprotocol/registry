@@ -100,6 +100,53 @@ func TestPollForToken_TransientIncorrectDeviceCodeRecovered(t *testing.T) {
 	assert.Equal(t, 3, gh.requests())
 }
 
+func TestPollForToken_OAuthErrorsRetryOnBadRequest(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusBadRequest} {
+		for _, code := range []string{"authorization_pending", "slow_down", "incorrect_device_code"} {
+			t.Run(fmt.Sprintf("%d/%s", status, code), func(t *testing.T) {
+				gh := newSeqTokenServer(t,
+					seqResp{status: status, body: fmt.Sprintf(`{"error":%q}`, code)},
+					okResp(tokenBody),
+				)
+				p, slept := newPollTestProvider(gh.srv.URL)
+				p.pollInterval = defaultPollInterval
+
+				token, err := p.pollForToken(context.Background(), "issued-device-code")
+				require.NoError(t, err)
+				assert.Equal(t, "gho_test_token", token)
+				assert.Equal(t, 2, gh.requests())
+				wait := time.Duration(defaultPollInterval) * time.Second
+				if code == "slow_down" {
+					wait += 5 * time.Second
+				}
+				assert.Equal(t, []time.Duration{wait}, *slept)
+			})
+		}
+	}
+}
+
+func TestPollForToken_BadRequestOAuthErrorsRemainTerminal(t *testing.T) {
+	for _, code := range []string{"access_denied", "expired_token", "unknown_error", "incorrect_device_code"} {
+		t.Run(code, func(t *testing.T) {
+			gh := newSeqTokenServer(t, seqResp{
+				status: http.StatusBadRequest,
+				body:   fmt.Sprintf(`{"error":%q,"error_description":"Request rejected","error_uri":"https://github.com/error"}`, code),
+			})
+			p, slept := newPollTestProvider(gh.srv.URL)
+
+			token, err := p.pollForToken(context.Background(), "issued-device-code")
+			require.EqualError(t, err, "token request failed: "+code+": Request rejected (https://github.com/error)")
+			assert.Empty(t, token)
+			retries := 0
+			if code == "incorrect_device_code" {
+				retries = incorrectDeviceCodeGraceRetries
+			}
+			assert.Equal(t, 1+retries, gh.requests())
+			assert.Len(t, *slept, retries)
+		})
+	}
+}
+
 // TestPollForToken_ErrorDescriptionAndURISurfaced confirms the grace budget is
 // spent in full against a persistently invalid code, and that GitHub's
 // error_description and error_uri reach the user instead of being discarded.
@@ -290,22 +337,30 @@ func TestPollForToken_TimeoutAfterRecoveryIsBare(t *testing.T) {
 		"a recovered 502 must not be reported as the cause of a user timeout")
 }
 
-// TestPollForToken_NonOKStatusSurfacesStatusAndBody confirms a non-2xx below
-// 500 (a 429 HTML page, say) reports its status and body rather than failing
-// downstream on a JSON parse error.
+// Non-OAuth failures retain HTTP diagnostics rather than JSON parsing errors.
 func TestPollForToken_NonOKStatusSurfacesStatusAndBody(t *testing.T) {
-	gh := newSeqTokenServer(t,
-		seqResp{status: http.StatusTooManyRequests, body: "<html>rate limited</html>"},
-	)
-	p, _ := newPollTestProvider(gh.srv.URL)
+	for _, tt := range []struct {
+		name string
+		resp seqResp
+	}{
+		{"rate_limited", seqResp{status: http.StatusTooManyRequests, body: "<html>rate limited</html>"}},
+		{"bad_request_html", seqResp{status: http.StatusBadRequest, body: "<html>bad request</html>"}},
+		{"bad_request_invalid_json", seqResp{status: http.StatusBadRequest, body: `{"error":`}},
+		{"bad_request_empty_error", seqResp{status: http.StatusBadRequest, body: `{"error":""}`}},
+		{"bad_request_token", seqResp{status: http.StatusBadRequest, body: tokenBody}},
+		{"pending_on_other_status", seqResp{status: http.StatusForbidden, body: pendingBody}},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			gh := newSeqTokenServer(t, tt.resp)
+			p, slept := newPollTestProvider(gh.srv.URL)
 
-	_, err := p.pollForToken(context.Background(), "issued-device-code")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "429")
-	assert.Contains(t, err.Error(), "rate limited")
-	assert.NotContains(t, err.Error(), "invalid character",
-		"must not surface as a JSON parse failure")
-	assert.Equal(t, 1, gh.requests(), "a non-retryable status must stop polling")
+			token, err := p.pollForToken(context.Background(), "issued-device-code")
+			require.EqualError(t, err, fmt.Sprintf("token endpoint returned %d: %s", tt.resp.status, tt.resp.body))
+			assert.Empty(t, token)
+			assert.Equal(t, 1, gh.requests(), "a non-retryable status must stop polling")
+			assert.Empty(t, *slept)
+		})
+	}
 }
 
 // TestPollForToken_ConsecutiveServerErrorsBackOff confirms the 5xx wait grows by
