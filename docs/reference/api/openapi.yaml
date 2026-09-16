@@ -720,6 +720,35 @@ components:
           description: A mapping of environment variables to be set when running the package.
           items:
             $ref: '#/components/schemas/KeyValueInput'
+        postInstallInstructions:
+          type: array
+          description: "Structured post-install steps that clients can display as a checklist after downloading the package. Intended for servers that require additional manual setup beyond installation (for example, registering a companion system service). Instructions are informational only - clients display text and never execute commands automatically."
+          items:
+            $ref: '#/components/schemas/PostInstallInstruction'
+
+    PostInstallInstruction:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          description: Human-readable instruction text describing the post-install step.
+          minLength: 1
+          example: "Install as a system service for the web UI"
+        command:
+          type: string
+          description: Optional shell command the user can run to complete the step. Displayed for the user to copy; clients must not execute it automatically.
+          example: "mind-map service install --addr 127.0.0.1:4242"
+        documentation:
+          type: string
+          format: uri
+          description: Optional link to documentation or a setup page describing the step in more detail.
+          example: "https://github.com/aniongithub/mind-map#service-management"
+        optional:
+          type: boolean
+          description: Whether the step is optional. When true, the MCP server functions without completing this step.
+          default: false
 
     Input:
       type: object
