@@ -659,10 +659,11 @@ components:
       properties:
         registryType:
           type: string
-          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')
+          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'cargo', 'oci', 'nuget', 'mcpb')
           examples:
             - "npm"
             - "pypi"
+            - "cargo"
             - "oci"
             - "nuget"
             - "mcpb"
@@ -673,6 +674,7 @@ components:
           examples:
             - "https://registry.npmjs.org"
             - "https://pypi.org"
+            - "https://crates.io"
             - "https://docker.io"
             - "https://api.nuget.org/v3/index.json"
             - "https://github.com"

@@ -18,7 +18,7 @@ The official registry has some more endpoints and restrictions on top of this. S
 - **`GET /v0.1/servers/{serverName}/versions`** - List all versions of a server
 - **`GET /v0.1/servers/{serverName}/versions/{version}`** - Get specific version of server. Use the special version `latest` to get the latest version.
 - **`POST /v0.1/publish`** - Publish new server (optional, registry-specific authentication)
-- **`PUT /v0.1/servers/{serverName}/versions/{version}`** - Update specific server version (optional, not implemented by official registry)
+- **`PUT /v0.1/servers/{serverName}/versions/{version}`** - Update specific server version (optional; the official registry implements this as an admin endpoint)
 - **`DELETE /v0.1/servers/{serverName}/versions/{version}`** - Delete specific server version (optional, not implemented by official registry)
 - **`PATCH /v0.1/servers/{serverName}/versions/{version}/status`** - Update server version status (optional)
 - **`PATCH /v0.1/servers/{serverName}/status`** - Update status for all versions (optional)

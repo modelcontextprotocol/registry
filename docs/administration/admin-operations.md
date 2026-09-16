@@ -1,6 +1,6 @@
 # Admin Operations
 
-This is a brief guide for admins and moderators managing content on the registry. All actions should be taken in line with the [moderation guidelines](moderation-guidelines.md).
+This is a brief guide for admins and moderators managing content on the registry. All actions should be taken in line with the [moderation policy](../modelcontextprotocol-io/moderation-policy.mdx).
 
 ## Prerequisites
 
@@ -33,8 +33,8 @@ ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
 # Get specific version
 curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}" > server.json
 
-# Or get latest version (omit /versions/VERSION)
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}" > server.json
+# Or get the latest version (use the special version "latest")
+curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/latest" > server.json
 ```
 
 ### Step 2: Make Changes
@@ -44,19 +44,46 @@ Open `server.json` and edit the specific version details. You cannot change the 
 ### Step 3: Update Version
 
 ```bash
-# Update specific version
+# Update specific version (requires the full server.json body)
 curl -X PUT "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}" \
   -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
   -H "Content-Type: application/json" \
   -d "$(cat server.json)"
+```
 
+To change **only** the status of a version, use the status endpoint instead — it does not require
+the full server configuration:
+
+```bash
+curl -X PATCH "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}/status" \
+  -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "deprecated", "statusMessage": "Superseded by v2"}'
 ```
 
 ## Edit an Entire Server (All Versions)
 
-Use this when you need to apply changes across all versions of a server (e.g., mark entire server as deleted, apply content scrubbing).
+### Status Changes Across All Versions
 
-### Step 1: List All Versions
+A status change applies to every version of a server in a single request. The response reports
+how many versions were updated in `updatedCount`.
+
+```bash
+export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
+ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
+
+curl -X PATCH "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/status" \
+  -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "deleted", "statusMessage": "Removed per moderation policy"}'
+```
+
+### Content Changes Across All Versions
+
+Content edits (e.g. scrubbing sensitive text from descriptions) have no bulk endpoint and must be
+applied per version using the edit endpoint, which takes the full server configuration.
+
+#### Step 1: List All Versions
 
 ```bash
 export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
@@ -65,29 +92,32 @@ ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
 curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions" > all_versions.json
 ```
 
-### Step 2: Extract Versions
+#### Step 2: Extract Versions
 
 ```bash
 # Extract all versions from the server
 jq -r '.servers[].server.version' all_versions.json > versions.txt
 ```
 
-### Step 3: Apply Changes to All Versions
+#### Step 3: Apply Changes to Each Version
 
 ```bash
-# For each version, apply changes using the edit endpoint
 while read VERSION; do
   echo "Processing version: $VERSION"
 
-  # Apply your changes here (e.g., set status to "deleted")
-  curl -X PUT "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}?status=deleted" \
+  # Download the version, edit it, then send the full body back
+  curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}" > version.json
+
+  # Apply your changes to version.json here, then:
+  curl -X PUT "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/${VERSION}" \
     -H "Authorization: Bearer ${REGISTRY_TOKEN}" \
-    -H "Content-Type: application/json"
+    -H "Content-Type: application/json" \
+    -d "$(cat version.json)"
 
 done < versions.txt
 
 # Clean up temporary files
-rm versions.txt all_versions.json
+rm -f versions.txt all_versions.json version.json
 ```
 
 ## Quick Operations
@@ -98,7 +128,7 @@ rm versions.txt all_versions.json
 export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
 ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
 
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}" > latest_version.json
+curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/latest" > latest_version.json
 export VERSION=$(jq -r '.server.version' latest_version.json)
 echo "Latest version: $VERSION"
 ```
@@ -113,30 +143,37 @@ export REGISTRY_TOKEN="<your-token>"
 REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" VERSION="$VERSION" ./tools/admin/takedown.sh
 ```
 
-### Takedown Latest Version (Entire Server)
+### Takedown All Versions of a Server
+
+`ALL_VERSIONS=true` marks every version as deleted in a single request. The script requires either
+`VERSION` or `ALL_VERSIONS` to be set explicitly, so a forgotten `VERSION` cannot take down a whole
+server by accident.
 
 ```bash
 export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
 export REGISTRY_TOKEN="<your-token>"
 
-# This marks the latest version as deleted
-REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" ./tools/admin/takedown.sh
+REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" ALL_VERSIONS=true ./tools/admin/takedown.sh
 ```
 
-### Takedown All Versions of a Server
+### Takedown the Latest Version Only
 
 ```bash
 export SERVER_NAME="<server-name>"    # e.g., "com.example/my-server"
 export REGISTRY_TOKEN="<your-token>"
 ENCODED_SERVER_NAME=$(echo "$SERVER_NAME" | sed 's|/|%2F|g')
 
-# Get all versions and takedown each one
-curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions" | \
-  jq -r '.servers[].server.version' | \
-  while read VERSION; do
-    echo "Taking down version: $VERSION"
-    REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" VERSION="$VERSION" ./tools/admin/takedown.sh
-  done
+# Resolve the latest version, then take down that specific version
+VERSION=$(curl -s "https://registry.modelcontextprotocol.io/v0/servers/${ENCODED_SERVER_NAME}/versions/latest" | jq -r '.server.version')
+
+REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" VERSION="$VERSION" ./tools/admin/takedown.sh
+```
+
+### Record a Reason with a Takedown
+
+```bash
+REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" ALL_VERSIONS=true \
+  STATUS_MESSAGE="Removed per moderation policy" ./tools/admin/takedown.sh
 ```
 
 ## Connecting to the Production Database
@@ -179,6 +216,8 @@ Any write attempts will fail with an error until you disconnect.
 ## Notes
 
 - **Version-specific changes**: Only affect that particular version
-- **Server-wide changes**: Must be applied to each version individually
+- **Server-wide status changes**: `PATCH /v0/servers/{serverName}/status` updates every version in one request
+- **Server-wide content changes**: Have no bulk endpoint and must be applied to each version individually
+- **Status vs. edit**: Use `PATCH .../status` to change status alone; the `PUT` edit endpoint requires the full server configuration
 - **Content scrubbing**: Use the version-specific edit workflow to scrub sensitive content
 - **Server name**: Cannot be changed in any version (it's the immutable identifier)

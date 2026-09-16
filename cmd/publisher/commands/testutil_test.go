@@ -68,9 +68,10 @@ func SetupMockRegistryServer(t *testing.T, publishHandler func(w http.ResponseWr
 func SetupTestToken(t *testing.T, registryURL, token string) string {
 	t.Helper()
 
-	// Override $HOME so tokenFilePath() resolves to a temp directory
+	// Override the home directory so tokenFilePath() resolves to a temp directory.
 	tempHome := t.TempDir()
 	t.Setenv("HOME", tempHome)
+	t.Setenv("USERPROFILE", tempHome)
 
 	dir := filepath.Join(tempHome, ".config", "mcp-publisher")
 	require.NoError(t, os.MkdirAll(dir, 0700))
@@ -94,9 +95,7 @@ func SetupTestToken(t *testing.T, registryURL, token string) string {
 func CreateTestServerJSON(t *testing.T, serverJSON apiv0.ServerJSON) (string, string) {
 	t.Helper()
 
-	tempDir, err := os.MkdirTemp("", "mcp-publisher-test")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tempDir) })
+	tempDir := t.TempDir()
 
 	jsonData, err := json.MarshalIndent(serverJSON, "", "  ")
 	require.NoError(t, err)

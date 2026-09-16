@@ -2,6 +2,7 @@ package auth_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
 )
@@ -43,6 +44,36 @@ func TestIsValidDomain(t *testing.T) {
 		t.Run(tc.domain, func(t *testing.T) {
 			if got := auth.IsValidDomain(tc.domain); got != tc.want {
 				t.Errorf("IsValidDomain(%q) = %v, want %v", tc.domain, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestValidateDomainAndTimestampRejectsGitHubPages(t *testing.T) {
+	timestamp := time.Now().UTC().Format(time.RFC3339)
+	tests := []struct {
+		domain    string
+		wantError bool
+	}{
+		// GitHub Pages domains must not mint io.github.* namespaces via DNS/HTTP
+		{"my-org.github.io", true},
+		{"my-org.GitHub.IO", true},
+		{"github.io", true},
+		{"sub.my-org.github.io", true},
+
+		// Lookalikes and ordinary domains stay allowed
+		{"github.io.evil-example.com", false},
+		{"example.com", false},
+		{"my-org.github.io.example.com", false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.domain, func(t *testing.T) {
+			_, err := auth.ValidateDomainAndTimestamp(tc.domain, timestamp)
+			if tc.wantError && err == nil {
+				t.Errorf("ValidateDomainAndTimestamp(%q) succeeded, want github.io rejection", tc.domain)
+			}
+			if !tc.wantError && err != nil {
+				t.Errorf("ValidateDomainAndTimestamp(%q) failed: %v", tc.domain, err)
 			}
 		})
 	}

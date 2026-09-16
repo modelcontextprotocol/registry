@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/cmd/publisher/commands"
@@ -35,6 +37,87 @@ func TestPublishCommand_Success(t *testing.T) {
 
 	// Should succeed
 	assert.NoError(t, err)
+}
+
+func TestPublishCommand_PrintsSubmittedIdentityOnFailure(t *testing.T) {
+	server := SetupMockRegistryServer(t, func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "duplicate version", http.StatusBadRequest)
+	}, nil)
+	SetupTestToken(t, server.URL, "test-token")
+	CreateTestServerJSON(t, apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "io.github.BargLabs/cejel",
+		Description: "A test server",
+		Version:     "0.4.5",
+	})
+
+	output, err := os.CreateTemp(t.TempDir(), "stdout")
+	require.NoError(t, err)
+	originalStdout := os.Stdout
+	os.Stdout = output
+	t.Cleanup(func() {
+		os.Stdout = originalStdout
+		_ = output.Close()
+	})
+
+	err = commands.PublishCommand(nil)
+	require.ErrorContains(t, err, "duplicate version")
+	_, err = output.Seek(0, io.SeekStart)
+	require.NoError(t, err)
+	data, err := io.ReadAll(output)
+	require.NoError(t, err)
+	assert.Equal(t, "Publishing io.github.BargLabs/cejel@0.4.5 to "+server.URL+"...\n", string(data))
+}
+
+func TestPublishCommand_PreservesNonASCIIDescription(t *testing.T) {
+	server := SetupMockRegistryServer(t,
+		func(w http.ResponseWriter, r *http.Request) {
+			var req apiv0.ServerJSON
+			require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+			assert.Equal(t, "Tools for agents — safely", req.Description)
+
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(apiv0.ServerResponse{
+				Server: apiv0.ServerJSON{
+					Name:    req.Name,
+					Version: req.Version,
+				},
+			})
+		},
+		nil,
+	)
+	SetupTestToken(t, server.URL, "test-token")
+
+	CreateTestServerJSON(t, apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/test-server",
+		Description: "Tools for agents — safely",
+		Version:     "1.0.0",
+	})
+
+	require.NoError(t, commands.PublishCommand([]string{}))
+}
+
+func TestPublishCommand_RejectsInvalidUTF8ServerJSON(t *testing.T) {
+	createRawServerJSON(t, []byte{
+		'{', '"', '$', 's', 'c', 'h', 'e', 'm', 'a', '"', ':', '"', '"', ',',
+		'"', 'n', 'a', 'm', 'e', '"', ':', '"', 'c', 'o', 'm', '.', 'e', 'x', 'a', 'm', 'p', 'l', 'e', '/', 't', 'e', 's', 't', '"', ',',
+		'"', 'd', 'e', 's', 'c', 'r', 'i', 'p', 't', 'i', 'o', 'n', '"', ':', '"', 'b', 'a', 'd', ' ', 0xe2, '"', ',',
+		'"', 'v', 'e', 'r', 's', 'i', 'o', 'n', '"', ':', '"', '1', '.', '0', '.', '0', '"', '}',
+	})
+
+	err := commands.PublishCommand([]string{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "UTF-8")
+}
+
+func TestPublishCommand_RejectsUnpairedSurrogateEscape(t *testing.T) {
+	createRawServerJSON(t, []byte(`{"$schema":"","name":"com.example/test","description":"bad \udc94","version":"1.0.0"}`))
+
+	err := commands.PublishCommand([]string{})
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "unpaired UTF-16 surrogate")
+	assert.Contains(t, err.Error(), "$.description")
 }
 
 func TestPublishCommand_422ValidationFlow(t *testing.T) {
@@ -100,6 +183,20 @@ func TestPublishCommand_422ValidationFlow(t *testing.T) {
 	// Verify both endpoints were called
 	assert.Equal(t, 1, publishCallCount, "publish endpoint should be called once")
 	assert.Equal(t, 1, validateCallCount, "validate endpoint should be called once after 422")
+}
+
+func createRawServerJSON(t *testing.T, data []byte) {
+	t.Helper()
+
+	tempDir := t.TempDir()
+	serverFile := filepath.Join(tempDir, "server.json")
+	require.NoError(t, os.WriteFile(serverFile, data, 0600))
+
+	originalDir, err := os.Getwd()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = os.Chdir(originalDir) })
+
+	require.NoError(t, os.Chdir(tempDir))
 }
 
 func TestPublishCommand_422WithMultipleIssues(t *testing.T) {

@@ -22,12 +22,13 @@ type Transport struct {
 //   - NPM:   RegistryType, Identifier (package name), Version, RegistryBaseURL (optional)
 //   - PyPI:  RegistryType, Identifier (package name), Version, RegistryBaseURL (optional)
 //   - NuGet: RegistryType, Identifier (package ID), Version, RegistryBaseURL (optional)
+//   - Cargo: RegistryType, Identifier (crate name), Version, RegistryBaseURL (optional)
 //   - OCI:   RegistryType, Identifier (full image reference like "ghcr.io/owner/repo:tag")
 //   - MCPB:  RegistryType, Identifier (download URL), Version (optional), FileSHA256 (required)
 type Package struct {
-	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "nuget", "mcpb")
-	RegistryType string `json:"registryType" minLength:"1" doc:"Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'oci', 'nuget', 'mcpb')" example:"npm"`
-	// RegistryBaseURL is the base URL of the package registry (used by npm, pypi, nuget; not used by oci, mcpb)
+	// RegistryType indicates how to download packages (e.g., "npm", "pypi", "cargo", "oci", "nuget", "mcpb")
+	RegistryType string `json:"registryType" minLength:"1" doc:"Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'cargo', 'oci', 'nuget', 'mcpb')" example:"npm"`
+	// RegistryBaseURL is the base URL of the package registry (used by npm, pypi, nuget, cargo; not used by oci, mcpb)
 	RegistryBaseURL string `json:"registryBaseUrl,omitempty" format:"uri" doc:"Base URL of the package registry" example:"https://registry.npmjs.org"`
 	// Identifier is the package identifier:
 	//   - For NPM/PyPI/NuGet: package name or ID

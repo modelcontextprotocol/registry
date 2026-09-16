@@ -140,16 +140,13 @@ func TestValidateCommand_NoServerFile(t *testing.T) {
 	server := SetupMockRegistryServer(t, nil, nil)
 	SetupTestToken(t, server.URL, "test-token")
 
-	// Don't create server.json
-	tempDir, err := os.MkdirTemp("", "mcp-publisher-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
 	defer func() { _ = os.Chdir(originalDir) }()
 
-	_ = os.Chdir(tempDir)
+	require.NoError(t, os.Chdir(tempDir))
 
 	err = commands.ValidateCommand([]string{})
 
@@ -161,15 +158,13 @@ func TestValidateCommand_InvalidJSON(t *testing.T) {
 	server := SetupMockRegistryServer(t, nil, nil)
 	SetupTestToken(t, server.URL, "test-token")
 
-	tempDir, err := os.MkdirTemp("", "mcp-publisher-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
 	defer func() { _ = os.Chdir(originalDir) }()
 
-	_ = os.Chdir(tempDir)
+	require.NoError(t, os.Chdir(tempDir))
 
 	// Create invalid JSON file
 	err = os.WriteFile("server.json", []byte("{ invalid json }"), 0600)

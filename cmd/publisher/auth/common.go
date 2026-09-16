@@ -164,10 +164,10 @@ func parseRawPrivateKey(curve elliptic.Curve, privateKeyBytes []byte) (*ecdsa.Pr
 	return &ecdsa.PrivateKey{
 		PublicKey: ecdsa.PublicKey{
 			Curve: curve,
-			X:     x,
-			Y:     y,
+			X:     x, //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
+			Y:     y, //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 		},
-		D: d,
+		D: d, //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 	}, nil
 }
 

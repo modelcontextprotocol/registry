@@ -372,6 +372,35 @@ The same `registryType` / `identifier` pattern works for other supported OCI hos
 }
 ```
 
+### Cargo (Rust) Package Example
+
+`cargo install <crate>` places the binary on PATH (via `~/.cargo/bin`); MCP clients invoke it directly by name. There is no single-shot equivalent of `npx` (npm), `uvx` (PyPI), or `dnx` (NuGet, .NET 10 SDK) for cargo — install once, run by name.
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.example/widget-mcp",
+  "description": "Rust-native MCP server",
+  "title": "Widget",
+  "repository": {
+    "url": "https://github.com/example/widget-mcp",
+    "source": "github"
+  },
+  "version": "0.3.0",
+  "packages": [
+    {
+      "registryType": "cargo",
+      "registryBaseUrl": "https://crates.io",
+      "identifier": "widget-mcp",
+      "version": "0.3.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
 ### NuGet (.NET) Package Example
 
 The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.

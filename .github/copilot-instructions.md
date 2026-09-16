@@ -9,5 +9,5 @@ To publish an MCP server to the registry, use the `mcp-publisher` CLI tool. See 
 ## Development
 
 - Use `make` targets where possible (run `make help` to see available targets)
-- Run `make check` to run lint, unit tests, and integration tests
+- Run `make check` to run lint, schema validation, and all tests (this also stops any running dev-compose environment)
 - Run `make dev-compose` to start the local development environment

@@ -27,10 +27,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Check for help flag for subcommands
+	// Check for help flag for subcommands. Commands without an entry in
+	// printCommandHelp handle --help themselves, so fall through to dispatch.
 	if len(os.Args) >= 3 && (os.Args[2] == "--help" || os.Args[2] == "-h") {
-		printCommandHelp(os.Args[1])
-		return
+		if printCommandHelp(os.Args[1]) {
+			return
+		}
 	}
 
 	var err error
@@ -81,7 +83,10 @@ func printUsage() {
 	_, _ = fmt.Fprintln(os.Stdout, "Use 'mcp-publisher <command> --help' for more information about a command.")
 }
 
-func printCommandHelp(command string) {
+// printCommandHelp prints help for a specific command and reports whether it had
+// an entry here. Commands without one parse --help themselves, so the caller
+// should fall through to normal dispatch when this returns false.
+func printCommandHelp(command string) bool {
 	switch command {
 	case "init":
 		_, _ = fmt.Fprintln(os.Stdout, "Create a server.json file template")
@@ -165,7 +170,8 @@ func printCommandHelp(command string) {
 		_, _ = fmt.Fprintln(os.Stdout, "You must be logged in before updating status. Run 'mcp-publisher login' first.")
 
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		printUsage()
+		return false
 	}
+
+	return true
 }

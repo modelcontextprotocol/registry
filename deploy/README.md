@@ -147,15 +147,20 @@ Pre-requisites:
 
 ## Configuration
 
+Configuration keys are namespaced. Set them with `pulumi config set <key> [--secret]`.
+
 | Parameter | Description | Required |
 |-----------|-------------|----------|
-| `environment` | Deployment environment (local/staging/prod) | Yes |
-| `provider` | Kubernetes provider (local/gcp) | No (default: local) |
-| `githubClientId` | GitHub OAuth Client ID | Yes |
-| `githubClientSecret` | GitHub OAuth Client Secret | Yes |
-| `imageTag` | Docker image tag for production environment | Yes (prod only) |
-| `gcpProjectId` | GCP Project ID (required when provider=gcp) | No |
-| `gcpRegion` | GCP Region (default: us-central1) | No |
+| `mcp-registry:environment` | Deployment environment (local/staging/prod) | Yes |
+| `mcp-registry:provider` | Kubernetes provider (local/gcp) | No (default: local) |
+| `mcp-registry:githubClientId` | GitHub OAuth Client ID | Yes |
+| `mcp-registry:githubClientSecret` | GitHub OAuth Client Secret | Yes (secret) |
+| `mcp-registry:jwtPrivateKey` | Ed25519 seed used to sign registry JWTs | Yes (secret) |
+| `mcp-registry:googleOauthClientSecret` | Google OAuth client secret for Grafana login | Yes (secret) |
+| `mcp-registry:imageTag` | Docker image tag for production environment | Yes (prod only) |
+| `gcp:project` | GCP Project ID | Yes when `provider=gcp` |
+| `gcp:region` | GCP Region | No (default: us-central1) |
+| `gcp:credentials` | GCP service account credentials JSON | No (secret; set in staging/prod) |
 
 ## Database Backups
 

@@ -324,11 +324,12 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			Annotations: pulumi.StringMap{
 				"cert-manager.io/cluster-issuer": pulumi.String("letsencrypt-prod"),
 				"kubernetes.io/ingress.class":    pulumi.String("nginx"),
-			// Rate limiting to protect against abuse
-			// Allows 180 requests/minute (3 req/sec avg), with bursts up to 540 requests
-			// Status code 429 is set globally via NGINX ConfigMap (per-Ingress annotation doesn't work)
-			"nginx.ingress.kubernetes.io/limit-rpm":              pulumi.String("180"),
-			"nginx.ingress.kubernetes.io/limit-burst-multiplier": pulumi.String("3"),
+				// Rate limiting to protect against abuse. The exact bulk-list paths get a
+				// separate, higher budget below; all other routes retain this limit.
+				// Allows 180 requests/minute (3 req/sec avg), with bursts up to 540 requests.
+				// Status code 429 is set globally via NGINX ConfigMap (per-Ingress annotation doesn't work).
+				"nginx.ingress.kubernetes.io/limit-rpm":              pulumi.String("180"),
+				"nginx.ingress.kubernetes.io/limit-burst-multiplier": pulumi.String("3"),
 			},
 		},
 		Spec: &networkingv1.IngressSpecArgs{
@@ -348,6 +349,87 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 								&networkingv1.HTTPIngressPathArgs{
 									Path:     pulumi.String("/"),
 									PathType: pulumi.String("Prefix"),
+									Backend: &networkingv1.IngressBackendArgs{
+										Service: &networkingv1.IngressServiceBackendArgs{
+											Name: service.Metadata.Name().Elem(),
+											Port: &networkingv1.ServiceBackendPortArgs{
+												Number: pulumi.Int(80),
+											},
+										},
+									},
+								},
+							},
+						},
+					})
+				}
+				return rules
+			}).(networkingv1.IngressRuleArrayOutput),
+		},
+	}, pulumi.Provider(cluster.Provider), pulumi.DependsOnInputs(ingressNginx.Ready))
+	if err != nil {
+		return nil, err
+	}
+
+	// Bulk registry consumers paginate the complete server list. Production
+	// traffic analysis on 2026-08-06 showed legitimate consumers sustaining
+	// roughly 10 requests/second per source IP while the catch-all Ingress only
+	// allowed 3 requests/second per controller replica. That caused NGINX to
+	// reject healthy pagination requests before they reached the application.
+	// The ingress controller caches these exact public paths for 30 seconds, so
+	// the higher client budget does not translate into the same increase in
+	// application and database load.
+	//
+	// ingress-nginx merges different paths for the same host across Ingress
+	// resources and applies each resource's annotations only to its own paths.
+	// Keep the canonical list endpoints on exact paths so publish, auth, edit,
+	// status, and individual-server reads remain protected by the lower limit.
+	_, err = networkingv1.NewIngress(ctx, "mcp-registry-bulk-read", &networkingv1.IngressArgs{
+		Metadata: &metav1.ObjectMetaArgs{
+			Name:      pulumi.String("mcp-registry-bulk-read"),
+			Namespace: pulumi.String("default"),
+			Labels: pulumi.StringMap{
+				"app":         pulumi.String("mcp-registry"),
+				"environment": pulumi.String(environment),
+			},
+			Annotations: pulumi.StringMap{
+				// ingress-nginx disables response buffering by default, but NGINX
+				// needs it to populate the on-disk proxy cache for these paths.
+				"nginx.ingress.kubernetes.io/proxy-buffering": pulumi.String("on"),
+				// Limits are maintained independently by each ingress-nginx replica.
+				// At two production replicas this permits up to 1,200 requests/minute
+				// per source IP, while a single replica still accommodates the observed
+				// 10 requests/second pagination rate.
+				"nginx.ingress.kubernetes.io/limit-rpm":              pulumi.String("600"),
+				"nginx.ingress.kubernetes.io/limit-burst-multiplier": pulumi.String("3"),
+			},
+		},
+		Spec: &networkingv1.IngressSpecArgs{
+			IngressClassName: pulumi.String("nginx"),
+			Rules: pulumi.ToStringArray(hosts).ToStringArrayOutput().ApplyT(func(hosts []string) networkingv1.IngressRuleArray {
+				rules := make(networkingv1.IngressRuleArray, 0, len(hosts))
+				for _, host := range hosts {
+					rules = append(rules, &networkingv1.IngressRuleArgs{
+						Host: pulumi.String(host),
+						Http: &networkingv1.HTTPIngressRuleValueArgs{
+							Paths: networkingv1.HTTPIngressPathArray{
+								// Exact prevents the higher budget from applying to edit/status
+								// subpaths. The v0.1 dot is accepted because ingress.go disables
+								// strict path validation for this controller.
+								&networkingv1.HTTPIngressPathArgs{
+									Path:     pulumi.String("/v0/servers"),
+									PathType: pulumi.String("Exact"),
+									Backend: &networkingv1.IngressBackendArgs{
+										Service: &networkingv1.IngressServiceBackendArgs{
+											Name: service.Metadata.Name().Elem(),
+											Port: &networkingv1.ServiceBackendPortArgs{
+												Number: pulumi.Int(80),
+											},
+										},
+									},
+								},
+								&networkingv1.HTTPIngressPathArgs{
+									Path:     pulumi.String("/v0.1/servers"),
+									PathType: pulumi.String("Exact"),
 									Backend: &networkingv1.IngressBackendArgs{
 										Service: &networkingv1.IngressServiceBackendArgs{
 											Name: service.Metadata.Name().Elem(),

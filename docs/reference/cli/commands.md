@@ -16,7 +16,10 @@ $ brew install mcp-publisher
 
 All commands support:
 - `--help`, `-h` - Show command help
-- `--registry` - Registry URL (default: `https://registry.modelcontextprotocol.io`)
+
+`--registry` is a flag on `login` only (default: `https://registry.modelcontextprotocol.io`). The
+other commands read the registry URL from the stored login token, so passing `--registry` to
+`publish` would be interpreted as the `server.json` path.
 
 ## Commands
 
@@ -26,14 +29,14 @@ Generate a `server.json` template with automatic detection.
 
 **Usage:**
 ```bash
-mcp-publisher init [options]
+mcp-publisher init
 ```
 
 **Behavior:**
 - Creates `server.json` in current directory
 - Auto-detects package managers (`package.json`, `setup.py`, etc.)
 - Pre-fills fields where possible
-- Prompts for missing required fields
+- Writes `TODO:` placeholders for fields it cannot detect — it is non-interactive and takes no flags
 
 **Example output:**
 ```json
@@ -59,10 +62,13 @@ Authenticate with the registry.
 
 #### GitHub Interactive
 ```bash
-mcp-publisher login github [--registry=URL]
+mcp-publisher login github [--token=PAT] [--registry=URL]
 ```
 - Opens browser for GitHub OAuth flow
 - Grants access to `io.github.{username}/*` and `io.github.{org}/*` namespaces
+- `--token` supplies a GitHub Personal Access Token instead of the interactive flow, which is how
+  [publishing from GitHub Actions](../../modelcontextprotocol-io/github-actions.mdx) authenticates
+  without a browser. This flag is accepted by `login github` only.
 
 #### GitHub OIDC (CI/CD)  
 ```bash
@@ -83,12 +89,13 @@ Also see [the guide to publishing from GitHub Actions](../../modelcontextprotoco
 
 #### DNS Verification
 ```bash
-mcp-publisher login dns --domain=example.com --private-key=HEX_KEY [--registry=URL]
+mcp-publisher login dns --domain=example.com --private-key=HEX_KEY [--algorithm=ed25519|ecdsap384] [--registry=URL]
 ```
 - Verifies domain ownership via DNS TXT record
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
-  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault.
+  - `--algorithm` defaults to `ed25519`. **For an ECDSA P-384 key you must pass `--algorithm ecdsap384`**, otherwise the key is rejected with `invalid seed length: expected 32 bytes, got 48`.
+  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault. Cloud providers derive the algorithm from the key itself, so `--algorithm` does not apply to them.
 
 **Setup:** (for Ed25519, recommended)
 ```bash
@@ -118,6 +125,9 @@ openssl ec -in key.pem -text -noout -conv_form compressed | grep -A4 "pub:" | ta
 
 # Extract private key for login
 openssl ec -in <pem path> -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n'
+
+# Log in, selecting the ECDSA P-384 algorithm explicitly
+mcp-publisher login dns --algorithm ecdsap384 --domain=example.com --private-key=HEX_KEY
 ```
 
 **Setup:** (for Google KMS signing)
@@ -178,12 +188,13 @@ mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault 
 
 #### HTTP Verification
 ```bash
-mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--registry=URL]
+mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--algorithm=ed25519|ecdsap384] [--registry=URL]
 ```
 - Verifies domain ownership via HTTPS endpoint  
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
-  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault.
+  - `--algorithm` defaults to `ed25519`. **For an ECDSA P-384 key you must pass `--algorithm ecdsap384`**.
+  - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault. Cloud providers derive the algorithm from the key itself, so `--algorithm` does not apply to them.
 
 **Setup:** (for Ed25519, recommended)
 ```bash
@@ -203,6 +214,9 @@ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
 # Host public key at:
 # https://example.com/.well-known/mcp-registry-auth
 # Content: v=MCPv1; k=ecdsap384; p=PUBLIC_KEY
+
+# Log in, selecting the ECDSA P-384 algorithm explicitly
+mcp-publisher login http --algorithm ecdsap384 --domain=example.com --private-key=HEX_KEY
 ```
 
 Cloud signing is also supported for HTTP authentication, similar to the DNS examples above. Just swap out the `dns` positional argument for `http`.

@@ -3,28 +3,28 @@ updates:
   - package-ecosystem: gomod
     directory: /
     groups:
-      opentelemetry:
+      go-dependencies:
         patterns:
-          - "go.opentelemetry.io/*"
+          - "*"
     schedule:
       interval: weekly
   - package-ecosystem: gomod
     directory: /deploy
     groups:
-      opentelemetry:
+      deploy-go-dependencies:
         patterns:
-          - "go.opentelemetry.io/*"
+          - "*"
     schedule:
       interval: weekly
   - package-ecosystem: github-actions
     directory: /
     groups:
-      actions:
+      github-actions:
         patterns:
           - "*"
     schedule:
       interval: weekly
-  - package-ecosystem: "docker"
-    directory: "/"
+  - package-ecosystem: docker
+    directory: /
     schedule:
-        interval: "weekly"
+      interval: weekly

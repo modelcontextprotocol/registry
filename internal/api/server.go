@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 	"time"
@@ -72,11 +73,18 @@ func TrailingSlashMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only redirect if the path is not "/" and ends with a "/"
 		if r.URL.Path != "/" && strings.HasSuffix(r.URL.Path, "/") {
+			// Build the target from the path and query alone, dropping any
+			// scheme/host the client may have supplied in an absolute-form
+			// request URI ("GET http://evil.com/foo/ HTTP/1.1"), which would
+			// otherwise be echoed back as an off-site redirect.
+			//
 			// path.Clean both removes the trailing slash and collapses any
 			// leading "//" to "/", which prevents an open-redirect via a
 			// protocol-relative path like "//evil.com/" (GHSA-v8vw-gw5j-w7m6).
-			newURL := *r.URL
-			newURL.Path = path.Clean(r.URL.Path)
+			newURL := url.URL{
+				Path:     path.Clean(r.URL.Path),
+				RawQuery: r.URL.RawQuery,
+			}
 
 			// Use 308 Permanent Redirect to preserve the request method
 			http.Redirect(w, r, newURL.String(), http.StatusPermanentRedirect)
@@ -109,6 +117,7 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 			http.MethodGet,
 			http.MethodPost,
 			http.MethodPut,
+			http.MethodPatch,
 			http.MethodDelete,
 			http.MethodOptions,
 		},
@@ -145,6 +154,12 @@ func NewServer(cfg *config.Config, registryService service.RegistryService, metr
 	}
 
 	return server
+}
+
+// Handler returns the fully wrapped HTTP handler (middleware stack plus routes).
+// Exposed so tests can exercise the middleware, e.g. CORS, without binding a port.
+func (s *Server) Handler() http.Handler {
+	return s.server.Handler
 }
 
 // Start begins listening for incoming HTTP requests

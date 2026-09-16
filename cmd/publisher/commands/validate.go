@@ -142,6 +142,9 @@ func ValidateCommand(args []string) error {
 		}
 		return fmt.Errorf("failed to read %s: %w", serverFile, err)
 	}
+	if err := validateJSONUnicode(serverFile, serverData); err != nil {
+		return err
+	}
 
 	// Validate JSON
 	var serverJSON apiv0.ServerJSON
@@ -188,6 +191,10 @@ func ValidateCommand(args []string) error {
 
 // validateViaAPI calls the /validate endpoint on the registry
 func validateViaAPI(registryURL string, serverData []byte) (*validators.ValidationResult, error) {
+	if err := validateJSONUnicode("server.json", serverData); err != nil {
+		return nil, err
+	}
+
 	// Parse the server JSON data to ensure it's valid JSON
 	var serverJSON apiv0.ServerJSON
 	err := json.Unmarshal(serverData, &serverJSON)

@@ -190,7 +190,7 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 			return e
 		}
 		if versionExists {
-			return database.ErrInvalidVersion
+			return fmt.Errorf("%w: %s@%s already exists", database.ErrInvalidVersion, serverJSON.Name, serverJSON.Version)
 		}
 		currentLatest, e = s.db.GetCurrentLatestVersion(ctx, tx, serverJSON.Name)
 		if e != nil && !errors.Is(e, database.ErrNotFound) {

@@ -37,9 +37,9 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Edit MCP server",
 		Description: "Update the configuration of a specific version of an existing MCP server. Requires edit permission for the server. Use PATCH /servers/{serverName}/versions/{version}/status to update status metadata.",
-		Tags:        []string{"servers"},
+		Tags:        []string{tagServers},
 		Security: []map[string][]string{
-			{"bearer": {}},
+			{securitySchemeBearer: {}},
 		},
 	}, func(ctx context.Context, input *EditServerInput) (*Response[apiv0.ServerResponse], error) {
 		// Extract bearer token

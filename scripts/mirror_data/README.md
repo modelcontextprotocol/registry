@@ -14,7 +14,7 @@ These scripts help you:
 
 ## Prerequisites
 
-- Go 1.24.x
+- Go — see the [prerequisites in the root README](../../README.md#pre-requisites) for the required version
 - PostgreSQL (via Docker or local installation)
 - Required Go packages:
   ```bash
@@ -31,7 +31,7 @@ go run scripts/mirror_data/fetch_production_data.go
 ```
 
 This will:
-- Fetch all servers from https://registry.modelcontextprotocol.io/v0.1/servers
+- Fetch all servers from https://registry.modelcontextprotocol.io/v0/servers
 - Handle pagination automatically
 - Save data to `scripts/mirror_data/production_servers.json`
 - Be respectful to the API with rate limiting
@@ -71,7 +71,7 @@ This will:
 4. Analyze the data and report statistics
 5. Show sample servers with NULL status values
 
-To test a different migration, edit `maxMigration` in the script (line 24)
+To test a different migration, edit `maxMigration` in `load_production_data.go`
 
 ### 4. Test Migrations
 
@@ -80,8 +80,8 @@ After loading the data, you can test migrations against real production data.
 #### Testing a Single Migration
 
 ```bash
-# Test migration 008
-cat internal/database/migrations/008_separate_official_metadata.sql | \
+# Test the separate_official_metadata migration
+cat internal/database/migrations/009_separate_official_metadata.sql | \
   docker exec -i test-postgres psql -U postgres -d registry_test
 ```
 
@@ -90,7 +90,7 @@ cat internal/database/migrations/008_separate_official_metadata.sql | \
 1. **Check the error output:**
 ```bash
 # Run migration and capture all output
-cat internal/database/migrations/008_separate_official_metadata.sql | \
+cat internal/database/migrations/009_separate_official_metadata.sql | \
   docker exec -i test-postgres psql -U postgres -d registry_test 2>&1 | \
   grep -E "(ERROR|NOTICE|WARNING)"
 ```
@@ -126,7 +126,7 @@ EOF
 # Start a transaction to test and rollback
 docker exec test-postgres psql -U postgres -d registry_test <<EOF
 BEGIN;
-\i /dev/stdin < internal/database/migrations/008_separate_official_metadata.sql
+\i /dev/stdin < internal/database/migrations/009_separate_official_metadata.sql
 -- Inspect the results
 \d servers
 SELECT COUNT(*) FROM servers;
@@ -145,7 +145,7 @@ go run scripts/mirror_data/load_production_data.go
 
 2. **Test your migration changes:**
 ```bash
-cat internal/database/migrations/008_separate_official_metadata.sql | \
+cat internal/database/migrations/009_separate_official_metadata.sql | \
   docker exec -i test-postgres psql -U postgres -d registry_test
 ```
 
@@ -183,7 +183,7 @@ The `load_production_data.go` script connects to:
 - User: `postgres`
 - Password: `testpass`
 
-Modify line 17 in the script if you need different connection parameters.
+Modify the `sql.Open` connection string in `load_production_data.go` if you need different connection parameters.
 
 ## Example Output
 
@@ -234,4 +234,4 @@ docker logs test-postgres
 ```
 
 ### Migration failures
-The script stops at migration 007 intentionally. To test migration 008, run it manually after the data is loaded.
+The script stops at migration 007 intentionally. To test later migrations (008 onwards), run them manually after the data is loaded, in order.
