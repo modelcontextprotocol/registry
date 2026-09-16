@@ -26,6 +26,7 @@ var (
 	ErrInvalidNamedArgumentName      = errors.New("invalid named argument name format")
 	ErrArgumentValueStartsWithName   = errors.New("argument value cannot start with the argument name")
 	ErrArgumentDefaultStartsWithName = errors.New("argument default cannot start with the argument name")
+	ErrValueHintOnNamedArgument      = errors.New("valueHint is only valid for positional arguments, not named arguments")
 
 	// Server name validation errors
 	ErrMultipleSlashesInServerName = errors.New("server name cannot contain multiple slashes")
