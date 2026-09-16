@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -227,7 +228,7 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON, performValidation bo
 		var validationErr *jsonschema.ValidationError
 		if errors.As(err, &validationErr) {
 			// Process the validation error and its causes
-			addValidationError(result, validationErr, schema)
+			addValidationError(result, validationErr, schema, serverMap)
 		} else {
 			// Fallback for other error types
 			issue := NewValidationIssue(
@@ -245,13 +246,13 @@ func validateServerJSONSchema(serverJSON *apiv0.ServerJSON, performValidation bo
 }
 
 // addValidationError processes validation errors and extracts useful information
-func addValidationError(result *ValidationResult, validationErr *jsonschema.ValidationError, schema map[string]any) {
+func addValidationError(result *ValidationResult, validationErr *jsonschema.ValidationError, schema map[string]any, instance any) {
 	// Use DetailedOutput to get the nested error details
 	detailed := validationErr.DetailedOutput()
 
 	// Process the detailed error structure
 
-	addDetailedErrors(result, detailed, schema)
+	addDetailedErrors(result, detailed, schema, instance)
 }
 
 // ConvertJSONPointerToBracketNotation converts a JSON Pointer path (RFC 6901) to bracket notation
@@ -313,7 +314,7 @@ func ConvertJSONPointerToBracketNotation(jsonPointer string) string {
 }
 
 // addDetailedErrors recursively processes detailed validation errors
-func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed, schema map[string]any) {
+func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed, schema map[string]any, instance any) {
 	// Only process errors that have specific field paths and meaningful messages
 	if detailed.InstanceLocation != "" && detailed.Error != "" {
 		// Convert JSON Pointer format to bracket notation to match semantic validation format
@@ -328,6 +329,13 @@ func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed, s
 		}
 		if strings.Contains(message, "is not valid") {
 			message = strings.ReplaceAll(message, "is not valid", "has invalid format")
+		}
+
+		// Provide explicit feedback for maxLength violations: name the field, show the
+		// observed/max length, and suggest a truncated value the publisher can paste back.
+		// Issue: https://github.com/modelcontextprotocol/registry/issues/1184
+		if enhanced, ok := enhanceMaxLengthMessage(detailed, instance, path); ok {
+			message = enhanced
 		}
 
 		// Build the full resolved reference path
@@ -345,8 +353,111 @@ func addDetailedErrors(result *ValidationResult, detailed jsonschema.Detailed, s
 
 	// Process nested errors
 	for _, nested := range detailed.Errors {
-		addDetailedErrors(result, nested, schema)
+		addDetailedErrors(result, nested, schema, instance)
 	}
+}
+
+// maxLengthErrorRe matches the jsonschema library's default maxLength error message,
+// which is formatted as "length must be <= MAX, but got OBSERVED". Captures: 1=max, 2=observed.
+var maxLengthErrorRe = regexp.MustCompile(`length must be <= (\d+), but got (\d+)`)
+
+// enhanceMaxLengthMessage rewrites the jsonschema library's terse maxLength error message
+// into something publishers can act on directly: it names the field, reports the observed
+// length, restates the limit, and includes a truncated value they can paste back. Returns
+// false if the error is not a maxLength violation or the offending value cannot be resolved.
+func enhanceMaxLengthMessage(detailed jsonschema.Detailed, instance any, bracketPath string) (string, bool) {
+	if !strings.HasSuffix(detailed.KeywordLocation, "/maxLength") {
+		return "", false
+	}
+	matches := maxLengthErrorRe.FindStringSubmatch(detailed.Error)
+	if len(matches) != 3 {
+		return "", false
+	}
+	maxLen, err := strconv.Atoi(matches[1])
+	if err != nil {
+		return "", false
+	}
+	value, ok := resolveJSONPointer(instance, detailed.InstanceLocation)
+	if !ok {
+		return "", false
+	}
+	str, ok := value.(string)
+	if !ok {
+		return "", false
+	}
+	fieldName := extractFieldName(bracketPath)
+	observed := utf8.RuneCountInString(str)
+	suggestion := truncateForSuggestion(str, maxLen)
+	return fmt.Sprintf(`field %q is too long: %d chars (max %d). Truncate to: %q`,
+		fieldName, observed, maxLen, suggestion), true
+}
+
+// resolveJSONPointer walks a decoded JSON value (map[string]any / []any) following an
+// RFC 6901 JSON Pointer and returns the value at that location. Returns false if the
+// pointer cannot be resolved.
+func resolveJSONPointer(data any, pointer string) (any, bool) {
+	if pointer == "" {
+		return data, true
+	}
+	if !strings.HasPrefix(pointer, "/") {
+		return nil, false
+	}
+	current := data
+	for _, raw := range strings.Split(pointer[1:], "/") {
+		// RFC 6901 escape sequences: ~1 -> "/", ~0 -> "~" (~1 must come first)
+		token := strings.ReplaceAll(raw, "~1", "/")
+		token = strings.ReplaceAll(token, "~0", "~")
+		switch node := current.(type) {
+		case map[string]any:
+			next, exists := node[token]
+			if !exists {
+				return nil, false
+			}
+			current = next
+		case []any:
+			idx, err := strconv.Atoi(token)
+			if err != nil || idx < 0 || idx >= len(node) {
+				return nil, false
+			}
+			current = node[idx]
+		default:
+			return nil, false
+		}
+	}
+	return current, true
+}
+
+// extractFieldName returns the leaf field name from a bracket-notation path, so e.g.
+// "packages[0].description" -> "description" and "packages[0]" -> "packages".
+func extractFieldName(path string) string {
+	if path == "" {
+		return ""
+	}
+	if idx := strings.LastIndex(path, "."); idx != -1 {
+		path = path[idx+1:]
+	}
+	if idx := strings.Index(path, "["); idx != -1 {
+		path = path[:idx]
+	}
+	return path
+}
+
+// truncateForSuggestion returns a rune-safe truncation of s that fits within maxLen
+// characters, ending in an ellipsis "..." when truncation is needed. For maxLen <= 3
+// (no room for an ellipsis) it returns the first maxLen runes verbatim.
+func truncateForSuggestion(s string, maxLen int) string {
+	if maxLen <= 0 {
+		return ""
+	}
+	runes := []rune(s)
+	if len(runes) <= maxLen {
+		return s
+	}
+	const ellipsis = "..."
+	if maxLen <= len(ellipsis) {
+		return string(runes[:maxLen])
+	}
+	return string(runes[:maxLen-len(ellipsis)]) + ellipsis
 }
 
 // buildResolvedReference extracts the resolved reference path by resolving $ref segments
