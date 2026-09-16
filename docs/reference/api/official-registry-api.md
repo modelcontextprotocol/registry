@@ -77,6 +77,64 @@ The `GET /v0.1/servers/{serverName}/versions` endpoint returns all versions of a
 - POST `/v0.1/auth/github-oidc` - Exchange GitHub OIDC token for auth token
 - POST `/v0.1/auth/oidc` - Exchange Google OIDC token for auth token (for admins)
 
+##### Publishing without `mcp-publisher`
+
+[Publisher Commands](../cli/commands.md) covers the CLI, which is the recommended path. If you
+publish from a script, a CI step, or a language without the Go binary, the request and response
+shapes for the domain-proof flow are below.
+
+Exchange a signed timestamp for a token. The signature is over the RFC3339 timestamp string,
+and is **hex-encoded, not base64**:
+
+```bash
+curl -s -X POST https://registry.modelcontextprotocol.io/v0.1/auth/http \
+  -H 'content-type: application/json' \
+  -d '{
+        "domain": "example.com",
+        "timestamp": "2026-08-16T15:53:00Z",
+        "signed_timestamp": "<hex signature over the timestamp string>"
+      }'
+```
+
+The response field is **`registry_token`**:
+
+```json
+{ "registry_token": "<jwt>", "expires_at": 1786893600 }
+```
+
+The token is short-lived, so authenticate and publish in the same run.
+
+Then publish. The body is the [server.json](../server-json/generic-server-json.md) object
+**flat at the top level** — not wrapped in `{"server": {...}}` — and `$schema` is required:
+
+```bash
+curl -s -X POST https://registry.modelcontextprotocol.io/v0.1/publish \
+  -H "authorization: Bearer ${REGISTRY_TOKEN}" \
+  -H 'content-type: application/json' \
+  -d '{
+        "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+        "name": "com.example/my-server",
+        "description": "Does a useful thing.",
+        "version": "1.0.0",
+        "repository": { "url": "https://github.com/example/my-server", "source": "github" },
+        "remotes": [{ "type": "streamable-http", "url": "https://example.com/mcp" }]
+      }'
+```
+
+Three responses worth recognising:
+
+- Wrapping the body in `{"server": {...}}` returns `422` with
+  `expected required property $schema to be present`. The validator is describing the outer
+  object, so the message names fields that are plainly present one level down.
+- Reading the auth response's `token` instead of `registry_token` sends `Bearer undefined`,
+  which returns `401` with `token is malformed: token contains an invalid number of segments`
+  — an error that reads like a signing fault and is not one.
+- Re-publishing an existing `version` returns `400` with
+  `invalid version: cannot publish duplicate version`. There is no upsert; bump the version.
+
+If you are unsure whether a server was already published, query the full name rather than
+searching for part of it — `?search=` matches loosely and can rank other servers above yours.
+
 #### Status endpoints
 
 ##### Update Single Version Status
