@@ -384,6 +384,41 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedStatus:       http.StatusUnprocessableEntity,
 			expectedError:        "Failed to publish server, invalid schema: call /validate for details",
 		},
+		{
+			name: "invalid argument - empty type",
+			requestBody: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Packages: []model.Package{
+					{
+						RegistryType: model.RegistryTypeNPM,
+						Identifier:   "test-package",
+						Version:      "1.0.0",
+						Transport: model.Transport{
+							Type: model.TransportTypeStdio,
+						},
+						RuntimeArguments: []model.Argument{
+							{
+								InputWithVariables: model.InputWithVariables{Input: model.Input{Value: "mcp"}},
+								Type:               "", // type present but empty string, not a missing key
+								Name:               "command",
+							},
+						},
+					},
+				},
+			},
+			tokenClaims: &auth.JWTClaims{
+				AuthMethod: auth.MethodNone,
+				Permissions: []auth.Permission{
+					{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+				},
+			},
+			setupRegistryService: func(_ service.RegistryService) {},
+			expectedStatus:       http.StatusUnprocessableEntity,
+			expectedError:        "Failed to publish server, invalid schema: call /validate for details",
+		},
 	}
 
 	for _, tc := range testCases {
