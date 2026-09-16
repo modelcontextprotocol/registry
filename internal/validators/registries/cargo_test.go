@@ -434,7 +434,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			readmeStatus: http.StatusOK,
 			readmeBody:   fmt.Sprintf("<html><body><p>mcp-name: %s-extended</p></body></html>", serverName),
 			wantErr:      true,
-			wantContains: []string{"ownership validation failed"},
+			wantContains: []string{"'combined-prefix' version '0.1.0' ownership validation failed"},
 		},
 		{
 			// Token present but glued to a trailing period — the error must explain
@@ -446,7 +446,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			readmeStatus: http.StatusOK,
 			readmeBody:   fmt.Sprintf("<html><body><p>mcp-name: %s.</p></body></html>", serverName),
 			wantErr:      true,
-			wantContains: []string{"immediately followed by", `"."`},
+			wantContains: []string{"'combined-glued' version '0.1.0' ownership validation failed", "immediately followed by", `"."`},
 		},
 	}
 

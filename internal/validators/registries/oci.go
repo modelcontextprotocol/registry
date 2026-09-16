@@ -138,7 +138,7 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	}
 
 	if mcpName != serverName {
-		return fmt.Errorf("OCI image ownership validation failed. Expected annotation 'io.modelcontextprotocol.server.name' = '%s', got '%s'", serverName, mcpName)
+		return fmt.Errorf("OCI image '%s' ownership validation failed. Expected annotation 'io.modelcontextprotocol.server.name' = '%s', got '%s'", pkg.Identifier, serverName, mcpName)
 	}
 
 	return nil
