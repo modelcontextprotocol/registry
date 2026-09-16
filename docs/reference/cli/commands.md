@@ -70,6 +70,10 @@ mcp-publisher login github [--token=PAT] [--registry=URL]
   [publishing from GitHub Actions](../../modelcontextprotocol-io/github-actions.mdx) authenticates
   without a browser. This flag is accepted by `login github` only.
 
+Interactive login handles retryable OAuth errors in both HTTP 200 and HTTP 400 responses.
+Access denial, expired codes, and unrecognized OAuth errors still stop polling; an
+`incorrect_device_code` error receives at most two additional attempts per login.
+
 #### GitHub OIDC (CI/CD)  
 ```bash
 mcp-publisher login github-oidc [--registry=URL]
