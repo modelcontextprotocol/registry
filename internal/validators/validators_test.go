@@ -250,6 +250,16 @@ func TestValidate(t *testing.T) {
 			expectedError: validators.ErrMultipleSlashesInServerName.Error(),
 		},
 		{
+			name: "server without repository",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
 			name: "valid server detail with all fields",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
@@ -280,6 +290,43 @@ func TestValidate(t *testing.T) {
 				},
 			},
 			expectedError: "",
+		},
+		{
+			name: "server with empty repository",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository:  &model.Repository{},
+				Version:     "1.0.0",
+			},
+			expectedError: "repository url is required when repository is provided",
+		},
+		{
+			name: "server with repository missing URL",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					Source: "github",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "repository url is required when repository is provided",
+		},
+		{
+			name: "server with repository missing source",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL: "https://github.com/owner/repo",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "repository source is required when repository is provided",
 		},
 		{
 			name: "server with invalid repository source",
