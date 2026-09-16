@@ -1,6 +1,6 @@
 module github.com/modelcontextprotocol/registry
 
-go 1.26
+go 1.26.0
 
 require (
 	cloud.google.com/go/kms v1.33.0
@@ -10,7 +10,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/danielgtaylor/huma/v2 v2.39.1
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/google/go-containerregistry v0.22.0
+	github.com/google/go-containerregistry v0.22.1
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/prometheus/client_golang v1.24.1
 	github.com/rs/cors v1.11.1
@@ -22,7 +22,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.46.0
 	go.opentelemetry.io/otel/sdk v1.46.0
 	go.opentelemetry.io/otel/sdk/metric v1.46.0
-	golang.org/x/mod v0.40.0
+	golang.org/x/mod v0.41.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
