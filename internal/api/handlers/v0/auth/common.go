@@ -95,6 +95,12 @@ func ValidateDomainAndTimestamp(domain, timestamp string) (*time.Time, error) {
 				"use GitHub authentication for io.github.* namespaces")
 	}
 
+	if isGitLabPagesDomain(domain) {
+		return nil, fmt.Errorf(
+			"gitlab.io domains cannot be used with DNS/HTTP authentication; " +
+				"the proof only demonstrates write access to a single Pages repository")
+	}
+
 	ts, err := time.Parse(time.RFC3339, timestamp)
 	if err != nil {
 		return nil, fmt.Errorf("invalid timestamp format: %w", err)
@@ -398,6 +404,17 @@ func ReverseString(domain string) string {
 func isGitHubPagesDomain(domain string) bool {
 	d := strings.ToLower(domain)
 	return d == "github.io" || strings.HasSuffix(d, ".github.io")
+}
+
+// isGitLabPagesDomain reports whether domain is gitlab.io or a subdomain of it.
+// GitLab Pages serves <group>.gitlab.io from the <group>/<group>.gitlab.io
+// repository, so the HTTP/DNS proof only demonstrates push access to that one
+// repository — routinely held by ordinary Developers, a far weaker bar than
+// group ownership. Users of io.gitlab.* namespaces should prove ownership of
+// their apex domain instead.
+func isGitLabPagesDomain(domain string) bool {
+	d := strings.ToLower(domain)
+	return d == "gitlab.io" || strings.HasSuffix(d, ".gitlab.io")
 }
 
 func IsValidDomain(domain string) bool {
