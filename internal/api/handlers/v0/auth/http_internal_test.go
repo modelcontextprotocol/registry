@@ -1,8 +1,15 @@
 package auth
 
 import (
+	"bytes"
+	"context"
+	"crypto/tls"
 	"net"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestIsBlockedIP(t *testing.T) {
@@ -76,5 +83,130 @@ func TestIsBlockedIP(t *testing.T) {
 				t.Errorf("isBlockedIP(%q) = %v, want %v", tc.ip, got, tc.blocked)
 			}
 		})
+	}
+}
+
+// Mirrors the constants of the same purpose in the external test package; the
+// well-known path and a placeholder domain are all FetchKey needs, since the
+// transport dials the local test server regardless of the request hostname.
+const (
+	internalWellKnownPath = "/.well-known/mcp-registry-auth"
+	internalTestDomain    = "example.com"
+)
+
+// newLocalTLSTransport builds a transport that reaches srv regardless of the
+// hostname in the request URL, so the production client configuration can be
+// exercised against a local server.
+func newLocalTLSTransport(srv *httptest.Server) *http.Transport {
+	dialAddr := srv.Listener.Addr().String()
+	return &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // testing only
+		DialContext: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			d := &net.Dialer{}
+			return d.DialContext(ctx, network, dialAddr)
+		},
+		ForceAttemptHTTP2:   false,
+		MaxIdleConns:        10,
+		IdleConnTimeout:     30 * time.Second,
+		TLSHandshakeTimeout: 5 * time.Second,
+	}
+}
+
+func newLocalTLSFetcher(srv *httptest.Server) *DefaultHTTPKeyFetcher {
+	return &DefaultHTTPKeyFetcher{client: newHTTPKeyFetcherClient(newLocalTLSTransport(srv))}
+}
+
+// The published HTTP verification contract (see
+// docs/modelcontextprotocol-io/authentication.mdx) tells users the endpoint must
+// answer 200 OK directly, so the client must never follow a redirect to another
+// host or path.
+func TestHTTPKeyFetcherClient_DoesNotFollowRedirects(t *testing.T) {
+	var redirectTargetHit bool
+
+	target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		redirectTargetHit = true
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("v=MCPv1; k=ed25519; p=REDIRECTED"))
+	}))
+	defer target.Close()
+
+	redirector := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != internalWellKnownPath {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		http.Redirect(w, r, target.URL+internalWellKnownPath, http.StatusMovedPermanently)
+	}))
+	defer redirector.Close()
+
+	fetcher := newLocalTLSFetcher(redirector)
+
+	_, err := fetcher.FetchKey(context.Background(), internalTestDomain)
+	if err == nil {
+		t.Fatal("expected the redirect to fail verification, got nil error")
+	}
+	if !strings.Contains(err.Error(), "HTTP 301") {
+		t.Fatalf("got err=%v, want it to report HTTP 301", err)
+	}
+	if redirectTargetHit {
+		t.Error("the redirect target was requested; redirects must not be followed")
+	}
+}
+
+// Pins the timeout users are told to satisfy and the request headers the
+// documented fetch sends.
+func TestHTTPKeyFetcherClient_TimeoutAndRequestHeaders(t *testing.T) {
+	type observed struct {
+		accept    string
+		userAgent string
+	}
+	var got observed
+
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = observed{accept: r.Header.Get("Accept"), userAgent: r.Header.Get("User-Agent")}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("  v=MCPv1; k=ed25519; p=PUBLIC_KEY\n"))
+	}))
+	defer srv.Close()
+
+	fetcher := newLocalTLSFetcher(srv)
+
+	if fetcher.client.Timeout != httpKeyFetchTimeout {
+		t.Errorf("client timeout = %v, want %v", fetcher.client.Timeout, httpKeyFetchTimeout)
+	}
+
+	key, err := fetcher.FetchKey(context.Background(), internalTestDomain)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if want := "v=MCPv1; k=ed25519; p=PUBLIC_KEY"; key != want {
+		t.Errorf("key = %q, want %q (surrounding whitespace must be trimmed)", key, want)
+	}
+	if want := "text/plain"; got.accept != want {
+		t.Errorf("Accept = %q, want %q", got.accept, want)
+	}
+	if want := "mcp-registry/1.0"; got.userAgent != want {
+		t.Errorf("User-Agent = %q, want %q", got.userAgent, want)
+	}
+}
+
+// A body above the documented 4096 byte limit must fail even when the server
+// answers 200 OK.
+func TestHTTPKeyFetcher_RejectsResponseAboveDocumentedLimit(t *testing.T) {
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != internalWellKnownPath {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(bytes.Repeat([]byte("A"), MaxKeyResponseSize+1))
+	}))
+	defer srv.Close()
+
+	fetcher := newLocalTLSFetcher(srv)
+
+	_, err := fetcher.FetchKey(context.Background(), internalTestDomain)
+	if err == nil || !strings.Contains(err.Error(), "too large") {
+		t.Fatalf("got err=%v, want a response-too-large error", err)
 	}
 }
