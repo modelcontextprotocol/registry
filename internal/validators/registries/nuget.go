@@ -22,6 +22,11 @@ var (
 
 const userAgent = "MCP-Registry-Validator/1.0"
 
+// maxNuGetReadmeBytes caps how much of a package README we buffer, so a hostile
+// or oversized response cannot exhaust validator memory. Mirrors the cargo
+// validator's maxCargoReadmeBytes.
+const maxNuGetReadmeBytes = 5 << 20 // 5 MiB
+
 type cachedServiceIndex struct {
 	index     *serviceIndex
 	expiresAt time.Time
@@ -76,7 +81,7 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 		return ErrMissingVersionForNuget
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := newNuGetHTTPClient(pkg.RegistryBaseURL)
 
 	// Fetch the service serviceIndex
 	serviceIndex, err := fetchAndCacheServiceIndex(ctx, client, pkg.RegistryBaseURL)
@@ -148,6 +153,56 @@ func validateAndNormalizeBaseURL(pkg *model.Package) error {
 	}
 
 	return nil
+}
+
+// nugetRedirectAllowed reports whether a redirect to target is permitted, given
+// the originating request. The target host must match the origin's host;
+// additionally, for the real NuGet base, the scheme must not change from the
+// origin's (which is https) and the port must stay default — so a redirect
+// cannot downgrade the scheme or steer the validator at a non-standard port on
+// an otherwise-trusted host. For test (httptest) bases only the host is checked,
+// so mocks on http/loopback keep working.
+//
+// This is the NuGet analogue of cargoURLAllowed. NuGet has no separate README
+// CDN host (the README URL comes from the trusted service-index template and is
+// served from the same host), so the allowed host is the origin's own host
+// rather than a static allow-list.
+func nugetRedirectAllowed(target, origin *url.URL, baseURL string) bool {
+	if target.Hostname() != origin.Hostname() {
+		return false
+	}
+	if baseURL == model.RegistryURLNuGet {
+		if target.Scheme != origin.Scheme {
+			return false
+		}
+		if p := target.Port(); p != "" && p != "443" {
+			return false
+		}
+	}
+	return true
+}
+
+// newNuGetHTTPClient builds the client used for all NuGet calls (service index,
+// README, and package index). Its CheckRedirect pins every redirect hop to the
+// originating request's host (see nugetRedirectAllowed), so an upstream 3xx
+// cannot steer the validator at an internal or attacker-chosen host (SSRF).
+// NuGet serves these resources directly without cross-host redirects, so this is
+// behaviour-preserving for real packages.
+func newNuGetHTTPClient(baseURL string) *http.Client {
+	return &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("stopped after 10 redirects")
+			}
+			// via is non-empty whenever net/http invokes CheckRedirect, so
+			// via[0] is the originating request.
+			if !nugetRedirectAllowed(req.URL, via[0].URL, baseURL) {
+				return fmt.Errorf("refusing redirect to unexpected URL %q", req.URL.Redacted())
+			}
+			return nil
+		},
+	}
 }
 
 func fetchAndCacheServiceIndex(ctx context.Context, client *http.Client, baseURL string) (*serviceIndex, error) {
@@ -234,8 +289,9 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
-		// Check README content
-		readmeBytes, err := io.ReadAll(resp.Body)
+		// Check README content. Bound the read so a hostile or oversized
+		// response cannot exhaust validator memory.
+		readmeBytes, err := io.ReadAll(io.LimitReader(resp.Body, maxNuGetReadmeBytes))
 		if err != nil {
 			return NoReadme, fmt.Errorf("failed to read NuGet README content: %w", err)
 		}
