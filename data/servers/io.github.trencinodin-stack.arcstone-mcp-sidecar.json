@@ -1,0 +1,8 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schema/2026/server.json",
+  "name": "io.github.trencinodin-stack/arcstone-mcp-sidecar",
+  "description": "Experimental downstream execution boundary for deterministic authorization and controlled actuation.",
+  "repository": "https://github.com/trencinodin-stack/arcstone-mcp-sidecar",
+  "license": "Apache-2.0",
+  "version": "0.1.0"
+}
