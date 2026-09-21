@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schema.json",
+  "name": "kindlesms",
+  "title": "KindleSMS - SMS Platform",
+  "description": "The Fastest Way to Reach Your Customers with SMS. Launch campaigns in minutes, not days. Automate outreach, manage contacts, and convert more leads with our powerful SMS marketing platform.",
+  "homepage": "https://kindlesms.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lexerAnn/sms"
+  },
+  "package": {
+    "type": "npm",
+    "name": "kindlesms",
+    "url": "https://www.npmjs.com/package/kindlesms"
+  },
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "kindlesms"]
+    },
+    {
+      "type": "http",
+      "url": "https://kindlesms.com/api/mcp"
+    }
+  ],
+  "config": {
+    "env": {
+      "USER_TOKEN": {
+        "type": "string",
+        "required": true,
+        "description": "Your KindleSMS Personal Connector Token (Settings > Claude & API on KindleSMS)"
+      }
+    }
+  },
+  "categories": ["marketing", "communication", "messaging"],
+  "license": "MIT"
+}
