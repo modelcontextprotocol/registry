@@ -1,0 +1,386 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "com.warppay402.api",
+  "title": "WarpPay402 MCP Gateway",
+  "version": "1.0.0",
+  "description": "High-speed Web3 intelligence, PDF extraction, web scraping, Base analytics, Arc analytics, yield vaults, smart contract deployment, Aerodrome swaps, CLAMM liquidity management, veAERO governance voting, Arc deployments, CCTP bridging, and x402 micropayment tools for autonomous AI agents.",
+  "websiteUrl": "https://www.warppay402.com",
+  "repository": {
+    "url": "https://github.com/Warppay402/Warppay402-MCP-Server",
+    "source": "github"
+  },
+  "endpoints": {
+    "mcp": "https://api.warppay402.com/mcp?v=2",
+    "openapi": "https://api.warppay402.com/openapi.json",
+    "agentCard": "https://api.warppay402.com/.well-known/agent.json",
+    "x402Manifest": "https://api.warppay402.com/.well-known/x402-manifest.json",
+    "agentOffers": "https://api.warppay402.com/agent-offers.json",
+    "llmsTxt": "https://api.warppay402.com/llms.txt",
+    "fiatOnramp": "https://api.warppay402.com/onramp"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "streaming": false,
+    "x402Micropayments": true,
+    "agentEscrows": true,
+    "paymaster": {
+      "version": "v0.8",
+      "contract": "0x46403812ac6f96675a5fac073f2317bc1ef09763",
+      "quoteEndpoint": "https://api.warppay402.com/api/v1/paymaster/quote",
+      "rpcEndpoint": "https://api.warppay402.com/api/v1/paymaster/rpc"
+    }
+  },
+  "payment": {
+    "protocol": "x402",
+    "version": "2.0",
+    "merchantWallet": "0x226df5aabe192fd2181555367c2f6b99da39c184",
+    "supportedChains": [
+      {
+        "caip2": "eip155:8453",
+        "chainName": "Base Mainnet",
+        "assetSymbol": "USDC",
+        "assetContract": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "payeeAddress": "0x226df5aabe192fd2181555367c2f6b99da39c184"
+      },
+      {
+        "caip2": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "chainName": "Solana Mainnet",
+        "assetSymbol": "USDC",
+        "assetContract": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "payeeAddress": "HXeYkDCYT813GaWThsx3qZ9qrtVDkVARU5X2p7mAVrV7"
+      },
+      {
+        "caip2": "eip155:42161",
+        "chainName": "Arbitrum One",
+        "assetSymbol": "USDC",
+        "assetContract": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+        "payeeAddress": "0x226df5aabe192fd2181555367c2f6b99da39c184"
+      },
+      {
+        "caip2": "eip155:5042",
+        "chainName": "Arc Mainnet",
+        "assetSymbol": "USDC",
+        "assetContract": "0x0000000000000000000000000000000000000000",
+        "payeeAddress": "0x226df5aabe192fd2181555367c2f6b99da39c184"
+      }
+    ],
+    "fiatOnramp": {
+      "provider": "Coinbase Pay / CDP Onramp",
+      "cdpProjectId": "7f3d7d40-1ea4-59db-8c63-d37debb5643f",
+      "acceptedPaymentMethods": [
+        "Apple Pay",
+        "Credit Card",
+        "Debit Card",
+        "Coinbase Account"
+      ]
+    },
+    "escrowContracts": {
+      "agentPaymentEscrow": "0x456CdEC6ccf1FE853563a0fBa2BA72DE9266aD0E",
+      "agentSubscriptionEscrow": "0x58A3d3e48fA326979e0f9F9378091b549a209cAd",
+      "agentBountyEscrow": "0x93e9a6E89ec95A01a713F8e701f2Ce14cD58DeAD"
+    }
+  },
+  "tools": [
+    {
+      "name": "public_data_feed",
+      "description": "Public attestation data feed JSON records ($0.0001 USDC)",
+      "priceUsdc": "0.0001",
+      "endpoint": "https://api.warppay402.com/public_data_feed/{filename}",
+      "method": "GET",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "filename": { "type": "string", "description": "Attestation filename (e.g., test.json)" }
+        },
+        "required": ["filename"]
+      }
+    },
+    {
+      "name": "data_feeds",
+      "description": "Pre-scraped AI data feeds ($0.001 USDC)",
+      "priceUsdc": "0.0010",
+      "endpoint": "https://api.warppay402.com/api/v1/feeds/{feedId}",
+      "method": "GET",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "feedId": { "type": "string", "description": "Feed report ID (e.g., trending-pairs)" }
+        },
+        "required": ["feedId"]
+      }
+    },
+    {
+      "name": "web_scraper",
+      "description": "Scrapes web pages into clean markdown for AI context ($0.001 USDC)",
+      "priceUsdc": "0.0010",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/web-scraper",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "Target public website URL to scrape" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "browser_scraper",
+      "description": "Unblockable JS-rendering browser scraper backed by proxy workers ($0.005 USDC)",
+      "priceUsdc": "0.0050",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/browser-scraper",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "Target JS-heavy URL to render" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "base_analytics",
+      "description": "Fetches Base 0x wallet balance and nonce stats ($0.002 USDC)",
+      "priceUsdc": "0.0020",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/base-analytics",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": { "type": "string", "description": "Target 0x EVM wallet address" }
+        },
+        "required": ["address"]
+      }
+    },
+    {
+      "name": "arc_analytics",
+      "description": "Fetches Arc Mainnet block height, gas fees, and node metrics ($0.001 USDC)",
+      "priceUsdc": "0.0010",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/arc-analytics",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "arc_network_oracle_query",
+      "description": "Pre-flight Arc Mainnet telemetry: RPC latency, gas prices, native USDC balance, and account nonce ($0.10 USDC)",
+      "priceUsdc": "0.1000",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/arc-network-query",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "includeGasTrends": { "type": "boolean", "default": true },
+          "checkMerchantAccount": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    {
+      "name": "arc_dex_oracle",
+      "description": "Real-time ETH/USDC spot price resolver and DEX oracle for Arc Mainnet ($0.001 USDC)",
+      "priceUsdc": "0.0010",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/arc-dex-oracle",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pair": { "type": "string", "default": "ETH/USDC" }
+        }
+      }
+    },
+    {
+      "name": "x402_telemetry_feed",
+      "description": "Public x402 micropayment proofs and uptime telemetry (Free)",
+      "priceUsdc": "0.0000",
+      "endpoint": "https://api.warppay402.com/api/v1/telemetry/settlements",
+      "method": "GET",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "pdf_extractor",
+      "description": "Extracts plain text preview from public PDF URLs ($0.005 USDC)",
+      "priceUsdc": "0.0050",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/pdf-extractor",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pdfUrl": { "type": "string", "description": "Public HTTPS PDF URL" }
+        },
+        "required": ["pdfUrl"]
+      }
+    },
+    {
+      "name": "render_screenshot",
+      "description": "Captures rendered webpage screenshot image data ($0.01 USDC)",
+      "priceUsdc": "0.0100",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/render-screenshot",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string", "description": "Target website URL" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "extract_json",
+      "description": "Extracts structured JSON data from web pages ($0.01 USDC)",
+      "priceUsdc": "0.0100",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/extract-json",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string" },
+          "schema": { "type": "object" }
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "smart_contract_verifier",
+      "description": "Source code analysis, ABI fetching, and proxy validation ($0.02 USDC)",
+      "priceUsdc": "0.0200",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/smart-contract-verifier",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": { "type": "string", "description": "Base contract address" }
+        },
+        "required": ["address"]
+      }
+    },
+    {
+      "name": "get_aerodrome_yields",
+      "description": "Fetch live Aerodrome DEX pool yields, APYs, and TVL on Base Mainnet ($0.003 USDC)",
+      "priceUsdc": "0.0030",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/aerodrome-yields",
+      "method": "GET",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "aerodrome_swap",
+      "description": "Executes low-slippage token swaps directly via Aerodrome Finance Router on Base Mainnet ($0.01 USDC)",
+      "priceUsdc": "0.0100",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/aerodrome-swap",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tokenIn": { "type": "string" },
+          "tokenOut": { "type": "string" },
+          "amountIn": { "type": "string" },
+          "decimalsIn": { "type": "number" },
+          "isStable": { "type": "boolean" }
+        },
+        "required": ["tokenIn", "tokenOut", "amountIn", "decimalsIn", "isStable"]
+      }
+    },
+    {
+      "name": "aerodrome_clamm",
+      "description": "Allows agents to open, adjust, and rebalance concentrated liquidity ranges on Aerodrome Slipstream ($0.01 USDC)",
+      "priceUsdc": "0.0100",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/aerodrome-clamm",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "enum": ["mint", "increaseLiquidity", "decreaseLiquidity", "collect"] }
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "name": "aerodrome_veaero",
+      "description": "Automates $AERO locking, epoch gauge voting, and bribe reward harvesting on Aerodrome ($0.01 USDC)",
+      "priceUsdc": "0.0100",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/aerodrome-veaero",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "enum": ["createLock", "increaseAmount", "increaseUnlockTime", "vote", "claimBribes"] }
+        },
+        "required": ["action"]
+      }
+    },
+    {
+      "name": "deploy_contract",
+      "description": "Deploys custom escrow, bounty, or agent smart contracts to Base Mainnet ($5.00 USDC)",
+      "priceUsdc": "5.0000",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/deploy-contract",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contractType": { "type": "string", "enum": ["escrow", "bounty", "subscription", "pendle"] }
+        },
+        "required": ["contractType"]
+      }
+    },
+    {
+      "name": "deploy_solana_contract",
+      "description": "Programmatically initializes SPL Escrows, cNFT Badge Issuers, or Raydium Vaults on Solana Mainnet ($5.00 USDC)",
+      "priceUsdc": "5.0000",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/deploy-solana-contract",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contractType": { "type": "string", "enum": ["spl_escrow", "cnft_badge", "raydium_vault"] },
+          "params": { "type": "object" }
+        },
+        "required": ["contractType"]
+      }
+    },
+    {
+      "name": "deploy_arc_contract",
+      "description": "Deploys custom escrow, bounty, or agent smart contracts to Arc Mainnet ($5.00 USDC)",
+      "priceUsdc": "5.0000",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/deploy-arc-contract",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contractType": { "type": "string", "enum": ["escrow", "bounty", "subscription"] }
+        },
+        "required": ["contractType"]
+      }
+    },
+    {
+      "name": "arc_cctp_bridge",
+      "description": "Bridges USDC cross-chain from Arc Mainnet via Circle CCTP ($0.25 USDC)",
+      "priceUsdc": "0.2500",
+      "endpoint": "https://api.warppay402.com/api/v1/tools/arc-cctp-bridge",
+      "method": "POST",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "amountUsdc": { "type": "string" },
+          "destinationChain": { "type": "string", "enum": ["ethereum", "avalanche", "optimism", "arbitrum", "solana", "base"] },
+          "recipientAddress": { "type": "string" }
+        },
+        "required": ["amountUsdc", "destinationChain", "recipientAddress"]
+      }
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "contactEmail": "warppay.402@gmail.com",
+      "publisher": "WarpPay402 Studio",
+      "protocolSupport": ["MCP-2024-11-05", "x402-v2.0", "ERC-4337-v0.8", "ERC-7677"]
+    }
+  }
+}
