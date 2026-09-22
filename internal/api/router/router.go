@@ -121,20 +121,22 @@ func WithSkipPaths(paths ...string) MiddlewareOption {
 }
 
 // handle404 returns a helpful 404 error with suggestions for common mistakes
-func handle404(w http.ResponseWriter, r *http.Request) {
+func handle404(w http.ResponseWriter, r *http.Request, uiBasePath string) {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(http.StatusNotFound)
 
 	path := r.URL.Path
-	detail := "Endpoint not found. See /docs for the API documentation."
+	docsPath := uiBasePath + "/docs"
+	detail := fmt.Sprintf("Endpoint not found. See %s for the API documentation.", docsPath)
 
 	// Provide suggestions for common API endpoint mistakes
 	if !strings.HasPrefix(path, "/v0/") && !strings.HasPrefix(path, "/v0.1/") {
 		detail = fmt.Sprintf(
-			"Endpoint not found. Did you mean '%s' or '%s'? See /docs for the API documentation.",
+			"Endpoint not found. Did you mean '%s' or '%s'? See %s for the API documentation.",
 			"/v0.1"+path,
 			"/v0"+path,
+			docsPath,
 		)
 	}
 
@@ -236,7 +238,7 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 					"frame-ancestors 'none'; "+
 					"base-uri 'self'; "+
 					"form-action 'self'")
-			_, err := w.Write([]byte(v0.GetUIHTML()))
+			_, err := w.Write([]byte(v0.GetUIHTML(cfg.UIBasePath)))
 			if err != nil {
 				http.Error(w, "Failed to write response", http.StatusInternalServerError)
 			}
@@ -244,7 +246,7 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 		}
 
 		// Handle 404 for all non-matched routes
-		handle404(w, r)
+		handle404(w, r, cfg.UIBasePath)
 	})
 
 	return api

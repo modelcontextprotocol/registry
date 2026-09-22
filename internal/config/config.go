@@ -17,6 +17,11 @@ type Config struct {
 	EnableAnonymousAuth      bool   `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 	EnableRegistryValidation bool   `env:"ENABLE_REGISTRY_VALIDATION" envDefault:"true"`
 
+	// UIBasePath is a path prefix for browser-side links when the UI is served
+	// behind a reverse proxy under a subpath (e.g. "/mcp/registry"). It does
+	// not affect API routing.
+	UIBasePath string `env:"UI_BASE_PATH" envDefault:""`
+
 	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
 
 	// OIDC Configuration
