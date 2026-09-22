@@ -101,10 +101,10 @@ func validatePyPIPackage(ctx context.Context, pkg model.Package, serverName stri
 	// If the token IS present but glued to a trailing character, say so — otherwise
 	// the publisher sees "must appear as mcp-name: X" while looking at exactly that.
 	if trailing, glued := mcpNameTokenGluedTrailing(description, serverName); glued {
-		return fmt.Errorf("PyPI package '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and republish", pkg.Identifier, serverName, trailing)
+		return fmt.Errorf("PyPI package '%s' version '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and republish", pkg.Identifier, pkg.Version, serverName, trailing)
 	}
 
-	return fmt.Errorf("PyPI package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
+	return fmt.Errorf("PyPI package '%s' version '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, pkg.Version, serverName, serverName)
 }
 
 // pypiPackageState is the outcome of probing the package-level PyPI metadata
