@@ -1,4 +1,19 @@
-{
+// Source of truth for the server.json JSON Schema.
+//
+// This TypeScript file is the canonical definition of the schema. The committed
+// artifact `draft/server.schema.json` is generated from it -- do not edit that
+// JSON by hand. Run `npm run generate` (or `make generate-schema` from the repo
+// root) to regenerate it, and `npm run check` to verify it is in sync.
+//
+// The schema is expressed as a plain object literal so the generated JSON can be
+// reproduced exactly (a strict no-op vs. the previous OpenAPI-derived output).
+// The `JSONSchema` type is intentionally permissive: the document is draft-07
+// JSON Schema that also carries OpenAPI-style `example` annotations, which are
+// not part of the standard JSON Schema vocabulary.
+
+export type JSONSchema = { [keyword: string]: unknown };
+
+export const schema: JSONSchema = {
   "$comment": "This file is auto-generated from docs/reference/server-json/schema.ts. Do not edit manually. Run 'make generate-schema' to update.",
   "$id": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/docs/reference/server-json/draft/server.schema.json",
   "$ref": "#/definitions/ServerDetail",
@@ -282,7 +297,7 @@
           "description": "Transport protocol configuration for the package"
         },
         "version": {
-          "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '\u003e=1.2.3', '1.x', '1.*').",
+          "description": "Package version. Must be a specific version. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*').",
           "example": "1.0.2",
           "maxLength": 255,
           "minLength": 1,
@@ -375,7 +390,7 @@
       "description": "Repository metadata for the MCP server source code. Enables users and security experts to inspect the code, improving transparency.",
       "properties": {
         "id": {
-          "description": "Repository identifier from the hosting service (e.g., GitHub repo ID). Owned and determined by the source forge. Should remain stable across repository renames and may be used to detect repository resurrection attacks - if a repository is deleted and recreated, the ID should change. For GitHub, use: gh api repos/\u003cowner\u003e/\u003crepo\u003e --jq '.id'",
+          "description": "Repository identifier from the hosting service (e.g., GitHub repo ID). Owned and determined by the source forge. Should remain stable across repository renames and may be used to detect repository resurrection attacks - if a repository is deleted and recreated, the ID should change. For GitHub, use: gh api repos/<owner>/<repo> --jq '.id'",
           "example": "b94b5f7e-c7c6-d760-2c78-a5e9b8a5b8c9",
           "type": "string"
         },
@@ -477,7 +492,7 @@
           "type": "string"
         },
         "version": {
-          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '\u003e=1.2.3', '1.x', '1.*').",
+          "description": "Version string for this server. SHOULD follow semantic versioning (e.g., '1.0.2', '2.1.0-alpha'). Equivalent of Implementation.version in MCP specification. Non-semantic versions are allowed but may not sort predictably. Version ranges are rejected (e.g., '^1.2.3', '~1.2.3', '>=1.2.3', '1.x', '1.*').",
           "example": "1.0.2",
           "maxLength": 255,
           "type": "string"
@@ -574,4 +589,4 @@
     }
   },
   "title": "server.json defining a Model Context Protocol (MCP) server"
-}
+};

@@ -1,0 +1,5 @@
+{
+  "name": "no-namespace-separator",
+  "description": "The name must contain exactly one slash separating namespace from name.",
+  "version": "1.0.0"
+}
