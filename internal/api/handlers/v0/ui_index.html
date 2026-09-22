@@ -279,6 +279,7 @@
             recentServers.forEach(item => {
                 const server = item.server;
                 const meta = item._meta?.['io.modelcontextprotocol.registry/official'];
+                const identity = getServerCardIdentity(server);
 
                 const card = document.createElement('div');
                 card.className = 'bg-blue-50 border border-blue-200 rounded-lg overflow-hidden hover:border-blue-400 hover:shadow-md transition-all flex flex-col';
@@ -288,7 +289,10 @@
                 header.onclick = () => toggleDetails(card, item);
                 header.innerHTML = `
                     <div class="flex items-start justify-between gap-3 mb-2">
-                        <h3 class="font-semibold text-gray-900 text-base flex-1 min-w-0 break-all">${escapeHtml(server.name)}</h3>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 text-base ${identity.titleWrapClass}">${escapeHtml(identity.displayTitle)}</h3>
+                            ${identity.technicalName ? `<p class="text-xs text-gray-500 leading-tight mt-0.5 break-all">${escapeHtml(identity.technicalName)}</p>` : ''}
+                        </div>
                         <span class="text-xs text-gray-500 font-medium whitespace-nowrap">v${escapeHtml(server.version)}</span>
                     </div>
                     <p class="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-2 break-words">${escapeHtml(server.description || '')}</p>
@@ -300,6 +304,16 @@
                 card.appendChild(header);
                 container.appendChild(card);
             });
+        }
+
+        function getServerCardIdentity(server) {
+            const hasDistinctTitle = Boolean(server.title && server.title !== server.name);
+
+            return {
+                displayTitle: hasDistinctTitle ? server.title : server.name,
+                technicalName: hasDistinctTitle ? server.name : null,
+                titleWrapClass: hasDistinctTitle ? 'break-words' : 'break-all'
+            };
         }
 
         // Fetch servers
@@ -344,6 +358,7 @@
             servers.forEach(item => {
                 const server = item.server;
                 const meta = item._meta?.['io.modelcontextprotocol.registry/official'];
+                const identity = getServerCardIdentity(server);
 
                 const card = document.createElement('div');
                 card.className = 'bg-white border border-gray-200 rounded-lg overflow-hidden hover:border-blue-300 hover:shadow-md transition-all flex flex-col';
@@ -353,7 +368,10 @@
                 header.onclick = () => toggleDetails(card, item);
                 header.innerHTML = `
                     <div class="flex items-start justify-between gap-3 mb-2">
-                        <h3 class="font-semibold text-gray-900 text-base flex-1 min-w-0">${escapeHtml(server.name)}</h3>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-900 text-base ${identity.titleWrapClass}">${escapeHtml(identity.displayTitle)}</h3>
+                            ${identity.technicalName ? `<p class="text-xs text-gray-500 leading-tight mt-0.5 break-all">${escapeHtml(identity.technicalName)}</p>` : ''}
+                        </div>
                         <span class="text-xs text-gray-500 font-medium whitespace-nowrap">v${escapeHtml(server.version)}</span>
                     </div>
                     <p class="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-2">${escapeHtml(server.description || '')}</p>
