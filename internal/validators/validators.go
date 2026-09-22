@@ -404,6 +404,20 @@ func validateArgument(ctx *ValidationContext, obj *model.Argument) *ValidationRe
 		// Validate value and default don't start with the name
 		valueResult := validateArgumentValueFields(ctx, obj.Name, obj.Value, obj.Default)
 		result.Merge(valueResult)
+
+		// valueHint names a positional slot for transport URL variable
+		// substitution, so it only makes sense on positional arguments. The
+		// schema allows it on named arguments (the union branches don't set
+		// additionalProperties: false), so reject it here instead.
+		if obj.ValueHint != "" {
+			issue := NewValidationIssueFromError(
+				ValidationIssueTypeSemantic,
+				ctx.Field("valueHint").String(),
+				ErrValueHintOnNamedArgument,
+				"valuehint-on-named-argument",
+			)
+			result.AddIssue(issue)
+		}
 	}
 	return result
 }
