@@ -111,6 +111,20 @@ func TestPublishCommand_RejectsInvalidUTF8ServerJSON(t *testing.T) {
 	assert.Contains(t, err.Error(), "UTF-8")
 }
 
+func TestPublishCommand_AcceptsUTF8BOM(t *testing.T) {
+	// Windows tools such as PowerShell's Out-File write UTF-8 with a leading
+	// byte order mark; RFC 8259 permits parsers to ignore it.
+	server := SetupMockRegistryServer(t, nil, nil)
+	SetupTestToken(t, server.URL, "test-token")
+
+	bom := []byte{0xEF, 0xBB, 0xBF}
+	body := []byte(`{"$schema":"` + model.CurrentSchemaURL + `","name":"com.example/test","description":"A test server","version":"1.0.0"}`)
+	createRawServerJSON(t, append(bom, body...))
+
+	err := commands.PublishCommand([]string{})
+	assert.NoError(t, err)
+}
+
 func TestPublishCommand_RejectsUnpairedSurrogateEscape(t *testing.T) {
 	createRawServerJSON(t, []byte(`{"$schema":"","name":"com.example/test","description":"bad \udc94","version":"1.0.0"}`))
 
