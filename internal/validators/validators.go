@@ -396,7 +396,8 @@ func looksLikeVersionRange(version string) bool {
 func validateArgument(ctx *ValidationContext, obj *model.Argument) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 
-	if obj.Type == model.ArgumentTypeNamed {
+	switch obj.Type {
+	case model.ArgumentTypeNamed:
 		// Validate named argument name format
 		nameResult := validateNamedArgumentName(ctx.Field("name"), obj.Name)
 		result.Merge(nameResult)
@@ -404,6 +405,26 @@ func validateArgument(ctx *ValidationContext, obj *model.Argument) *ValidationRe
 		// Validate value and default don't start with the name
 		valueResult := validateArgumentValueFields(ctx, obj.Name, obj.Value, obj.Default)
 		result.Merge(valueResult)
+	case model.ArgumentTypePositional:
+		// Positional arguments need a value or a valueHint to be usable
+		if obj.Value == "" && obj.ValueHint == "" {
+			issue := NewValidationIssueFromError(
+				ValidationIssueTypeSemantic,
+				ctx.String(),
+				ErrPositionalArgumentValueRequired,
+				"positional-argument-value-or-hint-required",
+			)
+			result.AddIssue(issue)
+		}
+	default:
+		// Reject unknown argument types, including the empty string
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("type").String(),
+			fmt.Errorf("%w: %q", ErrInvalidArgumentType, obj.Type),
+			"invalid-argument-type",
+		)
+		result.AddIssue(issue)
 	}
 	return result
 }

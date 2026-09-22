@@ -27,6 +27,10 @@ var (
 	ErrArgumentValueStartsWithName   = errors.New("argument value cannot start with the argument name")
 	ErrArgumentDefaultStartsWithName = errors.New("argument default cannot start with the argument name")
 
+	// Argument type and shape validation errors
+	ErrInvalidArgumentType             = errors.New("argument type must be 'positional' or 'named'")
+	ErrPositionalArgumentValueRequired = errors.New("positional argument must provide a value or a valueHint")
+
 	// Server name validation errors
 	ErrMultipleSlashesInServerName = errors.New("server name cannot contain multiple slashes")
 	ErrInvalidServerNameFormat     = errors.New("server name format is invalid")
