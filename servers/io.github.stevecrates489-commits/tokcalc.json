@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/0.1.0/server.json",
+  "name": "io.github.stevecrates489-commits/tokcalc",
+  "description": "Planning tools for AI agents to estimate VRAM, compute requirements, throughput, latency, and GPU topology for LLM workloads.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stevecrates489-commits/tokcalc.git"
+  },
+  "version": "0.1.2",
+  "packages": [
+    {
+      "registry": "npm",
+      "name": "@tokcalc/mcp-server",
+      "version": "0.1.2"
+    }
+  ]
+}
