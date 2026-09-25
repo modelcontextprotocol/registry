@@ -319,3 +319,51 @@ mcp-publisher login http azure-key-vault --domain="${MY_DOMAIN}" --vault "${MY_K
 ```
 
 </CodeGroup>
+
+## Troubleshooting DNS and HTTP authentication
+
+The DNS and HTTP flows fail with a generic `signature verification failed` (or `no MCP public key found`) error in several common situations. Before re-running `mcp-publisher login`, check the following.
+
+### Compare the "Expected proof record" against what is actually published
+
+Each `mcp-publisher login dns` / `login http` invocation prints an `Expected proof record:` line, e.g.:
+
+```text Output
+Expected proof record:
+v=MCPv1; k=ed25519; p=CmELkdW27Q+pySZRD1ezkXAG/SbeDhGWAjtuKKMKixg=
+```
+
+The string after `Expected proof record:` is what the registry expects to find — character-for-character — at your apex TXT record (DNS) or in `/.well-known/mcp-registry-auth` (HTTP). If the published value differs even by one character (commonly: a different key from a previous attempt, an extra space, or a trailing newline introduced by a copy/paste), verification will fail. Always rerun the login command after rotating a key so you compare against the freshly derived public key, not a stale one.
+
+### DNS: verify the TXT record before logging in
+
+The most common DNS failures are **propagation delay** and **placement at the wrong name**. Confirm the apex record is actually live and matches the expected proof record:
+
+```bash
+dig TXT example.com +short
+# Expect a line like:
+# "v=MCPv1; k=ed25519; p=CmELkdW27Q+pySZRD1ezkXAG/SbeDhGWAjtuKKMKixg="
+```
+
+If `dig` returns nothing, the record has not propagated yet — wait a few minutes and retry. If `dig TXT _mcp-auth.example.com +short` returns a record but `dig TXT example.com +short` does not, the record is at the wrong name (see the apex warning above). If `dig` returns a record with a different `p=` value than the CLI printed, an older or unrelated key is winning — remove the stale TXT record from the apex.
+
+When the registry sees an MCPv1 record at a known wrong selector (`_mcp-auth.<domain>`, `_mcp-registry.<domain>`) but none at the apex, it now returns a more specific error pointing at the misplaced record instead of a generic signature failure.
+
+### HTTP: verify the well-known endpoint before logging in
+
+For HTTP authentication, fetch the file the registry will read and confirm the response is a `200` containing exactly the expected proof record:
+
+```bash
+curl -i https://example.com/.well-known/mcp-registry-auth
+```
+
+A few constraints are easy to trip over:
+
+- **HTTPS only.** The registry fetches `https://<domain>/.well-known/mcp-registry-auth`. A plain-HTTP endpoint will not be tried.
+- **No redirects.** The fetcher does not follow redirects. Apex-to-`www` (or `www`-to-apex) 301/302 redirects, common defaults on platforms like GitHub Pages, Netlify, and Vercel, will cause the fetch to fail. Host the file at the exact domain you pass to `--domain`, with a non-redirecting `200` response.
+- **Body ≤ 4096 bytes.** The response body must contain the `v=MCPv1; k=...; p=...` proof record; surrounding whitespace and trailing newlines are trimmed. Responses larger than 4096 bytes are rejected outright, so a full HTML page returned in place of the file will fail. Keep the file to a single proof-record line as shown above.
+- **Hostname must be public.** The well-known fetcher refuses to dial loopback, RFC1918/ULA private, link-local, and CGNAT addresses. Internal-only domains will not work even if reachable from your machine.
+
+### Confirm the algorithm matches the key
+
+The `--algorithm` flag (default `ed25519`) must match the algorithm declared in the published proof record's `k=` field. Signing an Ed25519 timestamp against an `ecdsap384` proof record (or vice versa) fails verification. If you regenerated the keypair with a different algorithm than what is published, update the TXT record or the `mcp-registry-auth` file before retrying.
