@@ -11,6 +11,11 @@ sidebarTitle: GitHub Actions
 
 In your server project directory, create a `.github/workflows/publish-mcp.yml` file. Here is an example for npm-based local server, but the MCP Registry publishing steps are the same for all package types:
 
+The examples pin `mcp-publisher` to a specific release and verify its Sigstore
+bundle before extracting it. When upgrading, update `MCP_PUBLISHER_VERSION` to
+the intended release tag deliberately; do not switch back to the mutable
+`releases/latest` URL.
+
 <CodeGroup>
 
 ```yaml OIDC authentication (recommended)
@@ -26,6 +31,8 @@ jobs:
     permissions:
       id-token: write # Required for OIDC authentication
       contents: read
+    env:
+      MCP_PUBLISHER_VERSION: v1.8.1
 
     steps:
       - name: Checkout code
@@ -54,9 +61,26 @@ jobs:
 
       ### Publish MCP server:
 
-      - name: Install mcp-publisher
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Download and verify mcp-publisher
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity-regexp "^https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}$" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
 
       - name: Authenticate to MCP Registry
         run: ./mcp-publisher login github-oidc
@@ -87,6 +111,8 @@ jobs:
     environment: mcp-registry-publish
     permissions:
       contents: read
+    env:
+      MCP_PUBLISHER_VERSION: v1.8.1
 
     steps:
       - name: Checkout code
@@ -115,9 +141,26 @@ jobs:
 
       ### Publish MCP server:
 
-      - name: Install mcp-publisher
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Download and verify mcp-publisher
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity-regexp "^https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}$" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
 
       - name: Authenticate to MCP Registry
         run: ./mcp-publisher login github --token ${{ secrets.MCP_GITHUB_TOKEN }}
@@ -144,6 +187,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      MCP_PUBLISHER_VERSION: v1.8.1
 
     steps:
       - name: Checkout code
@@ -172,9 +217,26 @@ jobs:
 
       ### Publish MCP server:
 
-      - name: Install mcp-publisher
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Download and verify mcp-publisher
         run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+          set -euo pipefail
+          os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+          arch="$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+          archive="mcp-publisher_${os}_${arch}.tar.gz"
+          base_url="https://github.com/modelcontextprotocol/registry/releases/download/${MCP_PUBLISHER_VERSION}"
+
+          curl --fail --location --silent --show-error --output "$archive" "$base_url/$archive"
+          curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
+          cosign verify-blob \
+            --bundle "$archive.sigstore.json" \
+            --certificate-identity-regexp "^https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}$" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+            "$archive"
+          tar xzf "$archive" mcp-publisher
+          rm -f "$archive" "$archive.sigstore.json"
 
       # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       # TODO: Replace `example.com` with your domain name
@@ -245,7 +307,7 @@ The workflow will run tests, build the package, publish the package to npm, and 
 | Error Message | Action |
 | --- | --- |
 | "Authentication failed" | Ensure `id-token: write` permission is set for OIDC, or check secrets. |
-| "invalid audience" | Your `mcp-publisher` binary is too old for this registry deployment. Re-run the install step shown above so you pick up the latest release. |
+| "invalid audience" | Your `mcp-publisher` binary is too old for this registry deployment. Update `MCP_PUBLISHER_VERSION` to a compatible release and rerun the workflow. |
 | "Package validation failed" | Verify your package successfully published to the package registry (e.g., npm, PyPI), and that your package has the [necessary verification information](./package-types). |
 
 {/* prettier-ignore-end */}
