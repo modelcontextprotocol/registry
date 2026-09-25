@@ -113,11 +113,11 @@ func publishToRegistry(registryURL string, serverData []byte, token string) (*ap
 		return nil, 0, fmt.Errorf("error parsing server.json file: %w", err)
 	}
 
-	// Convert to JSON
-	jsonData, err := json.Marshal(serverJSON)
-	if err != nil {
-		return nil, 0, fmt.Errorf("error serializing request: %w", err)
+	var compactBuf bytes.Buffer
+	if err := json.Compact(&compactBuf, serverData); err != nil {
+		return nil, 0, fmt.Errorf("error compacting JSON: %w", err)
 	}
+	jsonData := compactBuf.Bytes()
 
 	// Ensure URL ends with the publish endpoint
 	if !strings.HasSuffix(registryURL, "/") {
