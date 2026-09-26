@@ -702,6 +702,13 @@ components:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.
           examples: [npx, uvx, docker, dnx]
+        executable:
+          type: string
+          description: "Name of the executable within the package that starts the MCP server, for packages that ship more than one. Currently supported for npm packages only, where it must name an entry in the package's `bin` field; clients run it through the package runner, e.g. `npx -y --package=sumlyzer@1.0.0 -- sumlyzer-mcp-server`. When omitted, clients use the package's default executable (for npm, the bin whose name matches the package name, or its only bin)."
+          example: "sumlyzer-mcp-server"
+          minLength: 1
+          maxLength: 255
+          pattern: "^[A-Za-z0-9_][A-Za-z0-9._-]*$"
         transport:
           $ref: '#/components/schemas/LocalTransport'
           description: Transport protocol configuration for the package

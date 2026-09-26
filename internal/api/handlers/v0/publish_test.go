@@ -542,3 +542,94 @@ func TestPublishEndpoint_MultipleSlashesEdgeCases(t *testing.T) {
 		})
 	}
 }
+
+// TestPublishEndpoint_PackageExecutable checks that the optional package
+// executable (#1629) is stored and returned on publish, and that unsafe names
+// or unsupported registry types are rejected before anything is stored.
+func TestPublishEndpoint_PackageExecutable(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+	testConfig := &config.Config{
+		JWTPrivateKey:            hex.EncodeToString(testSeed),
+		EnableRegistryValidation: false, // no live npm lookups in unit tests
+	}
+
+	testCases := []struct {
+		name           string
+		pkg            model.Package
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name: "npm package with executable is stored and returned",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypeNPM,
+				Identifier:   "sumlyzer",
+				Version:      "1.0.0",
+				Executable:   "sumlyzer-mcp-server",
+				Transport:    model.Transport{Type: model.TransportTypeStdio},
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody:   `"executable":"sumlyzer-mcp-server"`,
+		},
+		{
+			name: "executable that looks like a flag is rejected",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypeNPM,
+				Identifier:   "sumlyzer",
+				Version:      "1.0.0",
+				Executable:   "--call=evil",
+				Transport:    model.Transport{Type: model.TransportTypeStdio},
+			},
+			expectedStatus: http.StatusUnprocessableEntity,
+			expectedBody:   "expected string to match pattern",
+		},
+		{
+			name: "executable on a pypi package is rejected",
+			pkg: model.Package{
+				RegistryType: model.RegistryTypePyPI,
+				Identifier:   "sumlyzer",
+				Version:      "1.0.0",
+				Executable:   "sumlyzer-mcp-server",
+				Transport:    model.Transport{Type: model.TransportTypeStdio},
+			},
+			expectedStatus: http.StatusUnprocessableEntity,
+			expectedBody:   "invalid schema: call /validate for details",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			registryService := service.NewRegistryService(database.NewTestDB(t), testConfig)
+			mux := http.NewServeMux()
+			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
+			v0.RegisterPublishEndpoint(api, "/v0", registryService, testConfig)
+
+			bodyBytes, err := json.Marshal(apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/sumlyzer",
+				Description: "Test server",
+				Version:     "1.0.0",
+				Packages:    []model.Package{tc.pkg},
+			})
+			require.NoError(t, err)
+
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/v0/publish", bytes.NewBuffer(bodyBytes))
+			require.NoError(t, err)
+			req.Header.Set("Content-Type", "application/json")
+			token, err := generateTestJWTToken(testConfig, auth.JWTClaims{
+				AuthMethod:  auth.MethodNone,
+				Permissions: []auth.Permission{{Action: auth.PermissionActionPublish, ResourcePattern: "*"}},
+			})
+			require.NoError(t, err)
+			req.Header.Set("Authorization", "Bearer "+token)
+
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			assert.Equal(t, tc.expectedStatus, rr.Code, "body: %s", rr.Body.String())
+			assert.Contains(t, rr.Body.String(), tc.expectedBody)
+		})
+	}
+}

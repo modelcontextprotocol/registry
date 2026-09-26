@@ -25,6 +25,12 @@ var (
 	serverNameRegex = regexp.MustCompile(`^` + namespacePattern + `/` + namePartPattern + `$`)
 )
 
+// executableRegex matches Package.Executable. It must stay in sync with the
+// `pattern` on the executable property in docs/reference/api/openapi.yaml. A
+// plain name with no path separators or leading '-' is safe to pass to a
+// package runner (e.g. npx) without being read as a path or a flag.
+var executableRegex = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9._-]*$`)
+
 // Regexes to detect semver range syntaxes
 var (
 	// Case 1: comparator ranges
@@ -310,6 +316,9 @@ func validatePackageField(ctx *ValidationContext, obj *model.Package) *Validatio
 	versionResult := validateVersion(ctx.Field("version"), obj.Version)
 	result.Merge(versionResult)
 
+	// Validate executable selection
+	result.Merge(validatePackageExecutable(ctx.Field("executable"), obj))
+
 	// Validate runtime arguments
 	for i, arg := range obj.RuntimeArguments {
 		argResult := validateArgument(ctx.Field("runtimeArguments").Index(i), &arg)
@@ -326,6 +335,36 @@ func validatePackageField(ctx *ValidationContext, obj *model.Package) *Validatio
 	availableVariables := collectAvailableVariables(obj)
 	transportResult := validatePackageTransport(ctx.Field("transport"), &obj.Transport, availableVariables)
 	result.Merge(transportResult)
+
+	return result
+}
+
+// validatePackageExecutable validates the optional executable selector. It is
+// only defined for npm, where it names an entry in package.json "bin"; the npm
+// registry validator checks that the entry exists in the published version.
+func validatePackageExecutable(ctx *ValidationContext, pkg *model.Package) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+	if pkg.Executable == "" {
+		return result
+	}
+
+	if pkg.RegistryType != model.RegistryTypeNPM {
+		result.AddIssue(NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Errorf("%w (got registryType %q)", ErrExecutableUnsupported, pkg.RegistryType),
+			"package-executable-unsupported",
+		))
+	}
+
+	if len(pkg.Executable) > 255 || !executableRegex.MatchString(pkg.Executable) {
+		result.AddIssue(NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Errorf("%w: %q", ErrInvalidExecutableName, pkg.Executable),
+			"package-executable-invalid",
+		))
+	}
 
 	return result
 }
