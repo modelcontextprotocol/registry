@@ -21,7 +21,9 @@ func IsValidRepositoryURL(source RepositorySource, url string) bool {
 	case SourceGitHub:
 		return githubURLRegex.MatchString(url)
 	case SourceGitLab:
-		return gitlabURLRegex.MatchString(url)
+		// GitLab reserves "-" as the separator between a project path and its
+		// routes (/-/tree, /-/issues), so no group or project can be named "-".
+		return gitlabURLRegex.MatchString(url) && !strings.Contains(url+"/", "/-/")
 	}
 	return false
 }

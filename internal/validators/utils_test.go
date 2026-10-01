@@ -43,6 +43,10 @@ func TestIsValidRepositoryURL(t *testing.T) {
 		{"gitlab spoofed host prefix", validators.SourceGitLab, "https://gitlab.com.evil.com/group/repo", false},
 		{"gitlab query string", validators.SourceGitLab, "https://gitlab.com/group/subgroup/repo?ref=main", false},
 		{"gitlab fragment", validators.SourceGitLab, "https://gitlab.com/group/subgroup/repo#readme", false},
+		{"gitlab route separator into tree", validators.SourceGitLab, "https://gitlab.com/group/repo/-/tree/main", false},
+		{"gitlab route separator into issues", validators.SourceGitLab, "https://gitlab.com/group/subgroup/repo/-/issues", false},
+		{"gitlab trailing route separator", validators.SourceGitLab, "https://gitlab.com/group/repo/-", false},
+		{"gitlab segment starting with dash stays valid", validators.SourceGitLab, "https://gitlab.com/group/-repo", true},
 
 		// Unknown source
 		{"unknown source", validators.RepositorySource("bitbucket"), "https://bitbucket.org/owner/repo", false},
