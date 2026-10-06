@@ -22,7 +22,7 @@ This tutorial will show you how to publish an MCP server written in TypeScript t
 If you do not have an MCP server written in TypeScript, you can copy the `weather-server-typescript` server from the [`modelcontextprotocol/quickstart-resources` repository](https://github.com/modelcontextprotocol/quickstart-resources) to follow along with this tutorial:
 
 ```bash
-git clone --depth 1 git@github.com:modelcontextprotocol/quickstart-resources.git
+git clone --depth 1 https://github.com/modelcontextprotocol/quickstart-resources.git
 cp -r quickstart-resources/weather-server-typescript .
 rm -rf quickstart-resources
 cd weather-server-typescript
@@ -73,9 +73,6 @@ The MCP Registry only hosts metadata, not artifacts, so we must publish the pack
 Ensure the distribution files are built:
 
 ```bash
-# Navigate to project directory
-cd weather-server-typescript
-
 # Install dependencies
 npm install
 
@@ -110,7 +107,7 @@ $arch = if ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitec
 # Move mcp-publisher.exe to a directory in your PATH
 ```
 
-```bash
+```bash Homebrew
 brew install mcp-publisher
 ```
 
@@ -162,12 +159,12 @@ Open the generated `server.json` file, and you should see contents like:
     "url": "https://github.com/my-username/mcp-weather-server",
     "source": "github"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@my-username/mcp-weather-server",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "transport": {
         "type": "stdio"
       },
@@ -196,14 +193,12 @@ Edit the contents as necessary:
      "url": "https://github.com/my-username/mcp-weather-server",
      "source": "github"
    },
--  "version": "1.0.0",
-+  "version": "1.0.1",
+   "version": "1.0.1",
    "packages": [
      {
        "registryType": "npm",
        "identifier": "@my-username/mcp-weather-server",
--      "version": "1.0.0",
-+      "version": "1.0.1",
+       "version": "1.0.1",
        "transport": {
          "type": "stdio"
 -      },
