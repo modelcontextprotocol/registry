@@ -13,10 +13,38 @@ This tutorial will show you how to publish an MCP server written in TypeScript t
   If you are publishing a non-npm package (PyPI, NuGet, OCI, MCPB), the overall flow is identical, but the ownership-verification step in [Step 1](#step-1-add-verification-information-to-the-package) is different per package type. See [Package Types](./package-types) for the verification mechanism that applies to your package, then return here and follow the remaining steps.
 </Note>
 
+## Remote-only servers
+
+If your MCP server is available only at a public remote endpoint, you can publish its metadata without a package. Skip the npm-specific prerequisites and Steps 1–2, then continue with [Step 3](#step-3-install-mcp-publisher). Your `server.json` must include a `remotes` entry and can omit `packages`:
+
+```json server.json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.my-username/weather",
+  "title": "Weather",
+  "description": "A remote MCP server for weather information.",
+  "repository": {
+    "url": "https://github.com/my-username/mcp-weather-server",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://weather.example.com/mcp"
+    }
+  ]
+}
+```
+
+The remote URL must be publicly accessible, and `description` is limited to 100 characters. See [Publishing Remote Servers](./remote-servers) for transport, URL variable, and header options.
+
+With GitHub authentication, the Registry verifies that you control the GitHub namespace in `name`; it does not verify that you control the domain serving the remote URL. If the remote URL uses a domain that you control and you want that domain represented in the server name, use [DNS authentication](./authentication#dns-authentication) or [HTTP authentication](./authentication#http-authentication) instead.
+
 ## Prerequisites
 
 - **Node.js** — This tutorial assumes the MCP server is written in TypeScript.
-- **npm account** — The MCP Registry only hosts metadata, not artifacts. Before publishing to the MCP Registry, we will publish the MCP server's package to npm, so you will need an [npm](https://www.npmjs.com) account.
+- **npm account (package-based servers only)** — The MCP Registry only hosts metadata, not artifacts. Before publishing a package-based MCP server to the MCP Registry, we will publish the package to npm, so you will need an [npm](https://www.npmjs.com) account.
 - **GitHub account** — The MCP Registry supports [multiple authentication methods](./authentication). For simplicity, this tutorial will use GitHub-based authentication, so you will need a [GitHub](https://github.com/) account.
 
 If you do not have an MCP server written in TypeScript, you can copy the `weather-server-typescript` server from the [`modelcontextprotocol/quickstart-resources` repository](https://github.com/modelcontextprotocol/quickstart-resources) to follow along with this tutorial:
@@ -141,6 +169,8 @@ Use 'mcp-publisher <command> --help' for more information about a command.
 ## Step 4: Create `server.json`
 
 The `mcp-publisher init` command can generate a `server.json` template file with some information derived from your project.
+
+The Registry limits the `description` field to 100 characters. Keep the description focused on what the server does; longer descriptions fail validation.
 
 In your server project directory, run `mcp-publisher init`:
 
