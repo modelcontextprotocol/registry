@@ -48,6 +48,9 @@
             <div id="recent-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <!-- Populated by JS -->
             </div>
+            <div class="mt-4 text-center">
+                <button id="recent-toggle" type="button" class="hidden text-sm text-blue-600 hover:underline"></button>
+            </div>
         </div>
 
         <!-- Loading State -->
@@ -143,6 +146,9 @@
         let currentCursor = null;
         let nextCursor = null;
         let searchTimeout = null;
+        const RECENT_PREVIEW_COUNT = 6;
+        let hasRecentServers = false;
+        let recentExpanded = false;
         let baseUrl = '';
 
         // Get base URL based on selection
@@ -264,12 +270,36 @@
 
                 if (data.servers && data.servers.length > 0) {
                     renderRecentServers(data.servers);
-                    document.getElementById('recently-updated').classList.remove('hidden');
+                    hasRecentServers = true;
+                    updateRecentlyUpdatedVisibility(document.getElementById('search').value, currentCursor);
                 }
             } catch (err) {
                 // Silently fail if recent updates can't be fetched
             }
         }
+
+        // Only show recently updated servers on the first page of an unfiltered listing,
+        // so they never push search results or later pages down.
+        function updateRecentlyUpdatedVisibility(search, cursor) {
+            const visible = hasRecentServers && !search && !cursor;
+            document.getElementById('recently-updated').classList.toggle('hidden', !visible);
+        }
+
+        function applyRecentExpanded() {
+            const cards = document.getElementById('recent-cards').children;
+            for (let i = 0; i < cards.length; i++) {
+                cards[i].classList.toggle('hidden', !recentExpanded && i >= RECENT_PREVIEW_COUNT);
+            }
+
+            const toggle = document.getElementById('recent-toggle');
+            toggle.classList.toggle('hidden', cards.length <= RECENT_PREVIEW_COUNT);
+            toggle.textContent = recentExpanded ? 'Show less' : `Show all ${cards.length} recently updated`;
+        }
+
+        document.getElementById('recent-toggle').addEventListener('click', () => {
+            recentExpanded = !recentExpanded;
+            applyRecentExpanded();
+        });
 
         // Render recently updated servers
         function renderRecentServers(recentServers) {
@@ -300,10 +330,13 @@
                 card.appendChild(header);
                 container.appendChild(card);
             });
+
+            applyRecentExpanded();
         }
 
         // Fetch servers
         async function fetchServers(cursor = null, search = '', latestOnly = null) {
+            updateRecentlyUpdatedVisibility(search, cursor);
             try {
                 if (latestOnly === null) {
                     latestOnly = document.getElementById('latest-only').checked;

@@ -21,3 +21,11 @@ func TestUIHTML_SearchPrecedesRecentlyUpdated(t *testing.T) {
 	require.Less(t, searchPos, recentPos, "search control must appear before recently-updated section")
 	require.Less(t, latestOnlyPos, recentPos, "filter control must appear before recently-updated section")
 }
+
+func TestUIHTML_RecentlyUpdatedIsCollapsibleAndHiddenDuringSearch(t *testing.T) {
+	html := v0.GetUIHTML()
+
+	require.Contains(t, html, `id="recent-toggle"`, "recently updated section must have a show all/less toggle")
+	require.Contains(t, html, "RECENT_PREVIEW_COUNT", "recently updated section must be capped to a preview count")
+	require.Contains(t, html, "function updateRecentlyUpdatedVisibility(", "recently updated visibility must depend on search state")
+}
