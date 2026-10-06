@@ -15,7 +15,7 @@ This tutorial will show you how to publish an MCP server written in TypeScript t
 
 ## Remote-only servers
 
-If your MCP server is available only at a public remote endpoint, you can publish its metadata without a package. Skip the npm-specific prerequisites and Steps 1–2, then continue with [Step 3](#step-3-install-mcp-publisher). Your `server.json` must include a `remotes` entry and can omit `packages`:
+If your MCP server is available only at a public remote endpoint, you can publish its metadata without a package. Skip the Node.js and npm prerequisites and Steps 1–2, then continue with [Step 3](#step-3-install-mcp-publisher). Your `server.json` must include a `remotes` entry and can omit `packages`:
 
 ```json server.json
 {
@@ -37,9 +37,9 @@ If your MCP server is available only at a public remote endpoint, you can publis
 }
 ```
 
-The remote URL must be publicly accessible, and `description` is limited to 100 characters. See [Publishing Remote Servers](./remote-servers) for transport, URL variable, and header options.
+The remote URL must be publicly accessible. See [Publishing Remote Servers](./remote-servers) for transport, URL variable, and header options.
 
-With GitHub authentication, the Registry verifies that you control the GitHub namespace in `name`; it does not verify that you control the domain serving the remote URL. If the remote URL uses a domain that you control and you want that domain represented in the server name, use [DNS authentication](./authentication#dns-authentication) or [HTTP authentication](./authentication#http-authentication) instead.
+With any authentication method, the Registry verifies that you control the namespace in `name`; it does not verify that you control the remote URL. See [Ownership Verification](./remote-servers#ownership-verification) for details.
 
 ## Prerequisites
 
@@ -248,6 +248,10 @@ Edit the contents as necessary:
 ```
 
 The `name` property in `server.json` **must** match the `mcpName` property in `package.json`.
+
+<Note>
+  For a [remote-only server](#remote-only-servers), `mcp-publisher init` still generates a `packages` entry. Replace the `packages` array with a `remotes` array, as shown in the remote-only example above.
+</Note>
 
 ## Step 5: Authenticate with the MCP Registry
 
