@@ -62,7 +62,7 @@ func RegisterDNSEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 		Path:        pathPrefix + "/auth/dns",
 		Summary:     "Exchange DNS signature for Registry JWT",
 		Description: "Authenticate using DNS TXT record public key and signed timestamp",
-		Tags:        []string{"auth"},
+		Tags:        []string{tagAuth},
 	}, func(ctx context.Context, input *DNSTokenExchangeInput) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.ExchangeToken(ctx, input.Body.Domain, input.Body.Timestamp, input.Body.SignedTimestamp)
 		if err != nil {

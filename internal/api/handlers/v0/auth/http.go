@@ -242,7 +242,7 @@ func RegisterHTTPEndpoint(api huma.API, pathPrefix string, cfg *config.Config) {
 		Path:        pathPrefix + "/auth/http",
 		Summary:     "Exchange HTTP signature for Registry JWT",
 		Description: "Authenticate using HTTP-hosted public key and signed timestamp",
-		Tags:        []string{"auth"},
+		Tags:        []string{tagAuth},
 	}, func(ctx context.Context, input *HTTPTokenExchangeInput) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.ExchangeToken(ctx, input.Body.Domain, input.Body.Timestamp, input.Body.SignedTimestamp)
 		if err != nil {

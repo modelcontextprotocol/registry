@@ -235,7 +235,7 @@ func RegisterGitHubOIDCEndpoint(api huma.API, pathPrefix string, cfg *config.Con
 		Path:        pathPrefix + "/auth/github-oidc",
 		Summary:     "Exchange GitHub OIDC token for Registry JWT",
 		Description: "Exchange a GitHub Actions OIDC token for a short-lived Registry JWT token",
-		Tags:        []string{"auth"},
+		Tags:        []string{tagAuth},
 	}, func(ctx context.Context, input *GitHubOIDCTokenExchangeInput) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.ExchangeToken(ctx, input.Body.OIDCToken)
 		if err != nil {

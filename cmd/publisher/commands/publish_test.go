@@ -39,6 +39,36 @@ func TestPublishCommand_Success(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestPublishCommand_PrintsSubmittedIdentityOnFailure(t *testing.T) {
+	server := SetupMockRegistryServer(t, func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "duplicate version", http.StatusBadRequest)
+	}, nil)
+	SetupTestToken(t, server.URL, "test-token")
+	CreateTestServerJSON(t, apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "io.github.BargLabs/cejel",
+		Description: "A test server",
+		Version:     "0.4.5",
+	})
+
+	output, err := os.CreateTemp(t.TempDir(), "stdout")
+	require.NoError(t, err)
+	originalStdout := os.Stdout
+	os.Stdout = output
+	t.Cleanup(func() {
+		os.Stdout = originalStdout
+		_ = output.Close()
+	})
+
+	err = commands.PublishCommand(nil)
+	require.ErrorContains(t, err, "duplicate version")
+	_, err = output.Seek(0, io.SeekStart)
+	require.NoError(t, err)
+	data, err := io.ReadAll(output)
+	require.NoError(t, err)
+	assert.Equal(t, "Publishing io.github.BargLabs/cejel@0.4.5 to "+server.URL+"...\n", string(data))
+}
+
 func TestPublishCommand_PreservesNonASCIIDescription(t *testing.T) {
 	server := SetupMockRegistryServer(t,
 		func(w http.ResponseWriter, r *http.Request) {

@@ -159,7 +159,7 @@ func RegisterOIDCEndpoints(api huma.API, pathPrefix string, cfg *config.Config) 
 		Path:        pathPrefix + "/auth/oidc",
 		Summary:     "Exchange OIDC ID token for Registry JWT",
 		Description: "Exchange an OIDC ID token from any configured provider for a short-lived Registry JWT token",
-		Tags:        []string{"auth"},
+		Tags:        []string{tagAuth},
 	}, func(ctx context.Context, input *OIDCTokenExchangeInput) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.ExchangeToken(ctx, input.Body.OIDCToken)
 		if err != nil {

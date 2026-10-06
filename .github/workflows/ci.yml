@@ -27,7 +27,7 @@ jobs:
     - name: Run lint
       uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a
       with:
-        version: v2.11.4
+        version: v2.13.1
 
     - name: Validate schemas and examples
       run: make validate

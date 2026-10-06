@@ -64,7 +64,7 @@ func PublishCommand(args []string) error {
 	}
 
 	// Publish to registry
-	_, _ = fmt.Fprintf(os.Stdout, "Publishing to %s...\n", registryURL)
+	_, _ = fmt.Fprintf(os.Stdout, "Publishing %s@%s to %s...\n", serverJSON.Name, serverJSON.Version, registryURL)
 	response, statusCode, err := publishToRegistry(registryURL, serverData, token)
 	if err != nil {
 		// If publish failed with 422, call validate endpoint to show detailed errors

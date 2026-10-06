@@ -14,6 +14,9 @@ import (
 const (
 	openAPIPath     = "docs/reference/api/openapi.yaml"
 	schemaOutputDir = "docs/reference/server-json/draft"
+
+	// refKey is the JSON Schema reference key.
+	refKey = "$ref"
 )
 
 func main() {
@@ -99,7 +102,7 @@ func main() {
 		"$schema":     "http://json-schema.org/draft-07/schema#",
 		"$id":         schemaID,
 		"title":       "server.json defining a Model Context Protocol (MCP) server",
-		"$ref":        "#/definitions/ServerDetail",
+		refKey:        "#/definitions/ServerDetail",
 		"definitions": definitions,
 	}
 
@@ -148,7 +151,7 @@ func findReferencedSchemas(obj interface{}, found map[string]bool) {
 	switch v := obj.(type) {
 	case map[string]interface{}:
 		for key, value := range v {
-			if key == "$ref" {
+			if key == refKey {
 				if ref, ok := value.(string); ok {
 					// Extract schema name from #/components/schemas/SchemaName
 					if strings.HasPrefix(ref, "#/components/schemas/") {
@@ -173,7 +176,7 @@ func replaceComponentRefs(obj interface{}) interface{} {
 	case map[string]interface{}:
 		result := make(map[string]interface{})
 		for key, value := range v {
-			if key == "$ref" {
+			if key == refKey {
 				if ref, ok := value.(string); ok {
 					// Replace the reference path
 					result[key] = strings.ReplaceAll(ref, "#/components/schemas/", "#/definitions/")

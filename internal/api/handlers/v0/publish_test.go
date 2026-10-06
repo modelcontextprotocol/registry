@@ -168,7 +168,7 @@ func TestPublishEndpoint(t *testing.T) {
 			expectedError:  "You do not have permission to publish this server",
 		},
 		{
-			name: "registry service error",
+			name: "duplicate version includes submitted server identity",
 			requestBody: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
 				Name:        "example/test-server",
@@ -202,7 +202,7 @@ func TestPublishEndpoint(t *testing.T) {
 				_, _ = registry.CreateServer(context.Background(), &existingServer)
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  "invalid version: cannot publish duplicate version",
+			expectedError:  "invalid version: cannot publish duplicate version: example/test-server@1.0.0 already exists",
 		},
 		{
 			name: "package validation success - MCPB package",

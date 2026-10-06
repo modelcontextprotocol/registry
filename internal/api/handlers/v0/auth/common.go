@@ -372,7 +372,7 @@ func ParsePublicKey(algorithm, publicKey string) (*PublicKeyInfo, error) {
 		}
 		return &PublicKeyInfo{
 			Algorithm: AlgorithmECDSAP384,
-			Key:       ecdsa.PublicKey{Curve: curve, X: x, Y: y},
+			Key:       ecdsa.PublicKey{Curve: curve, X: x, Y: y}, //nolint:staticcheck // SA1019: needs crypto/ecdh refactor
 		}, nil
 	}
 

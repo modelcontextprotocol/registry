@@ -5,6 +5,9 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
 
+// tagAuth is the OpenAPI tag grouping all token exchange operations.
+const tagAuth = "auth"
+
 // RegisterAuthEndpoints registers all authentication endpoints with a custom path prefix
 func RegisterAuthEndpoints(api huma.API, pathPrefix string, cfg *config.Config) {
 	// Register GitHub access token authentication endpoint

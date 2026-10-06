@@ -90,7 +90,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		Path:        pathPrefix + "/servers",
 		Summary:     "List MCP servers",
 		Description: "Get a paginated list of MCP servers from the registry",
-		Tags:        []string{"servers"},
+		Tags:        []string{tagServers},
 	}, func(ctx context.Context, input *ListServersInput) (*Response[apiv0.ServerListResponse], error) {
 		// Build filter from input parameters
 		filter := &database.ServerFilter{}
@@ -159,7 +159,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		Path:        pathPrefix + "/servers/{serverName}/versions/{version}",
 		Summary:     "Get specific MCP server version",
 		Description: "Get detailed information about a specific version of an MCP server. Use the special version 'latest' to get the latest version.",
-		Tags:        []string{"servers"},
+		Tags:        []string{tagServers},
 	}, func(ctx context.Context, input *ServerVersionDetailInput) (*Response[apiv0.ServerResponse], error) {
 		// URL-decode the server name
 		serverName, err := url.PathUnescape(input.ServerName)
@@ -201,7 +201,7 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		Path:        pathPrefix + "/servers/{serverName}/versions",
 		Summary:     "Get all versions of an MCP server",
 		Description: "Get all available versions for a specific MCP server",
-		Tags:        []string{"servers"},
+		Tags:        []string{tagServers},
 	}, func(ctx context.Context, input *ServerVersionsInput) (*Response[apiv0.ServerListResponse], error) {
 		// URL-decode the server name
 		serverName, err := url.PathUnescape(input.ServerName)

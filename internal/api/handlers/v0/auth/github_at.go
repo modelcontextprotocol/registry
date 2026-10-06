@@ -54,7 +54,7 @@ func RegisterGitHubATEndpoint(api huma.API, pathPrefix string, cfg *config.Confi
 		Path:        pathPrefix + "/auth/github-at",
 		Summary:     "Exchange GitHub OAuth access token for Registry JWT",
 		Description: "Exchange a GitHub OAuth access token for a short-lived Registry JWT token",
-		Tags:        []string{"auth"},
+		Tags:        []string{tagAuth},
 	}, func(ctx context.Context, input *GitHubTokenExchangeInput) (*v0.Response[auth.TokenResponse], error) {
 		response, err := handler.ExchangeToken(ctx, input.Body.GitHubToken)
 		if err != nil {
