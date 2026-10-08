@@ -127,11 +127,25 @@ func (c *InProcessSigner) GetSignedTimestamp(_ context.Context) (*string, []byte
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to sign message: %w", err)
 		}
-		signature := append(r.Bytes(), s.Bytes()...)
+		signature := encodeECDSAP384Signature(r, s)
 		return &timestamp, signature, nil
 	default:
 		return nil, nil, fmt.Errorf("unsupported crypto algorithm: %s", c.cryptoAlgorithm)
 	}
+}
+
+// encodeECDSAP384Signature encodes r and s as fixed-width R || S (48 bytes each,
+// 96 bytes total). big.Int.Bytes drops leading zero bytes, so appending them
+// directly can produce fewer than 96 bytes when r or s is small, which the
+// registry rejects with "invalid signature size for ECDSA P-384". FillBytes
+// left-pads each component to 48 bytes so verification always sees 96 bytes.
+// r and s come from ecdsa.Sign in this file and are bounded by the P-384 group
+// order, so they always fit in 48 bytes and FillBytes cannot panic.
+func encodeECDSAP384Signature(r, s *big.Int) []byte {
+	signature := make([]byte, 96)
+	r.FillBytes(signature[:48])
+	s.FillBytes(signature[48:])
+	return signature
 }
 
 // parseRawPrivateKey parses a raw ECDSA private key from bytes.
