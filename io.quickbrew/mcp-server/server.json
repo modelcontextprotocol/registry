@@ -1,0 +1,13 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.quickbrew/mcp-server",
+  "description": "Model Context Protocol (MCP) server for Quickbrew.io x402 data endpoints.",
+  "version": "1.0.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "name": "@richardthelion73/quickbrew-mcp",
+      "version": "1.0.2"
+    }
+  ]
+}
