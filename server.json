@@ -1,0 +1,39 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.aliyun/cloudmonitor",
+  "title": "Alibaba Cloud CloudMonitor",
+  "description": "Query and manage CloudMonitor 2.0 metrics, alerts, Prometheus, Grafana, APM, traces, and workspaces.",
+  "version": "1.0.0",
+  "websiteUrl": "https://help.aliyun.com/zh/openapi/user-guide/openapi-mcp-server-guide",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://openapi-mcp.cn-hangzhou.aliyuncs.com/s/Cms/cms/9fe79ff0bf5748e6923530c5097ec359/mcp"
+    },
+    {
+      "type": "sse",
+      "url": "https://openapi-mcp.cn-hangzhou.aliyuncs.com/s/Cms/cms/9fe79ff0bf5748e6923530c5097ec359/sse"
+    },
+    {
+      "type": "streamable-http",
+      "url": "https://openapi-mcp.ap-southeast-1.aliyuncs.com/s/Cms/cms/9fe79ff0bf5748e6923530c5097ec359/mcp"
+    },
+    {
+      "type": "sse",
+      "url": "https://openapi-mcp.ap-southeast-1.aliyuncs.com/s/Cms/cms/9fe79ff0bf5748e6923530c5097ec359/sse"
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "product": "Cms",
+      "preferredTransport": "streamable-http",
+      "auth": "oauth",
+      "sites": {
+        "cn": "cn-hangzhou",
+        "intl": "ap-southeast-1"
+      },
+      "toolsetsQueryParam": "toolsets",
+      "defaultToolsetAlias": "core"
+    }
+  }
+}
