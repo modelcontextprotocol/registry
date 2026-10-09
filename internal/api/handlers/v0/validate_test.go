@@ -59,6 +59,32 @@ func TestValidateEndpoint(t *testing.T) {
 			},
 		},
 		{
+			name: "executable on a non-npm package should be invalid",
+			serverJSON: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Packages: []model.Package{{
+					RegistryType: model.RegistryTypePyPI,
+					Identifier:   "test-server",
+					Version:      "1.0.0",
+					Executable:   "test-server-mcp",
+					Transport:    model.Transport{Type: model.TransportTypeStdio},
+				}},
+			},
+			expectedValid:  false,
+			expectedStatus: http.StatusOK,
+			description:    "Should report executable as unsupported outside npm",
+			validateIssues: func(t *testing.T, issues []issueStruct) {
+				t.Helper()
+				require.Len(t, issues, 1)
+				assert.Equal(t, "semantic", issues[0].Type)
+				assert.Equal(t, "packages[0].executable", issues[0].Path)
+				assert.Contains(t, issues[0].Message, "executable is only supported for npm packages")
+			},
+		},
+		{
 			name: "version range should be invalid",
 			serverJSON: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,

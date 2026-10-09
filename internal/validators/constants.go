@@ -12,6 +12,8 @@ var (
 	ErrPackageNameHasSpaces  = errors.New("package name cannot contain spaces")
 	ErrReservedVersionString = errors.New("version string 'latest' is reserved and cannot be used")
 	ErrVersionLooksLikeRange = errors.New("version must be a specific version, not a range")
+	ErrInvalidExecutableName = errors.New("executable must be a plain executable name (letters, digits, '.', '_', '-'; not starting with '.' or '-')")
+	ErrExecutableUnsupported = errors.New("executable is only supported for npm packages")
 
 	// Transport validation errors
 	ErrInvalidPackageTransportURL = errors.New("invalid package transport URL")

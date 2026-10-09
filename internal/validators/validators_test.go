@@ -3,9 +3,11 @@ package validators_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/validators"
@@ -1977,6 +1979,65 @@ func createValidServerWithArgument(arg model.Argument) apiv0.ServerJSON {
 				URL:  "https://example.com/remote",
 			},
 		},
+	}
+}
+
+func TestValidate_PackageExecutable(t *testing.T) {
+	tests := []struct {
+		name          string
+		registryType  string
+		baseURL       string
+		executable    string
+		expectedError error
+	}{
+		{name: "npm without executable", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM},
+		{name: "npm with executable", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: "sumlyzer-mcp-server"},
+		{name: "npm with dotted and underscored executable", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: "_mcp.server-2"},
+		{name: "npm executable that looks like a flag", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: "-c", expectedError: validators.ErrInvalidExecutableName},
+		{name: "npm executable with a path", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: "../bin/server", expectedError: validators.ErrInvalidExecutableName},
+		{name: "npm executable with a slash", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: "bin/server", expectedError: validators.ErrInvalidExecutableName},
+		{name: "npm executable with a space", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: "mcp server", expectedError: validators.ErrInvalidExecutableName},
+		{name: "npm executable with shell metacharacters", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: "mcp;rm", expectedError: validators.ErrInvalidExecutableName},
+		{name: "npm hidden executable", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: ".mcp", expectedError: validators.ErrInvalidExecutableName},
+		{name: "npm executable over 255 characters", registryType: model.RegistryTypeNPM, baseURL: model.RegistryURLNPM, executable: strings.Repeat("a", 256), expectedError: validators.ErrInvalidExecutableName},
+		{name: "pypi executable is not supported", registryType: model.RegistryTypePyPI, baseURL: model.RegistryURLPyPI, executable: "server", expectedError: validators.ErrExecutableUnsupported},
+		{name: "oci executable is not supported", registryType: model.RegistryTypeOCI, executable: "server", expectedError: validators.ErrExecutableUnsupported},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			identifier := "test-package"
+			version := "1.0.0"
+			if tt.registryType == model.RegistryTypeOCI {
+				identifier = "ghcr.io/owner/test-package:1.0.0"
+				version = ""
+			}
+			serverJSON := apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Packages: []model.Package{
+					{
+						RegistryType:    tt.registryType,
+						RegistryBaseURL: tt.baseURL,
+						Identifier:      identifier,
+						Version:         version,
+						Executable:      tt.executable,
+						Transport:       model.Transport{Type: model.TransportTypeStdio},
+					},
+				},
+			}
+
+			result := validators.ValidateServerJSON(&serverJSON, validators.ValidationSchemaVersionAndSemantic)
+			err := result.FirstError()
+			if tt.expectedError == nil {
+				assert.NoError(t, err)
+				return
+			}
+			require.ErrorContains(t, err, tt.expectedError.Error())
+			assert.Equal(t, "packages[0].executable", result.Issues[0].Path)
+		})
 	}
 }
 

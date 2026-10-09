@@ -6,6 +6,29 @@ Changes to the server.json schema and format.
 
 This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./draft/server.schema.json) in this repository.
 
+### Added
+
+#### `executable` Selects Which npm Executable Starts the Server ([#1629](https://github.com/modelcontextprotocol/registry/issues/1629))
+
+Packages have a new optional `executable` field that names the executable that starts the MCP server, for packages that ship more than one. It is currently supported for npm packages only, where it must be an entry of the `bin` field in the published `package.json`; the registry verifies this at publish time. Clients run it with `npx -y --package=<identifier>@<version> -- <executable>` instead of `npx -y <identifier>@<version>`.
+
+The value must match `^[A-Za-z0-9_][A-Za-z0-9._-]*$` (no path separators, no leading `-` or `.`), so it can be passed to a package runner without being read as a path or a flag.
+
+**Example:**
+```json
+{
+  "packages": [{
+    "registryType": "npm",
+    "identifier": "sumlyzer",
+    "version": "1.0.0",
+    "executable": "sumlyzer-mcp-server",
+    "transport": { "type": "stdio" }
+  }]
+}
+```
+
+**Migration:** No changes required. When `executable` is omitted, clients keep using the package's default executable.
+
 ### Changed
 
 #### Transport URL Pattern Now Accepts Template Variables

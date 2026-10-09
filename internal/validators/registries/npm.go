@@ -1,12 +1,15 @@
 package registries
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -20,6 +23,9 @@ var (
 // NPMPackageResponse represents the structure returned by the NPM registry API
 type NPMPackageResponse struct {
 	MCPName string `json:"mcpName"`
+	// Bin is package.json "bin": an object mapping executable names to paths,
+	// or a single path string whose executable is named after the package.
+	Bin json.RawMessage `json:"bin"`
 }
 
 // ValidateNPM validates that an NPM package contains the correct MCP server name
@@ -94,7 +100,64 @@ func validateNPMPackage(ctx context.Context, pkg model.Package, serverName strin
 		return fmt.Errorf("NPM package ownership validation failed. Expected mcpName '%s', got '%s'", serverName, npmResp.MCPName)
 	}
 
+	if pkg.Executable != "" {
+		return validateNPMExecutable(pkg, npmResp.Bin)
+	}
+
 	return nil
+}
+
+// validateNPMExecutable checks that the executable selected in server.json is
+// one of the executables the published version declares in package.json "bin",
+// so clients can run it with `npx --package=<identifier>@<version> -- <executable>`.
+func validateNPMExecutable(pkg model.Package, rawBin json.RawMessage) error {
+	names, err := npmBinNames(pkg.Identifier, rawBin)
+	if err != nil {
+		return fmt.Errorf("failed to parse 'bin' field of NPM package '%s' version '%s': %w", pkg.Identifier, pkg.Version, err)
+	}
+	if len(names) == 0 {
+		return fmt.Errorf("NPM package '%s' version '%s' declares no executables in package.json 'bin', so executable '%s' cannot be run", pkg.Identifier, pkg.Version, pkg.Executable)
+	}
+	if !slices.Contains(names, pkg.Executable) {
+		return fmt.Errorf("NPM package '%s' version '%s' has no executable named '%s' in package.json 'bin' (available: %s)", pkg.Identifier, pkg.Version, pkg.Executable, strings.Join(names, ", "))
+	}
+	return nil
+}
+
+// npmBinNames returns the sorted executable names declared by a package.json
+// "bin" value. The registry normally stores "bin" as an object; the string
+// shorthand declares one executable named after the package (without scope).
+func npmBinNames(identifier string, rawBin json.RawMessage) ([]string, error) {
+	trimmed := bytes.TrimSpace(rawBin)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		return nil, nil
+	}
+
+	if trimmed[0] == '"' {
+		var path string
+		if err := json.Unmarshal(trimmed, &path); err != nil {
+			return nil, err
+		}
+		if path == "" {
+			return nil, nil
+		}
+		name := identifier
+		if i := strings.LastIndex(name, "/"); i >= 0 {
+			name = name[i+1:]
+		}
+		return []string{name}, nil
+	}
+
+	var bins map[string]string
+	if err := json.Unmarshal(trimmed, &bins); err != nil {
+		return nil, err
+	}
+	names := make([]string, 0, len(bins))
+	for name := range bins {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	return names, nil
 }
 
 // npmPackageState is the outcome of probing the package-level NPM metadata
