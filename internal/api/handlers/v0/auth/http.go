@@ -38,16 +38,26 @@ func NewDefaultHTTPKeyFetcher() *DefaultHTTPKeyFetcher {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialContext = safeDialContext
 
-	return &DefaultHTTPKeyFetcher{
-		client: &http.Client{
-			Timeout: 10 * time.Second,
-			// Disable redirects for security purposes:
-			// Prevents people doing weird things like sending us to internal endpoints at different paths
-			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-			Transport: transport,
+	return &DefaultHTTPKeyFetcher{client: newHTTPKeyFetcherClient(transport)}
+}
+
+// httpKeyFetchTimeout bounds the entire well-known fetch, including DNS resolution
+// and the TLS handshake. It is part of the documented verification contract: an
+// endpoint that cannot answer within this budget fails authentication.
+const httpKeyFetchTimeout = 10 * time.Second
+
+// newHTTPKeyFetcherClient builds the HTTP client used to fetch a domain's
+// well-known verification key. The transport is a parameter so that tests can
+// exercise the production timeout and redirect policy against a local server.
+func newHTTPKeyFetcherClient(transport http.RoundTripper) *http.Client {
+	return &http.Client{
+		Timeout: httpKeyFetchTimeout,
+		// Disable redirects for security purposes:
+		// Prevents people doing weird things like sending us to internal endpoints at different paths
+		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+			return http.ErrUseLastResponse
 		},
+		Transport: transport,
 	}
 }
 
