@@ -330,9 +330,9 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 			expectedNames: []string{"com.example/server-b"},
 		},
 		{
-			name: "filter by substring name",
+			name: "filter by search term matching the name",
 			filter: &database.ServerFilter{
-				SubstringName: stringPtr("server-"),
+				Search: stringPtr("server-"),
 			},
 			limit:         10,
 			expectedCount: 3,
@@ -402,6 +402,99 @@ func TestPostgreSQL_ListServers(t *testing.T) {
 			if tt.limit < len(testServers) && len(results) == tt.limit {
 				assert.NotEmpty(t, nextCursor, "Should return next cursor when results are limited")
 			}
+		})
+	}
+}
+
+func TestPostgreSQL_ListServersSearch(t *testing.T) {
+	db := database.NewTestDB(t)
+	ctx := context.Background()
+	now := time.Now()
+
+	// Names and descriptions are deliberately crossed: "weather" is in one
+	// server's name and in another's description, so a search for it can only
+	// return both if the two fields are really OR'd. The third carries LIKE
+	// metacharacters in its description, which is where the escaping is proved.
+	testServers := []struct {
+		name        string
+		description string
+	}{
+		{"com.example/alpha-tool", "Weather forecasts for pilots"},
+		{"com.example/weather-cli", "Unrelated subject entirely"},
+		{"com.example/gamma", "Reports 100% of coverage_report runs"},
+	}
+	for _, ts := range testServers {
+		serverJSON := &apiv0.ServerJSON{
+			Name:        ts.name,
+			Description: ts.description,
+			Version:     testVersion100,
+			Remotes:     []model.Transport{{Type: "http", URL: "https://api.example.com/mcp"}},
+		}
+		officialMeta := &apiv0.RegistryExtensions{
+			Status:          model.StatusActive,
+			StatusChangedAt: now,
+			PublishedAt:     now,
+			UpdatedAt:       now,
+			IsLatest:        true,
+		}
+		_, err := db.CreateServer(ctx, nil, serverJSON, officialMeta)
+		require.NoError(t, err)
+	}
+
+	tests := []struct {
+		name          string
+		search        string
+		expectedNames []string
+	}{
+		{
+			name:          "matches the name",
+			search:        "alpha",
+			expectedNames: []string{"com.example/alpha-tool"},
+		},
+		{
+			name:          "matches the description — the point of #1453",
+			search:        "forecasts",
+			expectedNames: []string{"com.example/alpha-tool"},
+		},
+		{
+			name:          "matches either field, not both",
+			search:        "weather",
+			expectedNames: []string{"com.example/alpha-tool", "com.example/weather-cli"},
+		},
+		{
+			name:          "is case-insensitive on the description too",
+			search:        "WEATHER",
+			expectedNames: []string{"com.example/alpha-tool", "com.example/weather-cli"},
+		},
+		{
+			// Without escaping this would match every row through both columns.
+			name:          "treats % as a literal, not a wildcard",
+			search:        "100%",
+			expectedNames: []string{"com.example/gamma"},
+		},
+		{
+			// Likewise `_`, which would otherwise match any single character.
+			name:          "treats _ as a literal, not a single-character wildcard",
+			search:        "coverage_report",
+			expectedNames: []string{"com.example/gamma"},
+		},
+		{
+			name:          "returns nothing when neither field matches",
+			search:        "nonexistent",
+			expectedNames: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			results, _, err := db.ListServers(ctx, nil, &database.ServerFilter{Search: &tt.search}, "", 10)
+			require.NoError(t, err)
+
+			names := make([]string, 0, len(results))
+			for _, r := range results {
+				names = append(names, r.Server.Name)
+			}
+			assert.ElementsMatch(t, tt.expectedNames, names)
 		})
 	}
 }
@@ -922,10 +1015,10 @@ func TestPostgreSQL_EdgeCases(t *testing.T) {
 
 		// Test multiple filters combined
 		filter := &database.ServerFilter{
-			SubstringName: stringPtr("complex"),
-			UpdatedSince:  timePtr(testTime.Add(-30 * time.Minute)),
-			IsLatest:      boolPtr(true),
-			Version:       stringPtr("1.0.0"),
+			Search:       stringPtr("complex"),
+			UpdatedSince: timePtr(testTime.Add(-30 * time.Minute)),
+			IsLatest:     boolPtr(true),
+			Version:      stringPtr("1.0.0"),
 		}
 
 		results, _, err := db.ListServers(ctx, nil, filter, "", 10)
@@ -1229,7 +1322,7 @@ func TestPostgreSQL_PerformanceScenarios(t *testing.T) {
 		cursor := ""
 		for {
 			rs, next, err := db.ListServers(ctx, nil,
-				&database.ServerFilter{SubstringName: stringPtr("cursor-test-")},
+				&database.ServerFilter{Search: stringPtr("cursor-test-")},
 				cursor, 2)
 			require.NoError(t, err)
 			paged = append(paged, rs...)
@@ -1705,7 +1798,7 @@ func TestPostgreSQL_IncludeDeletedFilter(t *testing.T) {
 
 	t.Run("excludes deleted by default (nil IncludeDeleted)", func(t *testing.T) {
 		filter := &database.ServerFilter{
-			SubstringName: stringPtr("deleted-filter"),
+			Search: stringPtr("deleted-filter"),
 		}
 
 		results, _, err := db.ListServers(ctx, nil, filter, "", 10)
@@ -1730,7 +1823,7 @@ func TestPostgreSQL_IncludeDeletedFilter(t *testing.T) {
 
 	t.Run("excludes deleted when IncludeDeleted is false", func(t *testing.T) {
 		filter := &database.ServerFilter{
-			SubstringName:  stringPtr("deleted-filter"),
+			Search:         stringPtr("deleted-filter"),
 			IncludeDeleted: boolPtr(false),
 		}
 
@@ -1748,7 +1841,7 @@ func TestPostgreSQL_IncludeDeletedFilter(t *testing.T) {
 
 	t.Run("includes deleted when IncludeDeleted is true", func(t *testing.T) {
 		filter := &database.ServerFilter{
-			SubstringName:  stringPtr("deleted-filter"),
+			Search:         stringPtr("deleted-filter"),
 			IncludeDeleted: boolPtr(true),
 		}
 
@@ -1772,7 +1865,7 @@ func TestPostgreSQL_IncludeDeletedFilter(t *testing.T) {
 	t.Run("combined filters with include deleted", func(t *testing.T) {
 		// Test that IncludeDeleted works correctly with other filters
 		filter := &database.ServerFilter{
-			SubstringName:  stringPtr("deleted-filter"),
+			Search:         stringPtr("deleted-filter"),
 			Version:        stringPtr("1.0.0"),
 			IsLatest:       boolPtr(true),
 			IncludeDeleted: boolPtr(true),
