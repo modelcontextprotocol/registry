@@ -38,7 +38,7 @@ The official registry enforces additional [package validation requirements](../s
 The official registry extends the `GET /v0.1/servers` endpoint with additional query parameters for improved discovery and synchronization:
 
 - `updated_since` - Filter servers updated after RFC3339 timestamp (e.g., `2025-08-07T13:15:04.280Z`)
-- `search` - Case-insensitive substring search on server names (e.g., `filesystem`)
+- `search` - Case-insensitive substring search on server names and descriptions (e.g., `filesystem`)
     - This is intentionally simple. For more advanced searching and filtering, use a subregistry.
 - `version` - Filter by version (currently supports `latest` for latest versions only)
 - `include_deleted` - Include deleted servers in results (default: `false`, but automatically `true` when `updated_since` is provided for incremental sync)

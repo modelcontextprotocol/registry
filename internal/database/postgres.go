@@ -117,13 +117,23 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		args = append(args, *filter.UpdatedSince)
 		argIndex++
 	}
-	if filter.SubstringName != nil {
+	if filter.Search != nil {
+		// Matches the name OR the description. A server is looked for by what it
+		// does at least as often as by what it is called, and a name is a brand:
+		// `io.github.<owner>/<product>` is what the publishing docs steer authors
+		// toward, so a server named after its product rather than its category was
+		// unfindable by its own subject. See #1453.
+		//
 		// Escape LIKE metacharacters so that user input cannot expand into
 		// wildcard matches (e.g. `?search=_` matching every single-char name,
 		// `?search=%` matching everything). Order matters: backslashes must be
 		// escaped first so subsequent escape backslashes are not double-escaped.
-		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(*filter.SubstringName)
-		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", argIndex))
+		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(*filter.Search)
+		// One placeholder used twice: both columns take the same pattern, so the
+		// argument list — and therefore every caller's arg index — is unchanged.
+		conditions = append(conditions, fmt.Sprintf(
+			"(server_name ILIKE $%[1]d ESCAPE '\\' OR value ->> 'description' ILIKE $%[1]d ESCAPE '\\')",
+			argIndex))
 		args = append(args, "%"+escaped+"%")
 		argIndex++
 	}
