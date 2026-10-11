@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.user/local-weather",
+  "description": "Local MCP server distributed as an npm package.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@modelcontextprotocol/server-weather",
+      "version": "1.0.0",
+      "transport": { "type": "stdio" },
+      "runtimeHint": "npx",
+      "packageArguments": [
+        { "type": "positional", "valueHint": "config_path" },
+        { "type": "named", "name": "--port", "value": "8080" }
+      ],
+      "environmentVariables": [
+        { "name": "API_KEY", "isSecret": true, "isRequired": true }
+      ]
+    }
+  ]
+}
