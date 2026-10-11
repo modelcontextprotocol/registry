@@ -41,6 +41,8 @@ type Package struct {
 	FileSHA256 string `json:"fileSha256,omitempty" pattern:"^[a-f0-9]{64}$" doc:"SHA-256 hash of the package file for integrity verification. Required for MCPB packages and optional for other package types. Authors are responsible for generating correct SHA-256 hashes when creating server.json. If present, MCP clients must validate the downloaded file matches the hash before running packages to ensure file integrity." example:"fe333e598595000ae021bd27117db32ec69af6987f507ba7a63c90638ff633ce"`
 	// RunTimeHint suggests the appropriate runtime for the package
 	RunTimeHint string `json:"runtimeHint,omitempty" doc:"A hint to help clients determine the appropriate runtime for the package. This field should be provided when runtimeArguments are present." example:"npx"`
+	// Executable selects which of the package's executables starts the MCP server (npm only: a key of package.json "bin")
+	Executable string `json:"executable,omitempty" minLength:"1" maxLength:"255" pattern:"^[A-Za-z0-9_][A-Za-z0-9._-]*$" doc:"Name of the executable within the package that starts the MCP server, for packages that ship more than one. Currently supported for npm packages only, where it must name an entry in the package's bin field; clients run it through the package runner, e.g. npx -y --package=sumlyzer@1.0.0 -- sumlyzer-mcp-server. When omitted, clients use the package's default executable (for npm, the bin whose name matches the package name, or its only bin)." example:"sumlyzer-mcp-server"`
 	// Transport is required and specifies the transport protocol configuration
 	Transport Transport `json:"transport" doc:"Transport protocol configuration for the package"`
 	// RuntimeArguments are passed to the package's runtime command (e.g., docker, npx)

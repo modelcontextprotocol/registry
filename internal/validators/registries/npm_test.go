@@ -182,6 +182,91 @@ func TestValidateNPM_PositivePathMock(t *testing.T) {
 	assert.NoError(t, err, "a version response with the matching mcpName should validate")
 }
 
+// TestValidateNPM_Executable covers the optional executable selector (#1629):
+// it must name an entry of package.json "bin" in the published version.
+func TestValidateNPM_Executable(t *testing.T) {
+	ctx := context.Background()
+	const serverName = "io.github.test/demo"
+
+	tests := []struct {
+		name        string
+		identifier  string
+		bin         string // raw JSON for the "bin" field; empty means omitted
+		executable  string
+		errContains string // empty means success is expected
+	}{
+		{
+			name:       "selected executable is one of several bins",
+			identifier: "sumlyzer",
+			bin:        `{"sumlyzer":"bin/sumlyzer.mjs","sumlyzer-mcp-server":"bin/sumlyzer-mcp-server.mjs"}`,
+			executable: "sumlyzer-mcp-server",
+		},
+		{
+			name:        "selected executable is not a bin",
+			identifier:  "sumlyzer",
+			bin:         `{"sumlyzer-mcp-server":"bin/b.mjs","sumlyzer":"bin/a.mjs"}`,
+			executable:  "sumlyzer-mcp",
+			errContains: "has no executable named 'sumlyzer-mcp' in package.json 'bin' (available: sumlyzer, sumlyzer-mcp-server)",
+		},
+		{
+			name:       "string bin shorthand is named after the unscoped package",
+			identifier: "@scope/demo-mcp",
+			bin:        `"dist/index.js"`,
+			executable: "demo-mcp",
+		},
+		{
+			name:        "string bin shorthand does not match another name",
+			identifier:  "@scope/demo-mcp",
+			bin:         `"dist/index.js"`,
+			executable:  "scope",
+			errContains: "(available: demo-mcp)",
+		},
+		{
+			name:        "package without bin",
+			identifier:  "demo-lib",
+			executable:  "demo",
+			errContains: "declares no executables in package.json 'bin'",
+		},
+		{
+			name:        "malformed bin",
+			identifier:  "demo-pkg",
+			bin:         `["a","b"]`,
+			executable:  "a",
+			errContains: "failed to parse 'bin' field",
+		},
+		{
+			name:       "no executable selected skips the bin check",
+			identifier: "demo-lib",
+			bin:        `["not","checked"]`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := fmt.Sprintf(`{"mcpName":%q}`, serverName)
+			if tt.bin != "" {
+				body = fmt.Sprintf(`{"mcpName":%q,"bin":%s}`, serverName, tt.bin)
+			}
+			mock := newNPMMock(http.StatusOK, body, http.StatusOK)
+			defer mock.Close()
+
+			pkg := model.Package{
+				RegistryType:    model.RegistryTypeNPM,
+				RegistryBaseURL: mock.URL,
+				Identifier:      tt.identifier,
+				Version:         "1.0.0",
+				Executable:      tt.executable,
+			}
+			err := registries.ValidateNPMPackage(ctx, pkg, serverName)
+			if tt.errContains == "" {
+				assert.NoError(t, err)
+				return
+			}
+			assert.ErrorContains(t, err, tt.errContains)
+		})
+	}
+}
+
 func TestValidateNPM_RealPackages(t *testing.T) {
 	ctx := context.Background()
 
@@ -190,6 +275,7 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 		packageName  string
 		version      string
 		serverName   string
+		executable   string
 		expectError  bool
 		errorMessage string
 	}{
@@ -287,6 +373,25 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 			serverName:  "io.github.hellocoop/admin-mcp",
 			expectError: false,
 		},
+		{
+			// Ships two bins ("mcp", "hello-mcp-http"), neither named after the
+			// package, so `npx @hellocoop/admin-mcp@1.5.7` cannot pick one.
+			name:        "multi-bin package with a declared executable should pass",
+			packageName: "@hellocoop/admin-mcp",
+			version:     "1.5.7",
+			serverName:  "io.github.hellocoop/admin-mcp",
+			executable:  "mcp",
+			expectError: false,
+		},
+		{
+			name:         "multi-bin package with an unknown executable should fail",
+			packageName:  "@hellocoop/admin-mcp",
+			version:      "1.5.7",
+			serverName:   "io.github.hellocoop/admin-mcp",
+			executable:   "admin-mcp",
+			expectError:  true,
+			errorMessage: "has no executable named 'admin-mcp' in package.json 'bin' (available: hello-mcp-http, mcp)",
+		},
 	}
 
 	for _, tt := range tests {
@@ -295,6 +400,7 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 				RegistryType: model.RegistryTypeNPM,
 				Identifier:   tt.packageName,
 				Version:      tt.version,
+				Executable:   tt.executable,
 			}
 
 			err := registries.ValidateNPM(ctx, pkg, tt.serverName)

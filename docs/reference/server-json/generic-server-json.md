@@ -723,6 +723,33 @@ Some CLI tools bundle an MCP server, without a standalone MCP package or a publi
 }
 ```
 
+### npm package with multiple executables
+
+When an npm package declares several executables in its `package.json` `bin` field, `npx <package>` only works if one of them is named after the package. Use `executable` to name the one that starts the MCP server. The registry checks that it is an entry of `bin` in the published version, and clients run it with `npx -y --package=<identifier>@<version> -- <executable>`, followed by any `packageArguments`.
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.example/sumlyzer",
+  "description": "Summarize documents over MCP",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "sumlyzer",
+      "version": "1.0.0",
+      "executable": "sumlyzer-mcp-server",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
+With `"bin": { "sumlyzer": "bin/sumlyzer.mjs", "sumlyzer-mcp-server": "bin/sumlyzer-mcp-server.mjs" }`, this runs `npx -y --package=sumlyzer@1.0.0 -- sumlyzer-mcp-server`. `executable` is currently supported for npm packages only.
+
 ### Server with Custom Installation Path
 
 For MCP servers that follow a custom installation path or are embedded in applications without standalone packages, use the `websiteUrl` field to direct users to setup documentation:
