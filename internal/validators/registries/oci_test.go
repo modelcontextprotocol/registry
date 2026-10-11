@@ -311,6 +311,6 @@ func TestValidateOCI_LabelMismatch(t *testing.T) {
 
 	err := registries.ValidateOCI(ctx, pkg, "io.github.github/github-mcp-server-mismatch")
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "ownership validation failed")
+	assert.Contains(t, err.Error(), "OCI image 'ghcr.io/github/github-mcp-server:latest' ownership validation failed")
 	assert.Contains(t, err.Error(), "Expected annotation")
 }
