@@ -36,7 +36,7 @@ func TestListServersEndpoint(t *testing.T) {
 	_, err = registryService.CreateServer(ctx, &apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
 		Name:        "com.example/server-beta",
-		Description: "Beta test server",
+		Description: "Beta test server for weather forecasting",
 		Version:     "2.0.0",
 	})
 	require.NoError(t, err)
@@ -70,6 +70,18 @@ func TestListServersEndpoint(t *testing.T) {
 			queryParams:    "?search=alpha",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
+		},
+		{
+			name:           "search matches description when name does not match",
+			queryParams:    "?search=weather",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+		},
+		{
+			name:           "search term absent from both name and description matches nothing",
+			queryParams:    "?search=nonexistent-term-xyz",
+			expectedStatus: http.StatusOK,
+			expectedCount:  0,
 		},
 		{
 			name:           "filter latest only",
