@@ -79,6 +79,8 @@ docker run -p 8080:8080 ghcr.io/modelcontextprotocol/registry:main-20250906-abc1
 
 #### Publishing a server
 
+Publishing an MCP server does **not** happen through a pull request to this repository. Adding a `server.json`, a server directory, or an entry in `data/seed.json` will not publish or list your server, even if the PR is merged. Use the `mcp-publisher` CLI from your server's own project instead.
+
 To publish a server, we've built a simple CLI. You can use it with:
 
 ```bash
