@@ -319,3 +319,42 @@ mcp-publisher login http azure-key-vault --domain="${MY_DOMAIN}" --vault "${MY_K
 ```
 
 </CodeGroup>
+
+### Troubleshooting failed HTTP verification
+
+The Registry fetches your verification file from its own infrastructure when you run `mcp-publisher login http`, so a `curl` that succeeds on your machine does not prove that login will work. The Registry itself must be able to reach the endpoint.
+
+<Warning>
+  If the Registry cannot use the endpoint, login fails with `token exchange failed with status 401` even though the file is served correctly to every other client.
+</Warning>
+
+The fetch is a plain HTTPS request with these properties:
+
+| Property | Requirement |
+| --- | --- |
+| Request | `GET https://<domain>/.well-known/mcp-registry-auth`, sent with `Accept: text/plain` and `User-Agent: mcp-registry/1.0` |
+| Status | `200 OK`. Redirects are not followed, so a `3xx` fails verification |
+| Body | the proof record, at most 4096 bytes. Surrounding whitespace is ignored |
+| Timeout | 10 seconds for the whole request |
+| Origin | the hosted Registry runs on Google Cloud, so the request arrives from Google Cloud addresses rather than a fixed address you can allowlist per request |
+
+Because the request originates from cloud infrastructure rather than a browser on a residential network, the usual causes of failure are edge rules that block it:
+
+- a WAF, bot-management, or "under attack" rule that challenges or blocks non-browser clients
+- a geo-block or IP allowlist that excludes Google Cloud address ranges
+- an `AAAA` (IPv6) record pointing at an address that is not reachable. Verification fails if none of the domain's public addresses can be reached, even when IPv4 works in a browser
+- a `301`/`302` redirect to another host or path, which the Registry does not follow
+- `/.well-known/mcp-registry-auth` answering `200 OK` with an HTML error page instead of the proof record
+
+To see what the Registry sees, request the file the same way it does, ideally from a network other than your own:
+
+```bash
+curl -sS -o - -w '\n%{http_code}\n' \
+  -H 'Accept: text/plain' \
+  -A 'mcp-registry/1.0' \
+  https://example.com/.well-known/mcp-registry-auth
+```
+
+The response body must be the proof record printed by the login command (`v=MCPv1; k=...; p=...`). When the Registry cannot use the endpoint, the login error carries the Registry's own fetch failure, such as `dial tcp <ip>:443: i/o timeout`, `HTTP 403: failed to fetch key from ...`, or `HTTP 301: failed to fetch key from ...`. Allow plain HTTPS clients through for `/.well-known/mcp-registry-auth`, serve the path without redirects, then retry.
+
+Addresses that resolve to loopback, private, link-local, or carrier-grade NAT ranges are refused by design, so the endpoint must be reachable at a public address.
