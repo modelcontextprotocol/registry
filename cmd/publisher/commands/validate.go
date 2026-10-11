@@ -142,6 +142,7 @@ func ValidateCommand(args []string) error {
 		}
 		return fmt.Errorf("failed to read %s: %w", serverFile, err)
 	}
+	serverData = stripUTF8BOM(serverData)
 	if err := validateJSONUnicode(serverFile, serverData); err != nil {
 		return err
 	}
