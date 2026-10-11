@@ -324,6 +324,20 @@ func TestValidate(t *testing.T) {
 			expectedError: validators.ErrInvalidRepositoryURL.Error(),
 		},
 		{
+			name: "server with valid GitLab URL in nested subgroup",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://gitlab.com/myorg/team/subgroup/my-mcp-server",
+					Source: "gitlab",
+				},
+				Version: "1.0.0",
+			},
+			expectedError: "",
+		},
+		{
 			name: "server with valid repository subfolder",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
