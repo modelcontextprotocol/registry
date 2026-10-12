@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "description": "High-performance vector document synthesis engine. Generate publication-grade invoices, estimates, receipts, contracts, NDAs, and real estate agreements in sub-25ms with vector QR code mobile payments.",
+  "name": "io.github.mooshee/pressmark",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://pressmark.dev/mcp"
+    }
+  ],
+  "repository": {
+    "source": "github",
+    "url": "https://github.com/mooshee/pressmark"
+  },
+  "title": "Pressmark",
+  "version": "0.1.0",
+  "websiteUrl": "https://pressmark.dev"
+}
