@@ -34,6 +34,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 - [MCP Server for MCP Registry](https://github.com/formulahendry/mcp-server-mcp-registry) - MCP Server to discover and search for available MCP servers in the registry
 - [mcp-insights](https://github.com/joelverhagen/mcp-insights/) - Analytics and insights for the MCP Registry
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
+- [mcp-registry-preflight](https://github.com/elfovo/mcp-registry-preflight) - Read-only bash script to run before `mcp-publisher publish`: checks the live registries for the usual causes of a 400 (version already published, `packages[].version` drift, npm `mcpName` / PyPI `mcp-name:` mismatch, MCPB asset not public or `fileSha256` not matching the published file)
 - [mcpscore](https://mcpscore.dev) - Deterministic auditor for MCP servers: 100+ static checks across protocol conformance, tool and schema quality, security posture, and spec readiness, scored 0–100, with a web UI, CLI, and GitHub Action for CI ([source code](https://github.com/mcp-box/mcpscore)).
 - [OtherVibes/mcp-publish-action](https://github.com/OtherVibes/mcp-publish-action) - GitHub Action for publishing MCP servers to the official registry
 - [polygraph](https://polygraph.so) - Independent behavioral security grades (A–F) for MCP servers from an open, reproducible harness, published as an adoption-ranked index with per-server reports
