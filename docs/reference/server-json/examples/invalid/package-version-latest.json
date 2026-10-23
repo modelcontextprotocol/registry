@@ -1,0 +1,13 @@
+{
+  "name": "io.github.user/bad-version",
+  "description": "Package pins the disallowed floating tag 'latest'.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@modelcontextprotocol/server-weather",
+      "version": "latest",
+      "transport": { "type": "stdio" }
+    }
+  ]
+}
