@@ -6,6 +6,33 @@ Changes to the server.json schema and format.
 
 This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./draft/server.schema.json) in this repository.
 
+### Added
+
+#### Optional `postInstallInstructions` on Packages
+
+Packages may now declare an optional `postInstallInstructions` array of structured post-install steps that clients can display as a checklist after downloading a package. This is intended for servers that require additional manual setup beyond installation — for example, a server that doubles as a system service and needs a companion daemon registered. Instructions are informational only: clients display the text and never execute commands automatically, so there is no supply chain risk.
+
+Each instruction has a required `description` and optional `command`, `documentation` (a URI), and `optional` (boolean) fields.
+
+**Example:**
+```json
+{
+  "packages": [{
+    "registryType": "mcpb",
+    "identifier": "https://github.com/aniongithub/mind-map/releases/download/v1.0.0/mind-map.mcpb",
+    "transport": { "type": "stdio" },
+    "postInstallInstructions": [
+      {
+        "description": "Install as a system service for the web UI",
+        "command": "mind-map service install --addr 127.0.0.1:4242",
+        "documentation": "https://github.com/aniongithub/mind-map#service-management",
+        "optional": true
+      }
+    ]
+  }]
+}
+```
+
 ### Changed
 
 #### Transport URL Pattern Now Accepts Template Variables
