@@ -43,7 +43,7 @@
                   "-ec"
                 ],
                 "args": [
-                  "umask 077\nfor attempt in $(seq 1 30); do\n  if pg_isready -q; then break; fi\n  sleep 10\ndone\nif ! pg_isready; then\n  echo REGISTRY_DATABASE_BACKUP_FAILED: database unavailable >&2\n  exit 1\nfi\npg_dump --format=custom --lock-wait-timeout=30s --file=/backup/registry.dump\npg_restore --file=/dev/null /backup/registry.dump\ncd /backup\nsha256sum registry.dump > registry.dump.sha256\necho REGISTRY_DATABASE_ARCHIVE_VALIDATED"
+                  "umask 077\nfor attempt in $(seq 1 30); do\n  if pg_isready -q; then break; fi\n  sleep 10\ndone\nif ! pg_isready; then\n  echo REGISTRY_DATABASE_BACKUP_FAILED: database unavailable >&2\n  exit 1\nfi\npg_dump --format=custom --compress=0 --lock-wait-timeout=30s --file=/backup/registry.dump\npg_restore --file=/dev/null /backup/registry.dump\ncd /backup\nsha256sum registry.dump > registry.dump.sha256\necho REGISTRY_DATABASE_ARCHIVE_VALIDATED"
                 ],
                 "env": [
                   {

@@ -1,0 +1,25 @@
+{
+  "nameTable": {
+    "productionKubernetes": "urn:pulumi:gcpProd::mcp-registry-infra::pulumi:providers:kubernetes::k8s-provider"
+  },
+  "resources": [
+    {
+      "type": "kubernetes:core/v1:Service",
+      "name": "registry-pg-backup",
+      "id": "default/registry-pg-backup",
+      "provider": "productionKubernetes"
+    },
+    {
+      "type": "kubernetes:yaml:ConfigGroup",
+      "name": "postgres-backup-job",
+      "component": true
+    },
+    {
+      "type": "kubernetes:batch/v1:CronJob",
+      "name": "default/registry-database-backup",
+      "id": "default/registry-database-backup",
+      "parent": "postgres-backup-job",
+      "provider": "productionKubernetes"
+    }
+  ]
+}

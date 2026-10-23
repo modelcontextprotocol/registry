@@ -360,8 +360,18 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 		Location:     pulumi.String("US"),
 		StorageClass: pulumi.String("STANDARD"),
 		// Restic keys, config and deduplicated packs can remain necessary indefinitely.
-		// Only Restic may prune repository contents; object-age deletion corrupts it.
-		LifecycleRules:           storage.BucketLifecycleRuleArray{},
+		// Only Restic may prune live repository contents. Bound the extra versions
+		// left by pruning, without expiring live data or legacy recovery evidence.
+		LifecycleRules: storage.BucketLifecycleRuleArray{
+			&storage.BucketLifecycleRuleArgs{
+				Action: &storage.BucketLifecycleRuleActionArgs{Type: pulumi.String("Delete")},
+				Condition: &storage.BucketLifecycleRuleConditionArgs{
+					WithState:               pulumi.String("ARCHIVED"),
+					DaysSinceNoncurrentTime: pulumi.Int(30),
+					MatchesPrefixes:         pulumi.StringArray{pulumi.String("postgres-custom-v1/")},
+				},
+			},
+		},
 		UniformBucketLevelAccess: pulumi.Bool(true),
 		Versioning: &storage.BucketVersioningArgs{
 			Enabled: pulumi.Bool(true),

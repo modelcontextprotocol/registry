@@ -165,7 +165,10 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 ## Database Backups
 
 The `registry-database-backup` CronJob backs up the registry's `app` database
-with PostgreSQL 17 `pg_dump --format=custom`. An init container connects using
+with PostgreSQL 17 `pg_dump --format=custom --compress=0`. Leaving table data
+uncompressed lets Restic deduplicate it before repository compression, rather
+than storing changing compressed streams. The temporary volume must fit the
+uncompressed archive (currently limited to 2 GiB). An init container connects using
 `registry-pg-app` credentials, requires TLS, enables read-only transactions, and
 writes to a private temporary volume. A private `registry-pg-backup` service
 follows the primary even when the CNPG management readiness probe is slow; the
@@ -197,11 +200,16 @@ Restic stores `/backup/registry.dump` and `/backup/registry.dump.sha256` in the
 - [Staging bucket](https://console.cloud.google.com/storage/browser/mcp-registry-staging-backups/postgres-custom-v1?project=mcp-registry-staging)
 - Local MinIO: `k8up-backups/postgres-custom-v1`
 
-**Never configure object-age deletion on a Restic repository.** Its keys, config,
+**Never configure object-age deletion for live Restic objects.** Its keys, config,
 and deduplicated data can be older than every retained snapshot and still be
 required. Restic alone manages live repository retention. GCS versioning is
-retained, but does not make age-based deletion safe; noncurrent object versions
-can consume storage beyond the logical 28-day retention period.
+retained. A separate lifecycle rule deletes only noncurrent versions under
+`postgres-custom-v1/` after 30 days **since becoming noncurrent**, using
+`isLive: false` and `daysSinceNoncurrentTime: 30`. It never matches live keys,
+config, packs, or snapshots, regardless of their age. GCS soft-delete retention
+can delay final removal further (currently seven additional days in production).
+Legacy prefixes are excluded so their recovery evidence is preserved; since
+their schedules are retired, they do not continually accumulate new versions.
 
 The legacy K8up Schedule is retained with no scheduled actions. Existing objects
 at the bucket root and in `postgres-logical-v1` are preserved for investigation;
@@ -225,6 +233,37 @@ an existing or damaged repository. The password comes from
 `default/k8up-repo-password`; S3 credentials come from
 `default/k8up-backup-credentials`. Preserve that password/key association;
 changing a Secret alone does not rotate Restic keys. Do not print credentials.
+
+### Adopting the production repair into Pulumi
+
+The October 2026 repair created `default/registry-pg-backup` and
+`default/registry-database-backup` directly in production. They must be imported
+before the first production `pulumi up` using this code; a normal refresh does
+not adopt unmanaged resources. The existing bucket, K8up Schedule, operator,
+and credentials are already in the production state and must not be re-imported.
+The GCP alert script manages its own policies separately from Pulumi.
+
+From this directory, with production backend credentials and the existing stack
+passphrase available through the usual secure mechanism, run:
+
+```bash
+export PULUMI_BACKEND_URL=gs://mcp-registry-prod-pulumi-state
+export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt
+pulumi import --stack gcpProd --file imports/gcpProd-database-backups.json \
+  --generate-code=false --protect=false
+make build
+pulumi preview --stack gcpProd --refresh --diff
+```
+
+The import file includes the YAML component parent and the explicit production
+Kubernetes provider, so the imported URNs match this program. Import reads the
+existing Kubernetes objects and records them in state; it does not recreate
+them. Review the preview before any deployment: the backup Service and CronJob
+must not be created, replaced, or deleted, and no production database replacement
+is expected. Resolve any unrelated drift separately. Do not run this one-time
+import on staging, local, a fresh production cluster, or resources already
+imported. Successful import and preview are a rollout gate, not implied by a
+successful code build.
 
 ### Verification and isolated recovery
 
