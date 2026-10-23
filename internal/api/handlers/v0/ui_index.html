@@ -559,23 +559,25 @@
             }
         }
 
-        // Smallest icon at least as large as the rendered size, so it stays crisp
-        // without pulling a needlessly large file. Scalable icons win outright.
+        // Smallest icon at least as large as the rendered size in device pixels,
+        // so it stays crisp without pulling a needlessly large file. Scalable
+        // icons and icons with omitted sizes (usable at any size) win outright.
         // `theme: 'dark'` means "for a dark background"; this UI is light, so those
         // are used only when nothing else is available.
         const ICON_RENDER_PX = 40;
 
         function iconScore(icon) {
             const sizes = Array.isArray(icon.sizes) ? icon.sizes : [];
-            if (sizes.includes('any')) return 0;
+            if (!sizes.length || sizes.includes('any')) return 0;
+            const requiredPx = ICON_RENDER_PX * (window.devicePixelRatio || 1);
             const widths = sizes
                 .map((s) => parseInt(String(s).split('x')[0], 10))
                 .filter((n) => Number.isFinite(n) && n > 0);
-            if (!widths.length) return ICON_RENDER_PX * 100;
-            const atLeast = widths.filter((w) => w >= ICON_RENDER_PX);
+            if (!widths.length) return requiredPx * 100;
+            const atLeast = widths.filter((w) => w >= requiredPx);
             return atLeast.length
                 ? Math.min(...atLeast)
-                : ICON_RENDER_PX * 100 + (ICON_RENDER_PX - Math.max(...widths));
+                : requiredPx * 100 + (requiredPx - Math.max(...widths));
         }
 
         function pickIcon(server) {
