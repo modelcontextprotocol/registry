@@ -250,7 +250,7 @@ passphrase available through the usual secure mechanism, run:
 export PULUMI_BACKEND_URL=gs://mcp-registry-prod-pulumi-state
 export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt
 pulumi import --stack gcpProd --file imports/gcpProd-database-backups.json \
-  --generate-code=false --protect=false
+  --generate-code=false
 make build
 pulumi preview --stack gcpProd --refresh --diff
 ```
@@ -258,7 +258,11 @@ pulumi preview --stack gcpProd --refresh --diff
 The import file includes the YAML component parent and the explicit production
 Kubernetes provider, so the imported URNs match this program. Import reads the
 existing Kubernetes objects and records them in state; it does not recreate
-them. Review the preview before any deployment: the backup Service and CronJob
+them. Keep the default import deletion protection until this code lands, so an
+older checkout cannot delete the newly managed backup resources. A deployment
+that includes these resource definitions clears that temporary protection.
+The Service preserves its Kubernetes-allocated IPs during adoption.
+Review the preview before any deployment: the backup Service and CronJob
 must not be created, replaced, or deleted, and no production database replacement
 is expected. Resolve any unrelated drift separately. Do not run this one-time
 import on staging, local, a fresh production cluster, or resources already
