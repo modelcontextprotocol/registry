@@ -164,45 +164,182 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 
 ## Database Backups
 
-The deployment uses [K8up](https://k8up.io/) (a Kubernetes backup operator) that uses [Restic](https://restic.net/) under the hood.
+The production-only `registry-database-backup` CronJob backs up the registry's
+`app` database with PostgreSQL 17 `pg_dump --format=custom --compress=0`. Leaving table data
+uncompressed lets Restic deduplicate it before repository compression, rather
+than storing changing compressed streams. The temporary volume must fit the
+uncompressed archive (currently limited to 2 GiB). An init container connects using
+`registry-pg-app` credentials, requires TLS, enables read-only transactions, and
+writes to a private temporary volume. A private `registry-pg-backup` service
+follows the primary even when the CNPG management readiness probe is slow; the
+job independently waits for PostgreSQL to accept connections. It reads the entire
+archive back with
+`pg_restore --file=/dev/null` and records a SHA-256 checksum before the upload
+container can start. No production database volume is mounted.
 
-When running locally they are stored in a Minio bucket. In staging and production, backups are stored in a GCS bucket.
+The second container verifies the checksum, uploads the archive with Restic,
+runs `restic check --read-data`, and applies 28-day daily snapshot retention.
+It emits `REGISTRY_DATABASE_BACKUP_SUCCESS` only after all steps succeed.
+The archive contains database schema, data, ownership and grants. Cluster-wide
+roles, role passwords, the maintenance `postgres` database, and Grafana's separate
+database are outside this backup. CNPG supplies the registry's `app` role and
+credentials when provisioning a replacement cluster.
 
-### Accessing Backup Files
+Production runs daily at **04:46 UTC**, with a 30-minute job deadline and
+no overlapping runs. Staging and local development do not create the backup
+CronJob or its private Service and require no repository initialization.
+Their legacy backup resources and stored objects are retained, with the old
+K8up Schedule disabled. No automatic staging backup smoke test is run.
+Validate infrastructure changes with builds and Pulumi previews, and periodically
+test recovery from a production archive in an isolated database using the
+procedure below. This is a daily logical backup, not point-in-time recovery;
+the recovery point can be up to one day old. Increase the backup volume size, deadline, and
+client major version when database growth or a PostgreSQL upgrade requires it.
 
-#### Local Development (MinIO)
+### Repository and retention
+
+Restic stores `/backup/registry.dump` and `/backup/registry.dump.sha256` in the
+`postgres-custom-v1` prefix of the existing
+[production bucket](https://console.cloud.google.com/storage/browser/mcp-registry-prod-backups/postgres-custom-v1?project=mcp-registry-prod).
+
+**Never configure object-age deletion for live Restic objects.** Its keys, config,
+and deduplicated data can be older than every retained snapshot and still be
+required. Restic alone manages live repository retention. GCS versioning is
+retained. A separate lifecycle rule deletes only noncurrent versions under
+`postgres-custom-v1/` after 30 days **since becoming noncurrent**, using
+`isLive: false` and `daysSinceNoncurrentTime: 30`. It never matches live keys,
+config, packs, or snapshots, regardless of their age. GCS soft-delete retention
+can delay final removal further (currently seven additional days in production).
+Legacy prefixes are excluded so their recovery evidence is preserved; since
+their schedules are retired, they do not continually accumulate new versions.
+
+The legacy K8up Schedule is retained with no scheduled actions. Existing objects
+at the bucket root and in `postgres-logical-v1` are preserved for investigation;
+they are not a verified recovery source and are never pruned by the new job.
+The old physical-data production-to-staging sync workflow is guarded against
+execution because it is incompatible with the current archive format.
+
+On a **new production deployment**, initialize only the new repository before
+starting the CronJob. With the existing S3 credentials and repository password securely
+loaded into the environment, use:
 
 ```bash
-# Expose MinIO web console
-kubectl port-forward -n minio svc/minio 9000:9000 9001:9001
+export RESTIC_REPOSITORY=s3:https://storage.googleapis.com/mcp-registry-prod-backups/postgres-custom-v1
+restic init
 ```
 
-Then open [localhost:9001](http://localhost:9001), login with username `minioadmin` and password `minioadmin`, and navigate to the k8up-backups bucket.
+The existing production repository is already initialized; do not initialize it again.
+The scheduled job deliberately never runs `restic init`: a missing repository
+must fail visibly, not silently create new encryption keys. Do not run init on
+an existing or damaged repository. The password comes from
+`default/k8up-repo-password`; S3 credentials come from
+`default/k8up-backup-credentials`. Preserve that password/key association;
+changing a Secret alone does not rotate Restic keys. Do not print credentials.
 
-##### Staging and Production (GCS)
+### Adopting the production repair into Pulumi
 
-- [Staging](https://console.cloud.google.com/storage/browser/mcp-registry-staging-backups?project=mcp-registry-staging)
-- [Production](https://console.cloud.google.com/storage/browser/mcp-registry-prod-backups?project=mcp-registry-prod)
+The October 2026 repair created `default/registry-pg-backup` and
+`default/registry-database-backup` directly in production. They must be imported
+before the first production `pulumi up` using this code; a normal refresh does
+not adopt unmanaged resources. The existing bucket, K8up Schedule, operator,
+and credentials are already in the production state and must not be re-imported.
+The GCP alert script manages its own policies separately from Pulumi.
 
-#### Decrypting and Restoring Backups
+From this directory, with production backend credentials and the existing stack
+passphrase available through the usual secure mechanism, run:
 
-Backups are encrypted using Restic. To access the backup data:
+```bash
+export PULUMI_BACKEND_URL=gs://mcp-registry-prod-pulumi-state
+export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt
+pulumi import --stack gcpProd --file imports/gcpProd-database-backups.json \
+  --generate-code=false
+make build
+pulumi preview --stack gcpProd --refresh --diff
+```
 
-1. **Download the backup files from the bucket:**
-   ```bash
-   # Local (MinIO) - ensure port-forward is active: kubectl port-forward -n minio svc/minio 9000:9000 9001:9001
-   AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin \
-     aws --endpoint-url http://localhost:9000 s3 sync s3://k8up-backups/ ./backup-files/
-   
-   # GCS (staging/production)
-   gsutil -m cp -r gs://mcp-registry-{staging|prod}-backups/* ./backup-files/
-   ```
-2. **[Install Restic](https://restic.readthedocs.io/en/latest/020_installation.html)**
-3. **Restore the backup:**
-   ```bash
-   RESTIC_PASSWORD=password restic -r ./backup-files restore latest --target ./restored-files
-   ```
-   PostgreSQL data will be in `./restored-files/data/registry-pg-1/pgdata/`
+The import file includes the YAML component parent and the explicit production
+Kubernetes provider, so the imported URNs match this program. Import reads the
+existing Kubernetes objects and records them in state; it does not recreate
+them. Keep the default import deletion protection until this code lands, so an
+older checkout cannot delete the newly managed backup resources. A deployment
+that includes these resource definitions clears that temporary protection.
+The Service preserves its Kubernetes-allocated IPs during adoption.
+Review the preview before any deployment: the backup Service and CronJob
+must not be created, replaced, or deleted, and no production database replacement
+is expected. Resolve any unrelated drift separately. Do not run this one-time
+import on staging, local, a fresh production cluster, or resources already
+imported. Successful import and preview are a rollout gate, not implied by a
+successful code build.
+
+### Verification and isolated recovery
+
+Keep downloaded archives private (`umask 077`). With the above credentials and
+repository configured, select a specific snapshot and verify it:
+
+```bash
+restic --no-lock snapshots
+restic --no-lock check --read-data
+umask 077
+# Replace SNAPSHOT_ID with the full ID selected above.
+restic --no-lock dump SNAPSHOT_ID /backup/registry.dump > registry.dump
+restic --no-lock dump SNAPSHOT_ID /backup/registry.dump.sha256 > registry.dump.sha256
+shasum -a 256 -c registry.dump.sha256
+```
+
+Do not stream an unverified transfer directly into a database. Check the archive
+checksum at the destination before importing. Test recovery in an isolated,
+disposable PostgreSQL 17 instance, never the public database. For example:
+
+```bash
+docker run -d --name registry-backup-verify --network none \
+  -e POSTGRES_USER=restore_verifier -e POSTGRES_DB=postgres \
+  -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17
+# Wait until this succeeds:
+docker exec registry-backup-verify pg_isready -U restore_verifier
+docker cp registry.dump registry-backup-verify:/tmp/registry.dump
+docker cp registry.dump.sha256 registry-backup-verify:/tmp/registry.dump.sha256
+docker exec -w /tmp registry-backup-verify sha256sum -c registry.dump.sha256
+docker exec registry-backup-verify psql -X -U restore_verifier -d postgres \
+  -v ON_ERROR_STOP=1 -c 'CREATE ROLE app LOGIN;' -c 'CREATE DATABASE app OWNER app;'
+docker exec registry-backup-verify pg_restore --exit-on-error \
+  -U restore_verifier -d app /tmp/registry.dump
+docker exec registry-backup-verify psql -X -U restore_verifier -d app \
+  -c 'SELECT count(*) FROM servers;' \
+  -c 'SELECT version FROM schema_migrations ORDER BY version;'
+docker rm -f -v registry-backup-verify
+```
+
+Check restore exit status, schema, row counts, and application queries. Use a
+compatible PostgreSQL client major version. Repeat isolated recovery drills
+after backup or database upgrades; repository integrity alone does not prove
+that PostgreSQL can recover the archive.
+
+### Backup alerts
+
+Provision/update GCP failure and freshness alerts with:
+
+```bash
+python3 tools/admin/configure-backup-alerts.py \
+  --project mcp-registry-prod --cluster mcp-registry-prod --email YOUR_EMAIL --dry-run
+# Review, then rerun without --dry-run.
+```
+
+The script reuses an email channel and updates only its labelled policies. It
+alerts on dump/restore-tool/repository errors and on no successful, fully checked
+backup in 25 hours, including complete absence of the success metric. Log metrics
+are not backfilled: run a fresh job after provisioning and verify that the success
+metric appears in Cloud Monitoring. The freshness policy initially alerts until
+success is observed. Alert delivery and channel verification should be checked
+with the notification recipient.
+
+Use explicit Kubernetes contexts when inspecting status:
+
+```bash
+kubectl --context=YOUR_CONTEXT -n default get cronjob registry-database-backup
+kubectl --context=YOUR_CONTEXT -n default get pods -l app=registry-database-backup
+kubectl --context=YOUR_CONTEXT -n default logs job/JOB_NAME -c pg-dump
+kubectl --context=YOUR_CONTEXT -n default logs job/JOB_NAME -c restic
+```
 
 ## Troubleshooting
 

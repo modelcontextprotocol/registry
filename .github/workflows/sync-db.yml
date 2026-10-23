@@ -18,6 +18,12 @@ jobs:
       group: sync-staging-database
       cancel-in-progress: false
     steps:
+      - name: Reject obsolete physical-data restore
+        run: |
+          echo "This workflow expects raw PGDATA backups and is incompatible with postgres-custom-v1 PostgreSQL archives."
+          echo "Use the isolated logical restore procedure in deploy/README.md. No database has been changed."
+          exit 1
+
       - name: Authenticate to Google Cloud (Production)
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
         with:

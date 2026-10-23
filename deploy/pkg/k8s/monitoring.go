@@ -540,6 +540,10 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		},
 		Namespace: ns.Metadata.Name().Elem(),
 		Values: pulumi.Map{
+			// Match grafana.ini so the chart omits the unused, randomly generated admin Secret.
+			"env": pulumi.Map{
+				"GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION": pulumi.String("true"),
+			},
 			"plugins": pulumi.Array{
 				pulumi.String("victoriametrics-logs-datasource"),
 			},
