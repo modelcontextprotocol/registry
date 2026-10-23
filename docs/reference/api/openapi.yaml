@@ -1015,6 +1015,114 @@ components:
                   commit: "abc123def456"
                   timestamp: "2023-12-01T10:30:00Z"
                   pipelineId: "build-789"
+            io.modelcontextprotocol.registry/security-scan:
+              type: array
+              description: "Optional, scanner-neutral security scan receipts. Each entry is an evidence-scoped receipt, not a server-level safety property: a 'clean' verdict means clean only under the named scanner version, rule set, policy profile, and scanned artifact digest, for the listed scan_scope. Receipts are produced by any scanner; the registry does not endorse any particular one. Clients MUST NOT render 'clean' unless the receipt binds to the current package/artifact digest (scanned_artifact_digest) and the displayed claim names the covered scan_scope, because a dependency or package scan can be clean while handler-side validation remains unassessed."
+              items:
+                $ref: '#/components/schemas/SecurityScanReceipt'
+
+    SecurityScanReceipt:
+      description: "A scanner-neutral, evidence-scoped security scan receipt. Binds a verdict to the exact scanner, rule set, policy profile, and scanned artifact digest that produced it, so downstream tools can reject stale or unjoinable reports without the registry trusting any single scanner. Capability posture (what authority a server declares or exposes) is intentionally out of scope here and may be modeled as a separate sibling extension; a receipt answers only 'what evidence was checked'."
+      type: object
+      required:
+        - scanner
+        - scanned_artifact_digest
+        - scan_scope
+        - verdict
+        - scanned_at
+        - attestation
+      properties:
+        scanner:
+          type: string
+          description: "Identifier of the scanner that produced this receipt. An open string so any community scanner can populate it; the registry does not endorse any particular scanner."
+          example: "example-scanner"
+        scanner_version:
+          type: string
+          description: "Version of the scanner that produced this receipt."
+          example: "1.2.3"
+        rule_set_ref:
+          type: string
+          description: "Reference to the rule set used, ideally digest-pinned so the receipt is reproducible. An open string; any ruleset reference is valid."
+          example: "example-ruleset@sha256:..."
+        policy_profile:
+          type: string
+          description: "Identifier of the policy profile applied during the scan (the thresholds and gating decisions under which the verdict was computed)."
+          example: "default-mcp-registry-v1"
+        scanned_artifact_ref:
+          type: string
+          description: "Human-meaningful reference to the artifact that was scanned, such as a package URL or image reference."
+          example: "pkg:npm/example/server@1.0.0"
+        scanned_artifact_digest:
+          type: string
+          description: "Digest of the exact bytes that were scanned, as 'algorithm:hex'. This binds the verdict to a specific artifact: clients MUST compare it against the current package/artifact digest before trusting a 'clean' verdict, and treat a mismatch as inconclusive."
+          pattern: "^[a-z0-9]+:[a-f0-9]+$"
+          example: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        scan_scope:
+          type: array
+          description: "What was actually evaluated, not what the server is capable of doing. Listing the covered surfaces lets clients see, machine-readably, whether handler-side validation was assessed. A receipt covering only 'dependency' and 'package' leaves handler-side authority unassessed even when the verdict is 'clean'. Values are open strings; well-known values include 'dependency', 'package', and 'handler-validation'."
+          minItems: 1
+          items:
+            type: string
+          example:
+            - "dependency"
+            - "package"
+            - "handler-validation"
+        verdict:
+          type: string
+          description: "Outcome of the scan under the named scanner, rule set, policy profile, artifact digest, and scope. 'inconclusive' is first-class: a report can fail to bind to the current artifact, use an unsupported package type, or omit handler-side checks, and those MUST NOT collapse into 'clean' or 'findings'."
+          enum:
+            - "clean"
+            - "warnings"
+            - "findings"
+            - "inconclusive"
+          example: "clean"
+        inconclusive_reason:
+          type: string
+          description: "Machine-readable reason a verdict is 'inconclusive', so clients can act without parsing scanner-specific prose. Required when verdict is 'inconclusive'."
+          enum:
+            - "artifact_digest_mismatch"
+            - "unsupported_package_type"
+            - "scope_excludes_handler_validation"
+            - "evidence_unavailable"
+            - "stale_scan"
+          example: "scope_excludes_handler_validation"
+        scanned_at:
+          type: string
+          format: date-time
+          description: "Timestamp when the scan was performed."
+          example: "2026-06-28T00:00:00Z"
+        freshness_expires_at:
+          type: string
+          format: date-time
+          description: "Timestamp after which the receipt should be treated as stale. Clients SHOULD reject or down-rank receipts past this time; a client that surfaces a stale receipt SHOULD treat it as inconclusive with reason 'stale_scan'."
+          example: "2026-07-28T00:00:00Z"
+        evidence_ref:
+          type: string
+          format: uri
+          description: "URL to the full scan report or evidence backing this receipt."
+          example: "https://example.org/report.json"
+        evidence_digest:
+          type: string
+          description: "Digest of the evidence at evidence_ref, as 'algorithm:hex', giving clients a verifiability hook without requiring a signature."
+          pattern: "^[a-z0-9]+:[a-f0-9]+$"
+          example: "sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+        attestation:
+          type: string
+          description: "Who asserts the receipt. 'publisher-asserted' is self-asserted by the publisher (for example, carried under the publisher-provided extension); 'registry-attested' and 'third-party-attested' are asserted by the registry or an independent party. Signatures are intentionally left out of this version; attestation plus evidence_digest carry verifiability first."
+          enum:
+            - "publisher-asserted"
+            - "registry-attested"
+            - "third-party-attested"
+          example: "publisher-asserted"
+      additionalProperties: true
+      allOf:
+        - if:
+            properties:
+              verdict:
+                const: "inconclusive"
+          then:
+            required:
+              - inconclusive_reason
 
     ServerResponse:
       description: API response format with separated server data and registry metadata
