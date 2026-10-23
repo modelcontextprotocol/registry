@@ -27,7 +27,10 @@ func deployPostgresBackupJob(ctx *pulumi.Context, cluster *providers.ProviderInf
 			Selector:                 pulumi.StringMap{"cnpg.io/cluster": pulumi.String("registry-pg"), "cnpg.io/instanceRole": pulumi.String("primary")},
 			Ports:                    corev1.ServicePortArray{&corev1.ServicePortArgs{Name: pulumi.String("postgres"), Port: pulumi.Int(5432), TargetPort: pulumi.Int(5432)}},
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, pulumi.Provider(cluster.Provider),
+		// These addresses are allocated by Kubernetes. Preserve them when adopting
+		// an existing Service instead of replacing it to remove imported defaults.
+		pulumi.IgnoreChanges([]string{"spec.clusterIP", "spec.clusterIPs"}))
 	if err != nil {
 		return fmt.Errorf("failed to create backup database service: %w", err)
 	}
