@@ -60,6 +60,11 @@ func RegisterPublishEndpoint(api huma.API, pathPrefix string, registry service.R
 			return nil, huma.Error422UnprocessableEntity("Failed to publish server, invalid schema: call /validate for details")
 		}
 
+		// Tag the API version so the publish log can attribute a slow publish to the
+		// route it arrived on. /v0 and /v0.1 share one service instance, so nothing
+		// below this point can tell them apart otherwise.
+		ctx = service.ContextWithAPIVersion(ctx, pathPrefix)
+
 		// Publish the server with extensions
 		publishedServer, err := registry.CreateServer(ctx, &input.Body)
 		if err != nil {
