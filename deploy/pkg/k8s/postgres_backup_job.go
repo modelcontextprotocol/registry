@@ -18,6 +18,11 @@ import (
 var postgresBackupJobTemplate string
 
 func deployPostgresBackupJob(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo, password *corev1.Secret) error {
+	// Staging and local data are disposable; only production needs scheduled backups.
+	if environment != "prod" {
+		return nil
+	}
+
 	// The backup checks PostgreSQL readiness itself. A slow CNPG management
 	// probe must not remove an otherwise reachable primary from backup discovery.
 	service, err := corev1.NewService(ctx, "registry-pg-backup", &corev1.ServiceArgs{
@@ -34,14 +39,10 @@ func deployPostgresBackupJob(ctx *pulumi.Context, cluster *providers.ProviderInf
 	if err != nil {
 		return fmt.Errorf("failed to create backup database service: %w", err)
 	}
-	schedule, keepDaily := "46 4 * * *", "28"
-	if environment == "local" || environment == "dev" {
-		schedule, keepDaily = "* * * * *", "1"
-	}
 	values := map[string]string{
 		"__ENVIRONMENT__":        environment,
-		"__SCHEDULE__":           schedule,
-		"__KEEP_DAILY__":         keepDaily,
+		"__SCHEDULE__":           "46 4 * * *",
+		"__KEEP_DAILY__":         "28",
 		"__REPOSITORY__":         fmt.Sprintf("s3:%s/%s/postgres-custom-v1", storage.Endpoint, storage.BucketName),
 		"__PASSWORD_SECRET__":    "k8up-repo-password",
 		"__CREDENTIALS_SECRET__": "k8up-backup-credentials",

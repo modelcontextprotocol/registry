@@ -13,7 +13,7 @@ import (
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
-// DeployK8up retains legacy backup resources and installs the archive backup job.
+// DeployK8up retains legacy backup resources and installs the production archive backup job.
 func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo) error {
 	if storage == nil {
 		ctx.Log.Info("No backup storage configured, skipping k8up deployment", nil)

@@ -164,8 +164,8 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 
 ## Database Backups
 
-The `registry-database-backup` CronJob backs up the registry's `app` database
-with PostgreSQL 17 `pg_dump --format=custom --compress=0`. Leaving table data
+The production-only `registry-database-backup` CronJob backs up the registry's
+`app` database with PostgreSQL 17 `pg_dump --format=custom --compress=0`. Leaving table data
 uncompressed lets Restic deduplicate it before repository compression, rather
 than storing changing compressed streams. The temporary volume must fit the
 uncompressed archive (currently limited to 2 GiB). An init container connects using
@@ -185,20 +185,22 @@ roles, role passwords, the maintenance `postgres` database, and Grafana's separa
 database are outside this backup. CNPG supplies the registry's `app` role and
 credentials when provisioning a replacement cluster.
 
-Production/staging run daily at **04:46 UTC**, with a 30-minute job deadline and
-no overlapping runs. Local development runs every minute and keeps one daily
-snapshot. This is a daily logical backup, not point-in-time recovery; the recovery
-point can be up to one day old. Increase the backup volume size, deadline, and
+Production runs daily at **04:46 UTC**, with a 30-minute job deadline and
+no overlapping runs. Staging and local development do not create the backup
+CronJob or its private Service and require no repository initialization.
+Their legacy backup resources and stored objects are retained, with the old
+K8up Schedule disabled. No automatic staging backup smoke test is run.
+Validate infrastructure changes with builds and Pulumi previews, and periodically
+test recovery from a production archive in an isolated database using the
+procedure below. This is a daily logical backup, not point-in-time recovery;
+the recovery point can be up to one day old. Increase the backup volume size, deadline, and
 client major version when database growth or a PostgreSQL upgrade requires it.
 
 ### Repository and retention
 
 Restic stores `/backup/registry.dump` and `/backup/registry.dump.sha256` in the
-`postgres-custom-v1` prefix of the existing backup bucket:
-
-- [Production bucket](https://console.cloud.google.com/storage/browser/mcp-registry-prod-backups/postgres-custom-v1?project=mcp-registry-prod)
-- [Staging bucket](https://console.cloud.google.com/storage/browser/mcp-registry-staging-backups/postgres-custom-v1?project=mcp-registry-staging)
-- Local MinIO: `k8up-backups/postgres-custom-v1`
+`postgres-custom-v1` prefix of the existing
+[production bucket](https://console.cloud.google.com/storage/browser/mcp-registry-prod-backups/postgres-custom-v1?project=mcp-registry-prod).
 
 **Never configure object-age deletion for live Restic objects.** Its keys, config,
 and deduplicated data can be older than every retained snapshot and still be
@@ -217,8 +219,8 @@ they are not a verified recovery source and are never pruned by the new job.
 The old physical-data production-to-staging sync workflow is guarded against
 execution because it is incompatible with the current archive format.
 
-On a **new deployment**, initialize only the new repository before starting the
-CronJob. With the existing S3 credentials and repository password securely
+On a **new production deployment**, initialize only the new repository before
+starting the CronJob. With the existing S3 credentials and repository password securely
 loaded into the environment, use:
 
 ```bash
@@ -226,7 +228,7 @@ export RESTIC_REPOSITORY=s3:https://storage.googleapis.com/mcp-registry-prod-bac
 restic init
 ```
 
-Use the appropriate staging/local bucket and endpoint for those environments.
+The existing production repository is already initialized; do not initialize it again.
 The scheduled job deliberately never runs `restic init`: a missing repository
 must fail visibly, not silently create new encryption keys. Do not run init on
 an existing or damaged repository. The password comes from
