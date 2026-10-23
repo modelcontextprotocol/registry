@@ -188,8 +188,8 @@ credentials when provisioning a replacement cluster.
 Production runs daily at **04:46 UTC**, with a 30-minute job deadline and
 no overlapping runs. Staging and local development do not create the backup
 CronJob or its private Service and require no repository initialization.
-Their legacy backup resources and stored objects are retained, with the old
-K8up Schedule disabled. No automatic staging backup smoke test is run.
+Their legacy operator, credentials and stored objects are retained; the old
+K8up Schedule is removed. No automatic staging backup smoke test is run.
 Validate infrastructure changes with builds and Pulumi previews, and periodically
 test recovery from a production archive in an isolated database using the
 procedure below. This is a daily logical backup, not point-in-time recovery;
@@ -213,7 +213,9 @@ can delay final removal further (currently seven additional days in production).
 Legacy prefixes are excluded so their recovery evidence is preserved; since
 their schedules are retired, they do not continually accumulate new versions.
 
-The legacy K8up Schedule is retained with no scheduled actions. Existing objects
+The legacy K8up Schedule is removed. Clearing its spec can leave defaulted
+backup/prune entries without cron expressions and crash the K8up operator.
+The operator and credentials remain available. Existing objects
 at the bucket root and in `postgres-logical-v1` are preserved for investigation;
 they are not a verified recovery source and are never pruned by the new job.
 The old physical-data production-to-staging sync workflow is guarded against
@@ -241,8 +243,9 @@ changing a Secret alone does not rotate Restic keys. Do not print credentials.
 The October 2026 repair created `default/registry-pg-backup` and
 `default/registry-database-backup` directly in production. They must be imported
 before the first production `pulumi up` using this code; a normal refresh does
-not adopt unmanaged resources. The existing bucket, K8up Schedule, operator,
-and credentials are already in the production state and must not be re-imported.
+not adopt unmanaged resources. The existing bucket, operator, and credentials
+are already in the production state and must not be re-imported. The retired
+K8up Schedule is deliberately deleted during deployment.
 The GCP alert script manages its own policies separately from Pulumi.
 
 From this directory, with production backend credentials and the existing stack
