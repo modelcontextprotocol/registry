@@ -32,6 +32,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
 - [MCP Registry Remote MCP Server](https://github.com/jaw9c/mcp-registry-mcp) - Open Remote MCP server for the Registry at `https://registry-mcp.remote-mcp.com`
 - [MCP Server for MCP Registry](https://github.com/formulahendry/mcp-server-mcp-registry) - MCP Server to discover and search for available MCP servers in the registry
+- [MCP Verify](https://mcpverify.ai) - The rating layer for AI agents: free A to F grades for remote MCP servers, each computed from its own sealed record. 
 - [mcp-insights](https://github.com/joelverhagen/mcp-insights/) - Analytics and insights for the MCP Registry
 - [mcp-registry-cli](https://pypi.org/project/mcp-registry-cli/) - CLI tool to navigate the MCP registry servers
 - [mcpscore](https://mcpscore.dev) - Deterministic auditor for MCP servers: 100+ static checks across protocol conformance, tool and schema quality, security posture, and spec readiness, scored 0–100, with a web UI, CLI, and GitHub Action for CI ([source code](https://github.com/mcp-box/mcpscore)).
