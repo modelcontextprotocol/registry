@@ -104,6 +104,56 @@ Pre-requisites:
    Then run `curl -H "Host: prod.registry.modelcontextprotocol.io" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
 
+## Server-name search index
+
+Migration 015 adds a GIN trigram index for substring searches on `server_name`.
+The index was built concurrently and verified valid in production on
+2026-10-23; production does not need to repeat that build.
+On a busy existing database, build it **before deploying** the migration, using
+an administrative `psql` connection to the application database:
+
+```sql
+SET application_name = 'registry-trigram-index-build';
+SET lock_timeout = '10s';
+SET statement_timeout = '10min';
+CREATE INDEX CONCURRENTLY idx_servers_name_trgm
+    ON public.servers USING gin (server_name gin_trgm_ops);
+```
+
+Run these statements with autocommit enabled, outside a transaction (do not use
+`psql --single-transaction` or put all statements in one `psql -c` argument).
+The existing `pg_trgm` extension supplies `gin_trgm_ops`. Concurrent construction
+keeps reads and writes available, but consumes CPU and I/O. Watch API latency,
+database waits, and `pg_stat_progress_create_index` while it runs. If the build
+materially worsens service, cancel only the backend identified by this
+`application_name` and the index-build progress view.
+
+Verify the index before deploying:
+
+```sql
+SELECT i.indisvalid, i.indisready, pg_get_indexdef(i.indexrelid)
+FROM pg_index i
+WHERE i.indexrelid = to_regclass('public.idx_servers_name_trgm');
+```
+
+Both flags must be true, with a GIN index on `server_name gin_trgm_ops`. If the
+index already exists and matches, skip the build. A cancelled or failed build
+can leave an invalid index: after confirming the build has stopped and the
+index is invalid, remove only that index with
+`DROP INDEX CONCURRENTLY public.idx_servers_name_trgm` and retry the build.
+Do not rely on `IF NOT EXISTS` to repair an invalid index.
+
+After completion, check `EXPLAIN` for representative substring searches and
+compare fresh `pg_stat_statements` deltas and API responses, including pagination.
+Ingress caches listing responses, so HTTP latency alone is insufficient evidence.
+Very short or broad search terms may still scan many rows.
+
+The application migration runs in a transaction. It creates the index normally
+on fresh databases and skips an existing valid index; it rejects an invalid
+index instead of silently recording success. Other populated installations
+should also prebuild the index concurrently to avoid blocking writes during
+startup. No application restart is needed for the operational index build.
+
 ## Structure
 
 ```
