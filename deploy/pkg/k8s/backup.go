@@ -13,7 +13,7 @@ import (
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
-// DeployK8up installs the k8up backup operator and configures scheduled backups
+// DeployK8up retains legacy backup resources and installs the archive backup job.
 func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo) error {
 	if storage == nil {
 		ctx.Log.Info("No backup storage configured, skipping k8up deployment", nil)
@@ -32,8 +32,9 @@ func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environmen
 	// Install k8up operator
 	k8upValues := pulumi.Map{
 		"k8up": pulumi.Map{
-			"backupCommandAnnotation": pulumi.String("k8up.io/backup-command"),
-			"fileExtensionAnnotation": pulumi.String("k8up.io/file-extension"),
+			// Disable implicit PVC copies while retaining the legacy operator.
+			"skipWithoutAnnotation": pulumi.Bool(true),
+			"timezone":              pulumi.String("UTC"),
 		},
 	}
 
@@ -60,77 +61,32 @@ func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environmen
 		},
 		Type: pulumi.String("Opaque"),
 		StringData: pulumi.StringMap{
-			"password": pulumi.String("password"), // In production we use GCS, which is already encrypted
+			// Preserve the existing key/password association. Rotating a repository
+			// password requires restic key operations, not just a Secret update.
+			"password": pulumi.String("password"),
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
 		return fmt.Errorf("failed to create repository password secret: %w", err)
 	}
 
-	// Determine schedule based on environment
-	backupSchedule := "46 4 * * *" // Daily at 4:46 AM
-	pruneSchedule := "46 5 * * *"  // Daily at 5:46 AM
-	keepDaily := 28                // Keep daily backups for 28 days
-
-	if environment == "local" || environment == "dev" {
-		backupSchedule = "* * * * *"  // Every minute for testing
-		pruneSchedule = "*/5 * * * *" // Every 5 minutes
-		keepDaily = 1
-	}
-
-	// Create Schedule for automated backups
+	// Keep the legacy Schedule resource and repository for investigation, but
+	// remove all scheduled actions. A dedicated job below writes and validates a
+	// complete PostgreSQL archive before uploading; it does not stream through
+	// the Kubernetes exec API.
 	_, err = apiextensions.NewCustomResource(ctx, "k8up-schedule", &apiextensions.CustomResourceArgs{
 		ApiVersion: pulumi.String("k8up.io/v1"),
 		Kind:       pulumi.String("Schedule"),
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("backup-schedule"),
 			Namespace: pulumi.String("default"),
-			Labels: pulumi.StringMap{
-				"environment": pulumi.String(environment),
-			},
+			Labels:    pulumi.StringMap{"environment": pulumi.String(environment)},
 		},
-		OtherFields: map[string]any{
-			"spec": map[string]any{
-				"backend": map[string]any{
-					"repoPasswordSecretRef": map[string]any{
-						"name": repoPassword.Metadata.Name().Elem(),
-						"key":  "password",
-					},
-					"s3": map[string]any{
-						"endpoint": storage.Endpoint,
-						"bucket":   storage.BucketName,
-						"accessKeyIDSecretRef": map[string]any{
-							"name": storage.Credentials.Metadata.Name().Elem(),
-							"key":  "AWS_ACCESS_KEY_ID",
-						},
-						"secretAccessKeySecretRef": map[string]any{
-							"name": storage.Credentials.Metadata.Name().Elem(),
-							"key":  "AWS_SECRET_ACCESS_KEY",
-						},
-					},
-				},
-				"backup": map[string]any{
-					"schedule": backupSchedule,
-					"podSecurityContext": map[string]any{
-						"runAsUser": 0, // Run as root to access all files
-					},
-					"successfulJobsHistoryLimit": 3,
-					"failedJobsHistoryLimit":     3,
-				},
-				"prune": map[string]any{
-					"schedule": pruneSchedule,
-					"retention": map[string]any{
-						"keepDaily": keepDaily,
-					},
-					"successfulJobsHistoryLimit": 1,
-					"failedJobsHistoryLimit":     1,
-				},
-			},
-		},
-	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn([]pulumi.Resource{k8up, storage.Credentials, repoPassword}))
+		OtherFields: map[string]any{"spec": map[string]any{}},
+	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn([]pulumi.Resource{k8up}))
 	if err != nil {
-		return fmt.Errorf("failed to create k8up schedule: %w", err)
+		return fmt.Errorf("failed to retire the legacy backup schedule: %w", err)
 	}
 
-	return nil
+	return deployPostgresBackupJob(ctx, cluster, environment, storage, repoPassword)
 }

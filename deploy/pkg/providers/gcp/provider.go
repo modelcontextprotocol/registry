@@ -359,16 +359,9 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 		Name:         pulumi.String(bucketName),
 		Location:     pulumi.String("US"),
 		StorageClass: pulumi.String("STANDARD"),
-		LifecycleRules: storage.BucketLifecycleRuleArray{
-			&storage.BucketLifecycleRuleArgs{
-				Action: &storage.BucketLifecycleRuleActionArgs{
-					Type: pulumi.String("Delete"),
-				},
-				Condition: &storage.BucketLifecycleRuleConditionArgs{
-					Age: pulumi.Int(60), // Keep backups for 60 days (K8up manages pruning at 28 days, GCS deletion is a safety net)
-				},
-			},
-		},
+		// Restic keys, config and deduplicated packs can remain necessary indefinitely.
+		// Only Restic may prune repository contents; object-age deletion corrupts it.
+		LifecycleRules:           storage.BucketLifecycleRuleArray{},
 		UniformBucketLevelAccess: pulumi.Bool(true),
 		Versioning: &storage.BucketVersioningArgs{
 			Enabled: pulumi.Bool(true),

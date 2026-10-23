@@ -1,0 +1,199 @@
+{
+  "apiVersion": "batch/v1",
+  "kind": "CronJob",
+  "metadata": {
+    "name": "registry-database-backup",
+    "namespace": "default",
+    "labels": {
+      "environment": "__ENVIRONMENT__"
+    }
+  },
+  "spec": {
+    "schedule": "__SCHEDULE__",
+    "timeZone": "UTC",
+    "concurrencyPolicy": "Forbid",
+    "startingDeadlineSeconds": 3600,
+    "successfulJobsHistoryLimit": 3,
+    "failedJobsHistoryLimit": 3,
+    "jobTemplate": {
+      "spec": {
+        "backoffLimit": 1,
+        "activeDeadlineSeconds": 1800,
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "registry-database-backup"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "restartPolicy": "Never",
+            "securityContext": {
+              "runAsNonRoot": true,
+              "runAsUser": 65532,
+              "runAsGroup": 65532,
+              "fsGroup": 65532
+            },
+            "initContainers": [
+              {
+                "name": "pg-dump",
+                "image": "postgres:17",
+                "command": [
+                  "/bin/sh",
+                  "-ec"
+                ],
+                "args": [
+                  "umask 077\nfor attempt in $(seq 1 30); do\n  if pg_isready -q; then break; fi\n  sleep 10\ndone\nif ! pg_isready; then\n  echo REGISTRY_DATABASE_BACKUP_FAILED: database unavailable >&2\n  exit 1\nfi\npg_dump --format=custom --lock-wait-timeout=30s --file=/backup/registry.dump\npg_restore --file=/dev/null /backup/registry.dump\ncd /backup\nsha256sum registry.dump > registry.dump.sha256\necho REGISTRY_DATABASE_ARCHIVE_VALIDATED"
+                ],
+                "env": [
+                  {
+                    "name": "PGHOST",
+                    "value": "registry-pg-backup"
+                  },
+                  {
+                    "name": "PGPORT",
+                    "value": "5432"
+                  },
+                  {
+                    "name": "PGDATABASE",
+                    "value": "app"
+                  },
+                  {
+                    "name": "PGCONNECT_TIMEOUT",
+                    "value": "30"
+                  },
+                  {
+                    "name": "PGSSLMODE",
+                    "value": "require"
+                  },
+                  {
+                    "name": "PGOPTIONS",
+                    "value": "-c default_transaction_read_only=on"
+                  },
+                  {
+                    "name": "PGUSER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "registry-pg-app",
+                        "key": "username"
+                      }
+                    }
+                  },
+                  {
+                    "name": "PGPASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "registry-pg-app",
+                        "key": "password"
+                      }
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "archive",
+                    "mountPath": "/backup"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                }
+              }
+            ],
+            "containers": [
+              {
+                "name": "restic",
+                "image": "ghcr.io/k8up-io/k8up:v2.12.0",
+                "command": [
+                  "/bin/sh",
+                  "-ec"
+                ],
+                "args": [
+                  "cd /backup\nsha256sum -c registry.dump.sha256\nrestic snapshots --no-lock >/dev/null\nrestic backup --host registry-postgres --tag postgres-custom /backup\nrestic check --read-data\nrestic forget --prune --keep-daily \"$KEEP_DAILY\" --group-by host,paths,tags\necho REGISTRY_DATABASE_BACKUP_SUCCESS"
+                ],
+                "env": [
+                  {
+                    "name": "RESTIC_REPOSITORY",
+                    "value": "__REPOSITORY__"
+                  },
+                  {
+                    "name": "RESTIC_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "__PASSWORD_SECRET__",
+                        "key": "password"
+                      }
+                    }
+                  },
+                  {
+                    "name": "RESTIC_CACHE_DIR",
+                    "value": "/tmp/restic-cache"
+                  },
+                  {
+                    "name": "KEEP_DAILY",
+                    "value": "__KEEP_DAILY__"
+                  }
+                ],
+                "envFrom": [
+                  {
+                    "secretRef": {
+                      "name": "__CREDENTIALS_SECRET__"
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "archive",
+                    "mountPath": "/backup",
+                    "readOnly": true
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": "100m",
+                    "memory": "128Mi"
+                  },
+                  "limits": {
+                    "cpu": "500m",
+                    "memory": "512Mi"
+                  }
+                },
+                "securityContext": {
+                  "allowPrivilegeEscalation": false,
+                  "capabilities": {
+                    "drop": [
+                      "ALL"
+                    ]
+                  }
+                }
+              }
+            ],
+            "volumes": [
+              {
+                "name": "archive",
+                "emptyDir": {
+                  "sizeLimit": "2Gi"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
