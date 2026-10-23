@@ -44,6 +44,21 @@ func NewRegistryService(db database.Database, cfg *config.Config) RegistryServic
 	}
 }
 
+// normalizeReadSchema rewrites a stored server's $schema to the current schema URL.
+//
+// Server records are persisted as JSONB of the apiv0.ServerJSON struct and are always
+// re-serialized into the current struct shape on read, but the $schema string is carried
+// verbatim from publish time. Because every schema revision has been additive or relaxing
+// (docs/reference/server-json/CHANGELOG.md — no field made newly required), an entry
+// published under an older schema still conforms to the current one. Advertising the stale
+// publish-time $schema makes strict clients (e.g. VSCode) fail validation, so we normalize
+// it on the read path. See issue #783.
+func normalizeReadSchema(resp *apiv0.ServerResponse) {
+	if resp != nil {
+		resp.Server.Schema = model.CurrentSchemaURL
+	}
+}
+
 // ListServers returns registry entries with cursor-based pagination and optional filtering
 func (s *registryServiceImpl) ListServers(ctx context.Context, filter *database.ServerFilter, cursor string, limit int) ([]*apiv0.ServerResponse, string, error) {
 	// If limit is not set or negative, use a default limit
@@ -57,6 +72,10 @@ func (s *registryServiceImpl) ListServers(ctx context.Context, filter *database.
 		return nil, "", err
 	}
 
+	for _, serverRecord := range serverRecords {
+		normalizeReadSchema(serverRecord)
+	}
+
 	return serverRecords, nextCursor, nil
 }
 
@@ -67,6 +86,7 @@ func (s *registryServiceImpl) GetServerByName(ctx context.Context, serverName st
 		return nil, err
 	}
 
+	normalizeReadSchema(serverRecord)
 	return serverRecord, nil
 }
 
@@ -77,6 +97,7 @@ func (s *registryServiceImpl) GetServerByNameAndVersion(ctx context.Context, ser
 		return nil, err
 	}
 
+	normalizeReadSchema(serverRecord)
 	return serverRecord, nil
 }
 
@@ -85,6 +106,10 @@ func (s *registryServiceImpl) GetAllVersionsByServerName(ctx context.Context, se
 	serverRecords, err := s.db.GetAllVersionsByServerName(ctx, nil, serverName, includeDeleted)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, serverRecord := range serverRecords {
+		normalizeReadSchema(serverRecord)
 	}
 
 	return serverRecords, nil
