@@ -22,7 +22,12 @@ import (
 )
 
 func TestPrometheusHandler(t *testing.T) {
-	registryService := service.NewRegistryService(database.NewTestDB(t), config.NewConfig())
+	// The repository reachability check issues a live HTTP probe; disable it so
+	// this telemetry test stays hermetic and does not depend on github.com
+	// resolving the placeholder repository URL below.
+	svcConfig := config.NewConfig()
+	svcConfig.EnableRepositoryReachabilityCheck = false
+	registryService := service.NewRegistryService(database.NewTestDB(t), svcConfig)
 	server, err := registryService.CreateServer(context.Background(), &apiv0.ServerJSON{
 		Schema:      model.CurrentSchemaURL,
 		Name:        "io.github.example/test-server",
