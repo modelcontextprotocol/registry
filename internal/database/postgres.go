@@ -117,14 +117,26 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		args = append(args, *filter.UpdatedSince)
 		argIndex++
 	}
-	if filter.SubstringName != nil {
-		// Escape LIKE metacharacters so that user input cannot expand into
-		// wildcard matches (e.g. `?search=_` matching every single-char name,
-		// `?search=%` matching everything). Order matters: backslashes must be
-		// escaped first so subsequent escape backslashes are not double-escaped.
-		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(*filter.SubstringName)
+	switch {
+	case filter.SubstringName != nil && filter.SubstringDescription != nil:
+		// The ?search= query param sets both fields to the same term so that
+		// a server matches on name OR description. These must be combined into
+		// a single OR condition here rather than left as two independent
+		// per-field checks below (which the outer AND-join would turn into
+		// "name matches AND description matches").
+		conditions = append(conditions, fmt.Sprintf(
+			"(server_name ILIKE $%d ESCAPE '\\' OR value ->> 'description' ILIKE $%d ESCAPE '\\')",
+			argIndex, argIndex+1,
+		))
+		args = append(args, likePattern(*filter.SubstringName), likePattern(*filter.SubstringDescription))
+		argIndex += 2
+	case filter.SubstringName != nil:
 		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", argIndex))
-		args = append(args, "%"+escaped+"%")
+		args = append(args, likePattern(*filter.SubstringName))
+		argIndex++
+	case filter.SubstringDescription != nil:
+		conditions = append(conditions, fmt.Sprintf("value ->> 'description' ILIKE $%d ESCAPE '\\'", argIndex))
+		args = append(args, likePattern(*filter.SubstringDescription))
 		argIndex++
 	}
 	if filter.Version != nil {
@@ -142,6 +154,17 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 	}
 
 	return conditions, args, argIndex
+}
+
+// likePattern escapes LIKE/ILIKE metacharacters in s and wraps it for a
+// substring match, so that user input cannot expand into unintended wildcard
+// matches (e.g. `?search=_` matching every single-char name, `?search=%`
+// matching everything). Order matters: backslashes must be escaped first so
+// subsequent escape backslashes are not double-escaped. Callers must pair
+// this with `ESCAPE '\\'` in the ILIKE clause.
+func likePattern(s string) string {
+	escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
+	return "%" + escaped + "%"
 }
 
 // addCursorCondition adds pagination cursor condition to WHERE clause.
