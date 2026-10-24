@@ -369,3 +369,44 @@ curl -sS -o - -w '\n%{http_code}\n' \
 The response body must be the proof record printed by the login command (`v=MCPv1; k=...; p=...`). When the Registry cannot use the endpoint, the login error carries the Registry's own fetch failure, such as `dial tcp <ip>:443: i/o timeout`, `HTTP 403: failed to fetch key from ...`, or `HTTP 301: failed to fetch key from ...`. Allow plain HTTPS clients through for `/.well-known/mcp-registry-auth`, serve the path without redirects, then retry.
 
 Addresses that resolve to loopback, private, link-local, or carrier-grade NAT ranges are refused by design, so the endpoint must be reachable at a public address.
+
+## Troubleshooting DNS and HTTP authentication
+
+If `mcp-publisher login dns` or `login http` fails, check the published proof record before changing keys or retrying. A fetch failure and a signature mismatch have different causes; read the detailed error returned by the Registry.
+
+### Compare the "Expected proof record" against what is actually published
+
+Each login invocation prints an `Expected proof record:` line, for example:
+
+```text Output
+Expected proof record:
+v=MCPv1; k=ed25519; p=CmELkdW27Q+pySZRD1ezkXAG/SbeDhGWAjtuKKMKixg=
+```
+
+Check that the algorithm (`k=`) and public key (`p=`) in the published MCPv1 record match the current login command's output. Rerun the login command after rotating a key so you compare against the freshly derived public key. For HTTP verification, surrounding whitespace and trailing newlines are trimmed; their presence alone does not cause a signature mismatch. Avoid editing or wrapping the public-key data itself.
+
+When a signature does not match, the Registry's error includes fingerprints of the published keys it tried. Compare these with the key you intended to publish to help identify a stale record or a mismatch between the private key and published public key.
+
+### DNS: verify the TXT record before logging in
+
+Confirm an MCPv1 TXT record is published at the exact domain passed to `--domain`, rather than at a selector such as `_mcp-auth.<domain>`:
+
+```bash
+dig TXT example.com +short
+# Expect a record like:
+# "v=MCPv1; k=ed25519; p=CmELkdW27Q+pySZRD1ezkXAG/SbeDhGWAjtuKKMKixg="
+```
+
+If no MCPv1 record appears, check the DNS provider's record name and value, then allow for DNS propagation and cached responses after correcting it. If `dig TXT _mcp-auth.example.com +short` returns the proof record but `dig TXT example.com +short` does not, it is published at the wrong name (see the apex warning above).
+
+When the Registry finds a well-formed MCPv1 record at a known wrong selector (`_mcp-auth.<domain>` or `_mcp-registry.<domain>`) but none at the requested domain, it returns a specific error identifying the misplaced record.
+
+The Registry tries all valid published MCP keys; a different key in another TXT record does not take precedence over the correct one. Ensure at least one record contains the public key for the private key used by the login command. Remove retired MCP authentication records when they are no longer needed, while preserving keys still in use and TXT records for other services.
+
+### HTTP: verify the well-known endpoint before logging in
+
+Follow [Troubleshooting failed HTTP verification](#troubleshooting-failed-http-verification) for the exact request, timeout, response-size limit, redirect policy, and network requirements. A successful request from your own machine does not establish that the Registry can reach the endpoint.
+
+### Confirm the algorithm matches the key
+
+The `--algorithm` flag (default `ed25519`) must match the algorithm declared in the published proof record's `k=` field. Signing an Ed25519 timestamp against an `ecdsap384` proof record (or vice versa) fails verification. If you regenerated the keypair with a different algorithm than what is published, update the TXT record or the `mcp-registry-auth` file before retrying.
