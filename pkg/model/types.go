@@ -101,6 +101,9 @@ type Argument struct {
 	Name       string       `json:"name,omitempty" doc:"The flag name (for named arguments), including any leading dashes. Empty for positional arguments." example:"--port"`
 	ValueHint  string       `json:"valueHint,omitempty" doc:"An identifier for positional arguments. Used in transport URL variable substitution." example:"file_path"`
 	IsRepeated bool         `json:"isRepeated,omitempty" doc:"Whether the argument can be repeated multiple times."`
+
+	valuePresent     bool
+	valueHintPresent bool
 }
 
 type Icon struct {
