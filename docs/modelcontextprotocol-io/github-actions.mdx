@@ -76,7 +76,7 @@ jobs:
           curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
           cosign verify-blob \
             --bundle "$archive.sigstore.json" \
-            --certificate-identity-regexp "^https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}$" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "$archive"
           tar xzf "$archive" mcp-publisher
@@ -156,7 +156,7 @@ jobs:
           curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
           cosign verify-blob \
             --bundle "$archive.sigstore.json" \
-            --certificate-identity-regexp "^https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}$" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "$archive"
           tar xzf "$archive" mcp-publisher
@@ -232,7 +232,7 @@ jobs:
           curl --fail --location --silent --show-error --output "$archive.sigstore.json" "$base_url/$archive.sigstore.json"
           cosign verify-blob \
             --bundle "$archive.sigstore.json" \
-            --certificate-identity-regexp "^https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}$" \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/${MCP_PUBLISHER_VERSION}" \
             --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
             "$archive"
           tar xzf "$archive" mcp-publisher
