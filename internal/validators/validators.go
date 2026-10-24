@@ -430,8 +430,9 @@ func validateArgument(ctx *ValidationContext, obj *model.Argument) *ValidationRe
 		valueResult := validateArgumentValueFields(ctx, obj.Name, obj.Value, obj.Default)
 		result.Merge(valueResult)
 	case model.ArgumentTypePositional:
-		// Positional arguments need a value or a valueHint to be usable
-		if obj.Value == "" && obj.ValueHint == "" {
+		// The schema requires value or valueHint to be present; an explicitly
+		// empty value is a valid CLI argument.
+		if !obj.HasValueOrHint() {
 			issue := NewValidationIssueFromError(
 				ValidationIssueTypeSemantic,
 				ctx.String(),
