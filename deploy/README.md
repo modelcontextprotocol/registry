@@ -104,6 +104,42 @@ Pre-requisites:
    Then run `curl -H "Host: prod.registry.modelcontextprotocol.io" -k https://<EXTERNAL-IP>/v0/ping` to check that the service is up.
 
 
+## Ingress stability rollout
+
+Staging and production reserve 300m CPU per ingress controller and 250m per
+registry replica, with no CPU limits. Each Deployment spreads its own revision
+across eligible nodes using `DoNotSchedule`, `maxSkew: 1`, and
+`matchLabelKeys: [pod-template-hash]`. Counting revisions separately prevents
+old pods from masking an uneven placement of the replacement replicas. Tainted
+nodes are excluded unless tolerated. Local development keeps soft spreading and
+100m CPU requests. Hosted clusters require Kubernetes 1.27 or newer with
+`MatchLabelKeysInPodTopologySpread` enabled.
+
+Ingress readiness allows three seconds per check; liveness allows five. The
+chart's ten-second period and three/five failure thresholds are retained. These
+timeouts tolerate brief stalls; they do not establish that request latency is
+healthy. Both Deployments allow one surge pod and zero unavailable pods during
+updates. Before rollout, check that eligible nodes have enough unreserved CPU
+and memory for the surge pods as well as the steady-state requests. A pending
+replacement should be investigated, not worked around by deleting healthy pods.
+
+Roll out these pod changes through staging and then the normal production
+promotion. Check that both Deployments become available, each pair of production
+replicas ends on different nodes, and no replacement remains Pending. Compare
+ingress probe failures/restarts, node CPU pressure, and request latency at
+comparable traffic over the following day, including a busy period. Application
+metrics omit ingress cache hits, so include ingress logs in the latency check.
+
+Keep the node disk change in a subsequent rollout. The current 20 GB
+`pd-standard` boot disks also hold the ingress cache and container logs. The
+next step for the observed disk queues is larger `pd-balanced` boot disks,
+starting with 50 GB, using GKE surge upgrades with one extra node and zero
+unavailable nodes. A disk-type change recreates nodes; it is not an in-place
+filesystem change. Preview the actual Pulumi plan before applying it, verify a
+recent successful database backup, and account for a possible interruption
+while the single PostgreSQL instance moves. Complete the pod rollout before
+starting this node rollout. No node-pool change is included in the pod repair.
+
 ## Server-name search index
 
 Migration 015 adds a GIN trigram index for substring searches on `server_name`.

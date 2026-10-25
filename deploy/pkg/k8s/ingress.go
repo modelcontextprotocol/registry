@@ -48,6 +48,28 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		replicaCount = 2
 	}
 
+	ingressCPURequest := "100m"
+	spreadConstraints := pulumi.Array{}
+	if environment == "prod" || environment == "staging" {
+		// Reserve CPU for the proxy and its health endpoint without limiting
+		// bursts or exhausting the CPU needed for a rolling-update surge pod.
+		ingressCPURequest = "300m"
+		spreadConstraints = pulumi.Array{pulumi.Map{
+			"maxSkew":           pulumi.Int(1),
+			"topologyKey":       pulumi.String("kubernetes.io/hostname"),
+			"whenUnsatisfiable": pulumi.String("DoNotSchedule"),
+			"nodeTaintsPolicy":  pulumi.String("Honor"),
+			"matchLabelKeys":    pulumi.StringArray{pulumi.String("pod-template-hash")},
+			"labelSelector": pulumi.Map{
+				"matchLabels": pulumi.StringMap{
+					"app.kubernetes.io/name":      pulumi.String("ingress-nginx"),
+					"app.kubernetes.io/instance":  pulumi.String("ingress-nginx"),
+					"app.kubernetes.io/component": pulumi.String("controller"),
+				},
+			},
+		}}
+	}
+
 	// Install NGINX Ingress Controller
 	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
@@ -59,6 +81,25 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
 				"replicaCount": pulumi.Int(replicaCount),
+				"resources": pulumi.Map{
+					"requests": pulumi.StringMap{
+						"cpu":    pulumi.String(ingressCPURequest),
+						"memory": pulumi.String("90Mi"),
+					},
+				},
+				"topologySpreadConstraints": spreadConstraints,
+				"updateStrategy": pulumi.Map{
+					"type": pulumi.String("RollingUpdate"),
+					"rollingUpdate": pulumi.Map{
+						"maxSurge":       pulumi.Int(1),
+						"maxUnavailable": pulumi.Int(0),
+					},
+				},
+				// Keep readiness more responsive than liveness: a short stall should
+				// stop new traffic before it causes a restart and discards the cache.
+				// Helm retains the other probe defaults (10s period, 3/5 failures).
+				"readinessProbe": pulumi.Map{"timeoutSeconds": pulumi.Int(3)},
+				"livenessProbe":  pulumi.Map{"timeoutSeconds": pulumi.Int(5)},
 				"service": pulumi.Map{
 					"type":                  serviceType,
 					"externalTrafficPolicy": pulumi.String("Local"),
