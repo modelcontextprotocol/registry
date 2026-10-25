@@ -130,15 +130,29 @@ ingress probe failures/restarts, node CPU pressure, and request latency at
 comparable traffic over the following day, including a busy period. Application
 metrics omit ingress cache hits, so include ingress logs in the latency check.
 
-Keep the node disk change in a subsequent rollout. The current 20 GB
-`pd-standard` boot disks also hold the ingress cache and container logs. The
-next step for the observed disk queues is larger `pd-balanced` boot disks,
-starting with 50 GB, using GKE surge upgrades with one extra node and zero
-unavailable nodes. A disk-type change recreates nodes; it is not an in-place
-filesystem change. Preview the actual Pulumi plan before applying it, verify a
-recent successful database backup, and account for a possible interruption
-while the single PostgreSQL instance moves. Complete the pod rollout before
-starting this node rollout. No node-pool change is included in the pod repair.
+### Node boot disks
+
+Hosted node pools use 50 GB `pd-balanced` boot disks for the ingress cache and
+container logs. This replaces the 20 GB `pd-standard` disks that showed sustained
+I/O queues. GKE surge upgrades explicitly allow one extra node and zero
+unavailable nodes. Changing disk type or size rolls the nodes; the PostgreSQL
+and monitoring persistent volumes are separate and keep their existing sizes.
+
+Complete the pod rollout above before promoting the disk change to production.
+Merging the disk change rolls staging first; production requires a separate
+promotion. Preview the actual Pulumi plan before each rollout and confirm a
+node-pool update rather than resource replacement. Check quota and capacity for
+the extra node, verify a recent successful database backup, and schedule for a
+database interruption: the single registry and Grafana PostgreSQL instances
+must stop and reattach their persistent disks on another node. Surge capacity
+does not make these databases highly available. Monitoring workloads can also
+be interrupted while moving.
+
+After the rollout, verify both nodes use 50 GB `pd-balanced` disks, all workloads
+are ready, and the two registry and production ingress replicas are spread
+across nodes. Check the registry health, listing, and search endpoints. Compare
+boot-disk latency/queues, ingress restarts, and request latency during a busy
+period before concluding that the disk upgrade resolved the observed stalls.
 
 ## Server-name search index
 
