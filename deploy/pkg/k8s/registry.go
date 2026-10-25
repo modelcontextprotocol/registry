@@ -41,6 +41,25 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		imageTag = conf.Require("imageTag") // Explicit configuration required - no fallback
 	}
 
+	registryCPURequest := "100m"
+	spreadConstraint := &corev1.TopologySpreadConstraintArgs{
+		MaxSkew:           pulumi.Int(1),
+		TopologyKey:       pulumi.String("kubernetes.io/hostname"),
+		WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
+		LabelSelector: &metav1.LabelSelectorArgs{
+			MatchLabels: pulumi.StringMap{"app": pulumi.String("mcp-registry")},
+		},
+	}
+	if environment == "prod" || environment == "staging" {
+		registryCPURequest = "250m"
+		// Count each revision separately so removing old pods after a rolling
+		// update cannot leave both new replicas on the same node. Unlike required
+		// anti-affinity, maxSkew=1 still allows a surge pod on a two-node cluster.
+		spreadConstraint.WhenUnsatisfiable = pulumi.String("DoNotSchedule")
+		spreadConstraint.MatchLabelKeys = pulumi.StringArray{pulumi.String("pod-template-hash")}
+		spreadConstraint.NodeTaintsPolicy = pulumi.String("Honor")
+	}
+
 	// Create Secret with sensitive configuration
 	secret, err := corev1.NewSecret(ctx, "mcp-registry-secrets", &corev1.SecretArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -96,22 +115,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
-					// Soft-spread pods across nodes so the PodDisruptionBudget below can't
-					// deadlock a node drain when both pods happen to co-locate.
-					// `ScheduleAnyway` keeps single-node clusters (e.g. constrained dev
-					// envs) schedulable while still preferring spread under normal load.
-					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{
-						&corev1.TopologySpreadConstraintArgs{
-							MaxSkew:           pulumi.Int(1),
-							TopologyKey:       pulumi.String("kubernetes.io/hostname"),
-							WhenUnsatisfiable: pulumi.String("ScheduleAnyway"),
-							LabelSelector: &metav1.LabelSelectorArgs{
-								MatchLabels: pulumi.StringMap{
-									"app": pulumi.String("mcp-registry"),
-								},
-							},
-						},
-					},
+					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{spreadConstraint},
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:            pulumi.String("mcp-registry"),
@@ -234,7 +238,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 								// and limit to match.
 								Requests: pulumi.StringMap{
 									"memory": pulumi.String("512Mi"),
-									"cpu":    pulumi.String("100m"),
+									"cpu":    pulumi.String(registryCPURequest),
 								},
 								Limits: pulumi.StringMap{
 									"memory": pulumi.String("1Gi"),
