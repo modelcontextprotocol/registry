@@ -40,10 +40,18 @@ The official registry extends the `GET /v0.1/servers` endpoint with additional q
 - `updated_since` - Filter servers updated after RFC3339 timestamp (e.g., `2025-08-07T13:15:04.280Z`)
 - `search` - Case-insensitive substring search on server names (e.g., `filesystem`)
     - This is intentionally simple. For more advanced searching and filtering, use a subregistry.
-- `version` - Filter by version (currently supports `latest` for latest versions only)
+- `version` - Filter by version (`latest` for latest versions only, or an exact version such as `1.2.3`)
 - `include_deleted` - Include deleted servers in results (default: `false`, but automatically `true` when `updated_since` is provided for incremental sync)
 
 These extensions enable efficient incremental synchronization for downstream registries and improved server discovery. Parameters can be combined and work with standard cursor-based pagination.
+
+Listings contain one record per server version. Without a `version` filter, results can include multiple versions of the same server, including superseded versions. This also applies when `search` is provided.
+
+Results are ordered by server name, then by version string, both ascending. Version strings are compared as text, not by semantic version or publication date; for example, `1.10.0` sorts before `1.2.0`. Do not treat the first result for a server as its latest version.
+
+To retrieve only the latest version of each matching server, pass `version=latest`. Returned records have `_meta["io.modelcontextprotocol.registry/official"].isLatest` set to `true`. Keep the same filters when following `metadata.nextCursor` to subsequent pages.
+
+Example: `GET /v0.1/servers?search=filesystem&version=latest`
 
 Example: `GET /v0.1/servers?search=filesystem&updated_since=2025-08-01T00:00:00Z&version=latest`
 

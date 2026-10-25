@@ -89,7 +89,9 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		Method:      http.MethodGet,
 		Path:        pathPrefix + "/servers",
 		Summary:     "List MCP servers",
-		Description: "Get a paginated list of MCP servers from the registry",
+		Description: "Get a paginated list with one record per server version. Without a version filter, results include superseded versions, including when search is provided. " +
+			"Results are ordered by server name, then by version string, both ascending. Versions are compared as text, not by semantic version or publication date; the first result for a server is not necessarily its latest version. " +
+			"Use version=latest to return only the latest version of each matching server. Keep the same filters when following metadata.nextCursor.",
 		Tags:        []string{tagServers},
 	}, func(ctx context.Context, input *ListServersInput) (*Response[apiv0.ServerListResponse], error) {
 		// Build filter from input parameters
