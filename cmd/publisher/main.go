@@ -116,6 +116,10 @@ func printCommandHelp(command string) bool {
 		_, _ = fmt.Fprintln(os.Stdout, "Examples:")
 		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher login github")
 		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher login dns --domain example.com --private-key <key>")
+		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher login dns --domain example.com --private-key-file key.hex")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "For dns and http, the key can also come from the MCP_PRIVATE_KEY env var.")
+		_, _ = fmt.Fprintln(os.Stdout, "--private-key and --private-key-file are mutually exclusive; either one overrides MCP_PRIVATE_KEY.")
 
 	case "logout":
 		_, _ = fmt.Fprintln(os.Stdout, "Clear saved authentication")
