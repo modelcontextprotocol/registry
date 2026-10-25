@@ -1,4 +1,4 @@
-# Promote pod scheduling and ingress health fixes from #1737; retain application version 1.8.4.
+# Promote 50 GB balanced node boot disks from #1739; retain application version 1.8.4.
 config:
   mcp-registry:environment: prod
   mcp-registry:provider: gcp
