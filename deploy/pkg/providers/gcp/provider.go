@@ -252,8 +252,14 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		NodeCount: pulumi.Int(2),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
 			MachineType: pulumi.String("e2-standard-2"),
-			DiskSizeGb:  pulumi.Int(20),
-			DiskType:    pulumi.String("pd-standard"),
+			// Boot disks also serve the ingress cache and container logs.
+			DiskSizeGb: pulumi.Int(50),
+			DiskType:   pulumi.String("pd-balanced"),
+		},
+		UpgradeSettings: &container.NodePoolUpgradeSettingsArgs{
+			Strategy:       pulumi.String("SURGE"),
+			MaxSurge:       pulumi.Int(1),
+			MaxUnavailable: pulumi.Int(0),
 		},
 
 		// Node management configuration
