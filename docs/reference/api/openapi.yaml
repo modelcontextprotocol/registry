@@ -22,7 +22,12 @@ paths:
     get:
       tags: [servers]
       summary: List MCP servers
-      description: Returns a list of all registered MCP servers
+      description: |
+        Returns a paginated list with one record per server version. Without a version filter, results include superseded versions, including when search is provided.
+
+        The official registry orders results by server name, then by version string, both ascending. Versions are compared as text, not by semantic version or publication date; the first result for a server is not necessarily its latest version.
+
+        Use version=latest to return only the latest version of each matching server. Keep the same filters when following metadata.nextCursor.
       parameters:
         - name: cursor
           in: query
