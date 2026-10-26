@@ -125,3 +125,57 @@ existing listing-latency alert separately; an alert remaining green is not proof
 that these measurements are healthy. Reproduce the observed traffic with
 production-scale data before validating a cache, concurrency, query-plan, or
 capacity change. A tiny staging seed only validates instrumentation wiring.
+
+## Individual slow listing requests
+
+The application emits `listing diagnostic` structured logs for GET `/v0/servers`
+and `/v0.1/servers`. A request still running after two seconds produces
+`event=listing_slow_in_progress`, followed by another snapshot every ten seconds
+until completion. Slow or failed requests produce `event=listing_complete`.
+Fast successful requests are silent. All these events share a per-process budget
+of two events per second with a burst of ten; `diagnostics_suppressed` on the next
+emitted event reports the number dropped since the preceding event. These are
+samples, not an exhaustive request audit or a replacement for counters.
+
+Use `request_id` to join application records to ingress `$req_id`. Ingress passes
+`X-Request-ID` upstream. Direct requests without a valid ID receive a generated
+ID in their logs; IDs are correlation hints, not trusted identities. The logger
+accepts only 1–128 ASCII letters, digits, hyphens or underscores. A cached response
+has no new application event. The app does not add an ID response header, which
+would otherwise be cached and reused. Pod, route, start and observation times
+identify the request's lifetime, including after client cancellation.
+
+The exclusive wall-clock phase durations (milliseconds) add up to `total_ms`:
+
+| Field | Measured interval |
+| --- | --- |
+| `handler_ms` | Handler parsing/filter construction before acquiring a connection |
+| `pool_acquire_ms` | Pool acquisition, including connection creation/validation |
+| `query_wait_ms` | pgx query start until Query returns; may include initial network/server work |
+| `row_fetch_ms` | Advancing rows and finishing/closing the result, including network/server waits |
+| `row_decode_ms` | Scanning, JSON decoding, and constructing response records |
+| `response_ms` | Work after the database method returns, including response serialization/writing |
+
+`first_row_ms` runs from pgx query start to the first successful `Next`, excluding
+pool acquisition. It overlaps query/fetch timings; do not add it to the phase sum.
+`first_row_received=false` distinguishes an empty or unfinished result from a
+zero-duration first row. Neither query/fetch time nor first-row time is pure
+PostgreSQL execution time. Row decoding also includes scheduler delays.
+
+`phase` identifies the current operation in a progress snapshot. Completion
+records include `failed_phase`, `outcome`, effective HTTP `status` (499 for client
+cancellation), and PostgreSQL `sqlstate` where available. `rows_received` counts
+rows presented for decoding; `json_bytes` counts scanned JSONB payload bytes,
+not serialized HTTP bytes. Filter flags (`search`, `cursor`, `updated`, `latest`,
+`exact_version`, `include_deleted`) and `limit` describe the list query shape
+without exposing search strings, cursors, raw SQL, parameters or response data.
+`backend_pid` links to a contemporaneous `pg_stat_activity` sample on the registry
+PostgreSQL instance; it is zero before a query starts and is not globally unique
+across database restarts. `pool_acquired_at_start` and `pool_max` describe the pool
+when acquisition began, not necessarily its state at log time.
+
+Application logs flow to the existing VictoriaLogs and GKE logging destinations.
+These diagnostics distinguish application row processing from waiting for rows,
+but still require live PostgreSQL wait-event samples to distinguish internal
+locks, buffer contention, CPU scheduling and storage waits. A process crash can
+lose the completion event; rate limiting can suppress either event independently.

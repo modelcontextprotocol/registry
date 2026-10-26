@@ -12,6 +12,12 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
+const (
+	outcomeSuccess  = "success"
+	outcomeCanceled = "canceled"
+	outcomeTimeout  = "timeout"
+)
+
 type databaseOperationKey struct{}
 type acquireStartKey struct{}
 type queryStartKey struct{}
@@ -91,7 +97,11 @@ func (m *DatabaseMetrics) ObservePool(pool *pgxpool.Pool) (metric.Registration, 
 	}, connections, maximum)
 }
 
-func (m *DatabaseMetrics) TraceAcquireStart(ctx context.Context, _ *pgxpool.Pool, _ pgxpool.TraceAcquireStartData) context.Context {
+func (m *DatabaseMetrics) TraceAcquireStart(ctx context.Context, pool *pgxpool.Pool, _ pgxpool.TraceAcquireStartData) context.Context {
+	if diagnostic := ListingFromContext(ctx); diagnostic != nil {
+		stat := pool.Stat()
+		diagnostic.AcquireStarted(stat.AcquiredConns(), stat.MaxConns())
+	}
 	m.pending.Add(ctx, 1, metric.WithAttributes(attribute.String("operation", databaseOperation(ctx))))
 	return context.WithValue(ctx, acquireStartKey{}, time.Now())
 }
@@ -106,7 +116,10 @@ func (m *DatabaseMetrics) TraceAcquireEnd(ctx context.Context, _ *pgxpool.Pool, 
 	m.acquireDuration.Record(ctx, time.Since(start).Seconds(), databaseAttributes(ctx, data.Err))
 }
 
-func (m *DatabaseMetrics) TraceQueryStart(ctx context.Context, _ *pgx.Conn, _ pgx.TraceQueryStartData) context.Context {
+func (m *DatabaseMetrics) TraceQueryStart(ctx context.Context, conn *pgx.Conn, _ pgx.TraceQueryStartData) context.Context {
+	if conn != nil {
+		ListingFromContext(ctx).QueryStarted(conn.PgConn().PID())
+	}
 	return context.WithValue(ctx, queryStartKey{}, time.Now())
 }
 
@@ -120,12 +133,12 @@ func (m *DatabaseMetrics) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data p
 }
 
 func databaseAttributes(ctx context.Context, err error) metric.MeasurementOption {
-	outcome := "success"
+	outcome := outcomeSuccess
 	switch {
 	case errors.Is(err, context.Canceled):
-		outcome = "canceled"
+		outcome = outcomeCanceled
 	case errors.Is(err, context.DeadlineExceeded):
-		outcome = "timeout"
+		outcome = outcomeTimeout
 	case err != nil:
 		outcome = "error"
 	}

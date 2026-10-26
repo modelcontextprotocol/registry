@@ -200,7 +200,9 @@ func (db *PostgreSQL) ListServers(
 	filter *ServerFilter,
 	cursor string,
 	limit int,
-) ([]*apiv0.ServerResponse, string, error) {
+) (_ []*apiv0.ServerResponse, _ string, resultErr error) {
+	diagnostic := telemetry.ListingFromContext(ctx)
+	defer func() { diagnostic.DatabaseDone(resultErr) }()
 	operation := "list"
 	switch {
 	case filter != nil && filter.SubstringName != nil:
@@ -215,6 +217,15 @@ func (db *PostgreSQL) ListServers(
 		limit = 10
 	}
 
+	shape := telemetry.ListingShape{Cursor: cursor != "", Limit: limit}
+	if filter != nil {
+		shape.Search = filter.SubstringName != nil
+		shape.Updated = filter.UpdatedSince != nil
+		shape.Latest = filter.IsLatest != nil && *filter.IsLatest
+		shape.Version = filter.Version != nil
+		shape.IncludeDeleted = filter.IncludeDeleted != nil && *filter.IncludeDeleted
+	}
+	diagnostic.SetShape(shape)
 	if ctx.Err() != nil {
 		return nil, "", ctx.Err()
 	}
@@ -253,7 +264,9 @@ func (db *PostgreSQL) ListServers(
 	defer rows.Close()
 
 	var results []*apiv0.ServerResponse
+	diagnostic.Phase("row_fetch")
 	for rows.Next() {
+		diagnostic.RowReceived()
 		var serverName, version, status string
 		var statusChangedAt, publishedAt, updatedAt time.Time
 		var statusMessage *string
@@ -265,6 +278,7 @@ func (db *PostgreSQL) ListServers(
 			return nil, "", fmt.Errorf("failed to scan server row: %w", err)
 		}
 
+		diagnostic.AddBytes(len(valueJSON))
 		// Parse the ServerJSON from JSONB
 		var serverJSON apiv0.ServerJSON
 		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
@@ -287,6 +301,7 @@ func (db *PostgreSQL) ListServers(
 		}
 
 		results = append(results, serverResponse)
+		diagnostic.Phase("row_fetch")
 	}
 
 	if err := rows.Err(); err != nil {

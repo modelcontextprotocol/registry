@@ -2,8 +2,11 @@ package router_test
 
 import (
 	"context"
+	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -120,4 +123,57 @@ func httpMetricValues(t *testing.T, reader *sdkmetric.ManualReader) map[string]i
 		}
 	}
 	return values
+}
+
+// The real Huma adapter must propagate the diagnostic context and ingress ID to
+// the handler, including error and panic completion paths.
+func TestListingDiagnosticMiddleware(t *testing.T) {
+	for _, mode := range []string{"error", "panic", "canceled"} {
+		t.Run(mode, func(t *testing.T) {
+			var output strings.Builder
+			previous := slog.Default()
+			slog.SetDefault(slog.New(slog.NewJSONHandler(&output, nil)))
+			t.Cleanup(func() { slog.SetDefault(previous) })
+			provider := sdkmetric.NewMeterProvider()
+			t.Cleanup(func() { require.NoError(t, provider.Shutdown(context.Background())) })
+			metrics, err := telemetry.NewMetrics(provider.Meter("test"))
+			require.NoError(t, err)
+			mux := http.NewServeMux()
+			api := humago.New(mux, huma.DefaultConfig("Test", "1"))
+			api.UseMiddleware(router.MetricTelemetryMiddleware(metrics))
+			huma.Register(api, huma.Operation{OperationID: "listing", Method: http.MethodGet, Path: "/v0.1/servers"}, func(ctx context.Context, _ *struct{}) (*struct{}, error) {
+				require.NotNil(t, telemetry.ListingFromContext(ctx))
+				if mode == "panic" {
+					panic("private panic")
+				}
+				return nil, huma.Error500InternalServerError("failure")
+			})
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			if mode == "canceled" {
+				cancel()
+			}
+			req := httptest.NewRequest(http.MethodGet, "/v0.1/servers?search=private-search", nil).WithContext(ctx)
+			req.Header.Set("X-Request-ID", "ingress-test-id")
+			serve := func() { mux.ServeHTTP(httptest.NewRecorder(), req) }
+			if mode == "panic" {
+				require.Panics(t, serve)
+			} else {
+				serve()
+			}
+			var event map[string]any
+			require.NoError(t, json.Unmarshal([]byte(output.String()), &event))
+			require.Equal(t, "ingress-test-id", event["request_id"])
+			require.Equal(t, "listing_complete", event["event"])
+			require.Equal(t, "/v0.1/servers", event["route"])
+			require.NotContains(t, output.String(), "private-search")
+			require.NotContains(t, output.String(), "private panic")
+			if mode == "canceled" {
+				require.Equal(t, "canceled", event["outcome"])
+				require.EqualValues(t, 499, event["status"])
+			} else {
+				require.EqualValues(t, 500, event["status"])
+			}
+		})
+	}
 }

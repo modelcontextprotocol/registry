@@ -66,6 +66,19 @@ func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...Middleware
 			return
 		}
 
+		handlerReturned := false
+		if ctx.Method() == http.MethodGet && (path == "/v0/servers" || path == "/v0.1/servers") {
+			diagnosticContext, diagnostic := telemetry.StartListingDiagnostic(ctx.Context(), ctx.Header("X-Request-ID"), path)
+			ctx = huma.WithContext(ctx, diagnosticContext)
+			defer func() {
+				status := ctx.Status()
+				if !handlerReturned {
+					status = http.StatusInternalServerError
+				}
+				diagnostic.Finish(status, ctx.Context().Err())
+			}()
+		}
+
 		start := time.Now()
 		method := ctx.Method()
 		routePath := getRoutePath(ctx)
@@ -76,6 +89,7 @@ func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...Middleware
 		defer metrics.RequestsInFlight.Add(context.WithoutCancel(ctx.Context()), -1, arrivalAttrs)
 
 		next(ctx)
+		handlerReturned = true
 
 		duration := time.Since(start).Seconds()
 		statusCode := ctx.Status()
