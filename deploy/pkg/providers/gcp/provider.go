@@ -242,6 +242,12 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	}
 
 	// Create a managed node pool for the cluster
+	// Keep the smaller default so production capacity can be promoted without
+	// also resizing staging. Changing this setting rolls the pool's nodes.
+	nodeMachineType := config.New(ctx, "mcp-registry").Get("nodeMachineType")
+	if nodeMachineType == "" {
+		nodeMachineType = "e2-standard-2"
+	}
 	nodePoolName := fmt.Sprintf("%s-nodepool", clusterName)
 	nodePoolArgs := &container.NodePoolArgs{
 		Cluster:  cluster.Name,
@@ -251,7 +257,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		// Node pool configuration
 		NodeCount: pulumi.Int(2),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
-			MachineType: pulumi.String("e2-standard-2"),
+			MachineType: pulumi.String(nodeMachineType),
 			// Boot disks also serve the ingress cache and container logs.
 			DiskSizeGb: pulumi.Int(50),
 			DiskType:   pulumi.String("pd-balanced"),

@@ -157,6 +157,33 @@ across nodes. Check the registry health, listing, and search endpoints. Compare
 boot-disk latency/queues, ingress restarts, and request latency during a busy
 period before concluding that the disk upgrade resolved the observed stalls.
 
+### Node CPU capacity
+
+`mcp-registry:nodeMachineType` selects the GCP node machine type independently
+for each stack; it defaults to `e2-standard-2`. Set it in
+`Pulumi.gcpProd.yaml` to promote additional production capacity while leaving
+staging at its existing size. The node count and boot-disk configuration are
+unchanged by this setting.
+
+Changing machine type recreates nodes using the surge settings above. Preview
+both stacks and require an update of the intended node pool, not replacement
+of the pool or cluster. Check the full production preview because promotion
+applies all infrastructure code at that commit. Confirm surge quota and zonal
+capacity, a recent usable backup, and no competing GKE operation before rollout.
+
+Expect database interruption and cold ingress caches as pods move. The single
+PostgreSQL instance can move more than once if it lands on another old node
+that is subsequently replaced. Watch database placement, PVC attachment,
+service readiness, application reconnection, and ingress availability.
+
+After recovery and cache warming, compare at least 15 minutes of similar
+incoming traffic and query mix: node and PostgreSQL CPU pressure, CPU quota
+throttling, pool queues, connection failures, listing latency, and errors.
+Keep database resource settings, buffers, connection limits, and cache settings
+unchanged during this comparison to attribute the capacity change's effect.
+Reverting machine type causes another disruptive rolling update; investigate a
+stalled GKE operation before reversing configuration.
+
 ## Server-name search index
 
 Migration 015 adds a GIN trigram index for substring searches on `server_name`.
@@ -256,6 +283,7 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 |-----------|-------------|----------|
 | `mcp-registry:environment` | Deployment environment (local/staging/prod) | Yes |
 | `mcp-registry:provider` | Kubernetes provider (local/gcp) | No (default: local) |
+| `mcp-registry:nodeMachineType` | GCP node machine type; changing it rolls nodes | No (default: e2-standard-2) |
 | `mcp-registry:githubClientId` | GitHub OAuth Client ID | Yes |
 | `mcp-registry:githubClientSecret` | GitHub OAuth Client Secret | Yes (secret) |
 | `mcp-registry:jwtPrivateKey` | Ed25519 seed used to sign registry JWTs | Yes (secret) |
