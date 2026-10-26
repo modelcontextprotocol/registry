@@ -184,6 +184,37 @@ unchanged during this comparison to attribute the capacity change's effect.
 Reverting machine type causes another disruptive rolling update; investigate a
 stalled GKE operation before reversing configuration.
 
+### PostgreSQL shared buffers
+
+`mcp-registry:postgresSharedBuffers` optionally sets `shared_buffers` on the
+registry database for one stack. When omitted, PostgreSQL retains its default
+(128 MB on the current image). Use PostgreSQL units, for example `512MB`.
+This setting does not change node capacity, CPU resources, connection limits,
+or the Grafana database. Removing an override restores the default and also
+requires a restart.
+
+Validate a buffer change in staging before a separate production YAML
+promotion. Preview the full target commit and require only the intended
+database parameter change plus understood deployment housekeeping. Check a
+recent usable backup, database and operator health, current container memory,
+OOM events, and available node memory. Budget buffers together with backend
+and query memory and file cache; the 512 MiB memory request does not reserve
+the full 4 GiB limit. A move from 128 MB to 512 MB adds 384 MB of configured
+shared buffers.
+
+Changing this startup parameter restarts the singleton database and interrupts
+database-backed requests. Watch the operator reconcile, readiness and app
+reconnection; verify `SHOW shared_buffers` and `pg_settings.pending_restart`
+afterward. Rollback also requires a database restart.
+
+After recovery and cache warming, collect at least 15 minutes of observations.
+Compare request and query mix, pool queues, listing latency, errors, database
+CPU pressure and quota throttling, memory, and BufferMapping wait samples.
+Use fresh `pg_stat_io` and `pg_stat_statements` deltas within each window;
+check reset timestamps and normalize buffer evictions and reads by completed
+query volume. Lower buffer churn alone does not establish recovery if queues
+and latency remain high. Keep other tuning settings fixed during the test.
+
 ## Server-name search index
 
 Migration 015 adds a GIN trigram index for substring searches on `server_name`.
@@ -284,6 +315,7 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 | `mcp-registry:environment` | Deployment environment (local/staging/prod) | Yes |
 | `mcp-registry:provider` | Kubernetes provider (local/gcp) | No (default: local) |
 | `mcp-registry:nodeMachineType` | GCP node machine type; changing it rolls nodes | No (default: e2-standard-2) |
+| `mcp-registry:postgresSharedBuffers` | Registry PostgreSQL shared buffers, e.g. `512MB`; changes restart the singleton | No (PostgreSQL default) |
 | `mcp-registry:githubClientId` | GitHub OAuth Client ID | Yes |
 | `mcp-registry:githubClientSecret` | GitHub OAuth Client Secret | Yes (secret) |
 | `mcp-registry:jwtPrivateKey` | Ed25519 seed used to sign registry JWTs | Yes (secret) |
