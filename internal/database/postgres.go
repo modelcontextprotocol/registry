@@ -12,14 +12,18 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 
+	"github.com/modelcontextprotocol/registry/internal/telemetry"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
-	pool *pgxpool.Pool
+	pool        *pgxpool.Pool
+	poolMetrics metric.Registration
 }
 
 // Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
@@ -54,12 +58,23 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	config.MinConns = 10                      // Keep connections warm for fast response
 	config.MaxConnIdleTime = 30 * time.Minute // Keep connections available for bursts
 	config.MaxConnLifetime = 2 * time.Hour    // Refresh connections regularly for stability
+	dbMetrics, err := telemetry.NewDatabaseMetrics(otel.Meter("mcp_registry.database"))
+	if err != nil {
+		return nil, fmt.Errorf("initialize database metrics: %w", err)
+	}
+	config.ConnConfig.Tracer = dbMetrics
 
 	// Create connection pool with configured settings
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create PostgreSQL pool: %w", err)
 	}
+	initialized := false
+	defer func() {
+		if !initialized {
+			pool.Close()
+		}
+	}()
 
 	// Test the connection
 	if err = pool.Ping(ctx); err != nil {
@@ -77,9 +92,15 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	if err := migrator.Migrate(ctx); err != nil {
 		return nil, fmt.Errorf("failed to run database migrations: %w", err)
 	}
+	registration, err := dbMetrics.ObservePool(pool)
+	if err != nil {
+		return nil, fmt.Errorf("observe database pool: %w", err)
+	}
+	initialized = true
 
 	return &PostgreSQL{
-		pool: pool,
+		pool:        pool,
+		poolMetrics: registration,
 	}, nil
 }
 
@@ -180,6 +201,16 @@ func (db *PostgreSQL) ListServers(
 	cursor string,
 	limit int,
 ) ([]*apiv0.ServerResponse, string, error) {
+	operation := "list"
+	switch {
+	case filter != nil && filter.SubstringName != nil:
+		operation = "list_search"
+	case filter != nil && filter.UpdatedSince != nil:
+		operation = "list_updated"
+	case cursor != "":
+		operation = "list_page"
+	}
+	ctx = telemetry.WithDatabaseOperation(ctx, operation)
 	if limit <= 0 {
 		limit = 10
 	}
@@ -937,6 +968,10 @@ func (db *PostgreSQL) SetLatestVersion(ctx context.Context, tx pgx.Tx, serverNam
 
 // Close closes the database connection
 func (db *PostgreSQL) Close() error {
+	var err error
+	if db.poolMetrics != nil {
+		err = db.poolMetrics.Unregister()
+	}
 	db.pool.Close()
-	return nil
+	return err
 }

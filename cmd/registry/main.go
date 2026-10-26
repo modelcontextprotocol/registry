@@ -57,6 +57,19 @@ func main() {
 	// Initialize configuration
 	cfg := config.NewConfig()
 
+	// Initialize telemetry before opening the instrumented database pool.
+	shutdownTelemetry, metrics, err := telemetry.InitMetrics(cfg.Version)
+	if err != nil {
+		log.Printf("Failed to initialize metrics: %v", err)
+		return
+	}
+
+	defer func() {
+		if err := shutdownTelemetry(context.Background()); err != nil {
+			log.Printf("Failed to shutdown telemetry: %v", err)
+		}
+	}()
+
 	// Connect to PostgreSQL with bounded retry. The DB endpoint can flap briefly
 	// during voluntary disruptions (node drains, rollouts) and without retry the
 	// pod exits cleanly, restarts, then races with the still-recovering service
@@ -106,18 +119,6 @@ func main() {
 			log.Printf("Failed to import seed data: %v", err)
 		}
 	}
-
-	shutdownTelemetry, metrics, err := telemetry.InitMetrics(cfg.Version)
-	if err != nil {
-		log.Printf("Failed to initialize metrics: %v", err)
-		return
-	}
-
-	defer func() {
-		if err := shutdownTelemetry(context.Background()); err != nil {
-			log.Printf("Failed to shutdown telemetry: %v", err)
-		}
-	}()
 
 	// Prepare version information
 	versionInfo := &v0.VersionBody{

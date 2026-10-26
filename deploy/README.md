@@ -106,6 +106,9 @@ Pre-requisites:
 
 ## Ingress stability rollout
 
+For arrival/completion metrics, database-pool timing, and ingress cache logs, see
+[Diagnosing production overload](../docs/administration/performance-observability.md).
+
 Staging and production reserve 300m CPU per ingress controller and 250m per
 registry replica, with no CPU limits. Each Deployment spreads its own revision
 across eligible nodes using `DoNotSchedule`, `maxSkew: 1`, and
