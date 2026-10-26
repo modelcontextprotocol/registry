@@ -21,8 +21,10 @@ const (
 )
 
 type Metrics struct {
-	// Requests tracks the number of HTTP requests
-	Requests metric.Int64Counter
+	// Requests tracks completed HTTP requests, including cancellations.
+	Requests         metric.Int64Counter
+	RequestArrivals  metric.Int64Counter
+	RequestsInFlight metric.Int64UpDownCounter
 
 	// RequestDuration tracks the duration of HTTP Requests
 	RequestDuration metric.Float64Histogram
@@ -44,6 +46,16 @@ func NewMetrics(meter metric.Meter) (*Metrics, error) {
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request counter: %w", err)
+	}
+	arrivals, err := meter.Int64Counter(Namespace+".http.request.arrivals",
+		metric.WithDescription("Requests entering the application handler, excluding skipped routes"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request arrival counter: %w", err)
+	}
+	inFlight, err := meter.Int64UpDownCounter(Namespace+".http.requests.in_flight",
+		metric.WithDescription("Requests currently inside application handlers"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create in-flight request counter: %w", err)
 	}
 
 	reqDuration, err := meter.Float64Histogram(
@@ -74,10 +86,12 @@ func NewMetrics(meter metric.Meter) (*Metrics, error) {
 	}
 
 	return &Metrics{
-		Requests:        req,
-		RequestDuration: reqDuration,
-		ErrorCount:      errCount,
-		Up:              up,
+		Requests:         req,
+		RequestArrivals:  arrivals,
+		RequestsInFlight: inFlight,
+		RequestDuration:  reqDuration,
+		ErrorCount:       errCount,
+		Up:               up,
 	}, nil
 }
 

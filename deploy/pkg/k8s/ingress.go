@@ -12,6 +12,11 @@ import (
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
+// Preserve ingress-nginx's combined-log prefix for existing consumers. Append
+// cache diagnostics; the original request URI, method, request ID, total time,
+// upstream address and response time are already present in that prefix.
+const registryIngressLogFormat = `$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id cache_status="$upstream_cache_status" scheme="$scheme" host="$host" ingress_pod="$hostname" upstream_connect_time="$upstream_connect_time" upstream_header_time="$upstream_header_time" completed_at="$msec"`
+
 // SetupIngressController sets up the NGINX Ingress Controller
 func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*helm.Chart, error) {
 	conf := config.New(ctx, "mcp-registry")
@@ -106,6 +111,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 					"annotations":           pulumi.Map{},
 				},
 				"config": pulumi.Map{
+					"log-format-upstream": pulumi.String(registryIngressLogFormat),
 					// Cache the public list endpoints at the ingress. Registry consumers
 					// repeatedly walk the same cursor pages, so sending every walk to the
 					// application needlessly consumes application CPU and database pool

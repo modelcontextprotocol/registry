@@ -69,6 +69,11 @@ func MetricTelemetryMiddleware(metrics *telemetry.Metrics, options ...Middleware
 		start := time.Now()
 		method := ctx.Method()
 		routePath := getRoutePath(ctx)
+		arrivalAttrs := metric.WithAttributes(attribute.String("method", method), attribute.String("path", routePath))
+		metrics.RequestArrivals.Add(ctx.Context(), 1, arrivalAttrs)
+		metrics.RequestsInFlight.Add(ctx.Context(), 1, arrivalAttrs)
+		// Balance even when the handler panics or the client disconnects.
+		defer metrics.RequestsInFlight.Add(context.WithoutCancel(ctx.Context()), -1, arrivalAttrs)
 
 		next(ctx)
 
