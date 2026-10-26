@@ -73,7 +73,9 @@ func newListingDiagnostic(requestID, route string, threshold, interval time.Dura
 	now := time.Now()
 	d := &ListingDiagnostic{started: now, phaseStarted: now, phase: "handler", requestID: listingRequestID(requestID), route: route,
 		durations: make(map[string]time.Duration), threshold: threshold, interval: interval, emit: emit}
+	d.mu.Lock()
 	d.timer = time.AfterFunc(threshold, d.progress)
+	d.mu.Unlock()
 	return d
 }
 
