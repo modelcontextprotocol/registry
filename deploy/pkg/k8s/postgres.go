@@ -6,6 +6,7 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
@@ -41,6 +42,16 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 	}
 
 	// Create PostgreSQL cluster
+	parameters := map[string]any{
+		"pg_stat_statements.track": "all",
+		"max_connections":          "200",
+	}
+	// Leave the PostgreSQL default in place unless this stack opts in. Changing
+	// shared_buffers requires a restart, including downtime for our singleton.
+	if sharedBuffers := config.New(ctx, "mcp-registry").Get("postgresSharedBuffers"); sharedBuffers != "" {
+		parameters["shared_buffers"] = sharedBuffers
+	}
+
 	pgCluster, err := apiextensions.NewCustomResource(ctx, "registry-pg", &apiextensions.CustomResourceArgs{
 		ApiVersion: pulumi.String("postgresql.cnpg.io/v1"),
 		Kind:       pulumi.String("Cluster"),
@@ -59,11 +70,9 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 				"storage": map[string]any{
 					"size": "50Gi",
 				},
-				// Explicit resource budget. PG was previously unlimited which made
-				// node-level OOM behaviour unpredictable. With max_connections=200
-				// the worst-case per-connection memory (~10–15MB each) plus
-				// shared_buffers and overhead lands around 3–4GiB; 4Gi limit gives
-				// headroom for query workspaces (work_mem) and OS-level effects.
+				// Bound memory use, but budget shared buffers, backend/query memory
+				// and file cache together when tuning. The request is a scheduling
+				// reservation, not a guarantee of headroom up to the 4Gi limit.
 				"resources": map[string]any{
 					"requests": map[string]any{
 						"memory": "512Mi",
@@ -88,10 +97,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 				// headroom for future scale or burst.
 				"postgresql": map[string]any{
 					"shared_preload_libraries": []any{"pg_stat_statements"},
-					"parameters": map[string]any{
-						"pg_stat_statements.track": "all",
-						"max_connections":          "200",
-					},
+					"parameters":               parameters,
 				},
 				"bootstrap": map[string]any{
 					"initdb": map[string]any{
