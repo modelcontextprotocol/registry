@@ -1,7 +1,8 @@
-# Promote 50 GB balanced node boot disks from #1739; retain application version 1.8.4.
+# Increase production CPU headroom; keep staging at the default node size.
 config:
   mcp-registry:environment: prod
   mcp-registry:provider: gcp
+  mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:imageTag: 1.8.5  # Set specific image tag for production (change this to deploy different versions)
   gcp:project: mcp-registry-prod
   mcp-registry:githubClientId: Iv23liUydBbI7Z2Q9bOZ
