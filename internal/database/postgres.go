@@ -317,51 +317,9 @@ func (db *PostgreSQL) ListServers(
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to query servers: %w", err)
 	}
-	defer rows.Close()
-
-	var results []*apiv0.ServerResponse
-	diagnostic.Phase("row_fetch")
-	for rows.Next() {
-		diagnostic.RowReceived()
-		var serverName, version, status string
-		var statusChangedAt, publishedAt, updatedAt time.Time
-		var statusMessage *string
-		var isLatest bool
-		var valueJSON []byte
-
-		err := rows.Scan(&serverName, &version, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest, &valueJSON)
-		if err != nil {
-			return nil, "", fmt.Errorf("failed to scan server row: %w", err)
-		}
-
-		diagnostic.AddBytes(len(valueJSON))
-		// Parse the ServerJSON from JSONB
-		var serverJSON apiv0.ServerJSON
-		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
-			return nil, "", fmt.Errorf("failed to unmarshal server JSON: %w", err)
-		}
-
-		// Build ServerResponse with separated metadata
-		serverResponse := &apiv0.ServerResponse{
-			Server: serverJSON,
-			Meta: apiv0.ResponseMeta{
-				Official: &apiv0.RegistryExtensions{
-					Status:          model.Status(status),
-					StatusChangedAt: statusChangedAt,
-					StatusMessage:   statusMessage,
-					PublishedAt:     publishedAt,
-					UpdatedAt:       updatedAt,
-					IsLatest:        isLatest,
-				},
-			},
-		}
-
-		results = append(results, serverResponse)
-		diagnostic.Phase("row_fetch")
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, "", fmt.Errorf("error iterating rows: %w", err)
+	results, err := decodeListingRows(ctx, rows, diagnostic)
+	if err != nil {
+		return nil, "", err
 	}
 
 	// Determine next cursor using compound serverName:version format
@@ -372,6 +330,62 @@ func (db *PostgreSQL) ListServers(
 	}
 
 	return results, nextCursor, nil
+}
+
+func decodeListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic) ([]*apiv0.ServerResponse, error) {
+	defer rows.Close()
+
+	// Copy the bounded page before decoding JSON. Exhausting/closing pooled rows
+	// releases the connection, so application CPU work cannot keep it occupied.
+	// Within a caller-owned transaction, closing rows only frees the transaction
+	// for its next query; the caller still owns the transaction's connection.
+	type listingRow struct {
+		metadata apiv0.RegistryExtensions
+		value    []byte
+	}
+	var page []listingRow
+	diagnostic.Phase("row_fetch")
+	for rows.Next() {
+		diagnostic.RowReceived()
+		diagnostic.Phase("row_fetch")
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		var serverName, version, status string
+		var row listingRow
+		meta := &row.metadata
+		// pgx scans JSONB into an owned []byte, valid after Next and Close.
+		if err := rows.Scan(&serverName, &version, &status, &meta.StatusChangedAt, &meta.StatusMessage,
+			&meta.PublishedAt, &meta.UpdatedAt, &meta.IsLatest, &row.value); err != nil {
+			return nil, fmt.Errorf("failed to scan server row: %w", err)
+		}
+		meta.Status = model.Status(status)
+		diagnostic.AddBytes(len(row.value))
+		page = append(page, row)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	var results []*apiv0.ServerResponse
+	diagnostic.Phase("row_decode")
+	for i := range page {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		var serverJSON apiv0.ServerJSON
+		if err := json.Unmarshal(page[i].value, &serverJSON); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
+		}
+		page[i].value = nil // Drop each copied payload as its decoded form replaces it.
+		results = append(results, &apiv0.ServerResponse{
+			Server: serverJSON,
+			Meta:   apiv0.ResponseMeta{Official: &page[i].metadata},
+		})
+	}
+
+	return results, nil
 }
 
 // GetServerByName retrieves the latest version of a server by server name
