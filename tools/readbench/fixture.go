@@ -11,6 +11,8 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/database"
 )
 
+const fixtureExactName = "net.todoist/mcp"
+
 var fixtureEpoch = time.Date(2026, time.October, 26, 12, 0, 0, 0, time.UTC)
 
 func seed(ctx context.Context, dbURL, fixture string, count int, namespaced bool) error {
@@ -101,7 +103,7 @@ func seed(ctx context.Context, dbURL, fixture string, count int, namespaced bool
 func namespacedFixtureName(n int) string {
 	switch {
 	case n == 0:
-		return "net.todoist/mcp"
+		return fixtureExactName
 	case n == 1:
 		return "io.github.github/benchmark"
 	case n >= 2 && n < 38:

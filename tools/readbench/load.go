@@ -22,6 +22,7 @@ import (
 )
 
 const (
+	scenarioDiverse  = "diverse-search"
 	scenarioObserved = "observed-search"
 	scenarioShort    = "short-search"
 	kindPublish      = "publish"
@@ -132,9 +133,17 @@ func requestPath(scenario string, sequence, rows int) (string, string) {
 		}
 		// Distinct watermarks deliberately defeat exact-URL cache reuse.
 		q.Set("updated_since", fixtureEpoch.Add(-age-time.Duration(sequence)*time.Microsecond).Format(time.RFC3339Nano))
+	case scenarioDiverse:
+		q.Del("cursor")
+		term, category := diverseSearch(sequence, rows)
+		q.Set("search", term)
+		if sequence%3 == 0 {
+			q.Set("version", "latest")
+		}
+		shape = scenarioDiverse + "/" + category
 	case scenarioObserved, scenarioShort:
 		q.Del("cursor")
-		terms := []string{"notion", "net.todoist/mcp", "io.github.github/", "mcp", "benchmark"}
+		terms := []string{"notion", fixtureExactName, "io.github.github/", "mcp", "benchmark"}
 		if shape == scenarioShort {
 			terms = []string{"a", "ai"}
 		}
@@ -149,9 +158,42 @@ func requestPath(scenario string, sequence, rows int) (string, string) {
 	return "/v0.1/servers?" + q.Encode(), shape
 }
 
+// Half unique complete names; the remainder span sparse, common and absent matches.
+func diverseSearch(sequence, rows int) (string, string) {
+	switch sequence % 16 {
+	case 8:
+		return "notion", scenarioSparse
+	case 9:
+		return fixtureExactName, scenarioSparse
+	case 10:
+		return "io.github.github/", "namespace"
+	case 11:
+		return "io.github.", "common"
+	case 12:
+		return "benchmark", "common"
+	case 13:
+		return "mcp", scenarioSparse
+	case 14:
+		return fmt.Sprintf("missing-%06d", sequence), "absent"
+	case 15:
+		return "000", "numeric"
+	default:
+		return namespacedFixtureName((sequence * 7919) % (rows / 3)), "full-name"
+	}
+}
+
 func publishRequest(sequence int, runID string) []byte {
 	b, _ := json.Marshal(map[string]any{"$schema": model.CurrentSchemaURL, "name": fmt.Sprintf("io.benchmark/publish-%s-%06d", runID, sequence), "description": "Local benchmark publish", "version": "1.0.0", "remotes": []map[string]string{{"type": "streamable-http", "url": fmt.Sprintf("https://example.invalid/%s/%d/mcp", runID, sequence)}}})
 	return b
+}
+
+// Alternate each sixteen-search block so even-period categories reach both replicas.
+func requestTarget(c loadConfig, j job) string {
+	index := j.number
+	if !j.publish && c.scenario == scenarioDiverse {
+		index += j.number / 16
+	}
+	return strings.TrimRight(c.targets[index%len(c.targets)], "/")
 }
 
 func execute(ctx context.Context, client *http.Client, c loadConfig, j job, token, runID string) observation {
@@ -167,7 +209,7 @@ func execute(ctx context.Context, client *http.Client, c loadConfig, j job, toke
 	started := time.Now()
 	ctx, cancel := context.WithDeadline(ctx, j.scheduled.Add(c.timeout))
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, method, strings.TrimRight(c.targets[j.number%len(c.targets)], "/")+path, body)
+	req, err := http.NewRequestWithContext(ctx, method, requestTarget(c, j)+path, body)
 	o := observation{kind: kind, lag: float64(started.Sub(j.scheduled)) / float64(time.Millisecond)}
 	if err == nil {
 		req.Header.Set("X-Request-ID", fmt.Sprintf("readbench-%s-%d", runID, j.number))
@@ -234,7 +276,7 @@ func validateLoad(c loadConfig) error {
 		return fmt.Errorf("invalid rate, duration, workers, rows, or publish rate")
 	}
 	switch c.scenario {
-	case scenarioPage, scenarioUpdated, scenarioSparse, scenarioSearch, "mixed", "page-heavy", "hot", scenarioObserved, scenarioShort:
+	case scenarioPage, scenarioUpdated, scenarioSparse, scenarioSearch, "mixed", "page-heavy", "hot", scenarioObserved, scenarioShort, scenarioDiverse:
 	default:
 		return fmt.Errorf("unknown scenario %q", c.scenario)
 	}

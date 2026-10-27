@@ -265,6 +265,38 @@ index instead of silently recording success. Other populated installations
 should also prebuild the index concurrently to avoid blocking writes during
 startup. No application restart is needed for the operational index build.
 
+### Namespace suffix index
+
+Migration 016 adds `idx_servers_namespace_suffix` for substring searches that
+span the namespace/path separator. The existing `check_server_name_format`
+constraint guarantees exactly one `/`. A matching search must therefore match
+a suffix of the namespace; reversing it converts that suffix to a B-tree prefix
+lookup. The application still applies the complete original substring predicate.
+Searches without a namespace component keep their existing behavior.
+
+For a busy existing database, use the same concurrent-build procedure and
+monitoring described above, with these statements in an autocommit session:
+
+```sql
+SET application_name = 'registry-namespace-index-build';
+SET lock_timeout = '10s';
+SET statement_timeout = '10min';
+CREATE INDEX CONCURRENTLY idx_servers_namespace_suffix
+    ON public.servers (lower(reverse(split_part(server_name, '/', 1))) text_pattern_ops);
+```
+
+Verify both `indisvalid` and `indisready`, and the exact expression/operator class
+using `pg_get_indexdef`, before deploying the application migration. A failed
+build must be repaired explicitly; `IF NOT EXISTS` cannot repair it. Keep the
+trigram index: searches without a namespace still use it. After creation, run
+`ANALYZE public.servers` to collect expression statistics, then compare plans for
+rare namespaces, partial namespace suffixes, common terms, and latest/all-version
+searches. Measure publisher latency as well as read performance.
+
+The local constrained benchmark and its limits are documented in
+[`tools/readbench/CONSTRAINED_RESULTS.md`](../tools/readbench/CONSTRAINED_RESULTS.md).
+That experiment does not deploy this index or change production settings.
+
 ## Structure
 
 ```

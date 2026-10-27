@@ -4,6 +4,63 @@ This harness measures the real registry HTTP routes with PostgreSQL 17 and an is
 
 See [measured results and limitations](RESULTS.md) for the initial optimization comparison and [cyclic crawl results](CYCLIC_RESULTS.md) for the search minimum and repeated full-registry walks.
 
+## Constrained database and diverse clients
+
+`run-constrained.sh` runs the database in a disposable local Docker container
+with an enforced 1.5-CPU quota, 4-GiB memory limit, no swap and 512-MiB shared
+buffers. It verifies the cgroup v2 limits before testing. Two native app
+processes and two native NGINX caches remain outside that quota; this isolates
+the database bottleneck and does not emulate a complete Kubernetes cluster.
+
+On macOS, a dedicated local Colima profile can supply the Docker daemon. No
+cloud resources are required. With Go, PostgreSQL client tools, NGINX, Docker
+CLI and Colima installed:
+
+```sh
+colima start registry-bench --activate=false --ssh-config=false \
+  --cpu 4 --memory 6 --disk 12 --vm-type vz --mount none
+READBENCH_DOCKER_HOST="unix://$HOME/.colima/registry-bench/docker.sock" \
+  ./tools/readbench/run-constrained.sh /tmp/registry-constrained
+colima stop registry-bench
+```
+
+The runner requires an explicit local Unix Docker socket and fresh output
+directory. It creates and removes only its own container and volume. It does
+not install tools, alter the active Docker context, or stop the caller's daemon.
+On Linux, use the path of an existing local Docker socket. Ports 55434 and
+18080–18083 must be free; `READBENCH_PG_PORT` overrides the database port.
+
+The baseline is pinned to the pre-optimization commit `d317a62`; the candidate
+comes from the checkout. Both include the same three-character search minimum.
+The runner explicitly drops the namespace suffix index for baseline trials and
+creates it for candidate trials, then analyzes the fixture. No other tuning
+settings change. `READBENCH_BASELINE_REF`, `READBENCH_POSTGRES_IMAGE`,
+`READBENCH_ORDER` and `READBENCH_SEARCH_RATE` permit explicit future comparisons.
+
+Three waves of ten crawlers use `/v0` and `/v0.1`, varied page sizes (including
+the default), parameter order and unique incremental watermarks. There are no
+meaningless cache-busting parameters. The crawl-start ceiling remains 1,200/sec.
+For 60 seconds, 200 independently scheduled searches/sec bypass the caches and
+hit the apps directly, with 128 workers and 128 waiting slots. Half of the terms
+are varied complete names; the rest mix sparse, broad, namespace, numeric and
+absent matches. Each category alternates between both app replicas, avoiding
+category/replica coupling from the deterministic sequence. All terms satisfy
+the minimum. This is a deliberate saturation
+scenario, not a measured production burst composition.
+
+Search arrivals then stop; publishing continues at one/sec until 90 seconds,
+and monitoring/draining ends at 100 seconds. Incomplete crawls, deadlines,
+driver drops and policy rejections remain separate from successful work.
+Recovery observations must not turn unfinished/cancelled crawls into successes.
+Evidence includes cgroup CPU throttling/memory events, origin/cache counts,
+pool samples, database statement deltas and app diagnostics. After timing,
+`verify-search.py` compares full response hashes across both API versions,
+filters and real cursor pagination.
+
+See [constrained results](CONSTRAINED_RESULTS.md) for the overload reproduction,
+rejected plan-only change, final comparison and scope of the evidence. Do not
+edit a running shell runner or run builds/other benchmarks during timed trials.
+
 ## Cyclic full-registry crawls and the search minimum
 
 ```sh

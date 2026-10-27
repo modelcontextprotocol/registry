@@ -147,6 +147,19 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", argIndex))
 		args = append(args, "%"+escaped+"%")
 		argIndex++
+		// check_server_name_format guarantees one namespace/path separator. A search
+		// spanning it must match a suffix of the namespace. This narrows full
+		// name searches before the original substring predicate is rechecked.
+		if namespace, _, ok := strings.Cut(*filter.SubstringName, "/"); ok && len(namespace) >= 3 {
+			reversed := []rune(namespace)
+			for i, j := 0, len(reversed)-1; i < j; i, j = i+1, j-1 {
+				reversed[i], reversed[j] = reversed[j], reversed[i]
+			}
+			prefix := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(string(reversed))
+			conditions = append(conditions, fmt.Sprintf("lower(reverse(split_part(server_name, '/', 1))) LIKE lower($%d) ESCAPE '\\'", argIndex))
+			args = append(args, prefix+"%")
+			argIndex++
+		}
 	}
 	if filter.Version != nil {
 		conditions = append(conditions, fmt.Sprintf("version = $%d", argIndex))

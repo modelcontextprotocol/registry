@@ -77,6 +77,11 @@ func main() {
 	searchRate := flag.Int("search-rate", 10, "cycles: background searches per second")
 	shortPercent := flag.Int("short-percent", 1, "cycles: percent of background searches shorter than three characters")
 	metricTargets := flag.String("metric-targets", "http://127.0.0.1:18080", "cycles: comma-separated direct loopback apps for metrics")
+	searchTargets := flag.String("search-targets", "", "cycles: direct loopback search origins; empty uses edge targets")
+	searchScenario := flag.String("search-scenario", scenarioObserved, "cycles: observed-search or diverse-search")
+	searchDuration := flag.Duration("search-offering", 0, "cycles: stop search arrivals before recovery; zero uses full offering")
+	searchWorkers := flag.Int("search-workers", 32, "cycles: bounded background search workers and queue capacity")
+	diverseKeys := flag.Bool("diverse-keys", false, "cycles: vary API versions, page sizes and parameter order")
 	flag.Parse()
 	ctx := context.Background()
 	var err error
@@ -90,7 +95,11 @@ func main() {
 			err = serve(ctx, *dbURL, *addr, *profile, *delay)
 		}
 	case "cycles":
-		err = runCycles(ctx, cycleConfig{load: loadConfig{targets: strings.Split(*target, ","), rows: *rows, duration: *duration, rate: *rate, workers: *workers, scenario: "page", publishRate: *publishRate, output: *output, timeout: *timeout}, metrics: strings.Split(*metricTargets, ","), waves: *waves, crawlers: *crawlers, searchRate: *searchRate, shortPercent: *shortPercent, interval: *interval, recovery: *recovery})
+		var searchOrigins []string
+		if *searchTargets != "" {
+			searchOrigins = strings.Split(*searchTargets, ",")
+		}
+		err = runCycles(ctx, cycleConfig{load: loadConfig{targets: strings.Split(*target, ","), rows: *rows, duration: *duration, rate: *rate, workers: *workers, scenario: "page", publishRate: *publishRate, output: *output, timeout: *timeout}, metrics: strings.Split(*metricTargets, ","), searchTargets: searchOrigins, searchScenario: *searchScenario, searchDuration: *searchDuration, searchWorkers: *searchWorkers, diverseKeys: *diverseKeys, waves: *waves, crawlers: *crawlers, searchRate: *searchRate, shortPercent: *shortPercent, interval: *interval, recovery: *recovery})
 	case "load":
 		err = load(ctx, loadConfig{targets: strings.Split(*target, ","), rows: *rows, duration: *duration, rate: *rate, workers: *workers, scenario: *scenario, publishRate: *publishRate, output: *output, timeout: *timeout})
 	default:

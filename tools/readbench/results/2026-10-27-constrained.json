@@ -1,0 +1,1075 @@
+{
+  "date": "2026-10-27",
+  "vm": {
+    "cpus": 4,
+    "memory_bytes": 6197379072,
+    "kernel": "6.8.0-117-generic",
+    "os": "linux",
+    "arch": "aarch64"
+  },
+  "baseline_commit": "d317a62a43d0e2786459cefcffd2a1ebd2369f9d",
+  "primary_experiment": {
+    "metadata": {
+      "order": [
+        "baseline",
+        "candidate",
+        "candidate",
+        "baseline"
+      ],
+      "gomaxprocs_per_app": 2,
+      "apps": 2,
+      "independent_cache_processes": 2,
+      "cache_ttl_seconds": 30,
+      "cache_lock_seconds": 5,
+      "crawlers": 10,
+      "rate_ceiling": 1200,
+      "short_search_percent": 0,
+      "postgres": "PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "fixture_rows": 185001,
+      "nginx": "nginx version: nginx/1.31.8",
+      "go": "go version go1.27.3 darwin/arm64",
+      "binary_sha256": {
+        "baseline": "ff63b2153712f2fd614ef6fdc3b2d2a307f9bbc9ceb4eaa1baec44d3dbcbd030",
+        "candidate": "8291a8eac8c669001dfed45d216c4cf5e84e5f9c29c3e49812d7e011ecf0f251"
+      },
+      "settings": {
+        "default_statistics_target": "100",
+        "max_connections": "200",
+        "plan_cache_mode": "auto",
+        "shared_buffers": "65536",
+        "work_mem": "4096"
+      },
+      "source_sha256": {
+        "tools/readbench/cache.py": "7d355a74f04a8f7555e73b4a7cf8dbabfd04ed55efeb74c816f579468395db9b",
+        "tools/readbench/compare.py": "940ab51c7b0d687bf6157fad10a9c31f8af759332d697a10db226f4e4cd225c5",
+        "tools/readbench/cycles.go": "3ea6eb5fbd3621a392b8a54344bdcddbc70859cec41b4000840a2d148edda3bd",
+        "tools/readbench/cycles.py": "e0efcc60f5dae7c6fe56479843894f890aa720cb2d8aef98d82775cdb9542f5d",
+        "tools/readbench/cycles_test.go": "ae216bb62de4852d027752f74023c11c1ad18e6bf85e0afafec738cfefb4d751",
+        "tools/readbench/fixture.go": "5604fb1e524e900bb06b8165b51c5c5312f3712b81893da8aa0cabf08297637c",
+        "tools/readbench/load.go": "53d20563625eca718299dcca93dd8f1586b95242b8e9c4cf8e60ca118a022fa1",
+        "tools/readbench/main.go": "f61f66e639620374429b4895511464024d846fddef46d221e66f19e1274e435b",
+        "tools/readbench/main_test.go": "0504ad9f947f563d3a56d16ac0f3d5365286921853ad1a3b1986c4f47c773271",
+        "tools/readbench/run-constrained.sh": "56361c08900a61dc1c55b96b60641ca7dc644a1a65009e9ff3ebd43b5910e346",
+        "tools/readbench/run-cycles.sh": "d2d13ba414e05db9f343caec662d7256b3173d45e461029a6c3ebce794c1d6ff",
+        "tools/readbench/run-local.sh": "8fdd501ef0699c857f6bd943cbd8ec2c3e1e3ec973d4824dcfbb80cf222e4977",
+        "tools/readbench/verify-search.py": "1aa570da554bfc367da859be8440109a7a5dcadd454e9925e766460e67c5adb7",
+        "tools/readbench/verify.py": "5d06896f3b235c6ec407d4f2e341a97cc1c4391349becaa585d7114c7c1c6f96"
+      },
+      "application_source_sha256": "b98b2cd94375dabaa796935aed8e25b2d5dd968e45fa5f8cfcfec3b7b25cfe89",
+      "workload": {
+        "direct_search": true,
+        "diverse_keys": true,
+        "search_scenario": "diverse-search",
+        "search_offering": "60s",
+        "search_workers": 128,
+        "search_rate": 200,
+        "publish_rate": 1,
+        "interval": "20s",
+        "recovery": "30s"
+      },
+      "database_container": {
+        "NanoCpus": 1500000000,
+        "Memory": 4294967296,
+        "MemorySwap": 4294967296,
+        "ShmSize": 805306368
+      }
+    },
+    "trials": [
+      {
+        "variant": "baseline",
+        "directory": "0-baseline-0",
+        "result": {
+          "search_targets": [
+            "http://127.0.0.1:18080",
+            "http://127.0.0.1:18081"
+          ],
+          "search_scenario": "diverse-search",
+          "search_offering_seconds": 60,
+          "search_workers": 128,
+          "diverse_cache_keys": true,
+          "waves": 3,
+          "crawlers_per_wave": 10,
+          "interval_seconds": 20,
+          "recovery_seconds": 30,
+          "crawl_rate_ceiling": 1200,
+          "search_rate": 200,
+          "short_search_percent": 0,
+          "scheduled_searches": 12000,
+          "driver_dropped_searches": 4483,
+          "scheduled_publishes": 90,
+          "driver_dropped_publishes": 0,
+          "short_search_422": 0,
+          "unexpected_failures": 4,
+          "completed_crawls": 18,
+          "non_short_read_successes": 61785,
+          "status": {
+            "crawl:0": 1,
+            "crawl:200": 54271,
+            "diverse-search/absent:200": 479,
+            "diverse-search/common:0": 1,
+            "diverse-search/common:200": 916,
+            "diverse-search/full-name:200": 3749,
+            "diverse-search/namespace:0": 2,
+            "diverse-search/namespace:200": 489,
+            "diverse-search/numeric:200": 447,
+            "diverse-search/sparse:200": 1434,
+            "publish:200": 90
+          },
+          "success_latency_ms": {
+            "crawl": {
+              "count": 54271,
+              "p50_ms": 0.5375,
+              "p95_ms": 199.207583,
+              "p99_ms": 500.729792,
+              "max_ms": 1120.347708
+            },
+            "diverse-search/absent": {
+              "count": 479,
+              "p50_ms": 1375.371167,
+              "p95_ms": 1799.487292,
+              "p99_ms": 2090.961334,
+              "max_ms": 2354.808834
+            },
+            "diverse-search/common": {
+              "count": 916,
+              "p50_ms": 1571.328542,
+              "p95_ms": 3672.33825,
+              "p99_ms": 4241.0425,
+              "max_ms": 4990.119167
+            },
+            "diverse-search/full-name": {
+              "count": 3749,
+              "p50_ms": 2005.651625,
+              "p95_ms": 2931.973959,
+              "p99_ms": 3399.7475,
+              "max_ms": 8672.253667
+            },
+            "diverse-search/namespace": {
+              "count": 489,
+              "p50_ms": 6024.458042,
+              "p95_ms": 8172.786792,
+              "p99_ms": 9775.277792,
+              "max_ms": 9937.897542
+            },
+            "diverse-search/numeric": {
+              "count": 447,
+              "p50_ms": 1214.383584,
+              "p95_ms": 1575.159959,
+              "p99_ms": 1707.988667,
+              "max_ms": 1969.367084
+            },
+            "diverse-search/sparse": {
+              "count": 1434,
+              "p50_ms": 1276.193542,
+              "p95_ms": 1685.655042,
+              "p99_ms": 1882.923417,
+              "max_ms": 2378.210417
+            },
+            "publish": {
+              "count": 90,
+              "p50_ms": 210.524584,
+              "p95_ms": 590.679667,
+              "p99_ms": 716.1375,
+              "max_ms": 716.1375
+            }
+          },
+          "cache": {
+            "HIT": 31631,
+            "MISS": 21051,
+            "STALE": 1589
+          },
+          "app_cpu_seconds": {
+            "http://127.0.0.1:18080": 10.036113,
+            "http://127.0.0.1:18081": 9.901641
+          },
+          "origin_reads": {
+            "http://127.0.0.1:18080": 15112,
+            "http://127.0.0.1:18081": 15046
+          },
+          "clock_discontinuity_seconds": 0.0009769159999990507,
+          "valid_measurement": true,
+          "cgroup_delta": {
+            "usage_usec": 99366153,
+            "nr_periods": 1003,
+            "nr_throttled": 624,
+            "throttled_usec": 115555531,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "successful_searches": 7514,
+          "metric_samples_both_apps": 99,
+          "peak_pending_sampled": 42,
+          "peak_inflight_sampled": 151,
+          "late_pending_peak_after_80s": 0,
+          "peak_completed_read_rps": 1288,
+          "last_complete_walk_seconds": 96.8437285,
+          "unfinished_walk_count": 12,
+          "unfinished_walk_errors": {
+            "context deadline exceeded": 11,
+            "HTTP 0: Get \"http://127.0.0.1:18083/v0/servers?limit=30&cursor=io.github.benchmark-008414%2Fserver%3A1.0.0\": context deadline exceeded": 1
+          }
+        }
+      },
+      {
+        "variant": "candidate",
+        "directory": "1-candidate-0",
+        "result": {
+          "search_targets": [
+            "http://127.0.0.1:18080",
+            "http://127.0.0.1:18081"
+          ],
+          "search_scenario": "diverse-search",
+          "search_offering_seconds": 60,
+          "search_workers": 128,
+          "diverse_cache_keys": true,
+          "waves": 3,
+          "crawlers_per_wave": 10,
+          "interval_seconds": 20,
+          "recovery_seconds": 30,
+          "crawl_rate_ceiling": 1200,
+          "search_rate": 200,
+          "short_search_percent": 0,
+          "scheduled_searches": 12000,
+          "driver_dropped_searches": 0,
+          "scheduled_publishes": 90,
+          "driver_dropped_publishes": 0,
+          "short_search_422": 0,
+          "unexpected_failures": 0,
+          "completed_crawls": 30,
+          "non_short_read_successes": 96143,
+          "status": {
+            "crawl:200": 84143,
+            "diverse-search/absent:200": 750,
+            "diverse-search/common:200": 1500,
+            "diverse-search/full-name:200": 6000,
+            "diverse-search/namespace:200": 750,
+            "diverse-search/numeric:200": 750,
+            "diverse-search/sparse:200": 2250,
+            "publish:200": 90
+          },
+          "success_latency_ms": {
+            "crawl": {
+              "count": 84143,
+              "p50_ms": 1.069166,
+              "p95_ms": 2.877417,
+              "p99_ms": 5.150375,
+              "max_ms": 82.406583
+            },
+            "diverse-search/absent": {
+              "count": 750,
+              "p50_ms": 0.87175,
+              "p95_ms": 2.0895,
+              "p99_ms": 3.530375,
+              "max_ms": 4.794
+            },
+            "diverse-search/common": {
+              "count": 1500,
+              "p50_ms": 12.496,
+              "p95_ms": 29.791,
+              "p99_ms": 34.212916,
+              "max_ms": 110.437333
+            },
+            "diverse-search/full-name": {
+              "count": 6000,
+              "p50_ms": 0.800416,
+              "p95_ms": 1.598083,
+              "p99_ms": 2.301166,
+              "max_ms": 12.51975
+            },
+            "diverse-search/namespace": {
+              "count": 750,
+              "p50_ms": 0.769458,
+              "p95_ms": 1.4905,
+              "p99_ms": 2.067166,
+              "max_ms": 13.949916
+            },
+            "diverse-search/numeric": {
+              "count": 750,
+              "p50_ms": 2.059541,
+              "p95_ms": 3.149916,
+              "p99_ms": 4.937958,
+              "max_ms": 8.147333
+            },
+            "diverse-search/sparse": {
+              "count": 2250,
+              "p50_ms": 1.04625,
+              "p95_ms": 2.482166,
+              "p99_ms": 3.174458,
+              "max_ms": 25.474291
+            },
+            "publish": {
+              "count": 90,
+              "p50_ms": 6.850166,
+              "p95_ms": 12.85625,
+              "p99_ms": 18.153458,
+              "max_ms": 18.153458
+            }
+          },
+          "cache": {
+            "HIT": 26607,
+            "MISS": 30929,
+            "STALE": 26607
+          },
+          "app_cpu_seconds": {
+            "http://127.0.0.1:18080": 22.878379000000002,
+            "http://127.0.0.1:18081": 22.582633
+          },
+          "origin_reads": {
+            "http://127.0.0.1:18080": 34764,
+            "http://127.0.0.1:18081": 34772
+          },
+          "clock_discontinuity_seconds": 0.0009765420000036329,
+          "valid_measurement": true,
+          "cgroup_delta": {
+            "usage_usec": 37241078,
+            "nr_periods": 775,
+            "nr_throttled": 1,
+            "throttled_usec": 4080,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "successful_searches": 12000,
+          "metric_samples_both_apps": 99,
+          "peak_pending_sampled": 1,
+          "peak_inflight_sampled": 5,
+          "late_pending_peak_after_80s": 1,
+          "peak_completed_read_rps": 1403,
+          "last_complete_walk_seconds": 70.746743958,
+          "unfinished_walk_count": 0,
+          "unfinished_walk_errors": {}
+        }
+      },
+      {
+        "variant": "candidate",
+        "directory": "2-candidate-0",
+        "result": {
+          "search_targets": [
+            "http://127.0.0.1:18080",
+            "http://127.0.0.1:18081"
+          ],
+          "search_scenario": "diverse-search",
+          "search_offering_seconds": 60,
+          "search_workers": 128,
+          "diverse_cache_keys": true,
+          "waves": 3,
+          "crawlers_per_wave": 10,
+          "interval_seconds": 20,
+          "recovery_seconds": 30,
+          "crawl_rate_ceiling": 1200,
+          "search_rate": 200,
+          "short_search_percent": 0,
+          "scheduled_searches": 12000,
+          "driver_dropped_searches": 0,
+          "scheduled_publishes": 90,
+          "driver_dropped_publishes": 0,
+          "short_search_422": 0,
+          "unexpected_failures": 0,
+          "completed_crawls": 30,
+          "non_short_read_successes": 96143,
+          "status": {
+            "crawl:200": 84143,
+            "diverse-search/absent:200": 750,
+            "diverse-search/common:200": 1500,
+            "diverse-search/full-name:200": 6000,
+            "diverse-search/namespace:200": 750,
+            "diverse-search/numeric:200": 750,
+            "diverse-search/sparse:200": 2250,
+            "publish:200": 90
+          },
+          "success_latency_ms": {
+            "crawl": {
+              "count": 84143,
+              "p50_ms": 1.071167,
+              "p95_ms": 2.981584,
+              "p99_ms": 5.808958,
+              "max_ms": 126.879125
+            },
+            "diverse-search/absent": {
+              "count": 750,
+              "p50_ms": 0.929583,
+              "p95_ms": 2.028625,
+              "p99_ms": 3.732291,
+              "max_ms": 5.554041
+            },
+            "diverse-search/common": {
+              "count": 1500,
+              "p50_ms": 13.146333,
+              "p95_ms": 31.394833,
+              "p99_ms": 44.348333,
+              "max_ms": 126.520708
+            },
+            "diverse-search/full-name": {
+              "count": 6000,
+              "p50_ms": 0.819208,
+              "p95_ms": 1.638125,
+              "p99_ms": 2.763625,
+              "max_ms": 25.397041
+            },
+            "diverse-search/namespace": {
+              "count": 750,
+              "p50_ms": 0.785958,
+              "p95_ms": 1.44475,
+              "p99_ms": 1.991666,
+              "max_ms": 8.791333
+            },
+            "diverse-search/numeric": {
+              "count": 750,
+              "p50_ms": 2.400041,
+              "p95_ms": 11.62275,
+              "p99_ms": 15.556,
+              "max_ms": 20.336458
+            },
+            "diverse-search/sparse": {
+              "count": 2250,
+              "p50_ms": 1.050041,
+              "p95_ms": 2.471375,
+              "p99_ms": 3.234125,
+              "max_ms": 17.770208
+            },
+            "publish": {
+              "count": 90,
+              "p50_ms": 6.920833,
+              "p95_ms": 12.092708,
+              "p99_ms": 20.765583,
+              "max_ms": 20.765583
+            }
+          },
+          "cache": {
+            "HIT": 26607,
+            "MISS": 30929,
+            "STALE": 26607
+          },
+          "app_cpu_seconds": {
+            "http://127.0.0.1:18080": 22.739649,
+            "http://127.0.0.1:18081": 22.777172
+          },
+          "origin_reads": {
+            "http://127.0.0.1:18080": 34763,
+            "http://127.0.0.1:18081": 34773
+          },
+          "clock_discontinuity_seconds": 0.0009770420000023705,
+          "valid_measurement": true,
+          "cgroup_delta": {
+            "usage_usec": 39490968,
+            "nr_periods": 756,
+            "nr_throttled": 1,
+            "throttled_usec": 9524,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "successful_searches": 12000,
+          "metric_samples_both_apps": 99,
+          "peak_pending_sampled": 1,
+          "peak_inflight_sampled": 8,
+          "late_pending_peak_after_80s": 1,
+          "peak_completed_read_rps": 1404,
+          "last_complete_walk_seconds": 70.756025083,
+          "unfinished_walk_count": 0,
+          "unfinished_walk_errors": {}
+        }
+      },
+      {
+        "variant": "baseline",
+        "directory": "3-baseline-0",
+        "result": {
+          "search_targets": [
+            "http://127.0.0.1:18080",
+            "http://127.0.0.1:18081"
+          ],
+          "search_scenario": "diverse-search",
+          "search_offering_seconds": 60,
+          "search_workers": 128,
+          "diverse_cache_keys": true,
+          "waves": 3,
+          "crawlers_per_wave": 10,
+          "interval_seconds": 20,
+          "recovery_seconds": 30,
+          "crawl_rate_ceiling": 1200,
+          "search_rate": 200,
+          "short_search_percent": 0,
+          "scheduled_searches": 12000,
+          "driver_dropped_searches": 2914,
+          "scheduled_publishes": 90,
+          "driver_dropped_publishes": 0,
+          "short_search_422": 0,
+          "unexpected_failures": 13,
+          "completed_crawls": 18,
+          "non_short_read_successes": 64976,
+          "status": {
+            "crawl:0": 2,
+            "crawl:200": 55901,
+            "diverse-search/absent:200": 588,
+            "diverse-search/common:200": 1147,
+            "diverse-search/full-name:0": 1,
+            "diverse-search/full-name:200": 4510,
+            "diverse-search/namespace:0": 10,
+            "diverse-search/namespace:200": 559,
+            "diverse-search/numeric:200": 575,
+            "diverse-search/sparse:200": 1696,
+            "publish:200": 90
+          },
+          "success_latency_ms": {
+            "crawl": {
+              "count": 55901,
+              "p50_ms": 0.537917,
+              "p95_ms": 192.041917,
+              "p99_ms": 500.651083,
+              "max_ms": 1105.567417
+            },
+            "diverse-search/absent": {
+              "count": 588,
+              "p50_ms": 977.356416,
+              "p95_ms": 1197.580625,
+              "p99_ms": 1318.021,
+              "max_ms": 1446.844375
+            },
+            "diverse-search/common": {
+              "count": 1147,
+              "p50_ms": 1260.27425,
+              "p95_ms": 3442.568625,
+              "p99_ms": 4060.735166,
+              "max_ms": 5824.03925
+            },
+            "diverse-search/full-name": {
+              "count": 4510,
+              "p50_ms": 1520.535541,
+              "p95_ms": 2110.784041,
+              "p99_ms": 2513.865583,
+              "max_ms": 6501.882333
+            },
+            "diverse-search/namespace": {
+              "count": 559,
+              "p50_ms": 5714.428541,
+              "p95_ms": 7695.113708,
+              "p99_ms": 9774.786208,
+              "max_ms": 9948.461708
+            },
+            "diverse-search/numeric": {
+              "count": 575,
+              "p50_ms": 1033.128916,
+              "p95_ms": 1540.704625,
+              "p99_ms": 1881.462125,
+              "max_ms": 2238.051083
+            },
+            "diverse-search/sparse": {
+              "count": 1696,
+              "p50_ms": 985.120333,
+              "p95_ms": 1214.1835,
+              "p99_ms": 1362.535625,
+              "max_ms": 1628.72
+            },
+            "publish": {
+              "count": 90,
+              "p50_ms": 234.967375,
+              "p95_ms": 451.955041,
+              "p99_ms": 665.032166,
+              "max_ms": 665.032166
+            }
+          },
+          "cache": {
+            "HIT": 31931,
+            "MISS": 21706,
+            "STALE": 2264
+          },
+          "app_cpu_seconds": {
+            "http://127.0.0.1:18080": 10.936577999999999,
+            "http://127.0.0.1:18081": 10.742889000000002
+          },
+          "origin_reads": {
+            "http://127.0.0.1:18080": 16553,
+            "http://127.0.0.1:18081": 16504
+          },
+          "clock_discontinuity_seconds": 0.0009772089999984246,
+          "valid_measurement": true,
+          "cgroup_delta": {
+            "usage_usec": 99191770,
+            "nr_periods": 1002,
+            "nr_throttled": 623,
+            "throttled_usec": 126958138,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "successful_searches": 9075,
+          "metric_samples_both_apps": 99,
+          "peak_pending_sampled": 37,
+          "peak_inflight_sampled": 151,
+          "late_pending_peak_after_80s": 1,
+          "peak_completed_read_rps": 1352,
+          "last_complete_walk_seconds": 96.0569515,
+          "unfinished_walk_count": 12,
+          "unfinished_walk_errors": {
+            "context deadline exceeded": 10,
+            "HTTP 0: Get \"http://127.0.0.1:18083/v0/servers?limit=30&cursor=io.github.benchmark-011100%2Fserver%3A1.0.1\": context deadline exceeded": 1,
+            "HTTP 0: Get \"http://127.0.0.1:18082/v0/servers?cursor=io.github.benchmark-009005%2Fserver%3A1.0.0\": context deadline exceeded": 1
+          }
+        }
+      }
+    ]
+  },
+  "exploratory_experiments": {
+    "reproduce50": {
+      "metadata": {
+        "order": [
+          "baseline"
+        ],
+        "binary_sha256": {
+          "baseline": "10d7362ecb5871a1f8892b70f336a57ceedf68db6926954f5e522a30a8966aad",
+          "candidate": "10d7362ecb5871a1f8892b70f336a57ceedf68db6926954f5e522a30a8966aad"
+        },
+        "workload": {
+          "direct_search": true,
+          "diverse_keys": true,
+          "search_scenario": "diverse-search",
+          "search_offering": "60s",
+          "search_workers": 128,
+          "search_rate": 50,
+          "publish_rate": 1,
+          "interval": "20s",
+          "recovery": "30s"
+        },
+        "category_routing": "category tied to one replica; exploratory only"
+      },
+      "trials": [
+        {
+          "variant": "baseline",
+          "directory": "0-baseline-0",
+          "result": {
+            "valid_measurement": true,
+            "completed_crawls": 30,
+            "unfinished_walk_count": 0,
+            "unexpected_failures": 0,
+            "scheduled_searches": 3000,
+            "successful_searches": 3000,
+            "driver_dropped_searches": 0,
+            "driver_dropped_publishes": 0,
+            "peak_pending_sampled": 1,
+            "cgroup_delta": {
+              "usage_usec": 49501424,
+              "nr_periods": 785,
+              "nr_throttled": 6,
+              "throttled_usec": 635348,
+              "oom": 0,
+              "oom_kill": 0
+            },
+            "p95_ms": {
+              "crawl": 2.890291,
+              "diverse-search/absent": 1.5635,
+              "diverse-search/common": 41.276542,
+              "diverse-search/full-name": 12.95325,
+              "diverse-search/namespace": 80.503334,
+              "diverse-search/numeric": 9.004875,
+              "diverse-search/sparse": 2.547084,
+              "publish": 18.334709
+            }
+          }
+        }
+      ]
+    },
+    "reproduce200": {
+      "metadata": {
+        "order": [
+          "baseline"
+        ],
+        "binary_sha256": {
+          "baseline": "10d7362ecb5871a1f8892b70f336a57ceedf68db6926954f5e522a30a8966aad",
+          "candidate": "4f10fd8c4d146fad03b9726461f6856820d857c25f72f0f43a2471a10b595082"
+        },
+        "workload": {
+          "direct_search": true,
+          "diverse_keys": true,
+          "search_scenario": "diverse-search",
+          "search_offering": "60s",
+          "search_workers": 128,
+          "search_rate": 200,
+          "publish_rate": 1,
+          "interval": "20s",
+          "recovery": "30s"
+        },
+        "category_routing": "category tied to one replica; exploratory only"
+      },
+      "trials": [
+        {
+          "variant": "baseline",
+          "directory": "0-baseline-0",
+          "result": {
+            "valid_measurement": true,
+            "completed_crawls": 18,
+            "unfinished_walk_count": 12,
+            "unexpected_failures": 1,
+            "scheduled_searches": 12000,
+            "successful_searches": 9254,
+            "driver_dropped_searches": 2746,
+            "driver_dropped_publishes": 0,
+            "peak_pending_sampled": 63,
+            "cgroup_delta": {
+              "usage_usec": 99647832,
+              "nr_periods": 1002,
+              "nr_throttled": 624,
+              "throttled_usec": 125998101,
+              "oom": 0,
+              "oom_kill": 0
+            },
+            "p95_ms": {
+              "crawl": 81.729042,
+              "diverse-search/absent": 1559.68575,
+              "diverse-search/common": 3081.605,
+              "diverse-search/full-name": 2224.570083,
+              "diverse-search/namespace": 7765.840208,
+              "diverse-search/numeric": 1045.083583,
+              "diverse-search/sparse": 1472.146542,
+              "publish": 752.966583
+            }
+          }
+        }
+      ]
+    },
+    "custom200": {
+      "metadata": {
+        "order": [
+          "candidate"
+        ],
+        "binary_sha256": {
+          "baseline": "10d7362ecb5871a1f8892b70f336a57ceedf68db6926954f5e522a30a8966aad",
+          "candidate": "05c7fd574e8a880e84e1515e6dace6ae029f47d087c6932ca3256d4b67e60835"
+        },
+        "workload": {
+          "direct_search": true,
+          "diverse_keys": true,
+          "search_scenario": "diverse-search",
+          "search_offering": "60s",
+          "search_workers": 128,
+          "search_rate": 200,
+          "publish_rate": 1,
+          "interval": "20s",
+          "recovery": "30s"
+        },
+        "category_routing": "category tied to one replica; exploratory only"
+      },
+      "trials": [
+        {
+          "variant": "candidate",
+          "directory": "0-candidate-0",
+          "result": {
+            "valid_measurement": true,
+            "completed_crawls": 18,
+            "unfinished_walk_count": 12,
+            "unexpected_failures": 1,
+            "scheduled_searches": 12000,
+            "successful_searches": 9482,
+            "driver_dropped_searches": 2518,
+            "driver_dropped_publishes": 0,
+            "peak_pending_sampled": 60,
+            "cgroup_delta": {
+              "usage_usec": 99375517,
+              "nr_periods": 1001,
+              "nr_throttled": 622,
+              "throttled_usec": 122583565,
+              "oom": 0,
+              "oom_kill": 0
+            },
+            "p95_ms": {
+              "crawl": 85.839792,
+              "diverse-search/absent": 1501.332042,
+              "diverse-search/common": 2915.075875,
+              "diverse-search/full-name": 2151.229625,
+              "diverse-search/namespace": 7488.280625,
+              "diverse-search/numeric": 1013.555208,
+              "diverse-search/sparse": 1422.385917,
+              "publish": 736.443333
+            }
+          }
+        }
+      ]
+    },
+    "suffix200": {
+      "metadata": {
+        "order": [
+          "candidate"
+        ],
+        "binary_sha256": {
+          "baseline": "10d7362ecb5871a1f8892b70f336a57ceedf68db6926954f5e522a30a8966aad",
+          "candidate": "880d3b01aac0bac22de7b34f44e3ddc2b54961cce9217b743c09b3b824867920"
+        },
+        "workload": {
+          "direct_search": true,
+          "diverse_keys": true,
+          "search_scenario": "diverse-search",
+          "search_offering": "60s",
+          "search_workers": 128,
+          "search_rate": 200,
+          "publish_rate": 1,
+          "interval": "20s",
+          "recovery": "30s"
+        },
+        "application_source_sha256": "c75982c08b2896ab7f45cf72a08890d733bad23dad67c733f6b2719cd22b9de5",
+        "category_routing": "category tied to one replica; exploratory only"
+      },
+      "trials": [
+        {
+          "variant": "candidate",
+          "directory": "0-candidate-0",
+          "result": {
+            "valid_measurement": true,
+            "completed_crawls": 30,
+            "unfinished_walk_count": 0,
+            "unexpected_failures": 0,
+            "scheduled_searches": 12000,
+            "successful_searches": 12000,
+            "driver_dropped_searches": 0,
+            "driver_dropped_publishes": 0,
+            "peak_pending_sampled": 1,
+            "cgroup_delta": {
+              "usage_usec": 52171976,
+              "nr_periods": 789,
+              "nr_throttled": 2,
+              "throttled_usec": 59194,
+              "oom": 0,
+              "oom_kill": 0
+            },
+            "p95_ms": {
+              "crawl": 3.389292,
+              "diverse-search/absent": 2.671416,
+              "diverse-search/common": 37.886333,
+              "diverse-search/full-name": 1.780166,
+              "diverse-search/namespace": 29.414083,
+              "diverse-search/numeric": 12.517708,
+              "diverse-search/sparse": 2.861958,
+              "publish": 14.256833
+            }
+          }
+        }
+      ]
+    },
+    "suffix-auto200": {
+      "metadata": {
+        "order": [
+          "candidate"
+        ],
+        "binary_sha256": {
+          "baseline": "10d7362ecb5871a1f8892b70f336a57ceedf68db6926954f5e522a30a8966aad",
+          "candidate": "1f9d2eacd972074074ca3424cce98b57b91b1da7b39221cb1bc5fa8169fa383b"
+        },
+        "workload": {
+          "direct_search": true,
+          "diverse_keys": true,
+          "search_scenario": "diverse-search",
+          "search_offering": "60s",
+          "search_workers": 128,
+          "search_rate": 200,
+          "publish_rate": 1,
+          "interval": "20s",
+          "recovery": "30s"
+        },
+        "application_source_sha256": "53f552b951a7d61e2b3f9c006e4dec58b64fc52796d7380a180c3a193ded9048",
+        "category_routing": "category tied to one replica; exploratory only"
+      },
+      "trials": [
+        {
+          "variant": "candidate",
+          "directory": "0-candidate-0",
+          "result": {
+            "valid_measurement": true,
+            "completed_crawls": 30,
+            "unfinished_walk_count": 0,
+            "unexpected_failures": 0,
+            "scheduled_searches": 12000,
+            "successful_searches": 12000,
+            "driver_dropped_searches": 0,
+            "driver_dropped_publishes": 0,
+            "peak_pending_sampled": 1,
+            "cgroup_delta": {
+              "usage_usec": 43861022,
+              "nr_periods": 739,
+              "nr_throttled": 0,
+              "throttled_usec": 0,
+              "oom": 0,
+              "oom_kill": 0
+            },
+            "p95_ms": {
+              "crawl": 3.004125,
+              "diverse-search/absent": 2.751375,
+              "diverse-search/common": 40.022458,
+              "diverse-search/full-name": 1.659625,
+              "diverse-search/namespace": 1.561125,
+              "diverse-search/numeric": 11.182,
+              "diverse-search/sparse": 2.653666,
+              "publish": 13.220791
+            }
+          }
+        }
+      ]
+    }
+  },
+  "index": {
+    "index_bytes": 4734976,
+    "server_name_constraint": "CHECK (((server_name)::text ~ '^[a-zA-Z0-9][a-zA-Z0-9.-]*[a-zA-Z0-9]/[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]$'::text))",
+    "collation": "C"
+  },
+  "earlier_unbalanced_abba": {
+    "metadata": {
+      "order": [
+        "baseline",
+        "candidate",
+        "candidate",
+        "baseline"
+      ],
+      "binary_sha256": {
+        "baseline": "79e854da3d2ccc00ba62b29f01cf9558cb186ec443ead4131b72700ab1d95201",
+        "candidate": "b1acefb5f08381b8fa4c3a219bcf1b9d3847dc13d6c50afae45f4289ae5ecd6a"
+      },
+      "workload": {
+        "direct_search": true,
+        "diverse_keys": true,
+        "search_scenario": "diverse-search",
+        "search_offering": "60s",
+        "search_workers": 128,
+        "search_rate": 200,
+        "publish_rate": 1,
+        "interval": "20s",
+        "recovery": "30s"
+      },
+      "application_source_sha256": "b98b2cd94375dabaa796935aed8e25b2d5dd968e45fa5f8cfcfec3b7b25cfe89",
+      "category_routing": "category tied to one replica; exploratory only"
+    },
+    "trials": [
+      {
+        "variant": "baseline",
+        "directory": "0-baseline-0",
+        "result": {
+          "valid_measurement": true,
+          "completed_crawls": 18,
+          "unfinished_walk_count": 12,
+          "unexpected_failures": 1,
+          "scheduled_searches": 12000,
+          "successful_searches": 7866,
+          "driver_dropped_searches": 4134,
+          "driver_dropped_publishes": 0,
+          "peak_pending_sampled": 80,
+          "cgroup_delta": {
+            "usage_usec": 99416322,
+            "nr_periods": 1002,
+            "nr_throttled": 623,
+            "throttled_usec": 103346974,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "p95_ms": {
+            "crawl": 78.195792,
+            "diverse-search/absent": 2000.397833,
+            "diverse-search/common": 3204.353708,
+            "diverse-search/full-name": 2712.780208,
+            "diverse-search/namespace": 6982.492041,
+            "diverse-search/numeric": 1712.916416,
+            "diverse-search/sparse": 1780.693916,
+            "publish": 828.534
+          }
+        }
+      },
+      {
+        "variant": "candidate",
+        "directory": "1-candidate-0",
+        "result": {
+          "valid_measurement": true,
+          "completed_crawls": 30,
+          "unfinished_walk_count": 0,
+          "unexpected_failures": 0,
+          "scheduled_searches": 12000,
+          "successful_searches": 12000,
+          "driver_dropped_searches": 0,
+          "driver_dropped_publishes": 0,
+          "peak_pending_sampled": 1,
+          "cgroup_delta": {
+            "usage_usec": 48811645,
+            "nr_periods": 774,
+            "nr_throttled": 3,
+            "throttled_usec": 17184,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "p95_ms": {
+            "crawl": 2.993416,
+            "diverse-search/absent": 1.882167,
+            "diverse-search/common": 75.381583,
+            "diverse-search/full-name": 1.670083,
+            "diverse-search/namespace": 1.50075,
+            "diverse-search/numeric": 10.547917,
+            "diverse-search/sparse": 2.599958,
+            "publish": 17.584375
+          }
+        }
+      },
+      {
+        "variant": "candidate",
+        "directory": "2-candidate-0",
+        "result": {
+          "valid_measurement": true,
+          "completed_crawls": 30,
+          "unfinished_walk_count": 0,
+          "unexpected_failures": 0,
+          "scheduled_searches": 12000,
+          "successful_searches": 12000,
+          "driver_dropped_searches": 0,
+          "driver_dropped_publishes": 0,
+          "peak_pending_sampled": 1,
+          "cgroup_delta": {
+            "usage_usec": 37343506,
+            "nr_periods": 764,
+            "nr_throttled": 0,
+            "throttled_usec": 0,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "p95_ms": {
+            "crawl": 2.938583,
+            "diverse-search/absent": 2.235209,
+            "diverse-search/common": 29.995834,
+            "diverse-search/full-name": 1.526834,
+            "diverse-search/namespace": 1.537125,
+            "diverse-search/numeric": 3.17175,
+            "diverse-search/sparse": 2.513084,
+            "publish": 12.385
+          }
+        }
+      },
+      {
+        "variant": "baseline",
+        "directory": "3-baseline-0",
+        "result": {
+          "valid_measurement": true,
+          "completed_crawls": 18,
+          "unfinished_walk_count": 12,
+          "unexpected_failures": 0,
+          "scheduled_searches": 12000,
+          "successful_searches": 9371,
+          "driver_dropped_searches": 2629,
+          "driver_dropped_publishes": 0,
+          "peak_pending_sampled": 56,
+          "cgroup_delta": {
+            "usage_usec": 99447482,
+            "nr_periods": 1002,
+            "nr_throttled": 622,
+            "throttled_usec": 126394531,
+            "oom": 0,
+            "oom_kill": 0
+          },
+          "p95_ms": {
+            "crawl": 82.397833,
+            "diverse-search/absent": 1511.265958,
+            "diverse-search/common": 2999.458666,
+            "diverse-search/full-name": 2165.321958,
+            "diverse-search/namespace": 7554.161708,
+            "diverse-search/numeric": 1342.076625,
+            "diverse-search/sparse": 1437.396208,
+            "publish": 634.910166
+          }
+        }
+      }
+    ]
+  },
+  "equivalence": {
+    "passed": true,
+    "cases_per_variant": 356,
+    "responses_per_variant": 526
+  },
+  "raw_archive_sha256": "b6aca771922c385d39be3b3a20786d02ee0f2491616706cb1c194f8a713d017b"
+}

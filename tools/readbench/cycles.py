@@ -32,6 +32,15 @@ def main():
     parser.add_argument('--short-percent', type=int, default=1)
     parser.add_argument('--search-rate', type=int, default=10)
     parser.add_argument('--publish-rate', type=int, default=1)
+    parser.add_argument('--direct-search', action='store_true')
+    parser.add_argument('--diverse-keys', action='store_true')
+    parser.add_argument('--search-scenario', default='observed-search', choices=['observed-search','diverse-search'])
+    parser.add_argument('--search-offering', default='0s')
+    parser.add_argument('--search-workers', type=int, default=32)
+    parser.add_argument('--baseline-sql', type=pathlib.Path)
+    parser.add_argument('--candidate-sql', type=pathlib.Path)
+    parser.add_argument('--pg-container')
+    parser.add_argument('--docker-host')
     parser.add_argument('--order', nargs='+', choices=['baseline','candidate'], default=['baseline','candidate','candidate','baseline'])
     args = parser.parse_args()
     args.out = args.out.resolve()
@@ -45,12 +54,32 @@ def main():
     meta['settings'] = json.loads(sql("SELECT json_object_agg(name,setting) FROM pg_settings WHERE name IN ('shared_buffers','max_connections','default_statistics_target','plan_cache_mode','work_mem')"))
     meta['source_sha256'] = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(pathlib.Path('tools/readbench').glob('*')) if p.suffix in ['.go','.py','.sh']}
     (args.out/'metadata.json').write_text(json.dumps(meta,indent=2))
+    meta['application_source_sha256'] = hashlib.sha256(pathlib.Path('internal/database/postgres.go').read_bytes()).hexdigest()
+    meta['workload'] = {'direct_search':args.direct_search, 'diverse_keys':args.diverse_keys, 'search_scenario':args.search_scenario, 'search_offering':args.search_offering, 'search_workers':args.search_workers, 'search_rate':args.search_rate, 'publish_rate':args.publish_rate, 'interval':args.interval, 'recovery':args.recovery}
+    docker = None
+    if args.pg_container:
+        if not args.docker_host or not args.docker_host.startswith('unix:///'):
+            parser.error('container metrics require an explicit local Unix Docker socket')
+        docker = ['docker','--host',args.docker_host]
+        meta['database_container'] = json.loads(subprocess.check_output(docker+['inspect','--format','{{json .HostConfig}}',args.pg_container],text=True))
+    (args.out/'metadata.json').write_text(json.dumps(meta,indent=2))
+
+    def container_snapshot(path):
+        if docker:
+            stats = subprocess.check_output(docker+['exec',args.pg_container,'sh','-c','cat /sys/fs/cgroup/cpu.max /sys/fs/cgroup/cpu.stat /sys/fs/cgroup/memory.max /sys/fs/cgroup/memory.current /sys/fs/cgroup/memory.events'],text=True)
+            path.write_text(stats)
+
     results = []
     try:
         for run, variant in enumerate(meta['order']):
             for attempt in range(3):
                 root = args.out/f'{run}-{variant}-{attempt}'
                 root.mkdir()
+                setup = getattr(args,variant+'_sql')
+                if setup:
+                    setup_sql = setup.read_text()
+                    (root/'setup.sql').write_text(setup_sql)
+                    sql(setup_sql)
                 sql("DELETE FROM servers WHERE server_name LIKE 'io.benchmark/publish-%'")
                 sql('ANALYZE servers')
                 processes = []
@@ -73,7 +102,7 @@ http {{
  upstream app {{ server 127.0.0.1:18080; server 127.0.0.1:18081; keepalive 64; }}
  server {{ listen 127.0.0.1:{18082+cache_id};
   location / {{ proxy_pass http://app; proxy_http_version 1.1; proxy_set_header Connection ""; }}
-  location = /v0.1/servers {{
+  location ~ ^/v0(?:\\.1)?/servers$ {{
    proxy_pass http://app; proxy_http_version 1.1; proxy_set_header Connection "";
    proxy_buffering on; proxy_cache bench;
    proxy_cache_key "$scheme$request_method$host$request_uri";
@@ -93,8 +122,13 @@ http {{
                     subprocess.run([str(args.candidate.resolve()),'-duration','3s','-rate','20','-scenario','observed-search','-publish-rate','0','-out',str(root/'warmup.json')],check=True)
                     counters="SELECT coalesce(json_agg(t),'[]') FROM (SELECT userid,queryid::text,toplevel,calls,total_exec_time,shared_blks_hit,shared_blks_read,query FROM pg_stat_statements WHERE query LIKE '%FROM servers%')t"
                     (root/'db-before.json').write_text(sql(counters))
-                    subprocess.run([str(args.candidate.resolve()),'-mode','cycles','-target','http://127.0.0.1:18082,http://127.0.0.1:18083','-metric-targets','http://127.0.0.1:18080,http://127.0.0.1:18081','-waves','3','-crawlers',str(args.crawlers),'-wave-interval',args.interval,'-recovery',args.recovery,'-rate',str(args.rate),'-search-rate',str(args.search_rate),'-short-percent',str(args.short_percent),'-publish-rate',str(args.publish_rate),'-out',str(root/'result.json')],check=True)
+                    container_snapshot(root/'cgroup-before.txt')
+                    extra = ['-search-scenario',args.search_scenario,'-search-offering',args.search_offering,'-search-workers',str(args.search_workers)]
+                    if args.direct_search: extra += ['-search-targets','http://127.0.0.1:18080,http://127.0.0.1:18081']
+                    if args.diverse_keys: extra += ['-diverse-keys']
+                    subprocess.run([str(args.candidate.resolve()),'-mode','cycles','-target','http://127.0.0.1:18082,http://127.0.0.1:18083','-metric-targets','http://127.0.0.1:18080,http://127.0.0.1:18081','-waves','3','-crawlers',str(args.crawlers),'-wave-interval',args.interval,'-recovery',args.recovery,'-rate',str(args.rate),'-search-rate',str(args.search_rate),'-short-percent',str(args.short_percent),'-publish-rate',str(args.publish_rate),'-out',str(root/'result.json')]+extra,check=True)
                     (root/'db-after.json').write_text(sql(counters))
+                    container_snapshot(root/'cgroup-after.txt')
                     result=json.loads((root/'result.json').read_text())
                     if not result['valid_measurement']:
                         print('Invalid trial retained:', root.name, flush=True)

@@ -20,7 +20,11 @@ import (
 
 type cycleConfig struct {
 	load                                      loadConfig
-	metrics                                   []string
+	metrics, searchTargets                    []string
+	searchScenario                            string
+	searchDuration                            time.Duration
+	searchWorkers                             int
+	diverseKeys                               bool
 	waves, crawlers, searchRate, shortPercent int
 	interval, recovery                        time.Duration
 }
@@ -40,6 +44,11 @@ type cycleSample struct {
 	ObservedTargets             int `json:"observed_targets"`
 }
 type cycleOutput struct {
+	SearchTargets           []string                `json:"search_targets"`
+	SearchScenario          string                  `json:"search_scenario"`
+	SearchOfferingSeconds   float64                 `json:"search_offering_seconds"`
+	SearchWorkers           int                     `json:"search_workers"`
+	DiverseKeys             bool                    `json:"diverse_cache_keys"`
 	Waves                   int                     `json:"waves"`
 	CrawlersPerWave         int                     `json:"crawlers_per_wave"`
 	IntervalSeconds         float64                 `json:"interval_seconds"`
@@ -106,11 +115,30 @@ func (p *crawlPacer) wait(ctx context.Context) error {
 	}
 }
 
-func fetchPage(ctx context.Context, client *http.Client, target string, params url.Values) (crawlPage, observation) {
+// Vary real client choices without adding meaningless cache-busting parameters.
+func crawlPath(q url.Values, id int, diverse bool) string {
+	prefix := "/v0.1/servers?"
+	encoded := q.Encode()
+	if diverse {
+		if (id/2)%2 == 0 {
+			prefix = "/v0/servers?"
+		}
+		if (id/4)%2 == 0 {
+			parts := strings.Split(encoded, "&")
+			for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
+				parts[i], parts[j] = parts[j], parts[i]
+			}
+			encoded = strings.Join(parts, "&")
+		}
+	}
+	return prefix + encoded
+}
+
+func fetchPage(ctx context.Context, client *http.Client, target, path string) (crawlPage, observation) {
 	started := time.Now()
 	o := observation{kind: "crawl"}
 	var page crawlPage
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target+"/v0.1/servers?"+params.Encode(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target+path, nil)
 	if err == nil {
 		var resp *http.Response
 		resp, err = client.Do(req)
@@ -134,26 +162,39 @@ func fetchPage(ctx context.Context, client *http.Client, target string, params u
 	return page, o
 }
 
-func crawl(ctx context.Context, client *http.Client, target string, wave, id int, pacer *crawlPacer, record func(observation)) crawlResult {
-	started := time.Now()
-	r := crawlResult{Wave: wave, Client: id, Shape: "all_versions"}
+func crawlParams(wave, id int, diverse bool) (url.Values, string) {
+	shape := "all_versions"
 	q := url.Values{"limit": {"100"}}
+	if diverse {
+		q.Set("limit", []string{"30", "50", "96", "100"}[(id/2)%4])
+		if id%8 == 0 {
+			q.Del("limit")
+		}
+	}
 	// 60% all-version walks, 30% latest-only walks, 10% unique incremental walks.
 	if id%10 >= 6 && id%10 < 9 {
 		q.Set("version", "latest")
-		r.Shape = "latest"
+		shape = "latest"
 	}
 	if id%10 == 9 {
 		q.Set("updated_since", fixtureEpoch.Add(-7*24*time.Hour-time.Duration(wave*10000+id)*time.Microsecond).Format(time.RFC3339Nano))
-		r.Shape = "incremental"
+		shape = "incremental"
 	}
+	return q, shape
+}
+
+func crawl(ctx context.Context, client *http.Client, target string, wave, id int, pacer *crawlPacer, diverse bool, record func(observation)) crawlResult {
+	started := time.Now()
+	r := crawlResult{Wave: wave, Client: id, Shape: "all_versions"}
+	q, shape := crawlParams(wave, id, diverse)
+	r.Shape = shape
 	previous := ""
 	for r.Pages < 10000 {
 		if err := pacer.wait(ctx); err != nil {
 			r.Error = err.Error()
 			break
 		}
-		page, o := fetchPage(ctx, client, target, q)
+		page, o := fetchPage(ctx, client, target, crawlPath(q, id, diverse))
 		record(o)
 		if o.status != http.StatusOK {
 			r.Error = fmt.Sprintf("HTTP %d: %s", o.status, o.errorText)
@@ -246,8 +287,17 @@ func validateCycleConfig(c cycleConfig) error {
 	if err := validateLoad(c.load); err != nil {
 		return err
 	}
-	if c.waves < 2 || c.waves > 5 || c.crawlers < 1 || c.crawlers > 256 || c.interval < time.Second || c.recovery < time.Second || c.searchRate < 0 || c.searchRate > 100 || c.shortPercent < 0 || c.shortPercent > 100 {
+	if c.waves < 2 || c.waves > 5 || c.crawlers < 1 || c.crawlers > 256 || c.interval < time.Second || c.recovery < time.Second || c.searchRate < 0 || c.searchRate > 500 || c.shortPercent < 0 || c.shortPercent > 100 {
 		return fmt.Errorf("invalid cyclic workload parameters")
+	}
+	if c.searchDuration <= 0 || c.searchDuration > c.load.duration || c.searchWorkers < 1 || c.searchWorkers > 256 {
+		return fmt.Errorf("invalid search offering or worker count")
+	}
+	searchConfig := c.load
+	searchConfig.targets = c.searchTargets
+	searchConfig.scenario = c.searchScenario
+	if err := validateLoad(searchConfig); err != nil {
+		return err
 	}
 	metricConfig := c.load
 	metricConfig.targets = c.metrics
@@ -259,6 +309,18 @@ func validateCycleConfig(c cycleConfig) error {
 
 func runCycles(ctx context.Context, c cycleConfig) error {
 	c.load.duration = time.Duration(c.waves)*c.interval + c.recovery
+	if c.searchDuration == 0 {
+		c.searchDuration = c.load.duration
+	}
+	if c.searchWorkers == 0 {
+		c.searchWorkers = 32
+	}
+	if c.searchScenario == "" {
+		c.searchScenario = scenarioObserved
+	}
+	if len(c.searchTargets) == 0 {
+		c.searchTargets = c.load.targets
+	}
 	if err := validateCycleConfig(c); err != nil {
 		return err
 	}
@@ -310,9 +372,10 @@ func runCycles(ctx context.Context, c cycleConfig) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			droppedSearch = runSchedule(start, c.load.duration, c.searchRate, 32, false, func(j job) {
+			droppedSearch = runSchedule(start, c.searchDuration, c.searchRate, c.searchWorkers, false, func(j job) {
 				cfg := c.load
-				cfg.scenario = scenarioObserved
+				cfg.scenario = c.searchScenario
+				cfg.targets = c.searchTargets
 				if j.number%100 < c.shortPercent {
 					cfg.scenario = scenarioShort
 				}
@@ -327,7 +390,7 @@ func runCycles(ctx context.Context, c cycleConfig) error {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				r := crawl(ctx, client, c.load.targets[id%len(c.load.targets)], wave, id, pacer, record)
+				r := crawl(ctx, client, c.load.targets[id%len(c.load.targets)], wave, id, pacer, c.diverseKeys, record)
 				mu.Lock()
 				walks = append(walks, r)
 				mu.Unlock()
@@ -357,7 +420,7 @@ func runCycles(ctx context.Context, c cycleConfig) error {
 }
 
 func summarizeCycles(c cycleConfig, start time.Time, obs []observation, walks []crawlResult, samples []cycleSample) cycleOutput {
-	r := cycleOutput{Waves: c.waves, CrawlersPerWave: c.crawlers, IntervalSeconds: c.interval.Seconds(), RecoverySeconds: c.recovery.Seconds(), CrawlRateCeiling: c.load.rate, SearchRate: c.searchRate, ShortSearchPercent: c.shortPercent, ScheduledSearches: int(c.load.duration.Seconds()) * c.searchRate, ScheduledPublishes: int(c.load.duration.Seconds()) * c.load.publishRate, Status: map[string]int{}, Latency: map[string]distribution{}, PerSecond: map[int]int{}, Cache: map[string]int{}, Crawls: walks, Samples: samples, CPU: map[string]float64{}, Origin: map[string]float64{}}
+	r := cycleOutput{SearchTargets: c.searchTargets, SearchScenario: c.searchScenario, SearchOfferingSeconds: c.searchDuration.Seconds(), SearchWorkers: c.searchWorkers, DiverseKeys: c.diverseKeys, Waves: c.waves, CrawlersPerWave: c.crawlers, IntervalSeconds: c.interval.Seconds(), RecoverySeconds: c.recovery.Seconds(), CrawlRateCeiling: c.load.rate, SearchRate: c.searchRate, ShortSearchPercent: c.shortPercent, ScheduledSearches: int(c.searchDuration.Seconds()) * c.searchRate, ScheduledPublishes: int(c.load.duration.Seconds()) * c.load.publishRate, Status: map[string]int{}, Latency: map[string]distribution{}, PerSecond: map[int]int{}, Cache: map[string]int{}, Crawls: walks, Samples: samples, CPU: map[string]float64{}, Origin: map[string]float64{}}
 	lat := map[string][]float64{}
 	for _, o := range obs {
 		r.Status[fmt.Sprintf("%s:%d", o.kind, o.status)]++
