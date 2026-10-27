@@ -59,6 +59,9 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		spreadConstraint.MatchLabelKeys = pulumi.StringArray{pulumi.String("pod-template-hash")}
 		spreadConstraint.NodeTaintsPolicy = pulumi.String("Honor")
 	}
+	if request := conf.Get("registryCPURequest"); request != "" {
+		registryCPURequest = request
+	}
 
 	// Create Secret with sensitive configuration
 	secret, err := corev1.NewSecret(ctx, "mcp-registry-secrets", &corev1.SecretArgs{

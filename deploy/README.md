@@ -644,6 +644,14 @@ database node was saturated and the app on that node queued requests. Do not
 enable this in production without a successful end-to-end burst validation.
 See `tools/ingressbench/VALIDATION.md` for the measured comparison and limitations.
 
+`mcp-registry:registryCPURequest` can override the application CPU reservation
+for controlled staging comparisons. The default remains 250m per hosted app
+replica (100m locally), with no CPU limit. Raising the reservation changes both
+CPU sharing under contention and pod placement; it can prevent consolidation
+onto two nodes even when the autoscaler's configured minimum remains two.
+Measure node count and placement through recovery, not just request latency.
+The replica count and each pool's 60 maximum / 10 minimum remain unchanged.
+
 `mcp-registry:burstAutoscaling` opts a hosted stack into ingress and GKE node
 scaling. It is enabled in staging for validation; production keeps its existing
 configuration until a separate promotion. Application replicas and their
