@@ -1,0 +1,1508 @@
+{
+  "date": "2026-10-26",
+  "scope": "Local synthetic benchmark; no production or staging changes",
+  "metadata": {
+    "fixture_rows": 185001,
+    "actual_rows_before": 185001,
+    "go": "go version go1.27.3 darwin/arm64",
+    "postgres": "PostgreSQL 17.11 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.3.34.2), 64-bit",
+    "gomaxprocs": 2,
+    "duration": "10s",
+    "order": [
+      100,
+      1000,
+      1000,
+      100
+    ],
+    "table_sizes": "252706816|324100096",
+    "hardware": "arm64",
+    "binary_sha256": "48f708fd31c992ac61475b007d94262a62b17d3ff329edea3a9f0e760469dbdd",
+    "source_commit": "3ba097b05c41437aaaaccd2c65b8054eb56e68e5",
+    "source_status": "?? tools/readbench/",
+    "source_sha256": {
+      "tools/readbench/fixture.go": "5e381799e1e22ed8ecbd7772fa6b3b1769b5bc9af4ff663948d89c019178677a",
+      "tools/readbench/load.go": "7a734cbf75a33c7bc3e66672f035d43f7d38e6d87612aff1086f77ccb9092f1e",
+      "tools/readbench/main.go": "0fd0cd383d0c0e5ccca3ff4c5ee1bdb83beee75d1ef52b28fd8ea8dff568d9a9",
+      "tools/readbench/main_test.go": "0504ad9f947f563d3a56d16ac0f3d5365286921853ad1a3b1986c4f47c773271"
+    },
+    "fixture_sha256": "8638c4b53a4db41a1ef5fd9742b03340cce93a89cedf351677c61f522d491544",
+    "postgres_settings": {
+      "default_statistics_target": "100",
+      "effective_cache_size": "524288",
+      "jit": "on",
+      "max_connections": "200",
+      "max_parallel_workers_per_gather": "2",
+      "plan_cache_mode": "auto",
+      "random_page_cost": "4",
+      "shared_buffers": "65536",
+      "track_io_timing": "on",
+      "work_mem": "4096"
+    },
+    "statement_stats_reset": "2026-10-26 23:46:10.189623+02"
+  },
+  "statistics": [
+    {
+      "run": 0,
+      "target": 100,
+      "scenario": "sparse",
+      "evidence_prefix": "0-stats100-sparse",
+      "result": {
+        "scenario": "sparse",
+        "offered_rps": 600,
+        "offering_seconds": 10,
+        "drain_seconds": 0.013944415999999293,
+        "scheduled_reads": 6000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 6000,
+        "successful_reads_per_second_including_drain": 599.1645000958232,
+        "successful_reads_during_offering": 5993,
+        "status": {
+          "publish:200": 10,
+          "sparse:200": 6000
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 6000,
+            "p50_ms": 13.319209,
+            "p95_ms": 17.482875,
+            "p99_ms": 21.421333,
+            "max_ms": 90.580041
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 5.294833,
+            "p95_ms": 8.089208,
+            "p99_ms": 8.089208,
+            "max_ms": 8.089208
+          },
+          "sparse": {
+            "count": 6000,
+            "p50_ms": 13.319209,
+            "p95_ms": 17.482875,
+            "p99_ms": 21.421333,
+            "max_ms": 90.580041
+          }
+        },
+        "dispatch_lag": {
+          "count": 6010,
+          "p50_ms": 0.144834,
+          "p95_ms": 0.253,
+          "p99_ms": 0.476958,
+          "max_ms": 5.241083
+        },
+        "response_bytes": 590060780,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 7.129987000000001
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 6000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 10.014054,
+        "clock_discontinuity_seconds": 0.00010958400000049551,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 6000,
+        "total_exec_time": 68115.5463159999,
+        "shared_blks_hit": 59460483,
+        "shared_blks_read": 27978
+      },
+      "listing_mean_execution_ms": 11.35259105266665,
+      "listing_buffers_per_call": 9914.7435
+    },
+    {
+      "run": 0,
+      "target": 100,
+      "scenario": "mixed",
+      "evidence_prefix": "0-stats100-mixed",
+      "result": {
+        "scenario": "mixed",
+        "offered_rps": 1800,
+        "offering_seconds": 10,
+        "drain_seconds": 0.007060292000000246,
+        "scheduled_reads": 18000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 18000,
+        "successful_reads_per_second_including_drain": 1798.7300440659722,
+        "successful_reads_during_offering": 17998,
+        "status": {
+          "page:200": 9900,
+          "publish:200": 10,
+          "search:200": 360,
+          "updated:200": 7740
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 18000,
+            "p50_ms": 1.348431,
+            "p95_ms": 2.42257,
+            "p99_ms": 8.124015,
+            "max_ms": 48.368084
+          },
+          "page": {
+            "count": 9900,
+            "p50_ms": 1.342779,
+            "p95_ms": 2.346181,
+            "p99_ms": 3.064584,
+            "max_ms": 4.648362
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 3.25325,
+            "p95_ms": 9.989209,
+            "p99_ms": 9.989209,
+            "max_ms": 9.989209
+          },
+          "search": {
+            "count": 360,
+            "p50_ms": 8.124015,
+            "p95_ms": 46.721709,
+            "p99_ms": 47.752293,
+            "max_ms": 48.368084
+          },
+          "updated": {
+            "count": 7740,
+            "p50_ms": 1.335626,
+            "p95_ms": 2.129168,
+            "p99_ms": 2.550598,
+            "max_ms": 3.659792
+          }
+        },
+        "dispatch_lag": {
+          "count": 18010,
+          "p50_ms": 0.046459,
+          "p95_ms": 0.10007,
+          "p99_ms": 0.110918,
+          "max_ms": 0.704209
+        },
+        "response_bytes": 2218744792,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 16.520091
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 18000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 10.007166,
+        "clock_discontinuity_seconds": 0.00010570799999953806,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 18000,
+        "total_exec_time": 12314.225568999602,
+        "shared_blks_hit": 2302540,
+        "shared_blks_read": 0
+      },
+      "listing_mean_execution_ms": 0.6841236427222,
+      "listing_buffers_per_call": 127.91888888888889
+    },
+    {
+      "run": 1,
+      "target": 1000,
+      "scenario": "sparse",
+      "evidence_prefix": "1-stats1000-sparse",
+      "result": {
+        "scenario": "sparse",
+        "offered_rps": 600,
+        "offering_seconds": 10,
+        "drain_seconds": 0,
+        "scheduled_reads": 6000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 6000,
+        "successful_reads_per_second_including_drain": 600,
+        "successful_reads_during_offering": 6000,
+        "status": {
+          "publish:200": 10,
+          "sparse:200": 6000
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 6000,
+            "p50_ms": 1.259542,
+            "p95_ms": 1.706459,
+            "p99_ms": 1.963459,
+            "max_ms": 7.035334
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 3.540334,
+            "p95_ms": 8.988959,
+            "p99_ms": 8.988959,
+            "max_ms": 8.988959
+          },
+          "sparse": {
+            "count": 6000,
+            "p50_ms": 1.259542,
+            "p95_ms": 1.706459,
+            "p99_ms": 1.963459,
+            "max_ms": 7.035334
+          }
+        },
+        "dispatch_lag": {
+          "count": 6010,
+          "p50_ms": 0.071792,
+          "p95_ms": 0.157876,
+          "p99_ms": 0.184417,
+          "max_ms": 1.465834
+        },
+        "response_bytes": 590060777,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 5.709915
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 6000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 9.99964,
+        "clock_discontinuity_seconds": 0.00010574999999946044,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 6000,
+        "total_exec_time": 3317.2446589999017,
+        "shared_blks_hit": 1369058,
+        "shared_blks_read": 0
+      },
+      "listing_mean_execution_ms": 0.552874109833317,
+      "listing_buffers_per_call": 228.17633333333333
+    },
+    {
+      "run": 1,
+      "target": 1000,
+      "scenario": "mixed",
+      "evidence_prefix": "1-stats1000-mixed",
+      "result": {
+        "scenario": "mixed",
+        "offered_rps": 1800,
+        "offering_seconds": 10,
+        "drain_seconds": 0.006304667000000208,
+        "scheduled_reads": 18000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 18000,
+        "successful_reads_per_second_including_drain": 1798.8658749680662,
+        "successful_reads_during_offering": 17998,
+        "status": {
+          "page:200": 9900,
+          "publish:200": 10,
+          "search:200": 360,
+          "updated:200": 7740
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 18000,
+            "p50_ms": 1.425764,
+            "p95_ms": 2.397834,
+            "p99_ms": 7.931737,
+            "max_ms": 53.04925
+          },
+          "page": {
+            "count": 9900,
+            "p50_ms": 1.397306,
+            "p95_ms": 2.347875,
+            "p99_ms": 2.953112,
+            "max_ms": 5.377362
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 4.33075,
+            "p95_ms": 7.731209,
+            "p99_ms": 7.731209,
+            "max_ms": 7.731209
+          },
+          "search": {
+            "count": 360,
+            "p50_ms": 7.931737,
+            "p95_ms": 47.021834,
+            "p99_ms": 49.444042,
+            "max_ms": 53.04925
+          },
+          "updated": {
+            "count": 7740,
+            "p50_ms": 1.439057,
+            "p95_ms": 2.129153,
+            "p99_ms": 2.514459,
+            "max_ms": 3.616598
+          }
+        },
+        "dispatch_lag": {
+          "count": 18010,
+          "p50_ms": 0.048653,
+          "p95_ms": 0.100751,
+          "p99_ms": 0.111126,
+          "max_ms": 0.520417
+        },
+        "response_bytes": 2218744792,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 16.90792
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 18000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 10.00641,
+        "clock_discontinuity_seconds": 0.00010533300000048484,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 18000,
+        "total_exec_time": 12355.001349000368,
+        "shared_blks_hit": 2302867,
+        "shared_blks_read": 0
+      },
+      "listing_mean_execution_ms": 0.6863889638333538,
+      "listing_buffers_per_call": 127.93705555555556
+    },
+    {
+      "run": 2,
+      "target": 1000,
+      "scenario": "sparse",
+      "evidence_prefix": "2-stats1000-sparse",
+      "result": {
+        "scenario": "sparse",
+        "offered_rps": 600,
+        "offering_seconds": 10,
+        "drain_seconds": 0,
+        "scheduled_reads": 6000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 6000,
+        "successful_reads_per_second_including_drain": 600,
+        "successful_reads_during_offering": 6000,
+        "status": {
+          "publish:200": 10,
+          "sparse:200": 6000
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 6000,
+            "p50_ms": 1.256959,
+            "p95_ms": 1.668792,
+            "p99_ms": 1.941792,
+            "max_ms": 3.639626
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 3.373667,
+            "p95_ms": 39.657542,
+            "p99_ms": 39.657542,
+            "max_ms": 39.657542
+          },
+          "sparse": {
+            "count": 6000,
+            "p50_ms": 1.256959,
+            "p95_ms": 1.668792,
+            "p99_ms": 1.941792,
+            "max_ms": 3.639626
+          }
+        },
+        "dispatch_lag": {
+          "count": 6010,
+          "p50_ms": 0.071834,
+          "p95_ms": 0.158084,
+          "p99_ms": 0.184292,
+          "max_ms": 0.463542
+        },
+        "response_bytes": 590060777,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 5.689615999999999
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 6000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 9.999704,
+        "clock_discontinuity_seconds": 0.00010475000000020884,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 6000,
+        "total_exec_time": 3319.024838999685,
+        "shared_blks_hit": 1370013,
+        "shared_blks_read": 0
+      },
+      "listing_mean_execution_ms": 0.5531708064999475,
+      "listing_buffers_per_call": 228.3355
+    },
+    {
+      "run": 2,
+      "target": 1000,
+      "scenario": "mixed",
+      "evidence_prefix": "2-stats1000-mixed",
+      "result": {
+        "scenario": "mixed",
+        "offered_rps": 1800,
+        "offering_seconds": 10,
+        "drain_seconds": 0.003973583000000502,
+        "scheduled_reads": 18000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 18000,
+        "successful_reads_per_second_including_drain": 1799.2850391556256,
+        "successful_reads_during_offering": 17998,
+        "status": {
+          "page:200": 9900,
+          "publish:200": 10,
+          "search:200": 360,
+          "updated:200": 7740
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 18000,
+            "p50_ms": 1.424583,
+            "p95_ms": 2.471792,
+            "p99_ms": 5.350486,
+            "max_ms": 54.040792
+          },
+          "page": {
+            "count": 9900,
+            "p50_ms": 1.394556,
+            "p95_ms": 2.41657,
+            "p99_ms": 3.037903,
+            "max_ms": 5.016125
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 3.109792,
+            "p95_ms": 8.833542,
+            "p99_ms": 8.833542,
+            "max_ms": 8.833542
+          },
+          "search": {
+            "count": 360,
+            "p50_ms": 5.350486,
+            "p95_ms": 46.703709,
+            "p99_ms": 48.230333,
+            "max_ms": 54.040792
+          },
+          "updated": {
+            "count": 7740,
+            "p50_ms": 1.442848,
+            "p95_ms": 2.128848,
+            "p99_ms": 2.554987,
+            "max_ms": 5.154653
+          }
+        },
+        "dispatch_lag": {
+          "count": 18010,
+          "p50_ms": 0.048515,
+          "p95_ms": 0.101958,
+          "p99_ms": 0.112542,
+          "max_ms": 0.604833
+        },
+        "response_bytes": 2218744789,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 16.946045
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 18000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 10.004079,
+        "clock_discontinuity_seconds": 0.00010541700000032961,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 18000,
+        "total_exec_time": 11610.074551000436,
+        "shared_blks_hit": 2168089,
+        "shared_blks_read": 0
+      },
+      "listing_mean_execution_ms": 0.6450041417222464,
+      "listing_buffers_per_call": 120.44938888888889
+    },
+    {
+      "run": 3,
+      "target": 100,
+      "scenario": "sparse",
+      "evidence_prefix": "3-stats100-sparse",
+      "result": {
+        "scenario": "sparse",
+        "offered_rps": 600,
+        "offering_seconds": 10,
+        "drain_seconds": 0.014522665999999518,
+        "scheduled_reads": 6000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 6000,
+        "successful_reads_per_second_including_drain": 599.1299036518652,
+        "successful_reads_during_offering": 5993,
+        "status": {
+          "publish:200": 10,
+          "sparse:200": 6000
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 6000,
+            "p50_ms": 13.391,
+            "p95_ms": 17.903125,
+            "p99_ms": 22.621166,
+            "max_ms": 85.138875
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 4.051166,
+            "p95_ms": 6.42175,
+            "p99_ms": 6.42175,
+            "max_ms": 6.42175
+          },
+          "sparse": {
+            "count": 6000,
+            "p50_ms": 13.391,
+            "p95_ms": 17.903125,
+            "p99_ms": 22.621166,
+            "max_ms": 85.138875
+          }
+        },
+        "dispatch_lag": {
+          "count": 6010,
+          "p50_ms": 0.152708,
+          "p95_ms": 0.246667,
+          "p99_ms": 0.310791,
+          "max_ms": 15.648417
+        },
+        "response_bytes": 590060771,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 7.352092000000001
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 6000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 10.014627,
+        "clock_discontinuity_seconds": 0.00010433400000131599,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 6000,
+        "total_exec_time": 68968.25781600049,
+        "shared_blks_hit": 59540768,
+        "shared_blks_read": 0
+      },
+      "listing_mean_execution_ms": 11.494709636000081,
+      "listing_buffers_per_call": 9923.461333333333
+    },
+    {
+      "run": 3,
+      "target": 100,
+      "scenario": "mixed",
+      "evidence_prefix": "3-stats100-mixed",
+      "result": {
+        "scenario": "mixed",
+        "offered_rps": 1800,
+        "offering_seconds": 10,
+        "drain_seconds": 0.004029041000000788,
+        "scheduled_reads": 18000,
+        "driver_dropped_reads": 0,
+        "successful_reads": 18000,
+        "successful_reads_per_second_including_drain": 1799.2750646994048,
+        "successful_reads_during_offering": 17998,
+        "status": {
+          "page:200": 9900,
+          "publish:200": 10,
+          "search:200": 360,
+          "updated:200": 7740
+        },
+        "cache": {},
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 18000,
+            "p50_ms": 1.385792,
+            "p95_ms": 2.516514,
+            "p99_ms": 5.135792,
+            "max_ms": 49.363583
+          },
+          "page": {
+            "count": 9900,
+            "p50_ms": 1.378292,
+            "p95_ms": 2.437556,
+            "p99_ms": 3.116264,
+            "max_ms": 5.14282
+          },
+          "publish": {
+            "count": 10,
+            "p50_ms": 3.532291,
+            "p95_ms": 5.241,
+            "p99_ms": 5.241,
+            "max_ms": 5.241
+          },
+          "search": {
+            "count": 360,
+            "p50_ms": 5.128403,
+            "p95_ms": 47.078791,
+            "p99_ms": 48.236958,
+            "max_ms": 49.363583
+          },
+          "updated": {
+            "count": 7740,
+            "p50_ms": 1.371778,
+            "p95_ms": 2.171806,
+            "p99_ms": 2.64482,
+            "max_ms": 3.399542
+          }
+        },
+        "dispatch_lag": {
+          "count": 18010,
+          "p50_ms": 0.047403,
+          "p95_ms": 0.100417,
+          "p99_ms": 0.110458,
+          "max_ms": 0.204958
+        },
+        "response_bytes": 2218744786,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18080": 16.784740999999997
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18080": 18000
+        },
+        "scheduled_publishes": 10,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 256,
+        "read_queue_capacity": 256,
+        "wall_seconds": 10.004134,
+        "clock_discontinuity_seconds": 0.00010495899999973801,
+        "valid_for_comparison": true
+      },
+      "listing_statement_delta": {
+        "calls": 18000,
+        "total_exec_time": 11613.788046999658,
+        "shared_blks_hit": 2168746,
+        "shared_blks_read": 0
+      },
+      "listing_mean_execution_ms": 0.6452104470555365,
+      "listing_buffers_per_call": 120.4858888888889
+    }
+  ],
+  "cache_metadata": {
+    "nginx": "nginx version: nginx/1.31.8",
+    "order": [
+      5,
+      10,
+      10,
+      5
+    ],
+    "artificial_delay_seconds": 6
+  },
+  "cache": [
+    {
+      "run": 0,
+      "evidence_directory": "0",
+      "lock_seconds": 5,
+      "artificial_origin_delay_seconds": 6,
+      "result": {
+        "scenario": "hot",
+        "offered_rps": 100,
+        "offering_seconds": 8,
+        "drain_seconds": 4.077063041000001,
+        "scheduled_reads": 800,
+        "driver_dropped_reads": 0,
+        "successful_reads": 800,
+        "successful_reads_per_second_including_drain": 66.2412705211613,
+        "successful_reads_during_offering": 696,
+        "status": {
+          "page:200": 800,
+          "publish:200": 8
+        },
+        "cache": {
+          "HIT": 688,
+          "MISS": 112
+        },
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 800,
+            "p50_ms": 2585.9105,
+            "p95_ms": 11272.1695,
+            "p99_ms": 11438.174958,
+            "max_ms": 11452.255166
+          },
+          "page": {
+            "count": 800,
+            "p50_ms": 2585.9105,
+            "p95_ms": 11272.1695,
+            "p99_ms": 11438.174958,
+            "max_ms": 11452.255166
+          },
+          "publish": {
+            "count": 8,
+            "p50_ms": 6.680333,
+            "p95_ms": 18.621208,
+            "p99_ms": 18.621208,
+            "max_ms": 18.621208
+          }
+        },
+        "dispatch_lag": {
+          "count": 808,
+          "p50_ms": 1.0695,
+          "p95_ms": 1.170791,
+          "p99_ms": 1.32425,
+          "max_ms": 1.698083
+        },
+        "response_bytes": 99003509,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18082": 0.247992
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18082": 112
+        },
+        "scheduled_publishes": 8,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 1024,
+        "read_queue_capacity": 1024,
+        "wall_seconds": 12.07719,
+        "clock_discontinuity_seconds": 0.0001269589999992604,
+        "valid_for_comparison": true
+      }
+    },
+    {
+      "run": 1,
+      "evidence_directory": "1",
+      "lock_seconds": 10,
+      "artificial_origin_delay_seconds": 6,
+      "result": {
+        "scenario": "hot",
+        "offered_rps": 100,
+        "offering_seconds": 8,
+        "drain_seconds": 0,
+        "scheduled_reads": 800,
+        "driver_dropped_reads": 0,
+        "successful_reads": 800,
+        "successful_reads_per_second_including_drain": 100,
+        "successful_reads_during_offering": 800,
+        "status": {
+          "page:200": 800,
+          "publish:200": 8
+        },
+        "cache": {
+          "HIT": 792,
+          "MISS": 8
+        },
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 800,
+            "p50_ms": 2502.129291,
+            "p95_ms": 6002.736916,
+            "p99_ms": 6005.222083,
+            "max_ms": 6010.329541
+          },
+          "page": {
+            "count": 800,
+            "p50_ms": 2502.129291,
+            "p95_ms": 6002.736916,
+            "p99_ms": 6005.222083,
+            "max_ms": 6010.329541
+          },
+          "publish": {
+            "count": 8,
+            "p50_ms": 7.2215,
+            "p95_ms": 18.022083,
+            "p99_ms": 18.022083,
+            "max_ms": 18.022083
+          }
+        },
+        "dispatch_lag": {
+          "count": 808,
+          "p50_ms": 1.072041,
+          "p95_ms": 1.156708,
+          "p99_ms": 1.251666,
+          "max_ms": 1.81925
+        },
+        "response_bytes": 99003509,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18082": 0.052664
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18082": 8
+        },
+        "scheduled_publishes": 8,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 1024,
+        "read_queue_capacity": 1024,
+        "wall_seconds": 7.992305,
+        "clock_discontinuity_seconds": 8.366700000017602e-05,
+        "valid_for_comparison": true
+      }
+    },
+    {
+      "run": 2,
+      "evidence_directory": "2",
+      "lock_seconds": 10,
+      "artificial_origin_delay_seconds": 6,
+      "result": {
+        "scenario": "hot",
+        "offered_rps": 100,
+        "offering_seconds": 8,
+        "drain_seconds": 0,
+        "scheduled_reads": 800,
+        "driver_dropped_reads": 0,
+        "successful_reads": 800,
+        "successful_reads_per_second_including_drain": 100,
+        "successful_reads_during_offering": 800,
+        "status": {
+          "page:200": 800,
+          "publish:200": 8
+        },
+        "cache": {
+          "HIT": 792,
+          "MISS": 8
+        },
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 800,
+            "p50_ms": 2502.108292,
+            "p95_ms": 6001.901209,
+            "p99_ms": 6005.561625,
+            "max_ms": 6011.058125
+          },
+          "page": {
+            "count": 800,
+            "p50_ms": 2502.108292,
+            "p95_ms": 6001.901209,
+            "p99_ms": 6005.561625,
+            "max_ms": 6011.058125
+          },
+          "publish": {
+            "count": 8,
+            "p50_ms": 6.845375,
+            "p95_ms": 12.455167,
+            "p99_ms": 12.455167,
+            "max_ms": 12.455167
+          }
+        },
+        "dispatch_lag": {
+          "count": 808,
+          "p50_ms": 1.074625,
+          "p95_ms": 1.181,
+          "p99_ms": 1.292375,
+          "max_ms": 1.899292
+        },
+        "response_bytes": 99003512,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18082": 0.046866000000000005
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18082": 8
+        },
+        "scheduled_publishes": 8,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 1024,
+        "read_queue_capacity": 1024,
+        "wall_seconds": 7.992107,
+        "clock_discontinuity_seconds": 8.341599999983629e-05,
+        "valid_for_comparison": true
+      }
+    },
+    {
+      "run": 3,
+      "evidence_directory": "3",
+      "lock_seconds": 5,
+      "artificial_origin_delay_seconds": 6,
+      "result": {
+        "scenario": "hot",
+        "offered_rps": 100,
+        "offering_seconds": 8,
+        "drain_seconds": 4.0773892499999995,
+        "scheduled_reads": 800,
+        "driver_dropped_reads": 0,
+        "successful_reads": 800,
+        "successful_reads_per_second_including_drain": 66.23948135148497,
+        "successful_reads_during_offering": 696,
+        "status": {
+          "page:200": 800,
+          "publish:200": 8
+        },
+        "cache": {
+          "HIT": 688,
+          "MISS": 112
+        },
+        "successful_latency_from_scheduled_time": {
+          "all_reads": {
+            "count": 800,
+            "p50_ms": 2585.472583,
+            "p95_ms": 11273.580667,
+            "p99_ms": 11441.348,
+            "max_ms": 11457.323167
+          },
+          "page": {
+            "count": 800,
+            "p50_ms": 2585.472583,
+            "p95_ms": 11273.580667,
+            "p99_ms": 11441.348,
+            "max_ms": 11457.323167
+          },
+          "publish": {
+            "count": 8,
+            "p50_ms": 6.546833,
+            "p95_ms": 15.333958,
+            "p99_ms": 15.333958,
+            "max_ms": 15.333958
+          }
+        },
+        "dispatch_lag": {
+          "count": 808,
+          "p50_ms": 1.069042,
+          "p95_ms": 1.1775,
+          "p99_ms": 1.259458,
+          "max_ms": 1.918167
+        },
+        "response_bytes": 99003506,
+        "app_cpu_seconds": {
+          "http://127.0.0.1:18082": 0.252573
+        },
+        "origin_read_starts": {
+          "http://127.0.0.1:18082": 112
+        },
+        "scheduled_publishes": 8,
+        "driver_dropped_publishes": 0,
+        "served_all_offered_requests": true,
+        "read_workers": 1024,
+        "read_queue_capacity": 1024,
+        "wall_seconds": 12.077516,
+        "clock_discontinuity_seconds": 0.00012674999999973124,
+        "valid_for_comparison": true
+      }
+    }
+  ],
+  "response_equivalence_passed": true,
+  "plans": [
+    {
+      "file": "stats100-day-force_custom_plan.txt",
+      "execution_ms": 0.93,
+      "shared_hit_blocks": 528,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 3152,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 3152,
+          "Actual Rows": 102,
+          "Rows Removed by Filter": 2956,
+          "Shared Hit Blocks": 522
+        }
+      ]
+    },
+    {
+      "file": "stats100-day-force_generic_plan.txt",
+      "execution_ms": 0.976,
+      "shared_hit_blocks": 528,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 2056,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 20557,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 20557,
+          "Actual Rows": 102,
+          "Rows Removed by Filter": 2956,
+          "Shared Hit Blocks": 522
+        }
+      ]
+    },
+    {
+      "file": "stats100-day-plan.json",
+      "execution_ms": 1.252,
+      "shared_hit_blocks": 528,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 3152,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 3152,
+          "Actual Rows": 102,
+          "Rows Removed by Filter": 2956,
+          "Shared Hit Blocks": 522
+        }
+      ]
+    },
+    {
+      "file": "stats100-hour-force_custom_plan.txt",
+      "execution_ms": 21.012,
+      "shared_hit_blocks": 12308,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 610,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 610,
+          "Actual Rows": 101,
+          "Rows Removed by Filter": 72333,
+          "Shared Hit Blocks": 12302
+        }
+      ]
+    },
+    {
+      "file": "stats100-hour-force_generic_plan.txt",
+      "execution_ms": 20.044,
+      "shared_hit_blocks": 12308,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 2056,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 20557,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 20557,
+          "Actual Rows": 101,
+          "Rows Removed by Filter": 72333,
+          "Shared Hit Blocks": 12302
+        }
+      ]
+    },
+    {
+      "file": "stats100-hour-plan.json",
+      "execution_ms": 23.354,
+      "shared_hit_blocks": 12308,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 610,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 610,
+          "Actual Rows": 101,
+          "Rows Removed by Filter": 72333,
+          "Shared Hit Blocks": 12302
+        }
+      ]
+    },
+    {
+      "file": "stats100-week-force_custom_plan.txt",
+      "execution_ms": 0.221,
+      "shared_hit_blocks": 83,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 21869,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 21869,
+          "Actual Rows": 103,
+          "Rows Removed by Filter": 330,
+          "Shared Hit Blocks": 77
+        }
+      ]
+    },
+    {
+      "file": "stats100-week-force_generic_plan.txt",
+      "execution_ms": 0.219,
+      "shared_hit_blocks": 83,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 2056,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 20557,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 20557,
+          "Actual Rows": 103,
+          "Rows Removed by Filter": 330,
+          "Shared Hit Blocks": 77
+        }
+      ]
+    },
+    {
+      "file": "stats100-week-plan.json",
+      "execution_ms": 0.262,
+      "shared_hit_blocks": 83,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 21869,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 21869,
+          "Actual Rows": 103,
+          "Rows Removed by Filter": 330,
+          "Shared Hit Blocks": 77
+        }
+      ]
+    },
+    {
+      "file": "stats1000-day-force_custom_plan.txt",
+      "execution_ms": 0.944,
+      "shared_hit_blocks": 528,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 3172,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 3172,
+          "Actual Rows": 102,
+          "Rows Removed by Filter": 2956,
+          "Shared Hit Blocks": 522
+        }
+      ]
+    },
+    {
+      "file": "stats1000-day-force_generic_plan.txt",
+      "execution_ms": 1.141,
+      "shared_hit_blocks": 528,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 2056,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 20561,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 20561,
+          "Actual Rows": 102,
+          "Rows Removed by Filter": 2956,
+          "Shared Hit Blocks": 522
+        }
+      ]
+    },
+    {
+      "file": "stats1000-day-plan.json",
+      "execution_ms": 1.357,
+      "shared_hit_blocks": 528,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 3172,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 528
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 3172,
+          "Actual Rows": 102,
+          "Rows Removed by Filter": 2956,
+          "Shared Hit Blocks": 522
+        }
+      ]
+    },
+    {
+      "file": "stats1000-hour-force_custom_plan.txt",
+      "execution_ms": 0.338,
+      "shared_hit_blocks": 287,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 287
+        },
+        {
+          "Node Type": "Sort",
+          "Plan Rows": 156,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 287
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Plan Rows": 156,
+          "Actual Rows": 131,
+          "Rows Removed by Filter": 177,
+          "Shared Hit Blocks": 284
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "idx_servers_updated_at",
+          "Plan Rows": 306,
+          "Actual Rows": 308,
+          "Shared Hit Blocks": 3
+        }
+      ]
+    },
+    {
+      "file": "stats1000-hour-force_generic_plan.txt",
+      "execution_ms": 22.829,
+      "shared_hit_blocks": 12308,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 2056,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 20561,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 12308
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 20561,
+          "Actual Rows": 101,
+          "Rows Removed by Filter": 72333,
+          "Shared Hit Blocks": 12302
+        }
+      ]
+    },
+    {
+      "file": "stats1000-hour-plan.json",
+      "execution_ms": 0.452,
+      "shared_hit_blocks": 287,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 287
+        },
+        {
+          "Node Type": "Sort",
+          "Plan Rows": 156,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 287
+        },
+        {
+          "Node Type": "Bitmap Heap Scan",
+          "Plan Rows": 156,
+          "Actual Rows": 131,
+          "Rows Removed by Filter": 177,
+          "Shared Hit Blocks": 284
+        },
+        {
+          "Node Type": "Bitmap Index Scan",
+          "Index Name": "idx_servers_updated_at",
+          "Plan Rows": 306,
+          "Actual Rows": 308,
+          "Shared Hit Blocks": 3
+        }
+      ]
+    },
+    {
+      "file": "stats1000-week-force_custom_plan.txt",
+      "execution_ms": 0.228,
+      "shared_hit_blocks": 83,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 22046,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 22046,
+          "Actual Rows": 103,
+          "Rows Removed by Filter": 330,
+          "Shared Hit Blocks": 77
+        }
+      ]
+    },
+    {
+      "file": "stats1000-week-force_generic_plan.txt",
+      "execution_ms": 0.225,
+      "shared_hit_blocks": 83,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 2056,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 20561,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 20561,
+          "Actual Rows": 103,
+          "Rows Removed by Filter": 330,
+          "Shared Hit Blocks": 77
+        }
+      ]
+    },
+    {
+      "file": "stats1000-week-plan.json",
+      "execution_ms": 0.232,
+      "shared_hit_blocks": 83,
+      "nodes": [
+        {
+          "Node Type": "Limit",
+          "Plan Rows": 100,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Incremental Sort",
+          "Plan Rows": 22046,
+          "Actual Rows": 100,
+          "Shared Hit Blocks": 83
+        },
+        {
+          "Node Type": "Index Scan",
+          "Index Name": "idx_servers_name",
+          "Plan Rows": 22046,
+          "Actual Rows": 103,
+          "Rows Removed by Filter": 330,
+          "Shared Hit Blocks": 77
+        }
+      ]
+    }
+  ],
+  "source_script_sha256": {
+    "tools/readbench/cache.py": "7d355a74f04a8f7555e73b4a7cf8dbabfd04ed55efeb74c816f579468395db9b",
+    "tools/readbench/compare.py": "940ab51c7b0d687bf6157fad10a9c31f8af759332d697a10db226f4e4cd225c5",
+    "tools/readbench/run-local.sh": "8fdd501ef0699c857f6bd943cbd8ec2c3e1e3ec973d4824dcfbb80cf222e4977",
+    "tools/readbench/verify.py": "5d06896f3b235c6ec407d4f2e341a97cc1c4391349becaa585d7114c7c1c6f96"
+  }
+}
