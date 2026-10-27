@@ -1,0 +1,634 @@
+{
+  "date": "2026-10-27",
+  "baseline_commit": "e19fda006538296bbdb63be1fb22195d66813928",
+  "host": {
+    "os": "macOS arm64",
+    "logical_cpus": 12,
+    "memory_gib": 32
+  },
+  "experiments": {
+    "main-run": {
+      "metadata": {
+        "order": [
+          "baseline",
+          "candidate",
+          "candidate",
+          "baseline"
+        ],
+        "gomaxprocs_per_app": 2,
+        "apps": 2,
+        "independent_cache_processes": 2,
+        "cache_ttl_seconds": 30,
+        "cache_lock_seconds": 5,
+        "crawlers": 20,
+        "rate_ceiling": 1200,
+        "short_search_percent": 1,
+        "postgres": "PostgreSQL 17.11 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.3.34.2), 64-bit",
+        "fixture_rows": 185001,
+        "nginx": "nginx version: nginx/1.31.8",
+        "go": "go version go1.27.3 darwin/arm64",
+        "binary_sha256": {
+          "baseline": "c63ae13d550150dda8f85b861f2db8147bcbfa05154d0011e524b1c1f80b9e18",
+          "candidate": "62894b4b0bdd72b62a8144041325cbb1dc40296ba0c1d1c7c38502bebd8bbc8d"
+        },
+        "settings": {
+          "default_statistics_target": "100",
+          "max_connections": "200",
+          "plan_cache_mode": "auto",
+          "shared_buffers": "65536",
+          "work_mem": "4096"
+        },
+        "source_sha256": {
+          "tools/readbench/cache.py": "7d355a74f04a8f7555e73b4a7cf8dbabfd04ed55efeb74c816f579468395db9b",
+          "tools/readbench/compare.py": "940ab51c7b0d687bf6157fad10a9c31f8af759332d697a10db226f4e4cd225c5",
+          "tools/readbench/cycles.go": "b76c5d4442a1d588e7f721b9b0ee02c93807b31097cd7526dc9460bea4429140",
+          "tools/readbench/cycles.py": "385239ac7c7d8074133ad5593f0ad35b1b6438659f3ba70c440ad32285f3a18b",
+          "tools/readbench/cycles_test.go": "256c210e9c612474d007353ef234485f7dd71157927f3bc6e93c4e0ccd099fea",
+          "tools/readbench/fixture.go": "b7b22e0a2ab191b4ea47ef34c829ad358af3476454cdf27fef937082578f6386",
+          "tools/readbench/load.go": "c90e3ce6d72c05819367ba125e4514baed811fe828794f5e1c1815f73093944a",
+          "tools/readbench/main.go": "77cdbd7a2b9362ce49625bf93dac357742410029b2ee22fb49c12836e83a745f",
+          "tools/readbench/main_test.go": "0504ad9f947f563d3a56d16ac0f3d5365286921853ad1a3b1986c4f47c773271",
+          "tools/readbench/run-cycles.sh": "6fdfa8237da2c80da017081d9a152f81e3a753f44d0be306dc63873a527109f1",
+          "tools/readbench/run-local.sh": "8fdd501ef0699c857f6bd943cbd8ec2c3e1e3ec973d4824dcfbb80cf222e4977",
+          "tools/readbench/verify.py": "5d06896f3b235c6ec407d4f2e341a97cc1c4391349becaa585d7114c7c1c6f96"
+        }
+      },
+      "trials": [
+        {
+          "variant": "baseline",
+          "evidence_directory": "0-baseline-1",
+          "result": {
+            "waves": 3,
+            "crawlers_per_wave": 20,
+            "interval_seconds": 20,
+            "recovery_seconds": 30,
+            "crawl_rate_ceiling": 1200,
+            "search_rate": 10,
+            "short_search_percent": 1,
+            "scheduled_searches": 900,
+            "driver_dropped_searches": 0,
+            "scheduled_publishes": 90,
+            "driver_dropped_publishes": 0,
+            "short_search_422": 0,
+            "unexpected_failures": 0,
+            "completed_crawls": 60,
+            "non_short_read_successes": 80437,
+            "status": {
+              "crawl:200": 79546,
+              "observed-search:200": 891,
+              "publish:200": 90,
+              "short-search:200": 9
+            },
+            "success_latency_ms": {
+              "crawl": {
+                "count": 79546,
+                "p50_ms": 0.517666,
+                "p95_ms": 1.813667,
+                "p99_ms": 2.256042,
+                "max_ms": 501.74725
+              },
+              "observed-search": {
+                "count": 891,
+                "p50_ms": 0.236916,
+                "p95_ms": 2.386416,
+                "p99_ms": 3.275833,
+                "max_ms": 68.923916
+              },
+              "publish": {
+                "count": 90,
+                "p50_ms": 2.051916,
+                "p95_ms": 7.894833,
+                "p99_ms": 8.768375,
+                "max_ms": 8.768375
+              },
+              "short-search": {
+                "count": 9,
+                "p50_ms": 1.047541,
+                "p95_ms": 2.294,
+                "p99_ms": 2.294,
+                "max_ms": 2.294
+              }
+            },
+            "cache": {
+              "HIT": 64538,
+              "MISS": 10922,
+              "STALE": 4928,
+              "UPDATING": 58
+            },
+            "app_cpu_seconds": {
+              "http://127.0.0.1:18080": 9.251579,
+              "http://127.0.0.1:18081": 9.200330000000001
+            },
+            "origin_reads": {
+              "http://127.0.0.1:18080": 7923,
+              "http://127.0.0.1:18081": 7927
+            },
+            "clock_discontinuity_seconds": 3.154200000210494e-05,
+            "valid_measurement": true,
+            "complete_metric_samples": 99,
+            "peak_completed_read_rps": 1213,
+            "pool_pending_peak_sampled": 0,
+            "pool_pending_peak_after_80s": 0,
+            "inflight_peak_sampled": 2,
+            "last_walk_finished_seconds": 66.308907625,
+            "walks_by_shape": {
+              "incremental": 6,
+              "latest": 18,
+              "all_versions": 36
+            },
+            "total_entries_read": 7950098,
+            "wave_max_walk_seconds": {
+              "0": 26.200459875,
+              "1": 31.221315,
+              "2": 26.308907625
+            }
+          }
+        },
+        {
+          "variant": "candidate",
+          "evidence_directory": "1-candidate-0",
+          "result": {
+            "waves": 3,
+            "crawlers_per_wave": 20,
+            "interval_seconds": 20,
+            "recovery_seconds": 30,
+            "crawl_rate_ceiling": 1200,
+            "search_rate": 10,
+            "short_search_percent": 1,
+            "scheduled_searches": 900,
+            "driver_dropped_searches": 0,
+            "scheduled_publishes": 90,
+            "driver_dropped_publishes": 0,
+            "short_search_422": 9,
+            "unexpected_failures": 0,
+            "completed_crawls": 60,
+            "non_short_read_successes": 80437,
+            "status": {
+              "crawl:200": 79546,
+              "observed-search:200": 891,
+              "publish:200": 90,
+              "short-search:422": 9
+            },
+            "success_latency_ms": {
+              "crawl": {
+                "count": 79546,
+                "p50_ms": 0.511709,
+                "p95_ms": 1.7335,
+                "p99_ms": 2.101916,
+                "max_ms": 501.486583
+              },
+              "observed-search": {
+                "count": 891,
+                "p50_ms": 0.339458,
+                "p95_ms": 3.23525,
+                "p99_ms": 3.753875,
+                "max_ms": 63.053125
+              },
+              "publish": {
+                "count": 90,
+                "p50_ms": 2.1985,
+                "p95_ms": 8.2765,
+                "p99_ms": 9.627792,
+                "max_ms": 9.627792
+              }
+            },
+            "cache": {
+              "HIT": 64580,
+              "MISS": 10929,
+              "STALE": 4926,
+              "UPDATING": 11
+            },
+            "app_cpu_seconds": {
+              "http://127.0.0.1:18080": 8.730645,
+              "http://127.0.0.1:18081": 8.702363
+            },
+            "origin_reads": {
+              "http://127.0.0.1:18080": 7931,
+              "http://127.0.0.1:18081": 7924
+            },
+            "clock_discontinuity_seconds": 0.0002956250000067939,
+            "valid_measurement": true,
+            "complete_metric_samples": 99,
+            "peak_completed_read_rps": 1212,
+            "pool_pending_peak_sampled": 0,
+            "pool_pending_peak_after_80s": 0,
+            "inflight_peak_sampled": 2,
+            "last_walk_finished_seconds": 66.287671458,
+            "walks_by_shape": {
+              "incremental": 6,
+              "latest": 18,
+              "all_versions": 36
+            },
+            "total_entries_read": 7950098,
+            "wave_max_walk_seconds": {
+              "0": 25.897856583,
+              "1": 31.157554417,
+              "2": 26.287671458
+            }
+          }
+        },
+        {
+          "variant": "candidate",
+          "evidence_directory": "2-candidate-0",
+          "result": {
+            "waves": 3,
+            "crawlers_per_wave": 20,
+            "interval_seconds": 20,
+            "recovery_seconds": 30,
+            "crawl_rate_ceiling": 1200,
+            "search_rate": 10,
+            "short_search_percent": 1,
+            "scheduled_searches": 900,
+            "driver_dropped_searches": 0,
+            "scheduled_publishes": 90,
+            "driver_dropped_publishes": 0,
+            "short_search_422": 9,
+            "unexpected_failures": 0,
+            "completed_crawls": 60,
+            "non_short_read_successes": 80437,
+            "status": {
+              "crawl:200": 79546,
+              "observed-search:200": 891,
+              "publish:200": 90,
+              "short-search:422": 9
+            },
+            "success_latency_ms": {
+              "crawl": {
+                "count": 79546,
+                "p50_ms": 0.515375,
+                "p95_ms": 1.76075,
+                "p99_ms": 2.174083,
+                "max_ms": 501.519041
+              },
+              "observed-search": {
+                "count": 891,
+                "p50_ms": 0.305292,
+                "p95_ms": 2.634334,
+                "p99_ms": 3.119834,
+                "max_ms": 61.255375
+              },
+              "publish": {
+                "count": 90,
+                "p50_ms": 2.344584,
+                "p95_ms": 7.936792,
+                "p99_ms": 20.259209,
+                "max_ms": 20.259209
+              }
+            },
+            "cache": {
+              "HIT": 64546,
+              "MISS": 10929,
+              "STALE": 4926,
+              "UPDATING": 45
+            },
+            "app_cpu_seconds": {
+              "http://127.0.0.1:18080": 8.889982,
+              "http://127.0.0.1:18081": 8.828911000000002
+            },
+            "origin_reads": {
+              "http://127.0.0.1:18080": 7933,
+              "http://127.0.0.1:18081": 7922
+            },
+            "clock_discontinuity_seconds": 0.00029541600000015933,
+            "valid_measurement": true,
+            "complete_metric_samples": 99,
+            "peak_completed_read_rps": 1223,
+            "pool_pending_peak_sampled": 0,
+            "pool_pending_peak_after_80s": 0,
+            "inflight_peak_sampled": 2,
+            "last_walk_finished_seconds": 66.28782225,
+            "walks_by_shape": {
+              "incremental": 6,
+              "latest": 18,
+              "all_versions": 36
+            },
+            "total_entries_read": 7950098,
+            "wave_max_walk_seconds": {
+              "0": 26.081100542,
+              "1": 31.16677675,
+              "2": 26.28782225
+            }
+          }
+        },
+        {
+          "variant": "baseline",
+          "evidence_directory": "3-baseline-0",
+          "result": {
+            "waves": 3,
+            "crawlers_per_wave": 20,
+            "interval_seconds": 20,
+            "recovery_seconds": 30,
+            "crawl_rate_ceiling": 1200,
+            "search_rate": 10,
+            "short_search_percent": 1,
+            "scheduled_searches": 900,
+            "driver_dropped_searches": 0,
+            "scheduled_publishes": 90,
+            "driver_dropped_publishes": 0,
+            "short_search_422": 0,
+            "unexpected_failures": 0,
+            "completed_crawls": 60,
+            "non_short_read_successes": 80437,
+            "status": {
+              "crawl:200": 79546,
+              "observed-search:200": 891,
+              "publish:200": 90,
+              "short-search:200": 9
+            },
+            "success_latency_ms": {
+              "crawl": {
+                "count": 79546,
+                "p50_ms": 0.519917,
+                "p95_ms": 1.833958,
+                "p99_ms": 2.274708,
+                "max_ms": 501.812833
+              },
+              "observed-search": {
+                "count": 891,
+                "p50_ms": 0.237041,
+                "p95_ms": 2.562375,
+                "p99_ms": 3.59,
+                "max_ms": 65.808541
+              },
+              "publish": {
+                "count": 90,
+                "p50_ms": 2.235208,
+                "p95_ms": 8.255625,
+                "p99_ms": 10.466458,
+                "max_ms": 10.466458
+              },
+              "short-search": {
+                "count": 9,
+                "p50_ms": 0.682833,
+                "p95_ms": 5.040041,
+                "p99_ms": 5.040041,
+                "max_ms": 5.040041
+              }
+            },
+            "cache": {
+              "HIT": 64593,
+              "MISS": 10922,
+              "STALE": 4928,
+              "UPDATING": 3
+            },
+            "app_cpu_seconds": {
+              "http://127.0.0.1:18080": 9.286302000000001,
+              "http://127.0.0.1:18081": 9.362983999999999
+            },
+            "origin_reads": {
+              "http://127.0.0.1:18080": 7923,
+              "http://127.0.0.1:18081": 7927
+            },
+            "clock_discontinuity_seconds": 0.0002956670000031636,
+            "valid_measurement": true,
+            "complete_metric_samples": 99,
+            "peak_completed_read_rps": 1214,
+            "pool_pending_peak_sampled": 0,
+            "pool_pending_peak_after_80s": 0,
+            "inflight_peak_sampled": 2,
+            "last_walk_finished_seconds": 66.297132959,
+            "walks_by_shape": {
+              "incremental": 6,
+              "latest": 18,
+              "all_versions": 36
+            },
+            "total_entries_read": 7950098,
+            "wave_max_walk_seconds": {
+              "0": 26.103166792,
+              "1": 31.141510333,
+              "2": 26.297132959
+            }
+          }
+        }
+      ],
+      "excluded_trials": [
+        {
+          "directory": "0-baseline-0",
+          "clock_discontinuity_seconds": 30.19264383300002
+        }
+      ]
+    },
+    "stress-run": {
+      "metadata": {
+        "order": [
+          "baseline",
+          "candidate"
+        ],
+        "gomaxprocs_per_app": 2,
+        "apps": 2,
+        "independent_cache_processes": 2,
+        "cache_ttl_seconds": 30,
+        "cache_lock_seconds": 5,
+        "crawlers": 200,
+        "rate_ceiling": 12000,
+        "short_search_percent": 1,
+        "postgres": "PostgreSQL 17.11 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.3.34.2), 64-bit",
+        "fixture_rows": 185001,
+        "nginx": "nginx version: nginx/1.31.8",
+        "go": "go version go1.27.3 darwin/arm64",
+        "binary_sha256": {
+          "baseline": "b716571e4b8bcdea00a346851512042acf7d82bf806973885523a5d47414ed8f",
+          "candidate": "62894b4b0bdd72b62a8144041325cbb1dc40296ba0c1d1c7c38502bebd8bbc8d"
+        },
+        "settings": {
+          "default_statistics_target": "100",
+          "max_connections": "200",
+          "plan_cache_mode": "auto",
+          "shared_buffers": "65536",
+          "work_mem": "4096"
+        },
+        "source_sha256": {
+          "tools/readbench/cache.py": "7d355a74f04a8f7555e73b4a7cf8dbabfd04ed55efeb74c816f579468395db9b",
+          "tools/readbench/compare.py": "940ab51c7b0d687bf6157fad10a9c31f8af759332d697a10db226f4e4cd225c5",
+          "tools/readbench/cycles.go": "b76c5d4442a1d588e7f721b9b0ee02c93807b31097cd7526dc9460bea4429140",
+          "tools/readbench/cycles.py": "385239ac7c7d8074133ad5593f0ad35b1b6438659f3ba70c440ad32285f3a18b",
+          "tools/readbench/cycles_test.go": "256c210e9c612474d007353ef234485f7dd71157927f3bc6e93c4e0ccd099fea",
+          "tools/readbench/fixture.go": "b7b22e0a2ab191b4ea47ef34c829ad358af3476454cdf27fef937082578f6386",
+          "tools/readbench/load.go": "c90e3ce6d72c05819367ba125e4514baed811fe828794f5e1c1815f73093944a",
+          "tools/readbench/main.go": "77cdbd7a2b9362ce49625bf93dac357742410029b2ee22fb49c12836e83a745f",
+          "tools/readbench/main_test.go": "0504ad9f947f563d3a56d16ac0f3d5365286921853ad1a3b1986c4f47c773271",
+          "tools/readbench/run-cycles.sh": "d2d13ba414e05db9f343caec662d7256b3173d45e461029a6c3ebce794c1d6ff",
+          "tools/readbench/run-local.sh": "8fdd501ef0699c857f6bd943cbd8ec2c3e1e3ec973d4824dcfbb80cf222e4977",
+          "tools/readbench/verify.py": "5d06896f3b235c6ec407d4f2e341a97cc1c4391349becaa585d7114c7c1c6f96"
+        }
+      },
+      "trials": [
+        {
+          "variant": "baseline",
+          "evidence_directory": "0-baseline-0",
+          "result": {
+            "waves": 3,
+            "crawlers_per_wave": 200,
+            "interval_seconds": 20,
+            "recovery_seconds": 30,
+            "crawl_rate_ceiling": 12000,
+            "search_rate": 100,
+            "short_search_percent": 1,
+            "scheduled_searches": 9000,
+            "driver_dropped_searches": 0,
+            "scheduled_publishes": 90,
+            "driver_dropped_publishes": 0,
+            "short_search_422": 0,
+            "unexpected_failures": 0,
+            "completed_crawls": 600,
+            "non_short_read_successes": 804370,
+            "status": {
+              "crawl:200": 795460,
+              "observed-search:200": 8910,
+              "publish:200": 90,
+              "short-search:200": 90
+            },
+            "success_latency_ms": {
+              "crawl": {
+                "count": 795460,
+                "p50_ms": 2.568959,
+                "p95_ms": 51.725708,
+                "p99_ms": 90.778125,
+                "max_ms": 666.130167
+              },
+              "observed-search": {
+                "count": 8910,
+                "p50_ms": 2.340667,
+                "p95_ms": 42.522042,
+                "p99_ms": 75.983042,
+                "max_ms": 170.059417
+              },
+              "publish": {
+                "count": 90,
+                "p50_ms": 7.311667,
+                "p95_ms": 44.787083,
+                "p99_ms": 85.040625,
+                "max_ms": 85.040625
+              },
+              "short-search": {
+                "count": 90,
+                "p50_ms": 1.970625,
+                "p95_ms": 37.756167,
+                "p99_ms": 74.442667,
+                "max_ms": 74.442667
+              }
+            },
+            "cache": {
+              "HIT": 765920,
+              "MISS": 35354,
+              "STALE": 3081,
+              "UPDATING": 105
+            },
+            "app_cpu_seconds": {
+              "http://127.0.0.1:18080": 25.342874,
+              "http://127.0.0.1:18081": 25.183979
+            },
+            "origin_reads": {
+              "http://127.0.0.1:18080": 19214,
+              "http://127.0.0.1:18081": 19221
+            },
+            "clock_discontinuity_seconds": 0.0002963749999906895,
+            "valid_measurement": true,
+            "complete_metric_samples": 99,
+            "peak_completed_read_rps": 12276,
+            "pool_pending_peak_sampled": 1,
+            "pool_pending_peak_after_80s": 0,
+            "inflight_peak_sampled": 7,
+            "last_walk_finished_seconds": 70.740391375,
+            "walks_by_shape": {
+              "incremental": 60,
+              "latest": 180,
+              "all_versions": 360
+            },
+            "total_entries_read": 79503476,
+            "wave_max_walk_seconds": {
+              "0": 34.342673875,
+              "1": 40.405421583,
+              "2": 30.740391375
+            }
+          }
+        },
+        {
+          "variant": "candidate",
+          "evidence_directory": "1-candidate-0",
+          "result": {
+            "waves": 3,
+            "crawlers_per_wave": 200,
+            "interval_seconds": 20,
+            "recovery_seconds": 30,
+            "crawl_rate_ceiling": 12000,
+            "search_rate": 100,
+            "short_search_percent": 1,
+            "scheduled_searches": 9000,
+            "driver_dropped_searches": 0,
+            "scheduled_publishes": 90,
+            "driver_dropped_publishes": 0,
+            "short_search_422": 90,
+            "unexpected_failures": 0,
+            "completed_crawls": 600,
+            "non_short_read_successes": 804370,
+            "status": {
+              "crawl:200": 795460,
+              "observed-search:200": 8910,
+              "publish:200": 90,
+              "short-search:422": 90
+            },
+            "success_latency_ms": {
+              "crawl": {
+                "count": 795460,
+                "p50_ms": 2.608416,
+                "p95_ms": 52.963583,
+                "p99_ms": 94.591916,
+                "max_ms": 611.403333
+              },
+              "observed-search": {
+                "count": 8910,
+                "p50_ms": 2.367958,
+                "p95_ms": 43.81375,
+                "p99_ms": 83.588333,
+                "max_ms": 212.945917
+              },
+              "publish": {
+                "count": 90,
+                "p50_ms": 7.464542,
+                "p95_ms": 53.502,
+                "p99_ms": 129.571833,
+                "max_ms": 129.571833
+              }
+            },
+            "cache": {
+              "HIT": 765870,
+              "MISS": 35385,
+              "STALE": 3071,
+              "UPDATING": 134
+            },
+            "app_cpu_seconds": {
+              "http://127.0.0.1:18080": 24.775988,
+              "http://127.0.0.1:18081": 24.88694
+            },
+            "origin_reads": {
+              "http://127.0.0.1:18080": 19231,
+              "http://127.0.0.1:18081": 19225
+            },
+            "clock_discontinuity_seconds": 0.00029625000000521595,
+            "valid_measurement": true,
+            "complete_metric_samples": 99,
+            "peak_completed_read_rps": 12233,
+            "pool_pending_peak_sampled": 0,
+            "pool_pending_peak_after_80s": 0,
+            "inflight_peak_sampled": 4,
+            "last_walk_finished_seconds": 70.657640458,
+            "walks_by_shape": {
+              "incremental": 60,
+              "latest": 180,
+              "all_versions": 360
+            },
+            "total_entries_read": 79503432,
+            "wave_max_walk_seconds": {
+              "0": 34.619163958,
+              "1": 40.46217375,
+              "2": 30.657640458
+            }
+          }
+        }
+      ],
+      "excluded_trials": []
+    }
+  },
+  "raw_evidence_archive_sha256": "09eab2b5a3491f2835f66cb1feede6fdb8639c996eefc7e6b7000a4f2c9e7089"
+}

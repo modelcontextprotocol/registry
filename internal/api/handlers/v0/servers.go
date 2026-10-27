@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/modelcontextprotocol/registry/internal/database"
@@ -53,12 +54,25 @@ func resolveIncludeDeleted(includeDeleted OptionalBool, hasUpdatedSince bool) (b
 	return includeDeleted.Value, nil
 }
 
+// applySearchFilter rejects invalid terms before service/database work. Empty search
+// retains listing behavior, and valid terms retain their original matching semantics.
+func applySearchFilter(filter *database.ServerFilter, search string) error {
+	if search == "" {
+		return nil
+	}
+	if utf8.RuneCountInString(strings.TrimSpace(search)) < 3 {
+		return huma.Error422UnprocessableEntity("search must contain at least 3 characters after trimming surrounding whitespace")
+	}
+	filter.SubstringName = &search
+	return nil
+}
+
 // ListServersInput represents the input for listing servers
 type ListServersInput struct {
 	Cursor         string       `query:"cursor" doc:"Pagination cursor" required:"false" example:"server-cursor-123"`
 	Limit          int          `query:"limit" doc:"Number of items per page" default:"30" minimum:"1" maximum:"100" example:"50"`
 	UpdatedSince   string       `query:"updated_since" doc:"Filter servers updated since timestamp (RFC3339 datetime)" required:"false" example:"2025-08-07T13:15:04.280Z"`
-	Search         string       `query:"search" doc:"Search servers by name (substring match)" required:"false" example:"filesystem"`
+	Search         string       `query:"search" doc:"Search servers by name (substring match); nonempty searches require at least 3 characters after trimming surrounding whitespace" required:"false" example:"filesystem"`
 	Version        string       `query:"version" doc:"Filter by version ('latest' for latest version, or an exact version like '1.2.3')" required:"false" example:"latest"`
 	IncludeDeleted OptionalBool `query:"include_deleted" doc:"Include deleted servers in results (default: false, but always true when updated_since is provided)" required:"false"`
 }
@@ -107,9 +121,8 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			}
 		}
 
-		// Handle search parameter
-		if input.Search != "" {
-			filter.SubstringName = &input.Search
+		if err := applySearchFilter(filter, input.Search); err != nil {
+			return nil, err
 		}
 
 		// Handle version parameter

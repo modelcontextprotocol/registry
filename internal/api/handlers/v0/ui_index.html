@@ -30,7 +30,7 @@
                 <input
                     type="search"
                     id="search"
-                    placeholder="Search servers by name..."
+                    placeholder="Search servers by name (at least 3 characters)..."
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     autofocus
                 >
@@ -146,6 +146,7 @@
         let currentCursor = null;
         let nextCursor = null;
         let searchTimeout = null;
+        let serverRequestSequence = 0;
         const RECENT_PREVIEW_COUNT = 6;
         let hasRecentServers = false;
         let recentExpanded = false;
@@ -337,7 +338,22 @@
 
         // Fetch servers
         async function fetchServers(cursor = null, search = '', latestOnly = null) {
+            const requestSequence = ++serverRequestSequence;
             updateRecentlyUpdatedVisibility(search, cursor);
+            document.getElementById('error').classList.add('hidden');
+            if (search !== '' && Array.from(search.trim()).length < 3) {
+                servers = [];
+                cursorHistory = [];
+                currentCursor = null;
+                nextCursor = null;
+                document.getElementById('server-cards').textContent = 'Type at least 3 characters to search.';
+                updatePagination();
+                document.getElementById('page-info').textContent = '';
+                updateURL();
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('server-list').classList.remove('hidden');
+                return;
+            }
             try {
                 if (latestOnly === null) {
                     latestOnly = document.getElementById('latest-only').checked;
@@ -350,6 +366,8 @@
 
                 const response = await fetch(url);
                 const data = await response.json();
+                if (requestSequence !== serverRequestSequence) return;
+                if (!response.ok) throw new Error(data.detail || `HTTP ${response.status}`);
 
                 servers = data.servers || [];
                 nextCursor = data.metadata?.nextCursor || null;
@@ -361,6 +379,7 @@
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('server-list').classList.remove('hidden');
             } catch (err) {
+                if (requestSequence !== serverRequestSequence) return;
                 showError('Failed to load servers: ' + err.message);
             }
         }
