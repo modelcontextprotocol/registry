@@ -56,19 +56,19 @@ were approximately 50/50 across the app replicas.
   unchanged app resources/environment; their SHA-256 was verified before launch.
 
 The original **100-second observation** was retained in the initial experiments.
-A crawl-only control with no searches still completed only24/30 walks by that
+A crawl-only control with no searches still completed only 24/30 walks by that
 cutoff, despite a peak of one pool waiter and publish p95 of 91 ms. Its remaining
 six default 30-page walks were still progressing. Therefore the repeated suite
 extended only observation to 180 seconds. Search arrivals, 90 publishes, crawl waves,
-the crawl pacing ceiling and each request's10-second deadline were unchanged.
+the crawl pacing ceiling and each request's 10-second deadline were unchanged.
 Searches still had to complete within their original deadlines; the extra time
 only observed outstanding walks and recovery. Original cutoff failures remain in
 the machine-readable results and are not reclassified as successful requests.
 
 ## Why the fix helps
 
-The old broad plans visited roughly39,000 cached database blocks while rejecting
-about42,000 names before the first page. A covering ordered index permits the key
+The old broad plans visited roughly 39,000 cached database blocks while rejecting
+about 42,000 names before the first page. A covering ordered index permits the key
 selection to reject names without heap visits; the payload join fetches only the
 requested page, within the same SQL statement and MVCC snapshot. A second covering
 index handles the existing namespace-suffix predicate without combining a large
@@ -90,16 +90,16 @@ was caused by generic plans: expensive custom broad scans were also observed.
 
 ## Rejected experiments and limits
 
-At1.5 CPU, simple key-first lookup completed8,454/12,000 searches, the extra-index
-variant7,797, the materialized variant without parameter-specific planning6,268,
-and the final query variant9,366. Each failed the offered-work gate. A separate
-max 8/min 2 pool experiment completed7,393; a smaller pool alone was not sufficient.
+At 1.5 CPU, simple key-first lookup completed 8,454/12,000 searches, the extra-index
+variant 7,797, the materialized variant without parameter-specific planning 6,268,
+and the final query variant 9,366. Each failed the offered-work gate. A separate
+max 8/min 2 pool experiment completed 7,393; a smaller pool alone was not sufficient.
 These exploratory runs changed different factors and are not an isolated causal
 comparison of pool sizes. The pool remains max 60/min 10 per app.
 
-With3 CPU and the original100-second cutoff, the final candidate completed all
-12,000 searches and90 publishes with zero search drops/failures, while15/30 walks
-finished before cutoff. The repeated180-second comparison above then verified
+With 3 CPU and the original 100-second cutoff, the final candidate completed all
+12,000 searches and 90 publishes with zero search drops/failures, while 15/30 walks
+finished before cutoff. The repeated 180-second comparison above then verified
 complete walks and recovery, without increasing offered traffic.
 
 This validates the specified burst on this fixed corpus and infrastructure, not
@@ -107,22 +107,22 @@ unlimited future traffic or a captured replay of every production client. Broad
 substring filtering still performs work proportional to the names examined;
 larger datasets or substantially higher uncached search rates need new capacity
 measurements. The first control followed a database restart; the second control
-was warm and still dropped3,284 searches. Candidate-only diagnostics and initial
+was warm and still dropped 3,284 searches. Candidate-only diagnostics and initial
 screening runs are not mixed into the primary comparison.
 
 ## Rollout
 
 Prebuild and verify both migration 017 indexes concurrently on production before
 application migration; see [deployment instructions](../../deploy/README.md#search-page-covering-index).
-The tested production promotion must include the3-CPU database budget; the code
-change alone at 1.5 CPU was insufficient. This PR opts staging into3 CPU and adds an
-optional setting with a1.5 CPU default, leaving production configuration unchanged.
+The tested production promotion must include the 3-CPU database budget; the code
+change alone at 1.5 CPU was insufficient. This PR opts staging into 3 CPU and adds an
+optional setting with a 1.5 CPU default, leaving production configuration unchanged.
 Changing the current singleton's resources causes a managed restart and needs an
 explicit rollout plan. The node types/count, memory, storage and pools stay fixed.
 
 After validation, temporary drivers, cache-bypass annotations, diagnostic settings
 and test publications were removed, and staging was restored to its previous
-application and1.5 CPU quota. No production writes, release or promotion occurred
+application and 1.5 CPU quota. No production writes, release or promotion occurred
 as part of these experiments. Staging's permanent node/ingress parity was retained.
 
 Machine-readable results: [2026-10-27-staging-search.json](results/2026-10-27-staging-search.json).
