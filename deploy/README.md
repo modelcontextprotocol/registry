@@ -160,10 +160,11 @@ period before concluding that the disk upgrade resolved the observed stalls.
 ### Node CPU capacity
 
 `mcp-registry:nodeMachineType` selects the GCP node machine type independently
-for each stack; it defaults to `e2-standard-2`. Set it in
-`Pulumi.gcpProd.yaml` to promote additional production capacity while leaving
-staging at its existing size. The node count and boot-disk configuration are
-unchanged by this setting.
+for each stack; it defaults to `e2-standard-2`. Both `Pulumi.gcpProd.yaml` and
+`Pulumi.gcpStaging.yaml` explicitly use `e2-standard-4`. Staging also runs two
+ingress replicas so performance tests match production's node capacity and
+independent caches. The node count and boot-disk configuration are unchanged
+by this setting. Staging retains this capacity between test runs.
 
 Changing machine type recreates nodes using the surge settings above. Preview
 both stacks and require an update of the intended node pool, not replacement
