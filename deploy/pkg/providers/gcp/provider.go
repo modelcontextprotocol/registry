@@ -277,6 +277,14 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 
 	// Add provider if we have explicit credentials
 	nodePoolOpts := []pulumi.ResourceOption{}
+	if config.New(ctx, "mcp-registry").GetBool("burstAutoscaling") {
+		nodePoolArgs.Autoscaling = &container.NodePoolAutoscalingArgs{
+			MinNodeCount: pulumi.IntPtr(2),
+			MaxNodeCount: pulumi.IntPtr(4),
+		}
+		// The autoscaler owns the live count. Always refresh before updating.
+		nodePoolOpts = append(nodePoolOpts, pulumi.IgnoreChanges([]string{"nodeCount"}))
+	}
 	if gcpProvider != nil {
 		nodePoolOpts = append(nodePoolOpts, pulumi.Provider(gcpProvider))
 	}

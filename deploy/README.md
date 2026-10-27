@@ -632,3 +632,84 @@ kubectl logs -l app=postgres
 kubectl describe schedule.k8up.io 
 kubectl get backup
 ```
+
+### Burst capacity (staging validation)
+
+This is an experimental configuration, not an approved production fix. In the
+2026-10-27 staging comparison, CPU reservation protected database readiness, but
+ingress/node scaling alone left long application pool queues and publish
+timeouts. Adding a 60-second client connection lifetime did not resolve those
+failures. The ingress HPA could remain below its average CPU target while the
+database node was saturated and the app on that node queued requests. Do not
+enable this in production without a successful end-to-end burst validation.
+See `tools/ingressbench/VALIDATION.md` for the measured comparison and limitations.
+
+`mcp-registry:burstAutoscaling` opts a hosted stack into ingress and GKE node
+scaling. It is enabled in staging for validation; production keeps its existing
+configuration until a separate promotion. Application replicas and their
+connection pools stay fixed at two replicas, each with a maximum of 60 connections.
+
+| Setting | Fixed baseline | With burst capacity |
+| --- | --- | --- |
+| GKE nodes | 2 | 2–4, same machine type |
+| Ingress controllers | 2 | 2–6 |
+| Ingress CPU request | 300m | 800m, no CPU limit |
+| Ingress memory request | 90 MiB | 512 MiB |
+| Registry DB CPU request | 200m | Configurable separately with `postgresCPURequest` |
+| Registry DB CPU limit | 3 | Unchanged |
+
+The HPA targets 88% of the 800m ingress request (704m), including work serving
+cache hits. The request leaves room for the 2-CPU database and existing system
+workloads on a baseline node; a 1-CPU ingress request did not fit that placement.
+A rolling-update surge can still require a temporary extra node. Scale-up allows
+two additional controllers per minute. Scale-down waits
+for a ten-minute stabilization window, then removes at most one controller every
+two minutes. These are bounds, not a guarantee of immediate capacity: metric
+collection, pending-pod detection, node provisioning, readiness and load-balancer
+health checks all add delay. The cluster autoscaler adds nodes for unschedulable
+pods; high node CPU alone does not trigger it. It can remove spare nodes later,
+subject to pod placement, disruption budgets and its own delays.
+
+Both singleton PostgreSQL clusters inherit `safe-to-evict=false` on their pods
+and enable CloudNativePG disruption budgets. This protects them from voluntary
+autoscaler eviction, not node failure, operator restarts or manual deletion.
+It can also block node maintenance; plan explicit database interruption when
+upgrading nodes. Two protected database placements can constrain the minimum
+node count. Verify actual scale-down rather than assuming the cluster reaches two.
+
+`postgresCPURequest` reserves scheduling capacity and increases relative CPU
+shares under contention. It is not a dedicated-core guarantee. Raising the
+request can restart the singleton database, and the request must fit beneath
+its CPU limit and alongside other workloads. Validate a request of 2 CPUs in
+staging before promoting it. The initial staging rollout interrupted application
+readiness while the singleton database restarted and moved to a new node. Plan
+that interruption explicitly; ensure spare schedulable capacity is ready before
+changing the database request. Memory, buffers, connection limits and readiness
+thresholds are unchanged.
+
+Each ingress has an independent cache. New replicas start cold and can increase
+origin traffic before warming. Existing client connections may stay on older
+replicas. With burst capacity enabled, client connections have a 60-second
+active lifetime (`keepalive_time`); NGINX finishes the current request before
+closing so clients can reconnect to newly added capacity. This differs from the
+idle keep-alive timeout and does not abort a long-running request at 60 seconds.
+It adds connection/TLS setup work, so validate both HTTP/1.1 and HTTP/2.
+Rate limits are also per controller, so the aggregate allowance for a
+client can rise as replicas are added; this does not introduce a global limiter.
+Ingress metrics are scraped per pod every 30 seconds when burst capacity is on,
+so cache-serving demand is visible separately from application arrivals. Cache
+outcomes still require response headers or the existing ingress logs.
+
+Before an update, refresh Pulumi state and inspect the full preview. The node
+pool must update in place. Pulumi ignores `nodeCount` and ingress `spec.replicas`
+while autoscaling is enabled, so subsequent deploys do not reset controller-owned
+counts. Verify this again with a preview while scaled out. A configuration-map
+replacement for the metrics scrape config is expected.
+
+Validate the same sustained workload before and after: per-replica demand,
+cache misses, listing and publish latency, errors, pool queues, PostgreSQL CPU
+pressure/throttling, readiness, pending pods and node allocation. Require both
+scale-up under load and recovery/scale-down after it stops. Do not promote based
+on a quiet run or a synthetic workload that fails to reproduce the failure.
+To disable autoscaling, remove the opt-in and preview the transition back to
+fixed counts; scale-in and a database request rollback may interrupt service.

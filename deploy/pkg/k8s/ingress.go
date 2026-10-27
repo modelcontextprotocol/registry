@@ -1,8 +1,6 @@
 package k8s
 
 import (
-	"strings"
-
 	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -18,6 +16,8 @@ import (
 const registryIngressLogFormat = `$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id cache_status="$upstream_cache_status" scheme="$scheme" host="$host" ingress_pod="$hostname" upstream_connect_time="$upstream_connect_time" upstream_header_time="$upstream_header_time" completed_at="$msec"`
 
 // SetupIngressController sets up the NGINX Ingress Controller
+//
+//nolint:goconst // Keep Kubernetes and Helm schema keys literal.
 func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*helm.Chart, error) {
 	conf := config.New(ctx, "mcp-registry")
 	provider := conf.Get("provider")
@@ -74,6 +74,25 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		}}
 	}
 
+	// Enable this only after the same stack opts into node autoscaling. Keep
+	// existing environments unchanged until their explicit promotion.
+	burstAutoscaling := config.New(ctx, "mcp-registry").GetBool("burstAutoscaling")
+	ingressMemoryRequest := "90Mi"
+	clientKeepaliveSnippet := ""
+	autoscaling := pulumi.Map{"enabled": pulumi.Bool(false)}
+	chartOptions := []pulumi.ResourceOption{pulumi.Provider(cluster.Provider)}
+	if burstAutoscaling {
+		ingressCPURequest = "800m"
+		ingressMemoryRequest = "512Mi"
+		// Bound active connection age so added controllers can receive existing
+		// client traffic. NGINX finishes the current request before closing.
+		clientKeepaliveSnippet = "keepalive_time 60s;\n"
+		autoscaling = ingressAutoscalingValues()
+		// HPA owns replicas. Refresh before updates so the checkpoint follows
+		// the controller rather than resetting a scaled Deployment to two.
+		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{burstResourceTransform}))
+	}
+
 	// Install NGINX Ingress Controller
 	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
@@ -85,10 +104,12 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
 				"replicaCount": pulumi.Int(replicaCount),
+				"autoscaling":  autoscaling,
+				"metrics":      pulumi.Map{"enabled": pulumi.Bool(burstAutoscaling)},
 				"resources": pulumi.Map{
 					"requests": pulumi.StringMap{
 						"cpu":    pulumi.String(ingressCPURequest),
-						"memory": pulumi.String("90Mi"),
+						"memory": pulumi.String(ingressMemoryRequest),
 					},
 				},
 				"topologySpreadConstraints": spreadConstraints,
@@ -125,7 +146,7 @@ map "$request_method:$uri" $registry_read_cache_zone {
     default off;
     ~^GET:/v0(?:\.1)?/servers$ registry_read_cache;
 }
-`),
+` + clientKeepaliveSnippet),
 					"location-snippet": pulumi.String(`
 proxy_cache $registry_read_cache_zone;
 proxy_cache_key "$scheme$request_method$host$request_uri";
@@ -151,7 +172,7 @@ add_header X-Registry-Cache $upstream_cache_status always;
 				},
 			},
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, chartOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,9 +182,7 @@ add_header X-Registry-Cache $upstream_cache_status always;
 		// Look for the ingress-nginx-controller service
 		resourceMap := resources.(map[string]pulumi.Resource)
 		for resourceName, resource := range resourceMap {
-			if strings.Contains(resourceName, "ingress-nginx-controller") &&
-				!strings.Contains(resourceName, "admission") &&
-				strings.Contains(resourceName, "Service") {
+			if resourceName == "v1/Service::ingress-nginx/ingress-nginx-controller" {
 				if svc, ok := resource.(*v1.Service); ok {
 					// Return the LoadBalancer ingress IPs
 					return svc.Status.LoadBalancer().Ingress().ApplyT(func(ingresses []v1.LoadBalancerIngress) []string {

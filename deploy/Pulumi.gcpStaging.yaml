@@ -14,4 +14,6 @@ config:
     secure: v1:0NSeI0qWrdcHeVfh:P56IEP/700/e839TSbF7Ns2j2orZnD5cRNXohjxCPOKyIDYn+0bmiTuk8pyFnFk8WibS/w7M2FFgv3/BL0Djo0XMVe9tq+7HjLN4tPEJnCU=
   mcp-registry:googleOauthClientSecret:
     secure: v1:MfA48Ri4VssQwUi7:TUF9sBGIgTnBUhePfEF7L+h1VVn5e6j2uGLbOwbGbjyBO9Z72SKC+z/21xHmJtqUSr2t
+  mcp-registry:burstAutoscaling: "true"
+  mcp-registry:postgresCPURequest: "2"
 encryptionsalt: v1:EKBwmTmss1c=:v1:JLd4a7cM0X8Jroh+:z9/q6RSCEFTDzMV6X6h5Tpbw0tnpkA==

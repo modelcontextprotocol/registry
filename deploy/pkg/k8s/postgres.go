@@ -12,6 +12,8 @@ import (
 )
 
 // DeployPostgresDatabases deploys the CloudNative PostgreSQL operator and PostgreSQL cluster
+//
+//nolint:goconst // Keep Kubernetes and Helm schema keys literal.
 func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string) (*apiextensions.CustomResource, error) {
 	// Create cnpg-system namespace
 	cnpgNamespace, err := corev1.NewNamespace(ctx, "cnpg-system", &corev1.NamespaceArgs{
@@ -58,6 +60,11 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 		cpuLimit = "1500m"
 	}
 
+	cpuRequest := config.New(ctx, "mcp-registry").Get("postgresCPURequest")
+	if cpuRequest == "" {
+		cpuRequest = "200m"
+	}
+
 	pgCluster, err := apiextensions.NewCustomResource(ctx, "registry-pg", &apiextensions.CustomResourceArgs{
 		ApiVersion: pulumi.String("postgresql.cnpg.io/v1"),
 		Kind:       pulumi.String("Cluster"),
@@ -70,7 +77,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 			},
 		},
 		OtherFields: map[string]any{
-			"spec": map[string]any{
+			"spec": protectDatabase(ctx, map[string]any{
 				"instances": 1,
 				"enablePDB": false,
 				"storage": map[string]any{
@@ -82,7 +89,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 				"resources": map[string]any{
 					"requests": map[string]any{
 						"memory": "512Mi",
-						"cpu":    "200m",
+						"cpu":    cpuRequest,
 					},
 					"limits": map[string]any{
 						"memory": "4Gi",
@@ -112,7 +119,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 						},
 					},
 				},
-			},
+			}),
 		},
 	}, pulumi.Provider(cluster.Provider), pulumi.DependsOnInputs(cloudNativePG.Ready), pulumi.RetainOnDelete(true))
 	if err != nil {
