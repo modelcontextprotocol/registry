@@ -51,6 +51,12 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 	if sharedBuffers := config.New(ctx, "mcp-registry").Get("postgresSharedBuffers"); sharedBuffers != "" {
 		parameters["shared_buffers"] = sharedBuffers
 	}
+	// Keep existing stacks unchanged unless they opt into a tested CPU budget.
+	// This changes the container quota, not the node count or machine type.
+	cpuLimit := config.New(ctx, "mcp-registry").Get("postgresCPULimit")
+	if cpuLimit == "" {
+		cpuLimit = "1500m"
+	}
 
 	pgCluster, err := apiextensions.NewCustomResource(ctx, "registry-pg", &apiextensions.CustomResourceArgs{
 		ApiVersion: pulumi.String("postgresql.cnpg.io/v1"),
@@ -80,7 +86,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 					},
 					"limits": map[string]any{
 						"memory": "4Gi",
-						"cpu":    "1500m",
+						"cpu":    cpuLimit,
 					},
 				},
 				// Enable pg_stat_statements so we can attribute slow time to specific

@@ -1,0 +1,1348 @@
+{
+  "scope": "fixed production-data snapshot187108versions52366names; two e2-standard-4 nodes, two apps and ingress caches; pool60/min10 except pool8 experiment; no production mutation",
+  "original_workload": "200uncachedsearches/s for60s,30walks in3waves0/20/40s,90publishes at1/s; both APIs and page sizes30/50/96/100; real cursors",
+  "extended_observation": "Only hard observation deadline increased from100to180seconds; offered searches,publishes,waves and per-request10s deadlines unchanged. Crawl-only control completed24/30within100seconds with peak1poolwaiter. Original cutoff failures preserved.",
+  "rows": [
+    {
+      "trial": "screen-v1",
+      "description": "key-first; covering ordered index; automatic plans; pool60; CPU1.5",
+      "observation_seconds": 100,
+      "offered_searches": 12000,
+      "successful_searches": 8454,
+      "dropped_searches": 3544,
+      "completed_walks": 9,
+      "total_walks": 30,
+      "crawl_pages": 37151,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 14,
+      "latency": {
+        "crawl": {
+          "count": 37151,
+          "p50_ms": 20.885292,
+          "p95_ms": 398.65286,
+          "p99_ms": 574.707303,
+          "max_ms": 5301.772643
+        },
+        "diverse-search/absent": {
+          "count": 500,
+          "p50_ms": 1405.397573,
+          "p95_ms": 1838.067865,
+          "p99_ms": 2058.059935,
+          "max_ms": 7879.07435
+        },
+        "diverse-search/common": {
+          "count": 1095,
+          "p50_ms": 3790.48946,
+          "p95_ms": 5923.227919,
+          "p99_ms": 6701.40774,
+          "max_ms": 9653.76043
+        },
+        "diverse-search/full-name": {
+          "count": 4205,
+          "p50_ms": 1263.510509,
+          "p95_ms": 3559.680588,
+          "p99_ms": 4862.362651,
+          "max_ms": 8532.636706
+        },
+        "diverse-search/namespace": {
+          "count": 499,
+          "p50_ms": 1310.712821,
+          "p95_ms": 1776.407425,
+          "p99_ms": 2049.918925,
+          "max_ms": 6928.797429
+        },
+        "diverse-search/numeric": {
+          "count": 557,
+          "p50_ms": 1736.43912,
+          "p95_ms": 2563.622612,
+          "p99_ms": 2904.692877,
+          "max_ms": 9622.945354
+        },
+        "diverse-search/sparse": {
+          "count": 1598,
+          "p50_ms": 1344.727417,
+          "p95_ms": 1946.558522,
+          "p99_ms": 2356.781134,
+          "max_ms": 7787.810751
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 528.392188,
+          "p95_ms": 1144.364818,
+          "p99_ms": 1521.498974,
+          "max_ms": 1521.498974
+        }
+      },
+      "status": {
+        "crawl:0": 12,
+        "crawl:200": 37151,
+        "diverse-search/absent:200": 500,
+        "diverse-search/common:0": 2,
+        "diverse-search/common:200": 1095,
+        "diverse-search/full-name:200": 4205,
+        "diverse-search/namespace:200": 499,
+        "diverse-search/numeric:200": 557,
+        "diverse-search/sparse:200": 1598,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 90,
+      "last_complete_sample": {
+        "second": 99.000225894,
+        "Pending": 0,
+        "Inflight": 0,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 117.66991,
+      "database_throttled_periods": 635,
+      "database_periods": 1032,
+      "generator_cpu_seconds": 83.462877,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 11691,
+        "http://127.0.0.1:18081": 11689
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 42.08,
+        "http://127.0.0.1:18081": 42.48
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        36.216901066,
+        56.291764414,
+        56.294601304,
+        76.387221335,
+        36.560282148,
+        76.77335454,
+        82.110481638,
+        63.584686265,
+        44.913890407
+      ]
+    },
+    {
+      "trial": "screen-v2",
+      "description": "key-first; ordered/latest/namespace covering indexes; automatic plans; pool60; CPU1.5",
+      "observation_seconds": 100,
+      "offered_searches": 12000,
+      "successful_searches": 7797,
+      "dropped_searches": 4202,
+      "completed_walks": 9,
+      "total_walks": 30,
+      "crawl_pages": 36957,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 15,
+      "latency": {
+        "crawl": {
+          "count": 36957,
+          "p50_ms": 20.846375,
+          "p95_ms": 408.379087,
+          "p99_ms": 592.258642,
+          "max_ms": 5052.244839
+        },
+        "diverse-search/absent": {
+          "count": 469,
+          "p50_ms": 1515.363967,
+          "p95_ms": 2083.674711,
+          "p99_ms": 2560.998358,
+          "max_ms": 5907.517654
+        },
+        "diverse-search/common": {
+          "count": 990,
+          "p50_ms": 3634.571299,
+          "p95_ms": 6201.467753,
+          "p99_ms": 6832.769532,
+          "max_ms": 8720.947166
+        },
+        "diverse-search/full-name": {
+          "count": 3897,
+          "p50_ms": 1316.338457,
+          "p95_ms": 1973.962781,
+          "p99_ms": 4283.488645,
+          "max_ms": 9122.975648
+        },
+        "diverse-search/namespace": {
+          "count": 472,
+          "p50_ms": 1396.605431,
+          "p95_ms": 1883.585222,
+          "p99_ms": 2109.594069,
+          "max_ms": 6126.569242
+        },
+        "diverse-search/numeric": {
+          "count": 473,
+          "p50_ms": 5402.317352,
+          "p95_ms": 8047.114599,
+          "p99_ms": 8911.849954,
+          "max_ms": 9670.686129
+        },
+        "diverse-search/sparse": {
+          "count": 1496,
+          "p50_ms": 1419.887455,
+          "p95_ms": 2066.308401,
+          "p99_ms": 2418.459621,
+          "max_ms": 5836.144661
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 468.944996,
+          "p95_ms": 1162.860329,
+          "p99_ms": 1393.846892,
+          "max_ms": 1393.846892
+        }
+      },
+      "status": {
+        "crawl:0": 14,
+        "crawl:200": 36957,
+        "diverse-search/absent:200": 469,
+        "diverse-search/common:200": 990,
+        "diverse-search/full-name:200": 3897,
+        "diverse-search/namespace:200": 472,
+        "diverse-search/numeric:0": 1,
+        "diverse-search/numeric:200": 473,
+        "diverse-search/sparse:200": 1496,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 80,
+      "last_complete_sample": {
+        "second": 99.000469833,
+        "Pending": 0,
+        "Inflight": 0,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 118.110132,
+      "database_throttled_periods": 637,
+      "database_periods": 1034,
+      "generator_cpu_seconds": 82.725288,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 11345,
+        "http://127.0.0.1:18081": 11360
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 41.72,
+        "http://127.0.0.1:18081": 40.239999999999995
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        56.664594747,
+        36.667940527,
+        76.68163132,
+        76.872528252,
+        37.031992691,
+        57.23470261,
+        82.455901874,
+        63.524979897,
+        45.647281166
+      ]
+    },
+    {
+      "trial": "screen-v3",
+      "description": "materialized key batch; ordered/namespace covering indexes; automatic plans; pool60; CPU1.5",
+      "observation_seconds": 100,
+      "offered_searches": 12000,
+      "successful_searches": 6268,
+      "dropped_searches": 5600,
+      "completed_walks": 9,
+      "total_walks": 30,
+      "crawl_pages": 33614,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 150,
+      "latency": {
+        "crawl": {
+          "count": 33614,
+          "p50_ms": 21.152352,
+          "p95_ms": 501.344895,
+          "p99_ms": 872.902423,
+          "max_ms": 5087.50246
+        },
+        "diverse-search/absent": {
+          "count": 323,
+          "p50_ms": 1889.82816,
+          "p95_ms": 7397.678037,
+          "p99_ms": 9256.154247,
+          "max_ms": 9783.575784
+        },
+        "diverse-search/common": {
+          "count": 766,
+          "p50_ms": 4232.127869,
+          "p95_ms": 7322.290498,
+          "p99_ms": 8700.943457,
+          "max_ms": 9665.86086
+        },
+        "diverse-search/full-name": {
+          "count": 3214,
+          "p50_ms": 1664.500496,
+          "p95_ms": 2756.033715,
+          "p99_ms": 5414.683952,
+          "max_ms": 9124.630406
+        },
+        "diverse-search/namespace": {
+          "count": 394,
+          "p50_ms": 1686.784982,
+          "p95_ms": 2510.259467,
+          "p99_ms": 4500.970652,
+          "max_ms": 6441.430585
+        },
+        "diverse-search/numeric": {
+          "count": 397,
+          "p50_ms": 2661.295178,
+          "p95_ms": 8098.65435,
+          "p99_ms": 9419.286608,
+          "max_ms": 9600.586381
+        },
+        "diverse-search/sparse": {
+          "count": 1174,
+          "p50_ms": 1757.076942,
+          "p95_ms": 3229.531538,
+          "p99_ms": 8518.467353,
+          "max_ms": 9923.799157
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 486.160623,
+          "p95_ms": 1569.767623,
+          "p99_ms": 3174.729962,
+          "max_ms": 3174.729962
+        }
+      },
+      "status": {
+        "crawl:0": 18,
+        "crawl:200": 33614,
+        "diverse-search/absent:0": 59,
+        "diverse-search/absent:200": 323,
+        "diverse-search/common:0": 2,
+        "diverse-search/common:200": 766,
+        "diverse-search/full-name:200": 3214,
+        "diverse-search/namespace:200": 394,
+        "diverse-search/numeric:0": 4,
+        "diverse-search/numeric:200": 397,
+        "diverse-search/sparse:0": 67,
+        "diverse-search/sparse:200": 1174,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 81,
+      "last_complete_sample": {
+        "second": 99.000280163,
+        "Pending": 0,
+        "Inflight": 0,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 122.390529,
+      "database_throttled_periods": 656,
+      "database_periods": 1024,
+      "generator_cpu_seconds": 75.614674,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 10039,
+        "http://127.0.0.1:18081": 10058
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 40.49,
+        "http://127.0.0.1:18081": 38.44
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        80.992772199,
+        61.093029197,
+        41.235948051,
+        81.251341965,
+        61.282100874,
+        41.285977318,
+        86.452166015,
+        67.663076614,
+        48.608658788
+      ]
+    },
+    {
+      "trial": "screen-pool8",
+      "description": "key-first; ordered/namespace covering indexes; automatic plans; pool8/min2; CPU1.5",
+      "observation_seconds": 100,
+      "offered_searches": 12000,
+      "successful_searches": 7393,
+      "dropped_searches": 4607,
+      "completed_walks": 9,
+      "total_walks": 30,
+      "crawl_pages": 32905,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 17,
+      "latency": {
+        "crawl": {
+          "count": 32905,
+          "p50_ms": 21.841209,
+          "p95_ms": 65.64489,
+          "p99_ms": 1812.780578,
+          "max_ms": 2505.592376
+        },
+        "diverse-search/absent": {
+          "count": 472,
+          "p50_ms": 2195.138527,
+          "p95_ms": 3298.231256,
+          "p99_ms": 4215.040867,
+          "max_ms": 4471.057658
+        },
+        "diverse-search/common": {
+          "count": 887,
+          "p50_ms": 2028.730544,
+          "p95_ms": 3562.611335,
+          "p99_ms": 3748.360345,
+          "max_ms": 3904.78235
+        },
+        "diverse-search/full-name": {
+          "count": 3711,
+          "p50_ms": 1536.532066,
+          "p95_ms": 3156.382341,
+          "p99_ms": 3312.829079,
+          "max_ms": 3664.817347
+        },
+        "diverse-search/namespace": {
+          "count": 477,
+          "p50_ms": 1544.019646,
+          "p95_ms": 3135.995714,
+          "p99_ms": 3274.816722,
+          "max_ms": 3391.702073
+        },
+        "diverse-search/numeric": {
+          "count": 447,
+          "p50_ms": 2356.024078,
+          "p95_ms": 3855.944292,
+          "p99_ms": 4186.929494,
+          "max_ms": 4409.156862
+        },
+        "diverse-search/sparse": {
+          "count": 1399,
+          "p50_ms": 1585.100232,
+          "p95_ms": 3185.605324,
+          "p99_ms": 3855.102941,
+          "max_ms": 4702.300111
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 142.564733,
+          "p95_ms": 1949.724269,
+          "p99_ms": 2045.802613,
+          "max_ms": 2045.802613
+        }
+      },
+      "status": {
+        "crawl:0": 17,
+        "crawl:200": 32905,
+        "diverse-search/absent:200": 472,
+        "diverse-search/common:200": 887,
+        "diverse-search/full-name:200": 3711,
+        "diverse-search/namespace:200": 477,
+        "diverse-search/numeric:200": 447,
+        "diverse-search/sparse:200": 1399,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 136,
+      "last_complete_sample": {
+        "second": 99.000281189,
+        "Pending": 0,
+        "Inflight": 1,
+        "Acquired": 1,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 117.636117,
+      "database_throttled_periods": 624,
+      "database_periods": 1018,
+      "generator_cpu_seconds": 75.035163,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 10148,
+        "http://127.0.0.1:18081": 10192
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 39.74,
+        "http://127.0.0.1:18081": 40.81
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        80.567256053,
+        60.6872415,
+        40.738965179,
+        61.501387372,
+        81.629789599,
+        41.914215952,
+        87.191451009,
+        67.194345531,
+        47.893770832
+      ]
+    },
+    {
+      "trial": "screen-v4",
+      "description": "materialized key batch; ordered/namespace covering indexes; parameter-specific plans; pool60; CPU1.5",
+      "observation_seconds": 100,
+      "offered_searches": 12000,
+      "successful_searches": 9366,
+      "dropped_searches": 2634,
+      "completed_walks": 9,
+      "total_walks": 30,
+      "crawl_pages": 37257,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 10,
+      "latency": {
+        "crawl": {
+          "count": 37257,
+          "p50_ms": 21.284278,
+          "p95_ms": 400.185916,
+          "p99_ms": 616.119945,
+          "max_ms": 4989.517756
+        },
+        "diverse-search/absent": {
+          "count": 559,
+          "p50_ms": 1388.38082,
+          "p95_ms": 2009.868721,
+          "p99_ms": 2407.37452,
+          "max_ms": 5516.082243
+        },
+        "diverse-search/common": {
+          "count": 1205,
+          "p50_ms": 3628.727167,
+          "p95_ms": 5983.601025,
+          "p99_ms": 6407.007784,
+          "max_ms": 8833.301526
+        },
+        "diverse-search/full-name": {
+          "count": 4684,
+          "p50_ms": 1131.519803,
+          "p95_ms": 1867.664642,
+          "p99_ms": 4110.20246,
+          "max_ms": 5580.034798
+        },
+        "diverse-search/namespace": {
+          "count": 566,
+          "p50_ms": 1216.005935,
+          "p95_ms": 1703.93494,
+          "p99_ms": 1908.433792,
+          "max_ms": 3244.539608
+        },
+        "diverse-search/numeric": {
+          "count": 622,
+          "p50_ms": 1766.395663,
+          "p95_ms": 2570.062513,
+          "p99_ms": 2902.684396,
+          "max_ms": 5053.51022
+        },
+        "diverse-search/sparse": {
+          "count": 1730,
+          "p50_ms": 1269.057294,
+          "p95_ms": 1953.39995,
+          "p99_ms": 2306.016167,
+          "max_ms": 5713.009477
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 532.561089,
+          "p95_ms": 1153.476437,
+          "p99_ms": 5650.816925,
+          "max_ms": 5650.816925
+        }
+      },
+      "status": {
+        "crawl:0": 10,
+        "crawl:200": 37257,
+        "diverse-search/absent:200": 559,
+        "diverse-search/common:200": 1205,
+        "diverse-search/full-name:200": 4684,
+        "diverse-search/namespace:200": 566,
+        "diverse-search/numeric:200": 622,
+        "diverse-search/sparse:200": 1730,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 71,
+      "last_complete_sample": {
+        "second": 99.000154622,
+        "Pending": 0,
+        "Inflight": 3,
+        "Acquired": 1,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 116.549424,
+      "database_throttled_periods": 624,
+      "database_periods": 1017,
+      "generator_cpu_seconds": 84.750073,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 12184,
+        "http://127.0.0.1:18081": 12191
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 42.75,
+        "http://127.0.0.1:18081": 43.75
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        75.425672221,
+        35.536556586,
+        55.722471767,
+        56.62088093,
+        36.66428207,
+        76.80293523,
+        81.900761611,
+        62.946549055,
+        44.916295794
+      ]
+    },
+    {
+      "trial": "crawl-only",
+      "description": "candidate v4; CPU1.5; no searches; same walks/publishes",
+      "observation_seconds": 100,
+      "offered_searches": 0,
+      "successful_searches": 0,
+      "dropped_searches": 0,
+      "completed_walks": 24,
+      "total_walks": 30,
+      "crawl_pages": 74480,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 5,
+      "latency": {
+        "crawl": {
+          "count": 74480,
+          "p50_ms": 14.122688,
+          "p95_ms": 41.955824,
+          "p99_ms": 65.239044,
+          "max_ms": 517.332646
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 38.838852,
+          "p95_ms": 90.884104,
+          "p99_ms": 108.864098,
+          "max_ms": 108.864098
+        }
+      },
+      "status": {
+        "crawl:0": 5,
+        "crawl:200": 74480,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 1,
+      "last_complete_sample": {
+        "second": 99.000458109,
+        "Pending": 0,
+        "Inflight": 1,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 81.705386,
+      "database_throttled_periods": 18,
+      "database_periods": 1021,
+      "generator_cpu_seconds": 135.388447,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 22109,
+        "http://127.0.0.1:18081": 22107
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 85.45,
+        "http://127.0.0.1:18081": 88.57000000000001
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        11.982106363,
+        12.029441362,
+        12.752276536,
+        24.455916268,
+        9.119368622,
+        9.428073372,
+        18.462515867,
+        30.775502676,
+        54.545229317,
+        54.764106145,
+        15.501888001,
+        15.845683621,
+        39.703050355,
+        39.885312047,
+        28.569370198,
+        37.496695938,
+        42.84717025,
+        43.217477968,
+        88.991299337,
+        69.128669139,
+        89.471003174,
+        69.652285842,
+        56.017887416,
+        56.151106597
+      ]
+    },
+    {
+      "trial": "screen-v4-cpu3",
+      "description": "candidate v4; pool60; CPU3; original100-second observation",
+      "observation_seconds": 100,
+      "offered_searches": 12000,
+      "successful_searches": 12000,
+      "dropped_searches": 0,
+      "completed_walks": 15,
+      "total_walks": 30,
+      "crawl_pages": 52380,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 12,
+      "latency": {
+        "crawl": {
+          "count": 52380,
+          "p50_ms": 22.93362,
+          "p95_ms": 90.452011,
+          "p99_ms": 280.143876,
+          "max_ms": 3149.967202
+        },
+        "diverse-search/absent": {
+          "count": 750,
+          "p50_ms": 108.711606,
+          "p95_ms": 325.517992,
+          "p99_ms": 573.161024,
+          "max_ms": 3260.743478
+        },
+        "diverse-search/common": {
+          "count": 1500,
+          "p50_ms": 549.163657,
+          "p95_ms": 1556.965148,
+          "p99_ms": 1916.849844,
+          "max_ms": 4407.138465
+        },
+        "diverse-search/full-name": {
+          "count": 6000,
+          "p50_ms": 54.755495,
+          "p95_ms": 248.818984,
+          "p99_ms": 1128.611096,
+          "max_ms": 3822.946851
+        },
+        "diverse-search/namespace": {
+          "count": 750,
+          "p50_ms": 71.609999,
+          "p95_ms": 215.470145,
+          "p99_ms": 337.903578,
+          "max_ms": 3116.99861
+        },
+        "diverse-search/numeric": {
+          "count": 750,
+          "p50_ms": 240.265044,
+          "p95_ms": 803.939333,
+          "p99_ms": 1153.706925,
+          "max_ms": 3347.289022
+        },
+        "diverse-search/sparse": {
+          "count": 2250,
+          "p50_ms": 80.704271,
+          "p95_ms": 289.686249,
+          "p99_ms": 488.944331,
+          "max_ms": 3465.842423
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 98.836321,
+          "p95_ms": 307.315794,
+          "p99_ms": 544.361782,
+          "max_ms": 544.361782
+        }
+      },
+      "status": {
+        "crawl:0": 12,
+        "crawl:200": 52380,
+        "diverse-search/absent:200": 750,
+        "diverse-search/common:200": 1500,
+        "diverse-search/full-name:200": 6000,
+        "diverse-search/namespace:200": 750,
+        "diverse-search/numeric:200": 750,
+        "diverse-search/sparse:200": 2250,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 45,
+      "last_complete_sample": {
+        "second": 99.000637276,
+        "Pending": 0,
+        "Inflight": 1,
+        "Acquired": 1,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 176.283365,
+      "database_throttled_periods": 21,
+      "database_periods": 1033,
+      "generator_cpu_seconds": 124.786611,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 19965,
+        "http://127.0.0.1:18081": 19961
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 76.23,
+        "http://127.0.0.1:18081": 69.42
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        36.632786239,
+        36.986670813,
+        17.097130973,
+        17.11348145,
+        49.131103364,
+        26.117173936,
+        46.418879548,
+        26.452156943,
+        72.998572471,
+        53.14983675,
+        40.694257976,
+        49.302520448,
+        79.618217421,
+        59.801173288,
+        99.921785512
+      ]
+    },
+    {
+      "trial": "A1",
+      "description": "current main b96c5b2; CPU3; new indexes present;180-second observation",
+      "observation_seconds": 180,
+      "offered_searches": 12000,
+      "successful_searches": 11762,
+      "dropped_searches": 238,
+      "completed_walks": 30,
+      "total_walks": 30,
+      "crawl_pages": 80815,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 0,
+      "latency": {
+        "crawl": {
+          "count": 80815,
+          "p50_ms": 12.596907,
+          "p95_ms": 115.462125,
+          "p99_ms": 503.660242,
+          "max_ms": 1058.483099
+        },
+        "diverse-search/absent": {
+          "count": 734,
+          "p50_ms": 271.701049,
+          "p95_ms": 696.094493,
+          "p99_ms": 1385.693042,
+          "max_ms": 1694.658479
+        },
+        "diverse-search/common": {
+          "count": 1467,
+          "p50_ms": 2979.711923,
+          "p95_ms": 5778.402566,
+          "p99_ms": 7945.27378,
+          "max_ms": 9191.374635
+        },
+        "diverse-search/full-name": {
+          "count": 5884,
+          "p50_ms": 149.563017,
+          "p95_ms": 1390.487814,
+          "p99_ms": 2111.992622,
+          "max_ms": 3408.036397
+        },
+        "diverse-search/namespace": {
+          "count": 736,
+          "p50_ms": 139.621733,
+          "p95_ms": 550.909866,
+          "p99_ms": 1296.119415,
+          "max_ms": 1556.638935
+        },
+        "diverse-search/numeric": {
+          "count": 737,
+          "p50_ms": 386.395785,
+          "p95_ms": 871.402994,
+          "p99_ms": 1523.272997,
+          "max_ms": 1820.845783
+        },
+        "diverse-search/sparse": {
+          "count": 2204,
+          "p50_ms": 164.529128,
+          "p95_ms": 630.191493,
+          "p99_ms": 1323.211494,
+          "max_ms": 1601.32391
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 228.120814,
+          "p95_ms": 603.551157,
+          "p99_ms": 953.241371,
+          "max_ms": 953.241371
+        }
+      },
+      "status": {
+        "crawl:200": 80815,
+        "diverse-search/absent:200": 734,
+        "diverse-search/common:200": 1467,
+        "diverse-search/full-name:200": 5884,
+        "diverse-search/namespace:200": 736,
+        "diverse-search/numeric:200": 737,
+        "diverse-search/sparse:200": 2204,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 37,
+      "last_complete_sample": {
+        "second": 179.000261735,
+        "Pending": 0,
+        "Inflight": 0,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 224.53602,
+      "database_throttled_periods": 374,
+      "database_periods": 1602,
+      "generator_cpu_seconds": 168.581875,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 21733,
+        "http://127.0.0.1:18081": 21731
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 74.16000000000001,
+        "http://127.0.0.1:18081": 77.88
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        49.556765945,
+        69.712633576,
+        69.771281988,
+        49.870735834,
+        32.284241275,
+        32.600916147,
+        79.296323378,
+        59.505349602,
+        44.163042688,
+        74.364738551,
+        94.502544293,
+        55.267289837,
+        69.603521535,
+        109.786316096,
+        69.785499942,
+        89.818470407,
+        109.821466476,
+        89.86789743,
+        129.688949322,
+        109.874976832,
+        89.895135949,
+        110.46191235,
+        130.824056523,
+        90.843358537,
+        127.097026246,
+        107.449029889,
+        147.502215325,
+        107.511332198,
+        147.592081233,
+        127.776909701
+      ]
+    },
+    {
+      "trial": "A2",
+      "description": "current main b96c5b2; CPU3; new indexes present;180-second observation",
+      "observation_seconds": 180,
+      "offered_searches": 12000,
+      "successful_searches": 8716,
+      "dropped_searches": 3284,
+      "completed_walks": 30,
+      "total_walks": 30,
+      "crawl_pages": 80819,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 0,
+      "latency": {
+        "crawl": {
+          "count": 80819,
+          "p50_ms": 13.92661,
+          "p95_ms": 97.042326,
+          "p99_ms": 504.978504,
+          "max_ms": 3824.947777
+        },
+        "diverse-search/absent": {
+          "count": 535,
+          "p50_ms": 1231.024158,
+          "p95_ms": 1670.017736,
+          "p99_ms": 1787.704388,
+          "max_ms": 3067.832049
+        },
+        "diverse-search/common": {
+          "count": 1080,
+          "p50_ms": 3663.851226,
+          "p95_ms": 6873.415291,
+          "p99_ms": 7342.642679,
+          "max_ms": 8874.096637
+        },
+        "diverse-search/full-name": {
+          "count": 4372,
+          "p50_ms": 1093.909126,
+          "p95_ms": 2452.118392,
+          "p99_ms": 3411.146302,
+          "max_ms": 5308.58767
+        },
+        "diverse-search/namespace": {
+          "count": 549,
+          "p50_ms": 4886.551103,
+          "p95_ms": 7255.267514,
+          "p99_ms": 7824.002437,
+          "max_ms": 8616.925275
+        },
+        "diverse-search/numeric": {
+          "count": 544,
+          "p50_ms": 1356.074479,
+          "p95_ms": 1865.970566,
+          "p99_ms": 2145.353231,
+          "max_ms": 4832.193176
+        },
+        "diverse-search/sparse": {
+          "count": 1636,
+          "p50_ms": 1103.822449,
+          "p95_ms": 1505.958014,
+          "p99_ms": 1722.185704,
+          "max_ms": 4479.882386
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 207.608243,
+          "p95_ms": 704.976418,
+          "p99_ms": 910.252544,
+          "max_ms": 910.252544
+        }
+      },
+      "status": {
+        "crawl:200": 80819,
+        "diverse-search/absent:200": 535,
+        "diverse-search/common:200": 1080,
+        "diverse-search/full-name:200": 4372,
+        "diverse-search/namespace:200": 549,
+        "diverse-search/numeric:200": 544,
+        "diverse-search/sparse:200": 1636,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 64,
+      "last_complete_sample": {
+        "second": 179.000478919,
+        "Pending": 0,
+        "Inflight": 0,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 233.018079,
+      "database_throttled_periods": 525,
+      "database_periods": 1693,
+      "generator_cpu_seconds": 175.068887,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 19379,
+        "http://127.0.0.1:18081": 19330
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 68.17,
+        "http://127.0.0.1:18081": 75.5
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        74.970473244,
+        55.024028472,
+        75.470859133,
+        55.780299652,
+        36.492739469,
+        36.756643588,
+        83.821107859,
+        66.05172815,
+        48.951874632,
+        105.813927432,
+        65.978317918,
+        86.290280347,
+        98.483167608,
+        118.555513914,
+        78.897501559,
+        100.109599639,
+        120.183777155,
+        80.556327139,
+        121.952966469,
+        142.096745733,
+        102.104226992,
+        104.039915173,
+        124.054979086,
+        144.521780417,
+        160.449851434,
+        140.644486287,
+        120.716462556,
+        141.814547317,
+        161.927793777,
+        122.044148309
+      ]
+    },
+    {
+      "trial": "B1",
+      "description": "candidate v4; CPU3;180-second observation",
+      "observation_seconds": 180,
+      "offered_searches": 12000,
+      "successful_searches": 12000,
+      "dropped_searches": 0,
+      "completed_walks": 30,
+      "total_walks": 30,
+      "crawl_pages": 80793,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 0,
+      "latency": {
+        "crawl": {
+          "count": 80793,
+          "p50_ms": 14.181348,
+          "p95_ms": 63.563057,
+          "p99_ms": 175.691271,
+          "max_ms": 1362.008378
+        },
+        "diverse-search/absent": {
+          "count": 750,
+          "p50_ms": 76.947189,
+          "p95_ms": 329.093766,
+          "p99_ms": 416.861527,
+          "max_ms": 494.284727
+        },
+        "diverse-search/common": {
+          "count": 1500,
+          "p50_ms": 350.695681,
+          "p95_ms": 1616.836456,
+          "p99_ms": 1869.180775,
+          "max_ms": 3189.783999
+        },
+        "diverse-search/full-name": {
+          "count": 6000,
+          "p50_ms": 39.778708,
+          "p95_ms": 201.318659,
+          "p99_ms": 665.86717,
+          "max_ms": 1831.790099
+        },
+        "diverse-search/namespace": {
+          "count": 750,
+          "p50_ms": 54.425908,
+          "p95_ms": 213.2487,
+          "p99_ms": 305.537923,
+          "max_ms": 963.258358
+        },
+        "diverse-search/numeric": {
+          "count": 750,
+          "p50_ms": 126.591334,
+          "p95_ms": 529.476501,
+          "p99_ms": 686.727728,
+          "max_ms": 979.868481
+        },
+        "diverse-search/sparse": {
+          "count": 2250,
+          "p50_ms": 57.182642,
+          "p95_ms": 294.223866,
+          "p99_ms": 402.781077,
+          "max_ms": 888.346971
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 86.282998,
+          "p95_ms": 289.783277,
+          "p99_ms": 368.293772,
+          "max_ms": 368.293772
+        }
+      },
+      "status": {
+        "crawl:200": 80793,
+        "diverse-search/absent:200": 750,
+        "diverse-search/common:200": 1500,
+        "diverse-search/full-name:200": 6000,
+        "diverse-search/namespace:200": 750,
+        "diverse-search/numeric:200": 750,
+        "diverse-search/sparse:200": 2250,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 7,
+      "last_complete_sample": {
+        "second": 179.000902893,
+        "Pending": 0,
+        "Inflight": 0,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 189.327462,
+      "database_throttled_periods": 2,
+      "database_periods": 1483,
+      "generator_cpu_seconds": 165.356731,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 25703,
+        "http://127.0.0.1:18081": 25692
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 94.27,
+        "http://127.0.0.1:18081": 86.28999999999999
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        25.14512703,
+        25.662960136,
+        29.291946857,
+        11.376836669,
+        11.766566688,
+        37.072891706,
+        42.143566184,
+        62.226777139,
+        27.181860933,
+        27.265783357,
+        41.727074584,
+        51.24894186,
+        94.671122293,
+        74.920513599,
+        74.959727803,
+        95.020503919,
+        56.879026557,
+        56.925396134,
+        93.923139713,
+        114.109794982,
+        114.12197208,
+        94.33848507,
+        74.349439345,
+        74.357894576,
+        130.124327061,
+        110.362010099,
+        110.442133706,
+        90.475513489,
+        130.518962111,
+        90.52000722
+      ]
+    },
+    {
+      "trial": "B2",
+      "description": "candidate v4; CPU3;180-second observation",
+      "observation_seconds": 180,
+      "offered_searches": 12000,
+      "successful_searches": 12000,
+      "dropped_searches": 0,
+      "completed_walks": 30,
+      "total_walks": 30,
+      "crawl_pages": 80793,
+      "successful_publishes": 90,
+      "offered_publishes": 90,
+      "unexpected_failures": 0,
+      "latency": {
+        "crawl": {
+          "count": 80793,
+          "p50_ms": 14.793873,
+          "p95_ms": 73.510359,
+          "p99_ms": 241.370238,
+          "max_ms": 1185.269521
+        },
+        "diverse-search/absent": {
+          "count": 750,
+          "p50_ms": 142.366604,
+          "p95_ms": 415.617431,
+          "p99_ms": 533.03932,
+          "max_ms": 724.364403
+        },
+        "diverse-search/common": {
+          "count": 1500,
+          "p50_ms": 653.340855,
+          "p95_ms": 1934.168096,
+          "p99_ms": 2234.790621,
+          "max_ms": 2617.710096
+        },
+        "diverse-search/full-name": {
+          "count": 6000,
+          "p50_ms": 55.638939,
+          "p95_ms": 276.555802,
+          "p99_ms": 851.971021,
+          "max_ms": 2182.610455
+        },
+        "diverse-search/namespace": {
+          "count": 750,
+          "p50_ms": 76.26309,
+          "p95_ms": 252.780411,
+          "p99_ms": 347.915604,
+          "max_ms": 574.307806
+        },
+        "diverse-search/numeric": {
+          "count": 750,
+          "p50_ms": 227.332203,
+          "p95_ms": 629.711583,
+          "p99_ms": 802.049224,
+          "max_ms": 1651.055744
+        },
+        "diverse-search/sparse": {
+          "count": 2250,
+          "p50_ms": 96.262675,
+          "p95_ms": 505.504334,
+          "p99_ms": 901.730842,
+          "max_ms": 1400.631608
+        },
+        "publish": {
+          "count": 90,
+          "p50_ms": 106.774296,
+          "p95_ms": 450.49501,
+          "p99_ms": 644.026202,
+          "max_ms": 644.026202
+        }
+      },
+      "status": {
+        "crawl:200": 80793,
+        "diverse-search/absent:200": 750,
+        "diverse-search/common:200": 1500,
+        "diverse-search/full-name:200": 6000,
+        "diverse-search/namespace:200": 750,
+        "diverse-search/numeric:200": 750,
+        "diverse-search/sparse:200": 2250,
+        "publish:200": 90
+      },
+      "peak_pool_pending": 9,
+      "last_complete_sample": {
+        "second": 179.001047877,
+        "Pending": 0,
+        "Inflight": 0,
+        "Acquired": 0,
+        "observed_targets": 2
+      },
+      "database_cpu_seconds": 197.67032,
+      "database_throttled_periods": 6,
+      "database_periods": 1569,
+      "generator_cpu_seconds": 172.972119,
+      "generator_throttled_periods": 0,
+      "origin_requests_by_replica": {
+        "http://127.0.0.1:18080": 24780,
+        "http://127.0.0.1:18081": 24784
+      },
+      "app_cpu_seconds": {
+        "http://127.0.0.1:18080": 93.9,
+        "http://127.0.0.1:18081": 87.46
+      },
+      "measurement_valid": true,
+      "walk_durations_seconds": [
+        32.039516979,
+        12.210555438,
+        32.28583477,
+        12.617808106,
+        38.15155735,
+        29.100842656,
+        49.107429778,
+        29.210269625,
+        70.87509531,
+        50.911776395,
+        43.440952428,
+        52.468609003,
+        103.083383032,
+        63.090994245,
+        83.133591343,
+        63.993403522,
+        104.425556268,
+        84.470203546,
+        82.118521338,
+        122.252827337,
+        102.350791674,
+        82.693127934,
+        103.119777968,
+        123.125746305,
+        139.12776231,
+        99.550735501,
+        119.55763244,
+        140.521173519,
+        120.672977517,
+        100.671670305
+      ]
+    }
+  ],
+  "response_equivalence": {
+    "baseline_responses": 83,
+    "candidate_responses": 83,
+    "identical": true,
+    "differences": []
+  }
+}

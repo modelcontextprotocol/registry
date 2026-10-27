@@ -298,6 +298,60 @@ The local constrained benchmark and its limits are documented in
 [`tools/readbench/CONSTRAINED_RESULTS.md`](../tools/readbench/CONSTRAINED_RESULTS.md).
 That experiment does not deploy this index or change production settings.
 
+### Search page covering index
+
+Migration 017 adds `idx_servers_search_cover` and
+`idx_servers_search_namespace_cover`. Search queries first select the
+ordered page keys and then fetch their full records in the same SQL statement.
+The partial index covers non-deleted names/versions and the latest/update filters,
+so rejected names need not fetch JSON-bearing heap rows. Included-deleted searches
+retain the same results but cannot use this partial index. Other listing queries
+are unchanged.
+
+Prebuild on a busy database in an autocommit session:
+
+```sql
+SET application_name = 'registry-search-cover-index-build';
+SET lock_timeout = '10s';
+SET statement_timeout = '10min';
+CREATE INDEX CONCURRENTLY idx_servers_search_cover
+    ON public.servers (server_name, version) INCLUDE (is_latest, updated_at)
+    WHERE status != 'deleted';
+CREATE INDEX CONCURRENTLY idx_servers_search_namespace_cover
+    ON public.servers (lower(reverse(split_part(server_name, '/', 1))) text_pattern_ops)
+    INCLUDE (server_name, version, is_latest, updated_at)
+    WHERE status != 'deleted';
+```
+
+Verify `indisvalid`, `indisready`, and `pg_get_indexdef` before deployment, then
+`ANALYZE public.servers`. Keep the existing trigram and namespace indexes for
+selective searches. Index-only scans still depend on the visibility map; measure
+heap fetches on recently published data as well as quiet data. Validate broad and
+rare terms, both latest/all versions, full walks, and publisher latency under load
+before production promotion. A larger connection pool is not a substitute for
+reducing database work under a CPU limit.
+
+### Database CPU budget for burst traffic
+
+`mcp-registry:postgresCPULimit` controls the PostgreSQL container CPU quota and
+otherwise defaults to `1500m`. Staging opts into `"3"`; this does not change node
+count, machine type, memory, storage, or database connection limits. The broad
+search comparison uses the same 3-CPU budget for both application versions.
+The query changes alone did not sustain the complete offered workload at 1.5 CPUs.
+
+Promoting the tested combination requires setting `postgresCPULimit: "3"` in
+`Pulumi.gcpProd.yaml` along with the application promotion, after prebuilding and
+verifying both indexes above. That file triggers the production deployment
+workflow when merged. The current CloudNativePG operator restarts the singleton
+for CPU-resource changes, so schedule that operation deliberately; it is not a
+zero-downtime application-only rollout. Staging experiments drained app connections
+before the restart to avoid waiting for idle pooled connections during shutdown.
+
+Keep the application pool at 60 maximum / 10 minimum connections per replica
+and PostgreSQL at 200 connections for this rollout. A larger pool does not add
+CPU capacity; a smaller-pool experiment also failed the offered workload. See
+[staging results](../tools/readbench/STAGING_SEARCH_RESULTS.md) for the experiment conditions and limits.
+
 ## Structure
 
 ```
