@@ -4,7 +4,8 @@ config:
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:postgresSharedBuffers: 512MB
-  mcp-registry:imageTag: 1.8.5  # Set specific image tag for production (change this to deploy different versions)
+  mcp-registry:postgresCPULimit: "3"
+  mcp-registry:imageTag: 1.8.6  # Set specific image tag for production (change this to deploy different versions)
   gcp:project: mcp-registry-prod
   mcp-registry:githubClientId: Iv23liUydBbI7Z2Q9bOZ
   mcp-registry:githubClientSecret:
