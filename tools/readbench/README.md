@@ -2,7 +2,27 @@
 
 This harness measures the real registry HTTP routes with PostgreSQL 17 and an isolated synthetic dataset. It does not contact production or staging, and does not provision cloud resources. Every database and HTTP target must use a literal loopback IP; the database must be named `registry_bench`. The development seed file supplies JSON templates only; no production data is downloaded.
 
-See [measured results and limitations](RESULTS.md) for the initial optimization comparison.
+See [measured results and limitations](RESULTS.md) for the initial optimization comparison and [cyclic crawl results](CYCLIC_RESULTS.md) for the search minimum and repeated full-registry walks.
+
+## Cyclic full-registry crawls and the search minimum
+
+```sh
+./tools/readbench/run-cycles.sh /tmp/my-registry-cycles
+```
+
+This separate runner builds the baseline from the initial harness commit and the candidate from the current checkout, then creates a fresh namespaced fixture and an isolated PostgreSQL cluster on port 55433. It runs two app processes (`GOMAXPROCS=2` each) behind two independent NGINX cache processes on ports 18082/18083. Both caches use the current 30-second TTL and five-second lock settings; no artificial origin delay is injected. Ports 18080–18083 must be free. Baseline/candidate order is A/B/B/A with fresh app processes and empty edge caches per trial. `READBENCH_BASELINE_REF` explicitly overrides the recorded baseline for future comparisons.
+
+The workload launches three waves, 20 seconds apart, of 20 crawlers each. A crawler follows actual `metadata.nextCursor` values through the whole listing, preserving its filters and checking ordering, duplicates, page counts and cursor progression. With the default client count, 60% walk all versions, 30% walk latest versions, and 10% use distinct seven-day incremental watermarks. New waves start regardless of whether earlier walks finished. Crawler request starts share a ceiling of 1,200/sec; this is intentional client pacing, **not a claim that the server sustained that rate**. Results record actual completed requests per second and full-walk completion time, including pacing. Per-page HTTP latency excludes intentional pacing. The first wave starts cold, the second can reuse warm entries, and the third can cross cache expiration.
+
+Ten independently scheduled searches/sec and one publish/sec continue through the waves and a final 30-second observation period. One percent of searches are short terms; this approximates the recent quiet sample, **not a measured burst distribution**. Other terms include `notion`, `net.todoist/mcp`, `io.github.github/`, `mcp` and `benchmark`, with a mix of latest/all versions. The fixture gives 70% of ordinary names a repeated `io.github.benchmark-` namespace, plus sparse matches and matches late in name order. It exercises the namespace/trigram issue missed by the original sequential-name fixture, but does not reproduce the production distribution exactly.
+
+Search and publish latency includes generator scheduling delay. A further request-timeout allowance lets outstanding work drain. Walks that miss the hard deadline are marked incomplete; cancellation is never counted as successful recovery. Once-per-second direct-app samples record pool waiters, acquired connections and in-flight requests, with an observed-target count so missing metrics cannot masquerade as zero queues. PostgreSQL statement snapshots retain user/query/top-level identity to support correct counter differences.
+
+The candidate's short-search `422` responses are counted separately. They are **never credited as successful non-short read throughput**. Compare completed full walks, accepted-search latency, publish success/latency, driver drops and queue recovery. Reject claims of improvement based only on the time required to reject short queries. The min-length policy cannot prevent unfiltered registry crawls.
+
+Increase demand with `READBENCH_CRAWLERS=200 READBENCH_CRAWL_RPS=12000 READBENCH_SEARCH_RATE=100`, or test a larger short-search share with `READBENCH_SHORT_PERCENT=50`. `READBENCH_PUBLISH_RATE` changes publishing and `READBENCH_ORDER='baseline candidate'` selects a shorter comparison. These are local stress scenarios, not forecasts of production capacity. The underlying `cycles.py` also accepts explicit intervals and recovery duration. The harness does not emulate Linux cgroup CPU quotas, separate physical nodes or real client retries. Reuse the fixed baseline/candidate binaries and record all failures when comparing overload behavior.
+
+The fixed search set repeats through the edge caches. Crawler URLs use one API version, canonical query ordering and limit 100. This favors shared cache entries compared with diverse production clients and searches. More clients can increase cache hit share without proportionately increasing origin work; always report both. On macOS the runner prevents idle sleep only for its own lifetime, and clock-continuity checks still reject invalid measurements.
 
 ## Run
 

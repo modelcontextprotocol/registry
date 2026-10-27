@@ -22,10 +22,14 @@ import (
 )
 
 const (
-	scenarioPage    = "page"
-	scenarioUpdated = "updated"
-	scenarioSearch  = "search"
-	scenarioSparse  = "sparse"
+	scenarioObserved = "observed-search"
+	scenarioShort    = "short-search"
+	kindPublish      = "publish"
+	benchmarkSubject = "benchmark"
+	scenarioPage     = "page"
+	scenarioUpdated  = "updated"
+	scenarioSearch   = "search"
+	scenarioSparse   = "sparse"
 )
 
 type loadConfig struct {
@@ -128,6 +132,16 @@ func requestPath(scenario string, sequence, rows int) (string, string) {
 		}
 		// Distinct watermarks deliberately defeat exact-URL cache reuse.
 		q.Set("updated_since", fixtureEpoch.Add(-age-time.Duration(sequence)*time.Microsecond).Format(time.RFC3339Nano))
+	case scenarioObserved, scenarioShort:
+		q.Del("cursor")
+		terms := []string{"notion", "net.todoist/mcp", "io.github.github/", "mcp", "benchmark"}
+		if shape == scenarioShort {
+			terms = []string{"a", "ai"}
+		}
+		q.Set("search", terms[sequence%len(terms)])
+		if sequence%3 == 0 {
+			q.Set("version", "latest")
+		}
 	case scenarioSearch:
 		q.Del("cursor")
 		q.Set(scenarioSearch, fmt.Sprintf("server-%04d", sequence%600))
@@ -145,7 +159,7 @@ func execute(ctx context.Context, client *http.Client, c loadConfig, j job, toke
 	method := http.MethodGet
 	var body io.Reader
 	if j.publish {
-		kind = "publish"
+		kind = kindPublish
 		method = http.MethodPost
 		path = "/v0.1/publish"
 		body = bytes.NewReader(publishRequest(j.number, runID))
@@ -220,7 +234,7 @@ func validateLoad(c loadConfig) error {
 		return fmt.Errorf("invalid rate, duration, workers, rows, or publish rate")
 	}
 	switch c.scenario {
-	case scenarioPage, scenarioUpdated, scenarioSparse, scenarioSearch, "mixed", "page-heavy", "hot":
+	case scenarioPage, scenarioUpdated, scenarioSparse, scenarioSearch, "mixed", "page-heavy", "hot", scenarioObserved, scenarioShort:
 	default:
 		return fmt.Errorf("unknown scenario %q", c.scenario)
 	}
@@ -243,7 +257,7 @@ func load(ctx context.Context, c loadConfig) error {
 	transport := &http.Transport{MaxIdleConns: c.workers + 8, MaxIdleConnsPerHost: c.workers + 8, IdleConnTimeout: 30 * time.Second}
 	defer transport.CloseIdleConnections()
 	client := &http.Client{Transport: transport, Timeout: c.timeout, CheckRedirect: func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }}
-	tok, err := auth.NewJWTManager(&config.Config{JWTPrivateKey: benchmarkKey}).GenerateTokenResponse(ctx, auth.JWTClaims{AuthMethod: auth.MethodGitHubAT, AuthMethodSubject: "benchmark", Permissions: []auth.Permission{{Action: auth.PermissionActionPublish, ResourcePattern: "io.benchmark/*"}}})
+	tok, err := auth.NewJWTManager(&config.Config{JWTPrivateKey: benchmarkKey}).GenerateTokenResponse(ctx, auth.JWTClaims{AuthMethod: auth.MethodGitHubAT, AuthMethodSubject: benchmarkSubject, Permissions: []auth.Permission{{Action: auth.PermissionActionPublish, ResourcePattern: "io.benchmark/*"}}})
 	if err != nil {
 		return err
 	}
@@ -305,7 +319,7 @@ func load(ctx context.Context, c loadConfig) error {
 	r.DroppedPublishes = droppedPublishes
 	r.ReadWorkers = c.workers
 	r.ReadQueueCapacity = c.workers
-	r.ServedAllOffered = r.Completed == count && r.Latency["publish"].Count == r.ScheduledPublishes && dropped == 0 && droppedPublishes == 0
+	r.ServedAllOffered = r.Completed == count && r.Latency[kindPublish].Count == r.ScheduledPublishes && dropped == 0 && droppedPublishes == 0
 	data, err := json.MarshalIndent(r, "", "  ")
 	if err != nil {
 		return err
@@ -362,7 +376,7 @@ func summarize(c loadConfig, observations []observation, end time.Time, elapsed 
 		}
 		if o.status >= 200 && o.status < 300 {
 			latency[o.kind] = append(latency[o.kind], o.elapsed)
-			if o.kind != "publish" {
+			if o.kind != kindPublish {
 				r.Completed++
 				latency["all_reads"] = append(latency["all_reads"], o.elapsed)
 				if o.completed.Before(end) {

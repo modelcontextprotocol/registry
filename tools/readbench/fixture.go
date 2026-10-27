@@ -13,7 +13,7 @@ import (
 
 var fixtureEpoch = time.Date(2026, time.October, 26, 12, 0, 0, 0, time.UTC)
 
-func seed(ctx context.Context, dbURL, fixture string, count int) error {
+func seed(ctx context.Context, dbURL, fixture string, count int, namespaced bool) error {
 	if count < 3000 || count%3 != 0 {
 		return fmt.Errorf("rows must be >=3000 and a multiple of three")
 	}
@@ -59,6 +59,9 @@ func seed(ctx context.Context, dbURL, fixture string, count int) error {
 		i := index
 		index++
 		name := fmt.Sprintf("io.benchmark/server-%06d", i/3)
+		if namespaced {
+			name = namespacedFixtureName(i / 3)
+		}
 		version := fmt.Sprintf("1.0.%d", i%3)
 		value := make(map[string]any)
 		for k, v := range templates[i%len(templates)] {
@@ -91,4 +94,21 @@ func seed(ctx context.Context, dbURL, fixture string, count int) error {
 	}
 	fmt.Printf("Seeded %d rows; heap=%d bytes total=%d bytes\n", n, heap, total) //nolint:forbidigo // CLI seed summary, not application logging.
 	return nil
+}
+
+// Preserve repeated namespace trigrams and rare matches near the end of name order.
+// These are synthetic local records, not a production export or publisher input.
+func namespacedFixtureName(n int) string {
+	switch {
+	case n == 0:
+		return "net.todoist/mcp"
+	case n == 1:
+		return "io.github.github/benchmark"
+	case n >= 2 && n < 38:
+		return fmt.Sprintf("zz.benchmark/notion-%03d", n)
+	case n%10 < 7:
+		return fmt.Sprintf("io.github.benchmark-%06d/server", n)
+	default:
+		return fmt.Sprintf("com.example.benchmark-%06d/server", n)
+	}
 }

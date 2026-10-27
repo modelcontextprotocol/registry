@@ -54,12 +54,13 @@ func localDatabase(raw string) error {
 }
 
 func main() {
-	mode := flag.String("mode", "load", "seed, serve, or load")
+	mode := flag.String("mode", "load", "seed, serve, load, or cycles")
 	dbURL := flag.String("db", "postgres://mcpregistry@127.0.0.1:5432/registry_bench", "isolated loopback benchmark database")
 	addr := flag.String("listen", "127.0.0.1:18080", "benchmark HTTP listen address")
 	target := flag.String("target", "http://127.0.0.1:18080", "comma-separated loopback targets")
 	rows := flag.Int("rows", 185001, "fixture rows (multiple of three)")
 	fixture := flag.String("fixture", "data/seed.json", "local development seed templates")
+	namespaced := flag.Bool("namespaced", false, "seed: repeated synthetic namespace prefixes for cyclic/search benchmarks")
 	delay := flag.Duration("listing-delay", 0, "serve: artificial listing delay for cache-coordination experiment only")
 	profile := flag.String("cpuprofile", "", "serve: CPU profile output")
 	timeout := flag.Duration("timeout", 10*time.Second, "load: per-request deadline measured from scheduled arrival")
@@ -69,18 +70,27 @@ func main() {
 	scenario := flag.String("scenario", "mixed", "page, updated, sparse, search, mixed, or hot")
 	publishRate := flag.Int("publish-rate", 1, "independent publish requests/sec; zero disables")
 	output := flag.String("out", "", "load: JSON result file (otherwise stdout)")
+	waves := flag.Int("waves", 3, "cycles: independently scheduled crawler waves")
+	crawlers := flag.Int("crawlers", 20, "cycles: full-registry walks per wave")
+	interval := flag.Duration("wave-interval", 20*time.Second, "cycles: interval between starts, regardless of completion")
+	recovery := flag.Duration("recovery", 30*time.Second, "cycles: final observation period without new waves")
+	searchRate := flag.Int("search-rate", 10, "cycles: background searches per second")
+	shortPercent := flag.Int("short-percent", 1, "cycles: percent of background searches shorter than three characters")
+	metricTargets := flag.String("metric-targets", "http://127.0.0.1:18080", "cycles: comma-separated direct loopback apps for metrics")
 	flag.Parse()
 	ctx := context.Background()
 	var err error
 	switch *mode {
 	case "seed":
 		if err = localDatabase(*dbURL); err == nil {
-			err = seed(ctx, *dbURL, *fixture, *rows)
+			err = seed(ctx, *dbURL, *fixture, *rows, *namespaced)
 		}
 	case "serve":
 		if err = localDatabase(*dbURL); err == nil {
 			err = serve(ctx, *dbURL, *addr, *profile, *delay)
 		}
+	case "cycles":
+		err = runCycles(ctx, cycleConfig{load: loadConfig{targets: strings.Split(*target, ","), rows: *rows, duration: *duration, rate: *rate, workers: *workers, scenario: "page", publishRate: *publishRate, output: *output, timeout: *timeout}, metrics: strings.Split(*metricTargets, ","), waves: *waves, crawlers: *crawlers, searchRate: *searchRate, shortPercent: *shortPercent, interval: *interval, recovery: *recovery})
 	case "load":
 		err = load(ctx, loadConfig{targets: strings.Split(*target, ","), rows: *rows, duration: *duration, rate: *rate, workers: *workers, scenario: *scenario, publishRate: *publishRate, output: *output, timeout: *timeout})
 	default:

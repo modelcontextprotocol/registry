@@ -580,7 +580,7 @@ func TestServersEndpointEdgeCases(t *testing.T) {
 			{"future updated_since", "?updated_since=2030-01-01T00:00:00Z", http.StatusOK, ""},
 			{"very old updated_since", "?updated_since=1990-01-01T00:00:00Z", http.StatusOK, ""},
 			{"empty search parameter", "?search=", http.StatusOK, ""},
-			{"search with special characters", "?search=测试", http.StatusOK, ""},
+			{"search with special characters", "?search=测试名", http.StatusOK, ""},
 			{"combined valid parameters", "?search=server&limit=5&version=latest", http.StatusOK, ""},
 		}
 
