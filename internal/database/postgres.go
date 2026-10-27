@@ -207,6 +207,47 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 	return condition, []any{cursor}, argIndex + 1
 }
 
+// searchPageQuery retains the ordinary query for listings without a search.
+func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int) string {
+	if filter == nil || filter.SubstringName == nil {
+		return ordinary
+	}
+	// Find the page using only its keys before fetching the JSON payloads.
+	// The covering index can reject nonmatching names without visiting the
+	// heap. The materialized candidate query plans for a larger key batch:
+	// a small LIMIT otherwise assumes rare matches occur early in name order
+	// and can favor scanning most of the ordered index over a selective GIN
+	// lookup. The outer LIMIT still defines the exact page before payload fetch.
+	// PostgreSQL 17 can stop the ordered CTE scan after the requested rows.
+	return fmt.Sprintf(`
+        WITH candidates AS MATERIALIZED (
+            SELECT server_name, version FROM servers
+            %s
+            ORDER BY server_name, version
+            LIMIT GREATEST($%d, 8192)
+        )
+        SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
+               s.published_at, s.updated_at, s.is_latest, s.value
+        FROM (
+            SELECT server_name, version FROM candidates
+            ORDER BY server_name, version
+            LIMIT $%d
+        ) page
+        JOIN servers s USING (server_name, version)
+        ORDER BY s.server_name, s.version
+    `, whereClause, limitArg, limitArg)
+}
+
+func searchQueryArgs(filter *ServerFilter, args []any) []any {
+	if filter != nil && filter.SubstringName != nil {
+		// Search selectivity varies by orders of magnitude. Use an unnamed
+		// extended-protocol query so PostgreSQL plans for these parameter values
+		// instead of eventually reusing one generic plan for every search term.
+		return append([]any{pgx.QueryExecModeExec}, args...)
+	}
+	return args
+}
+
 func (db *PostgreSQL) ListServers(
 	ctx context.Context,
 	tx pgx.Tx,
@@ -268,7 +309,9 @@ func (db *PostgreSQL) ListServers(
         ORDER BY server_name, version
         LIMIT $%d
     `, whereClause, argIndex)
+	query = searchPageQuery(filter, query, whereClause, argIndex)
 	args = append(args, limit)
+	args = searchQueryArgs(filter, args)
 
 	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {

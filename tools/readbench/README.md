@@ -4,6 +4,8 @@ This harness measures the real registry HTTP routes with PostgreSQL 17 and an is
 
 See [measured results and limitations](RESULTS.md) for the initial optimization comparison and [cyclic crawl results](CYCLIC_RESULTS.md) for the search minimum and repeated full-registry walks.
 
+See [production-corpus staging validation](STAGING_SEARCH_RESULTS.md) for the broad-search fix, unchanged pool, database CPU comparison, and original/extended observation windows.
+
 ## Constrained database and diverse clients
 
 `run-constrained.sh` runs the database in a disposable local Docker container
