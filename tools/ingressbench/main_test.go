@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
 
 // Calibration must actually exercise the full real-cursor catalog, rather than
@@ -21,6 +25,34 @@ func TestVariedPagesReachWholeCatalog(t *testing.T) {
 		if len(seen) != 4000 {
 			t.Fatalf("hot=%d visited %d/4000 keys", hot, len(seen))
 		}
+	}
+}
+
+type unavailableTransport struct{}
+
+func (unavailableTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader("private-body")), Header: make(http.Header), Request: req}, nil
+}
+
+func TestFailureSamplesIncludeTimingWithoutRequestData(t *testing.T) {
+	points := make(chan point, 1)
+	scheduled := time.Now().Add(-time.Second)
+	client := &http.Client{Transport: unavailableTransport{}}
+	makeRequester(client, "private-token", points)("/v0/servers?search=private-query", "page", scheduled, nil)
+	close(points)
+	r := result{Status: map[string]int{}, Cache: map[string]int{}, Errors: map[string]int{}, Protocols: map[string]int{}, ErrorDetails: map[string]string{}}
+	done := make(chan struct{})
+	collectResults(points, &r, map[string][]float64{}, done)
+	if len(r.Failures) != 1 || r.Failures[0].Status != http.StatusServiceUnavailable ||
+		!r.Failures[0].ScheduledAt.Equal(scheduled) || !r.Failures[0].FinishedAt.After(scheduled) {
+		t.Fatalf("missing failure timing: %+v", r.Failures)
+	}
+	encoded, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(encoded), "private-") {
+		t.Fatal("request data leaked into results")
 	}
 }
 

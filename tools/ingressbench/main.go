@@ -34,12 +34,20 @@ type result struct {
 	ErrorDetails                                                        map[string]string
 	LatencyMS                                                           map[string]float64
 	ElapsedSeconds                                                      float64
+	Failures                                                            []requestFailure
+	OmittedFailures                                                     int
+}
+type requestFailure struct {
+	ScheduledAt, FinishedAt time.Time
+	Kind, Class             string
+	Status                  int
 }
 type point struct {
 	kind, cache, failure, protocol, detail string
 	status                                 int
 	elapsed                                float64
 	bytes                                  int64
+	scheduledAt, finishedAt                time.Time
 }
 
 func main() {
@@ -306,6 +314,9 @@ func makeRequester(client *http.Client, token string, results chan<- point) func
 			}
 		}
 		p.elapsed = float64(time.Since(scheduled)) / float64(time.Millisecond)
+		if p.failure != "" || p.status >= http.StatusBadRequest {
+			p.scheduledAt, p.finishedAt = scheduled.UTC(), time.Now().UTC()
+		}
 		results <- p
 	}
 }
@@ -357,6 +368,15 @@ func collectResults(results <-chan point, r *result, samples map[string][]float6
 	defer close(done)
 	for p := range results {
 		r.Completed++
+		if !p.finishedAt.IsZero() {
+			// Bounded, credential-free timing evidence for correlating failures
+			// with ingress/node transitions. Never retain URLs or request bodies.
+			if len(r.Failures) < 100 {
+				r.Failures = append(r.Failures, requestFailure{p.scheduledAt, p.finishedAt, p.kind, p.failure, p.status})
+			} else {
+				r.OmittedFailures++
+			}
+		}
 		if p.failure != "" {
 			r.Errors[p.kind+":"+p.failure]++
 			if _, ok := r.ErrorDetails[p.failure]; !ok {

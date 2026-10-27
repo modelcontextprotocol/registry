@@ -31,7 +31,7 @@ Keep the token in a private file, never a command-line argument or report.
 Only the benchmark's own staging publications should be removed afterward.
 
 The default read concurrency and queue are each bounded at 512. Dropped work,
-HTTP status zero (transport or body-read failure), HTTP failures, cache response
+HTTP status zero (transport or body-read failure), HTTP failures, up to 100 timestamped failure samples (with an omitted count), cache response
 headers, bytes and latency are recorded. Latencies run from intended start to
 body completion, including scheduling/queue delay, and include failed requests.
 `Scheduled` and `Dropped` count reads; `ScheduledPublishes` and
