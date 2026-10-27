@@ -45,11 +45,10 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		return "LoadBalancer"
 	}).(pulumi.StringOutput)
 
-	// Configure replicas based on environment
-	// Staging: 1 replica (sufficient for testing, allows brief downtime during deploys)
-	// Production: 2 replicas (HA, zero-downtime deploys, node-level resilience)
+	// Match the production cache and load-balancing topology in staging so
+	// performance tests exercise two independent ingress replicas.
 	replicaCount := 1
-	if environment == "prod" {
+	if environment == "prod" || environment == "staging" {
 		replicaCount = 2
 	}
 

@@ -1,6 +1,7 @@
 config:
   mcp-registry:environment: staging
   mcp-registry:provider: gcp
+  mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:postgresSharedBuffers: 512MB
   gcp:project: mcp-registry-staging
   mcp-registry:githubClientId: Iv23liB2r5oUw6PxiMOC
