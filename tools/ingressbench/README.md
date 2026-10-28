@@ -24,6 +24,10 @@ The subsequent [generator calibration and DB-isolation control](DELIVERY_VALIDAT
 resolves part of that measurement uncertainty and confirms remaining app CPU
 contention. Neither tested layout passed the short offered-load gate.
 
+The [coordinated CPU capacity candidate](COORDINATED_CAPACITY.md) records the next
+staging-only profile, CPU request budget and conditional validation gates. It is
+not enabled or validated.
+
 ```sh
 go build -o ingressbench ./tools/ingressbench
 ./ingressbench -staging -catalog -keys keys.json

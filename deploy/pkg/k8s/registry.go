@@ -83,6 +83,21 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		return nil, err
 	}
 
+	coordinatedCapacity := conf.GetBool("coordinatedCapacity")
+	deploymentOptions := []pulumi.ResourceOption{pulumi.Provider(cluster.Provider)}
+	maxSurge, maxUnavailable := 1, 0
+	poolEnv := corev1.EnvVarArray{}
+	if coordinatedCapacity {
+		// HPA owns the live count; keep the steady-state connection budget at
+		// 60–120 across 2–4 apps. Terminating pods may overlap during rollouts.
+		deploymentOptions = append(deploymentOptions, pulumi.IgnoreChanges([]string{"spec.replicas"}))
+		maxSurge, maxUnavailable = 0, 1
+		poolEnv = corev1.EnvVarArray{
+			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"), Value: pulumi.String("30")},
+			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"), Value: pulumi.String("5")},
+		}
+	}
+
 	// Create Deployment
 	_, err = v1.NewDeployment(ctx, "mcp-registry", &v1.DeploymentArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -98,8 +113,8 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			Strategy: &v1.DeploymentStrategyArgs{
 				Type: pulumi.String("RollingUpdate"),
 				RollingUpdate: &v1.RollingUpdateDeploymentArgs{
-					MaxUnavailable: pulumi.IntPtr(0), // Never reduce capacity during updates
-					MaxSurge:       pulumi.IntPtr(1), // Create new pods first, then terminate old
+					MaxUnavailable: pulumi.IntPtr(maxUnavailable),
+					MaxSurge:       pulumi.IntPtr(maxSurge),
 				},
 			},
 			Selector: &metav1.LabelSelectorArgs{
@@ -130,7 +145,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 									Name:          pulumi.String("http"),
 								},
 							},
-							Env: corev1.EnvVarArray{
+							Env: append(corev1.EnvVarArray{
 								&corev1.EnvVarArgs{
 									Name: pulumi.String("MCP_REGISTRY_DATABASE_URL"),
 									ValueFrom: &corev1.EnvVarSourceArgs{
@@ -201,7 +216,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 										return "https://" + environment + ".registry.modelcontextprotocol.io"
 									}()),
 								},
-							},
+							}, poolEnv...),
 							// StartupProbe protects the DB-retry budget in cmd/registry/main.go:
 							// 30 × 5s = 150s allowed before liveness/readiness take over, which
 							// covers the worst-case retry budget (8 attempts × 10s + ~40s sleep).
@@ -252,9 +267,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				},
 			},
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, deploymentOptions...)
 	if err != nil {
 		return nil, err
+	}
+
+	if coordinatedCapacity {
+		if err := deployRegistryAutoscaler(ctx, cluster.Provider); err != nil {
+			return nil, err
+		}
 	}
 
 	// Keep at least one registry pod available during voluntary disruptions

@@ -88,6 +88,10 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		// client traffic. NGINX finishes the current request before closing.
 		clientKeepaliveSnippet = "keepalive_time 60s;\n"
 		autoscaling = ingressAutoscalingValues()
+		if conf.GetBool("coordinatedCapacity") {
+			// Scale at 560m instead of 704m to add capacity before contention.
+			autoscaling["targetCPUUtilizationPercentage"] = pulumi.Int(70)
+		}
 		// HPA owns replicas. Refresh before updates so the checkpoint follows
 		// the controller rather than resetting a scaled Deployment to two.
 		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{burstResourceTransform}))

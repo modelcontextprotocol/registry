@@ -635,6 +635,12 @@ kubectl get backup
 
 ### Burst capacity (staging validation)
 
+The additional `coordinatedCapacity` opt-in is staged separately and currently
+disabled. See the [candidate and test gates](../tools/ingressbench/COORDINATED_CAPACITY.md)
+for its 2–4 app HPA, 30/5 pools and required CPU settings. It is rejected outside
+staging until the full validation passes. The configuration below describes the
+earlier ingress-only profile.
+
 This is an experimental configuration, not an approved production fix. In the
 2026-10-27 staging comparison, CPU reservation protected database readiness, but
 ingress/node scaling alone left long application pool queues and publish

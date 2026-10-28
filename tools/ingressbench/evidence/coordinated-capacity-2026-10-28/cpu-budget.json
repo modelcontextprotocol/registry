@@ -1,0 +1,70 @@
+{
+  "source": "Saved staging snapshot 2026-10-28T15:51Z; requires live refresh before apply",
+  "node_allocatable_mcpu": {
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-2846": 3920.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k": 3920.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-d57s": 3920.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25": 3920.0
+  },
+  "candidate": {
+    "db_request_mcpu": 1500,
+    "db_limit_mcpu": 3000,
+    "app_request_mcpu": 800,
+    "ingress_request_mcpu": 800,
+    "app_min_max": [
+      2,
+      4
+    ],
+    "ingress_min_max": [
+      2,
+      6
+    ],
+    "node_min_max": [
+      2,
+      4
+    ],
+    "pool_max_min_per_app": [
+      30,
+      5
+    ]
+  },
+  "idle_requested_mcpu": {
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25": 3726.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k": 2683.0
+  },
+  "idle_spare_mcpu": {
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25": 194.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k": 1237.0
+  },
+  "peak_requested_mcpu": {
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-2846": 2756.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k": 2653.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-d57s": 2756.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25": 3726.0
+  },
+  "peak_spare_mcpu": {
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-2846": 1164.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k": 1267.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-d57s": 1164.0,
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25": 194.0
+  },
+  "idle_other_pod_relocations": [
+    {
+      "name": "konnectivity-agent-6977df8778-4f62d",
+      "to": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+      "mcpu": 15.0
+    },
+    {
+      "name": "konnectivity-agent-6977df8778-mqm4k",
+      "to": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+      "mcpu": 15.0
+    }
+  ],
+  "fits_cpu_requests": true,
+  "limitations": [
+    "Constructive CPU request packing, not a Kubernetes scheduling simulation.",
+    "Does not prove runtime CPU headroom, memory fit, volume/affinity feasibility, autoscaler evacuation, or two-node recovery.",
+    "Keeps singleton DB nodes fixed; allows other movable workloads to relocate.",
+    "HPA reacts after demand, and node provisioning and load-balancer readiness add delay."
+  ]
+}
