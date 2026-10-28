@@ -116,7 +116,18 @@
   "limitations": [
     "CPU request changed placement and starting node count; this is not an isolated CPU-priority comparison.",
     "Neither candidate passed the no-dropped-work burst criterion.",
-    "Google Cloud reauthentication expired during CPU recovery; complete client result retained in SSH stdout, final infrastructure state unverified."
+    "CPU1 candidate retained three idle nodes; autoscaler reported no place to move the app pod.",
+    "Historical application metrics and original recovery result recovered after reauthentication; missing direct DB cgroup/endpoint snapshots during recovery remain an observation gap."
   ],
-  "cleanup": "Pending Google Cloud reauthentication"
+  "cleanup": "Complete: generator VM/disk, scoped publications and whitelist removed; baseline image/250m CPU restored; two Ready nodes verified around02:59UTC.",
+  "idle_nodes": {
+    "release-only-250m": 2,
+    "release-cpu1": 3
+  },
+  "recovery_backfill": {
+    "original_client_result_matches_stdout": true,
+    "all_sampled_app_up_values": 1,
+    "max_sampled_pool_waiters": 0
+  },
+  "cleanup_idle_nodes": 2
 }

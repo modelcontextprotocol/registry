@@ -2,8 +2,8 @@
 
 **Do not promote this candidate as a complete burst-capacity fix.** A larger
 application CPU reservation eliminated attempted-request failures in this run,
-but 4.67% of the offered reads still could not be dispatched. The two-node idle
-target also remains unverified for this configuration.
+but 4.67% of the offered reads still could not be dispatched. The candidate also
+retained three nodes at idle, missing the two-node target.
 
 ## Changes and controls
 
@@ -44,6 +44,7 @@ versions and 52,366 server names.
 | Peak sampled pool waiters, total | 1,013 | 116 |
 | Starting node count | 2 | 3 |
 | Peak node / ingress count | 4 / 6 | 4 / 6 |
+| Observed idle nodes | 2 | 3 |
 | Recovery reads succeeded | 180,000/180,000 | 180,000/180,000 |
 | Recovery publishes succeeded | 1,800/1,800 | 1,800/1,800 |
 | Recovery dropped work / failures | 0 / 0 | 0 / 0 |
@@ -85,7 +86,7 @@ the successful burst snapshots. The 250m run recorded about 85 ms of additional
 DB throttling late in recovery. These observations do not establish that larger
 connection pools would help; the pool budget was deliberately unchanged.
 
-## Idle capacity and observation gap
+## Idle capacity, recovered telemetry and cleanup
 
 The 250m candidate naturally returned to two Ready nodes around 00:37:05 UTC,
 approximately 32 minutes after its burst ended, without moving either app or
@@ -94,20 +95,35 @@ the registry database during the measured cycle.
 The 1-CPU rollout required a third node before load started. Scheduler events
 reported insufficient CPU on the database node and the app topology-spread
 constraint on the other node. The database node could not fit a 1-CPU app while
-retaining its existing ingress pod and other reservations. A node-pool minimum
-of two therefore does not establish that this placement can return to two.
+retaining its existing ingress pod and other reservations. It had 3,426m CPU
+reserved out of 3,920m allocatable, leaving 494m: enough for the original 250m
+app, but not a 1-CPU app. A node-pool minimum of two therefore does not establish
+that this placement can return to two.
 
-Google Cloud reauthentication expired during recovery. The last successful node
-snapshot was at 00:55:34 UTC with four nodes; node snapshot failures began at
-00:56:04 UTC. The remote benchmark nevertheless completed at 01:23:09 UTC and its
-complete JSON result was captured in the SSH command's stdout. Copying that
-result file back failed during subsequent authentication. Client recovery
-results are available, but full recovery infrastructure telemetry and the final
-idle node count require backfill and live verification after reauthentication.
-Do not describe that missing telemetry as healthy or zero.
+Google Cloud reauthentication expired during recovery. Direct node snapshots
+failed from 00:56:04 UTC, but the remote client benchmark completed at 01:23:09
+UTC. After reauthentication, the original result file was recovered and exactly
+matched the JSON retained in SSH stdout. Historical application metrics were
+backfilled: both app `up` series were healthy and every sampled pool-waiter gauge
+was zero throughout recovery. The 60-second app scrape interval still limits
+what these samples establish. Missing direct database cgroup and endpoint
+snapshots from that interval cannot be recreated from those app metrics.
 
-Production was not changed. Temporary staging resources and the experimental
-CPU/image settings require cleanup after authenticated access is restored.
+GKE's retained autoscaler logs showed three nodes by 01:19:30 UTC. A live check at
+02:38 UTC still found three Ready nodes and two ingress replicas. The autoscaler
+explicitly reported `no.scale.down.node.no.place.to.move.pods` for the node
+hosting the second app. Thus this is a confirmed placement obstacle, not merely
+an unexpired scale-down timer. The 1-CPU candidate does not meet the two-node idle
+requirement with its current reservations and placement constraints.
+
+Production was not changed. The temporary generator VM and its disk, temporary
+rate-limit exemption and scoped benchmark publications have been removed. The
+pre-experiment application image and 250m CPU request were restored, and all 48
+direct-origin response hashes still matched. Natural consolidation returned the
+restored 250m configuration to two Ready nodes at approximately 02:59 UTC, with
+both apps healthy on the original nodes. This occurred after reverting the
+experimental settings; it does not turn the 1-CPU candidate's three-node idle
+result into a pass. The candidate container image is retained for reproducibility.
 
 ## Reproduction
 
