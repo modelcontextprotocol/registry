@@ -2,6 +2,7 @@ package main
 
 import (
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type durationSummary struct {
 type windowTraffic struct {
 	Scheduled, Dropped, Dispatched, Completed, Failures int
 	SchedulerLag, QueueDelay, HTTPDuration              durationSummary
+	FailureClasses                                      map[string]int
 }
 
 type timeWindow struct {
@@ -70,6 +72,7 @@ func (h durationHistogram) summary() durationSummary {
 type trafficAccumulator struct {
 	scheduled, dropped, dispatched, completed, failures int
 	schedulerLag, queueDelay, httpDuration              durationHistogram
+	failureClasses                                      map[string]int
 }
 
 func (a *trafficAccumulator) merge(b trafficAccumulator) {
@@ -81,11 +84,17 @@ func (a *trafficAccumulator) merge(b trafficAccumulator) {
 	a.schedulerLag.merge(b.schedulerLag)
 	a.queueDelay.merge(b.queueDelay)
 	a.httpDuration.merge(b.httpDuration)
+	for class, count := range b.failureClasses {
+		if a.failureClasses == nil {
+			a.failureClasses = make(map[string]int)
+		}
+		a.failureClasses[class] += count
+	}
 }
 
 func (a trafficAccumulator) summary() windowTraffic {
 	return windowTraffic{a.scheduled, a.dropped, a.dispatched, a.completed, a.failures,
-		a.schedulerLag.summary(), a.queueDelay.summary(), a.httpDuration.summary()}
+		a.schedulerLag.summary(), a.queueDelay.summary(), a.httpDuration.summary(), a.failureClasses}
 }
 
 // Each timeline has one writer. Read scheduling, publish scheduling and result
@@ -126,6 +135,14 @@ func (t *timeline) completed(p point) {
 	a.completed++
 	if p.failure != "" || p.status == 0 || p.status >= 400 {
 		a.failures++
+		class := p.failure
+		if class == "" {
+			class = "status:" + strconv.Itoa(p.status)
+		}
+		if a.failureClasses == nil {
+			a.failureClasses = make(map[string]int)
+		}
+		a.failureClasses[class]++
 	}
 }
 

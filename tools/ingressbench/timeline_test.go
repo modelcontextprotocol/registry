@@ -60,3 +60,19 @@ func BenchmarkTimeline(b *testing.B) {
 		t.completed(p)
 	}
 }
+
+func TestTimelineRetainsFailureClassesAfterMerging(t *testing.T) {
+	at := time.Unix(100, 0)
+	a, b := newTimeline(), newTimeline()
+	for range 150 {
+		a.completed(point{kind: "page", failure: "body:connection_reset", scheduledAt: at, queuedAt: at, startedAt: at, finishedAt: at})
+	}
+	b.completed(point{kind: "page", failure: "body:connection_reset", scheduledAt: at, queuedAt: at, startedAt: at, finishedAt: at})
+	b.completed(point{kind: "page", status: 503, scheduledAt: at, queuedAt: at, startedAt: at, finishedAt: at})
+	b.completed(point{kind: "publish", failure: "request:timeout", scheduledAt: at, queuedAt: at, startedAt: at, finishedAt: at})
+	a.merge(b)
+	w := a.windows()[0]
+	if w.Reads.Failures != 152 || w.Reads.FailureClasses["body:connection_reset"] != 151 || w.Reads.FailureClasses["status:503"] != 1 || w.Publishes.FailureClasses["request:timeout"] != 1 {
+		t.Fatalf("failure classes lost, capped or mixed across request kinds: %+v", w)
+	}
+}

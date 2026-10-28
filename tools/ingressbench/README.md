@@ -51,7 +51,10 @@ are grouped by dispatch window. Their fixed histograms report `P95UpperMS`, a
 bucket upper bound, while `MeanMS` and `MaximumMS` use observed durations. Overall
 `LatencyMS` retains its existing exact sample percentiles. No URLs, bodies, or
 credentials are included in these windows. Use the same instrumented binary in
-both arms of a comparison.
+both arms of a comparison. Window `FailureClasses` counts every failure by its
+bounded transport-error class or HTTP status, even after the first 100 individual
+failure samples have been retained. This preserves transition timing for later
+error classes without retaining client data.
 
 Temporarily exempt only the generator IP from staging ingress rate limits when
 measuring aggregate multi-client capacity. Save and restore the prior annotation;
