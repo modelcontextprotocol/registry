@@ -106,3 +106,11 @@ changes source JSON or official timestamps. A concurrent update can leave a row
 for another pass; rerunning is safe. Identity mismatches remain on the fallback
 path and are counted. Check prepared/fallback coverage before interpreting a
 benchmark. No automatic full-table backfill runs during application startup.
+
+For a controlled app-replica comparison, `MCP_REGISTRY_DATABASE_MAX_CONNECTIONS`
+and `MCP_REGISTRY_DATABASE_MIN_CONNECTIONS` set each app's pool budget (defaults
+60/10). Invalid limits fail startup before connection retries. Two apps at 60/10
+and four apps at 30/5 both permit 120 maximum and 20 minimum connections in total.
+Lower per-app limits and finish that rollout before increasing replicas. Include
+surge pods, monitoring and administration in the PostgreSQL connection budget;
+the settings do not enforce a deployment-wide limit automatically.

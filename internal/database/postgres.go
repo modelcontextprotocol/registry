@@ -44,19 +44,24 @@ func (db *PostgreSQL) getExecutor(tx pgx.Tx) Executor {
 
 // NewPostgreSQL creates a new instance of the PostgreSQL database
 func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, error) {
+	return NewPostgreSQLWithPoolLimits(ctx, connectionURI, PoolLimits{MaxConns: 60, MinConns: 10})
+}
+
+// NewPostgreSQLWithPoolLimits sets an explicit per-replica connection budget.
+func NewPostgreSQLWithPoolLimits(ctx context.Context, connectionURI string, limits PoolLimits) (*PostgreSQL, error) {
+	if err := limits.Validate(); err != nil {
+		return nil, err
+	}
 	// Parse connection config for pool settings
 	config, err := pgxpool.ParseConfig(connectionURI)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse PostgreSQL config: %w", err)
 	}
 
-	// Configure pool for stability-focused defaults.
-	// MaxConns was 30 per pod (60 total across 2 replicas) which saturated under
-	// the 2026-04-28 scraper bursts (15 req/s on /v0/servers caused queue blowup
-	// even though individual queries were fast). 60 per pod gives 120 total,
-	// leaving 80 of PG max_connections=200 for autovacuum/admin/headroom.
-	config.MaxConns = 60                      // Handle scraper-burst concurrent load
-	config.MinConns = 10                      // Keep connections warm for fast response
+	// Keep the aggregate budget bounded when changing the replica count. The
+	// default constructor retains the existing 60 maximum / 10 minimum.
+	config.MaxConns = limits.MaxConns
+	config.MinConns = limits.MinConns
 	config.MaxConnIdleTime = 30 * time.Minute // Keep connections available for bursts
 	config.MaxConnLifetime = 2 * time.Hour    // Refresh connections regularly for stability
 	dbMetrics, err := telemetry.NewDatabaseMetrics(otel.Meter("mcp_registry.database"))
