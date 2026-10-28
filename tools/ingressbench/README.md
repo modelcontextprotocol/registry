@@ -7,6 +7,15 @@ explicitly selected by default; `-http2` allows HTTP/2. Keep the protocol fixed
 within a comparison and verify the response protocol counts in the output.
 The existing `tools/readbench` remains the query-focused benchmark.
 
+Before using a generator for a capacity verdict, run `-staging -calibrate` with
+the intended rate, workers and saved catalog. This uses only a loopback HTTPS
+fixture with a 64-KiB JSON response and exercises the same scheduling,
+connection rotation and body consumption. It cannot publish or collect a
+staging catalog. The fixture shares generator CPU, so a failure demonstrates a
+limit in this local client/server setup; a pass does not certify the external
+network. `Calibration` in the result prevents confusing this with a registry
+test. Optional `-cpu-profile=generator.pb.gz` writes a local Go CPU profile.
+
 The [fixed-budget replica comparison](REPLICA_CAPACITY_VALIDATION.md) records
 the latest short test and its load-generator limitations. It is not a passing
 production promotion or autoscaling gate.
@@ -59,6 +68,17 @@ both arms of a comparison. Window `FailureClasses` counts every failure by its
 bounded transport-error class or HTTP status, even after the first 100 individual
 failure samples have been retained. This preserves transition timing for later
 error classes without retaining client data.
+
+`RequestPhases` separates attempted requests by request kind and bounded cache
+outcome. It records scheduler delay, worker queue delay, connection acquisition,
+TLS handshake, request-written to first response byte, first byte to body
+completion, and total HTTP processing. Connection acquisition includes dial,
+TLS and transport waiting; these phases overlap and must not be added together.
+First-byte time includes network and upstream queuing, not just server CPU.
+Counts distinguish absent events from measured zero durations. TLS hooks can
+include speculative connections that are not ultimately used by a request, so
+their count can exceed the number of new connections actually obtained. No
+addresses, URLs, headers or credentials are retained in these aggregates.
 
 Temporarily exempt only the generator IP from staging ingress rate limits when
 measuring aggregate multi-client capacity. Save and restore the prior annotation;

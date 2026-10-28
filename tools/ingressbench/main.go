@@ -26,6 +26,8 @@ const limitParam = "limit"
 const target = "https://staging.registry.modelcontextprotocol.io"
 
 type result struct {
+	Calibration                                                         bool
+	RequestPhases                                                       map[string]phaseSummary
 	StartedAt, FinishedAt, CatalogSHA256                                string
 	ReadRate, UpdatedRate, SearchRate, HotPercent                       int
 	Scheduled, ScheduledPublishes, Completed, Dropped, DroppedPublishes int
@@ -44,6 +46,7 @@ type requestFailure struct {
 	Status                  int
 }
 type point struct {
+	phases                                       phaseObservation
 	kind, cache, failure, protocol, detail       string
 	status                                       int
 	elapsed                                      float64
@@ -64,10 +67,17 @@ func main() {
 	tokenFile := flag.String("token-file", "", "optional scoped staging publish token file")
 	hot := flag.Int("hot-percent", 80, "percent of requests using the first 128 keys")
 	http2 := flag.Bool("http2", false, "allow HTTP/2 negotiation (HTTP/1.1 only by default)")
+	calibrate := flag.Bool("calibrate", false, "use a private loopback HTTPS fixture with 64-KiB bodies; never contact staging")
+	cpuProfile := flag.String("cpu-profile", "", "optional local generator CPU profile file")
 	flag.Parse()
 	validateArguments(*ack, *rate, *updatedRate, *searchRate, *workers, *duration, *hot)
 	tr := newTransport(*http2)
 	client := &http.Client{Transport: tr, Timeout: 10 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
+	baseURL, closeFixture := configureCalibration(tr, *calibrate, *tokenFile, *catalogMode)
+	defer closeFixture()
+	defer tr.CloseIdleConnections()
+	stopProfile := startCPUProfile(*cpuProfile)
+	defer stopProfile()
 	if *catalogMode {
 		collectCatalog(client, *keysFile)
 		return
@@ -77,12 +87,13 @@ func main() {
 	results := make(chan point, 4096)
 	var wg sync.WaitGroup
 	r := result{Status: map[string]int{}, Cache: map[string]int{}, Errors: map[string]int{}, Protocols: map[string]int{}, ErrorDetails: map[string]string{}, LatencyMS: map[string]float64{}}
+	r.Calibration = *calibrate
 	samples := map[string][]float64{}
 	done := make(chan struct{})
 	completionTimeline := newTimeline()
 	readTimeline, publishTimeline := newTimeline(), newTimeline()
 	go collectResults(results, &r, samples, completionTimeline, done)
-	request := makeRequester(client, token, results)
+	request := makeRequesterAt(client, baseURL, token, results)
 	type job struct {
 		n            int
 		at, queuedAt time.Time
@@ -302,13 +313,18 @@ type requestTiming struct {
 }
 
 func makeRequester(client *http.Client, token string, results chan<- point) func(path, kind string, timing requestTiming, body []byte) {
+	return makeRequesterAt(client, target, token, results)
+}
+
+func makeRequesterAt(client *http.Client, baseURL, token string, results chan<- point) func(path, kind string, timing requestTiming, body []byte) {
 	return func(path, kind string, timing requestTiming, body []byte) {
 		started := time.Now()
 		method := "GET"
 		if body != nil {
 			method = "POST"
 		}
-		req, e := http.NewRequestWithContext(context.Background(), method, target+path, bytes.NewReader(body))
+		trace := newRequestTrace()
+		req, e := http.NewRequestWithContext(trace.context(context.Background()), method, baseURL+path, bytes.NewReader(body))
 		p := point{kind: kind}
 		if e == nil {
 			if body != nil {
@@ -333,6 +349,7 @@ func makeRequester(client *http.Client, token string, results chan<- point) func
 			}
 		}
 		finished := time.Now()
+		p.phases = trace.observation(finished)
 		p.elapsed = float64(finished.Sub(timing.Scheduled)) / float64(time.Millisecond)
 		p.scheduledAt, p.queuedAt = timing.Scheduled, timing.Queued
 		p.startedAt, p.finishedAt = started, finished
@@ -385,7 +402,13 @@ func validateArguments(ack bool, rate, updatedRate, searchRate, workers int, dur
 
 func collectResults(results <-chan point, r *result, samples map[string][]float64, timeline *timeline, done chan<- struct{}) {
 	defer close(done)
+	phases := make(map[string]*phaseAccumulator)
 	for p := range results {
+		key := phaseKey(p.kind, p.cache)
+		if phases[key] == nil {
+			phases[key] = &phaseAccumulator{}
+		}
+		phases[key].add(p)
 		r.Completed++
 		timeline.completed(p)
 		if p.failure != "" || p.status >= http.StatusBadRequest {
@@ -408,5 +431,9 @@ func collectResults(results <-chan point, r *result, samples map[string][]float6
 		r.Cache[p.cache]++
 		r.Protocols[p.protocol]++
 		samples[p.kind] = append(samples[p.kind], p.elapsed)
+	}
+	r.RequestPhases = make(map[string]phaseSummary, len(phases))
+	for key, value := range phases {
+		r.RequestPhases[key] = value.summary()
 	}
 }
