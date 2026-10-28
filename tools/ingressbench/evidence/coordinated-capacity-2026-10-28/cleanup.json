@@ -1,0 +1,22 @@
+{
+  "at": 1793218621.450293,
+  "production_changed": false,
+  "instances_absent": true,
+  "disks_absent": true,
+  "app_spec_restored": true,
+  "ingress_hpa_restored": true,
+  "db_resources_restored": true,
+  "whitelist_restored": true,
+  "verified_at": "2026-10-28T20:22:38.369288+00:00",
+  "response_hashes_matched": 48,
+  "corpus": {
+    "names": 52366,
+    "versions": 187108,
+    "benchmark_runs": null
+  },
+  "final_snapshot_at": 1793218899.924099,
+  "observed_nodes": 4,
+  "observed_app_pods": 2,
+  "observed_ingress_pods": 5,
+  "natural_two_node_recovery_observed": false
+}

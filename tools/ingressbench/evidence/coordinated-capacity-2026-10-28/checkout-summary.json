@@ -1,0 +1,498 @@
+{
+  "mcp-registry-57d9d88679-52rg4": {
+    "first": "burst-000-mcp-registry-57d9d88679-52rg4.prom",
+    "last": "burst-180-mcp-registry-57d9d88679-52rg4.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 19832.0,
+        "sum": 2671.182599758981,
+        "mean_ms": 134.69053044367593
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 33.0,
+        "sum": 2.5535394880000015,
+        "mean_ms": 77.37998448484853
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 146.0,
+        "sum": 8.752614036000002,
+        "mean_ms": 59.94941120547947
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 1644.0,
+        "sum": 133.9088617309998,
+        "mean_ms": 81.45307891180038
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 19832.0,
+        "sum": 317.3671917570001,
+        "mean_ms": 16.002782964753937
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 33.0,
+        "sum": 0.34554335599999997,
+        "mean_ms": 10.471010787878786
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 146.0,
+        "sum": 10.119083722,
+        "mean_ms": 69.30879261643835
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 1644.0,
+        "sum": 18.084914997999995,
+        "mean_ms": 11.000556568126518
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 19832.0,
+        "sum": 1.5336187330000004,
+        "mean_ms": 0.0773305129588544
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 33.0,
+        "sum": 0.0027124119999999995,
+        "mean_ms": 0.08219430303030302
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 146.0,
+        "sum": 0.004654085000000001,
+        "mean_ms": 0.03187729452054795
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 1644.0,
+        "sum": 0.2870319899999992,
+        "mean_ms": 0.17459366788321115
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 19832.0,
+        "sum": 302.85224179599925,
+        "mean_ms": 15.27088754517947
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 33.0,
+        "sum": 0.34177790199999997,
+        "mean_ms": 10.35690612121212
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 146.0,
+        "sum": 9.988774406000008,
+        "mean_ms": 68.41626305479457
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 1644.0,
+        "sum": 17.224061519000028,
+        "mean_ms": 10.476923065085176
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 0,
+        "{'operation': 'list_page'}": 0,
+        "{'operation': 'list_search'}": 0,
+        "{'operation': 'list_updated'}": 0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 2.0,
+        "{'state': 'constructing'}": 0,
+        "{'state': 'idle'}": 30.0
+      }
+    },
+    "payload_sources": {
+      "prepared": 1538987.0,
+      "fallback": 0.0
+    }
+  },
+  "mcp-registry-57d9d88679-bzq4l": {
+    "first": "burst-000-mcp-registry-57d9d88679-bzq4l.prom",
+    "last": "burst-180-mcp-registry-57d9d88679-bzq4l.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 19962.0,
+        "sum": 1302.3936863810318,
+        "mean_ms": 65.24364724882436
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 20.0,
+        "sum": 1.7993743130000002,
+        "mean_ms": 89.96871565000001
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 120.0,
+        "sum": 4.168257690999997,
+        "mean_ms": 34.73548075833331
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 1570.0,
+        "sum": 48.28134439399995,
+        "mean_ms": 30.752448658598695
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 19961.0,
+        "sum": 256.2248084679975,
+        "mean_ms": 12.83627115214656
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 20.0,
+        "sum": 0.253953905,
+        "mean_ms": 12.697695249999999
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 120.0,
+        "sum": 8.616490450000002,
+        "mean_ms": 71.80408708333336
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 1569.0,
+        "sum": 15.901171703000005,
+        "mean_ms": 10.134589995538564
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 19961.0,
+        "sum": 0.7858065599999962,
+        "mean_ms": 0.039367093832974105
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 20.0,
+        "sum": 0.000724497,
+        "mean_ms": 0.03622485
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 120.0,
+        "sum": 0.010087658999999999,
+        "mean_ms": 0.084063825
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 1569.0,
+        "sum": 0.058483850999999976,
+        "mean_ms": 0.03727460229445505
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 19961.0,
+        "sum": 253.00418001799972,
+        "mean_ms": 12.674925104854452
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 20.0,
+        "sum": 0.25274347199999997,
+        "mean_ms": 12.637173599999999
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 120.0,
+        "sum": 8.604589283000003,
+        "mean_ms": 71.7049106916667
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 1569.0,
+        "sum": 15.767338592000018,
+        "mean_ms": 10.049291645634174
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 0,
+        "{'operation': 'list_page'}": 0,
+        "{'operation': 'list_search'}": 0,
+        "{'operation': 'list_updated'}": 0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 4.0,
+        "{'state': 'constructing'}": 0,
+        "{'state': 'idle'}": 30.0
+      }
+    },
+    "payload_sources": {
+      "prepared": 1548275.0,
+      "fallback": 0.0
+    }
+  },
+  "mcp-registry-57d9d88679-sjl52": {
+    "first": "burst-000-mcp-registry-57d9d88679-sjl52.prom",
+    "last": "burst-180-mcp-registry-57d9d88679-sjl52.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 19979.0,
+        "sum": 577.1493973780033,
+        "mean_ms": 28.887802061064285
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 21.0,
+        "sum": 1.575979518,
+        "mean_ms": 75.04664371428572
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 128.0,
+        "sum": 3.356164981000001,
+        "mean_ms": 26.220038914062506
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 1524.0,
+        "sum": 22.921456378000062,
+        "mean_ms": 15.04032570734912
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 19979.0,
+        "sum": 255.0566578960003,
+        "mean_ms": 12.766237444116337
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 21.0,
+        "sum": 0.4122976100000001,
+        "mean_ms": 19.633219523809526
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 128.0,
+        "sum": 7.195824071,
+        "mean_ms": 56.2173755546875
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 1524.0,
+        "sum": 15.797473160999983,
+        "mean_ms": 10.365796037401564
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 19979.0,
+        "sum": 0.9531120689999997,
+        "mean_ms": 0.04770569442915059
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 21.0,
+        "sum": 0.000548634,
+        "mean_ms": 0.02612542857142857
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 128.0,
+        "sum": 0.006231186,
+        "mean_ms": 0.048681140624999994
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 1524.0,
+        "sum": 0.12462113899999966,
+        "mean_ms": 0.08177240091863494
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 19979.0,
+        "sum": 251.72876724999912,
+        "mean_ms": 12.599668013914567
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 21.0,
+        "sum": 0.40919799,
+        "mean_ms": 19.48561857142857
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 128.0,
+        "sum": 7.185343052000003,
+        "mean_ms": 56.13549259375002
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 1524.0,
+        "sum": 15.623433114999974,
+        "mean_ms": 10.251596532152215
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 0,
+        "{'operation': 'list_page'}": 0,
+        "{'operation': 'list_search'}": 0,
+        "{'operation': 'list_updated'}": 0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 3.0,
+        "{'state': 'constructing'}": 0,
+        "{'state': 'idle'}": 30.0
+      }
+    },
+    "payload_sources": {
+      "prepared": 1543768.0,
+      "fallback": 0.0
+    }
+  },
+  "mcp-registry-57d9d88679-vfcxl": {
+    "first": "burst-000-mcp-registry-57d9d88679-vfcxl.prom",
+    "last": "burst-180-mcp-registry-57d9d88679-vfcxl.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 19930.0,
+        "sum": 1093.5004873270102,
+        "mean_ms": 54.86705907310638
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 23.0,
+        "sum": 0.372437761,
+        "mean_ms": 16.19294613043478
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 134.0,
+        "sum": 3.6421931099999982,
+        "mean_ms": 27.180545597014913
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 1586.0,
+        "sum": 64.97912822000038,
+        "mean_ms": 40.97044654476694
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 19930.0,
+        "sum": 247.1292158339992,
+        "mean_ms": 12.39986030275962
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 23.0,
+        "sum": 0.12974925,
+        "mean_ms": 5.641271739130436
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 134.0,
+        "sum": 10.597778951,
+        "mean_ms": 79.08790261940298
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 1586.0,
+        "sum": 15.962422908000002,
+        "mean_ms": 10.064579387137455
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 19930.0,
+        "sum": 0.7841181170000013,
+        "mean_ms": 0.039343608479678945
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 23.0,
+        "sum": 0.007150085,
+        "mean_ms": 0.3108732608695652
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 134.0,
+        "sum": 0.002950665,
+        "mean_ms": 0.02201988805970149
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 1586.0,
+        "sum": 0.07006116999999991,
+        "mean_ms": 0.044174760403530834
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 19930.0,
+        "sum": 244.76379579400017,
+        "mean_ms": 12.281173898344214
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 23.0,
+        "sum": 0.119770133,
+        "mean_ms": 5.207397086956521
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 134.0,
+        "sum": 10.571343098000002,
+        "mean_ms": 78.89062013432837
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 1586.0,
+        "sum": 15.792451620000007,
+        "mean_ms": 9.957409596469109
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 0,
+        "{'operation': 'list_page'}": 0,
+        "{'operation': 'list_search'}": 0,
+        "{'operation': 'list_updated'}": 0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 2.0,
+        "{'state': 'constructing'}": 0,
+        "{'state': 'idle'}": 30.0
+      }
+    },
+    "payload_sources": {
+      "prepared": 1550656.0,
+      "fallback": 0.0
+    }
+  }
+}

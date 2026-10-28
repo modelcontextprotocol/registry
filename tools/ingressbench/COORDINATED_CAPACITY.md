@@ -1,9 +1,70 @@
 # Coordinated CPU capacity candidate — 2026-10-28
 
-**Prepared locally; not applied or load-tested. Production is unchanged.**
-Google Cloud interactive reauthentication blocked the initial live staging
-inventory. No generator VM was created and no staging resources were changed.
-The preceding short tests failed; their results are not a pass for this candidate.
+**Failed the staging short delivery gate. Production is unchanged.**
+After reauthentication, the candidate was applied in staging and tested with
+four Ready apps, six Ready ingress replicas and four healthy node backends.
+Of 810,000 scheduled reads, 7,418 (0.916%) were dropped before dispatch.
+All 802,582 attempted requests succeeded, but their latency excludes dropped
+work. The long burst, publish test and autoscaling recovery gate were not run.
+The opt-in remains disabled; this result does not support promotion.
+
+## Observed result
+
+The [saved result](evidence/coordinated-capacity-2026-10-28/summary.json)
+and [raw driver output](evidence/coordinated-capacity-2026-10-28/coordinated-burst.json)
+preserve the offered workload and limitations.
+
+| Measurement | Three-minute burst | Two-minute recovery |
+| --- | ---: | ---: |
+| Offered reads/s | 4,500 | 100 |
+| Scheduled / dropped reads | 810,000 / 7,418 | 12,000 / 0 |
+| Attempted request failures | 0 | 0 |
+| Page p95 | 316 ms | 3.7 ms |
+| Search p95 | 835 ms | 26.9 ms |
+| Updated-listing p95 | 664 ms | 9.6 ms |
+
+The generator first completed 405,000 calibration requests without drops or
+failures. During staging load its sixteen-vCPU VM averaged 17.8% CPU busy
+(maximum 22.6%), with no observed network-device drops. This excludes neither
+single-thread bottlenecks nor external network limitations.
+
+The app's connection hold time was short: listing checkout averaged 12–16 ms
+across replicas, with less than 0.1 ms after query completion. However, listing
+connection acquisition still averaged 29–135 ms. Every 15-second pending-queue
+sample was zero: those snapshots missed waits captured by the histograms.
+Acquisition includes pool and scheduler delay, so this does not establish that
+a larger pool would help. App CPU full-stall rates were approximately 8.7–15.5%
+over sampled intervals inside the burst; DB quota throttling remained zero.
+
+Placement also matters. The scheduler put apps 1/1/2/0 across four nodes; it did
+not rebalance them when the fourth node arrived. The sole ingress on the DB
+node used about 1.71 CPUs, versus 0.66–1.06 for the other controllers. That app
+had the highest acquisition time and CPU stall rate. The previous four-app
+test used hard one-app-per-node placement, and this test restarted PostgreSQL
+before preparation, changing cache state. The apparent improvements are not
+a controlled estimate of the CPU-request change alone.
+
+Drops recur roughly every 30 seconds. Both the generator's idle-connection
+rotation and ingress cache TTL are 30 seconds; current aggregate timing cannot
+separate their contribution. The next investigation should distinguish these
+effects and the ingress hot node using the captured profiles and counters,
+before proposing another capacity change. Do not interpret either quiet
+recovery or lower attempted-request latency as a passing delivery gate.
+
+### Restoration
+
+The [verified cleanup](evidence/coordinated-capacity-2026-10-28/cleanup.json)
+restored the exact original app specification (two replicas, 250m CPU request,
+original image and pools), ingress HPA specification, DB resources (2-CPU
+request / 3-CPU limit), and bulk-ingress whitelist. The app HPA was removed.
+The generator VM and disk were confirmed absent. All 48 sampled response hashes
+matched; the corpus remained 52,366 names / 187,108 versions with no benchmark
+publications. The DB restarted during resource restoration and was Ready.
+
+At the final 20:21 UTC snapshot, staging still had four nodes and five
+non-terminating ingress pods. Restored bounds allow 2–6 ingress replicas and
+2–4 nodes; restoration does not prove this candidate returns naturally to two
+nodes. No forced node deletion or long recovery test was performed.
 
 ## Why this candidate
 
@@ -49,15 +110,17 @@ Memory limits, DB buffers and max_connections=200 are unchanged.
 
 ## Two-node budget
 
-The [saved CPU packing calculation](evidence/coordinated-capacity-2026-10-28/cpu-budget.json)
-uses the 15:51 UTC staging inventory, including system pod requests. Each node
+The [original CPU packing calculation](evidence/coordinated-capacity-2026-10-28/cpu-budget.json)
+uses the 15:51 UTC staging inventory. A fresh preflight rechecked system pod
+requests, memory, volume locality, disruption budgets and autoscaler bounds.
+Each node
 has 3,920m allocatable CPU. Keeping the two singleton DB nodes, placing one app
 and one ingress on each, and relocating the other movable workloads gives:
 
 | Idle node | Requested CPU | Unallocated requests |
 | --- | ---: | ---: |
 | Registry DB node | 3,726m | 194m |
-| Monitoring DB node | 2,683m | 1,237m |
+| Monitoring DB node (fresh preflight) | 2,653m | 1,267m |
 
 With a 2-CPU DB request, the first placement would require 4,226m and would not
 fit. The 1.5-CPU request is therefore a deliberate balance with the larger app
@@ -67,10 +130,11 @@ acceptable latency and pressure under the benchmark.
 
 The four-node peak packing fits four apps and six ingress controllers in CPU
 requests. These are constructive request budgets, **not** a Kubernetes scheduler
-simulation or proof of runtime headroom. Refresh inventory and check memory,
-volume locality, affinity, disruption budgets and scale-down eligibility before
-applying. Natural return to two nodes must be observed, not inferred from the
-configured minimum. The DB node has a tight request budget.
+simulation or proof of runtime headroom. Natural return to two nodes must be
+observed, not inferred from the configured minimum. Fresh inventory confirmed
+staging had returned to two nodes after the preceding experiment; it does not
+validate this candidate's scale-down behavior. The DB node has a tight request
+budget.
 
 ## Implementation guard
 
@@ -130,7 +194,9 @@ The Pulumi program builds, deployment-module tests pass, and repository
 CPU-only metric and recovery window; configuration tests reject production and
 incomplete CPU budgets. A separate full deployment-module lint invocation also
 reports existing module lint debt; new changes are checked separately against
-the preceding commit. No successful live preview or load test is claimed.
+the preceding commit. Kubernetes server dry-runs passed before the staging
+changes. The live short test failed as reported above; a Pulumi apply was not
+used for this temporary comparison.
 
 HPA behavior follows the [Kubernetes v2 API](https://kubernetes.io/docs/reference/kubernetes-api/autoscaling/horizontal-pod-autoscaler-v2/)
 and [GKE CPU utilization semantics](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/horizontalpodautoscaler).

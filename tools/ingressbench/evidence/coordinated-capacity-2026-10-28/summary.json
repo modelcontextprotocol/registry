@@ -1,0 +1,440 @@
+{
+  "as_of": "2026-10-28T20:19:25.005885+00:00",
+  "verdict": "FAIL_SHORT_DELIVERY_GATE",
+  "production_changed": false,
+  "long_burst_and_30min_recovery_run": false,
+  "autoscaling_from_idle_validated": false,
+  "short_gate_capacity": {
+    "apps": 4,
+    "app_cpu_request_m": 800,
+    "pool_per_app_max_min": [
+      30,
+      5
+    ],
+    "ingress_replicas": 6,
+    "ingress_cpu_request_m": 800,
+    "nodes": 4,
+    "db_cpu_request_m": 1500,
+    "db_cpu_limit": 3
+  },
+  "phases": {
+    "preparation": {
+      "StartedAt": "2026-10-28T20:05:32.067527528Z",
+      "FinishedAt": "2026-10-28T20:07:32.062247042Z",
+      "Scheduled": 12000,
+      "Completed": 12000,
+      "Dropped": 0,
+      "DroppedPublishes": 0,
+      "ScheduledPublishes": 0,
+      "Status": {
+        "page:200": 11760,
+        "search:200": 120,
+        "updated:200": 120
+      },
+      "Errors": {},
+      "LatencyMS": {
+        "page_p50": 2.965104,
+        "page_p95": 15.546276,
+        "page_p99": 39.464061,
+        "search_p50": 11.929439,
+        "search_p95": 28.649121,
+        "search_p99": 30.941536,
+        "updated_p50": 5.024697,
+        "updated_p95": 12.162068,
+        "updated_p99": 13.494919
+      }
+    },
+    "burst": {
+      "StartedAt": "2026-10-28T20:07:36.167225061Z",
+      "FinishedAt": "2026-10-28T20:10:36.195036054Z",
+      "Scheduled": 810000,
+      "Completed": 802582,
+      "Dropped": 7418,
+      "DroppedPublishes": 0,
+      "ScheduledPublishes": 0,
+      "Status": {
+        "page:200": 795630,
+        "search:200": 534,
+        "updated:200": 6418
+      },
+      "Errors": {},
+      "LatencyMS": {
+        "page_p50": 5.297902,
+        "page_p95": 315.829021,
+        "page_p99": 805.774962,
+        "search_p50": 44.51659,
+        "search_p95": 835.071745,
+        "search_p99": 1902.086433,
+        "updated_p50": 17.625467,
+        "updated_p95": 664.151381,
+        "updated_p99": 1832.257212
+      }
+    },
+    "recovery": {
+      "StartedAt": "2026-10-28T20:10:58.184279679Z",
+      "FinishedAt": "2026-10-28T20:12:58.179258109Z",
+      "Scheduled": 12000,
+      "Completed": 12000,
+      "Dropped": 0,
+      "DroppedPublishes": 0,
+      "ScheduledPublishes": 0,
+      "Status": {
+        "page:200": 11760,
+        "search:200": 120,
+        "updated:200": 120
+      },
+      "Errors": {},
+      "LatencyMS": {
+        "page_p50": 2.758622,
+        "page_p95": 3.675634,
+        "page_p99": 5.42456,
+        "search_p50": 8.622515,
+        "search_p95": 26.852288,
+        "search_p99": 29.450764,
+        "updated_p50": 4.779784,
+        "updated_p95": 9.606068,
+        "updated_p99": 10.175718
+      }
+    }
+  },
+  "burst_drop_percent": 0.9158024691358025,
+  "app_acquisition_and_hold": [
+    {
+      "pod": "mcp-registry-57d9d88679-52rg4",
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+      "listing_mean_ms": {
+        "mcp_registry_db_pool_acquire_duration": 134.69053044367593,
+        "mcp_registry_db_pool_checkout_duration": 16.002782964753937,
+        "mcp_registry_db_pool_after_query_duration": 0.0773305129588544,
+        "mcp_registry_db_query_duration": 15.27088754517947
+      },
+      "peak_sampled_gauges": {
+        "mcp_registry_db_pool_acquire_pending": {
+          "{'operation': 'list'}": 0,
+          "{'operation': 'list_page'}": 0,
+          "{'operation': 'list_search'}": 0,
+          "{'operation': 'list_updated'}": 0,
+          "{'operation': 'other'}": 0
+        },
+        "mcp_registry_db_pool_connections": {
+          "{'state': 'acquired'}": 2.0,
+          "{'state': 'constructing'}": 0,
+          "{'state': 'idle'}": 30.0
+        }
+      }
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-bzq4l",
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-zn6z",
+      "listing_mean_ms": {
+        "mcp_registry_db_pool_acquire_duration": 65.24364724882436,
+        "mcp_registry_db_pool_checkout_duration": 12.83627115214656,
+        "mcp_registry_db_pool_after_query_duration": 0.039367093832974105,
+        "mcp_registry_db_query_duration": 12.674925104854452
+      },
+      "peak_sampled_gauges": {
+        "mcp_registry_db_pool_acquire_pending": {
+          "{'operation': 'list'}": 0,
+          "{'operation': 'list_page'}": 0,
+          "{'operation': 'list_search'}": 0,
+          "{'operation': 'list_updated'}": 0,
+          "{'operation': 'other'}": 0
+        },
+        "mcp_registry_db_pool_connections": {
+          "{'state': 'acquired'}": 4.0,
+          "{'state': 'constructing'}": 0,
+          "{'state': 'idle'}": 30.0
+        }
+      }
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-sjl52",
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+      "listing_mean_ms": {
+        "mcp_registry_db_pool_acquire_duration": 28.887802061064285,
+        "mcp_registry_db_pool_checkout_duration": 12.766237444116337,
+        "mcp_registry_db_pool_after_query_duration": 0.04770569442915059,
+        "mcp_registry_db_query_duration": 12.599668013914567
+      },
+      "peak_sampled_gauges": {
+        "mcp_registry_db_pool_acquire_pending": {
+          "{'operation': 'list'}": 0,
+          "{'operation': 'list_page'}": 0,
+          "{'operation': 'list_search'}": 0,
+          "{'operation': 'list_updated'}": 0,
+          "{'operation': 'other'}": 0
+        },
+        "mcp_registry_db_pool_connections": {
+          "{'state': 'acquired'}": 3.0,
+          "{'state': 'constructing'}": 0,
+          "{'state': 'idle'}": 30.0
+        }
+      }
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-vfcxl",
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-zn6z",
+      "listing_mean_ms": {
+        "mcp_registry_db_pool_acquire_duration": 54.86705907310638,
+        "mcp_registry_db_pool_checkout_duration": 12.39986030275962,
+        "mcp_registry_db_pool_after_query_duration": 0.039343608479678945,
+        "mcp_registry_db_query_duration": 12.281173898344214
+      },
+      "peak_sampled_gauges": {
+        "mcp_registry_db_pool_acquire_pending": {
+          "{'operation': 'list'}": 0,
+          "{'operation': 'list_page'}": 0,
+          "{'operation': 'list_search'}": 0,
+          "{'operation': 'list_updated'}": 0,
+          "{'operation': 'other'}": 0
+        },
+        "mcp_registry_db_pool_connections": {
+          "{'state': 'acquired'}": 2.0,
+          "{'state': 'constructing'}": 0,
+          "{'state': 'idle'}": 30.0
+        }
+      }
+    }
+  ],
+  "app_cpu_pressure": [
+    {
+      "pod": "mcp-registry-57d9d88679-52rg4",
+      "metric": "container_cpu_usage_seconds_total",
+      "seconds": 177.7170000076294,
+      "rate": 0.4621973980906368,
+      "start": 1793218057.983,
+      "end": 1793218235.7
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-52rg4",
+      "metric": "container_pressure_cpu_stalled_seconds_total",
+      "seconds": 177.7170000076294,
+      "rate": 0.15492261853856432,
+      "start": 1793218057.983,
+      "end": 1793218235.7
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-52rg4",
+      "metric": "container_pressure_cpu_waiting_seconds_total",
+      "seconds": 177.7170000076294,
+      "rate": 0.25454387029973485,
+      "start": 1793218057.983,
+      "end": 1793218235.7
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-vfcxl",
+      "metric": "container_cpu_usage_seconds_total",
+      "seconds": 176.40199995040894,
+      "rate": 0.4234080170349387,
+      "start": 1793218056.57,
+      "end": 1793218232.972
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-bzq4l",
+      "metric": "container_cpu_usage_seconds_total",
+      "seconds": 153.7590000629425,
+      "rate": 0.43019241782869694,
+      "start": 1793218057.166,
+      "end": 1793218210.925
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-vfcxl",
+      "metric": "container_pressure_cpu_stalled_seconds_total",
+      "seconds": 176.40199995040894,
+      "rate": 0.09445222279046714,
+      "start": 1793218056.57,
+      "end": 1793218232.972
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-bzq4l",
+      "metric": "container_pressure_cpu_stalled_seconds_total",
+      "seconds": 153.7590000629425,
+      "rate": 0.09256245159095655,
+      "start": 1793218057.166,
+      "end": 1793218210.925
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-vfcxl",
+      "metric": "container_pressure_cpu_waiting_seconds_total",
+      "seconds": 176.40199995040894,
+      "rate": 0.14315949369678024,
+      "start": 1793218056.57,
+      "end": 1793218232.972
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-bzq4l",
+      "metric": "container_pressure_cpu_waiting_seconds_total",
+      "seconds": 153.7590000629425,
+      "rate": 0.1405596744980965,
+      "start": 1793218057.166,
+      "end": 1793218210.925
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-sjl52",
+      "metric": "container_cpu_usage_seconds_total",
+      "seconds": 125.23699998855591,
+      "rate": 0.45432400971916703,
+      "start": 1793218088.328,
+      "end": 1793218213.565
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-sjl52",
+      "metric": "container_pressure_cpu_stalled_seconds_total",
+      "seconds": 125.23699998855591,
+      "rate": 0.087224398548338,
+      "start": 1793218088.328,
+      "end": 1793218213.565
+    },
+    {
+      "pod": "mcp-registry-57d9d88679-sjl52",
+      "metric": "container_pressure_cpu_waiting_seconds_total",
+      "seconds": 125.23699998855591,
+      "rate": 0.1408256266248123,
+      "start": 1793218088.328,
+      "end": 1793218213.565
+    }
+  ],
+  "generator": {
+    "sample_intervals": 17,
+    "scope": "Whole sixteen-vCPU generator from /proc/stat and non-loopback network devices; includes monitoring overhead. CPU busy includes steal, reported separately. Does not alone rule out single-thread or network constraints.",
+    "cpu_busy_percent": {
+      "mean": 17.762639382590372,
+      "max": 22.59479786900658
+    },
+    "cpu_steal_percent": {
+      "mean": 0.18974919589702258,
+      "max": 0.38232528987778125
+    },
+    "cpu_iowait_percent": {
+      "mean": 0.0014846625138125438,
+      "max": 0.006331518298087881
+    },
+    "cpu_softirq_percent": {
+      "mean": 4.85494863927935,
+      "max": 5.954246317768725
+    },
+    "received_gbps": {
+      "mean": 2.1155602481364646,
+      "max": 2.168580031962932
+    },
+    "transmitted_gbps": {
+      "mean": 0.027411111776386228,
+      "max": 0.031550045743905214
+    },
+    "receive_drops": 0,
+    "transmit_drops": 0
+  },
+  "capture_count": 140,
+  "capture_failures": [],
+  "runtime_integrity": {
+    "as_of": 1793218723.269331,
+    "samples": 17,
+    "commands_failed": [],
+    "app_restarts": {
+      "mcp-registry-57d9d88679-52rg4/mcp-registry": 0,
+      "mcp-registry-57d9d88679-bzq4l/mcp-registry": 0,
+      "mcp-registry-57d9d88679-sjl52/mcp-registry": 0,
+      "mcp-registry-57d9d88679-vfcxl/mcp-registry": 0,
+      "registry-pg-1/postgres": 0
+    },
+    "node_count_timeline": [
+      {
+        "at": 1793217912.826272,
+        "nodes": 4
+      }
+    ],
+    "db_throttled_usec_range": [
+      0,
+      0
+    ],
+    "db_endpoint_samples": 90,
+    "db_endpoint_errors_or_empty": [],
+    "db_endpoint_not_ready": [],
+    "metric_window": {
+      "start": 1793217928.0,
+      "end": 1793218622.6379101
+    },
+    "metric_errors": [],
+    "empty_metrics": [
+      "alerts",
+      "raw_5xx",
+      "raw_cancellations"
+    ],
+    "cadvisor_failures_or_empty": [],
+    "lb_collection_failures": []
+  },
+  "ingress_distribution": {
+    "scope": "Raw counter deltas at query timestamps 20:07:28\u201320:12:58 UTC. Scrape-aligned; includes surrounding traffic/recovery and any counted background work, not exact generator requests.",
+    "pods": [
+      {
+        "pod": "ingress-nginx-controller-54dc7ccbb8-dfgrl",
+        "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+        "counter_delta": 100064.0,
+        "share_percent": 11.414608883327192
+      },
+      {
+        "pod": "ingress-nginx-controller-54dc7ccbb8-mzmdk",
+        "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+        "counter_delta": 118292.0,
+        "share_percent": 13.493933023130598
+      },
+      {
+        "pod": "ingress-nginx-controller-54dc7ccbb8-dlgmt",
+        "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-zn6z",
+        "counter_delta": 110849.0,
+        "share_percent": 12.644887073352415
+      },
+      {
+        "pod": "ingress-nginx-controller-54dc7ccbb8-mkxsp",
+        "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-zn6z",
+        "counter_delta": 106013.0,
+        "share_percent": 12.093229648506613
+      },
+      {
+        "pod": "ingress-nginx-controller-54dc7ccbb8-5zhms",
+        "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+        "counter_delta": 265381.0,
+        "share_percent": 30.272828590364703
+      },
+      {
+        "pod": "ingress-nginx-controller-54dc7ccbb8-j9z7d",
+        "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-ntsl",
+        "counter_delta": 176032.0,
+        "share_percent": 20.08051278131848
+      }
+    ]
+  },
+  "limitations": [
+    "Warm 4-app/6-ingress capacity gate only: CPU HPA scale-up and natural 2-node recovery not tested.",
+    "Actual scheduler placed apps 1/1/2/0 across four nodes; previous four-app comparison used hard one-app-per-node placement.",
+    "DB resource change restarted PostgreSQL before preparation; cache state differs from previous tests.",
+    "15-second zero pending gauges do not imply zero waiting: acquire histogram means 29\u2013135 ms across pods, versus 12\u201316 ms checkout. Acquire time includes pool and scheduler delays.",
+    "App CPU full-stall rates cover unequal 125\u2013178-second intervals inside the burst.",
+    "Generator calibration excludes the external network; whole-VM spare CPU and zero NIC drops do not exclude a client or network limit.",
+    "Periodic drops overlap two 30-second mechanisms: generator idle-connection rotation and ingress cache TTL. Causality is unproven.",
+    "No publishes were generated; publish latency gate was not tested."
+  ],
+  "next_step": "Keep production unchanged. Use the captured evidence to isolate periodic cache-refill and connection-churn effects and uneven ingress placement before another capacity proposal; do not increase pools based on sampled zero queues.",
+  "restoration": {
+    "at": 1793218621.450293,
+    "production_changed": false,
+    "instances_absent": true,
+    "disks_absent": true,
+    "app_spec_restored": true,
+    "ingress_hpa_restored": true,
+    "db_resources_restored": true,
+    "whitelist_restored": true,
+    "verified_at": "2026-10-28T20:22:38.369288+00:00",
+    "response_hashes_matched": 48,
+    "corpus": {
+      "names": 52366,
+      "versions": 187108,
+      "benchmark_runs": null
+    },
+    "final_snapshot_at": 1793218899.924099,
+    "observed_nodes": 4,
+    "observed_app_pods": 2,
+    "observed_ingress_pods": 5,
+    "natural_two_node_recovery_observed": false
+  }
+}

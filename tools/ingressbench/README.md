@@ -24,9 +24,10 @@ The subsequent [generator calibration and DB-isolation control](DELIVERY_VALIDAT
 resolves part of that measurement uncertainty and confirms remaining app CPU
 contention. Neither tested layout passed the short offered-load gate.
 
-The [coordinated CPU capacity candidate](COORDINATED_CAPACITY.md) records the next
-staging-only profile, CPU request budget and conditional validation gates. It is
-not enabled or validated.
+The [coordinated CPU capacity candidate](COORDINATED_CAPACITY.md) records the
+subsequent staging test: 7,418 of 810,000 offered reads were dropped, despite
+lower attempted-request latency. Its short delivery gate failed, so the long
+autoscaling test was not run and the opt-in remains disabled.
 
 ```sh
 go build -o ingressbench ./tools/ingressbench

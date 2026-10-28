@@ -1,0 +1,37 @@
+{
+  "as_of": 1793218723.269331,
+  "samples": 17,
+  "commands_failed": [],
+  "app_restarts": {
+    "mcp-registry-57d9d88679-52rg4/mcp-registry": 0,
+    "mcp-registry-57d9d88679-bzq4l/mcp-registry": 0,
+    "mcp-registry-57d9d88679-sjl52/mcp-registry": 0,
+    "mcp-registry-57d9d88679-vfcxl/mcp-registry": 0,
+    "registry-pg-1/postgres": 0
+  },
+  "node_count_timeline": [
+    {
+      "at": 1793217912.826272,
+      "nodes": 4
+    }
+  ],
+  "db_throttled_usec_range": [
+    0,
+    0
+  ],
+  "db_endpoint_samples": 90,
+  "db_endpoint_errors_or_empty": [],
+  "db_endpoint_not_ready": [],
+  "metric_window": {
+    "start": 1793217928.0,
+    "end": 1793218622.6379101
+  },
+  "metric_errors": [],
+  "empty_metrics": [
+    "alerts",
+    "raw_5xx",
+    "raw_cancellations"
+  ],
+  "cadvisor_failures_or_empty": [],
+  "lb_collection_failures": []
+}
