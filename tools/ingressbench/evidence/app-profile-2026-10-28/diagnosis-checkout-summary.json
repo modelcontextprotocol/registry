@@ -1,0 +1,256 @@
+{
+  "mcp-registry-75dc47cb8c-js56r": {
+    "first": "burst-000-mcp-registry-75dc47cb8c-js56r.prom",
+    "last": "burst-180-mcp-registry-75dc47cb8c-js56r.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 32383.0,
+        "sum": 139923.75845917864,
+        "mean_ms": 4320.901660104952
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 42.0,
+        "sum": 177.077460854,
+        "mean_ms": 4216.130020333333
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 2573.0,
+        "sum": 11343.563675226987,
+        "mean_ms": 4408.691673232409
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 213.0,
+        "sum": 929.6411971990007,
+        "mean_ms": 4364.512662906106
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 32336.0,
+        "sum": 6967.861922144939,
+        "mean_ms": 215.4831123869662
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 42.0,
+        "sum": 14.246622057999996,
+        "mean_ms": 339.20528709523796
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 2573.0,
+        "sum": 527.2341940569994,
+        "mean_ms": 204.910296951807
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 213.0,
+        "sum": 53.80341299699996,
+        "mean_ms": 252.59818308450687
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 32336.0,
+        "sum": 44.09452008399998,
+        "mean_ms": 1.3636355790450267
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 42.0,
+        "sum": 0.0006797800000000003,
+        "mean_ms": 0.016185238095238103
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 2573.0,
+        "sum": 2.6879455869999966,
+        "mean_ms": 1.0446737609794001
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 213.0,
+        "sum": 0.2885354659999997,
+        "mean_ms": 1.3546266009389658
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 32336.0,
+        "sum": 6388.073811950991,
+        "mean_ms": 197.55300012218552
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 42.0,
+        "sum": 13.88802664,
+        "mean_ms": 330.66730095238097
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 2573.0,
+        "sum": 482.04232194399975,
+        "mean_ms": 187.34641350330344
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 213.0,
+        "sum": 51.560183335999994,
+        "mean_ms": 242.06658843192486
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 3.0,
+        "{'operation': 'list_page'}": 843.0,
+        "{'operation': 'list_search'}": 9.0,
+        "{'operation': 'list_updated'}": 77.0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 58.0,
+        "{'state': 'constructing'}": 0,
+        "{'state': 'idle'}": 19.0
+      }
+    },
+    "cache": {
+      "hit": 0,
+      "miss": 0,
+      "hit_fraction": null,
+      "mcp_registry_db_listing_json_cache_entries": 0,
+      "mcp_registry_db_listing_json_cache_payload_bytes": 0
+    }
+  },
+  "mcp-registry-75dc47cb8c-ksg8g": {
+    "first": "burst-000-mcp-registry-75dc47cb8c-ksg8g.prom",
+    "last": "burst-180-mcp-registry-75dc47cb8c-ksg8g.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 33096.0,
+        "sum": 647.7390540120152,
+        "mean_ms": 19.571520848803942
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 39.0,
+        "sum": 0.6372074540000005,
+        "mean_ms": 16.33865266666668
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 2767.0,
+        "sum": 20.754347321999983,
+        "mean_ms": 7.500667626310077
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 220.0,
+        "sum": 1.852707417,
+        "mean_ms": 8.421397350000001
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 33096.0,
+        "sum": 435.9225932980025,
+        "mean_ms": 13.171458584058572
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 39.0,
+        "sum": 0.5308828280000001,
+        "mean_ms": 13.612380205128208
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 2767.0,
+        "sum": 34.24139123700006,
+        "mean_ms": 12.37491551752803
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 219.0,
+        "sum": 9.030233360999997,
+        "mean_ms": 41.23394228767122
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 33096.0,
+        "sum": 1.6756086680000077,
+        "mean_ms": 0.050628736644912006
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 39.0,
+        "sum": 0.05231855299999999,
+        "mean_ms": 1.3415013589743587
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 2767.0,
+        "sum": 0.12623753300000023,
+        "mean_ms": 0.04562252728586926
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 219.0,
+        "sum": 0.010610954000000002,
+        "mean_ms": 0.04845184474885846
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 33096.0,
+        "sum": 427.2969633130019,
+        "mean_ms": 12.910834037738757
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 39.0,
+        "sum": 0.477987415,
+        "mean_ms": 12.256087564102565
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 2767.0,
+        "sum": 33.890723538000024,
+        "mean_ms": 12.248183425370447
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 219.0,
+        "sum": 9.013212399,
+        "mean_ms": 41.156221
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 0,
+        "{'operation': 'list_page'}": 0,
+        "{'operation': 'list_search'}": 0,
+        "{'operation': 'list_updated'}": 0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 3.0,
+        "{'state': 'constructing'}": 0,
+        "{'state': 'idle'}": 60.0
+      }
+    },
+    "cache": {
+      "hit": 0,
+      "miss": 0,
+      "hit_fraction": null,
+      "mcp_registry_db_listing_json_cache_entries": 0,
+      "mcp_registry_db_listing_json_cache_payload_bytes": 0
+    }
+  }
+}

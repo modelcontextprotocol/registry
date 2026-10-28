@@ -1,0 +1,17 @@
+{
+  "before": "diagnostics-1793187820.json",
+  "after": "diagnostics-1793188148.json",
+  "window_seconds": 328.9415910243988,
+  "reset_unchanged": true,
+  "scope": "Only statements present in both bounded top-25 snapshots; interval brackets burst with collection padding",
+  "rows": [
+    {
+      "queryid": 308564448692527448,
+      "calls": 79884,
+      "mean_ms": 1.5357204145260692,
+      "total_exec_ms": 122679.48959400051,
+      "block_reads": 0,
+      "temp_blocks_written": 0
+    }
+  ]
+}

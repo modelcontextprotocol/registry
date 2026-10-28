@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-28T11:33:34.798187+00:00",
+  "rows": 187108,
+  "prepared": 187108,
+  "jsonb_text_bytes": 162038018,
+  "prepared_bytes": 155017950,
+  "table_bytes": 349216768,
+  "indexes_bytes": 212328448,
+  "postmaster_start": "2026-10-27T21:24:59.430872+00:00"
+}

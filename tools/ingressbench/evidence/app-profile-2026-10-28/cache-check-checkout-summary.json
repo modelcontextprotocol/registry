@@ -1,0 +1,256 @@
+{
+  "mcp-registry-7fc9585957-6rq6t": {
+    "first": "burst-000-mcp-registry-7fc9585957-6rq6t.prom",
+    "last": "burst-180-mcp-registry-7fc9585957-6rq6t.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 29899.0,
+        "sum": 425.49390079799286,
+        "mean_ms": 14.231041198635168
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 37.0,
+        "sum": 1.1831182200000006,
+        "mean_ms": 31.976168108108123
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 2095.0,
+        "sum": 10.428127551000028,
+        "mean_ms": 4.977626515990466
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 171.0,
+        "sum": 1.7546932549999994,
+        "mean_ms": 10.261364064327482
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 29845.0,
+        "sum": 312.9376773679973,
+        "mean_ms": 10.485430637225575
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 37.0,
+        "sum": 0.3945361289999999,
+        "mean_ms": 10.663138621621618
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 2095.0,
+        "sum": 20.28154378100003,
+        "mean_ms": 9.680927819093093
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 171.0,
+        "sum": 8.446093573000008,
+        "mean_ms": 49.39236007602344
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 29845.0,
+        "sum": 1.4232190949999868,
+        "mean_ms": 0.04768701943374055
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 37.0,
+        "sum": 0.0008786980000000003,
+        "mean_ms": 0.023748594594594604
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 2095.0,
+        "sum": 0.07606957599999996,
+        "mean_ms": 0.03631006014319807
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 171.0,
+        "sum": 0.010726379000000001,
+        "mean_ms": 0.06272736257309942
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 29845.0,
+        "sum": 310.13403425299856,
+        "mean_ms": 10.39149050939851
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 37.0,
+        "sum": 0.3922005189999997,
+        "mean_ms": 10.600014027027019
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 2095.0,
+        "sum": 20.138220753000017,
+        "mean_ms": 9.612515872553708
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 171.0,
+        "sum": 8.437472827999994,
+        "mean_ms": 49.341946362573054
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 0,
+        "{'operation': 'list_page'}": 0,
+        "{'operation': 'list_search'}": 0,
+        "{'operation': 'list_updated'}": 0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 5.0,
+        "{'state': 'constructing'}": 0,
+        "{'state': 'idle'}": 55.0
+      }
+    },
+    "cache": {
+      "hit": 182891.0,
+      "miss": 2088894.0,
+      "hit_fraction": 0.08050541754611462,
+      "mcp_registry_db_listing_json_cache_entries": 8192.0,
+      "mcp_registry_db_listing_json_cache_payload_bytes": 6806144.0
+    }
+  },
+  "mcp-registry-7fc9585957-r6gck": {
+    "first": "burst-000-mcp-registry-7fc9585957-r6gck.prom",
+    "last": "burst-180-mcp-registry-7fc9585957-r6gck.prom",
+    "histograms": {
+      "mcp_registry_db_pool_acquire_duration/list_page": {
+        "count": 29911.0,
+        "sum": 2194.2550947149966,
+        "mean_ms": 73.35946958359789
+      },
+      "mcp_registry_db_pool_acquire_duration/list": {
+        "count": 43.0,
+        "sum": 7.017721797,
+        "mean_ms": 163.2028324883721
+      },
+      "mcp_registry_db_pool_acquire_duration/list_updated": {
+        "count": 2221.0,
+        "sum": 108.9760119389998,
+        "mean_ms": 49.06619177802783
+      },
+      "mcp_registry_db_pool_acquire_duration/list_search": {
+        "count": 188.0,
+        "sum": 6.797710042000006,
+        "mean_ms": 36.158032138297905
+      },
+      "mcp_registry_db_pool_acquire_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_checkout_duration/list_page": {
+        "count": 29874.0,
+        "sum": 2707.6365600479967,
+        "mean_ms": 90.6352199252861
+      },
+      "mcp_registry_db_pool_checkout_duration/list": {
+        "count": 43.0,
+        "sum": 7.391689142000002,
+        "mean_ms": 171.89974748837213
+      },
+      "mcp_registry_db_pool_checkout_duration/list_updated": {
+        "count": 2220.0,
+        "sum": 200.93862396700013,
+        "mean_ms": 90.51289367882889
+      },
+      "mcp_registry_db_pool_checkout_duration/list_search": {
+        "count": 188.0,
+        "sum": 25.235101978999996,
+        "mean_ms": 134.22926584574466
+      },
+      "mcp_registry_db_pool_checkout_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_pool_after_query_duration/list_page": {
+        "count": 29874.0,
+        "sum": 7.364668155000007,
+        "mean_ms": 0.2465243407310707
+      },
+      "mcp_registry_db_pool_after_query_duration/list": {
+        "count": 43.0,
+        "sum": 0.012715377,
+        "mean_ms": 0.29570644186046513
+      },
+      "mcp_registry_db_pool_after_query_duration/list_updated": {
+        "count": 2220.0,
+        "sum": 0.5013231059999995,
+        "mean_ms": 0.2258212189189187
+      },
+      "mcp_registry_db_pool_after_query_duration/list_search": {
+        "count": 188.0,
+        "sum": 0.022854259000000012,
+        "mean_ms": 0.12156520744680858
+      },
+      "mcp_registry_db_pool_after_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      },
+      "mcp_registry_db_query_duration/list_page": {
+        "count": 29874.0,
+        "sum": 2681.161433420023,
+        "mean_ms": 89.74899355359253
+      },
+      "mcp_registry_db_query_duration/list": {
+        "count": 43.0,
+        "sum": 6.981532712000001,
+        "mean_ms": 162.36122586046514
+      },
+      "mcp_registry_db_query_duration/list_updated": {
+        "count": 2220.0,
+        "sum": 199.24890840000003,
+        "mean_ms": 89.75176054054056
+      },
+      "mcp_registry_db_query_duration/list_search": {
+        "count": 188.0,
+        "sum": 25.176720596999985,
+        "mean_ms": 133.91872657978715
+      },
+      "mcp_registry_db_query_duration/other": {
+        "count": 0.0,
+        "sum": 0.0,
+        "mean_ms": null
+      }
+    },
+    "peak_gauges": {
+      "mcp_registry_db_pool_acquire_pending": {
+        "{'operation': 'list'}": 0,
+        "{'operation': 'list_page'}": 29.0,
+        "{'operation': 'list_search'}": 0,
+        "{'operation': 'list_updated'}": 1.0,
+        "{'operation': 'other'}": 0
+      },
+      "mcp_registry_db_pool_connections": {
+        "{'state': 'acquired'}": 58.0,
+        "{'state': 'constructing'}": 3.0,
+        "{'state': 'idle'}": 56.0
+      }
+    },
+    "cache": {
+      "hit": 287038.0,
+      "miss": 1922144.0,
+      "hit_fraction": 0.1299295395309214,
+      "mcp_registry_db_listing_json_cache_entries": 8192.0,
+      "mcp_registry_db_listing_json_cache_payload_bytes": 7030096.0
+    }
+  }
+}
