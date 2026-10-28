@@ -7,6 +7,10 @@ explicitly selected by default; `-http2` allows HTTP/2. Keep the protocol fixed
 within a comparison and verify the response protocol counts in the output.
 The existing `tools/readbench` remains the query-focused benchmark.
 
+The [fixed-budget replica comparison](REPLICA_CAPACITY_VALIDATION.md) records
+the latest short test and its load-generator limitations. It is not a passing
+production promotion or autoscaling gate.
+
 ```sh
 go build -o ingressbench ./tools/ingressbench
 ./ingressbench -staging -catalog -keys keys.json

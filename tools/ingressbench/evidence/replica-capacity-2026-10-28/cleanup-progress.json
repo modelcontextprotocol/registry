@@ -1,0 +1,10 @@
+{
+  "at": 1793199017.9505851,
+  "nodes": 4,
+  "ingress_current_replicas": 4,
+  "ingress_desired_replicas": 4,
+  "node_pool_min": 2,
+  "node_pool_max": 4,
+  "node_scale_down_candidate_observed": true,
+  "candidate_full_recovery_tested": false
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "pod": "mcp-registry-c46895d95-4bcgm",
+    "metric": "container_cpu_usage_seconds_total",
+    "seconds": 156.51500010490417,
+    "rate": 0.7532370502570507,
+    "start": 1793197401.978,
+    "end": 1793197558.493
+  },
+  {
+    "pod": "mcp-registry-c46895d95-4bcgm",
+    "metric": "container_pressure_cpu_stalled_seconds_total",
+    "seconds": 156.51500010490417,
+    "rate": 0.28372311899968855,
+    "start": 1793197401.978,
+    "end": 1793197558.493
+  },
+  {
+    "pod": "mcp-registry-c46895d95-4bcgm",
+    "metric": "container_pressure_cpu_waiting_seconds_total",
+    "seconds": 156.51500010490417,
+    "rate": 0.40651145869313005,
+    "start": 1793197401.978,
+    "end": 1793197558.493
+  },
+  {
+    "pod": "mcp-registry-c46895d95-fv2tn",
+    "metric": "container_cpu_usage_seconds_total",
+    "seconds": 155.8050000667572,
+    "rate": 0.7138816722977007,
+    "start": 1793197407.756,
+    "end": 1793197563.561
+  },
+  {
+    "pod": "mcp-registry-c46895d95-fv2tn",
+    "metric": "container_pressure_cpu_stalled_seconds_total",
+    "seconds": 155.8050000667572,
+    "rate": 0.28177460274823984,
+    "start": 1793197407.756,
+    "end": 1793197563.561
+  },
+  {
+    "pod": "mcp-registry-c46895d95-fv2tn",
+    "metric": "container_pressure_cpu_waiting_seconds_total",
+    "seconds": 155.8050000667572,
+    "rate": 0.38957453210097936,
+    "start": 1793197407.756,
+    "end": 1793197563.561
+  }
+]

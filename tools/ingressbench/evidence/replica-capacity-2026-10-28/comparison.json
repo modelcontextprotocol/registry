@@ -1,0 +1,140 @@
+{
+  "production_changed": false,
+  "short_diagnostic_only": true,
+  "arms": {
+    "two": {
+      "scheduled_reads": 810000,
+      "attempts_finished": 759347,
+      "dropped": 50653,
+      "drop_percent": 6.253456790123457,
+      "attempt_failures": 0,
+      "errors": {},
+      "latency_ms": {
+        "page_p50": 5.811258,
+        "page_p95": 688.39129,
+        "page_p99": 1715.119676,
+        "search_p50": 109.895904,
+        "search_p95": 2702.476342,
+        "search_p99": 3933.929401,
+        "updated_p50": 77.67783,
+        "updated_p95": 3360.372651,
+        "updated_p99": 4091.710536
+      },
+      "start": "2026-10-28T14:23:19.022947812Z",
+      "end": "2026-10-28T14:26:19.089668473Z",
+      "replicas": {
+        "mcp-registry-c46895d95-4bcgm": {
+          "observed_origin_completions": 41547.0,
+          "process_cpu_seconds": 132.89000000000001,
+          "cpu_ms_per_origin_completion": 3.198546224757504,
+          "peak_sampled_pool_waiters": 0.0,
+          "peak_heap_inuse_bytes": 55443456.0,
+          "payload_sources": {
+            "prepared": 2962360.0,
+            "fallback": 0.0
+          },
+          "first_sample": "burst-000-mcp-registry-c46895d95-4bcgm.prom",
+          "last_sample": "burst-180-mcp-registry-c46895d95-4bcgm.prom"
+        },
+        "mcp-registry-c46895d95-fv2tn": {
+          "observed_origin_completions": 41562.0,
+          "process_cpu_seconds": 126.09,
+          "cpu_ms_per_origin_completion": 3.0337808575140754,
+          "peak_sampled_pool_waiters": 905.0,
+          "peak_heap_inuse_bytes": 105037824.0,
+          "payload_sources": {
+            "prepared": 2967097.0,
+            "fallback": 0.0
+          },
+          "first_sample": "burst-000-mcp-registry-c46895d95-fv2tn.prom",
+          "last_sample": "burst-180-mcp-registry-c46895d95-fv2tn.prom"
+        }
+      },
+      "short_recovery": {
+        "reads": 12000,
+        "dropped": 0,
+        "failures": 0
+      }
+    },
+    "four": {
+      "scheduled_reads": 810000,
+      "attempts_finished": 761101,
+      "dropped": 48899,
+      "drop_percent": 6.036913580246914,
+      "attempt_failures": 0,
+      "errors": {},
+      "latency_ms": {
+        "page_p50": 7.029942,
+        "page_p95": 620.769074,
+        "page_p99": 1251.604969,
+        "search_p50": 58.809584,
+        "search_p95": 803.619519,
+        "search_p99": 1358.229498,
+        "updated_p50": 22.128803,
+        "updated_p95": 829.322605,
+        "updated_p99": 1437.237721
+      },
+      "start": "2026-10-28T14:32:47.208281842Z",
+      "end": "2026-10-28T14:35:47.230801941Z",
+      "replicas": {
+        "mcp-registry-6bf4df77c5-b5zgz": {
+          "observed_origin_completions": 20395.0,
+          "process_cpu_seconds": 71.4,
+          "cpu_ms_per_origin_completion": 3.5008580534444715,
+          "peak_sampled_pool_waiters": 0.0,
+          "peak_heap_inuse_bytes": 32735232.0,
+          "payload_sources": {
+            "prepared": 1450258.0,
+            "fallback": 0.0
+          },
+          "first_sample": "burst-000-mcp-registry-6bf4df77c5-b5zgz.prom",
+          "last_sample": "burst-180-mcp-registry-6bf4df77c5-b5zgz.prom"
+        },
+        "mcp-registry-6bf4df77c5-gtf7x": {
+          "observed_origin_completions": 20393.0,
+          "process_cpu_seconds": 67.17,
+          "cpu_ms_per_origin_completion": 3.293777276516452,
+          "peak_sampled_pool_waiters": 0.0,
+          "peak_heap_inuse_bytes": 20987904.0,
+          "payload_sources": {
+            "prepared": 1449134.0,
+            "fallback": 0.0
+          },
+          "first_sample": "burst-000-mcp-registry-6bf4df77c5-gtf7x.prom",
+          "last_sample": "burst-180-mcp-registry-6bf4df77c5-gtf7x.prom"
+        },
+        "mcp-registry-6bf4df77c5-pkxsj": {
+          "observed_origin_completions": 20390.0,
+          "process_cpu_seconds": 80.17,
+          "cpu_ms_per_origin_completion": 3.931829328102011,
+          "peak_sampled_pool_waiters": 3.0,
+          "peak_heap_inuse_bytes": 22585344.0,
+          "payload_sources": {
+            "prepared": 1455983.0,
+            "fallback": 0.0
+          },
+          "first_sample": "burst-000-mcp-registry-6bf4df77c5-pkxsj.prom",
+          "last_sample": "burst-180-mcp-registry-6bf4df77c5-pkxsj.prom"
+        },
+        "mcp-registry-6bf4df77c5-xd7ms": {
+          "observed_origin_completions": 20389.0,
+          "process_cpu_seconds": 70.99,
+          "cpu_ms_per_origin_completion": 3.4817793908480064,
+          "peak_sampled_pool_waiters": 1.0,
+          "peak_heap_inuse_bytes": 19079168.0,
+          "payload_sources": {
+            "prepared": 1458004.0,
+            "fallback": 0.0
+          },
+          "first_sample": "burst-000-mcp-registry-6bf4df77c5-xd7ms.prom",
+          "last_sample": "burst-180-mcp-registry-6bf4df77c5-xd7ms.prom"
+        }
+      },
+      "short_recovery": {
+        "reads": 12000,
+        "dropped": 0,
+        "failures": 0
+      }
+    }
+  }
+}

@@ -1,5 +1,9 @@
 # Listing CPU diagnosis — 2026-10-28
 
+The subsequent [fixed-budget two-versus-four app comparison](REPLICA_CAPACITY_VALIDATION.md)
+tests the replica/placement hypothesis below. It improves origin latency but
+does not pass the complete offered-load gate.
+
 **The tested candidates do not pass the promotion gate. Production was not
 changed.** The short runs identify expensive listing JSON work and continued
 application CPU contention. They do not establish a complete production fix.

@@ -1,0 +1,219 @@
+{
+  "sample_intervals": 17,
+  "scope": "Whole four-vCPU generator from /proc/stat and non-loopback network devices; includes monitoring overhead. CPU busy includes steal, reported separately. Does not alone rule out single-thread or network constraints.",
+  "intervals": [
+    {
+      "at": 1793197979.236559,
+      "cpu_busy_percent": 60.41178003648684,
+      "cpu_steal_percent": 0.7036747458952306,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 18.582225697159238,
+      "received_gbps": 2.1735660545384574,
+      "transmitted_gbps": 0.026803592737355896,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793197989.2446823,
+      "cpu_busy_percent": 68.43879668049793,
+      "cpu_steal_percent": 0.38900414937759337,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 17.557053941908713,
+      "received_gbps": 1.9756497730926053,
+      "transmitted_gbps": 0.029031728372082385,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793197999.2527142,
+      "cpu_busy_percent": 67.94640556557589,
+      "cpu_steal_percent": 0.2061324400927596,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 16.722494202525123,
+      "received_gbps": 1.9219533416484342,
+      "transmitted_gbps": 0.02696785743466008,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198009.2601385,
+      "cpu_busy_percent": 59.97915581031788,
+      "cpu_steal_percent": 0.26055237102657636,
+      "cpu_iowait_percent": 0.026055237102657634,
+      "cpu_softirq_percent": 20.036477331943722,
+      "received_gbps": 2.1737321194041814,
+      "transmitted_gbps": 0.026299709363304013,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198019.268129,
+      "cpu_busy_percent": 64.51363870303655,
+      "cpu_steal_percent": 0.2573340195573855,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 18.502316006176017,
+      "received_gbps": 1.9560804154417157,
+      "transmitted_gbps": 0.025256479360939266,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198029.2750576,
+      "cpu_busy_percent": 71.99792960662526,
+      "cpu_steal_percent": 0.2070393374741201,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 18.115942028985508,
+      "received_gbps": 1.8578045041699545,
+      "transmitted_gbps": 0.028713406077656347,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198039.283154,
+      "cpu_busy_percent": 60.96918619963129,
+      "cpu_steal_percent": 1.0797998419805108,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 20.779562812746907,
+      "received_gbps": 2.1569346624272545,
+      "transmitted_gbps": 0.02604378736078165,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198049.2900076,
+      "cpu_busy_percent": 58.00371648526679,
+      "cpu_steal_percent": 0.2123705866737457,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 19.72391823732413,
+      "received_gbps": 2.1239797773668854,
+      "transmitted_gbps": 0.02413286514666286,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198059.2972236,
+      "cpu_busy_percent": 76.81794739556473,
+      "cpu_steal_percent": 0.15471892728210418,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 16.787003610108304,
+      "received_gbps": 1.690590264401732,
+      "transmitted_gbps": 0.02993889216512609,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198069.3096907,
+      "cpu_busy_percent": 60.01583531274743,
+      "cpu_steal_percent": 0.2903140670361573,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 20.84982845077857,
+      "received_gbps": 2.1571676731844938,
+      "transmitted_gbps": 0.025576888120362903,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198079.3170233,
+      "cpu_busy_percent": 68.80733944954129,
+      "cpu_steal_percent": 0.34076015727391873,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 17.929226736566186,
+      "received_gbps": 1.91677353525288,
+      "transmitted_gbps": 0.02714785526301027,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198089.3240435,
+      "cpu_busy_percent": 67.15867158671587,
+      "cpu_steal_percent": 0.21085925144965736,
+      "cpu_iowait_percent": 0.02635740643120717,
+      "cpu_softirq_percent": 19.240906694781234,
+      "received_gbps": 1.9805508619397638,
+      "transmitted_gbps": 0.027906081274980028,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198099.3362043,
+      "cpu_busy_percent": 58.85014639339899,
+      "cpu_steal_percent": 0.18631887143997872,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 19.244077721586372,
+      "received_gbps": 2.1492706476693653,
+      "transmitted_gbps": 0.02563749161548168,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198109.3435338,
+      "cpu_busy_percent": 66.62313920083572,
+      "cpu_steal_percent": 0.18281535648994515,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 16.662313920083573,
+      "received_gbps": 1.9250599430528978,
+      "transmitted_gbps": 0.026314434530051733,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198119.3491871,
+      "cpu_busy_percent": 69.06867845993756,
+      "cpu_steal_percent": 0.1040582726326743,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 18.10613943808533,
+      "received_gbps": 1.9269700495464401,
+      "transmitted_gbps": 0.028743669307607314,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198129.354504,
+      "cpu_busy_percent": 59.909790395330326,
+      "cpu_steal_percent": 0.2122578933404086,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 19.23587158397453,
+      "received_gbps": 2.166475840303139,
+      "transmitted_gbps": 0.026297536871352195,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    },
+    {
+      "at": 1793198139.3599524,
+      "cpu_busy_percent": 64.68285043069694,
+      "cpu_steal_percent": 0.18271991647089533,
+      "cpu_iowait_percent": 0.0,
+      "cpu_softirq_percent": 16.992952231793264,
+      "received_gbps": 1.93273781765914,
+      "transmitted_gbps": 0.025598016526757684,
+      "receive_drops": 0,
+      "transmit_drops": 0
+    }
+  ],
+  "cpu_busy_percent": {
+    "mean": 64.95264751248278,
+    "max": 76.81794739556473
+  },
+  "cpu_steal_percent": {
+    "mean": 0.3047488356172742,
+    "max": 1.0797998419805108
+  },
+  "cpu_iowait_percent": {
+    "mean": 0.0030830966784626355,
+    "max": 0.02635740643120717
+  },
+  "cpu_softirq_percent": {
+    "mean": 18.533430038030982,
+    "max": 20.84982845077857
+  },
+  "received_gbps": {
+    "mean": 2.010899840064667,
+    "max": 2.1737321194041814
+  },
+  "transmitted_gbps": {
+    "mean": 0.026847664207539552,
+    "max": 0.02993889216512609
+  },
+  "receive_drops": 0,
+  "transmit_drops": 0
+}

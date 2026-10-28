@@ -1,0 +1,27 @@
+{
+  "as_of": 1793198600.268733,
+  "samples": 17,
+  "commands_failed": [],
+  "app_restarts": {
+    "mcp-registry-6bf4df77c5-b5zgz/mcp-registry": 0,
+    "mcp-registry-6bf4df77c5-gtf7x/mcp-registry": 0,
+    "mcp-registry-6bf4df77c5-pkxsj/mcp-registry": 0,
+    "mcp-registry-6bf4df77c5-xd7ms/mcp-registry": 0,
+    "registry-pg-1/postgres": 0
+  },
+  "node_count_timeline": [
+    {
+      "at": 1793197823.106338,
+      "nodes": 4
+    }
+  ],
+  "db_throttled_usec_range": [
+    976975,
+    976975
+  ],
+  "db_endpoint_samples": 90,
+  "db_endpoint_errors_or_empty": [],
+  "db_endpoint_not_ready": [],
+  "cadvisor_failures_or_empty": [],
+  "lb_collection_failures": []
+}
