@@ -13,6 +13,10 @@ This tutorial will show you how to publish an MCP server written in TypeScript t
   If you are publishing a non-npm package (PyPI, NuGet, OCI, MCPB), the overall flow is identical, but the ownership-verification step in [Step 1](#step-1-add-verification-information-to-the-package) is different per package type. See [Package Types](./package-types) for the verification mechanism that applies to your package, then return here and follow the remaining steps.
 </Note>
 
+<Note>
+  Publishing a Go server as a container image? See [Go stdio servers via OCI](#go-stdio-servers-via-oci). That path replaces the npm-specific Steps 1, 2, and 4; install `mcp-publisher` with Step 3, then follow the login and publish commands in the section.
+</Note>
+
 ## Remote-only servers
 
 If your MCP server is available only at a public remote endpoint, you can publish its metadata without a package. Skip the Node.js and npm prerequisites and Steps 1–2, then continue with [Step 3](#step-3-install-mcp-publisher). Your `server.json` must include a `remotes` entry and can omit `packages`:
@@ -308,6 +312,131 @@ You should see your server's metadata in the search results JSON:
 
 ```text Output
 {"servers":[{ ... "name":"io.github.my-username/weather" ... }]}
+```
+
+## Go stdio servers via OCI
+
+This section is a complete publishing path for a Go server distributed as a container image. It replaces Steps 1, 2, and 4; use [Step 3](#step-3-install-mcp-publisher) to install `mcp-publisher`, then follow the commands below.
+
+### 1. Build a minimal stdio server
+
+The example uses the official Go SDK. Save it as `main.go`:
+
+```go main.go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+type greetArgs struct {
+	Name string `json:"name" jsonschema:"the person to greet"`
+}
+
+func main() {
+	server := mcp.NewServer(&mcp.Implementation{Name: "hello-go", Version: "1.0.0"}, nil)
+	mcp.AddTool(server, &mcp.Tool{
+		Name:        "greet",
+		Description: "Say hello",
+	}, func(ctx context.Context, req *mcp.CallToolRequest, args greetArgs) (*mcp.CallToolResult, any, error) {
+		return &mcp.CallToolResult{
+			Content: []mcp.Content{
+				&mcp.TextContent{Text: "Hello, " + args.Name},
+			},
+		}, nil, nil
+	})
+
+	if err := server.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+Create the module, fetch the SDK, and build the binary:
+
+```bash
+go mod init example.com/hello-go
+go get github.com/modelcontextprotocol/go-sdk@latest
+go mod tidy
+go build -o hello-go .
+```
+
+### 2. Package and push the image
+
+The image must carry the `io.modelcontextprotocol.server.name` annotation, and its value must match `name` in `server.json`. The registry reads this annotation during ownership verification.
+
+```dockerfile Dockerfile
+FROM golang:1.25 AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/hello-go .
+
+FROM scratch
+LABEL io.modelcontextprotocol.server.name="io.github.my-username/hello-go"
+COPY --from=build /out/hello-go /hello-go
+ENTRYPOINT ["/hello-go"]
+```
+
+Build and push the image to GitHub Container Registry:
+
+```bash
+docker login ghcr.io -u my-username
+docker build -t ghcr.io/my-username/hello-go:1.0.0 .
+docker push ghcr.io/my-username/hello-go:1.0.0
+```
+
+<Note>
+  Use a GitHub personal access token with the `write:packages` scope as the password for `docker login`. GHCR packages are private by default; make the package public after the first push, otherwise the registry cannot read the annotation during validation.
+</Note>
+
+The same flow works with any supported OCI registry. For example, replace `ghcr.io/my-username/hello-go` with `docker.io/my-username/hello-go` if you publish to Docker Hub.
+
+### 3. Create `server.json`
+
+```json server.json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.my-username/hello-go",
+  "title": "Hello Go",
+  "description": "A minimal Go MCP server published as an OCI image.",
+  "repository": {
+    "url": "https://github.com/my-username/hello-go",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/my-username/hello-go:1.0.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
+`name` must be `io.github.<your-github-username>/<server-name>` when you authenticate with GitHub, and the same value must be used in the image annotation.
+
+### 4. Publish and verify
+
+```bash
+mcp-publisher login github
+mcp-publisher validate
+mcp-publisher publish
+```
+
+`validate` checks the `server.json` schema and fetches the image annotation, so run it after the image is pushed and public.
+
+Verify the listing through the registry API:
+
+```bash
+curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.my-username/hello-go"
 ```
 
 ## Troubleshooting
