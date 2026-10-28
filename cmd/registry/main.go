@@ -57,6 +57,13 @@ func main() {
 	// Initialize configuration
 	cfg := config.NewConfig()
 
+	stopProfiling, err := telemetry.StartProfiling(os.Getenv("MCP_REGISTRY_ENABLE_PPROF") == "true")
+	if err != nil {
+		log.Printf("Failed to start profiling: %v", err)
+		return
+	}
+	defer stopProfiling()
+
 	// Initialize telemetry before opening the instrumented database pool.
 	shutdownTelemetry, metrics, err := telemetry.InitMetrics(cfg.Version)
 	if err != nil {
