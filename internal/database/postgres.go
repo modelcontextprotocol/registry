@@ -22,10 +22,9 @@ import (
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
-	pool            *pgxpool.Pool
-	poolMetrics     metric.Registration
-	cacheMetrics    metric.Registration
-	encodedListings *listingJSONCache
+	pool           *pgxpool.Pool
+	poolMetrics    metric.Registration
+	listingMetrics metric.Int64Counter
 }
 
 // Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
@@ -98,19 +97,17 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	if err != nil {
 		return nil, fmt.Errorf("observe database pool: %w", err)
 	}
-	cache := newListingJSONCache(64<<20, 8192)
-	cacheRegistration, err := dbMetrics.ObserveListingCache(cache.stats)
+	listingMetrics, err := otel.Meter("mcp_registry.database").Int64Counter("mcp_registry.db.listing_json.rows", metric.WithDescription("Listing rows served from prepared JSON or normalization fallback"))
 	if err != nil {
 		_ = registration.Unregister()
-		return nil, fmt.Errorf("observe listing cache: %w", err)
+		return nil, fmt.Errorf("initialize listing metrics: %w", err)
 	}
 	initialized = true
 
 	return &PostgreSQL{
-		cacheMetrics:    cacheRegistration,
-		encodedListings: cache,
-		pool:            pool,
-		poolMetrics:     registration,
+		listingMetrics: listingMetrics,
+		pool:           pool,
+		poolMetrics:    registration,
 	}, nil
 }
 
@@ -218,7 +215,7 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 }
 
 // searchPageQuery retains the ordinary query for listings without a search.
-func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int) string {
+func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int, prepared ...bool) string {
 	if filter == nil || filter.SubstringName == nil {
 		return ordinary
 	}
@@ -229,6 +226,10 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
 	// and can favor scanning most of the ordered index over a selective GIN
 	// lookup. The outer LIMIT still defines the exact page before payload fetch.
 	// PostgreSQL 17 can stop the ordered CTE scan after the requested rows.
+	payload := "s.value"
+	if len(prepared) > 0 && prepared[0] {
+		payload = listingPayload("s.")
+	}
 	return fmt.Sprintf(`
         WITH candidates AS MATERIALIZED (
             SELECT server_name, version FROM servers
@@ -237,7 +238,7 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
             LIMIT GREATEST($%d, 8192)
         )
         SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
-               s.published_at, s.updated_at, s.is_latest, s.value
+               s.published_at, s.updated_at, s.is_latest, %s
         FROM (
             SELECT server_name, version FROM candidates
             ORDER BY server_name, version
@@ -245,7 +246,7 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
         ) page
         JOIN servers s USING (server_name, version)
         ORDER BY s.server_name, s.version
-    `, whereClause, limitArg, limitArg)
+    `, whereClause, limitArg, payload, limitArg)
 }
 
 func searchQueryArgs(filter *ServerFilter, args []any) []any {
@@ -261,7 +262,7 @@ func searchQueryArgs(filter *ServerFilter, args []any) []any {
 func (db *PostgreSQL) ListServers(ctx context.Context, tx pgx.Tx, filter *ServerFilter, cursor string, limit int) (_ []*apiv0.ServerResponse, _ string, resultErr error) {
 	diagnostic := telemetry.ListingFromContext(ctx)
 	defer func() { diagnostic.DatabaseDone(resultErr) }()
-	page, err := db.listServerRows(ctx, tx, filter, cursor, limit)
+	page, err := db.listServerRows(ctx, tx, filter, cursor, limit, false)
 	if err != nil {
 		return nil, "", err
 	}
@@ -286,6 +287,7 @@ func (db *PostgreSQL) listServerRows(
 	filter *ServerFilter,
 	cursor string,
 	limit int,
+	prepared bool,
 ) ([]listingRow, error) {
 	diagnostic := telemetry.ListingFromContext(ctx)
 	operation := "list"
@@ -332,15 +334,19 @@ func (db *PostgreSQL) listServerRows(
 		whereClause = "WHERE " + strings.Join(whereConditions, " AND ")
 	}
 
-	// Query servers table with hybrid column/JSON data
+	// Select prepared bytes only for HTTP serialization; typed callers retain JSONB.
+	payload := "value"
+	if prepared {
+		payload = listingPayload("")
+	}
 	query := fmt.Sprintf(`
-        SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value
+        SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, %s
         FROM servers
         %s
         ORDER BY server_name, version
         LIMIT $%d
-    `, whereClause, argIndex)
-	query = searchPageQuery(filter, query, whereClause, argIndex)
+    `, payload, whereClause, argIndex)
+	query = searchPageQuery(filter, query, whereClause, argIndex, prepared)
 	args = append(args, limit)
 	args = searchQueryArgs(filter, args)
 
@@ -348,15 +354,17 @@ func (db *PostgreSQL) listServerRows(
 	if err != nil {
 		return nil, fmt.Errorf("failed to query servers: %w", err)
 	}
-	return readListingRows(ctx, rows, diagnostic)
+	return readListingRows(ctx, rows, diagnostic, prepared)
 }
 
 type listingRow struct {
-	metadata apiv0.RegistryExtensions
-	value    []byte
+	metadata      apiv0.RegistryExtensions
+	value         []byte
+	name, version string
+	prepared      bool
 }
 
-func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic) ([]listingRow, error) {
+func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic, prepared bool) ([]listingRow, error) {
 	defer rows.Close()
 
 	// Copy the bounded page before decoding JSON. Exhausting/closing pooled rows
@@ -371,12 +379,16 @@ func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.L
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		var serverName, version, status string
+		var status string
 		var row listingRow
 		meta := &row.metadata
-		// pgx scans JSONB into an owned []byte, valid after Next and Close.
-		if err := rows.Scan(&serverName, &version, &status, &meta.StatusChangedAt, &meta.StatusMessage,
-			&meta.PublishedAt, &meta.UpdatedAt, &meta.IsLatest, &row.value); err != nil {
+		// pgx scans JSONB/bytea into owned bytes, valid after Next and Close.
+		dest := []any{&row.name, &row.version, &status, &meta.StatusChangedAt, &meta.StatusMessage,
+			&meta.PublishedAt, &meta.UpdatedAt, &meta.IsLatest, &row.value}
+		if prepared {
+			dest = append(dest, &row.prepared)
+		}
+		if err := rows.Scan(dest...); err != nil {
 			return nil, fmt.Errorf("failed to scan server row: %w", err)
 		}
 		meta.Status = model.Status(status)
@@ -647,10 +659,15 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, serverJSON *a
 		return nil, fmt.Errorf("failed to marshal server JSON: %w", err)
 	}
 
+	normalized, err := normalizeListingJSON(valueJSON)
+	if err != nil {
+		return nil, err
+	}
+
 	// Insert the new server version using composite primary key
 	insertQuery := `
-		INSERT INTO servers (server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO servers (server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value, listing_value, listing_codec)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 
 	_, err = db.getExecutor(tx).Exec(ctx, insertQuery,
@@ -663,6 +680,8 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, serverJSON *a
 		officialMeta.UpdatedAt,
 		officialMeta.IsLatest,
 		valueJSON,
+		normalized.json,
+		listingCodecVersion,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
@@ -701,10 +720,15 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 		return nil, fmt.Errorf("failed to marshal updated server: %w", err)
 	}
 
-	// Update only the JSON data (keep existing metadata columns)
+	normalized, err := normalizeListingJSON(valueJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update payload and its derived response together.
 	query := `
 		UPDATE servers
-		SET value = $1, updated_at = NOW()
+		SET value = $1, updated_at = NOW(), listing_value = $4, listing_codec = $5
 		WHERE server_name = $2 AND version = $3
 		RETURNING server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest
 	`
@@ -714,7 +738,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 	var statusMessage *string
 	var isLatest bool
 
-	err = db.getExecutor(tx).QueryRow(ctx, query, valueJSON, serverName, version).Scan(&name, &vers, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest)
+	err = db.getExecutor(tx).QueryRow(ctx, query, valueJSON, serverName, version, normalized.json, listingCodecVersion).Scan(&name, &vers, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -1080,9 +1104,6 @@ func (db *PostgreSQL) Close() error {
 	var err error
 	if db.poolMetrics != nil {
 		err = db.poolMetrics.Unregister()
-	}
-	if db.cacheMetrics != nil {
-		err = errors.Join(err, db.cacheMetrics.Unregister())
 	}
 	db.pool.Close()
 	return err

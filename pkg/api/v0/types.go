@@ -71,7 +71,7 @@ func (s ServerListResponse) MarshalJSON() ([]byte, error) {
 		type plain ServerListResponse
 		return json.Marshal(plain(s))
 	}
-	// Payloads were normalized with json.Marshal before caching. Metadata is
+	// Payloads were normalized with json.Marshal before storage. Metadata is
 	// freshly encoded here; append avoids copying every large payload through
 	// intermediate record and slice encoders. The outer encoder validates JSON.
 	capacity := 64

@@ -1,55 +1,26 @@
 package database
 
 import (
-	"container/list"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
 )
 
+// Bump whenever ServerJSON's wire normalization changes. Unknown codecs fall
+// back to authoritative JSONB, allowing mixed-version deployments and rollback.
+const listingCodecVersion = 1
+
 type normalizedServer struct {
-	key           [32]byte
 	json          json.RawMessage
 	name, version string
 }
 
-// listingJSONCache caches only the typed JSON normalization of a stored value.
-// Every request still queries PostgreSQL for selection, ordering and metadata.
-// Content addressing makes updates visible immediately without invalidation or
-// TTLs. Both retained payload capacity and entry count are bounded.
-type listingJSONCache struct {
-	mu                          sync.Mutex
-	entries                     map[[32]byte]*list.Element
-	lru                         list.List
-	bytes, maxBytes, maxEntries int
-	hits, misses                int64
-}
-
-func newListingJSONCache(maxBytes, maxEntries int) *listingJSONCache {
-	return &listingJSONCache{entries: make(map[[32]byte]*list.Element), maxBytes: maxBytes, maxEntries: maxEntries}
-}
-
-func (c *listingJSONCache) normalize(value []byte) (normalizedServer, error) {
-	key := sha256.Sum256(value)
-	if c != nil {
-		c.mu.Lock()
-		if e := c.entries[key]; e != nil {
-			c.lru.MoveToFront(e)
-			c.hits++
-			result := e.Value.(normalizedServer)
-			c.mu.Unlock()
-			return result, nil
-		}
-		c.misses++
-		c.mu.Unlock()
-	}
-	// Preserve the existing API's typed normalization, including omitted fields,
-	// custom argument JSON handling and removal of unknown stored properties.
+func normalizeListingJSON(value []byte) (normalizedServer, error) {
 	var server apiv0.ServerJSON
 	if err := json.Unmarshal(value, &server); err != nil {
 		return normalizedServer{}, fmt.Errorf("failed to unmarshal server JSON: %w", err)
@@ -58,32 +29,12 @@ func (c *listingJSONCache) normalize(value []byte) (normalizedServer, error) {
 	if err != nil {
 		return normalizedServer{}, fmt.Errorf("encode server JSON: %w", err)
 	}
-	result := normalizedServer{key: key, json: encoded, name: server.Name, version: server.Version}
-	if c != nil {
-		c.store(result)
-	}
-	return result, nil
+	return normalizedServer{json: encoded, name: server.Name, version: server.Version}, nil
 }
 
-func (c *listingJSONCache) store(value normalizedServer) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if c.maxEntries <= 0 || cap(value.json) > c.maxBytes {
-		return
-	}
-	if e := c.entries[value.key]; e != nil {
-		c.lru.MoveToFront(e)
-		return
-	}
-	for c.lru.Len() >= c.maxEntries || c.bytes+cap(value.json) > c.maxBytes {
-		e := c.lru.Back()
-		old := e.Value.(normalizedServer)
-		delete(c.entries, old.key)
-		c.bytes -= cap(old.json)
-		c.lru.Remove(e)
-	}
-	c.entries[value.key] = c.lru.PushFront(value)
-	c.bytes += cap(value.json)
+func listingPayload(prefix string) string {
+	valid := fmt.Sprintf("(%slisting_codec = %d AND %slisting_value IS NOT NULL)", prefix, listingCodecVersion, prefix)
+	return fmt.Sprintf("CASE WHEN %s THEN %slisting_value ELSE convert_to(%svalue::text, 'UTF8') END, COALESCE(%s, false)", valid, prefix, prefix, valid)
 }
 
 // ListServersJSON is an HTTP serialization path. Typed listings remain in use
@@ -91,17 +42,27 @@ func (c *listingJSONCache) store(value normalizedServer) {
 func (db *PostgreSQL) ListServersJSON(ctx context.Context, filter *ServerFilter, cursor string, limit int) (_ apiv0.ServerListResponse, resultErr error) {
 	diagnostic := telemetry.ListingFromContext(ctx)
 	defer func() { diagnostic.DatabaseDone(resultErr) }()
-	page, err := db.listServerRows(ctx, nil, filter, cursor, limit)
+	page, err := db.listServerRows(ctx, nil, filter, cursor, limit, true)
 	if err != nil {
 		return apiv0.ServerListResponse{}, err
 	}
 	if limit <= 0 {
 		limit = 10
 	}
-	return encodeListingPage(ctx, page, limit, db.encodedListings, diagnostic)
+	if db.listingMetrics != nil {
+		var prepared int64
+		for _, row := range page {
+			if row.prepared {
+				prepared++
+			}
+		}
+		db.listingMetrics.Add(ctx, prepared, metric.WithAttributes(attribute.String("source", "prepared")))
+		db.listingMetrics.Add(ctx, int64(len(page))-prepared, metric.WithAttributes(attribute.String("source", "fallback")))
+	}
+	return encodeListingPage(ctx, page, limit, diagnostic)
 }
 
-func encodeListingPage(ctx context.Context, page []listingRow, limit int, cache *listingJSONCache, diagnostic *telemetry.ListingDiagnostic) (apiv0.ServerListResponse, error) {
+func encodeListingPage(ctx context.Context, page []listingRow, limit int, diagnostic *telemetry.ListingDiagnostic) (apiv0.ServerListResponse, error) {
 	diagnostic.Phase("row_decode")
 	records := make([]apiv0.EncodedServerRecord, 0, len(page))
 	nextCursor := ""
@@ -109,9 +70,13 @@ func encodeListingPage(ctx context.Context, page []listingRow, limit int, cache 
 		if err := ctx.Err(); err != nil {
 			return apiv0.ServerListResponse{}, err
 		}
-		server, err := cache.normalize(page[i].value)
-		if err != nil {
-			return apiv0.ServerListResponse{}, err
+		server := normalizedServer{json: page[i].value, name: page[i].name, version: page[i].version}
+		if !page[i].prepared {
+			var err error
+			server, err = normalizeListingJSON(page[i].value)
+			if err != nil {
+				return apiv0.ServerListResponse{}, err
+			}
 		}
 		page[i].value = nil
 		records = append(records, apiv0.EncodedServerRecord{Server: server.json, Meta: apiv0.ResponseMeta{Official: &page[i].metadata}})
@@ -120,10 +85,4 @@ func encodeListingPage(ctx context.Context, page []listingRow, limit int, cache 
 		}
 	}
 	return apiv0.NewEncodedServerList(records, apiv0.Metadata{Count: len(records), NextCursor: nextCursor}), nil
-}
-
-func (c *listingJSONCache) stats() telemetry.ListingCacheStats {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return telemetry.ListingCacheStats{Hits: c.hits, Misses: c.misses, Entries: int64(c.lru.Len()), PayloadBytes: int64(c.bytes)}
 }

@@ -87,12 +87,22 @@ server-side SQL completion time. Checkouts with no traced query contribute only
 to checkout duration. Both histograms use bounded operation labels and contain
 no SQL, arguments, connection identifiers or credentials.
 
-The listing serialization cache retains at most 64 MiB of normalized JSON buffer
-capacity and 8,192 entries per app replica (plus bounded key/list overhead). It
-is keyed by the complete stored JSON content, not by URL, server name or a TTL.
-PostgreSQL still determines every result and supplies fresh registry metadata.
-A cache miss performs the same typed normalization as the ordinary read path.
-The HTTP router enables this serialization-only path with schema-link response
-transforms disabled; other service/database consumers retain typed records.
-Cache hit/miss counters, entry count and retained payload bytes are exported
-alongside pool metrics. Monitor cold misses and churn as well as warm hits.
+The listing HTTP path uses versioned, normalized JSON prepared when a server is
+created or updated. PostgreSQL still selects every result and supplies fresh
+registry metadata. Migration 018 adds nullable derived columns; an older binary's
+payload update invalidates them through a trigger. Missing or unknown codec
+versions fall back to the ordinary typed normalization. Bump `listingCodecVersion`
+whenever ServerJSON wire normalization changes. The HTTP router enables this
+serialization-only path with schema-link response transforms disabled; other
+service/database consumers retain typed records. The listing JSON row counter
+labels the source as `prepared` or `fallback`.
+
+Existing rows can be prepared using `go run ./tools/prepare-listing-json` with
+`DATABASE_URL` supplied securely through the environment, after migration 018.
+The tool defaults to 500-row transactions with a 100 ms pause, a five-second
+statement timeout and a one-second lock timeout. It uses keyset batches, copies
+rows before normalizing, and conditionally updates only unchanged JSONB. It never
+changes source JSON or official timestamps. A concurrent update can leave a row
+for another pass; rerunning is safe. Identity mismatches remain on the fallback
+path and are counted. Check prepared/fallback coverage before interpreting a
+benchmark. No automatic full-table backfill runs during application startup.

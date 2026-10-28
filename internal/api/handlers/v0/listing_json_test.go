@@ -59,7 +59,7 @@ func TestEncodedListingMatchesTypedAPIThroughUpdates(t *testing.T) {
 		}
 	}
 	check()
-	check() // Warm hits must have the same behavior as normalization misses.
+	check() // Repeated reads must preserve fresh metadata.
 	server.Description = "updated payload"
 	_, err = db.UpdateServer(ctx, nil, server.Name, server.Version, &server)
 	require.NoError(t, err)
