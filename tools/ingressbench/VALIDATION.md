@@ -1,5 +1,9 @@
 # Staging autoscaling experiment — 2026-10-27
 
+Follow-up: [connection lifetime and app CPU comparison](CONNECTION_CPU_VALIDATION.md)
+records the next two burst/recovery tests, including their remaining capacity
+and idle-node limitations.
+
 **Neither autoscaling candidate passed. Do not promote these settings as a
 production performance fix.** Database CPU protection helped, but client-visible
 publish timeouts and application pool queues remained.
