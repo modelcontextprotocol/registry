@@ -1,0 +1,17 @@
+{
+  "at": 1793201571.074346,
+  "db_node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+  "workload_nodes": [
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-2846",
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-d57s"
+  ],
+  "postgres_pod_uid": "c3c2cffa-78bc-45cd-9337-5ebaef84c83a",
+  "counts": {
+    "nodes": 4,
+    "apps": 4,
+    "ingress": 6
+  },
+  "postgres_restarted": false,
+  "app_and_ingress_resources_unchanged": true
+}

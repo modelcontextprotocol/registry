@@ -17,8 +17,12 @@ network. `Calibration` in the result prevents confusing this with a registry
 test. Optional `-cpu-profile=generator.pb.gz` writes a local Go CPU profile.
 
 The [fixed-budget replica comparison](REPLICA_CAPACITY_VALIDATION.md) records
-the latest short test and its load-generator limitations. It is not a passing
+the earlier short test and its load-generator limitations. It is not a passing
 production promotion or autoscaling gate.
+
+The subsequent [generator calibration and DB-isolation control](DELIVERY_VALIDATION.md)
+resolves part of that measurement uncertainty and confirms remaining app CPU
+contention. Neither tested layout passed the short offered-load gate.
 
 ```sh
 go build -o ingressbench ./tools/ingressbench

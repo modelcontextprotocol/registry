@@ -1,5 +1,9 @@
 # Fixed-budget app replica comparison — 2026-10-28
 
+Follow-up [generator calibration and DB isolation](DELIVERY_VALIDATION.md)
+establish local generator limitations and continued app CPU contention with a
+larger generator. The older results below remain bounded observations.
+
 **Four apps substantially improved origin latency and sampled pool queues, but
 the short offered-load gate did not pass. Do not promote or treat this as an
 autoscaling validation.** Production was unchanged. The conditional ten-minute

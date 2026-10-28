@@ -1,0 +1,42 @@
+{
+  "recorded_at": 1793200558.415754,
+  "production_changed": false,
+  "app_image": "us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-replicas-20261028-v1@sha256:60fb8b7d7931a257542848460f7d1c76a99f16c46ddad795249fb5c25b1c9b0e",
+  "app_source_commit": "43e17e0993e1afed08950da75b461a1e4966fab3",
+  "calibration": {
+    "loopback_https_body_bytes": 65536,
+    "read_rate": 4500,
+    "seconds": 90,
+    "workers": 1024,
+    "connection_rotation_seconds": 30,
+    "scope": "Generator and fixture share CPU. Does not certify external network throughput.",
+    "first_generator_vcpus": 4,
+    "first_driver_sha256": "e930edbf92b5822499312b680bad20cc645b2ead753619faa546ae1bfb3c3e8c",
+    "second_generator_vcpus": 16,
+    "second_driver_sha256": "93de7e015c0fe51df8ff472f36a306678e1e48fa2c7e81a33b061b44c870550c",
+    "note": "Only helper extraction for lint separates instrumented binaries; traffic generation and connection rotation are unchanged."
+  },
+  "staging_short": {
+    "app_replicas": 4,
+    "pool_max_each": 30,
+    "pool_min_each": 5,
+    "cpu_request_m": 400,
+    "db_cpu_quota": 3,
+    "nodes": 4,
+    "ingress_replicas": 6,
+    "burst_read_rate": 4500,
+    "updated_rate": 36,
+    "search_rate": 3,
+    "burst_seconds": 180,
+    "recovery_seconds": 120,
+    "driver_sha256": "93de7e015c0fe51df8ff472f36a306678e1e48fa2c7e81a33b061b44c870550c"
+  },
+  "gates": {
+    "short_drops": 0,
+    "attempt_failures": 0,
+    "page_p95_ms_max": 1000,
+    "recovery_drops": 0,
+    "recovery_failures": 0,
+    "full_if_short_passes": "600-second burst with 1 publish/s; 1800-second recovery with publishes; publish p95 <=2000 ms; no dropped work/errors. Fixed app capacity only, not app-HPA behavior."
+  }
+}
