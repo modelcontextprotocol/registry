@@ -22,8 +22,10 @@ import (
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
-	pool        *pgxpool.Pool
-	poolMetrics metric.Registration
+	pool            *pgxpool.Pool
+	poolMetrics     metric.Registration
+	cacheMetrics    metric.Registration
+	encodedListings *listingJSONCache
 }
 
 // Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
@@ -96,11 +98,19 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	if err != nil {
 		return nil, fmt.Errorf("observe database pool: %w", err)
 	}
+	cache := newListingJSONCache(64<<20, 8192)
+	cacheRegistration, err := dbMetrics.ObserveListingCache(cache.stats)
+	if err != nil {
+		_ = registration.Unregister()
+		return nil, fmt.Errorf("observe listing cache: %w", err)
+	}
 	initialized = true
 
 	return &PostgreSQL{
-		pool:        pool,
-		poolMetrics: registration,
+		cacheMetrics:    cacheRegistration,
+		encodedListings: cache,
+		pool:            pool,
+		poolMetrics:     registration,
 	}, nil
 }
 
@@ -248,15 +258,36 @@ func searchQueryArgs(filter *ServerFilter, args []any) []any {
 	return args
 }
 
-func (db *PostgreSQL) ListServers(
+func (db *PostgreSQL) ListServers(ctx context.Context, tx pgx.Tx, filter *ServerFilter, cursor string, limit int) (_ []*apiv0.ServerResponse, _ string, resultErr error) {
+	diagnostic := telemetry.ListingFromContext(ctx)
+	defer func() { diagnostic.DatabaseDone(resultErr) }()
+	page, err := db.listServerRows(ctx, tx, filter, cursor, limit)
+	if err != nil {
+		return nil, "", err
+	}
+	results, err := decodeListingPage(ctx, page, diagnostic)
+	if err != nil {
+		return nil, "", err
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+	nextCursor := ""
+	if len(results) > 0 && len(results) >= limit {
+		last := results[len(results)-1]
+		nextCursor = last.Server.Name + ":" + last.Server.Version
+	}
+	return results, nextCursor, nil
+}
+
+func (db *PostgreSQL) listServerRows(
 	ctx context.Context,
 	tx pgx.Tx,
 	filter *ServerFilter,
 	cursor string,
 	limit int,
-) (_ []*apiv0.ServerResponse, _ string, resultErr error) {
+) ([]listingRow, error) {
 	diagnostic := telemetry.ListingFromContext(ctx)
-	defer func() { diagnostic.DatabaseDone(resultErr) }()
 	operation := "list"
 	switch {
 	case filter != nil && filter.SubstringName != nil:
@@ -281,7 +312,7 @@ func (db *PostgreSQL) ListServers(
 	}
 	diagnostic.SetShape(shape)
 	if ctx.Err() != nil {
-		return nil, "", ctx.Err()
+		return nil, ctx.Err()
 	}
 
 	// Build WHERE clause conditions
@@ -315,34 +346,23 @@ func (db *PostgreSQL) ListServers(
 
 	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to query servers: %w", err)
+		return nil, fmt.Errorf("failed to query servers: %w", err)
 	}
-	results, err := decodeListingRows(ctx, rows, diagnostic)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// Determine next cursor using compound serverName:version format
-	nextCursor := ""
-	if len(results) > 0 && len(results) >= limit {
-		lastResult := results[len(results)-1]
-		nextCursor = lastResult.Server.Name + ":" + lastResult.Server.Version
-	}
-
-	return results, nextCursor, nil
+	return readListingRows(ctx, rows, diagnostic)
 }
 
-func decodeListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic) ([]*apiv0.ServerResponse, error) {
+type listingRow struct {
+	metadata apiv0.RegistryExtensions
+	value    []byte
+}
+
+func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic) ([]listingRow, error) {
 	defer rows.Close()
 
 	// Copy the bounded page before decoding JSON. Exhausting/closing pooled rows
 	// releases the connection, so application CPU work cannot keep it occupied.
 	// Within a caller-owned transaction, closing rows only frees the transaction
 	// for its next query; the caller still owns the transaction's connection.
-	type listingRow struct {
-		metadata apiv0.RegistryExtensions
-		value    []byte
-	}
 	var page []listingRow
 	diagnostic.Phase("row_fetch")
 	for rows.Next() {
@@ -368,6 +388,10 @@ func decodeListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry
 		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
+	return page, nil
+}
+
+func decodeListingPage(ctx context.Context, page []listingRow, diagnostic *telemetry.ListingDiagnostic) ([]*apiv0.ServerResponse, error) {
 	var results []*apiv0.ServerResponse
 	diagnostic.Phase("row_decode")
 	for i := range page {
@@ -1056,6 +1080,9 @@ func (db *PostgreSQL) Close() error {
 	var err error
 	if db.poolMetrics != nil {
 		err = db.poolMetrics.Unregister()
+	}
+	if db.cacheMetrics != nil {
+		err = errors.Join(err, db.cacheMetrics.Unregister())
 	}
 	db.pool.Close()
 	return err
