@@ -643,6 +643,10 @@ failures. The ingress HPA could remain below its average CPU target while the
 database node was saturated and the app on that node queued requests. Do not
 enable this in production without a successful end-to-end burst validation.
 See `tools/ingressbench/VALIDATION.md` for the measured comparison and limitations.
+The follow-up [ready-capacity comparison](../tools/ingressbench/WARM_CAPACITY_VALIDATION.md)
+also failed with four nodes and six ingress replicas ready before the burst.
+Keep the rollout gate on complete offered load and recovery, not only successful
+HTTP attempts or quiet current metrics.
 
 `mcp-registry:registryCPURequest` can override the application CPU reservation
 for controlled staging comparisons. The default remains 250m per hosted app
