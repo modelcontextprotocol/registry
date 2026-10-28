@@ -9,6 +9,18 @@ def record(uri='/v0/servers?limit=100&cursor=secret', request_bytes=200, protoco
 
 
 class ProfileTests(unittest.TestCase):
+    def test_staging_collection_uses_only_selected_project(self):
+        queries = []
+        def fetch(body):
+            queries.append(body.copy())
+            return {'entries': []}
+        result = collect('2026-10-28T18:30:00Z', 60, 'private-token', fetch,
+                         project='mcp-registry-staging')
+        self.assertTrue(result['query_complete'])
+        self.assertEqual(queries[0]['resourceNames'], ['projects/mcp-registry-staging'])
+        with self.assertRaises(ValueError):
+            collect('2026-10-28T18:30:00Z', 60, 'private-token', fetch, project='another-project')
+
     def test_cloud_nanosecond_timestamp(self):
         self.assertEqual(parse_timestamp('2026-10-28T18:30:00.123456789Z').microsecond, 123456)
         with self.assertRaises(ValueError):

@@ -1,0 +1,11 @@
+{
+  "at": 1793230749.1713312,
+  "verified": [
+    "deployment/mcp-registry",
+    "deployment/ingress-nginx-controller",
+    "hpa/ingress-nginx-controller",
+    "configmap/ingress-nginx-controller",
+    "cluster.postgresql.cnpg.io/registry-pg"
+  ],
+  "production_changed": false
+}

@@ -1,0 +1,173 @@
+{
+  "command_failures": [],
+  "points": [
+    {
+      "at": "2026-10-28T22:35:54.956189+00:00",
+      "relative_seconds": -7.0,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:36:24.966365+00:00",
+      "relative_seconds": 23.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:36:54.973894+00:00",
+      "relative_seconds": 53.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:37:24.974092+00:00",
+      "relative_seconds": 83.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:37:54.979084+00:00",
+      "relative_seconds": 113.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:38:24.989258+00:00",
+      "relative_seconds": 143.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:38:54.999390+00:00",
+      "relative_seconds": 173.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:39:25.006462+00:00",
+      "relative_seconds": 203.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:39:55.014726+00:00",
+      "relative_seconds": 233.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:40:25.017826+00:00",
+      "relative_seconds": 263.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:40:55.026871+00:00",
+      "relative_seconds": 293.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:41:25.037039+00:00",
+      "relative_seconds": 323.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:41:55.047203+00:00",
+      "relative_seconds": 353.1,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:42:25.056700+00:00",
+      "relative_seconds": 383.2,
+      "nodes": 2,
+      "hpa": {
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    }
+  ]
+}

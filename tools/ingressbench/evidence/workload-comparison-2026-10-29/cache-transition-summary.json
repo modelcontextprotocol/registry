@@ -1,0 +1,128 @@
+{
+  "baseline-trace": {
+    "startup": {
+      "query_complete": true,
+      "unparsed": 3,
+      "client_count": 68451,
+      "cache_share": {
+        "none": 0.0054,
+        "MISS": 0.2612,
+        "HIT": 0.6742,
+        "STALE": 0.0471,
+        "UPDATING": 0.012
+      },
+      "response_bytes": {
+        "mean": 99663.90341996464,
+        "p50": 92971,
+        "p95": 160994,
+        "p99": 307465,
+        "max": 1326842
+      },
+      "zero_request_length_records": 3225
+    },
+    "final_minute": {
+      "query_complete": true,
+      "unparsed": 0,
+      "client_count": 55121,
+      "cache_share": {
+        "HIT": 0.6482,
+        "MISS": 0.1608,
+        "STALE": 0.1698,
+        "UPDATING": 0.0106,
+        "none": 0.0106
+      },
+      "response_bytes": {
+        "mean": 99283.06968306091,
+        "p50": 93252,
+        "p95": 162313,
+        "p99": 284389,
+        "max": 3515562
+      },
+      "zero_request_length_records": 9358
+    }
+  },
+  "app-trace": {
+    "startup": {
+      "query_complete": true,
+      "unparsed": 3,
+      "client_count": 73474,
+      "cache_share": {
+        "MISS": 0.262,
+        "HIT": 0.6695,
+        "none": 0.0055,
+        "STALE": 0.0542,
+        "UPDATING": 0.0088
+      },
+      "response_bytes": {
+        "mean": 99783.27055829273,
+        "p50": 93041,
+        "p95": 163044,
+        "p99": 307475,
+        "max": 1327783
+      },
+      "zero_request_length_records": 3981
+    },
+    "final_minute": {
+      "query_complete": true,
+      "unparsed": 0,
+      "client_count": 53212,
+      "cache_share": {
+        "HIT": 0.6592,
+        "STALE": 0.1707,
+        "MISS": 0.1572,
+        "none": 0.0103,
+        "UPDATING": 0.0026
+      },
+      "response_bytes": {
+        "mean": 98891.59078779223,
+        "p50": 93189,
+        "p95": 161266,
+        "p99": 275411,
+        "max": 1368331
+      },
+      "zero_request_length_records": 9084
+    }
+  },
+  "infra-trace": {
+    "startup": {
+      "query_complete": true,
+      "unparsed": 36,
+      "client_count": 73736,
+      "cache_share": {
+        "MISS": 0.2773,
+        "none": 0.0056,
+        "HIT": 0.665,
+        "STALE": 0.0486,
+        "UPDATING": 0.0036
+      },
+      "response_bytes": {
+        "mean": 99820.04589345775,
+        "p50": 93041,
+        "p95": 162555,
+        "p99": 307481,
+        "max": 1327784
+      },
+      "zero_request_length_records": 3581
+    },
+    "final_minute": {
+      "query_complete": true,
+      "unparsed": 42,
+      "client_count": 54536,
+      "cache_share": {
+        "HIT": 0.6331,
+        "MISS": 0.1946,
+        "STALE": 0.162,
+        "none": 0.0101,
+        "UPDATING": 0.0002
+      },
+      "response_bytes": {
+        "mean": 99122.02930174564,
+        "p50": 93327,
+        "p95": 161295,
+        "p99": 277999,
+        "max": 1368338
+      },
+      "zero_request_length_records": 8837
+    }
+  }
+}

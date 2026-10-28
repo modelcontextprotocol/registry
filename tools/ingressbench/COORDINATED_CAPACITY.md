@@ -14,6 +14,10 @@ scenario. Its failed gate remains a failed gate, but it is not a validated
 acceptance test for the actual production cycle. Qualify the workload baseline
 before another capacity comparison.
 
+Latest follow-up: [the production read-trace comparison](WORKLOAD_COMPARISON.md)
+measures the app improvement and the infrastructure transition separately,
+with explicit cache-state and workload-coverage limitations.
+
 ## Observed result
 
 The [saved result](evidence/coordinated-capacity-2026-10-28/summary.json)

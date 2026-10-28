@@ -107,9 +107,9 @@ func matchingPageKeys(class PageClass, keys []string) []string {
 			continue
 		}
 		q := u.Query()
-		valid := q.Get("limit") == fmt.Sprint(class.Limit) && q.Get("version") == class.VersionFilter
+		valid := q.Get("limit") == fmt.Sprint(class.Limit) && q.Get(versionParam) == class.VersionFilter
 		for name, values := range q {
-			if (name != "cursor" && name != "limit" && name != "version") || len(values) != 1 {
+			if (name != "cursor" && name != "limit" && name != versionParam) || len(values) != 1 {
 				valid = false
 			}
 		}
@@ -171,7 +171,7 @@ func benchmarkRequestShape(path, kind string) string {
 		}
 	}
 	version := "none"
-	if value := q.Get("version"); value == latestVersion {
+	if value := q.Get(versionParam); value == latestVersion {
 		version = latestVersion
 	} else if value != "" {
 		version = "exact"

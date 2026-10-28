@@ -1,0 +1,12 @@
+{
+  "samples": 30,
+  "first_sample_time": 1793228477.804183,
+  "last_sample_time": 1793228768.002134,
+  "health_state_observations": {
+    "HEALTHY": 114,
+    "UNHEALTHY": 2
+  },
+  "entries_without_health_status": 2,
+  "command_failures": 0,
+  "limitation": "Collection started after the early trace transport failures; cannot establish backend health at those failures."
+}

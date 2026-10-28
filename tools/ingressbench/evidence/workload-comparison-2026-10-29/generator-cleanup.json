@@ -1,0 +1,9 @@
+{
+  "at": 1793230802.8545501,
+  "verified_absent": [
+    "instances/registry-workload-bench-20261029",
+    "disks/registry-workload-bench-20261029"
+  ],
+  "local_publish_token_removed": true,
+  "production_changed": false
+}

@@ -1,0 +1,171 @@
+{
+  "baseline-trace": {
+    "offered": 274116,
+    "attempted": 268352,
+    "dropped": 5764,
+    "drop_percent": 2.102759415721811,
+    "transport_errors": 48,
+    "status": {
+      "detail:200": 2160,
+      "detail:404": 28,
+      "page:0": 47,
+      "page:200": 265016,
+      "search:0": 1,
+      "search:200": 960,
+      "updated:200": 140
+    },
+    "latency_ms": {
+      "detail_p50": 498.266667,
+      "detail_p95": 4317.953071,
+      "detail_p99": 5583.062271,
+      "page_p50": 38.084056,
+      "page_p95": 3321.811311,
+      "page_p99": 5538.748918,
+      "search_p50": 265.915743,
+      "search_p95": 3514.35404,
+      "search_p99": 5409.575506,
+      "updated_p50": 655.324676,
+      "updated_p95": 5170.463395,
+      "updated_p99": 6290.706091
+    },
+    "drop_windows": [
+      {
+        "start_relative_seconds": -1.907,
+        "end_relative_seconds": 8.093,
+        "dropped": 2503
+      },
+      {
+        "start_relative_seconds": 8.093,
+        "end_relative_seconds": 18.093,
+        "dropped": 741
+      },
+      {
+        "start_relative_seconds": 48.093,
+        "end_relative_seconds": 58.093,
+        "dropped": 1670
+      },
+      {
+        "start_relative_seconds": 58.093,
+        "end_relative_seconds": 68.093,
+        "dropped": 79
+      },
+      {
+        "start_relative_seconds": 68.093,
+        "end_relative_seconds": 78.093,
+        "dropped": 771
+      }
+    ],
+    "no_drops_after_seconds": 78.093,
+    "ready_ingress_at_start": 2,
+    "terminating_ingress_at_start": 0,
+    "trace_sha256": "e4db9792a9b1ec06c3973851aaff4699161d18c235f5f8276e087e66611b2233",
+    "catalog_sha256": "9bbb7b82489608e191cdee82a096c42eb2a6d29ee43b594c9b2326e35d457e48"
+  },
+  "app-trace": {
+    "offered": 274116,
+    "attempted": 271813,
+    "dropped": 2303,
+    "drop_percent": 0.8401552627354842,
+    "transport_errors": 0,
+    "status": {
+      "detail:200": 2179,
+      "detail:404": 28,
+      "page:200": 268500,
+      "search:200": 965,
+      "updated:200": 141
+    },
+    "latency_ms": {
+      "detail_p50": 13.198039,
+      "detail_p95": 1729.419481,
+      "detail_p99": 3350.082628,
+      "page_p50": 12.405141,
+      "page_p95": 1597.433442,
+      "page_p99": 3281.870462,
+      "search_p50": 17.609313,
+      "search_p95": 2557.167073,
+      "search_p99": 4124.2338,
+      "updated_p50": 14.233714,
+      "updated_p95": 1560.567641,
+      "updated_p99": 3313.343124
+    },
+    "drop_windows": [
+      {
+        "start_relative_seconds": -6.1,
+        "end_relative_seconds": 3.9,
+        "dropped": 1194
+      },
+      {
+        "start_relative_seconds": 3.9,
+        "end_relative_seconds": 13.9,
+        "dropped": 1094
+      },
+      {
+        "start_relative_seconds": 33.9,
+        "end_relative_seconds": 43.9,
+        "dropped": 15
+      }
+    ],
+    "no_drops_after_seconds": 43.9,
+    "ready_ingress_at_start": 2,
+    "terminating_ingress_at_start": 0,
+    "trace_sha256": "e4db9792a9b1ec06c3973851aaff4699161d18c235f5f8276e087e66611b2233",
+    "catalog_sha256": "9bbb7b82489608e191cdee82a096c42eb2a6d29ee43b594c9b2326e35d457e48"
+  },
+  "infra-trace": {
+    "offered": 274116,
+    "attempted": 272191,
+    "dropped": 1925,
+    "drop_percent": 0.7022574384567117,
+    "transport_errors": 7,
+    "status": {
+      "detail:200": 2148,
+      "detail:404": 22,
+      "detail:429": 42,
+      "page:0": 7,
+      "page:200": 268862,
+      "search:200": 969,
+      "updated:200": 141
+    },
+    "latency_ms": {
+      "detail_p50": 10.093021,
+      "detail_p95": 2028.839681,
+      "detail_p99": 3866.843287,
+      "page_p50": 13.478108,
+      "page_p95": 1667.372591,
+      "page_p99": 3711.801739,
+      "search_p50": 17.620171,
+      "search_p95": 1774.427394,
+      "search_p99": 3305.855384,
+      "updated_p50": 13.02561,
+      "updated_p95": 2085.618734,
+      "updated_p99": 2645.0969
+    },
+    "drop_windows": [
+      {
+        "start_relative_seconds": -6.933,
+        "end_relative_seconds": 3.067,
+        "dropped": 821
+      },
+      {
+        "start_relative_seconds": 3.067,
+        "end_relative_seconds": 13.067,
+        "dropped": 566
+      },
+      {
+        "start_relative_seconds": 43.067,
+        "end_relative_seconds": 53.067,
+        "dropped": 129
+      },
+      {
+        "start_relative_seconds": 73.067,
+        "end_relative_seconds": 83.067,
+        "dropped": 409
+      }
+    ],
+    "no_drops_after_seconds": 83.067,
+    "ready_ingress_at_start": 2,
+    "terminating_ingress_at_start": 0,
+    "trace_sha256": "e4db9792a9b1ec06c3973851aaff4699161d18c235f5f8276e087e66611b2233",
+    "catalog_sha256": "9bbb7b82489608e191cdee82a096c42eb2a6d29ee43b594c9b2326e35d457e48"
+  }
+}

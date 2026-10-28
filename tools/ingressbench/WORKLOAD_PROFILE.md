@@ -6,6 +6,10 @@ differences prevent choosing the final capacity configuration from it alone.
 Production and staging configuration were not changed during this audit. No
 generator VM was created.
 
+Follow-up: [the ordered read-trace comparison](WORKLOAD_COMPARISON.md) qualifies
+a final-minute broad-crawl read mix and compares the app and infrastructure
+candidates. Its cold-start limitations prevent treating it as a full-cycle pass.
+
 ## Evidence
 
 The [portable profile](evidence/workload-profile-2026-10-28/profile-summary.json)

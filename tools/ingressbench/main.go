@@ -29,7 +29,7 @@ type result struct {
 	Calibration                                                         bool
 	RequestPhases                                                       map[string]phaseSummary
 	StartedAt, FinishedAt, CatalogSHA256                                string
-	PageWorkloadSHA256, ConnectionRotation                              string
+	PageWorkloadSHA256, ConnectionRotation, ReadTraceSHA256             string
 	ReadRate, UpdatedRate, SearchRate, HotPercent                       int
 	Scheduled, ScheduledPublishes, Completed, Dropped, DroppedPublishes int
 	Bytes                                                               int64
@@ -68,6 +68,7 @@ func main() {
 	workers := flag.Int("workers", 512, "bounded request concurrency and queue")
 	tokenFile := flag.String("token-file", "", "optional scoped staging publish token file")
 	hot := flag.Int("hot-percent", 80, "percent of requests using the first 128 keys")
+	traceFile := flag.String("read-trace", "", "private catalog-indexed read arrival trace; overrides generated rates")
 	pageWorkloadFile := flag.String("page-workload", "", "measured page-class/key-frequency JSON; overrides hot-percent for pages")
 	connectionRotation := flag.Duration("connection-rotation", 30*time.Second, "forced idle-connection rotation; 0 disables this synthetic churn")
 	http2 := flag.Bool("http2", false, "allow HTTP/2 negotiation (HTTP/1.1 only by default)")
@@ -87,8 +88,12 @@ func main() {
 		collectCatalog(client, *keysFile)
 		return
 	}
-	raw, keys := loadKeys(*keysFile)
+	raw, keys := loadKeys(*keysFile, *traceFile != "")
 	pageWorkload, err := loadPageWorkload(*pageWorkloadFile, keys)
+	if err != nil {
+		panic(err)
+	}
+	trace, err := loadReadTrace(*traceFile, keys, *duration, *pageWorkloadFile, *tokenFile)
 	if err != nil {
 		panic(err)
 	}
@@ -113,10 +118,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for j := range jobs {
-				path, kind := readPath(j.n, *hot, *rate, *updatedRate, *searchRate, keys)
-				if kind == "page" && len(pageWorkload.paths) > 0 {
-					path = pageWorkload.path(pageSequence(j.n, *rate, *updatedRate+*searchRate))
-				}
+				path, kind := selectedRead(j.n, *hot, *rate, *updatedRate, *searchRate, keys, pageWorkload, trace)
 				request(path, kind, requestTiming{j.at, j.queuedAt}, nil)
 			}
 		}()
@@ -133,8 +135,9 @@ func main() {
 		r.PageWorkloadSHA256 = pageWorkload.SHA256
 		r.HotPercent = -1 // The measured distribution replaces this legacy parameter.
 	}
+	trace.describe(&r)
 	runID := fmt.Sprint(start.UnixNano())
-	total := int(duration.Seconds() * float64(*rate))
+	total := trace.count(int(duration.Seconds() * float64(*rate)))
 	if token != "" {
 		pubJobs := make(chan job, 16)
 		for w := 0; w < 16; w++ {
@@ -143,7 +146,7 @@ func main() {
 				defer wg.Done()
 				for j := range pubJobs {
 					i := j.n
-					body, _ := json.Marshal(map[string]any{"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json", "name": fmt.Sprintf("io.benchmark/autoscale-%s-%d", runID, i), "description": "Autoscaling staging benchmark", "version": "1.0.0", "remotes": []map[string]string{{"type": "streamable-http", "url": fmt.Sprintf("https://example.invalid/autoscale-%s-%d/mcp", runID, i)}}})
+					body, _ := json.Marshal(map[string]any{"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json", "name": fmt.Sprintf("io.benchmark/autoscale-%s-%d", runID, i), "description": "Autoscaling staging benchmark", versionParam: "1.0.0", "remotes": []map[string]string{{"type": "streamable-http", "url": fmt.Sprintf("https://example.invalid/autoscale-%s-%d/mcp", runID, i)}}})
 					request("/v0.1/publish", "publish", requestTiming{j.at, j.queuedAt}, body)
 				}
 			}()
@@ -172,7 +175,7 @@ func main() {
 	defer stopRotation()
 
 	for i := 0; i < total; i++ {
-		at := start.Add(time.Duration(float64(i) / float64(*rate) * float64(time.Second)))
+		at := start.Add(trace.offset(i, *rate))
 		time.Sleep(time.Until(at))
 		r.Scheduled++
 		queuedAt := time.Now()
@@ -252,7 +255,7 @@ func errorDetail(err error) string {
 
 func collectCatalog(client *http.Client, keysFile string) {
 	var keys []string
-	for _, prefix := range []string{"/v0/servers", "/v0.1/servers"} {
+	for _, prefix := range []string{v0ListingPath, v01ListingPath} {
 		for _, limit := range []string{"50", "100"} {
 			q := url.Values{limitParam: {limit}}
 			for i := 0; i < 1000; i++ {
@@ -290,7 +293,7 @@ func collectCatalog(client *http.Client, keysFile string) {
 	fmt.Fprintln(os.Stdout, "catalog keys", len(keys))
 }
 
-func loadKeys(keysFile string) ([]byte, []string) {
+func loadKeys(keysFile string, traced bool) ([]byte, []string) {
 	raw, err := os.ReadFile(keysFile)
 	if err != nil {
 		panic(err)
@@ -304,7 +307,7 @@ func loadKeys(keysFile string) ([]byte, []string) {
 	}
 	for _, k := range keys {
 		u, e := url.Parse(k)
-		if e != nil || u.IsAbs() || u.Host != "" || (u.Path != "/v0/servers" && u.Path != "/v0.1/servers") {
+		if !validCatalogKey(u, e, traced, k) {
 			panic("invalid key")
 		}
 	}
@@ -375,7 +378,7 @@ func loadToken(tokenFile string) string {
 func readPath(n, hot, rate, updatedRate, searchRate int, keys []string) (string, string) {
 	idx := pageIndex(n, hot, len(keys))
 	path := keys[idx]
-	kind := "page"
+	kind := pageKind
 	slot := n % rate
 	// Spread the low-rate query classes across each second.
 	specialRate := updatedRate + searchRate
@@ -385,9 +388,9 @@ func readPath(n, hot, rate, updatedRate, searchRate int, keys []string) (string,
 	updated := after > before && !search
 	if search {
 		sequence := n/rate*searchRate + before
-		q := url.Values{"search": {[]string{"github", "mcp", "postgres", "server", "cloud"}[sequence%5]}, limitParam: {fmt.Sprint(50 + sequence%51)}}
+		q := url.Values{searchKind: {[]string{"github", "mcp", "postgres", "server", "cloud"}[sequence%5]}, limitParam: {fmt.Sprint(50 + sequence%51)}}
 		path = "/v0.1/servers?" + q.Encode()
-		kind = "search"
+		kind = searchKind
 	} else if updated {
 		age := []time.Duration{7 * 24 * time.Hour, 24 * time.Hour, time.Hour}[n%3]
 		stamp := time.Now().UTC().Add(-age - time.Duration(n)*time.Microsecond).Format(time.RFC3339Nano)

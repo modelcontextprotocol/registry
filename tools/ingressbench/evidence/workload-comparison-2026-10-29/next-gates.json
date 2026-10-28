@@ -1,0 +1,9 @@
+{
+  "app_only_short_gate": "failed",
+  "infrastructure_short_gate": "failed",
+  "recovery_delivery": "passed: 180000/180000, no drops/errors",
+  "two_node_recovery_within_30_minutes": "not demonstrated: 3 nodes at final candidate snapshot",
+  "long_peak": "not run after short gate failure",
+  "next_acceptance": "Establish cache state from preceding production traffic, resolve corpus/rate-limit mismatches, then compare the same peak. Keep cold-start resilience separate.",
+  "production_changed": false
+}

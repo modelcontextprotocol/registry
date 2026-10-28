@@ -57,9 +57,23 @@ remains 30 seconds to reproduce older tests, and results record the setting.
 Neither value is evidence of production connection lifetimes. Hold transport
 policy fixed within a comparison and label any sensitivity test explicitly.
 
+`-read-trace trace.json` schedules an ordered read trace against the private
+`-keys` catalog. The format is `{"duration_ms":1000,"requests":[{"at_ms":10,
+"key":0,"kind":"page"}]}`. It preserves repeated keys and relative arrival
+spacing, overriding generated read rates, page selection, search and update
+fixtures. It accepts only supported relative public GET read paths, rejects
+publishing/page-profile combinations, and bounds duration, count and per-second
+arrivals. Results record the trace hash and use `-1` for overridden rate fields.
+Keep catalogs containing production search parameters private; do not commit
+them or raw access logs. Public result artifacts contain hashes and aggregate
+counts. Log completion time minus request duration estimates arrival time; it
+does not recover client TCP sessions. A trace also needs an explicitly matched
+initial cache state and a corpus-coverage check before it can qualify a workload.
+
 For read-only traffic profiling, `collect_profile_logs.py --start <RFC3339>
 --seconds 60 --out profile.json` reads production Cloud Logging with the current
-gcloud identity. It does not change production. It paginates up to 200,000
+gcloud identity. Use `--project mcp-registry-staging` for staging comparisons.
+It does not change either environment. It paginates up to 200,000
 records and marks incomplete coverage on errors or truncation; such slices do
 not receive a rate estimate. `profile_logs.py` separates zero-request-length
 background-work records from client records and saves only bounded aggregates

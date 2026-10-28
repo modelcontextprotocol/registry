@@ -9,13 +9,15 @@ import urllib.request
 from profile_logs import Profile, parse_timestamp
 
 
-def collect(start, seconds, token, fetch=None, max_records=200000):
+def collect(start, seconds, token, fetch=None, max_records=200000, project='mcp-registry-prod'):
     if not 1 <= seconds <= 300 or not 1 <= max_records <= 200000:
         raise ValueError('duration must be 1–300 seconds and record cap 1–200000')
+    if project not in ('mcp-registry-prod', 'mcp-registry-staging'):
+        raise ValueError('unsupported registry project')
     at = parse_timestamp(start)
     end = (at + datetime.timedelta(seconds=seconds)).isoformat()
     body = {
-        'resourceNames': ['projects/mcp-registry-prod'],
+        'resourceNames': ['projects/' + project],
         'filter': f'resource.type="k8s_container" AND resource.labels.namespace_name="ingress-nginx" AND timestamp>="{at.isoformat()}" AND timestamp<"{end}"',
         'orderBy': 'timestamp asc', 'pageSize': min(10000, max_records),
     }
@@ -61,9 +63,11 @@ def main():
     parser.add_argument('--start', required=True, help='RFC3339 timestamp with timezone')
     parser.add_argument('--seconds', type=int, default=60)
     parser.add_argument('--out', type=pathlib.Path, required=True)
+    parser.add_argument('--project', choices=['mcp-registry-prod', 'mcp-registry-staging'],
+                        default='mcp-registry-prod')
     args = parser.parse_args()
     token = subprocess.check_output(['gcloud', 'auth', 'print-access-token'], text=True, timeout=30).strip()
-    result = collect(args.start, args.seconds, token)
+    result = collect(args.start, args.seconds, token, project=args.project)
     args.out.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps({k: result[k] for k in ['query_complete', 'entries', 'parsed', 'unparsed', 'error_type']}))
     if not result['query_complete']:
