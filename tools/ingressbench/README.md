@@ -39,6 +39,20 @@ body completion, including scheduling/queue delay, and include failed requests.
 includes draining outstanding work. Idle connections rotate every 30 seconds
 so new ingress replicas can receive new connections.
 
+`Windows` adds UTC-aligned ten-second read/publish counters. Scheduled work is
+attributed to its intended time, drops to the actual enqueue attempt, dispatches
+to the start of request processing, and completions/failures to body completion.
+Partial first/last windows and delayed completions can cross interval boundaries;
+compare counts over the whole run as well as individual windows. Scheduler lag
+measures intended time to enqueue attempt (including dropped attempts); queue
+delay measures enqueue to request processing, including worker preparation; HTTP
+duration measures request processing through body completion. Queue/HTTP timings
+are grouped by dispatch window. Their fixed histograms report `P95UpperMS`, a
+bucket upper bound, while `MeanMS` and `MaximumMS` use observed durations. Overall
+`LatencyMS` retains its existing exact sample percentiles. No URLs, bodies, or
+credentials are included in these windows. Use the same instrumented binary in
+both arms of a comparison.
+
 Temporarily exempt only the generator IP from staging ingress rate limits when
 measuring aggregate multi-client capacity. Save and restore the prior annotation;
 never weaken production rate limits. The generator otherwise represents one

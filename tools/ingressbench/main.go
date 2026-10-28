@@ -36,6 +36,7 @@ type result struct {
 	ElapsedSeconds                                                      float64
 	Failures                                                            []requestFailure
 	OmittedFailures                                                     int
+	Windows                                                             []timeWindow
 }
 type requestFailure struct {
 	ScheduledAt, FinishedAt time.Time
@@ -43,11 +44,11 @@ type requestFailure struct {
 	Status                  int
 }
 type point struct {
-	kind, cache, failure, protocol, detail string
-	status                                 int
-	elapsed                                float64
-	bytes                                  int64
-	scheduledAt, finishedAt                time.Time
+	kind, cache, failure, protocol, detail       string
+	status                                       int
+	elapsed                                      float64
+	bytes                                        int64
+	scheduledAt, queuedAt, startedAt, finishedAt time.Time
 }
 
 func main() {
@@ -78,11 +79,13 @@ func main() {
 	r := result{Status: map[string]int{}, Cache: map[string]int{}, Errors: map[string]int{}, Protocols: map[string]int{}, ErrorDetails: map[string]string{}, LatencyMS: map[string]float64{}}
 	samples := map[string][]float64{}
 	done := make(chan struct{})
-	go collectResults(results, &r, samples, done)
+	completionTimeline := newTimeline()
+	readTimeline, publishTimeline := newTimeline(), newTimeline()
+	go collectResults(results, &r, samples, completionTimeline, done)
 	request := makeRequester(client, token, results)
 	type job struct {
-		n  int
-		at time.Time
+		n            int
+		at, queuedAt time.Time
 	}
 	jobs := make(chan job, *workers)
 	for i := 0; i < *workers; i++ {
@@ -91,7 +94,7 @@ func main() {
 			defer wg.Done()
 			for j := range jobs {
 				path, kind := readPath(j.n, *hot, *rate, *updatedRate, *searchRate, keys)
-				request(path, kind, j.at, nil)
+				request(path, kind, requestTiming{j.at, j.queuedAt}, nil)
 			}
 		}()
 	}
@@ -113,7 +116,7 @@ func main() {
 				for j := range pubJobs {
 					i := j.n
 					body, _ := json.Marshal(map[string]any{"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json", "name": fmt.Sprintf("io.benchmark/autoscale-%s-%d", runID, i), "description": "Autoscaling staging benchmark", "version": "1.0.0", "remotes": []map[string]string{{"type": "streamable-http", "url": fmt.Sprintf("https://example.invalid/autoscale-%s-%d/mcp", runID, i)}}})
-					request("/v0.1/publish", "publish", j.at, body)
+					request("/v0.1/publish", "publish", requestTiming{j.at, j.queuedAt}, body)
 				}
 			}()
 		}
@@ -125,11 +128,15 @@ func main() {
 				at := start.Add(time.Duration(i) * time.Second)
 				time.Sleep(time.Until(at))
 				r.ScheduledPublishes++
+				queuedAt := time.Now()
+				dropped := false
 				select {
-				case pubJobs <- job{i, at}:
+				case pubJobs <- job{i, at, queuedAt}:
 				default:
 					r.DroppedPublishes++
+					dropped = true
 				}
+				publishTimeline.scheduled("publish", at, queuedAt, dropped)
 			}
 		}()
 	}
@@ -154,16 +161,23 @@ func main() {
 		at := start.Add(time.Duration(float64(i) / float64(*rate) * float64(time.Second)))
 		time.Sleep(time.Until(at))
 		r.Scheduled++
+		queuedAt := time.Now()
+		dropped := false
 		select {
-		case jobs <- job{i, at}:
+		case jobs <- job{i, at, queuedAt}:
 		default:
 			r.Dropped++
+			dropped = true
 		}
+		readTimeline.scheduled("read", at, queuedAt, dropped)
 	}
 	close(jobs)
 	wg.Wait()
 	close(results)
 	<-done
+	completionTimeline.merge(readTimeline)
+	completionTimeline.merge(publishTimeline)
+	r.Windows = completionTimeline.windows()
 	r.ElapsedSeconds = time.Since(start).Seconds()
 	r.FinishedAt = time.Now().UTC().Format(time.RFC3339Nano)
 	for kind, v := range samples {
@@ -283,8 +297,13 @@ func loadKeys(keysFile string) ([]byte, []string) {
 	return raw, keys
 }
 
-func makeRequester(client *http.Client, token string, results chan<- point) func(path, kind string, scheduled time.Time, body []byte) {
-	return func(path, kind string, scheduled time.Time, body []byte) {
+type requestTiming struct {
+	Scheduled, Queued time.Time
+}
+
+func makeRequester(client *http.Client, token string, results chan<- point) func(path, kind string, timing requestTiming, body []byte) {
+	return func(path, kind string, timing requestTiming, body []byte) {
+		started := time.Now()
 		method := "GET"
 		if body != nil {
 			method = "POST"
@@ -313,10 +332,10 @@ func makeRequester(client *http.Client, token string, results chan<- point) func
 				p.detail = errorDetail(e)
 			}
 		}
-		p.elapsed = float64(time.Since(scheduled)) / float64(time.Millisecond)
-		if p.failure != "" || p.status >= http.StatusBadRequest {
-			p.scheduledAt, p.finishedAt = scheduled.UTC(), time.Now().UTC()
-		}
+		finished := time.Now()
+		p.elapsed = float64(finished.Sub(timing.Scheduled)) / float64(time.Millisecond)
+		p.scheduledAt, p.queuedAt = timing.Scheduled, timing.Queued
+		p.startedAt, p.finishedAt = started, finished
 		results <- p
 	}
 }
@@ -364,15 +383,16 @@ func validateArguments(ack bool, rate, updatedRate, searchRate, workers int, dur
 	}
 }
 
-func collectResults(results <-chan point, r *result, samples map[string][]float64, done chan<- struct{}) {
+func collectResults(results <-chan point, r *result, samples map[string][]float64, timeline *timeline, done chan<- struct{}) {
 	defer close(done)
 	for p := range results {
 		r.Completed++
-		if !p.finishedAt.IsZero() {
+		timeline.completed(p)
+		if p.failure != "" || p.status >= http.StatusBadRequest {
 			// Bounded, credential-free timing evidence for correlating failures
 			// with ingress/node transitions. Never retain URLs or request bodies.
 			if len(r.Failures) < 100 {
-				r.Failures = append(r.Failures, requestFailure{p.scheduledAt, p.finishedAt, p.kind, p.failure, p.status})
+				r.Failures = append(r.Failures, requestFailure{p.scheduledAt.UTC(), p.finishedAt.UTC(), p.kind, p.failure, p.status})
 			} else {
 				r.OmittedFailures++
 			}

@@ -38,11 +38,11 @@ func TestFailureSamplesIncludeTimingWithoutRequestData(t *testing.T) {
 	points := make(chan point, 1)
 	scheduled := time.Now().Add(-time.Second)
 	client := &http.Client{Transport: unavailableTransport{}}
-	makeRequester(client, "private-token", points)("/v0/servers?search=private-query", "page", scheduled, nil)
+	makeRequester(client, "private-token", points)("/v0/servers?search=private-query", "page", requestTiming{scheduled, scheduled}, nil)
 	close(points)
 	r := result{Status: map[string]int{}, Cache: map[string]int{}, Errors: map[string]int{}, Protocols: map[string]int{}, ErrorDetails: map[string]string{}}
 	done := make(chan struct{})
-	collectResults(points, &r, map[string][]float64{}, done)
+	collectResults(points, &r, map[string][]float64{}, newTimeline(), done)
 	if len(r.Failures) != 1 || r.Failures[0].Status != http.StatusServiceUnavailable ||
 		!r.Failures[0].ScheduledAt.Equal(scheduled) || !r.Failures[0].FinishedAt.After(scheduled) {
 		t.Fatalf("missing failure timing: %+v", r.Failures)
