@@ -1,0 +1,11 @@
+{
+  "read_only_staging_query": true,
+  "source_rows": 183507,
+  "distinct_keys": 11346,
+  "sha256": "410b91ddb2a4436ce549834236e282a8501cc8ab9d6748481d32e75dfc80f37b",
+  "mapping": "Evenly spaced valid cursors per API/limit/version class, then deterministic driver shuffle. Public catalog data only; no production request URLs.",
+  "limitations": [
+    "Exact production cursor positions, first-page fraction and response-size distribution are not preserved.",
+    "This catalog enables a calibrated frequency model, not an exact crawl replay."
+  ]
+}

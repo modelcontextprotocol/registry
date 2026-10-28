@@ -29,10 +29,12 @@ type result struct {
 	Calibration                                                         bool
 	RequestPhases                                                       map[string]phaseSummary
 	StartedAt, FinishedAt, CatalogSHA256                                string
+	PageWorkloadSHA256, ConnectionRotation                              string
 	ReadRate, UpdatedRate, SearchRate, HotPercent                       int
 	Scheduled, ScheduledPublishes, Completed, Dropped, DroppedPublishes int
 	Bytes                                                               int64
 	Status, Cache, Errors, Protocols                                    map[string]int
+	RequestShapes                                                       map[string]int
 	ErrorDetails                                                        map[string]string
 	LatencyMS                                                           map[string]float64
 	ElapsedSeconds                                                      float64
@@ -46,12 +48,12 @@ type requestFailure struct {
 	Status                  int
 }
 type point struct {
-	phases                                       phaseObservation
-	kind, cache, failure, protocol, detail       string
-	status                                       int
-	elapsed                                      float64
-	bytes                                        int64
-	scheduledAt, queuedAt, startedAt, finishedAt time.Time
+	phases                                        phaseObservation
+	kind, cache, failure, protocol, detail, shape string
+	status                                        int
+	elapsed                                       float64
+	bytes                                         int64
+	scheduledAt, queuedAt, startedAt, finishedAt  time.Time
 }
 
 func main() {
@@ -66,11 +68,14 @@ func main() {
 	workers := flag.Int("workers", 512, "bounded request concurrency and queue")
 	tokenFile := flag.String("token-file", "", "optional scoped staging publish token file")
 	hot := flag.Int("hot-percent", 80, "percent of requests using the first 128 keys")
+	pageWorkloadFile := flag.String("page-workload", "", "measured page-class/key-frequency JSON; overrides hot-percent for pages")
+	connectionRotation := flag.Duration("connection-rotation", 30*time.Second, "forced idle-connection rotation; 0 disables this synthetic churn")
 	http2 := flag.Bool("http2", false, "allow HTTP/2 negotiation (HTTP/1.1 only by default)")
 	calibrate := flag.Bool("calibrate", false, "use a private loopback HTTPS fixture with 64-KiB bodies; never contact staging")
 	cpuProfile := flag.String("cpu-profile", "", "optional local generator CPU profile file")
 	flag.Parse()
 	validateArguments(*ack, *rate, *updatedRate, *searchRate, *workers, *duration, *hot)
+	validateConnectionRotation(*connectionRotation)
 	tr := newTransport(*http2)
 	client := &http.Client{Transport: tr, Timeout: 10 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 	baseURL, closeFixture := configureCalibration(tr, *calibrate, *tokenFile, *catalogMode)
@@ -83,6 +88,10 @@ func main() {
 		return
 	}
 	raw, keys := loadKeys(*keysFile)
+	pageWorkload, err := loadPageWorkload(*pageWorkloadFile, keys)
+	if err != nil {
+		panic(err)
+	}
 	token := loadToken(*tokenFile)
 	results := make(chan point, 4096)
 	var wg sync.WaitGroup
@@ -105,6 +114,9 @@ func main() {
 			defer wg.Done()
 			for j := range jobs {
 				path, kind := readPath(j.n, *hot, *rate, *updatedRate, *searchRate, keys)
+				if kind == "page" && len(pageWorkload.paths) > 0 {
+					path = pageWorkload.path(pageSequence(j.n, *rate, *updatedRate+*searchRate))
+				}
 				request(path, kind, requestTiming{j.at, j.queuedAt}, nil)
 			}
 		}()
@@ -116,6 +128,11 @@ func main() {
 	r.UpdatedRate = *updatedRate
 	r.SearchRate = *searchRate
 	r.HotPercent = *hot
+	r.ConnectionRotation = connectionRotation.String()
+	if len(pageWorkload.paths) > 0 {
+		r.PageWorkloadSHA256 = pageWorkload.SHA256
+		r.HotPercent = -1 // The measured distribution replaces this legacy parameter.
+	}
 	runID := fmt.Sprint(start.UnixNano())
 	total := int(duration.Seconds() * float64(*rate))
 	if token != "" {
@@ -151,22 +168,8 @@ func main() {
 			}
 		}()
 	}
-	// Rotate idle connections to model independent clients arriving during a burst
-	// and let newly ready ingress replicas receive connections. Same rule in A/B.
-	stopRotation := make(chan struct{})
-	defer close(stopRotation)
-	go func() {
-		tick := time.NewTicker(30 * time.Second)
-		defer tick.Stop()
-		for {
-			select {
-			case <-tick.C:
-				tr.CloseIdleConnections()
-			case <-stopRotation:
-				return
-			}
-		}
-	}()
+	stopRotation := rotateIdleConnections(tr, *connectionRotation)
+	defer stopRotation()
 
 	for i := 0; i < total; i++ {
 		at := start.Add(time.Duration(float64(i) / float64(*rate) * float64(time.Second)))
@@ -325,7 +328,7 @@ func makeRequesterAt(client *http.Client, baseURL, token string, results chan<- 
 		}
 		trace := newRequestTrace()
 		req, e := http.NewRequestWithContext(trace.context(context.Background()), method, baseURL+path, bytes.NewReader(body))
-		p := point{kind: kind}
+		p := point{kind: kind, shape: benchmarkRequestShape(path, kind)}
 		if e == nil {
 			if body != nil {
 				req.Header.Set("Authorization", "Bearer "+token)
@@ -402,8 +405,10 @@ func validateArguments(ack bool, rate, updatedRate, searchRate, workers int, dur
 
 func collectResults(results <-chan point, r *result, samples map[string][]float64, timeline *timeline, done chan<- struct{}) {
 	defer close(done)
+	r.RequestShapes = make(map[string]int)
 	phases := make(map[string]*phaseAccumulator)
 	for p := range results {
+		r.RequestShapes[p.shape]++
 		key := phaseKey(p.kind, p.cache)
 		if phases[key] == nil {
 			phases[key] = &phaseAccumulator{}

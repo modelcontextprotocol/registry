@@ -8,6 +8,12 @@ All 802,582 attempted requests succeeded, but their latency excludes dropped
 work. The long burst, publish test and autoscaling recovery gate were not run.
 The opt-in remains disabled; this result does not support promotion.
 
+Follow-up: the [production workload qualification](WORKLOAD_PROFILE.md) found
+material API/page-size, cache-locality and duration differences in this stress
+scenario. Its failed gate remains a failed gate, but it is not a validated
+acceptance test for the actual production cycle. Qualify the workload baseline
+before another capacity comparison.
+
 ## Observed result
 
 The [saved result](evidence/coordinated-capacity-2026-10-28/summary.json)

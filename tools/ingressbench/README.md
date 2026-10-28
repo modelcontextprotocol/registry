@@ -1,5 +1,10 @@
 # Public-ingress staging benchmark
 
+The [production workload audit](WORKLOAD_PROFILE.md) found that the earlier
+stress workload does not reproduce the observed production cycle closely enough
+to serve as its acceptance test. Read that qualification before choosing rates
+or interpreting capacity results.
+
 This driver targets only `https://staging.registry.modelcontextprotocol.io` and
 requires `-staging`. Run it on a separate load-generator host, outside the tested
 node pool. It exercises HTTPS, ingress caches, and the application together. HTTP/1.1 is
@@ -28,6 +33,40 @@ The [coordinated CPU capacity candidate](COORDINATED_CAPACITY.md) records the
 subsequent staging test: 7,418 of 810,000 offered reads were dropped, despite
 lower attempted-request latency. Its short delivery gate failed, so the long
 autoscaling test was not run and the opt-in remains disabled.
+
+`-page-workload measured-pages.json` replaces the legacy page-selection rule
+with explicit API version, page size, version filter and anonymous key-frequency
+classes. Each class requires enough **distinct** matching staging catalog keys;
+the driver fails before load if the catalog is too small. It permutes ranks
+across matching keys independently of catalog ordering, then repeats a
+deterministically shuffled frequency schedule. This models aggregate frequency,
+not chronological crawl sessions or exact production cursor positions. Search
+and updated-listing generation remain separately configured by the existing
+flags; they are not calibrated automatically by a page profile.
+
+The profile format is `{"classes":[{"api_version":"v0.1","limit":100,
+"version_filter":"","key_counts":[7,2,1]}]}`. This example gives three distinct
+staging URLs frequencies 7/2/1. Use measured counts for actual calibration.
+Results record the profile SHA-256 and bounded `RequestShapes` counts to verify
+the attempted API/limit/version/cursor mix. `HotPercent=-1` means the measured
+profile replaced that legacy parameter. The old 4,000-key catalog is insufficient
+for the measured broad-crawl profile; do not silently reduce its diversity.
+
+`-connection-rotation=0` disables synchronized idle-connection churn. The default
+remains 30 seconds to reproduce older tests, and results record the setting.
+Neither value is evidence of production connection lifetimes. Hold transport
+policy fixed within a comparison and label any sensitivity test explicitly.
+
+For read-only traffic profiling, `collect_profile_logs.py --start <RFC3339>
+--seconds 60 --out profile.json` reads production Cloud Logging with the current
+gcloud identity. It does not change production. It paginates up to 200,000
+records and marks incomplete coverage on errors or truncation; such slices do
+not receive a rate estimate. `profile_logs.py` separates zero-request-length
+background-work records from client records and saves only bounded aggregates
+and anonymous frequency ranks. It does not save URLs, search text, IPs, user
+agents or request IDs. Complete pagination does not independently prove logging
+ingestion completeness. Run parser/coverage tests with
+`python3 -m unittest discover -s tools/ingressbench -p 'test_profile_logs.py'`.
 
 ```sh
 go build -o ingressbench ./tools/ingressbench
