@@ -1,0 +1,1788 @@
+{
+  "experiment": {
+    "recorded_at": "2026-10-28T08:33:27.785815+00:00",
+    "question": "Does ready capacity remove the burst loss, or does steady-state capacity remain inadequate?",
+    "production_changes": false,
+    "image": "us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-connection-release-20261028-v1@sha256:94f184cd38345b059f440756d5eaa22448dbc7d827490220d144bd9356713f94",
+    "app": {
+      "replicas": 2,
+      "cpu_request_m": 250,
+      "cpu_limit": null,
+      "pool_max_per_replica": 60,
+      "pool_min_per_replica": 10,
+      "placement": "Same pod UIDs and original two nodes verified before each arm"
+    },
+    "database": {
+      "cpu_request": 2,
+      "cpu_limit": 3,
+      "memory_GiB": 4,
+      "shared_buffers_MiB": 512,
+      "max_connections": 200
+    },
+    "driver_sha256": "96693b313ae702e76943ef2242e3de5c471ff3d0f0011b6999a51b88dfeee1a2",
+    "catalog_sha256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+    "protocol": "HTTP/1.1",
+    "hot_percent": 80,
+    "hot_keys": 128,
+    "generator": "e2-standard-4 outside cluster",
+    "arms": {
+      "warm": {
+        "start_nodes": 4,
+        "start_ingress": 6,
+        "ingress_hpa_min_during_burst": 6,
+        "release_hpa_min_after_burst": 2
+      },
+      "autoscale": {
+        "start_nodes": 2,
+        "start_ingress": 2,
+        "ingress_hpa_min": 2,
+        "ingress_hpa_max": 6
+      }
+    },
+    "phases": [
+      {
+        "name": "preparation",
+        "seconds": 300,
+        "reads_per_second": 100,
+        "updated_per_second": 1,
+        "search_per_second": 1,
+        "workers": 128,
+        "publishes_per_second": 0
+      },
+      {
+        "name": "burst",
+        "seconds": 600,
+        "reads_per_second": 4500,
+        "updated_per_second": 36,
+        "search_per_second": 3,
+        "workers": 1024,
+        "publishes_per_second": 1
+      },
+      {
+        "name": "recovery",
+        "seconds": 1800,
+        "reads_per_second": 100,
+        "updated_per_second": 1,
+        "search_per_second": 1,
+        "workers": 128,
+        "publishes_per_second": 1
+      }
+    ],
+    "return_to_idle_timeout_after_recovery_seconds": 1500,
+    "acceptance": "No dropped scheduled requests, controlled end-to-end latency, no errors, complete recovery, natural return to two Ready nodes; a diagnostic A/B alone is not a proven production fix.",
+    "caveats": [
+      "Cache readiness and backend connection distribution are part of warm-versus-scale-up cost.",
+      "Updated_since is generated relative to wall clock in both arms.",
+      "One pair is diagnostic; a successful candidate requires repetition.",
+      "250m held constant because the 1-CPU candidate did not fit the two-node idle requirement."
+    ],
+    "driver_source_commit": "4eb0c10810904e47696ea853b09b1348e68f38b5",
+    "validation": {
+      "race_tests": "passed",
+      "lint": "passed",
+      "github_ci": "https://github.com/modelcontextprotocol/registry/actions/runs/40657658165"
+    }
+  },
+  "runs": {
+    "warm": {
+      "phases": {
+        "preparation": {
+          "StartedAt": "2026-10-28T08:33:17.58099227Z",
+          "FinishedAt": "2026-10-28T08:38:17.576566723Z",
+          "CatalogSHA256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+          "ReadRate": 100,
+          "UpdatedRate": 1,
+          "SearchRate": 1,
+          "HotPercent": 80,
+          "Scheduled": 30000,
+          "ScheduledPublishes": 0,
+          "Completed": 30000,
+          "Dropped": 0,
+          "DroppedPublishes": 0,
+          "Status": {
+            "page:200": 29400,
+            "search:200": 300,
+            "updated:200": 300
+          },
+          "Cache": {
+            "HIT": 20003,
+            "MISS": 6417,
+            "STALE": 3580
+          },
+          "Errors": {},
+          "LatencyMS": {
+            "page_p50": 2.854372,
+            "page_p95": 10.496049,
+            "page_p99": 15.625065,
+            "search_p50": 12.482938,
+            "search_p95": 37.62502,
+            "search_p99": 45.216926,
+            "updated_p50": 11.099117,
+            "updated_p95": 15.703356,
+            "updated_p99": 16.910074
+          },
+          "ElapsedSeconds": 299.995574337,
+          "Bytes": 1727061035,
+          "window_totals": {
+            "Reads": {
+              "Scheduled": 30000,
+              "Dropped": 0,
+              "Dispatched": 30000,
+              "Completed": 30000,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 30000,
+                "mean_ms": 0.6086223268000002,
+                "maximum_ms": 2.061573,
+                "worst_window_p95_upper_ms": 2
+              },
+              "QueueDelay": {
+                "count": 30000,
+                "mean_ms": 0.009017354166666668,
+                "maximum_ms": 0.343305,
+                "worst_window_p95_upper_ms": 0.1
+              },
+              "HTTPDuration": {
+                "count": 30000,
+                "mean_ms": 3.6608936140333332,
+                "maximum_ms": 141.609588,
+                "worst_window_p95_upper_ms": 50
+              }
+            },
+            "Publishes": {
+              "Scheduled": 0,
+              "Dropped": 0,
+              "Dispatched": 0,
+              "Completed": 0,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 0,
+                "mean_ms": null,
+                "maximum_ms": 0,
+                "worst_window_p95_upper_ms": 0
+              },
+              "QueueDelay": {
+                "count": 0,
+                "mean_ms": null,
+                "maximum_ms": 0,
+                "worst_window_p95_upper_ms": 0
+              },
+              "HTTPDuration": {
+                "count": 0,
+                "mean_ms": null,
+                "maximum_ms": 0,
+                "worst_window_p95_upper_ms": 0
+              }
+            }
+          }
+        },
+        "burst": {
+          "StartedAt": "2026-10-28T08:38:24.538925958Z",
+          "FinishedAt": "2026-10-28T08:48:27.012485189Z",
+          "CatalogSHA256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+          "ReadRate": 4500,
+          "UpdatedRate": 36,
+          "SearchRate": 3,
+          "HotPercent": 80,
+          "Scheduled": 2700000,
+          "ScheduledPublishes": 600,
+          "Completed": 2338163,
+          "Dropped": 362437,
+          "DroppedPublishes": 0,
+          "Status": {
+            "page:0": 128,
+            "page:200": 2317174,
+            "publish:200": 600,
+            "search:0": 5,
+            "search:200": 1556,
+            "updated:0": 90,
+            "updated:200": 18610
+          },
+          "Cache": {
+            "": 819,
+            "HIT": 1944887,
+            "MISS": 38933,
+            "STALE": 204859,
+            "UPDATING": 148665
+          },
+          "Errors": {
+            "page:body:timeout": 1,
+            "page:request:timeout": 127,
+            "search:request:timeout": 5,
+            "updated:body:timeout": 3,
+            "updated:request:timeout": 87
+          },
+          "LatencyMS": {
+            "page_p50": 242.698843,
+            "page_p95": 649.870322,
+            "page_p99": 5565.102796,
+            "publish_p50": 35.364466,
+            "publish_p95": 6295.52226,
+            "publish_p99": 6833.156456,
+            "search_p50": 287.888307,
+            "search_p95": 5724.351489,
+            "search_p99": 6283.778105,
+            "updated_p50": 4282.275566,
+            "updated_p95": 5971.486638,
+            "updated_p99": 9515.563482
+          },
+          "ElapsedSeconds": 602.473559104,
+          "Bytes": 134711698432,
+          "window_totals": {
+            "Reads": {
+              "Scheduled": 2700000,
+              "Dropped": 362437,
+              "Dispatched": 2337563,
+              "Completed": 2337563,
+              "Failures": 223,
+              "SchedulerLag": {
+                "count": 2700000,
+                "mean_ms": 0.3855167980270365,
+                "maximum_ms": 336.55747,
+                "worst_window_p95_upper_ms": 200
+              },
+              "QueueDelay": {
+                "count": 2337563,
+                "mean_ms": 223.98283879131463,
+                "maximum_ms": 1414.987602,
+                "worst_window_p95_upper_ms": 2000
+              },
+              "HTTPDuration": {
+                "count": 2337563,
+                "mean_ms": 261.15499952233506,
+                "maximum_ms": 10004.182083,
+                "worst_window_p95_upper_ms": 5000
+              }
+            },
+            "Publishes": {
+              "Scheduled": 600,
+              "Dropped": 0,
+              "Dispatched": 600,
+              "Completed": 600,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 600,
+                "mean_ms": 0.16387878166666667,
+                "maximum_ms": 20.948269,
+                "worst_window_p95_upper_ms": 50
+              },
+              "QueueDelay": {
+                "count": 600,
+                "mean_ms": 0.10357080666666667,
+                "maximum_ms": 1.639371,
+                "worst_window_p95_upper_ms": 2
+              },
+              "HTTPDuration": {
+                "count": 600,
+                "mean_ms": 2021.607056951667,
+                "maximum_ms": 8348.133061,
+                "worst_window_p95_upper_ms": 10000
+              }
+            }
+          }
+        },
+        "recovery": {
+          "StartedAt": "2026-10-28T08:48:31.781882317Z",
+          "FinishedAt": "2026-10-28T09:18:31.781803019Z",
+          "CatalogSHA256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+          "ReadRate": 100,
+          "UpdatedRate": 1,
+          "SearchRate": 1,
+          "HotPercent": 80,
+          "Scheduled": 180000,
+          "ScheduledPublishes": 1800,
+          "Completed": 181800,
+          "Dropped": 0,
+          "DroppedPublishes": 0,
+          "Status": {
+            "page:200": 176400,
+            "publish:200": 1800,
+            "search:200": 1800,
+            "updated:200": 1800
+          },
+          "Cache": {
+            "": 1800,
+            "HIT": 125939,
+            "MISS": 19004,
+            "STALE": 35057
+          },
+          "Errors": {},
+          "LatencyMS": {
+            "page_p50": 2.799063,
+            "page_p95": 8.060709,
+            "page_p99": 13.28227,
+            "publish_p50": 9.70784,
+            "publish_p95": 12.978189,
+            "publish_p99": 15.947302,
+            "search_p50": 10.425445,
+            "search_p95": 36.405784,
+            "search_p99": 41.28453,
+            "updated_p50": 11.123907,
+            "updated_p95": 16.047554,
+            "updated_p99": 21.234086
+          },
+          "ElapsedSeconds": 1799.999920565,
+          "Bytes": 10387869614,
+          "window_totals": {
+            "Reads": {
+              "Scheduled": 180000,
+              "Dropped": 0,
+              "Dispatched": 180000,
+              "Completed": 180000,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 180000,
+                "mean_ms": 0.618953111461111,
+                "maximum_ms": 3.357755,
+                "worst_window_p95_upper_ms": 2
+              },
+              "QueueDelay": {
+                "count": 180000,
+                "mean_ms": 0.008993479355555552,
+                "maximum_ms": 0.217032,
+                "worst_window_p95_upper_ms": 0.1
+              },
+              "HTTPDuration": {
+                "count": 180000,
+                "mean_ms": 3.027214473116667,
+                "maximum_ms": 378.02543,
+                "worst_window_p95_upper_ms": 20
+              }
+            },
+            "Publishes": {
+              "Scheduled": 1800,
+              "Dropped": 0,
+              "Dispatched": 1800,
+              "Completed": 1800,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 1800,
+                "mean_ms": 0.5140783033333333,
+                "maximum_ms": 1.461131,
+                "worst_window_p95_upper_ms": 2
+              },
+              "QueueDelay": {
+                "count": 1800,
+                "mean_ms": 0.1105722494444445,
+                "maximum_ms": 0.530764,
+                "worst_window_p95_upper_ms": 1
+              },
+              "HTTPDuration": {
+                "count": 1800,
+                "mean_ms": 9.354878723888893,
+                "maximum_ms": 76.663278,
+                "worst_window_p95_upper_ms": 100
+              }
+            }
+          }
+        }
+      },
+      "generator": {
+        "sample_intervals": 60,
+        "scope": "Whole four-vCPU generator from /proc/stat and non-loopback network devices; includes monitoring overhead. CPU busy includes steal, reported separately. Does not alone rule out single-thread or network constraints.",
+        "cpu_busy_percent": {
+          "mean": 51.34566387688601,
+          "max": 59.38786008230453
+        },
+        "cpu_steal_percent": {
+          "mean": 0.13422269051651112,
+          "max": 0.3653444676409186
+        },
+        "cpu_iowait_percent": {
+          "mean": 0.0034787615935366217,
+          "max": 0.026567481402763018
+        },
+        "cpu_softirq_percent": {
+          "mean": 15.633350912263069,
+          "max": 17.690732206861238
+        },
+        "received_gbps": {
+          "mean": 1.8444311523971006,
+          "max": 2.1339308808883826
+        },
+        "transmitted_gbps": {
+          "mean": 0.021702159757767483,
+          "max": 0.02599625817023602
+        },
+        "receive_drops": 0,
+        "transmit_drops": 0
+      },
+      "app_pressure": [
+        {
+          "metric": "container_cpu_usage_seconds_total",
+          "seconds": 587.9370000362396,
+          "rate": 0.9535294886449475,
+          "start": 1793176716.769,
+          "end": 1793177304.706,
+          "placement": "other_node"
+        },
+        {
+          "metric": "container_pressure_cpu_stalled_seconds_total",
+          "seconds": 587.9370000362396,
+          "rate": 0.13083882115814865,
+          "start": 1793176716.769,
+          "end": 1793177304.706,
+          "placement": "other_node"
+        },
+        {
+          "metric": "container_pressure_cpu_waiting_seconds_total",
+          "seconds": 587.9370000362396,
+          "rate": 0.19931247904584504,
+          "start": 1793176716.769,
+          "end": 1793177304.706,
+          "placement": "other_node"
+        },
+        {
+          "metric": "container_cpu_usage_seconds_total",
+          "seconds": 569.0750000476837,
+          "rate": 0.9428957588279914,
+          "start": 1793176710.121,
+          "end": 1793177279.196,
+          "placement": "with_registry_database"
+        },
+        {
+          "metric": "container_pressure_cpu_stalled_seconds_total",
+          "seconds": 569.0750000476837,
+          "rate": 0.45991289720699324,
+          "start": 1793176710.121,
+          "end": 1793177279.196,
+          "placement": "with_registry_database"
+        },
+        {
+          "metric": "container_pressure_cpu_waiting_seconds_total",
+          "seconds": 569.0750000476837,
+          "rate": 0.5699427438787911,
+          "start": 1793176710.121,
+          "end": 1793177279.196,
+          "placement": "with_registry_database"
+        }
+      ],
+      "integrity": {
+        "samples": 99,
+        "commands_failed": [],
+        "db_throttled_usec_range": [
+          260147,
+          475465
+        ],
+        "db_endpoint_samples": 541,
+        "db_endpoint_errors_or_empty": [],
+        "db_endpoint_not_ready": [],
+        "cadvisor_failures_or_empty": [],
+        "lb_collection_failures": [],
+        "metric_window": {
+          "start": 1793176391.513865,
+          "end": 1793179341.3185751
+        },
+        "metric_errors": [],
+        "empty_metrics": [
+          "alerts",
+          "raw_5xx"
+        ],
+        "node_count_timeline": [
+          {
+            "at": 1793176391.553984,
+            "nodes": 4
+          },
+          {
+            "at": 1793179032.190119,
+            "nodes": 3
+          },
+          {
+            "at": 1793179332.2599921,
+            "nodes": 2
+          }
+        ],
+        "max_app_or_db_restart_count": 0,
+        "final_nodes": 2
+      },
+      "peak_sampled_pool_waiters": 927.0,
+      "client_result_verification": {
+        "at": 1793179176.142282,
+        "phases": {
+          "preparation": {
+            "identical_json_to_remote_file": true,
+            "remote_file_sha256": "8a2a1f4f89dddbf0430297dd20e07582b3af01f5fdf30012f4bdc645b9ac2fe0",
+            "parsed_stdout_file_sha256": "8a2a1f4f89dddbf0430297dd20e07582b3af01f5fdf30012f4bdc645b9ac2fe0"
+          },
+          "burst": {
+            "identical_json_to_remote_file": true,
+            "remote_file_sha256": "45111014a9c43d03a967c0e183fd7e4e00066883fca3f183fcac150fdc80147f",
+            "parsed_stdout_file_sha256": "45111014a9c43d03a967c0e183fd7e4e00066883fca3f183fcac150fdc80147f"
+          },
+          "recovery": {
+            "identical_json_to_remote_file": true,
+            "remote_file_sha256": "484884f944468f879d2113f70412738cab2ca47b8b2dceb97e4d0560f13a6d71",
+            "parsed_stdout_file_sha256": "484884f944468f879d2113f70412738cab2ca47b8b2dceb97e4d0560f13a6d71"
+          }
+        }
+      },
+      "database_statement_deltas": {
+        "before": "diagnostics-1793176386.json",
+        "after": "diagnostics-1793177394.json",
+        "window_seconds": 1002.8315010070801,
+        "reset_unchanged": true,
+        "scope": "Only statements present in both bounded top-25 snapshots; interval brackets burst with collection padding",
+        "rows": [
+          {
+            "queryid": 3749554622472550736,
+            "calls": 234981,
+            "mean_ms": 3.427575401592019,
+            "total_exec_ms": 805415.0954414941,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": -4303255870242342024,
+            "calls": 19069,
+            "mean_ms": 7.0532287655355175,
+            "total_exec_ms": 134498.01932999678,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": 903517041871178438,
+            "calls": 1927,
+            "mean_ms": 27.081587734305966,
+            "total_exec_ms": 52186.219564007595,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": 4318848960711986315,
+            "calls": 670,
+            "mean_ms": 0.9424345223880013,
+            "total_exec_ms": 631.4311299999608,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": -5383083741758676298,
+            "calls": 319,
+            "mean_ms": 1.6521755548589416,
+            "total_exec_ms": 527.0440020000024,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": 2079831266944838202,
+            "calls": 670,
+            "mean_ms": 0.4706912149255574,
+            "total_exec_ms": 315.36311400012346,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          }
+        ]
+      },
+      "fixture_cleanup": {
+        "at": 1793179361.27714,
+        "ids": [
+          "1793176704538925958",
+          "1793177311781882317"
+        ],
+        "code": 0,
+        "stdout": "BEGIN\nSET\nSET\n2400\nCOMMIT\n",
+        "stderr": ""
+      },
+      "natural_two_node_idle_at": 1793179338.236856
+    },
+    "autoscale": {
+      "phases": {
+        "preparation": {
+          "StartedAt": "2026-10-28T09:23:29.842553437Z",
+          "FinishedAt": "2026-10-28T09:28:29.835821505Z",
+          "CatalogSHA256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+          "ReadRate": 100,
+          "UpdatedRate": 1,
+          "SearchRate": 1,
+          "HotPercent": 80,
+          "Scheduled": 30000,
+          "ScheduledPublishes": 0,
+          "Completed": 30000,
+          "Dropped": 0,
+          "DroppedPublishes": 0,
+          "Status": {
+            "page:200": 29400,
+            "search:200": 300,
+            "updated:200": 300
+          },
+          "Cache": {
+            "HIT": 21637,
+            "MISS": 5182,
+            "STALE": 3181
+          },
+          "Errors": {},
+          "LatencyMS": {
+            "page_p50": 2.816732,
+            "page_p95": 9.333098,
+            "page_p99": 14.922277,
+            "search_p50": 12.234767,
+            "search_p95": 36.155952,
+            "search_p99": 59.734291,
+            "updated_p50": 10.253646,
+            "updated_p95": 15.78252,
+            "updated_p99": 17.29969
+          },
+          "ElapsedSeconds": 299.993267927,
+          "Bytes": 1727124918,
+          "window_totals": {
+            "Reads": {
+              "Scheduled": 30000,
+              "Dropped": 0,
+              "Dispatched": 30000,
+              "Completed": 30000,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 30000,
+                "mean_ms": 0.6063905583999999,
+                "maximum_ms": 3.764489,
+                "worst_window_p95_upper_ms": 5
+              },
+              "QueueDelay": {
+                "count": 30000,
+                "mean_ms": 0.009647454033333334,
+                "maximum_ms": 0.178441,
+                "worst_window_p95_upper_ms": 0.5
+              },
+              "HTTPDuration": {
+                "count": 30000,
+                "mean_ms": 3.380232566833334,
+                "maximum_ms": 185.536875,
+                "worst_window_p95_upper_ms": 100
+              }
+            },
+            "Publishes": {
+              "Scheduled": 0,
+              "Dropped": 0,
+              "Dispatched": 0,
+              "Completed": 0,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 0,
+                "mean_ms": null,
+                "maximum_ms": 0,
+                "worst_window_p95_upper_ms": 0
+              },
+              "QueueDelay": {
+                "count": 0,
+                "mean_ms": null,
+                "maximum_ms": 0,
+                "worst_window_p95_upper_ms": 0
+              },
+              "HTTPDuration": {
+                "count": 0,
+                "mean_ms": null,
+                "maximum_ms": 0,
+                "worst_window_p95_upper_ms": 0
+              }
+            }
+          }
+        },
+        "burst": {
+          "StartedAt": "2026-10-28T09:28:36.421225785Z",
+          "FinishedAt": "2026-10-28T09:38:38.824641006Z",
+          "CatalogSHA256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+          "ReadRate": 4500,
+          "UpdatedRate": 36,
+          "SearchRate": 3,
+          "HotPercent": 80,
+          "Scheduled": 2700000,
+          "ScheduledPublishes": 600,
+          "Completed": 2202897,
+          "Dropped": 497703,
+          "DroppedPublishes": 0,
+          "Status": {
+            "page:0": 487,
+            "page:200": 2182733,
+            "publish:0": 9,
+            "publish:200": 591,
+            "search:0": 8,
+            "search:200": 1461,
+            "updated:0": 144,
+            "updated:200": 17464
+          },
+          "Cache": {
+            "": 912,
+            "HIT": 1837889,
+            "MISS": 39132,
+            "STALE": 173643,
+            "UPDATING": 151321
+          },
+          "Errors": {
+            "page:body:connection_reset": 276,
+            "page:body:timeout": 15,
+            "page:request:timeout": 196,
+            "publish:request:connection_reset": 1,
+            "publish:request:timeout": 8,
+            "search:body:connection_reset": 1,
+            "search:request:timeout": 7,
+            "updated:body:connection_reset": 27,
+            "updated:body:timeout": 8,
+            "updated:request:timeout": 109
+          },
+          "LatencyMS": {
+            "page_p50": 274.999517,
+            "page_p95": 660.385472,
+            "page_p99": 6101.628831,
+            "publish_p50": 105.753377,
+            "publish_p95": 7980.214239,
+            "publish_p99": 10000.385639,
+            "search_p50": 378.759866,
+            "search_p95": 7143.601636,
+            "search_p99": 9022.712035,
+            "updated_p50": 4024.103398,
+            "updated_p95": 7726.966087,
+            "updated_p99": 9746.651614
+          },
+          "ElapsedSeconds": 602.403415063,
+          "Bytes": 126860655361,
+          "window_totals": {
+            "Reads": {
+              "Scheduled": 2700000,
+              "Dropped": 497703,
+              "Dispatched": 2202297,
+              "Completed": 2202297,
+              "Failures": 639,
+              "SchedulerLag": {
+                "count": 2700000,
+                "mean_ms": 0.15650167892407416,
+                "maximum_ms": 101.855828,
+                "worst_window_p95_upper_ms": 50
+              },
+              "QueueDelay": {
+                "count": 2202297,
+                "mean_ms": 243.42211870219003,
+                "maximum_ms": 1229.548229,
+                "worst_window_p95_upper_ms": 2000
+              },
+              "HTTPDuration": {
+                "count": 2202297,
+                "mean_ms": 278.28733524667865,
+                "maximum_ms": 10004.880439,
+                "worst_window_p95_upper_ms": 10000
+              }
+            },
+            "Publishes": {
+              "Scheduled": 600,
+              "Dropped": 0,
+              "Dispatched": 600,
+              "Completed": 600,
+              "Failures": 9,
+              "SchedulerLag": {
+                "count": 600,
+                "mean_ms": 0.1451826733333333,
+                "maximum_ms": 4.467296,
+                "worst_window_p95_upper_ms": 5
+              },
+              "QueueDelay": {
+                "count": 600,
+                "mean_ms": 0.10669146833333333,
+                "maximum_ms": 0.614831,
+                "worst_window_p95_upper_ms": 1
+              },
+              "HTTPDuration": {
+                "count": 600,
+                "mean_ms": 2527.673717551668,
+                "maximum_ms": 10006.079299,
+                "worst_window_p95_upper_ms": 20000
+              }
+            }
+          }
+        },
+        "recovery": {
+          "StartedAt": "2026-10-28T09:38:42.91359417Z",
+          "FinishedAt": "2026-10-28T10:08:42.911696534Z",
+          "CatalogSHA256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+          "ReadRate": 100,
+          "UpdatedRate": 1,
+          "SearchRate": 1,
+          "HotPercent": 80,
+          "Scheduled": 180000,
+          "ScheduledPublishes": 1800,
+          "Completed": 181800,
+          "Dropped": 0,
+          "DroppedPublishes": 0,
+          "Status": {
+            "page:0": 1,
+            "page:200": 176399,
+            "publish:200": 1800,
+            "search:200": 1800,
+            "updated:200": 1800
+          },
+          "Cache": {
+            "": 1801,
+            "HIT": 125548,
+            "MISS": 19351,
+            "STALE": 35100
+          },
+          "Errors": {
+            "page:request:connection_refused": 1
+          },
+          "LatencyMS": {
+            "page_p50": 2.779725,
+            "page_p95": 8.141626,
+            "page_p99": 13.302961,
+            "publish_p50": 10.640188,
+            "publish_p95": 13.951831,
+            "publish_p99": 16.505905,
+            "search_p50": 11.450831,
+            "search_p95": 38.316007,
+            "search_p99": 43.097837,
+            "updated_p50": 10.535312,
+            "updated_p95": 15.449092,
+            "updated_p99": 22.96925
+          },
+          "ElapsedSeconds": 1799.99810222,
+          "Bytes": 10381362354,
+          "window_totals": {
+            "Reads": {
+              "Scheduled": 180000,
+              "Dropped": 0,
+              "Dispatched": 180000,
+              "Completed": 180000,
+              "Failures": 1,
+              "SchedulerLag": {
+                "count": 180000,
+                "mean_ms": 0.6158125930999999,
+                "maximum_ms": 9.766306,
+                "worst_window_p95_upper_ms": 2
+              },
+              "QueueDelay": {
+                "count": 180000,
+                "mean_ms": 0.008858152249999997,
+                "maximum_ms": 0.249828,
+                "worst_window_p95_upper_ms": 0.1
+              },
+              "HTTPDuration": {
+                "count": 180000,
+                "mean_ms": 3.0210155262000007,
+                "maximum_ms": 410.444183,
+                "worst_window_p95_upper_ms": 20
+              }
+            },
+            "Publishes": {
+              "Scheduled": 1800,
+              "Dropped": 0,
+              "Dispatched": 1800,
+              "Completed": 1800,
+              "Failures": 0,
+              "SchedulerLag": {
+                "count": 1800,
+                "mean_ms": 0.5303296811111111,
+                "maximum_ms": 1.455758,
+                "worst_window_p95_upper_ms": 2
+              },
+              "QueueDelay": {
+                "count": 1800,
+                "mean_ms": 0.1061064388888889,
+                "maximum_ms": 0.585206,
+                "worst_window_p95_upper_ms": 1
+              },
+              "HTTPDuration": {
+                "count": 1800,
+                "mean_ms": 10.275798986111107,
+                "maximum_ms": 94.645054,
+                "worst_window_p95_upper_ms": 100
+              }
+            }
+          }
+        }
+      },
+      "generator": {
+        "sample_intervals": 60,
+        "scope": "Whole four-vCPU generator from /proc/stat and non-loopback network devices; includes monitoring overhead. CPU busy includes steal, reported separately. Does not alone rule out single-thread or network constraints.",
+        "cpu_busy_percent": {
+          "mean": 51.78341979521962,
+          "max": 66.04809200209095
+        },
+        "cpu_steal_percent": {
+          "mean": 0.0810159241998051,
+          "max": 0.20860495436766624
+        },
+        "cpu_iowait_percent": {
+          "mean": 0.006068008883176232,
+          "max": 0.07847240387130526
+        },
+        "cpu_softirq_percent": {
+          "mean": 14.441653875992783,
+          "max": 16.95786228160329
+        },
+        "received_gbps": {
+          "mean": 1.7375342139601637,
+          "max": 2.167692710190029
+        },
+        "transmitted_gbps": {
+          "mean": 0.020953099346152255,
+          "max": 0.025794656449407705
+        },
+        "receive_drops": 0,
+        "transmit_drops": 0
+      },
+      "app_pressure": [
+        {
+          "metric": "container_cpu_usage_seconds_total",
+          "seconds": 562.9060001373291,
+          "rate": 0.8565447816906756,
+          "start": 1793179724.264,
+          "end": 1793180287.17,
+          "placement": "other_node"
+        },
+        {
+          "metric": "container_pressure_cpu_stalled_seconds_total",
+          "seconds": 562.9060001373291,
+          "rate": 0.1864226566680738,
+          "start": 1793179724.264,
+          "end": 1793180287.17,
+          "placement": "other_node"
+        },
+        {
+          "metric": "container_pressure_cpu_waiting_seconds_total",
+          "seconds": 562.9060001373291,
+          "rate": 0.26435907765007977,
+          "start": 1793179724.264,
+          "end": 1793180287.17,
+          "placement": "other_node"
+        },
+        {
+          "metric": "container_cpu_usage_seconds_total",
+          "seconds": 561.9000000953674,
+          "rate": 0.8413106814731562,
+          "start": 1793179730.161,
+          "end": 1793180292.061,
+          "placement": "with_registry_database"
+        },
+        {
+          "metric": "container_pressure_cpu_stalled_seconds_total",
+          "seconds": 561.9000000953674,
+          "rate": 0.4503017101923044,
+          "start": 1793179730.161,
+          "end": 1793180292.061,
+          "placement": "with_registry_database"
+        },
+        {
+          "metric": "container_pressure_cpu_waiting_seconds_total",
+          "seconds": 561.9000000953674,
+          "rate": 0.5650659102084199,
+          "start": 1793179730.161,
+          "end": 1793180292.061,
+          "placement": "with_registry_database"
+        }
+      ],
+      "integrity": {
+        "samples": 96,
+        "commands_failed": [],
+        "db_throttled_usec_range": [
+          475465,
+          815084
+        ],
+        "db_endpoint_samples": 524,
+        "db_endpoint_errors_or_empty": [],
+        "db_endpoint_not_ready": [],
+        "cadvisor_failures_or_empty": [],
+        "lb_collection_failures": [
+          {
+            "at": 1793182235.030524,
+            "command": "health",
+            "detail": {
+              "code": 1,
+              "error": "ERROR: (gcloud.compute.target-pools.get-health) Could not get health for some targets:\n - The resource 'projects/mcp-registry-staging/zones/us-central1-b/instances/gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww' was not found\n\n"
+            }
+          }
+        ],
+        "metric_window": {
+          "start": 1793179403.256125,
+          "end": 1793182257.731721
+        },
+        "metric_errors": [],
+        "empty_metrics": [
+          "alerts",
+          "raw_5xx"
+        ],
+        "node_count_timeline": [
+          {
+            "at": 1793179403.2972429,
+            "nodes": 2
+          },
+          {
+            "at": 1793179793.4029498,
+            "nodes": 3
+          },
+          {
+            "at": 1793179883.4181492,
+            "nodes": 4
+          },
+          {
+            "at": 1793181863.921328,
+            "nodes": 3
+          },
+          {
+            "at": 1793182254.023026,
+            "nodes": 2
+          }
+        ],
+        "max_app_or_db_restart_count": 0,
+        "final_nodes": 2
+      },
+      "peak_sampled_pool_waiters": 895.0,
+      "client_result_verification": {
+        "at": 1793182468.525573,
+        "phases": {
+          "preparation": {
+            "identical_json_to_remote_file": true,
+            "remote_file_sha256": "5c901fb6d3c297819b3db904482a4f3633ae751b3928fdb356ea4c6906f88d39",
+            "parsed_stdout_file_sha256": "5c901fb6d3c297819b3db904482a4f3633ae751b3928fdb356ea4c6906f88d39"
+          },
+          "burst": {
+            "identical_json_to_remote_file": true,
+            "remote_file_sha256": "6868dc2db8c53078354ca76b0b3a56d7212ca36bd0080b63e4c406fad8925cef",
+            "parsed_stdout_file_sha256": "b8abe2ac5ddadf1d3dff88357493a6b1fc3a90ff93644a81888f98f5cad7feac"
+          },
+          "recovery": {
+            "identical_json_to_remote_file": true,
+            "remote_file_sha256": "73c2481468cd8132896cda59f1a4fdaaedc1aad3665ab37267bb0ffbe45ade3f",
+            "parsed_stdout_file_sha256": "73c2481468cd8132896cda59f1a4fdaaedc1aad3665ab37267bb0ffbe45ade3f"
+          }
+        }
+      },
+      "database_statement_deltas": {
+        "before": "diagnostics-1793179398.json",
+        "after": "diagnostics-1793180400.json",
+        "window_seconds": 993.2200920581818,
+        "reset_unchanged": true,
+        "scope": "Only statements present in both bounded top-25 snapshots; interval brackets burst with collection padding",
+        "rows": [
+          {
+            "queryid": 3749554622472550736,
+            "calls": 203184,
+            "mean_ms": 3.358564558654681,
+            "total_exec_ms": 682406.5812856928,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": -4303255870242342024,
+            "calls": 17970,
+            "mean_ms": 6.770110423982757,
+            "total_exec_ms": 121658.88431897014,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": 903517041871178438,
+            "calls": 1825,
+            "mean_ms": 28.093580003821685,
+            "total_exec_ms": 51270.78350697458,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": 2079831266944838202,
+            "calls": 659,
+            "mean_ms": 3.270229933232272,
+            "total_exec_ms": 2155.0815260000672,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": 4318848960711986315,
+            "calls": 658,
+            "mean_ms": 0.8853243708206686,
+            "total_exec_ms": 582.5434359999999,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          },
+          {
+            "queryid": -5383083741758676298,
+            "calls": 271,
+            "mean_ms": 1.6845018376383203,
+            "total_exec_ms": 456.49999799998477,
+            "block_reads": 0,
+            "temp_blocks_written": 0
+          }
+        ]
+      },
+      "fixture_cleanup": {
+        "at": 1793182485.414944,
+        "ids": [
+          "1793179716421225785",
+          "1793180322913594170"
+        ],
+        "code": 0,
+        "stdout": "BEGIN\nSET\nSET\n2395\nCOMMIT\n",
+        "stderr": ""
+      },
+      "natural_two_node_idle_at": 1793182254.6012611,
+      "recovery_refusal": {
+        "failure": {
+          "ScheduledAt": "2026-10-28T09:52:59.75359417Z",
+          "FinishedAt": "2026-10-28T09:52:59.756652132Z",
+          "Kind": "page",
+          "Class": "request:connection_refused",
+          "Status": 0
+        },
+        "nearby_lb_samples": [
+          {
+            "at": "2026-10-28T09:52:04.357756+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "tbww",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:52:14.361040+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "tbww",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:52:24.365999+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "tbww",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:52:34.370444+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "tbww",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:52:44.377561+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "tbww",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:52:54.385615+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "tbww",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:53:04.385983+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "tbww",
+                {
+                  "ready": false,
+                  "serving": true,
+                  "terminating": true
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:53:14.392999+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "HEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:53:24.394054+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "UNHEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:53:34.401805+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "UNHEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:53:44.410284+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "UNHEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          },
+          {
+            "at": "2026-10-28T09:53:54.418633+00:00",
+            "health": [
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-wn8j",
+                "HEALTHY"
+              ],
+              [
+                "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-tbww",
+                "UNHEALTHY"
+              ]
+            ],
+            "endpoints": [
+              [
+                "5x9k",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "kg25",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ],
+              [
+                "wn8j",
+                {
+                  "ready": true,
+                  "serving": true,
+                  "terminating": false
+                }
+              ]
+            ]
+          }
+        ],
+        "interpretation": "Refusal occurred during ingress downscaling; endpoint on tbww changes to terminating near the failure while LB health still reports healthy. No packet capture identifies the rejecting backend; causation is not established."
+      }
+    }
+  },
+  "verdict": "Both burst gates failed; neither arm establishes a production fix.",
+  "measurement_limitations": [
+    "One pair, no passing repeat.",
+    "Measured v4 driver retained complete failure totals but only 100 individual failure samples; later reset timestamps were omitted.",
+    "A subsequent driver commit adds complete per-window error-class counts for future runs; it was not used in either measured arm.",
+    "PostgreSQL statement deltas bracket preparation, burst and early recovery; they are not precise per-burst SQL statistics.",
+    "Origin gauges are sampled every 60 seconds; brief events may be missed."
+  ],
+  "cleanup": {
+    "at": 1793182484.203678,
+    "production_changed": false,
+    "hpa_spec_restored": true,
+    "restored_app": {
+      "image": "ghcr.io/modelcontextprotocol/registry:main",
+      "resources": {
+        "limits": {
+          "memory": "1Gi"
+        },
+        "requests": {
+          "cpu": "250m",
+          "memory": "512Mi"
+        }
+      }
+    },
+    "restored_whitelist": null,
+    "generator_instances_absent": true,
+    "generator_disks_absent": true,
+    "final_verification": {
+      "at": 1793182542.6208231,
+      "ready_nodes": 2,
+      "corpus": {
+        "at": "2026-10-28T10:15:43.761027+00:00",
+        "names": 52366,
+        "versions": 187108,
+        "benchmark_runs": null,
+        "database_started": "2026-10-27T21:24:59.430872+00:00"
+      },
+      "matching_response_hashes": 48
+    }
+  }
+}

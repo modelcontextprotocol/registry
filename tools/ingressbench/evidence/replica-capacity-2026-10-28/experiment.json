@@ -1,0 +1,53 @@
+{
+  "at": 1793197315.025013,
+  "commit": "43e17e0993e1afed08950da75b461a1e4966fab3",
+  "image": "us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-replicas-20261028-v1@sha256:60fb8b7d7931a257542848460f7d1c76a99f16c46ddad795249fb5c25b1c9b0e",
+  "driver_sha256": "dad841c9c6ef8c73ada3681dee2ed7b900d65db8e75574b38d4c779097771229",
+  "hypothesis": "Distributing origin work across four app replicas on four nodes removes per-app CPU starvation without increasing the aggregate pool budget.",
+  "control": {
+    "replicas": 2,
+    "pool_max": 60,
+    "pool_min": 10,
+    "cpu_request_m": 400
+  },
+  "candidate": {
+    "replicas": 4,
+    "pool_max": 30,
+    "pool_min": 5,
+    "cpu_request_m": 400
+  },
+  "constants": {
+    "nodes": 4,
+    "ingress_replicas": 6,
+    "total_pool_max": 120,
+    "total_pool_min": 20,
+    "db_cpu_quota": 3,
+    "app_cpu_limit": null,
+    "burst_read_rate": 4500,
+    "burst_seconds": 180,
+    "updated_rate": 36,
+    "search_rate": 3,
+    "publish_rate": 0
+  },
+  "short_gate": {
+    "dropped_reads": 0,
+    "attempt_failures": 0,
+    "page_p95_ms_max": 1000,
+    "recovery_dropped_reads": 0,
+    "recovery_attempt_failures": 0,
+    "pool_queues_drain": true
+  },
+  "full_gate_if_short_passes": {
+    "burst_minutes": 10,
+    "burst_read_rate": 4500,
+    "publish_rate": 1,
+    "recovery_minutes": 30,
+    "recovery_read_rate": 100,
+    "dropped_work": 0,
+    "attempt_failures": 0,
+    "page_p95_ms_max": 1000,
+    "publish_p95_ms_max": 2000
+  },
+  "production_changed": false,
+  "scope_note": "This is a fixed-capacity control. It cannot prove autoscaling behavior; a passing full test is required before implementing an app autoscaler."
+}

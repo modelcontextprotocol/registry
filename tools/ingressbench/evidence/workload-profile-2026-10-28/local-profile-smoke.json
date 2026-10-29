@@ -1,0 +1,144 @@
+{
+  "Calibration": true,
+  "RequestPhases": {
+    "page:HIT": {
+      "Attempts": 300,
+      "NewConnections": 1,
+      "ReusedConnections": 299,
+      "SchedulerLag": {
+        "Count": 300,
+        "MeanMS": 1.7735868900000007,
+        "P95UpperMS": 5,
+        "MaximumMS": 2.072666
+      },
+      "QueueDelay": {
+        "Count": 300,
+        "MeanMS": 0.003675849999999997,
+        "P95UpperMS": 0.1,
+        "MaximumMS": 0.032458
+      },
+      "ConnectionWait": {
+        "Count": 300,
+        "MeanMS": 0.013347080000000002,
+        "P95UpperMS": 0.1,
+        "MaximumMS": 2.517458
+      },
+      "TLS": {
+        "Count": 1,
+        "MeanMS": 2.261042,
+        "P95UpperMS": 5,
+        "MaximumMS": 2.261042
+      },
+      "FirstByte": {
+        "Count": 300,
+        "MeanMS": 0.15403767999999993,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 0.554292
+      },
+      "Body": {
+        "Count": 300,
+        "MeanMS": 0.10692536666666666,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 0.365583
+      },
+      "HTTP": {
+        "Count": 300,
+        "MeanMS": 0.3092824766666667,
+        "P95UpperMS": 1,
+        "MaximumMS": 2.9275
+      }
+    }
+  },
+  "StartedAt": "2026-10-28T20:51:35.741444Z",
+  "FinishedAt": "2026-10-28T20:51:38.73392Z",
+  "CatalogSHA256": "410b91ddb2a4436ce549834236e282a8501cc8ab9d6748481d32e75dfc80f37b",
+  "PageWorkloadSHA256": "693e29271b933bd6cad81a4df114d111506b21d1afcb50e457f00ef217a42bbc",
+  "ConnectionRotation": "0s",
+  "ReadRate": 100,
+  "UpdatedRate": 0,
+  "SearchRate": 0,
+  "HotPercent": -1,
+  "Scheduled": 300,
+  "ScheduledPublishes": 0,
+  "Completed": 300,
+  "Dropped": 0,
+  "DroppedPublishes": 0,
+  "Bytes": 19660800,
+  "Status": {
+    "page:200": 300
+  },
+  "Cache": {
+    "HIT": 300
+  },
+  "Errors": {},
+  "Protocols": {
+    "HTTP/1.1": 300
+  },
+  "ErrorDetails": {},
+  "LatencyMS": {
+    "page_p50": 2.218083,
+    "page_p95": 2.610416,
+    "page_p99": 2.742541
+  },
+  "ElapsedSeconds": 2.992449416,
+  "Failures": null,
+  "OmittedFailures": 0,
+  "Windows": [
+    {
+      "StartedAt": "2026-10-28T20:51:30Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 300,
+        "Dropped": 0,
+        "Dispatched": 300,
+        "Completed": 300,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 300,
+          "MeanMS": 1.7735868900000007,
+          "P95UpperMS": 5,
+          "MaximumMS": 2.072666
+        },
+        "QueueDelay": {
+          "Count": 300,
+          "MeanMS": 0.003675849999999997,
+          "P95UpperMS": 0.1,
+          "MaximumMS": 0.032458
+        },
+        "HTTPDuration": {
+          "Count": 300,
+          "MeanMS": 0.3092824766666667,
+          "P95UpperMS": 1,
+          "MaximumMS": 2.9275
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    }
+  ]
+}

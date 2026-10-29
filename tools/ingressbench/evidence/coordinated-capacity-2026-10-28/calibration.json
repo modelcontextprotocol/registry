@@ -1,0 +1,748 @@
+{
+  "Calibration": true,
+  "RequestPhases": {
+    "page:HIT": {
+      "Attempts": 401490,
+      "NewConnections": 44,
+      "ReusedConnections": 401446,
+      "SchedulerLag": {
+        "Count": 401490,
+        "MeanMS": 0.22996455564023746,
+        "P95UpperMS": 1,
+        "MaximumMS": 55.17366
+      },
+      "QueueDelay": {
+        "Count": 401490,
+        "MeanMS": 0.04600408297590017,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 39.421176
+      },
+      "ConnectionWait": {
+        "Count": 401490,
+        "MeanMS": 0.29622787783255594,
+        "P95UpperMS": 0.1,
+        "MaximumMS": 338.356314
+      },
+      "TLS": {
+        "Count": 347,
+        "MeanMS": 112.96794453602304,
+        "P95UpperMS": 500,
+        "MaximumMS": 379.708841
+      },
+      "FirstByte": {
+        "Count": 401490,
+        "MeanMS": 0.42713882190339497,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 410.044744
+      },
+      "Body": {
+        "Count": 401490,
+        "MeanMS": 0.17294890748960576,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 367.273187
+      },
+      "HTTP": {
+        "Count": 401490,
+        "MeanMS": 1.2300994108146983,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 747.943929
+      }
+    },
+    "search:HIT": {
+      "Attempts": 270,
+      "NewConnections": 1,
+      "ReusedConnections": 269,
+      "SchedulerLag": {
+        "Count": 270,
+        "MeanMS": 0.32463417777777787,
+        "P95UpperMS": 1,
+        "MaximumMS": 30.326402
+      },
+      "QueueDelay": {
+        "Count": 270,
+        "MeanMS": 1.1163395185185192,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 176.65662
+      },
+      "ConnectionWait": {
+        "Count": 270,
+        "MeanMS": 0.2274629296296295,
+        "P95UpperMS": 0.1,
+        "MaximumMS": 33.253349
+      },
+      "TLS": {
+        "Count": 1,
+        "MeanMS": 32.800994,
+        "P95UpperMS": 50,
+        "MaximumMS": 32.800994
+      },
+      "FirstByte": {
+        "Count": 270,
+        "MeanMS": 0.1951380888888889,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 9.264996
+      },
+      "Body": {
+        "Count": 270,
+        "MeanMS": 0.1034079481481482,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 0.986923
+      },
+      "HTTP": {
+        "Count": 270,
+        "MeanMS": 0.5650045999999997,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 34.385388
+      }
+    },
+    "updated:HIT": {
+      "Attempts": 3240,
+      "NewConnections": 0,
+      "ReusedConnections": 3240,
+      "SchedulerLag": {
+        "Count": 3240,
+        "MeanMS": 0.23362741172839516,
+        "P95UpperMS": 2,
+        "MaximumMS": 50.933417
+      },
+      "QueueDelay": {
+        "Count": 3240,
+        "MeanMS": 0.1096629354938268,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 186.334021
+      },
+      "ConnectionWait": {
+        "Count": 3240,
+        "MeanMS": 0.25702168024691385,
+        "P95UpperMS": 0.1,
+        "MaximumMS": 92.866368
+      },
+      "TLS": {
+        "Count": 4,
+        "MeanMS": 144.77077975,
+        "P95UpperMS": 500,
+        "MaximumMS": 225.540554
+      },
+      "FirstByte": {
+        "Count": 3240,
+        "MeanMS": 0.39996171141975567,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 180.315982
+      },
+      "Body": {
+        "Count": 3240,
+        "MeanMS": 0.34331726296296333,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 366.639093
+      },
+      "HTTP": {
+        "Count": 3240,
+        "MeanMS": 1.1452019333333325,
+        "P95UpperMS": 0.5,
+        "MaximumMS": 526.472371
+      }
+    }
+  },
+  "StartedAt": "2026-10-28T19:58:02.560258316Z",
+  "FinishedAt": "2026-10-28T19:59:32.561104489Z",
+  "CatalogSHA256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+  "ReadRate": 4500,
+  "UpdatedRate": 36,
+  "SearchRate": 3,
+  "HotPercent": 80,
+  "Scheduled": 405000,
+  "ScheduledPublishes": 0,
+  "Completed": 405000,
+  "Dropped": 0,
+  "DroppedPublishes": 0,
+  "Bytes": 26542080000,
+  "Status": {
+    "page:200": 401490,
+    "search:200": 270,
+    "updated:200": 3240
+  },
+  "Cache": {
+    "HIT": 405000
+  },
+  "Errors": {},
+  "Protocols": {
+    "HTTP/1.1": 405000
+  },
+  "ErrorDetails": {},
+  "LatencyMS": {
+    "page_p50": 0.309116,
+    "page_p95": 1.4322,
+    "page_p99": 2.428981,
+    "search_p50": 0.326879,
+    "search_p95": 1.462516,
+    "search_p99": 67.132465,
+    "updated_p50": 0.31745,
+    "updated_p95": 1.44725,
+    "updated_p99": 1.889981
+  },
+  "ElapsedSeconds": 90.000846042,
+  "Failures": null,
+  "OmittedFailures": 0,
+  "Windows": [
+    {
+      "StartedAt": "2026-10-28T19:58:00Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 33479,
+        "Dropped": 0,
+        "Dispatched": 33478,
+        "Completed": 33478,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 33478,
+          "MeanMS": 1.0779281501881681,
+          "P95UpperMS": 2,
+          "MaximumMS": 55.17366
+        },
+        "QueueDelay": {
+          "Count": 33478,
+          "MeanMS": 0.34425650878187253,
+          "P95UpperMS": 1,
+          "MaximumMS": 186.334021
+        },
+        "HTTPDuration": {
+          "Count": 33478,
+          "MeanMS": 11.381366567238164,
+          "P95UpperMS": 100,
+          "MaximumMS": 747.943929
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:58:10Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 45001,
+        "Completed": 45000,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 45001,
+          "MeanMS": 0.18862627843825852,
+          "P95UpperMS": 2,
+          "MaximumMS": 4.717959
+        },
+        "QueueDelay": {
+          "Count": 45001,
+          "MeanMS": 0.02182147696717918,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 0.911863
+        },
+        "HTTPDuration": {
+          "Count": 45001,
+          "MeanMS": 0.32112115339659003,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 24.337408
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:58:20Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 44998,
+        "Completed": 44999,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 44998,
+          "MeanMS": 0.14986084925996665,
+          "P95UpperMS": 1,
+          "MaximumMS": 1.926188
+        },
+        "QueueDelay": {
+          "Count": 44998,
+          "MeanMS": 0.019852251122272725,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 2.273629
+        },
+        "HTTPDuration": {
+          "Count": 44998,
+          "MeanMS": 0.29555208120360876,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 5.734464
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:58:30Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 44998,
+        "Completed": 44997,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 45002,
+          "MeanMS": 0.15932558992933507,
+          "P95UpperMS": 1,
+          "MaximumMS": 6.444069
+        },
+        "QueueDelay": {
+          "Count": 44998,
+          "MeanMS": 0.024078025445576436,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 9.019504
+        },
+        "HTTPDuration": {
+          "Count": 44998,
+          "MeanMS": 0.3990117717898601,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 53.907007
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:58:40Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 45000,
+        "Completed": 45001,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 44996,
+          "MeanMS": 0.15217630993866058,
+          "P95UpperMS": 1,
+          "MaximumMS": 2.342529
+        },
+        "QueueDelay": {
+          "Count": 45000,
+          "MeanMS": 0.019667756444445128,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 2.625167
+        },
+        "HTTPDuration": {
+          "Count": 45000,
+          "MeanMS": 0.2934834888444427,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 4.305302
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:58:50Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 45004,
+        "Completed": 45003,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 45004,
+          "MeanMS": 0.1389170924806686,
+          "P95UpperMS": 1,
+          "MaximumMS": 1.251191
+        },
+        "QueueDelay": {
+          "Count": 45004,
+          "MeanMS": 0.018886398897876334,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 0.978465
+        },
+        "HTTPDuration": {
+          "Count": 45004,
+          "MeanMS": 0.3015269344724923,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 4.363098
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:59:00Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 44997,
+        "Completed": 44998,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 44997,
+          "MeanMS": 0.14478993292886197,
+          "P95UpperMS": 1,
+          "MaximumMS": 1.990875
+        },
+        "QueueDelay": {
+          "Count": 44997,
+          "MeanMS": 0.019506986843567893,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 1.635128
+        },
+        "HTTPDuration": {
+          "Count": 44997,
+          "MeanMS": 0.3047035829277475,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 6.826555
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:59:10Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 45003,
+        "Completed": 45002,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 45003,
+          "MeanMS": 0.1460213479545802,
+          "P95UpperMS": 1,
+          "MaximumMS": 1.212579
+        },
+        "QueueDelay": {
+          "Count": 45003,
+          "MeanMS": 0.019933657045086556,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 0.812342
+        },
+        "HTTPDuration": {
+          "Count": 45003,
+          "MeanMS": 0.30058144559251365,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 3.775121
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:59:20Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 45000,
+        "Dropped": 0,
+        "Dispatched": 44997,
+        "Completed": 44998,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 44997,
+          "MeanMS": 0.15061702433495475,
+          "P95UpperMS": 1,
+          "MaximumMS": 1.659743
+        },
+        "QueueDelay": {
+          "Count": 44997,
+          "MeanMS": 0.020106356045959322,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 1.587554
+        },
+        "HTTPDuration": {
+          "Count": 44997,
+          "MeanMS": 0.3012109433073299,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 6.077487
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    },
+    {
+      "StartedAt": "2026-10-28T19:59:30Z",
+      "Seconds": 10,
+      "Reads": {
+        "Scheduled": 11521,
+        "Dropped": 0,
+        "Dispatched": 11524,
+        "Completed": 11524,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 11524,
+          "MeanMS": 0.14937863372092938,
+          "P95UpperMS": 1,
+          "MaximumMS": 1.180099
+        },
+        "QueueDelay": {
+          "Count": 11524,
+          "MeanMS": 0.01983235768830254,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 0.760641
+        },
+        "HTTPDuration": {
+          "Count": 11524,
+          "MeanMS": 0.2982812257028805,
+          "P95UpperMS": 0.5,
+          "MaximumMS": 4.778751
+        },
+        "FailureClasses": null
+      },
+      "Publishes": {
+        "Scheduled": 0,
+        "Dropped": 0,
+        "Dispatched": 0,
+        "Completed": 0,
+        "Failures": 0,
+        "SchedulerLag": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "QueueDelay": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "HTTPDuration": {
+          "Count": 0,
+          "MeanMS": 0,
+          "P95UpperMS": 0,
+          "MaximumMS": 0
+        },
+        "FailureClasses": null
+      }
+    }
+  ]
+}

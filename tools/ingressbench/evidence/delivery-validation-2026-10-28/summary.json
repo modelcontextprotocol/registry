@@ -1,0 +1,1025 @@
+{
+  "production_changed": false,
+  "generator_calibration": {
+    "calibration": {
+      "vcpus": 4,
+      "scheduled": 405000,
+      "dropped": 25918,
+      "failures": 0,
+      "page_p95_ms": 63.858946,
+      "scope": "Loopback HTTPS fixture and client share host; not an external-network calibration."
+    },
+    "calibration16": {
+      "vcpus": 16,
+      "scheduled": 405000,
+      "dropped": 0,
+      "failures": 0,
+      "page_p95_ms": 1.551173,
+      "scope": "Loopback HTTPS fixture and client share host; not an external-network calibration."
+    }
+  },
+  "staging": {
+    "four": {
+      "scheduled": 810000,
+      "dropped": 8641,
+      "drop_percent": 1.0667901234567903,
+      "attempt_failures": 9,
+      "latency_ms": {
+        "page_p50": 5.093946,
+        "page_p95": 328.161218,
+        "page_p99": 2185.814363,
+        "search_p50": 46.794415,
+        "search_p95": 3369.474513,
+        "search_p99": 7276.583135,
+        "updated_p50": 20.981621,
+        "updated_p95": 3935.097604,
+        "updated_p99": 7347.887684
+      },
+      "max_scheduler_lag_ms": 27.8808,
+      "request_phases": {
+        "page:HIT": {
+          "Attempts": 703415,
+          "NewConnections": 1857,
+          "ReusedConnections": 701558,
+          "SchedulerLag": {
+            "Count": 703415,
+            "MeanMS": 0.09559757971041007,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 26.556883
+          },
+          "QueueDelay": {
+            "Count": 703415,
+            "MeanMS": 13.16012722082664,
+            "P95UpperMS": 200,
+            "MaximumMS": 754.029742
+          },
+          "ConnectionWait": {
+            "Count": 703415,
+            "MeanMS": 1.4793695605865693,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 488.751885
+          },
+          "TLS": {
+            "Count": 7450,
+            "MeanMS": 201.9859112740944,
+            "P95UpperMS": 500,
+            "MaximumMS": 1480.879771
+          },
+          "FirstByte": {
+            "Count": 703415,
+            "MeanMS": 51.68760104336966,
+            "P95UpperMS": 100,
+            "MaximumMS": 9262.328305
+          },
+          "Body": {
+            "Count": 703415,
+            "MeanMS": 5.529591125163679,
+            "P95UpperMS": 50,
+            "MaximumMS": 2144.003423
+          },
+          "HTTP": {
+            "Count": 703415,
+            "MeanMS": 58.75527569210267,
+            "P95UpperMS": 200,
+            "MaximumMS": 9281.393604
+          }
+        },
+        "page:MISS": {
+          "Attempts": 21057,
+          "NewConnections": 219,
+          "ReusedConnections": 20838,
+          "SchedulerLag": {
+            "Count": 21057,
+            "MeanMS": 0.14837896894144526,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 23.239782
+          },
+          "QueueDelay": {
+            "Count": 21057,
+            "MeanMS": 50.730909462554145,
+            "P95UpperMS": 500,
+            "MaximumMS": 753.709931
+          },
+          "ConnectionWait": {
+            "Count": 21057,
+            "MeanMS": 4.764172574535824,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 489.25387
+          },
+          "TLS": {
+            "Count": 421,
+            "MeanMS": 269.420130608076,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1790.087696
+          },
+          "FirstByte": {
+            "Count": 21057,
+            "MeanMS": 758.7289245796601,
+            "P95UpperMS": 5000,
+            "MaximumMS": 8564.778974
+          },
+          "Body": {
+            "Count": 21057,
+            "MeanMS": 24.31324414579464,
+            "P95UpperMS": 200,
+            "MaximumMS": 3660.267921
+          },
+          "HTTP": {
+            "Count": 21057,
+            "MeanMS": 788.2197410107823,
+            "P95UpperMS": 5000,
+            "MaximumMS": 8698.875364
+          }
+        },
+        "page:STALE": {
+          "Attempts": 58567,
+          "NewConnections": 444,
+          "ReusedConnections": 58123,
+          "SchedulerLag": {
+            "Count": 58567,
+            "MeanMS": 0.11176806363651737,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 27.441633
+          },
+          "QueueDelay": {
+            "Count": 58567,
+            "MeanMS": 11.98553520499605,
+            "P95UpperMS": 100,
+            "MaximumMS": 753.553777
+          },
+          "ConnectionWait": {
+            "Count": 58567,
+            "MeanMS": 3.3991704405894447,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 490.049992
+          },
+          "TLS": {
+            "Count": 979,
+            "MeanMS": 208.58922298569925,
+            "P95UpperMS": 500,
+            "MaximumMS": 1169.37919
+          },
+          "FirstByte": {
+            "Count": 58567,
+            "MeanMS": 76.873753997268,
+            "P95UpperMS": 200,
+            "MaximumMS": 8420.714425
+          },
+          "Body": {
+            "Count": 58567,
+            "MeanMS": 10.082141246691819,
+            "P95UpperMS": 50,
+            "MaximumMS": 1466.628809
+          },
+          "HTTP": {
+            "Count": 58567,
+            "MeanMS": 90.5382506042303,
+            "P95UpperMS": 200,
+            "MaximumMS": 8421.607791
+          }
+        },
+        "page:UNKNOWN": {
+          "Attempts": 4,
+          "NewConnections": 0,
+          "ReusedConnections": 4,
+          "SchedulerLag": {
+            "Count": 4,
+            "MeanMS": 0.0921355,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 0.30834
+          },
+          "QueueDelay": {
+            "Count": 4,
+            "MeanMS": 7.77792925,
+            "P95UpperMS": 50,
+            "MaximumMS": 31.086732
+          },
+          "ConnectionWait": {
+            "Count": 4,
+            "MeanMS": 0.00470875,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 0.006859
+          },
+          "TLS": {
+            "Count": 0,
+            "MeanMS": 0,
+            "P95UpperMS": 0,
+            "MaximumMS": 0
+          },
+          "FirstByte": {
+            "Count": 0,
+            "MeanMS": 0,
+            "P95UpperMS": 0,
+            "MaximumMS": 0
+          },
+          "Body": {
+            "Count": 0,
+            "MeanMS": 0,
+            "P95UpperMS": 0,
+            "MaximumMS": 0
+          },
+          "HTTP": {
+            "Count": 4,
+            "MeanMS": 10000.1831235,
+            "P95UpperMS": 20000,
+            "MaximumMS": 10000.224879
+          }
+        },
+        "page:UPDATING": {
+          "Attempts": 11383,
+          "NewConnections": 150,
+          "ReusedConnections": 11233,
+          "SchedulerLag": {
+            "Count": 11383,
+            "MeanMS": 0.2320675629447411,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 27.8808
+          },
+          "QueueDelay": {
+            "Count": 11383,
+            "MeanMS": 78.84827231872121,
+            "P95UpperMS": 500,
+            "MaximumMS": 754.080957
+          },
+          "ConnectionWait": {
+            "Count": 11383,
+            "MeanMS": 7.4187985848194415,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 488.585684
+          },
+          "TLS": {
+            "Count": 261,
+            "MeanMS": 270.0277648888892,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1056.667149
+          },
+          "FirstByte": {
+            "Count": 11383,
+            "MeanMS": 94.2967268617237,
+            "P95UpperMS": 500,
+            "MaximumMS": 8060.916263
+          },
+          "Body": {
+            "Count": 11383,
+            "MeanMS": 9.930635858912394,
+            "P95UpperMS": 50,
+            "MaximumMS": 1470.614972
+          },
+          "HTTP": {
+            "Count": 11383,
+            "MeanMS": 112.62244453043985,
+            "P95UpperMS": 500,
+            "MaximumMS": 8065.360931
+          }
+        },
+        "search:MISS": {
+          "Attempts": 433,
+          "NewConnections": 8,
+          "ReusedConnections": 425,
+          "SchedulerLag": {
+            "Count": 433,
+            "MeanMS": 0.10812153117782916,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 1.002513
+          },
+          "QueueDelay": {
+            "Count": 433,
+            "MeanMS": 11.746329974595838,
+            "P95UpperMS": 200,
+            "MaximumMS": 376.515776
+          },
+          "ConnectionWait": {
+            "Count": 433,
+            "MeanMS": 5.1888199676674365,
+            "P95UpperMS": 2,
+            "MaximumMS": 373.737209
+          },
+          "TLS": {
+            "Count": 18,
+            "MeanMS": 158.4044611666667,
+            "P95UpperMS": 500,
+            "MaximumMS": 391.042075
+          },
+          "FirstByte": {
+            "Count": 433,
+            "MeanMS": 614.3257287113161,
+            "P95UpperMS": 5000,
+            "MaximumMS": 7957.628255
+          },
+          "Body": {
+            "Count": 433,
+            "MeanMS": 26.31506489838339,
+            "P95UpperMS": 200,
+            "MaximumMS": 650.060939
+          },
+          "HTTP": {
+            "Count": 433,
+            "MeanMS": 645.8886304064661,
+            "P95UpperMS": 5000,
+            "MaximumMS": 7958.687092
+          }
+        },
+        "search:STALE": {
+          "Attempts": 103,
+          "NewConnections": 0,
+          "ReusedConnections": 103,
+          "SchedulerLag": {
+            "Count": 103,
+            "MeanMS": 0.1208896699029126,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 0.592884
+          },
+          "QueueDelay": {
+            "Count": 103,
+            "MeanMS": 10.15727988349515,
+            "P95UpperMS": 100,
+            "MaximumMS": 283.901355
+          },
+          "ConnectionWait": {
+            "Count": 103,
+            "MeanMS": 3.461204796116505,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 164.079407
+          },
+          "TLS": {
+            "Count": 5,
+            "MeanMS": 160.8513514,
+            "P95UpperMS": 500,
+            "MaximumMS": 446.563731
+          },
+          "FirstByte": {
+            "Count": 103,
+            "MeanMS": 34.433826485436896,
+            "P95UpperMS": 200,
+            "MaximumMS": 733.750659
+          },
+          "Body": {
+            "Count": 103,
+            "MeanMS": 12.139617970873784,
+            "P95UpperMS": 50,
+            "MaximumMS": 406.742953
+          },
+          "HTTP": {
+            "Count": 103,
+            "MeanMS": 50.074065262135925,
+            "P95UpperMS": 500,
+            "MaximumMS": 939.534804
+          }
+        },
+        "updated:MISS": {
+          "Attempts": 6392,
+          "NewConnections": 16,
+          "ReusedConnections": 6376,
+          "SchedulerLag": {
+            "Count": 6392,
+            "MeanMS": 0.09532567787859836,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 10.261938
+          },
+          "QueueDelay": {
+            "Count": 6392,
+            "MeanMS": 14.823988297715916,
+            "P95UpperMS": 200,
+            "MaximumMS": 748.340805
+          },
+          "ConnectionWait": {
+            "Count": 6392,
+            "MeanMS": 1.463632779411763,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 356.682789
+          },
+          "TLS": {
+            "Count": 62,
+            "MeanMS": 248.8275058387097,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1021.45693
+          },
+          "FirstByte": {
+            "Count": 6392,
+            "MeanMS": 575.4583857393623,
+            "P95UpperMS": 5000,
+            "MaximumMS": 8139.201591
+          },
+          "Body": {
+            "Count": 6392,
+            "MeanMS": 11.57594532086981,
+            "P95UpperMS": 100,
+            "MaximumMS": 1913.841676
+          },
+          "HTTP": {
+            "Count": 6392,
+            "MeanMS": 588.5375524105149,
+            "P95UpperMS": 5000,
+            "MaximumMS": 8141.13393
+          }
+        },
+        "updated:UNKNOWN": {
+          "Attempts": 5,
+          "NewConnections": 0,
+          "ReusedConnections": 5,
+          "SchedulerLag": {
+            "Count": 5,
+            "MeanMS": 0.0508626,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 0.065922
+          },
+          "QueueDelay": {
+            "Count": 5,
+            "MeanMS": 0.013286799999999998,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 0.015264
+          },
+          "ConnectionWait": {
+            "Count": 5,
+            "MeanMS": 0.004341599999999999,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 0.005487
+          },
+          "TLS": {
+            "Count": 0,
+            "MeanMS": 0,
+            "P95UpperMS": 0,
+            "MaximumMS": 0
+          },
+          "FirstByte": {
+            "Count": 0,
+            "MeanMS": 0,
+            "P95UpperMS": 0,
+            "MaximumMS": 0
+          },
+          "Body": {
+            "Count": 0,
+            "MeanMS": 0,
+            "P95UpperMS": 0,
+            "MaximumMS": 0
+          },
+          "HTTP": {
+            "Count": 5,
+            "MeanMS": 10000.298772400001,
+            "P95UpperMS": 20000,
+            "MaximumMS": 10000.660131
+          }
+        }
+      },
+      "recovery": {
+        "scheduled": 12000,
+        "dropped": 0,
+        "attempt_failures": 0
+      },
+      "replicas": {
+        "mcp-registry-7c9c464c69-hv928": {
+          "peak_sampled_pool_pending": 0.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 4.111069506252242,
+          "page_checkout_mean_ms": 6.786923867044345,
+          "cpu_stalled_fraction": 0.08639270684330586
+        },
+        "mcp-registry-7c9c464c69-nv4g6": {
+          "peak_sampled_pool_pending": 0.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 203.43746100745457,
+          "page_checkout_mean_ms": 17.86458496839724,
+          "cpu_stalled_fraction": 0.18650880774561354
+        },
+        "mcp-registry-7c9c464c69-t5l8x": {
+          "peak_sampled_pool_pending": 758.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 1632.1689058727768,
+          "page_checkout_mean_ms": 128.27550334109935,
+          "cpu_stalled_fraction": 0.39102449658149263
+        },
+        "mcp-registry-7c9c464c69-tqztc": {
+          "peak_sampled_pool_pending": 0.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 0.9654956471038418,
+          "page_checkout_mean_ms": 4.983655437203411,
+          "cpu_stalled_fraction": 0.04159489470392535
+        }
+      },
+      "dominant_db_statement": {
+        "queryid": 308564448692527448,
+        "calls": 82727,
+        "mean_ms": 1.718417499244493,
+        "total_exec_ms": 142159.52445999917,
+        "block_reads": 0,
+        "temp_blocks_written": 0
+      },
+      "runtime_integrity": {
+        "as_of": 1793201429.364608,
+        "samples": 17,
+        "commands_failed": [],
+        "app_restarts": {
+          "mcp-registry-7c9c464c69-hv928/mcp-registry": 0,
+          "mcp-registry-7c9c464c69-nv4g6/mcp-registry": 0,
+          "mcp-registry-7c9c464c69-t5l8x/mcp-registry": 0,
+          "mcp-registry-7c9c464c69-tqztc/mcp-registry": 0,
+          "registry-pg-1/postgres": 0
+        },
+        "node_count_timeline": [
+          {
+            "at": 1793200865.394613,
+            "nodes": 4
+          }
+        ],
+        "db_throttled_usec_range": [
+          1017850,
+          1017850
+        ],
+        "db_endpoint_samples": 90,
+        "db_endpoint_errors_or_empty": [],
+        "db_endpoint_not_ready": [],
+        "cadvisor_failures_or_empty": [],
+        "lb_collection_failures": []
+      },
+      "captures": {
+        "total": 140,
+        "failed": 0
+      },
+      "generator": {
+        "sample_intervals": 17,
+        "scope": "Whole sixteen-vCPU generator from /proc/stat and non-loopback network devices; includes monitoring overhead. CPU busy includes steal, reported separately. Does not alone rule out single-thread or network constraints.",
+        "cpu_busy_percent": {
+          "mean": 18.37092867352658,
+          "max": 23.098931841302136
+        },
+        "cpu_steal_percent": {
+          "mean": 1.1643889680676884,
+          "max": 2.537975870475714
+        },
+        "cpu_iowait_percent": {
+          "mean": 0.0014868889822261993,
+          "max": 0.006358087487283825
+        },
+        "cpu_softirq_percent": {
+          "mean": 5.094784765916156,
+          "max": 5.979420253482243
+        },
+        "received_gbps": {
+          "mean": 2.118015801288082,
+          "max": 2.1575673933278035
+        },
+        "transmitted_gbps": {
+          "mean": 0.02563179294636198,
+          "max": 0.03150955174321181
+        },
+        "receive_drops": 0,
+        "transmit_drops": 0
+      }
+    },
+    "isolated": {
+      "scheduled": 810000,
+      "dropped": 23426,
+      "drop_percent": 2.892098765432099,
+      "attempt_failures": 0,
+      "latency_ms": {
+        "page_p50": 8.973222,
+        "page_p95": 414.47619,
+        "page_p99": 1303.712822,
+        "search_p50": 55.074819,
+        "search_p95": 1635.270011,
+        "search_p99": 2883.021975,
+        "updated_p50": 31.432483,
+        "updated_p95": 1291.326802,
+        "updated_p99": 2943.624531
+      },
+      "max_scheduler_lag_ms": 28.571824,
+      "request_phases": {
+        "page:HIT": {
+          "Attempts": 693198,
+          "NewConnections": 2202,
+          "ReusedConnections": 690996,
+          "SchedulerLag": {
+            "Count": 693198,
+            "MeanMS": 0.11591246628668249,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 28.353993
+          },
+          "QueueDelay": {
+            "Count": 693198,
+            "MeanMS": 26.21284182912156,
+            "P95UpperMS": 500,
+            "MaximumMS": 843.705121
+          },
+          "ConnectionWait": {
+            "Count": 693198,
+            "MeanMS": 2.912663961969009,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 497.063069
+          },
+          "TLS": {
+            "Count": 9390,
+            "MeanMS": 294.66106904472787,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1409.398886
+          },
+          "FirstByte": {
+            "Count": 693198,
+            "MeanMS": 29.958684159785363,
+            "P95UpperMS": 200,
+            "MaximumMS": 3881.420112
+          },
+          "Body": {
+            "Count": 693198,
+            "MeanMS": 7.716041042605739,
+            "P95UpperMS": 50,
+            "MaximumMS": 1653.30331
+          },
+          "HTTP": {
+            "Count": 693198,
+            "MeanMS": 40.65063486957314,
+            "P95UpperMS": 200,
+            "MaximumMS": 3882.216973
+          }
+        },
+        "page:MISS": {
+          "Attempts": 21024,
+          "NewConnections": 170,
+          "ReusedConnections": 20854,
+          "SchedulerLag": {
+            "Count": 21024,
+            "MeanMS": 0.13983545381468807,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 23.767363
+          },
+          "QueueDelay": {
+            "Count": 21024,
+            "MeanMS": 80.59473598544541,
+            "P95UpperMS": 500,
+            "MaximumMS": 839.824585
+          },
+          "ConnectionWait": {
+            "Count": 21024,
+            "MeanMS": 4.4655820159817585,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 497.040012
+          },
+          "TLS": {
+            "Count": 406,
+            "MeanMS": 333.574115684729,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1022.92375
+          },
+          "FirstByte": {
+            "Count": 21024,
+            "MeanMS": 648.6164506669505,
+            "P95UpperMS": 5000,
+            "MaximumMS": 5734.192107
+          },
+          "Body": {
+            "Count": 21024,
+            "MeanMS": 23.664179374714603,
+            "P95UpperMS": 100,
+            "MaximumMS": 1242.409115
+          },
+          "HTTP": {
+            "Count": 21024,
+            "MeanMS": 676.8824378730507,
+            "P95UpperMS": 5000,
+            "MaximumMS": 5741.803288
+          }
+        },
+        "page:STALE": {
+          "Attempts": 61633,
+          "NewConnections": 516,
+          "ReusedConnections": 61117,
+          "SchedulerLag": {
+            "Count": 61633,
+            "MeanMS": 0.14472261588759258,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 27.468609
+          },
+          "QueueDelay": {
+            "Count": 61633,
+            "MeanMS": 22.58462861473583,
+            "P95UpperMS": 200,
+            "MaximumMS": 843.452402
+          },
+          "ConnectionWait": {
+            "Count": 61633,
+            "MeanMS": 5.0853288288092475,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 497.198184
+          },
+          "TLS": {
+            "Count": 1344,
+            "MeanMS": 291.3601996130947,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1233.250228
+          },
+          "FirstByte": {
+            "Count": 61633,
+            "MeanMS": 37.06454117161279,
+            "P95UpperMS": 200,
+            "MaximumMS": 3344.516554
+          },
+          "Body": {
+            "Count": 61633,
+            "MeanMS": 13.597187478055853,
+            "P95UpperMS": 100,
+            "MaximumMS": 1647.027012
+          },
+          "HTTP": {
+            "Count": 61633,
+            "MeanMS": 55.854689980302744,
+            "P95UpperMS": 500,
+            "MaximumMS": 3348.377954
+          }
+        },
+        "page:UPDATING": {
+          "Attempts": 3889,
+          "NewConnections": 123,
+          "ReusedConnections": 3766,
+          "SchedulerLag": {
+            "Count": 3889,
+            "MeanMS": 0.30171256981229083,
+            "P95UpperMS": 1,
+            "MaximumMS": 28.571824
+          },
+          "QueueDelay": {
+            "Count": 3889,
+            "MeanMS": 168.84364120699476,
+            "P95UpperMS": 1000,
+            "MaximumMS": 843.726757
+          },
+          "ConnectionWait": {
+            "Count": 3889,
+            "MeanMS": 18.76399739496012,
+            "P95UpperMS": 200,
+            "MaximumMS": 494.77459
+          },
+          "TLS": {
+            "Count": 268,
+            "MeanMS": 354.0121233097016,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1219.717566
+          },
+          "FirstByte": {
+            "Count": 3889,
+            "MeanMS": 124.37065554872763,
+            "P95UpperMS": 1000,
+            "MaximumMS": 2477.274246
+          },
+          "Body": {
+            "Count": 3889,
+            "MeanMS": 18.44644455232704,
+            "P95UpperMS": 100,
+            "MaximumMS": 655.571455
+          },
+          "HTTP": {
+            "Count": 3889,
+            "MeanMS": 161.9637800563131,
+            "P95UpperMS": 2000,
+            "MaximumMS": 2478.357431
+          }
+        },
+        "search:MISS": {
+          "Attempts": 449,
+          "NewConnections": 5,
+          "ReusedConnections": 444,
+          "SchedulerLag": {
+            "Count": 449,
+            "MeanMS": 0.13799816926503355,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 22.226363
+          },
+          "QueueDelay": {
+            "Count": 449,
+            "MeanMS": 19.84802315144767,
+            "P95UpperMS": 500,
+            "MaximumMS": 434.350254
+          },
+          "ConnectionWait": {
+            "Count": 449,
+            "MeanMS": 5.045762153674832,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 383.967091
+          },
+          "TLS": {
+            "Count": 16,
+            "MeanMS": 195.67339887499998,
+            "P95UpperMS": 1000,
+            "MaximumMS": 700.82349
+          },
+          "FirstByte": {
+            "Count": 449,
+            "MeanMS": 235.29386529621385,
+            "P95UpperMS": 2000,
+            "MaximumMS": 3219.84158
+          },
+          "Body": {
+            "Count": 449,
+            "MeanMS": 29.617935839643675,
+            "P95UpperMS": 200,
+            "MaximumMS": 1011.20417
+          },
+          "HTTP": {
+            "Count": 449,
+            "MeanMS": 269.9995350222715,
+            "P95UpperMS": 2000,
+            "MaximumMS": 3282.146917
+          }
+        },
+        "search:STALE": {
+          "Attempts": 69,
+          "NewConnections": 1,
+          "ReusedConnections": 68,
+          "SchedulerLag": {
+            "Count": 69,
+            "MeanMS": 0.13031698550724638,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 0.673475
+          },
+          "QueueDelay": {
+            "Count": 69,
+            "MeanMS": 20.14004785507247,
+            "P95UpperMS": 200,
+            "MaximumMS": 531.23088
+          },
+          "ConnectionWait": {
+            "Count": 69,
+            "MeanMS": 3.962877565217393,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 159.202573
+          },
+          "TLS": {
+            "Count": 2,
+            "MeanMS": 165.900665,
+            "P95UpperMS": 200,
+            "MaximumMS": 174.478227
+          },
+          "FirstByte": {
+            "Count": 69,
+            "MeanMS": 50.53309997101449,
+            "P95UpperMS": 200,
+            "MaximumMS": 699.646992
+          },
+          "Body": {
+            "Count": 69,
+            "MeanMS": 20.87254398550725,
+            "P95UpperMS": 100,
+            "MaximumMS": 357.89058
+          },
+          "HTTP": {
+            "Count": 69,
+            "MeanMS": 75.42026292753623,
+            "P95UpperMS": 500,
+            "MaximumMS": 1134.858894
+          }
+        },
+        "updated:MISS": {
+          "Attempts": 6312,
+          "NewConnections": 19,
+          "ReusedConnections": 6293,
+          "SchedulerLag": {
+            "Count": 6312,
+            "MeanMS": 0.11460095611533541,
+            "P95UpperMS": 0.5,
+            "MaximumMS": 13.734759
+          },
+          "QueueDelay": {
+            "Count": 6312,
+            "MeanMS": 29.48820675776302,
+            "P95UpperMS": 500,
+            "MaximumMS": 834.684376
+          },
+          "ConnectionWait": {
+            "Count": 6312,
+            "MeanMS": 3.041838082858048,
+            "P95UpperMS": 0.1,
+            "MaximumMS": 472.347651
+          },
+          "TLS": {
+            "Count": 84,
+            "MeanMS": 336.579743607143,
+            "P95UpperMS": 1000,
+            "MaximumMS": 1057.198819
+          },
+          "FirstByte": {
+            "Count": 6312,
+            "MeanMS": 181.80102889670454,
+            "P95UpperMS": 2000,
+            "MaximumMS": 5101.99475
+          },
+          "Body": {
+            "Count": 6312,
+            "MeanMS": 13.823816214828888,
+            "P95UpperMS": 100,
+            "MaximumMS": 868.393431
+          },
+          "HTTP": {
+            "Count": 6312,
+            "MeanMS": 198.7275450857109,
+            "P95UpperMS": 2000,
+            "MaximumMS": 5102.070426
+          }
+        }
+      },
+      "recovery": {
+        "scheduled": 12000,
+        "dropped": 0,
+        "attempt_failures": 0
+      },
+      "replicas": {
+        "mcp-registry-558c7cb4d6-5xkrj": {
+          "peak_sampled_pool_pending": 357.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 237.11473657594314,
+          "page_checkout_mean_ms": 44.480979661182154,
+          "cpu_stalled_fraction": 0.3073916413911048
+        },
+        "mcp-registry-558c7cb4d6-hj5kk": {
+          "peak_sampled_pool_pending": 0.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 29.14358570522299,
+          "page_checkout_mean_ms": 14.180265811582807,
+          "cpu_stalled_fraction": 0.1392282529336618
+        },
+        "mcp-registry-558c7cb4d6-p4ghv": {
+          "peak_sampled_pool_pending": 460.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 311.2957382305604,
+          "page_checkout_mean_ms": 46.70886719516627,
+          "cpu_stalled_fraction": 0.30570831741404403
+        },
+        "mcp-registry-558c7cb4d6-znp4f": {
+          "peak_sampled_pool_pending": 0.0,
+          "final_recovery_pool_pending": 0.0,
+          "page_acquire_mean_ms": 5.652464262813558,
+          "page_checkout_mean_ms": 11.51279432375799,
+          "cpu_stalled_fraction": 0.16143010717801645
+        }
+      },
+      "dominant_db_statement": {
+        "queryid": 308564448692527448,
+        "calls": 86114,
+        "mean_ms": 0.6274773268922902,
+        "total_exec_ms": 54034.58252800268,
+        "block_reads": 0,
+        "temp_blocks_written": 0
+      },
+      "runtime_integrity": {
+        "as_of": 1793202440.3141491,
+        "samples": 17,
+        "commands_failed": [],
+        "app_restarts": {
+          "mcp-registry-558c7cb4d6-5xkrj/mcp-registry": 0,
+          "mcp-registry-558c7cb4d6-hj5kk/mcp-registry": 0,
+          "mcp-registry-558c7cb4d6-p4ghv/mcp-registry": 0,
+          "mcp-registry-558c7cb4d6-znp4f/mcp-registry": 0,
+          "registry-pg-1/postgres": 0
+        },
+        "node_count_timeline": [
+          {
+            "at": 1793201907.760947,
+            "nodes": 4
+          }
+        ],
+        "db_throttled_usec_range": [
+          1017850,
+          1017850
+        ],
+        "db_endpoint_samples": 90,
+        "db_endpoint_errors_or_empty": [],
+        "db_endpoint_not_ready": [],
+        "cadvisor_failures_or_empty": [],
+        "lb_collection_failures": []
+      },
+      "captures": {
+        "total": 140,
+        "failed": 0
+      },
+      "generator": {
+        "sample_intervals": 17,
+        "scope": "Whole sixteen-vCPU generator from /proc/stat and non-loopback network devices; includes monitoring overhead. CPU busy includes steal, reported separately. Does not alone rule out single-thread or network constraints.",
+        "cpu_busy_percent": {
+          "mean": 21.73170009661974,
+          "max": 28.390014247661526
+        },
+        "cpu_steal_percent": {
+          "mean": 2.1881960590938485,
+          "max": 3.8406739763364928
+        },
+        "cpu_iowait_percent": {
+          "mean": 0.0018128296201882859,
+          "max": 0.0062000124000248
+        },
+        "cpu_softirq_percent": {
+          "mean": 5.6992087472738,
+          "max": 6.460845207648276
+        },
+        "received_gbps": {
+          "mean": 2.07460722321219,
+          "max": 2.171329519777456
+        },
+        "transmitted_gbps": {
+          "mean": 0.025005732777509497,
+          "max": 0.029727798782741847
+        },
+        "receive_drops": 0,
+        "transmit_drops": 0
+      }
+    }
+  },
+  "full_test_run": false,
+  "decision": "Neither staging short run passed; no promotion. Dedicated DB placement alone did not resolve app CPU contention at the same four-node budget."
+}

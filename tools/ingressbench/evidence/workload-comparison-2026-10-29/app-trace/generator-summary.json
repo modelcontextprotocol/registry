@@ -1,0 +1,22 @@
+{
+  "samples": 24,
+  "cpu_busy_mean_percent": 9.380035652408129,
+  "cpu_busy_max_percent": 12.673946957878314,
+  "network_error_drop_deltas": {
+    "ens4": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "lo": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "limitations": [
+    "Aggregate CPU and device counters do not exclude single-thread or external-network bottlenecks."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "unit": "milliseconds",
+  "final_replay_minute": {
+    "checkout_mean": {
+      "list": 27.177531357142858,
+      "list_page": 35.44172178520267,
+      "list_search": 43.4672156377171,
+      "list_updated": 6.474163999999999,
+      "other": 24.879902612051456
+    },
+    "after_query_mean": {
+      "list": 0.049986392857142854,
+      "list_page": 0.13220790630985174,
+      "list_search": 0.03289944168734491,
+      "list_updated": 0.06495604477611941,
+      "other": 0.046745094786729856
+    }
+  }
+}

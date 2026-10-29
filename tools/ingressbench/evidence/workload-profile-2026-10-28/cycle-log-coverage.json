@@ -1,0 +1,155 @@
+[
+  {
+    "phase": "cycle-1630",
+    "start": "2026-10-28T16:30:00Z",
+    "end": "2026-10-28T16:31:00Z",
+    "entries": 23728,
+    "pages": 5,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1645",
+    "start": "2026-10-28T16:45:00Z",
+    "end": "2026-10-28T16:46:00Z",
+    "entries": 18142,
+    "pages": 4,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1700",
+    "start": "2026-10-28T17:00:00Z",
+    "end": "2026-10-28T17:01:00Z",
+    "entries": 108267,
+    "pages": 20,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1715",
+    "start": "2026-10-28T17:15:00Z",
+    "end": "2026-10-28T17:16:00Z",
+    "entries": 122439,
+    "pages": 22,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1730",
+    "start": "2026-10-28T17:30:00Z",
+    "end": "2026-10-28T17:31:00Z",
+    "entries": 115640,
+    "pages": 21,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1745",
+    "start": "2026-10-28T17:45:00Z",
+    "end": "2026-10-28T17:46:00Z",
+    "entries": 127345,
+    "pages": 23,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1800",
+    "start": "2026-10-28T18:00:00Z",
+    "end": "2026-10-28T18:01:00Z",
+    "entries": 112640,
+    "pages": 21,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1815",
+    "start": "2026-10-28T18:15:00Z",
+    "end": "2026-10-28T18:16:00Z",
+    "entries": 100722,
+    "pages": 18,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1830",
+    "start": "2026-10-28T18:30:00Z",
+    "end": "2026-10-28T18:31:00Z",
+    "entries": 62714,
+    "pages": 12,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1845",
+    "start": "2026-10-28T18:45:00Z",
+    "end": "2026-10-28T18:46:00Z",
+    "entries": 49590,
+    "pages": 9,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1900",
+    "start": "2026-10-28T19:00:00Z",
+    "end": "2026-10-28T19:01:00Z",
+    "entries": 35776,
+    "pages": 7,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1915",
+    "start": "2026-10-28T19:15:00Z",
+    "end": "2026-10-28T19:16:00Z",
+    "entries": 18910,
+    "pages": 4,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1930",
+    "start": "2026-10-28T19:30:00Z",
+    "end": "2026-10-28T19:31:00Z",
+    "entries": 14201,
+    "pages": 3,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-1945",
+    "start": "2026-10-28T19:45:00Z",
+    "end": "2026-10-28T19:46:00Z",
+    "entries": 11545,
+    "pages": 3,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-2000",
+    "start": "2026-10-28T20:00:00Z",
+    "end": "2026-10-28T20:01:00Z",
+    "entries": 16792,
+    "pages": 4,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-2015",
+    "start": "2026-10-28T20:15:00Z",
+    "end": "2026-10-28T20:16:00Z",
+    "entries": 13578,
+    "pages": 3,
+    "complete": true,
+    "error": null
+  },
+  {
+    "phase": "cycle-2030",
+    "start": "2026-10-28T20:30:00Z",
+    "end": "2026-10-28T20:31:00Z",
+    "entries": 10346,
+    "pages": 2,
+    "complete": true,
+    "error": null
+  }
+]

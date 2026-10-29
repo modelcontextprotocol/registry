@@ -203,6 +203,11 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
+	nodeScaling, err := readNodeScaling(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create GKE cluster
 	clusterName := fmt.Sprintf("mcp-registry-%s", environment)
 
@@ -249,15 +254,20 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		nodeMachineType = "e2-standard-2"
 	}
 	nodePoolName := fmt.Sprintf("%s-nodepool", clusterName)
+	var nodeLabels pulumi.StringMap
+	if config.New(ctx, "mcp-registry").GetBool("isolatedDatabase") {
+		nodeLabels = pulumi.StringMap{"registry-role": pulumi.String("worker")}
+	}
 	nodePoolArgs := &container.NodePoolArgs{
 		Cluster:  cluster.Name,
 		Location: pulumi.String(zone),
 		Project:  pulumi.String(projectID),
 
 		// Node pool configuration
-		NodeCount: pulumi.Int(2),
+		NodeCount: pulumi.Int(nodeScaling.minimum),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
 			MachineType: pulumi.String(nodeMachineType),
+			Labels:      nodeLabels,
 			// Boot disks also serve the ingress cache and container logs.
 			DiskSizeGb: pulumi.Int(50),
 			DiskType:   pulumi.String("pd-balanced"),
@@ -277,6 +287,14 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 
 	// Add provider if we have explicit credentials
 	nodePoolOpts := []pulumi.ResourceOption{}
+	if nodeScaling.enabled {
+		nodePoolArgs.Autoscaling = &container.NodePoolAutoscalingArgs{
+			MinNodeCount: pulumi.IntPtr(nodeScaling.minimum),
+			MaxNodeCount: pulumi.IntPtr(nodeScaling.maximum),
+		}
+		// The autoscaler owns the live count. Always refresh before updating.
+		nodePoolOpts = append(nodePoolOpts, pulumi.IgnoreChanges([]string{"nodeCount"}))
+	}
 	if gcpProvider != nil {
 		nodePoolOpts = append(nodePoolOpts, pulumi.Provider(gcpProvider))
 	}
@@ -284,6 +302,15 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	nodePool, err := container.NewNodePool(ctx, nodePoolName, nodePoolArgs, nodePoolOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create node pool: %w", err)
+	}
+
+	clusterDependencies := []pulumi.Resource{cluster, nodePool}
+	if config.New(ctx, "mcp-registry").GetBool("isolatedDatabase") {
+		dbPool, err := createDatabaseNodePool(ctx, cluster, projectID, zone, nodeMachineType, gcpProvider)
+		if err != nil {
+			return nil, err
+		}
+		clusterDependencies = append(clusterDependencies, dbPool)
 	}
 
 	// Grant the default compute service account the standard GKE node roles so the
@@ -334,7 +361,7 @@ users:
 
 			return kubeconfigYAML, nil
 		}).(pulumi.StringOutput),
-	}, pulumi.DependsOn([]pulumi.Resource{cluster, nodePool}))
+	}, pulumi.DependsOn(clusterDependencies))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kubernetes provider: %w", err)
 	}

@@ -1,0 +1,74 @@
+{
+  "baseline-trace": {
+    "StartedAt": "2026-10-28T22:40:06.116432761Z",
+    "FinishedAt": "2026-10-28T22:42:06.111490452Z",
+    "Scheduled": 12000,
+    "Completed": 12000,
+    "Dropped": 0,
+    "Errors": {},
+    "Status": {
+      "page:200": 11760,
+      "search:200": 120,
+      "updated:200": 120
+    },
+    "LatencyMS": {
+      "page_p50": 6.8075,
+      "page_p95": 13.951745,
+      "page_p99": 22.542307,
+      "search_p50": 11.56263,
+      "search_p95": 33.783731,
+      "search_p99": 36.665879,
+      "updated_p50": 4.807329,
+      "updated_p95": 12.495886,
+      "updated_p99": 13.34996
+    }
+  },
+  "app-trace": {
+    "StartedAt": "2026-10-28T22:50:21.293517697Z",
+    "FinishedAt": "2026-10-28T22:52:21.288457055Z",
+    "Scheduled": 12000,
+    "Completed": 12000,
+    "Dropped": 0,
+    "Errors": {},
+    "Status": {
+      "page:200": 11760,
+      "search:200": 120,
+      "updated:200": 120
+    },
+    "LatencyMS": {
+      "page_p50": 6.54282,
+      "page_p95": 11.546524,
+      "page_p99": 16.301016,
+      "search_p50": 11.820186,
+      "search_p95": 31.738718,
+      "search_p99": 33.707896,
+      "updated_p50": 5.286267,
+      "updated_p95": 12.189029,
+      "updated_p99": 14.006378
+    }
+  },
+  "infra-trace": {
+    "StartedAt": "2026-10-28T23:03:31.239411614Z",
+    "FinishedAt": "2026-10-28T23:33:31.23453527Z",
+    "Scheduled": 180000,
+    "Completed": 180000,
+    "Dropped": 0,
+    "Errors": {},
+    "Status": {
+      "page:200": 176400,
+      "search:200": 1800,
+      "updated:200": 1800
+    },
+    "LatencyMS": {
+      "page_p50": 4.002084,
+      "page_p95": 11.382412,
+      "page_p99": 17.898149,
+      "search_p50": 10.449166,
+      "search_p95": 33.879368,
+      "search_p99": 44.195112,
+      "updated_p50": 5.345832,
+      "updated_p95": 12.438895,
+      "updated_p99": 17.020728
+    }
+  }
+}

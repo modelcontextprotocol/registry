@@ -1,0 +1,40 @@
+{
+  "baseline": {
+    "image": "1.8.6",
+    "app_cpu": "250m",
+    "app_replicas": "2",
+    "ingress_cpu": "300m",
+    "ingress_replicas": "2",
+    "db_cpu_request": "200m",
+    "db_cpu_limit": "3",
+    "pool_per_app": "60/10",
+    "nodes": "2",
+    "ingress_memory_request": "90Mi"
+  },
+  "app-only": {
+    "image": "us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-replicas-20261028-v1@sha256:60fb8b7d7931a257542848460f7d1c76a99f16c46ddad795249fb5c25b1c9b0e",
+    "app_cpu": "250m",
+    "app_replicas": "2",
+    "ingress_cpu": "300m",
+    "ingress_replicas": "2",
+    "db_cpu_request": "200m",
+    "db_cpu_limit": "3",
+    "pool_per_app": "60/10",
+    "nodes": "2",
+    "ingress_memory_request": "90Mi"
+  },
+  "app-and-infra": {
+    "image": "us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-replicas-20261028-v1@sha256:60fb8b7d7931a257542848460f7d1c76a99f16c46ddad795249fb5c25b1c9b0e",
+    "app_cpu": "800m",
+    "app_replicas": "2\u20134",
+    "ingress_cpu": "800m",
+    "ingress_replicas": "2\u20136",
+    "db_cpu_request": "1500m",
+    "db_cpu_limit": "3",
+    "pool_per_app": "30/5",
+    "nodes": "2\u20134",
+    "client_connection_lifetime": "60s (candidate ingress setting)",
+    "idle_start_gate": "Two Ready nodes, two app replicas, two ingress replicas; DB Ready at 1500m reservation. No forced eviction.",
+    "ingress_memory_request": "512Mi"
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "arrivals": {
+    "/v0.1/servers": {
+      "samples": 8,
+      "maximum": 299.65,
+      "mean": 192.22291666666666
+    },
+    "/v0.1/servers/{serverName}/versions": {
+      "samples": 5,
+      "maximum": 3.6333333333333333,
+      "mean": 3.0533333333333332
+    },
+    "/v0.1/servers/{serverName}/versions/{version}": {
+      "samples": 5,
+      "maximum": 0.875,
+      "mean": 0.6033333333333333
+    },
+    "/v0/servers": {
+      "samples": 8,
+      "maximum": 39.108333333333334,
+      "mean": 25.179166666666667
+    },
+    "/v0/servers/{serverName}/versions/{version}": {
+      "samples": 5,
+      "maximum": 6.9,
+      "mean": 4.09
+    }
+  },
+  "query_rate": {
+    "list": {
+      "samples": 8,
+      "maximum": 0.43333333333333335,
+      "mean": 0.2604166666666667
+    },
+    "list_page": {
+      "samples": 8,
+      "maximum": 332.775,
+      "mean": 214.696875
+    },
+    "list_search": {
+      "samples": 8,
+      "maximum": 2.908333333333333,
+      "mean": 1.3677083333333333
+    },
+    "list_updated": {
+      "samples": 8,
+      "maximum": 0.525,
+      "mean": 0.325
+    },
+    "other": {
+      "samples": 8,
+      "maximum": 10.816666666666666,
+      "mean": 5.179166666666666
+    }
+  },
+  "query_p95": {
+    "list": {
+      "samples": 6,
+      "maximum": 1.4500000000000002,
+      "mean": 0.9420940170940172
+    },
+    "list_page": {
+      "samples": 7,
+      "maximum": 0.9396345116836431,
+      "mean": 0.8730331175870846
+    },
+    "list_search": {
+      "samples": 7,
+      "maximum": 1.210714285714282,
+      "mean": 0.955282510752893
+    },
+    "list_updated": {
+      "samples": 7,
+      "maximum": 0.36250000000000004,
+      "mean": 0.3207291666666663
+    },
+    "other": {
+      "samples": 7,
+      "maximum": 0.4231617647058821,
+      "mean": 0.348655307688532
+    }
+  },
+  "pool_p95": {
+    "list": {
+      "samples": 6,
+      "maximum": 4.784883720930233,
+      "mean": 4.594033863763926
+    },
+    "list_page": {
+      "samples": 7,
+      "maximum": 4.717475944846742,
+      "mean": 3.974821584337703
+    },
+    "list_search": {
+      "samples": 7,
+      "maximum": 4.4375,
+      "mean": 3.714822974644403
+    },
+    "list_updated": {
+      "samples": 7,
+      "maximum": 4.783333333333332,
+      "mean": 3.683354591836734
+    },
+    "other": {
+      "samples": 7,
+      "maximum": 4.674698795180722,
+      "mean": 3.853030121694338
+    }
+  },
+  "pool_pending": {
+    "list": {
+      "samples": 8,
+      "maximum": 1.0,
+      "mean": 0.25
+    },
+    "list_page": {
+      "samples": 8,
+      "maximum": 397.0,
+      "mean": 121.5
+    },
+    "list_search": {
+      "samples": 8,
+      "maximum": 1.0,
+      "mean": 0.5
+    },
+    "list_updated": {
+      "samples": 8,
+      "maximum": 1.0,
+      "mean": 0.25
+    },
+    "other": {
+      "samples": 8,
+      "maximum": 38.0,
+      "mean": 10.25
+    }
+  },
+  "inflight": {
+    "/v0.1/servers": {
+      "samples": 8,
+      "maximum": 484.0,
+      "mean": 180.875
+    },
+    "/v0.1/servers/{serverName}/versions": {
+      "samples": 7,
+      "maximum": 1.0,
+      "mean": 0.5714285714285714
+    },
+    "/v0.1/servers/{serverName}/versions/{version}": {
+      "samples": 7,
+      "maximum": 1.0,
+      "mean": 0.2857142857142857
+    },
+    "/v0/servers": {
+      "samples": 8,
+      "maximum": 53.0,
+      "mean": 20.75
+    },
+    "/v0/servers/{serverName}/versions/{version}": {
+      "samples": 7,
+      "maximum": 44.0,
+      "mean": 12.857142857142858
+    }
+  },
+  "http_p95": {
+    "/v0.1/servers": {
+      "samples": 7,
+      "maximum": 6.279439252336436,
+      "mean": 4.604295557078723
+    },
+    "/v0.1/servers/{serverName}/versions": {
+      "samples": 5,
+      "maximum": 7.194444444444441,
+      "mean": 5.188002640690418
+    },
+    "/v0.1/servers/{serverName}/versions/{version}": {
+      "samples": 5,
+      "maximum": 8.999999999999996,
+      "mean": 6.279807692307689
+    },
+    "/v0/servers": {
+      "samples": 7,
+      "maximum": 5.047839506172848,
+      "mean": 4.370864809535785
+    },
+    "/v0/servers/{serverName}/versions/{version}": {
+      "samples": 5,
+      "maximum": 5.9374999999999964,
+      "mean": 4.4901176971649175
+    }
+  },
+  "limitations": [
+    "App scrape interval 60s; 30s query points may repeat samples. Rates/histograms use rolling windows and are not phase-isolated distributions.",
+    "Pool acquisition includes scheduler delay; zero sampled pending gauges do not prove absence of transient waits.",
+    "Time-series maxima for per-replica means are not global request-weighted means."
+  ]
+}

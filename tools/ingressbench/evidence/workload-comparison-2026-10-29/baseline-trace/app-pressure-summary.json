@@ -1,0 +1,26 @@
+[
+  {
+    "pod": "mcp-registry-fdf44474c-d6wvz",
+    "metric": "container_cpu_usage_seconds_total",
+    "sampled_seconds": 215.88899993896484,
+    "rate": 1.1004152970608232
+  },
+  {
+    "pod": "mcp-registry-fdf44474c-d6wvz",
+    "metric": "container_pressure_cpu_stalled_seconds_total",
+    "sampled_seconds": 215.88899993896484,
+    "rate": 0.17373765690055587
+  },
+  {
+    "pod": "mcp-registry-fdf44474c-5t5wh",
+    "metric": "container_cpu_usage_seconds_total",
+    "sampled_seconds": 223.81700015068054,
+    "rate": 1.0289273372664305
+  },
+  {
+    "pod": "mcp-registry-fdf44474c-5t5wh",
+    "metric": "container_pressure_cpu_stalled_seconds_total",
+    "sampled_seconds": 223.81700015068054,
+    "rate": 0.3045389668975632
+  }
+]

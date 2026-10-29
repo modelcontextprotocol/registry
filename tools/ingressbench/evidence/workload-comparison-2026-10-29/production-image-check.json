@@ -1,0 +1,15 @@
+{
+  "at": 1793227031.888009,
+  "pods": [
+    {
+      "name": "mcp-registry-8c994bcbc-dvtkt",
+      "image": "ghcr.io/modelcontextprotocol/registry:1.8.6",
+      "image_id": "ghcr.io/modelcontextprotocol/registry@sha256:f116000c08b41a477c8c7d90ea3fc7003ff4afb65cfb60cc9ebd82a85096fea3"
+    },
+    {
+      "name": "mcp-registry-8c994bcbc-kn8jc",
+      "image": "ghcr.io/modelcontextprotocol/registry:1.8.6",
+      "image_id": "ghcr.io/modelcontextprotocol/registry@sha256:f116000c08b41a477c8c7d90ea3fc7003ff4afb65cfb60cc9ebd82a85096fea3"
+    }
+  ]
+}

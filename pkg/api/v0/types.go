@@ -1,6 +1,7 @@
 package v0
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/modelcontextprotocol/registry/pkg/model"
@@ -25,6 +26,9 @@ type ServerResponse struct {
 }
 
 type ServerListResponse struct {
+	// encoded contains immutable, normalized wire records for HTTP-only listing.
+	// Internal database/service operations continue to use typed ServerResponse.
+	encoded  []EncodedServerRecord
 	Servers  []ServerResponse `json:"servers" doc:"List of server entries"`
 	Metadata Metadata         `json:"metadata" doc:"Pagination metadata"`
 }
@@ -50,4 +54,58 @@ type ServerJSON struct {
 type Metadata struct {
 	NextCursor string `json:"nextCursor,omitempty" doc:"Pagination cursor for retrieving the next page of results. Use this exact value in the cursor query parameter of your next request."`
 	Count      int    `json:"count" doc:"Number of items in current page"`
+}
+
+// NewEncodedServerList creates a serialization-only listing. Each record must
+// contain normalized ServerJSON bytes and current metadata. It takes ownership of
+// records; callers must not mutate them after construction.
+func NewEncodedServerList(records []EncodedServerRecord, metadata Metadata) ServerListResponse {
+	if records == nil {
+		records = make([]EncodedServerRecord, 0)
+	}
+	return ServerListResponse{encoded: records, Metadata: metadata}
+}
+
+func (s ServerListResponse) MarshalJSON() ([]byte, error) {
+	if s.encoded == nil {
+		type plain ServerListResponse
+		return json.Marshal(plain(s))
+	}
+	// Payloads were normalized with json.Marshal before storage. Metadata is
+	// freshly encoded here; append avoids copying every large payload through
+	// intermediate record and slice encoders. The outer encoder validates JSON.
+	capacity := 64
+	for _, record := range s.encoded {
+		capacity += len(record.Server) + 384
+	}
+	result := make([]byte, 0, capacity)
+	result = append(result, `{"servers":[`...)
+	for i, record := range s.encoded {
+		if i > 0 {
+			result = append(result, ',')
+		}
+		meta, err := json.Marshal(record.Meta)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, `{"server":`...)
+		result = append(result, record.Server...)
+		result = append(result, `,"_meta":`...)
+		result = append(result, meta...)
+		result = append(result, '}')
+	}
+	metadata, err := json.Marshal(s.Metadata)
+	if err != nil {
+		return nil, err
+	}
+	result = append(result, `],"metadata":`...)
+	result = append(result, metadata...)
+	return append(result, '}'), nil
+}
+
+// EncodedServerRecord contains a normalized server payload and fresh metadata.
+// It is used only to construct a serialization-only ServerListResponse.
+type EncodedServerRecord struct {
+	Server json.RawMessage
+	Meta   ResponseMeta
 }

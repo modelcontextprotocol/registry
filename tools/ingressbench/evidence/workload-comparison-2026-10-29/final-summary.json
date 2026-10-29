@@ -1,0 +1,82 @@
+{
+  "production_changed": false,
+  "verdict": "App improvement demonstrated in one short cold-start comparison; infrastructure delivery and two-node-within-30-minute gates not passed. Full production cycle and publishes untested.",
+  "short_gate": {
+    "baseline": "fail",
+    "app_only": "fail",
+    "app_plus_infra": "fail"
+  },
+  "recovery": {
+    "scheduled": 180000,
+    "attempted": 180000,
+    "dropped": 0,
+    "errors": {},
+    "page_p95_ms": 11.382412,
+    "duration_seconds": 1800,
+    "replica_return": {
+      "mcp-registry": {
+        "first_sample_back_at_two": "2026-10-28T23:16:20.106745+00:00",
+        "minutes_after_recovery_start": 12.81
+      },
+      "ingress-nginx-controller": {
+        "first_sample_back_at_two": "2026-10-28T23:19:20.162376+00:00",
+        "minutes_after_recovery_start": 15.82
+      }
+    },
+    "peak_nodes": 4,
+    "nodes_in_final_candidate_snapshot": 3,
+    "final_snapshot_time": "2026-10-28T23:33:44.048174+00:00",
+    "two_node_gate_pass": false,
+    "autoscaler_final": "Healthy, minimum 2 / maximum 4, one scale-down candidate remained",
+    "final_five_minute_gauges": {
+      "pool_pending": {
+        "samples": 9,
+        "maximum_sum": 0.0,
+        "last_sum": 0.0
+      },
+      "inflight": {
+        "samples": 9,
+        "maximum_sum": 0.0,
+        "last_sum": 0.0
+      }
+    },
+    "db_counter_delta": {
+      "usage_usec": 451847408,
+      "nr_periods": 20518,
+      "nr_throttled": 2,
+      "throttled_usec": 24131
+    },
+    "no_forced_consolidation": true
+  },
+  "peak_trace_executed": false,
+  "publish_test_executed": false,
+  "limitations": [
+    "Empty ingress caches at replay start; observed source was mid-cycle",
+    "One run per configuration; infrastructure changes tested as a package",
+    "DB restarted and conditioned only before infrastructure arm",
+    "Stale staging corpus caused detail 404s; generator route exemption missed detail 429s",
+    "Source successful reads only, approximate arrival timing, HTTP/1.1 transport and unrecovered TCP sessions",
+    "Final-minute mix qualification does not qualify complete source cycle"
+  ],
+  "restoration": {
+    "at": 1793230940.671833,
+    "bulk_whitelist_restored": true,
+    "primary_ingress_unchanged": true,
+    "application_ingress_database_ready": true,
+    "owned_generator_and_disk_absent": [
+      "instances/registry-workload-bench-20261029",
+      "disks/registry-workload-bench-20261029"
+    ],
+    "response_fixtures_equal": 48,
+    "corpus_names": 52366,
+    "corpus_versions": 187108,
+    "test_publications": 0,
+    "restored_snapshot_nodes": 4,
+    "node_autoscaler_bounds": [
+      2,
+      4
+    ],
+    "node_consolidation_pending": true,
+    "production_changed": false
+  }
+}

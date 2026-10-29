@@ -51,6 +51,12 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 		return err
 	}
 
+	// The chart gives its ConfigMap a fixed name. Pulumi replaces ConfigMaps
+	// on data changes; delete the old object first to avoid AlreadyExists.
+	vmOptions := []pulumi.ResourceOption{pulumi.Provider(cluster.Provider)}
+	if config.New(ctx, "mcp-registry").GetBool("burstAutoscaling") {
+		vmOptions = append(vmOptions, pulumi.Transformations([]pulumi.ResourceTransformation{burstResourceTransform}))
+	}
 	// Deploy VMAgent
 	_, err = helm.NewChart(ctx, "victoria-metrics-agent", helm.ChartArgs{
 		Chart:     pulumi.String("victoria-metrics-agent"),
@@ -69,7 +75,7 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 				"global": pulumi.Map{
 					"scrape_interval": pulumi.String("60s"),
 				},
-				"scrape_configs": pulumi.Array{
+				"scrape_configs": withIngressScrape(ctx, pulumi.Array{
 					pulumi.Map{
 						"job_name": pulumi.String("mcp-registry"),
 						"kubernetes_sd_configs": pulumi.Array{
@@ -88,7 +94,7 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 							},
 						},
 					},
-				},
+				}),
 			},
 			"resources": pulumi.Map{
 				"requests": pulumi.Map{
@@ -100,7 +106,7 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 				},
 			},
 		},
-	}, pulumi.Provider(cluster.Provider))
+	}, vmOptions...)
 	if err != nil {
 		return err
 	}
@@ -452,6 +458,7 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 	return nil
 }
 
+//nolint:goconst // Keep Kubernetes and Helm schema keys literal.
 func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *corev1.Namespace, environment string, ingressNginx *helm.Chart) error {
 	conf := config.New(ctx, "mcp-registry")
 	grafanaSecret, err := corev1.NewSecret(ctx, "grafana-secrets", &corev1.SecretArgs{
@@ -480,13 +487,13 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 			},
 		},
 		OtherFields: map[string]any{
-			"spec": map[string]any{
+			"spec": protectDatabase(ctx, map[string]any{
 				"instances": 1,
 				"enablePDB": false,
 				"storage": map[string]any{
 					"size": "10Gi",
 				},
-			},
+			}),
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {

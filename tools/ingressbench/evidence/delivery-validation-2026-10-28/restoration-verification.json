@@ -1,0 +1,13 @@
+{
+  "at": 1793202671.212588,
+  "nodes": 4,
+  "ingress_hpa": [
+    {
+      "minimum": 2,
+      "maximum": 6,
+      "current": 6,
+      "desired": 6
+    }
+  ],
+  "candidate_scale_down_tested": false
+}

@@ -96,7 +96,7 @@ type ServerVersionsInput struct {
 }
 
 // RegisterServersEndpoints registers all server-related endpoints with a custom path prefix
-func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.RegistryService) {
+func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.RegistryService, encodedResponse ...bool) {
 	// List servers endpoint
 	huma.Register(api, huma.Operation{
 		OperationID: "list-servers" + strings.ReplaceAll(pathPrefix, "/", "-"),
@@ -144,27 +144,11 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 		}
 		filter.IncludeDeleted = &includeDeleted
 
-		// Get paginated results with filtering
-		servers, nextCursor, err := registry.ListServers(ctx, filter, input.Cursor, input.Limit)
+		body, err := listServersBody(ctx, registry, filter, input, len(encodedResponse) > 0 && encodedResponse[0])
 		if err != nil {
 			return nil, ListServersError(ctx, err)
 		}
-
-		// Convert []*ServerResponse to []ServerResponse
-		serverValues := make([]apiv0.ServerResponse, len(servers))
-		for i, server := range servers {
-			serverValues[i] = *server
-		}
-
-		return &Response[apiv0.ServerListResponse]{
-			Body: apiv0.ServerListResponse{
-				Servers: serverValues,
-				Metadata: apiv0.Metadata{
-					NextCursor: nextCursor,
-					Count:      len(servers),
-				},
-			},
-		}, nil
+		return &Response[apiv0.ServerListResponse]{Body: body}, nil
 	})
 
 	// Get specific server version endpoint (supports "latest" as special version)
@@ -249,4 +233,24 @@ func RegisterServersEndpoints(api huma.API, pathPrefix string, registry service.
 			},
 		}, nil
 	})
+}
+
+// Encoded responses are enabled only by the production router, which disables
+// Huma's schema-link transformer. That transformer reconstructs structs from
+// exported fields and cannot preserve a private serialized representation.
+func listServersBody(ctx context.Context, registry service.RegistryService, filter *database.ServerFilter, input *ListServersInput, encoded bool) (apiv0.ServerListResponse, error) {
+	if fast, ok := registry.(interface {
+		ListServersJSON(context.Context, *database.ServerFilter, string, int) (apiv0.ServerListResponse, error)
+	}); ok && encoded {
+		return fast.ListServersJSON(ctx, filter, input.Cursor, input.Limit)
+	}
+	servers, next, err := registry.ListServers(ctx, filter, input.Cursor, input.Limit)
+	if err != nil {
+		return apiv0.ServerListResponse{}, err
+	}
+	values := make([]apiv0.ServerResponse, len(servers))
+	for i, server := range servers {
+		values[i] = *server
+	}
+	return apiv0.ServerListResponse{Servers: values, Metadata: apiv0.Metadata{Count: len(values), NextCursor: next}}, nil
 }

@@ -56,6 +56,17 @@ func main() {
 
 	// Initialize configuration
 	cfg := config.NewConfig()
+	poolLimits := database.PoolLimits{MaxConns: cfg.DatabaseMaxConnections, MinConns: cfg.DatabaseMinConnections}
+	if err := poolLimits.Validate(); err != nil {
+		log.Fatalf("Invalid database pool configuration: %v", err)
+	}
+
+	stopProfiling, err := telemetry.StartProfiling(os.Getenv("MCP_REGISTRY_ENABLE_PPROF") == "true")
+	if err != nil {
+		log.Printf("Failed to start profiling: %v", err)
+		return
+	}
+	defer stopProfiling()
 
 	// Initialize telemetry before opening the instrumented database pool.
 	shutdownTelemetry, metrics, err := telemetry.InitMetrics(cfg.Version)
@@ -83,7 +94,7 @@ func main() {
 	backoff := initialBackoff
 	for attempt := 1; ; attempt++ {
 		attemptCtx, attemptCancel := context.WithTimeout(context.Background(), perAttemptTimeout)
-		db, err = database.NewPostgreSQL(attemptCtx, cfg.DatabaseURL)
+		db, err = database.NewPostgreSQLWithPoolLimits(attemptCtx, cfg.DatabaseURL, poolLimits)
 		attemptCancel()
 		if err == nil {
 			break

@@ -1,0 +1,191 @@
+{
+  "at": "2026-10-28T22:43:36.576514+00:00",
+  "origin_comparison_window": {
+    "staging_start": 1793227141.90652,
+    "staging_end": 1793227201.90652,
+    "query_samples": [
+      1793227164.908,
+      1793227194.908
+    ],
+    "method": "Compare final replay minute. Interpolate 60s production query-rate samples at matching source-relative timestamps."
+  },
+  "workload_fidelity_pass": true,
+  "checks": [
+    {
+      "name": "client_cache_HIT",
+      "staging": 0.6481921590682317,
+      "production": 0.6927664556730453,
+      "tolerance": 0.05,
+      "relative": false,
+      "pass": true
+    },
+    {
+      "name": "client_cache_MISS",
+      "staging": 0.16084613849531032,
+      "production": 0.14796385057260986,
+      "tolerance": 0.05,
+      "relative": false,
+      "pass": true
+    },
+    {
+      "name": "client_cache_STALE",
+      "staging": 0.1697900981477114,
+      "production": 0.1472869635212762,
+      "tolerance": 0.05,
+      "relative": false,
+      "pass": true
+    },
+    {
+      "name": "client_cache_UPDATING",
+      "staging": 0.010576731191378965,
+      "production": 0.0005854158281804544,
+      "tolerance": 0.05,
+      "relative": false,
+      "pass": true
+    },
+    {
+      "name": "wire_body_bytes_p50",
+      "staging": 93252,
+      "production": 93051,
+      "tolerance": 0.2,
+      "relative": true,
+      "pass": true
+    },
+    {
+      "name": "wire_body_bytes_p95",
+      "staging": 162313,
+      "production": 160765,
+      "tolerance": 0.2,
+      "relative": true,
+      "pass": true
+    },
+    {
+      "name": "distinct_page_keys",
+      "staging": 11948,
+      "production": 11833,
+      "tolerance": 0.2,
+      "relative": true,
+      "pass": true
+    },
+    {
+      "name": "top_128_page_share",
+      "staging": 0.1352617641067427,
+      "production": 0.13614689878269975,
+      "tolerance": 0.05,
+      "relative": false,
+      "pass": true
+    },
+    {
+      "name": "client_rps",
+      "staging": 918.6833333333333,
+      "production": 911.0333333333333,
+      "tolerance": 0.2,
+      "relative": true,
+      "pass": true
+    },
+    {
+      "name": "list_page_origin_queries_rps",
+      "staging": 325.89583333333337,
+      "production": 291.554753780365,
+      "tolerance": 0.2,
+      "relative": true,
+      "pass": true
+    },
+    {
+      "name": "list_search_origin_queries_rps",
+      "staging": 2.6166666666666667,
+      "production": 3.09142198562622,
+      "tolerance": 0.2,
+      "relative": true,
+      "pass": true
+    },
+    {
+      "name": "list_updated_origin_queries_rps",
+      "staging": 0.4625,
+      "production": 0.5425055503845215,
+      "tolerance": 0.2,
+      "relative": true,
+      "pass": true
+    }
+  ],
+  "staging_steady_metrics": {
+    "arrivals": {
+      "/v0.1/servers": 289.9916666666667,
+      "/v0.1/servers/{serverName}/versions": 3.208333333333333,
+      "/v0.1/servers/{serverName}/versions/{version}": 0.7791666666666667,
+      "/v0/servers": 37.3875,
+      "/v0/servers/{serverName}/versions/{version}": 6.245833333333334
+    },
+    "query_rate": {
+      "list": 0.42500000000000004,
+      "list_page": 325.89583333333337,
+      "list_search": 2.6166666666666667,
+      "list_updated": 0.4625,
+      "other": 9.975
+    },
+    "pool_pending": {
+      "list": 0.5,
+      "list_page": 63.0,
+      "list_search": 0.5,
+      "list_updated": 0.5,
+      "other": 26.5
+    },
+    "pool_p95": {
+      "list": 4.482293801229507,
+      "list_page": 4.374166936489566,
+      "list_search": 4.017045454545454,
+      "list_updated": 4.416666666666666,
+      "other": 4.114678899082569
+    },
+    "http_p95": {
+      "/v0.1/servers": 4.745370502703749,
+      "/v0.1/servers/{serverName}/versions": 4.575627234422879,
+      "/v0.1/servers/{serverName}/versions/{version}": 4.668269230769227,
+      "/v0/servers": 4.6636364804409975,
+      "/v0/servers/{serverName}/versions/{version}": 3.7467950162220625
+    },
+    "inflight": {
+      "/v0.1/servers": 139.0,
+      "/v0.1/servers/{serverName}/versions": 0.5,
+      "/v0.1/servers/{serverName}/versions/{version}": 0.0,
+      "/v0/servers": 14.0,
+      "/v0/servers/{serverName}/versions/{version}": 32.5
+    }
+  },
+  "offered": {
+    "Scheduled": 274116,
+    "Completed": 268352,
+    "Dropped": 5764,
+    "Errors": {
+      "page:body:timeout": 8,
+      "page:request:timeout": 39,
+      "search:request:timeout": 1
+    },
+    "LatencyMS": {
+      "detail_p50": 498.266667,
+      "detail_p95": 4317.953071,
+      "detail_p99": 5583.062271,
+      "page_p50": 38.084056,
+      "page_p95": 3321.811311,
+      "page_p99": 5538.748918,
+      "search_p50": 265.915743,
+      "search_p95": 3514.35404,
+      "search_p99": 5409.575506,
+      "updated_p50": 655.324676,
+      "updated_p95": 5170.463395,
+      "updated_p99": 6290.706091
+    },
+    "Cache": {
+      "": 2228,
+      "HIT": 181144,
+      "MISS": 48386,
+      "STALE": 31252,
+      "UPDATING": 5342
+    }
+  },
+  "limitations": [
+    "One short broad-crawl calibration, not full cyclic recovery validation",
+    "Search/update/detail/write fidelity remains separately required",
+    "Read baseline uses prior production corpus with derived schema columns present"
+  ]
+}

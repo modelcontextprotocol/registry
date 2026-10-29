@@ -1,0 +1,6 @@
+{
+  "at": 1793218901.7175639,
+  "code": 0,
+  "stdout": "BEGIN\nSET\n{\"at\": \"2026-10-28T20:21:41.187327+00:00\", \"names\": 52366, \"versions\": 187108, \"benchmark_runs\": null, \"database_started\": \"2026-10-28T20:21:23.962946+00:00\"}\nCOMMIT\n",
+  "stderr": ""
+}

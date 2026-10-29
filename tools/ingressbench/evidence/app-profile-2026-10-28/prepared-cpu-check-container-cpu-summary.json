@@ -1,0 +1,77 @@
+{
+  "scope": "Bounded burst intervals per cAdvisor series, default/ingress namespaces only; intervals are not exactly identical. System pods and node kernel overhead are excluded.",
+  "rows": [
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+      "pod": "ingress-nginx-controller-8587f46b84-m9sss",
+      "container": "controller",
+      "start": 1793187965.646,
+      "end": 1793188113.993,
+      "cpu_cores_mean": 0.907919188720838
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+      "pod": "ingress-nginx-controller-8587f46b84-q78zh",
+      "container": "controller",
+      "start": 1793187964.617,
+      "end": 1793188113.931,
+      "cpu_cores_mean": 0.8301688394273478
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+      "pod": "mcp-registry-685dff56b7-48qz9",
+      "container": "mcp-registry",
+      "start": 1793187957.843,
+      "end": 1793188111.47,
+      "cpu_cores_mean": 0.8265537237773973
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-jb9n",
+      "pod": "ingress-nginx-controller-8587f46b84-2t69w",
+      "container": "controller",
+      "start": 1793187960.937,
+      "end": 1793188118.739,
+      "cpu_cores_mean": 0.5458778721119613
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-jb9n",
+      "pod": "ingress-nginx-controller-8587f46b84-84rdr",
+      "container": "controller",
+      "start": 1793187968.502,
+      "end": 1793188117.902,
+      "cpu_cores_mean": 0.5644004824681268
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+      "pod": "ingress-nginx-controller-8587f46b84-rr9nr",
+      "container": "controller",
+      "start": 1793187965.933,
+      "end": 1793188110.733,
+      "cpu_cores_mean": 1.4194825004674445
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+      "pod": "mcp-registry-685dff56b7-tzs8j",
+      "container": "mcp-registry",
+      "start": 1793187969.154,
+      "end": 1793188113.379,
+      "cpu_cores_mean": 0.6666630408291069
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+      "pod": "registry-pg-1",
+      "container": "postgres",
+      "start": 1793187971.666,
+      "end": 1793188116.235,
+      "cpu_cores_mean": 0.7133892120435082
+    },
+    {
+      "node": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-sdtz",
+      "pod": "ingress-nginx-controller-8587f46b84-hmt7n",
+      "container": "controller",
+      "start": 1793187967.405,
+      "end": 1793188107.671,
+      "cpu_cores_mean": 1.2138303007189315
+    }
+  ]
+}

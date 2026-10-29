@@ -151,6 +151,28 @@ func (s *registryServiceImpl) ListServers(ctx context.Context, filter *database.
 	return serverRecords, nextCursor, nil
 }
 
+// ListServersJSON uses the database's normalized wire cache when available.
+// Alternate database implementations retain the ordinary typed path.
+func (s *registryServiceImpl) ListServersJSON(ctx context.Context, filter *database.ServerFilter, cursor string, limit int) (apiv0.ServerListResponse, error) {
+	if limit <= 0 {
+		limit = 30
+	}
+	if db, ok := s.db.(interface {
+		ListServersJSON(context.Context, *database.ServerFilter, string, int) (apiv0.ServerListResponse, error)
+	}); ok {
+		return db.ListServersJSON(ctx, filter, cursor, limit)
+	}
+	servers, next, err := s.ListServers(ctx, filter, cursor, limit)
+	if err != nil {
+		return apiv0.ServerListResponse{}, err
+	}
+	values := make([]apiv0.ServerResponse, len(servers))
+	for i, server := range servers {
+		values[i] = *server
+	}
+	return apiv0.ServerListResponse{Servers: values, Metadata: apiv0.Metadata{Count: len(values), NextCursor: next}}, nil
+}
+
 // GetServerByName retrieves the latest version of a server by its server name
 func (s *registryServiceImpl) GetServerByName(ctx context.Context, serverName string, includeDeleted bool) (*apiv0.ServerResponse, error) {
 	serverRecord, err := s.db.GetServerByName(ctx, nil, serverName, includeDeleted)

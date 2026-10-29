@@ -1,0 +1,38 @@
+{
+  "baseline-trace": {
+    "cadvisor_files": 14,
+    "failures": [],
+    "empty_node_telemetry": [],
+    "metric_queries": 18,
+    "metric_query_failures": [],
+    "optional_empty_series": [
+      "alerts",
+      "raw_5xx",
+      "raw_cancellations"
+    ]
+  },
+  "app-trace": {
+    "cadvisor_files": 14,
+    "failures": [],
+    "empty_node_telemetry": [],
+    "metric_queries": 20,
+    "metric_query_failures": [],
+    "optional_empty_series": [
+      "alerts",
+      "raw_5xx",
+      "raw_cancellations"
+    ]
+  },
+  "infra-trace": {
+    "cadvisor_files": 70,
+    "failures": [],
+    "empty_node_telemetry": [],
+    "metric_queries": 20,
+    "metric_query_failures": [],
+    "optional_empty_series": [
+      "alerts",
+      "raw_5xx",
+      "raw_cancellations"
+    ]
+  }
+}

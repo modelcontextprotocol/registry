@@ -1,0 +1,238 @@
+{
+  "at": 1793217505.732235,
+  "server_dry_run": "passed",
+  "production_changed": false,
+  "candidate_image": "us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-replicas-20261028-v1@sha256:60fb8b7d7931a257542848460f7d1c76a99f16c46ddad795249fb5c25b1c9b0e",
+  "driver_sha256": "93de7e015c0fe51df8ff472f36a306678e1e48fa2c7e81a33b061b44c870550c",
+  "catalog_sha256": "120f34ec070fe08acf093e65f13a28631d944cf510915c65233b9eab62c143be",
+  "live_idle_budget": {
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k": {
+      "cpu_m": 2653.0,
+      "memory_mi": 2892.1278076171875,
+      "pods": [
+        {
+          "name": "cert-manager-85586dbccb-t76gt",
+          "cpu_m": 0.0,
+          "memory_mi": 0.0
+        },
+        {
+          "name": "cert-manager-cainjector-55cd9f77b5-r2vk4",
+          "cpu_m": 0.0,
+          "memory_mi": 0.0
+        },
+        {
+          "name": "cert-manager-webhook-7987476d56-4pj8x",
+          "cpu_m": 0.0,
+          "memory_mi": 0.0
+        },
+        {
+          "name": "k8up-86967d97c5-x4vrt",
+          "cpu_m": 20.0,
+          "memory_mi": 128.0
+        },
+        {
+          "name": "mcp-registry-6b9df99d6c-2rjjc",
+          "cpu_m": 800,
+          "memory_mi": 512.0
+        },
+        {
+          "name": "kube-state-metrics-0",
+          "cpu_m": 105.0,
+          "memory_mi": 130.0
+        },
+        {
+          "name": "collector-tlb2v",
+          "cpu_m": 5.0,
+          "memory_mi": 34.332275390625
+        },
+        {
+          "name": "gmp-operator-84bcc79c46-d65wx",
+          "cpu_m": 1.0,
+          "memory_mi": 15.2587890625
+        },
+        {
+          "name": "ingress-nginx-controller-54dc7ccbb8-mzmdk",
+          "cpu_m": 800.0,
+          "memory_mi": 512.0
+        },
+        {
+          "name": "event-exporter-gke-6d4f698b66-gpnz2",
+          "cpu_m": 3.0,
+          "memory_mi": 100.0
+        },
+        {
+          "name": "fluentbit-gke-f7582",
+          "cpu_m": 105.0,
+          "memory_mi": 230.0
+        },
+        {
+          "name": "gke-metrics-agent-mpf8h",
+          "cpu_m": 21.0,
+          "memory_mi": 145.0
+        },
+        {
+          "name": "konnectivity-agent-6977df8778-ppts2",
+          "cpu_m": 15.0,
+          "memory_mi": 60.0
+        },
+        {
+          "name": "konnectivity-agent-autoscaler-76cd9ccc9c-ngst9",
+          "cpu_m": 10.0,
+          "memory_mi": 9.5367431640625
+        },
+        {
+          "name": "kube-dns-7d659bf477-d959c",
+          "cpu_m": 270.0,
+          "memory_mi": 155.0
+        },
+        {
+          "name": "kube-dns-autoscaler-5b85d8b66d-9dtsz",
+          "cpu_m": 20.0,
+          "memory_mi": 10.0
+        },
+        {
+          "name": "kube-proxy-gke-mcp-registry-sta-mcp-registry-sta-5d130b39-5x9k",
+          "cpu_m": 100.0,
+          "memory_mi": 0.0
+        },
+        {
+          "name": "metrics-server-v1.35.1-5998cfcd8f-4bmr5",
+          "cpu_m": 43.0,
+          "memory_mi": 55.0
+        },
+        {
+          "name": "pdcsi-node-s64kk",
+          "cpu_m": 10.0,
+          "memory_mi": 20.0
+        },
+        {
+          "name": "grafana-7cc5d86f9-p2wmz",
+          "cpu_m": 50.0,
+          "memory_mi": 128.0
+        },
+        {
+          "name": "grafana-pg-1",
+          "cpu_m": 0.0,
+          "memory_mi": 0.0
+        },
+        {
+          "name": "opentelemetry-collector-agent-866hv",
+          "cpu_m": 100.0,
+          "memory_mi": 200.0
+        },
+        {
+          "name": "victoria-logs-victoria-logs-single-server-0",
+          "cpu_m": 100.0,
+          "memory_mi": 256.0
+        },
+        {
+          "name": "victoria-metrics-agent-dfc8bd7d7-d66bt",
+          "cpu_m": 25.0,
+          "memory_mi": 64.0
+        },
+        {
+          "name": "victoria-metrics-victoria-metrics-single-server-0",
+          "cpu_m": 50.0,
+          "memory_mi": 128.0
+        }
+      ]
+    },
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25": {
+      "cpu_m": 3726.0,
+      "memory_mi": 2380.332275390625,
+      "pods": [
+        {
+          "name": "cloudnative-pg-5b6dd77f9d-slkqg",
+          "cpu_m": 0.0,
+          "memory_mi": 0.0
+        },
+        {
+          "name": "mcp-registry-6b9df99d6c-nws25",
+          "cpu_m": 800,
+          "memory_mi": 512.0
+        },
+        {
+          "name": "registry-pg-1",
+          "cpu_m": 1500,
+          "memory_mi": 512.0
+        },
+        {
+          "name": "collector-5t5hd",
+          "cpu_m": 5.0,
+          "memory_mi": 34.332275390625
+        },
+        {
+          "name": "ingress-nginx-controller-54dc7ccbb8-5zhms",
+          "cpu_m": 800.0,
+          "memory_mi": 512.0
+        },
+        {
+          "name": "fluentbit-gke-v8g89",
+          "cpu_m": 105.0,
+          "memory_mi": 230.0
+        },
+        {
+          "name": "gke-metrics-agent-jblcc",
+          "cpu_m": 21.0,
+          "memory_mi": 145.0
+        },
+        {
+          "name": "konnectivity-agent-6977df8778-9ncmm",
+          "cpu_m": 15.0,
+          "memory_mi": 60.0
+        },
+        {
+          "name": "kube-dns-7d659bf477-w5jfg",
+          "cpu_m": 270.0,
+          "memory_mi": 155.0
+        },
+        {
+          "name": "kube-proxy-gke-mcp-registry-sta-mcp-registry-sta-5d130b39-kg25",
+          "cpu_m": 100.0,
+          "memory_mi": 0.0
+        },
+        {
+          "name": "pdcsi-node-bhrkr",
+          "cpu_m": 10.0,
+          "memory_mi": 20.0
+        },
+        {
+          "name": "opentelemetry-collector-agent-8xc4k",
+          "cpu_m": 100.0,
+          "memory_mi": 200.0
+        }
+      ]
+    }
+  },
+  "live_pretest_nodes": 2,
+  "node_min_max": [
+    2,
+    4
+  ],
+  "cpu_request_milli": {
+    "app": 800,
+    "ingress": 800,
+    "postgres": 1500
+  },
+  "db_cpu_limit": 3,
+  "warm_gate_replicas": {
+    "app": 4,
+    "ingress": 6
+  },
+  "eventual_idle_replicas": {
+    "app": 2,
+    "ingress": 2
+  },
+  "pool_max_min_each": [
+    30,
+    5
+  ],
+  "app_hpa_cpu_target": 70,
+  "ingress_hpa_cpu_target": 70,
+  "baseline_equivalence_count": 48,
+  "limitations": [
+    "Reserved CPU fits, runtime performance still unproven.",
+    "DB pod restart is expected before testing.",
+    "Warm short gate does not test autoscaling reaction time."
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "scope": "VictoriaMetrics 180-second increase ending at burst finish; scrape-based estimate, not exact request matching. Histogram bounds, not interpolated quantiles. Bulk-read ingress only. Client latency starts at scheduled arrival and includes scheduler and worker queue delay.",
+  "ingress": {
+    "nginx_ingress_controller_connect_duration_seconds_bucket": {
+      "all": {
+        "count": 78251.0,
+        "cumulative_buckets": {
+          "0.005": 77845.0,
+          "0.01": 77944.0,
+          "0.025": 78083.0,
+          "0.05": 78152.0,
+          "0.1": 78198.0,
+          "0.25": 78233.0,
+          "0.5": 78250.0,
+          "1.0": 78251.0,
+          "2.5": 78251.0,
+          "5.0": 78251.0,
+          "10.0": 78251.0,
+          "inf": 78251.0
+        },
+        "p95_upper_ms": 5.0,
+        "p99_upper_ms": 5.0
+      }
+    },
+    "nginx_ingress_controller_header_duration_seconds_bucket": {
+      "all": {
+        "count": 78251.0,
+        "cumulative_buckets": {
+          "0.005": 18891.0,
+          "0.01": 39736.0,
+          "0.025": 60952.0,
+          "0.05": 69606.0,
+          "0.1": 73567.0,
+          "0.25": 75716.0,
+          "0.5": 76519.0,
+          "1.0": 76995.0,
+          "2.5": 78250.0,
+          "5.0": 78251.0,
+          "10.0": 78251.0,
+          "inf": 78251.0
+        },
+        "p95_upper_ms": 250.0,
+        "p99_upper_ms": 2500.0
+      }
+    },
+    "nginx_ingress_controller_request_duration_seconds_bucket": {
+      "all": {
+        "count": 764542.0,
+        "cumulative_buckets": {
+          "0.005": 378440.0,
+          "0.01": 454280.0,
+          "0.025": 573920.0,
+          "0.05": 661047.0,
+          "0.1": 723438.0,
+          "0.25": 755528.0,
+          "0.5": 761524.0,
+          "1.0": 762989.0,
+          "2.5": 764541.0,
+          "5.0": 764542.0,
+          "10.0": 764542.0,
+          "inf": 764542.0
+        },
+        "p95_upper_ms": 250.0,
+        "p99_upper_ms": 500.0
+      }
+    },
+    "nginx_ingress_controller_response_duration_seconds_bucket": {
+      "all": {
+        "count": 78251.0,
+        "cumulative_buckets": {
+          "0.005": 10971.0,
+          "0.01": 28436.0,
+          "0.025": 48029.0,
+          "0.05": 58977.0,
+          "0.1": 67856.0,
+          "0.25": 74462.0,
+          "0.5": 76219.0,
+          "1.0": 76928.0,
+          "2.5": 78250.0,
+          "5.0": 78251.0,
+          "10.0": 78251.0,
+          "inf": 78251.0
+        },
+        "p95_upper_ms": 250.0,
+        "p99_upper_ms": 2500.0
+      }
+    }
+  },
+  "client": {
+    "max_scheduler_lag_ms": 490.28643,
+    "received_response_bytes": 43647992717,
+    "cache": {
+      "HIT": 676598,
+      "MISS": 26679,
+      "STALE": 56852,
+      "UPDATING": 972
+    },
+    "dropped": 48899,
+    "scheduled": 810000,
+    "drop_windows": [
+      {
+        "start": "2026-10-28T14:32:40Z",
+        "scheduled": 12563,
+        "dropped": 4302,
+        "scheduler_lag_max_ms": 307.342966,
+        "http_mean_ms": 315.8769224773606,
+        "queue_mean_ms": 207.15429189455168
+      },
+      {
+        "start": "2026-10-28T14:32:50Z",
+        "scheduled": 45000,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 6.027901,
+        "http_mean_ms": 56.57579246983395,
+        "queue_mean_ms": 0.03561035145885668
+      },
+      {
+        "start": "2026-10-28T14:33:00Z",
+        "scheduled": 45000,
+        "dropped": 3267,
+        "scheduler_lag_max_ms": 319.173394,
+        "http_mean_ms": 66.69689974792162,
+        "queue_mean_ms": 30.78189123072896
+      },
+      {
+        "start": "2026-10-28T14:33:10Z",
+        "scheduled": 45000,
+        "dropped": 3501,
+        "scheduler_lag_max_ms": 214.585882,
+        "http_mean_ms": 71.49178826299386,
+        "queue_mean_ms": 40.10222373054776
+      },
+      {
+        "start": "2026-10-28T14:33:20Z",
+        "scheduled": 45000,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 2.146983,
+        "http_mean_ms": 15.097912840688972,
+        "queue_mean_ms": 0.035238837688888865
+      },
+      {
+        "start": "2026-10-28T14:33:30Z",
+        "scheduled": 45000,
+        "dropped": 4177,
+        "scheduler_lag_max_ms": 462.127782,
+        "http_mean_ms": 61.828214698276,
+        "queue_mean_ms": 33.25300850563851
+      },
+      {
+        "start": "2026-10-28T14:33:40Z",
+        "scheduled": 45000,
+        "dropped": 4789,
+        "scheduler_lag_max_ms": 490.28643,
+        "http_mean_ms": 86.36733540009705,
+        "queue_mean_ms": 44.607110885096034
+      },
+      {
+        "start": "2026-10-28T14:33:50Z",
+        "scheduled": 45000,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 9.706917,
+        "http_mean_ms": 19.103304622222346,
+        "queue_mean_ms": 0.04957219948888926
+      },
+      {
+        "start": "2026-10-28T14:34:00Z",
+        "scheduled": 45000,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 2.487848,
+        "http_mean_ms": 11.997588064311039,
+        "queue_mean_ms": 0.02211763448888871
+      },
+      {
+        "start": "2026-10-28T14:34:10Z",
+        "scheduled": 45000,
+        "dropped": 8782,
+        "scheduler_lag_max_ms": 282.541236,
+        "http_mean_ms": 130.00378477698305,
+        "queue_mean_ms": 89.80548412151782
+      },
+      {
+        "start": "2026-10-28T14:34:20Z",
+        "scheduled": 45000,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 4.129266,
+        "http_mean_ms": 40.30300710097569,
+        "queue_mean_ms": 0.03247769320681753
+      },
+      {
+        "start": "2026-10-28T14:34:30Z",
+        "scheduled": 45000,
+        "dropped": 4668,
+        "scheduler_lag_max_ms": 239.440387,
+        "http_mean_ms": 87.66371979068676,
+        "queue_mean_ms": 40.17027649045469
+      },
+      {
+        "start": "2026-10-28T14:34:40Z",
+        "scheduled": 45000,
+        "dropped": 2735,
+        "scheduler_lag_max_ms": 199.730233,
+        "http_mean_ms": 70.35024924086105,
+        "queue_mean_ms": 35.906052531763876
+      },
+      {
+        "start": "2026-10-28T14:34:50Z",
+        "scheduled": 45000,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 1.843467,
+        "http_mean_ms": 23.05708995133339,
+        "queue_mean_ms": 0.026086371933333245
+      },
+      {
+        "start": "2026-10-28T14:35:00Z",
+        "scheduled": 45000,
+        "dropped": 3489,
+        "scheduler_lag_max_ms": 167.02381,
+        "http_mean_ms": 70.8865089599378,
+        "queue_mean_ms": 39.728461297391284
+      },
+      {
+        "start": "2026-10-28T14:35:10Z",
+        "scheduled": 45000,
+        "dropped": 4391,
+        "scheduler_lag_max_ms": 147.109401,
+        "http_mean_ms": 68.68577627951936,
+        "queue_mean_ms": 46.294208309365025
+      },
+      {
+        "start": "2026-10-28T14:35:20Z",
+        "scheduled": 45000,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 3.481933,
+        "http_mean_ms": 20.931129828129468,
+        "queue_mean_ms": 0.030496771972710262
+      },
+      {
+        "start": "2026-10-28T14:35:30Z",
+        "scheduled": 45000,
+        "dropped": 4798,
+        "scheduler_lag_max_ms": 476.031706,
+        "http_mean_ms": 69.32207989729606,
+        "queue_mean_ms": 37.166894863094875
+      },
+      {
+        "start": "2026-10-28T14:35:40Z",
+        "scheduled": 32437,
+        "dropped": 0,
+        "scheduler_lag_max_ms": 2.917472,
+        "http_mean_ms": 9.41660763054529,
+        "queue_mean_ms": 0.023161071739063257
+      }
+    ]
+  }
+}

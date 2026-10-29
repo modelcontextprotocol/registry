@@ -1,0 +1,21 @@
+{
+  "at": 1793230940.671833,
+  "bulk_whitelist_restored": true,
+  "primary_ingress_unchanged": true,
+  "application_ingress_database_ready": true,
+  "owned_generator_and_disk_absent": [
+    "instances/registry-workload-bench-20261029",
+    "disks/registry-workload-bench-20261029"
+  ],
+  "response_fixtures_equal": 48,
+  "corpus_names": 52366,
+  "corpus_versions": 187108,
+  "test_publications": 0,
+  "restored_snapshot_nodes": 4,
+  "node_autoscaler_bounds": [
+    2,
+    4
+  ],
+  "node_consolidation_pending": true,
+  "production_changed": false
+}

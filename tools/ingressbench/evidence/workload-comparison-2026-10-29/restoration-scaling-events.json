@@ -1,0 +1,74 @@
+[
+  {
+    "at": "2026-10-28T23:34:04Z",
+    "reason": "ScaleDown",
+    "object": "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-9djm",
+    "message": "marked the node as toBeDeleted/unschedulable"
+  },
+  {
+    "at": "2026-10-28T23:34:05Z",
+    "reason": "ScaleDown",
+    "object": "collector-r2q4q",
+    "message": "deleting pod for node scale down"
+  },
+  {
+    "at": "2026-10-28T23:35:01Z",
+    "reason": "FailedScheduling",
+    "object": "ingress-nginx-controller-54dc7ccbb8-4fmgh",
+    "message": "0/3 nodes are available: 1 Insufficient cpu, 1 node(s) didn't match pod topology spread constraints, 1 node(s) were unschedulable. no new claims to deallocate, preemption: 0/3 nodes are available: 1 Preemption is not helpful for scheduling, 2 No preemption victims found for incoming pod."
+  },
+  {
+    "at": "2026-10-28T23:34:43Z",
+    "reason": "TriggeredScaleUp",
+    "object": "ingress-nginx-controller-54dc7ccbb8-4fmgh",
+    "message": "Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/mcp-registry-staging/zones/us-central1-b/instanceGroups/gke-mcp-registry-sta-mcp-registry-sta-5d130b39-grp 2->3 (max: 4)}]"
+  },
+  {
+    "at": "2026-10-28T23:35:23Z",
+    "reason": "FailedScheduling",
+    "object": "ingress-nginx-controller-54dc7ccbb8-4fmgh",
+    "message": "0/4 nodes are available: 1 Insufficient cpu, 1 node(s) didn't match pod topology spread constraints, 1 node(s) had untolerated taint(s), 1 node(s) were unschedulable. no new claims to deallocate, preemption: 0/4 nodes are available: 2 No preemption victims found for incoming pod, 2 Preemption is not helpful for scheduling."
+  },
+  {
+    "at": "2026-10-28T23:35:24Z",
+    "reason": "FailedScheduling",
+    "object": "ingress-nginx-controller-54dc7ccbb8-4fmgh",
+    "message": "0/5 nodes are available: 1 Insufficient cpu, 1 node(s) didn't match pod topology spread constraints, 1 node(s) were unschedulable, 2 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/5 nodes are available: 2 No preemption victims found for incoming pod, 3 Preemption is not helpful for scheduling."
+  },
+  {
+    "at": "2026-10-28T23:34:04Z",
+    "reason": "ScaleDownEmpty",
+    "object": "cluster-autoscaler-status",
+    "message": "Scale-down: removing empty node \"gke-mcp-registry-sta-mcp-registry-sta-5d130b39-9djm\""
+  },
+  {
+    "at": "2026-10-28T23:34:07Z",
+    "reason": "ScaleDownEmpty",
+    "object": "cluster-autoscaler-status",
+    "message": "Scale-down: empty node gke-mcp-registry-sta-mcp-registry-sta-5d130b39-9djm removed"
+  },
+  {
+    "at": "2026-10-28T23:34:05Z",
+    "reason": "ScaleDown",
+    "object": "fluentbit-gke-ncxjz",
+    "message": "deleting pod for node scale down"
+  },
+  {
+    "at": "2026-10-28T23:34:05Z",
+    "reason": "ScaleDown",
+    "object": "gke-metrics-agent-d9chh",
+    "message": "deleting pod for node scale down"
+  },
+  {
+    "at": "2026-10-28T23:34:05Z",
+    "reason": "ScaleDown",
+    "object": "pdcsi-node-t2pkv",
+    "message": "deleting pod for node scale down"
+  },
+  {
+    "at": "2026-10-28T23:34:05Z",
+    "reason": "ScaleDown",
+    "object": "opentelemetry-collector-agent-gfbmw",
+    "message": "deleting pod for node scale down"
+  }
+]

@@ -36,6 +36,11 @@ func main() {
 		conf := config.New(ctx, "mcp-registry")
 		environment := conf.Require("environment")
 
+		// Reject incomplete experimental capacity profiles before any resources.
+		if err := k8s.ValidateCapacityConfig(ctx); err != nil {
+			return err
+		}
+
 		// Create provider
 		provider, err := createProvider(ctx)
 		if err != nil {

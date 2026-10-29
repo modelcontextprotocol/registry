@@ -99,5 +99,11 @@ jobs:
         env:
           PULUMI_STAGING_PASSPHRASE: ${{ secrets.PULUMI_STAGING_PASSPHRASE }}
         run: |
-          echo "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
+          umask 077
+          printf '%s' "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
+          trap 'rm -f passphrase.staging.txt' EXIT
+          export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt
+          # Adopt the existing staging experiment before applying its code.
+          # This is idempotent, uses the staging backend only, and fails closed.
+          python3 scripts/adopt_staging_capacity.py
           make staging-up

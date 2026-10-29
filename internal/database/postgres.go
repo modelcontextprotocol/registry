@@ -22,8 +22,9 @@ import (
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
-	pool        *pgxpool.Pool
-	poolMetrics metric.Registration
+	pool           *pgxpool.Pool
+	poolMetrics    metric.Registration
+	listingMetrics metric.Int64Counter
 }
 
 // Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
@@ -43,19 +44,24 @@ func (db *PostgreSQL) getExecutor(tx pgx.Tx) Executor {
 
 // NewPostgreSQL creates a new instance of the PostgreSQL database
 func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, error) {
+	return NewPostgreSQLWithPoolLimits(ctx, connectionURI, PoolLimits{MaxConns: 60, MinConns: 10})
+}
+
+// NewPostgreSQLWithPoolLimits sets an explicit per-replica connection budget.
+func NewPostgreSQLWithPoolLimits(ctx context.Context, connectionURI string, limits PoolLimits) (*PostgreSQL, error) {
+	if err := limits.Validate(); err != nil {
+		return nil, err
+	}
 	// Parse connection config for pool settings
 	config, err := pgxpool.ParseConfig(connectionURI)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse PostgreSQL config: %w", err)
 	}
 
-	// Configure pool for stability-focused defaults.
-	// MaxConns was 30 per pod (60 total across 2 replicas) which saturated under
-	// the 2026-04-28 scraper bursts (15 req/s on /v0/servers caused queue blowup
-	// even though individual queries were fast). 60 per pod gives 120 total,
-	// leaving 80 of PG max_connections=200 for autovacuum/admin/headroom.
-	config.MaxConns = 60                      // Handle scraper-burst concurrent load
-	config.MinConns = 10                      // Keep connections warm for fast response
+	// Keep the aggregate budget bounded when changing the replica count. The
+	// default constructor retains the existing 60 maximum / 10 minimum.
+	config.MaxConns = limits.MaxConns
+	config.MinConns = limits.MinConns
 	config.MaxConnIdleTime = 30 * time.Minute // Keep connections available for bursts
 	config.MaxConnLifetime = 2 * time.Hour    // Refresh connections regularly for stability
 	dbMetrics, err := telemetry.NewDatabaseMetrics(otel.Meter("mcp_registry.database"))
@@ -96,11 +102,17 @@ func NewPostgreSQL(ctx context.Context, connectionURI string) (*PostgreSQL, erro
 	if err != nil {
 		return nil, fmt.Errorf("observe database pool: %w", err)
 	}
+	listingMetrics, err := otel.Meter("mcp_registry.database").Int64Counter("mcp_registry.db.listing_json.rows", metric.WithDescription("Listing rows served from prepared JSON or normalization fallback"))
+	if err != nil {
+		_ = registration.Unregister()
+		return nil, fmt.Errorf("initialize listing metrics: %w", err)
+	}
 	initialized = true
 
 	return &PostgreSQL{
-		pool:        pool,
-		poolMetrics: registration,
+		listingMetrics: listingMetrics,
+		pool:           pool,
+		poolMetrics:    registration,
 	}, nil
 }
 
@@ -208,7 +220,7 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 }
 
 // searchPageQuery retains the ordinary query for listings without a search.
-func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int) string {
+func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int, prepared ...bool) string {
 	if filter == nil || filter.SubstringName == nil {
 		return ordinary
 	}
@@ -219,6 +231,10 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
 	// and can favor scanning most of the ordered index over a selective GIN
 	// lookup. The outer LIMIT still defines the exact page before payload fetch.
 	// PostgreSQL 17 can stop the ordered CTE scan after the requested rows.
+	payload := "s.value"
+	if len(prepared) > 0 && prepared[0] {
+		payload = listingPayload("s.")
+	}
 	return fmt.Sprintf(`
         WITH candidates AS MATERIALIZED (
             SELECT server_name, version FROM servers
@@ -227,7 +243,7 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
             LIMIT GREATEST($%d, 8192)
         )
         SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
-               s.published_at, s.updated_at, s.is_latest, s.value
+               s.published_at, s.updated_at, s.is_latest, %s
         FROM (
             SELECT server_name, version FROM candidates
             ORDER BY server_name, version
@@ -235,7 +251,7 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
         ) page
         JOIN servers s USING (server_name, version)
         ORDER BY s.server_name, s.version
-    `, whereClause, limitArg, limitArg)
+    `, whereClause, limitArg, payload, limitArg)
 }
 
 func searchQueryArgs(filter *ServerFilter, args []any) []any {
@@ -248,15 +264,37 @@ func searchQueryArgs(filter *ServerFilter, args []any) []any {
 	return args
 }
 
-func (db *PostgreSQL) ListServers(
+func (db *PostgreSQL) ListServers(ctx context.Context, tx pgx.Tx, filter *ServerFilter, cursor string, limit int) (_ []*apiv0.ServerResponse, _ string, resultErr error) {
+	diagnostic := telemetry.ListingFromContext(ctx)
+	defer func() { diagnostic.DatabaseDone(resultErr) }()
+	page, err := db.listServerRows(ctx, tx, filter, cursor, limit, false)
+	if err != nil {
+		return nil, "", err
+	}
+	results, err := decodeListingPage(ctx, page, diagnostic)
+	if err != nil {
+		return nil, "", err
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+	nextCursor := ""
+	if len(results) > 0 && len(results) >= limit {
+		last := results[len(results)-1]
+		nextCursor = last.Server.Name + ":" + last.Server.Version
+	}
+	return results, nextCursor, nil
+}
+
+func (db *PostgreSQL) listServerRows(
 	ctx context.Context,
 	tx pgx.Tx,
 	filter *ServerFilter,
 	cursor string,
 	limit int,
-) (_ []*apiv0.ServerResponse, _ string, resultErr error) {
+	prepared bool,
+) ([]listingRow, error) {
 	diagnostic := telemetry.ListingFromContext(ctx)
-	defer func() { diagnostic.DatabaseDone(resultErr) }()
 	operation := "list"
 	switch {
 	case filter != nil && filter.SubstringName != nil:
@@ -281,7 +319,7 @@ func (db *PostgreSQL) ListServers(
 	}
 	diagnostic.SetShape(shape)
 	if ctx.Err() != nil {
-		return nil, "", ctx.Err()
+		return nil, ctx.Err()
 	}
 
 	// Build WHERE clause conditions
@@ -301,77 +339,94 @@ func (db *PostgreSQL) ListServers(
 		whereClause = "WHERE " + strings.Join(whereConditions, " AND ")
 	}
 
-	// Query servers table with hybrid column/JSON data
+	// Select prepared bytes only for HTTP serialization; typed callers retain JSONB.
+	payload := "value"
+	if prepared {
+		payload = listingPayload("")
+	}
 	query := fmt.Sprintf(`
-        SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value
+        SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, %s
         FROM servers
         %s
         ORDER BY server_name, version
         LIMIT $%d
-    `, whereClause, argIndex)
-	query = searchPageQuery(filter, query, whereClause, argIndex)
+    `, payload, whereClause, argIndex)
+	query = searchPageQuery(filter, query, whereClause, argIndex, prepared)
 	args = append(args, limit)
 	args = searchQueryArgs(filter, args)
 
 	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to query servers: %w", err)
+		return nil, fmt.Errorf("failed to query servers: %w", err)
 	}
+	return readListingRows(ctx, rows, diagnostic, prepared)
+}
+
+type listingRow struct {
+	metadata      apiv0.RegistryExtensions
+	value         []byte
+	name, version string
+	prepared      bool
+}
+
+func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic, prepared bool) ([]listingRow, error) {
 	defer rows.Close()
 
-	var results []*apiv0.ServerResponse
+	// Copy the bounded page before decoding JSON. Exhausting/closing pooled rows
+	// releases the connection, so application CPU work cannot keep it occupied.
+	// Within a caller-owned transaction, closing rows only frees the transaction
+	// for its next query; the caller still owns the transaction's connection.
+	var page []listingRow
 	diagnostic.Phase("row_fetch")
 	for rows.Next() {
 		diagnostic.RowReceived()
-		var serverName, version, status string
-		var statusChangedAt, publishedAt, updatedAt time.Time
-		var statusMessage *string
-		var isLatest bool
-		var valueJSON []byte
-
-		err := rows.Scan(&serverName, &version, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest, &valueJSON)
-		if err != nil {
-			return nil, "", fmt.Errorf("failed to scan server row: %w", err)
-		}
-
-		diagnostic.AddBytes(len(valueJSON))
-		// Parse the ServerJSON from JSONB
-		var serverJSON apiv0.ServerJSON
-		if err := json.Unmarshal(valueJSON, &serverJSON); err != nil {
-			return nil, "", fmt.Errorf("failed to unmarshal server JSON: %w", err)
-		}
-
-		// Build ServerResponse with separated metadata
-		serverResponse := &apiv0.ServerResponse{
-			Server: serverJSON,
-			Meta: apiv0.ResponseMeta{
-				Official: &apiv0.RegistryExtensions{
-					Status:          model.Status(status),
-					StatusChangedAt: statusChangedAt,
-					StatusMessage:   statusMessage,
-					PublishedAt:     publishedAt,
-					UpdatedAt:       updatedAt,
-					IsLatest:        isLatest,
-				},
-			},
-		}
-
-		results = append(results, serverResponse)
 		diagnostic.Phase("row_fetch")
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		var status string
+		var row listingRow
+		meta := &row.metadata
+		// pgx scans JSONB/bytea into owned bytes, valid after Next and Close.
+		dest := []any{&row.name, &row.version, &status, &meta.StatusChangedAt, &meta.StatusMessage,
+			&meta.PublishedAt, &meta.UpdatedAt, &meta.IsLatest, &row.value}
+		if prepared {
+			dest = append(dest, &row.prepared)
+		}
+		if err := rows.Scan(dest...); err != nil {
+			return nil, fmt.Errorf("failed to scan server row: %w", err)
+		}
+		meta.Status = model.Status(status)
+		diagnostic.AddBytes(len(row.value))
+		page = append(page, row)
 	}
-
+	rows.Close()
 	if err := rows.Err(); err != nil {
-		return nil, "", fmt.Errorf("error iterating rows: %w", err)
+		return nil, fmt.Errorf("error iterating rows: %w", err)
 	}
 
-	// Determine next cursor using compound serverName:version format
-	nextCursor := ""
-	if len(results) > 0 && len(results) >= limit {
-		lastResult := results[len(results)-1]
-		nextCursor = lastResult.Server.Name + ":" + lastResult.Server.Version
+	return page, nil
+}
+
+func decodeListingPage(ctx context.Context, page []listingRow, diagnostic *telemetry.ListingDiagnostic) ([]*apiv0.ServerResponse, error) {
+	var results []*apiv0.ServerResponse
+	diagnostic.Phase("row_decode")
+	for i := range page {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
+		var serverJSON apiv0.ServerJSON
+		if err := json.Unmarshal(page[i].value, &serverJSON); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal server JSON: %w", err)
+		}
+		page[i].value = nil // Drop each copied payload as its decoded form replaces it.
+		results = append(results, &apiv0.ServerResponse{
+			Server: serverJSON,
+			Meta:   apiv0.ResponseMeta{Official: &page[i].metadata},
+		})
 	}
 
-	return results, nextCursor, nil
+	return results, nil
 }
 
 // GetServerByName retrieves the latest version of a server by server name
@@ -609,10 +664,15 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, serverJSON *a
 		return nil, fmt.Errorf("failed to marshal server JSON: %w", err)
 	}
 
+	normalized, err := normalizeListingJSON(valueJSON)
+	if err != nil {
+		return nil, err
+	}
+
 	// Insert the new server version using composite primary key
 	insertQuery := `
-		INSERT INTO servers (server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO servers (server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, value, listing_value, listing_codec)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 
 	_, err = db.getExecutor(tx).Exec(ctx, insertQuery,
@@ -625,6 +685,8 @@ func (db *PostgreSQL) CreateServer(ctx context.Context, tx pgx.Tx, serverJSON *a
 		officialMeta.UpdatedAt,
 		officialMeta.IsLatest,
 		valueJSON,
+		normalized.json,
+		listingCodecVersion,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert server: %w", err)
@@ -663,10 +725,15 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 		return nil, fmt.Errorf("failed to marshal updated server: %w", err)
 	}
 
-	// Update only the JSON data (keep existing metadata columns)
+	normalized, err := normalizeListingJSON(valueJSON)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update payload and its derived response together.
 	query := `
 		UPDATE servers
-		SET value = $1, updated_at = NOW()
+		SET value = $1, updated_at = NOW(), listing_value = $4, listing_codec = $5
 		WHERE server_name = $2 AND version = $3
 		RETURNING server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest
 	`
@@ -676,7 +743,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 	var statusMessage *string
 	var isLatest bool
 
-	err = db.getExecutor(tx).QueryRow(ctx, query, valueJSON, serverName, version).Scan(&name, &vers, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest)
+	err = db.getExecutor(tx).QueryRow(ctx, query, valueJSON, serverName, version, normalized.json, listingCodecVersion).Scan(&name, &vers, &status, &statusChangedAt, &statusMessage, &publishedAt, &updatedAt, &isLatest)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound

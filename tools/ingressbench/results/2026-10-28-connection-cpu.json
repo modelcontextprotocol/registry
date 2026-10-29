@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "production_changed": false,
+  "client_results": [
+    {
+      "name": "release-only-250m",
+      "phase": "burst",
+      "start": "2026-10-27T23:54:40.144665768Z",
+      "end": "2026-10-28T00:04:42.398827704Z",
+      "scheduled_reads": 2700000,
+      "dropped_reads": 471814,
+      "dropped_percent": 17.474592592592593,
+      "read_failures_by_status": 269,
+      "errors": {
+        "page:body:connection_reset": 1,
+        "page:body:timeout": 5,
+        "page:request:timeout": 155,
+        "publish:request:timeout": 3,
+        "search:request:timeout": 4,
+        "updated:body:timeout": 4,
+        "updated:request:timeout": 100
+      },
+      "publishes_acknowledged": 597,
+      "publishes_scheduled": 600,
+      "publish_p95_ms": 7588.19546,
+      "page_p95_ms": 732.436179,
+      "page_p99_ms": 6102.625358,
+      "bytes": 128496823837,
+      "cache": {
+        "": 859,
+        "HIT": 1873152,
+        "MISS": 44340,
+        "STALE": 170159,
+        "UPDATING": 140276
+      },
+      "transport_failures": 272,
+      "traffic_gate_pass": false
+    },
+    {
+      "name": "release-only-250m",
+      "phase": "recovery",
+      "start": "2026-10-28T00:05:12.530950572Z",
+      "end": "2026-10-28T00:35:12.529354398Z",
+      "scheduled_reads": 180000,
+      "dropped_reads": 0,
+      "dropped_percent": 0.0,
+      "read_failures_by_status": 0,
+      "errors": {},
+      "publishes_acknowledged": 1800,
+      "publishes_scheduled": 1800,
+      "publish_p95_ms": 13.871881,
+      "page_p95_ms": 7.751579,
+      "page_p99_ms": 12.196983,
+      "bytes": 10394953505,
+      "cache": {
+        "": 1800,
+        "HIT": 126105,
+        "MISS": 20797,
+        "STALE": 33098
+      },
+      "transport_failures": 0,
+      "traffic_gate_pass": true
+    },
+    {
+      "name": "release-cpu1",
+      "phase": "burst",
+      "start": "2026-10-28T00:42:40.549589261Z",
+      "end": "2026-10-28T00:52:40.706749832Z",
+      "scheduled_reads": 2700000,
+      "dropped_reads": 125976,
+      "dropped_percent": 4.665777777777778,
+      "read_failures_by_status": 0,
+      "errors": {},
+      "publishes_acknowledged": 600,
+      "publishes_scheduled": 600,
+      "publish_p95_ms": 1349.588691,
+      "page_p95_ms": 596.716922,
+      "page_p99_ms": 1129.4293,
+      "bytes": 148439831516,
+      "cache": {
+        "": 600,
+        "HIT": 2308742,
+        "MISS": 45761,
+        "STALE": 210407,
+        "UPDATING": 9114
+      },
+      "transport_failures": 0,
+      "traffic_gate_pass": false
+    },
+    {
+      "name": "release-cpu1",
+      "phase": "recovery",
+      "start": "2026-10-28T00:53:09.569680147Z",
+      "end": "2026-10-28T01:23:09.573134721Z",
+      "scheduled_reads": 180000,
+      "dropped_reads": 0,
+      "dropped_percent": 0.0,
+      "read_failures_by_status": 0,
+      "errors": {},
+      "publishes_acknowledged": 1800,
+      "publishes_scheduled": 1800,
+      "publish_p95_ms": 14.165564,
+      "page_p95_ms": 7.111924,
+      "page_p99_ms": 10.78339,
+      "bytes": 10395101792,
+      "cache": {
+        "": 1800,
+        "HIT": 126201,
+        "MISS": 21000,
+        "STALE": 32799
+      },
+      "transport_failures": 0,
+      "traffic_gate_pass": true
+    }
+  ],
+  "limitations": [
+    "CPU request changed placement and starting node count; this is not an isolated CPU-priority comparison.",
+    "Neither candidate passed the no-dropped-work burst criterion.",
+    "CPU1 candidate retained three idle nodes; autoscaler reported no place to move the app pod.",
+    "Historical application metrics and original recovery result recovered after reauthentication; missing direct DB cgroup/endpoint snapshots during recovery remain an observation gap."
+  ],
+  "cleanup": "Complete: generator VM/disk, scoped publications and whitelist removed; baseline image/250m CPU restored; two Ready nodes verified around02:59UTC.",
+  "idle_nodes": {
+    "release-only-250m": 2,
+    "release-cpu1": 3
+  },
+  "recovery_backfill": {
+    "original_client_result_matches_stdout": true,
+    "all_sampled_app_up_values": 1,
+    "max_sampled_pool_waiters": 0
+  },
+  "cleanup_idle_nodes": 2
+}

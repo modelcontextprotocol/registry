@@ -1,0 +1,89 @@
+{
+  "source_start": "2026-10-28T18:27:00Z",
+  "duration_seconds": 240,
+  "read_count": 274116,
+  "distinct_keys": 34542,
+  "kinds": {
+    "page": 270766,
+    "detail": 2235,
+    "search": 974,
+    "updated": 141
+  },
+  "protocols": {
+    "HTTP/1.1": 269137,
+    "HTTP/2.0": 4979
+  },
+  "coverage": [
+    {
+      "start": "2026-10-28T18:27:00+00:00",
+      "end": "2026-10-28T18:28:00+00:00",
+      "entries": 86190,
+      "pages": 16,
+      "complete": true,
+      "excluded": {
+        "outside_start_window": 55,
+        "background": 9561,
+        "unsupported_read": 770,
+        "non_successful_get": 54
+      }
+    },
+    {
+      "start": "2026-10-28T18:28:00+00:00",
+      "end": "2026-10-28T18:29:00+00:00",
+      "entries": 81300,
+      "pages": 15,
+      "complete": true,
+      "excluded": {
+        "background": 7905,
+        "unsupported_read": 457,
+        "non_successful_get": 139
+      }
+    },
+    {
+      "start": "2026-10-28T18:29:00+00:00",
+      "end": "2026-10-28T18:30:00+00:00",
+      "entries": 79766,
+      "pages": 15,
+      "complete": true,
+      "excluded": {
+        "background": 8658,
+        "unsupported_read": 36,
+        "non_successful_get": 105
+      }
+    },
+    {
+      "start": "2026-10-28T18:30:00+00:00",
+      "end": "2026-10-28T18:31:00+00:00",
+      "entries": 62714,
+      "pages": 12,
+      "complete": true,
+      "excluded": {
+        "background": 8052,
+        "unsupported_read": 34,
+        "non_successful_get": 61
+      }
+    },
+    {
+      "start": "2026-10-28T18:31:00+00:00",
+      "end": "2026-10-28T18:31:10+00:00",
+      "entries": 11512,
+      "pages": 3,
+      "complete": true,
+      "excluded": {
+        "background": 1349,
+        "outside_start_window": 10112,
+        "unsupported_read": 5,
+        "non_successful_get": 13
+      }
+    }
+  ],
+  "trace_sha256": "e4db9792a9b1ec06c3973851aaff4699161d18c235f5f8276e087e66611b2233",
+  "catalog_sha256": "9bbb7b82489608e191cdee82a096c42eb2a6d29ee43b594c9b2326e35d457e48",
+  "privacy": "Only allowlisted successful public GET read paths in private staging input files; no raw log records, client IPs, identities, user agents, credentials or request IDs retained. Private paths are not committed.",
+  "limitations": [
+    "Arrival times inferred from completion timestamp minus NGINX request duration; not packet-capture timing",
+    "Failed reads, writes and unsupported paths omitted and counted",
+    "HTTP/1.1 generator approximates minority HTTP/2 requests; no source TCP connection identity",
+    "Staging corpus age and initial cache state still need qualification"
+  ]
+}

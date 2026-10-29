@@ -1,0 +1,42 @@
+package gcp
+
+import (
+	"fmt"
+
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
+)
+
+type nodeScalingConfig struct {
+	enabled bool
+	minimum int
+	maximum int
+}
+
+// Node scaling can be enabled without promoting the experimental ingress profile.
+// Legacy stacks retain their two-node default and burstAutoscaling compatibility.
+func readNodeScaling(ctx *pulumi.Context) (nodeScalingConfig, error) {
+	c := config.New(ctx, "mcp-registry")
+	result := nodeScalingConfig{enabled: c.GetBool("nodeAutoscaling") || c.GetBool("burstAutoscaling"), minimum: 2, maximum: 4}
+	if c.Get("nodeMinCount") != "" {
+		result.minimum = c.GetInt("nodeMinCount")
+	}
+	if c.Get("nodeMaxCount") != "" {
+		result.maximum = c.GetInt("nodeMaxCount")
+	}
+	if result.minimum < 1 || result.maximum < result.minimum {
+		return result, fmt.Errorf("nodeMinCount must be positive and nodeMaxCount must be at least nodeMinCount")
+	}
+	if !result.enabled && (c.Get("nodeMinCount") != "" || c.Get("nodeMaxCount") != "") {
+		return result, fmt.Errorf("node count bounds require nodeAutoscaling or burstAutoscaling")
+	}
+	if c.GetBool("isolatedDatabase") {
+		if !c.GetBool("coordinatedCapacity") || c.Get("environment") != "staging" || !result.enabled || result.minimum != 3 || result.maximum != 4 {
+			return result, fmt.Errorf("isolatedDatabase requires the staging coordinatedCapacity profile and total node bounds 3–4")
+		}
+		// One fixed database node plus two to three autoscaled workers.
+		result.minimum--
+		result.maximum--
+	}
+	return result, nil
+}

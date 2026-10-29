@@ -1,0 +1,33 @@
+{
+  "before": "diagnostics-1793197262.json",
+  "after": "diagnostics-1793197595.json",
+  "window_seconds": 328.06239914894104,
+  "reset_unchanged": true,
+  "scope": "Only statements present in both bounded top-25 snapshots; interval brackets burst with collection padding",
+  "rows": [
+    {
+      "queryid": 308564448692527448,
+      "calls": 81657,
+      "mean_ms": 1.5921378627797258,
+      "total_exec_ms": 130009.20146100406,
+      "block_reads": 0,
+      "temp_blocks_written": 0
+    },
+    {
+      "queryid": 8432540089838864685,
+      "calls": 628,
+      "mean_ms": 20.013119004777092,
+      "total_exec_ms": 12568.238735000014,
+      "block_reads": 0,
+      "temp_blocks_written": 0
+    },
+    {
+      "queryid": 9162679476881629384,
+      "calls": 6201,
+      "mean_ms": 2.0144477650378976,
+      "total_exec_ms": 12491.590591000004,
+      "block_reads": 0,
+      "temp_blocks_written": 0
+    }
+  ]
+}

@@ -1,0 +1,1125 @@
+{
+  "command_failures": [],
+  "points": [
+    {
+      "at": "2026-10-28T22:59:19.855773+00:00",
+      "relative_seconds": -7.1,
+      "nodes": 2,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T22:59:49.866045+00:00",
+      "relative_seconds": 22.9,
+      "nodes": 2,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:00:19.876295+00:00",
+      "relative_seconds": 52.9,
+      "nodes": 2,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:00:49.886551+00:00",
+      "relative_seconds": 83.0,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:01:19.896795+00:00",
+      "relative_seconds": 113.0,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:01:49.899793+00:00",
+      "relative_seconds": 143.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:02:19.902175+00:00",
+      "relative_seconds": 173.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:02:49.903835+00:00",
+      "relative_seconds": 203.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:03:19.914133+00:00",
+      "relative_seconds": 233.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:03:49.919386+00:00",
+      "relative_seconds": 263.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:04:19.919960+00:00",
+      "relative_seconds": 293.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:04:49.920439+00:00",
+      "relative_seconds": 323.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:05:19.930713+00:00",
+      "relative_seconds": 353.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:05:49.934428+00:00",
+      "relative_seconds": 383.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:06:19.938312+00:00",
+      "relative_seconds": 413.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:06:49.948578+00:00",
+      "relative_seconds": 443.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:07:19.958851+00:00",
+      "relative_seconds": 473.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:07:49.966296+00:00",
+      "relative_seconds": 503.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:08:19.976571+00:00",
+      "relative_seconds": 533.0,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:08:49.986841+00:00",
+      "relative_seconds": 563.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:09:19.993426+00:00",
+      "relative_seconds": 593.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:09:50.003699+00:00",
+      "relative_seconds": 623.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:10:20.013970+00:00",
+      "relative_seconds": 653.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:10:50.021821+00:00",
+      "relative_seconds": 683.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:11:20.025295+00:00",
+      "relative_seconds": 713.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:11:50.032269+00:00",
+      "relative_seconds": 743.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:12:20.042549+00:00",
+      "relative_seconds": 773.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 6,
+          "desiredReplicas": 6
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:12:50.044446+00:00",
+      "relative_seconds": 803.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 5,
+          "desiredReplicas": 5
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:13:20.054740+00:00",
+      "relative_seconds": 833.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 5,
+          "desiredReplicas": 5
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:13:50.059815+00:00",
+      "relative_seconds": 863.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 4,
+          "desiredReplicas": 3
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 5,
+          "desiredReplicas": 5
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:14:20.065962+00:00",
+      "relative_seconds": 893.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 5,
+          "desiredReplicas": 5
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:14:50.076241+00:00",
+      "relative_seconds": 923.1,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:15:20.086522+00:00",
+      "relative_seconds": 953.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:15:50.096491+00:00",
+      "relative_seconds": 983.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:16:20.106745+00:00",
+      "relative_seconds": 1013.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 4,
+          "desiredReplicas": 4
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:16:50.110476+00:00",
+      "relative_seconds": 1043.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:17:20.120763+00:00",
+      "relative_seconds": 1073.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:17:50.131022+00:00",
+      "relative_seconds": 1103.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:18:20.141770+00:00",
+      "relative_seconds": 1133.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 3,
+          "desiredReplicas": 3
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:18:50.152104+00:00",
+      "relative_seconds": 1163.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 3,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:19:20.162376+00:00",
+      "relative_seconds": 1193.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:19:50.171872+00:00",
+      "relative_seconds": 1223.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:20:20.182136+00:00",
+      "relative_seconds": 1253.2,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:20:50.183287+00:00",
+      "relative_seconds": 1283.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:21:20.193569+00:00",
+      "relative_seconds": 1313.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:21:50.197487+00:00",
+      "relative_seconds": 1343.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:22:20.205374+00:00",
+      "relative_seconds": 1373.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:22:50.207320+00:00",
+      "relative_seconds": 1403.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:23:20.217451+00:00",
+      "relative_seconds": 1433.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:23:50.217970+00:00",
+      "relative_seconds": 1463.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:24:20.219887+00:00",
+      "relative_seconds": 1493.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:24:50.223924+00:00",
+      "relative_seconds": 1523.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:25:20.226647+00:00",
+      "relative_seconds": 1553.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:25:50.236918+00:00",
+      "relative_seconds": 1583.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:26:20.239614+00:00",
+      "relative_seconds": 1613.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:26:50.242417+00:00",
+      "relative_seconds": 1643.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:27:20.252683+00:00",
+      "relative_seconds": 1673.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:27:50.259991+00:00",
+      "relative_seconds": 1703.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:28:20.266376+00:00",
+      "relative_seconds": 1733.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:28:50.276647+00:00",
+      "relative_seconds": 1763.3,
+      "nodes": 4,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:29:20.278326+00:00",
+      "relative_seconds": 1793.3,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:29:50.286760+00:00",
+      "relative_seconds": 1823.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:30:20.297034+00:00",
+      "relative_seconds": 1853.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:30:50.305040+00:00",
+      "relative_seconds": 1883.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:31:20.315312+00:00",
+      "relative_seconds": 1913.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:31:50.325578+00:00",
+      "relative_seconds": 1943.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 0
+    },
+    {
+      "at": "2026-10-28T23:32:20.335861+00:00",
+      "relative_seconds": 1973.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 2
+    },
+    {
+      "at": "2026-10-28T23:32:50.346146+00:00",
+      "relative_seconds": 2003.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 2
+    },
+    {
+      "at": "2026-10-28T23:33:20.356411+00:00",
+      "relative_seconds": 2033.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 2
+    },
+    {
+      "at": "2026-10-28T23:33:50.366677+00:00",
+      "relative_seconds": 2063.4,
+      "nodes": 3,
+      "hpa": {
+        "mcp-registry": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        },
+        "ingress-nginx-controller": {
+          "currentReplicas": 2,
+          "desiredReplicas": 2
+        }
+      },
+      "db_throttled_periods": 2
+    }
+  ]
+}

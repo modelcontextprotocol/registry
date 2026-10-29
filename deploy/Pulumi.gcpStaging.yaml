@@ -2,6 +2,9 @@ config:
   mcp-registry:environment: staging
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
+  mcp-registry:nodeAutoscaling: "true"
+  mcp-registry:nodeMinCount: "3"
+  mcp-registry:nodeMaxCount: "4"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"
   gcp:project: mcp-registry-staging
@@ -14,4 +17,10 @@ config:
     secure: v1:0NSeI0qWrdcHeVfh:P56IEP/700/e839TSbF7Ns2j2orZnD5cRNXohjxCPOKyIDYn+0bmiTuk8pyFnFk8WibS/w7M2FFgv3/BL0Djo0XMVe9tq+7HjLN4tPEJnCU=
   mcp-registry:googleOauthClientSecret:
     secure: v1:MfA48Ri4VssQwUi7:TUF9sBGIgTnBUhePfEF7L+h1VVn5e6j2uGLbOwbGbjyBO9Z72SKC+z/21xHmJtqUSr2t
+  mcp-registry:burstAutoscaling: "true"
+  mcp-registry:postgresCPURequest: "3"
+  mcp-registry:coordinatedCapacity: "true"
+  mcp-registry:isolatedDatabase: "true"
+  mcp-registry:registryCPURequest: "800m"
+  mcp-registry:stagingImage: us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-replicas-20261028-v1@sha256:60fb8b7d7931a257542848460f7d1c76a99f16c46ddad795249fb5c25b1c9b0e
 encryptionsalt: v1:EKBwmTmss1c=:v1:JLd4a7cM0X8Jroh+:z9/q6RSCEFTDzMV6X6h5Tpbw0tnpkA==

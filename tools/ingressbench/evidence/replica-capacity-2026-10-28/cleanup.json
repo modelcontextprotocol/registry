@@ -1,0 +1,12 @@
+{
+  "at": 1793198610.657897,
+  "production_changed": false,
+  "generator_instances_absent": true,
+  "generator_disks_absent": true,
+  "app_restored": true,
+  "replicas": 2,
+  "ready_replicas": 2,
+  "profiling_disabled": true,
+  "hpa_spec_restored": true,
+  "whitelist_restored": true
+}

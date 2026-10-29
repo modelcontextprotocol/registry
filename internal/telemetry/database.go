@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -43,12 +44,22 @@ func databaseOperation(ctx context.Context) string {
 // timing starts after acquisition and ends when rows are closed or exhausted.
 // It includes network transfer and row consumption, not just PostgreSQL CPU.
 type DatabaseMetrics struct {
-	meter           metric.Meter
-	acquireDuration metric.Float64Histogram
-	queryDuration   metric.Float64Histogram
-	pending         metric.Int64UpDownCounter
+	meter              metric.Meter
+	acquireDuration    metric.Float64Histogram
+	queryDuration      metric.Float64Histogram
+	pending            metric.Int64UpDownCounter
+	checkoutDuration   metric.Float64Histogram
+	afterQueryDuration metric.Float64Histogram
+	loansMu            sync.Mutex
+	loans              map[*pgx.Conn]connectionLoan
 }
 
+type connectionLoan struct {
+	started, queryEnded time.Time
+	operation           string
+}
+
+var _ pgxpool.ReleaseTracer = (*DatabaseMetrics)(nil)
 var _ pgx.QueryTracer = (*DatabaseMetrics)(nil)
 var _ pgxpool.AcquireTracer = (*DatabaseMetrics)(nil)
 
@@ -71,7 +82,18 @@ func NewDatabaseMetrics(meter metric.Meter) (*DatabaseMetrics, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create pending acquisition counter: %w", err)
 	}
-	return &DatabaseMetrics{meter: meter, acquireDuration: acquire, queryDuration: query, pending: pending}, nil
+	checkout, err := meter.Float64Histogram(Namespace+".db.pool.checkout.duration",
+		metric.WithDescription("Time from successful acquisition to entry into Release; excludes pool wait and release bookkeeping"), buckets)
+	if err != nil {
+		return nil, fmt.Errorf("create checkout histogram: %w", err)
+	}
+	afterQuery, err := meter.Float64Histogram(Namespace+".db.pool.after_query.duration",
+		metric.WithDescription("Time from the final query tracer completion (including row consumption) to entry into Release; excludes checkouts without a query"), buckets)
+	if err != nil {
+		return nil, fmt.Errorf("create post-query histogram: %w", err)
+	}
+	return &DatabaseMetrics{meter: meter, acquireDuration: acquire, queryDuration: query, pending: pending,
+		checkoutDuration: checkout, afterQueryDuration: afterQuery, loans: make(map[*pgx.Conn]connectionLoan)}, nil
 }
 
 // ObservePool registers scrape-time pool statistics. Unregister before discarding
@@ -107,6 +129,11 @@ func (m *DatabaseMetrics) TraceAcquireStart(ctx context.Context, pool *pgxpool.P
 }
 
 func (m *DatabaseMetrics) TraceAcquireEnd(ctx context.Context, _ *pgxpool.Pool, data pgxpool.TraceAcquireEndData) {
+	if data.Err == nil && data.Conn != nil {
+		m.loansMu.Lock()
+		m.loans[data.Conn] = connectionLoan{started: time.Now(), operation: databaseOperation(ctx)}
+		m.loansMu.Unlock()
+	}
 	start, ok := ctx.Value(acquireStartKey{}).(time.Time)
 	if !ok {
 		return
@@ -123,7 +150,13 @@ func (m *DatabaseMetrics) TraceQueryStart(ctx context.Context, conn *pgx.Conn, _
 	return context.WithValue(ctx, queryStartKey{}, time.Now())
 }
 
-func (m *DatabaseMetrics) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryEndData) {
+func (m *DatabaseMetrics) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
+	m.loansMu.Lock()
+	if loan, ok := m.loans[conn]; ok {
+		loan.queryEnded = time.Now()
+		m.loans[conn] = loan
+	}
+	m.loansMu.Unlock()
 	start, ok := ctx.Value(queryStartKey{}).(time.Time)
 	if !ok {
 		return
@@ -143,4 +176,23 @@ func databaseAttributes(ctx context.Context, err error) metric.MeasurementOption
 		outcome = "error"
 	}
 	return metric.WithAttributes(attribute.String("operation", databaseOperation(ctx)), attribute.String("outcome", outcome))
+}
+
+// TraceRelease measures ownership, not PostgreSQL execution. A transaction may
+// run several queries; after_query starts at the final query's tracer callback.
+func (m *DatabaseMetrics) TraceRelease(_ *pgxpool.Pool, data pgxpool.TraceReleaseData) {
+	ended := time.Now()
+	m.loansMu.Lock()
+	loan, ok := m.loans[data.Conn]
+	delete(m.loans, data.Conn)
+	m.loansMu.Unlock()
+	if !ok {
+		return
+	}
+	ctx := context.Background()
+	attrs := metric.WithAttributes(attribute.String("operation", loan.operation))
+	m.checkoutDuration.Record(ctx, ended.Sub(loan.started).Seconds(), attrs)
+	if !loan.queryEnded.IsZero() {
+		m.afterQueryDuration.Record(ctx, ended.Sub(loan.queryEnded).Seconds(), attrs)
+	}
 }
