@@ -62,6 +62,11 @@ jobs:
     - name: Run all tests
       run: make test-all
 
+    - name: Test deployment configuration and staging adoption
+      run: |
+        go -C deploy test ./...
+        python3 -m unittest discover -s deploy/scripts -p 'test_*.py'
+
     - name: Upload coverage artifacts
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
       with:

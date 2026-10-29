@@ -24,9 +24,15 @@ The selected next candidate is **three idle nodes, up to four**, with three
 Ready apps (maximum four) and three Ready ingress controllers (maximum six).
 Keep staging at this intended production footprint until validation passes;
 production promotion remains gated. App CPU stays 800m, pool maximum/minimum
-30/5 per replica, ingress CPU 800m, and registry DB request/limit 1500m/3 CPUs.
+30/5 per replica and ingress CPU 800m. The revised placement reserves one fixed
+node for PostgreSQL with request/limit **3/3 CPUs**, and places app/ingress on
+two–three worker nodes. Thus the total remains three–four nodes. System agents
+share the DB node; this is resource isolation, not database high availability.
 This is a new candidate, not a passing result. Historical measurements and the
 older two-node test procedure below remain unchanged for reproducibility.
+
+The [isolated placement report](ISOLATED_PLACEMENT.md) records its live staging
+rollout, response-equivalence checks and outstanding adoption/acceptance gates.
 
 Use the ordered production trace and fidelity checks from
 [the latest comparison](WORKLOAD_COMPARISON.md) for acceptance. Record cache state
@@ -167,12 +173,15 @@ budget.
 
 ## Implementation guard
 
-`mcp-registry:coordinatedCapacity` defaults to false and is not enabled in any
-stack file. The program rejects it outside staging or without all of:
+`mcp-registry:coordinatedCapacity` defaults to false and is now enabled with
+`isolatedDatabase` in the staging stack only. The program rejects it outside
+staging or without all of:
 
 - `provider=gcp`, `nodeMachineType=e2-standard-4`, `burstAutoscaling=true`;
 - `nodeMinCount=3`, `nodeMaxCount=4`;
-- `registryCPURequest=800m`, `postgresCPURequest=1500m`, `postgresCPULimit=3`.
+- `registryCPURequest=800m`, `postgresCPULimit=3`;
+- `postgresCPURequest=3` and a digest-pinned `stagingImage` when isolated;
+  the older shared-node candidate instead requires `postgresCPURequest=1500m`.
 
 When enabled it registers the app HPA, gives it ownership of deployment replica
 count, sets app pools to 30/5 and changes ingress's CPU target from 88% to 70%.

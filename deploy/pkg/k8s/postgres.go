@@ -77,7 +77,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 			},
 		},
 		OtherFields: map[string]any{
-			"spec": protectDatabase(ctx, map[string]any{
+			"spec": protectRegistryDatabase(ctx, map[string]any{
 				"instances": 1,
 				"enablePDB": false,
 				"storage": map[string]any{

@@ -30,5 +30,13 @@ func readNodeScaling(ctx *pulumi.Context) (nodeScalingConfig, error) {
 	if !result.enabled && (c.Get("nodeMinCount") != "" || c.Get("nodeMaxCount") != "") {
 		return result, fmt.Errorf("node count bounds require nodeAutoscaling or burstAutoscaling")
 	}
+	if c.GetBool("isolatedDatabase") {
+		if !c.GetBool("coordinatedCapacity") || c.Get("environment") != "staging" || !result.enabled || result.minimum != 3 || result.maximum != 4 {
+			return result, fmt.Errorf("isolatedDatabase requires the staging coordinatedCapacity profile and total node bounds 3–4")
+		}
+		// One fixed database node plus two to three autoscaled workers.
+		result.minimum--
+		result.maximum--
+	}
 	return result, nil
 }

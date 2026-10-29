@@ -254,6 +254,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		nodeMachineType = "e2-standard-2"
 	}
 	nodePoolName := fmt.Sprintf("%s-nodepool", clusterName)
+	var nodeLabels pulumi.StringMap
+	if config.New(ctx, "mcp-registry").GetBool("isolatedDatabase") {
+		nodeLabels = pulumi.StringMap{"registry-role": pulumi.String("worker")}
+	}
 	nodePoolArgs := &container.NodePoolArgs{
 		Cluster:  cluster.Name,
 		Location: pulumi.String(zone),
@@ -263,6 +267,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		NodeCount: pulumi.Int(nodeScaling.minimum),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
 			MachineType: pulumi.String(nodeMachineType),
+			Labels:      nodeLabels,
 			// Boot disks also serve the ingress cache and container logs.
 			DiskSizeGb: pulumi.Int(50),
 			DiskType:   pulumi.String("pd-balanced"),
@@ -297,6 +302,15 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	nodePool, err := container.NewNodePool(ctx, nodePoolName, nodePoolArgs, nodePoolOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create node pool: %w", err)
+	}
+
+	clusterDependencies := []pulumi.Resource{cluster, nodePool}
+	if config.New(ctx, "mcp-registry").GetBool("isolatedDatabase") {
+		dbPool, err := createDatabaseNodePool(ctx, cluster, projectID, zone, nodeMachineType, gcpProvider)
+		if err != nil {
+			return nil, err
+		}
+		clusterDependencies = append(clusterDependencies, dbPool)
 	}
 
 	// Grant the default compute service account the standard GKE node roles so the
@@ -347,7 +361,7 @@ users:
 
 			return kubeconfigYAML, nil
 		}).(pulumi.StringOutput),
-	}, pulumi.DependsOn([]pulumi.Resource{cluster, nodePool}))
+	}, pulumi.DependsOn(clusterDependencies))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kubernetes provider: %w", err)
 	}

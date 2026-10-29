@@ -110,6 +110,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
 				"replicaCount": pulumi.Int(replicaCount),
+				"nodeSelector": workerNodeSelector(ctx),
 				"autoscaling":  autoscaling,
 				"metrics":      pulumi.Map{"enabled": pulumi.Bool(burstAutoscaling)},
 				"resources": pulumi.Map{

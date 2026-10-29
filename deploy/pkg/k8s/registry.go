@@ -41,6 +41,11 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		imageTag = conf.Require("imageTag") // Explicit configuration required - no fallback
 	}
 
+	image := "ghcr.io/modelcontextprotocol/registry:" + imageTag
+	if environment == coordinatedEnvironment && conf.Get("stagingImage") != "" {
+		image = conf.Get("stagingImage")
+	}
+
 	registryCPURequest := "100m"
 	spreadConstraint := &corev1.TopologySpreadConstraintArgs{
 		MaxSkew:           pulumi.Int(1),
@@ -136,10 +141,11 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				},
 				Spec: &corev1.PodSpecArgs{
 					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{spreadConstraint},
+					NodeSelector:              workerNodeSelector(ctx),
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:            pulumi.String("mcp-registry"),
-							Image:           pulumi.Sprintf("ghcr.io/modelcontextprotocol/registry:%s", imageTag),
+							Image:           pulumi.String(image),
 							ImagePullPolicy: pulumi.String("Always"),
 							Ports: corev1.ContainerPortArray{
 								&corev1.ContainerPortArgs{

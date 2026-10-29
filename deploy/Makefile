@@ -32,7 +32,7 @@ staging-preview: build staging-login ## Preview staging infrastructure changes
 	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi preview --stack gcpStaging
 
 staging-up: build staging-login ## Deploy staging infrastructure
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi up --yes --stack gcpStaging
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi up --refresh --yes --stack gcpStaging
 
 # Production stack commands
 prod-login: ## Login to production Pulumi backend

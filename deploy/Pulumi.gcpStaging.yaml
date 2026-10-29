@@ -18,5 +18,9 @@ config:
   mcp-registry:googleOauthClientSecret:
     secure: v1:MfA48Ri4VssQwUi7:TUF9sBGIgTnBUhePfEF7L+h1VVn5e6j2uGLbOwbGbjyBO9Z72SKC+z/21xHmJtqUSr2t
   mcp-registry:burstAutoscaling: "true"
-  mcp-registry:postgresCPURequest: "2"
+  mcp-registry:postgresCPURequest: "3"
+  mcp-registry:coordinatedCapacity: "true"
+  mcp-registry:isolatedDatabase: "true"
+  mcp-registry:registryCPURequest: "800m"
+  mcp-registry:stagingImage: us-central1-docker.pkg.dev/mcp-registry-staging/registry-staging-experiments/registry:staging-replicas-20261028-v1@sha256:60fb8b7d7931a257542848460f7d1c76a99f16c46ddad795249fb5c25b1c9b0e
 encryptionsalt: v1:EKBwmTmss1c=:v1:JLd4a7cM0X8Jroh+:z9/q6RSCEFTDzMV6X6h5Tpbw0tnpkA==

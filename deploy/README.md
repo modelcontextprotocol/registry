@@ -636,8 +636,8 @@ kubectl get backup
 ### Node capacity
 
 `mcp-registry:nodeAutoscaling` enables GKE node scaling independently of the
-experimental ingress/app profile. `nodeMinCount` and `nodeMaxCount` specify the
-bounds. Both hosted stack files now propose **3–4 e2-standard-4 nodes**; changing
+experimental ingress/app profile. `nodeMinCount` and `nodeMaxCount` specify total
+node bounds. Both hosted stack files now propose **3–4 e2-standard-4 nodes**; changing
 these files does not deploy production. Staging is validated first. Always
 refresh Pulumi state before applying, since the autoscaler owns `nodeCount`.
 Both singleton database pods retain voluntary-eviction protection with either
@@ -659,8 +659,28 @@ be delayed by placement and disruption budgets; a minimum is not a guarantee.
 
 ### Burst capacity (staging validation)
 
-The additional `coordinatedCapacity` opt-in is staged separately and currently
-disabled. See the [candidate and test gates](../tools/ingressbench/COORDINATED_CAPACITY.md)
+The `coordinatedCapacity` and `isolatedDatabase` opt-ins are enabled in the
+staging candidate. The latter creates one fixed, tainted database node and
+subtracts it from the total node bounds, leaving two–three autoscaled workers.
+PostgreSQL requests its full 3-CPU limit on the reserved node. App and ingress
+pods require worker nodes and retain their per-revision hostname spread;
+three idle replicas can therefore occupy two workers as 2+1. System agents
+still share the database node. This remains a single PostgreSQL instance,
+not database high availability. Node-upgrade surge can temporarily exceed the
+four-node steady-state ceiling.
+
+The isolated profile requires a digest-pinned `stagingImage` containing the
+prepared-listing app changes. The override is staging-only; production retains
+its release image. Import any manually created database pool and app HPA into
+the staging Pulumi stack before applying this configuration, then refresh and
+review a full preview. Do not create a second pool or replace the existing one.
+The staging GitHub Actions job runs `scripts/adopt_staging_capacity.py` before
+the normal apply, using its existing staging passphrase secret. The script
+imports only missing resources with the exact expected staging identities and
+providers, rejects conflicting ownership, and skips completed imports on retry.
+The following apply refreshes state before planning. Keep this transition step
+until the first successful adoption is recorded; it can then be removed.
+See the [candidate and test gates](../tools/ingressbench/COORDINATED_CAPACITY.md)
 for its 3–4 app HPA, 30/5 pools and required CPU settings. It is rejected outside
 staging until the full validation passes. The configuration below describes the
 earlier ingress-only profile.

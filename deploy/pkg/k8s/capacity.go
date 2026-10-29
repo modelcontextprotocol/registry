@@ -1,7 +1,9 @@
 package k8s
 
 import (
+	"encoding/hex"
 	"fmt"
+	"strings"
 
 	autoscalingv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/autoscaling/v2"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
@@ -20,6 +22,9 @@ const (
 // profile is opt-in and must use the complete node/ingress/DB budget.
 func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
+	if c.GetBool("isolatedDatabase") && !c.GetBool("coordinatedCapacity") {
+		return fmt.Errorf("isolatedDatabase requires coordinatedCapacity")
+	}
 	if !c.GetBool("coordinatedCapacity") {
 		return nil
 	}
@@ -29,7 +34,16 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	if c.Get("environment") != coordinatedEnvironment {
 		return fmt.Errorf("coordinatedCapacity is staging-only until burst and recovery validation passes")
 	}
-	for key, expected := range map[string]string{"registryCPURequest": coordinatedAppCPU, "postgresCPURequest": coordinatedDBCPU, "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "4"} {
+	dbCPU := coordinatedDBCPU
+	if c.GetBool("isolatedDatabase") {
+		dbCPU = "3"
+		image, digest, pinned := strings.Cut(c.Get("stagingImage"), "@sha256:")
+		_, digestErr := hex.DecodeString(digest)
+		if !pinned || image == "" || len(digest) != 64 || digestErr != nil {
+			return fmt.Errorf("coordinatedCapacity with isolatedDatabase requires a digest-pinned stagingImage")
+		}
+	}
+	for key, expected := range map[string]string{"registryCPURequest": coordinatedAppCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "4"} {
 		if c.Get(key) != expected {
 			return fmt.Errorf("coordinatedCapacity requires %s=%s", key, expected)
 		}

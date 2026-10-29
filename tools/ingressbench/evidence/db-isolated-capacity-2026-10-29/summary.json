@@ -1,0 +1,94 @@
+{
+  "at": "2026-10-29T13:12:29.817687+00:00",
+  "environment": "staging",
+  "production_changed": false,
+  "networking_changed": false,
+  "status": "placement_verified_acceptance_pending",
+  "configuration": {
+    "database_nodes": 1,
+    "worker_nodes_min": 2,
+    "worker_nodes_max": 3,
+    "database_cpu_request": "3",
+    "database_cpu_limit": "3",
+    "app_replicas_min": 3,
+    "app_replicas_max": 4,
+    "ingress_replicas_min": 3,
+    "ingress_replicas_max": 6,
+    "app_cpu_request": "800m",
+    "ingress_cpu_request": "800m",
+    "app_pool_max": 30,
+    "app_pool_min": 5
+  },
+  "verification": {
+    "db_ready_on_reserved_node": true,
+    "app_ready_replicas": 3,
+    "ingress_ready_replicas": 3,
+    "app_and_ingress_worker_only": true,
+    "database_only_non_system_workload_on_reserved_node": true,
+    "response_fixtures_matched": 48,
+    "corpus_names": 52366,
+    "corpus_versions": 187108,
+    "invalid_indexes": 0,
+    "rollout_health_samples": 84,
+    "rollout_health_failed_samples": 1,
+    "rollout_failure": "connection refused at 2026-10-29T12:56:47.743490+00:00; cause not isolated",
+    "natural_three_node_consolidation": {
+      "observed_at": "2026-10-29T13:12:29.817687+00:00",
+      "nodes": 3,
+      "worker_distribution": [
+        {
+          "apps": 1,
+          "ingress": 2
+        },
+        {
+          "apps": 2,
+          "ingress": 1
+        }
+      ],
+      "health_samples": 20,
+      "health_failures": 0,
+      "forced_evictions_or_resizes": false,
+      "scope": "idle consolidation after rollout, not recovery following a representative burst"
+    }
+  },
+  "request_budget": {
+    "database_node_mcpu": 3341.0,
+    "worker_mcpu": {
+      "idle": [
+        3245.0,
+        3249.0
+      ],
+      "peak": [
+        3541.0,
+        3245.0,
+        3249.0
+      ],
+      "peak_ingress_rollout": [
+        3608.0,
+        3616.0,
+        3611.0
+      ]
+    },
+    "allocatable_per_node_mcpu": 3920,
+    "limits": "Constructive request packing only; not proof of runtime capacity or scheduler consolidation. Some support workloads lack CPU requests."
+  },
+  "pending": [
+    "Pulumi state adoption via GitHub Actions using existing staging secret",
+    "Representative warmed rise/peak with publish traffic",
+    "Full burst recovery and natural scale-down after load"
+  ],
+  "checks": {
+    "deployment_go_tests": "pass",
+    "changed_deployment_go_lint": "pass",
+    "adoption_unit_tests": 5,
+    "adoption_plan_checked_against_actual_state": true
+  },
+  "state_adoption": {
+    "status": "prepared_in_staging_workflow_not_yet_executed",
+    "resources": [
+      "registry-database-nodepool",
+      "mcp-registry-capacity"
+    ],
+    "credential_source": "existing GitHub staging secret"
+  }
+}
