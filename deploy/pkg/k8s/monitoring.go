@@ -14,6 +14,18 @@ import (
 )
 
 func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart) error {
+	vmMemoryRequest, vmMemoryLimit, vmCPURequest := "128Mi", "256Mi", "50m"
+	vmExtraArgs := pulumi.StringMap{}
+	if config.New(ctx, "mcp-registry").GetBool("victoriaMetricsCapacity") {
+		// Cache and query budgets are separate: neither bounds all process memory.
+		// Leave room for ingestion, merges and runtime overhead beneath the limit.
+		vmMemoryRequest, vmMemoryLimit, vmCPURequest = "1Gi", "2Gi", "250m"
+		vmExtraArgs = pulumi.StringMap{
+			"memory.allowedPercent":        pulumi.String("40"),
+			"search.maxConcurrentRequests": pulumi.String("2"),
+			"search.maxMemoryPerQuery":     pulumi.String("128MiB"),
+		}
+	}
 	// Create namespace
 	ns, err := corev1.NewNamespace(ctx, "monitoring", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -35,13 +47,14 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 		Values: pulumi.Map{
 			"server": pulumi.Map{
 				"retentionPeriod": pulumi.String("14d"),
+				"extraArgs":       vmExtraArgs,
 				"resources": pulumi.Map{
 					"requests": pulumi.Map{
-						"memory": pulumi.String("128Mi"),
-						"cpu":    pulumi.String("50m"),
+						"memory": pulumi.String(vmMemoryRequest),
+						"cpu":    pulumi.String(vmCPURequest),
 					},
 					"limits": pulumi.Map{
-						"memory": pulumi.String("256Mi"),
+						"memory": pulumi.String(vmMemoryLimit),
 					},
 				},
 			},

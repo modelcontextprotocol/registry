@@ -48,10 +48,21 @@ jobs:
           project_id: mcp-registry-prod
           install_components: gke-gcloud-auth-plugin
 
+      - name: Verify GKE authentication
+        env:
+          # setup-gcloud already imports this job's service account. The file
+          # override loader crashes in config-helper (missing private_key_id).
+          CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: ""
+        run: |
+          # Discard credential output; fail before building if token acquisition fails.
+          gcloud auth print-access-token > /dev/null
+          gke-gcloud-auth-plugin > /dev/null
+
       - name: Deploy to Production
         working-directory: ./deploy
         env:
           PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
+          CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: ""
         run: |
           umask 077
           trap 'rm -f passphrase.prod.txt' EXIT

@@ -106,6 +106,36 @@ Pre-requisites:
 
 ## Ingress stability rollout
 
+### Metrics storage capacity
+
+`victoriaMetricsCapacity: true` reserves 250m CPU and 1 GiB memory for the
+VictoriaMetrics server, with a 2 GiB memory limit. The previous 128/256 MiB
+request/limit repeatedly OOM-restarted during the October 29 traffic cycle.
+The profile retains the chart/image, storage volume and 14-day retention.
+It does not change the registry application or its database.
+
+For an infrastructure-only apply, `registryRolloutCommit` can pin the app's
+existing `registry.modelcontextprotocol.io/deployCommit` pod annotation. Without
+this setting, each new Git commit changes the annotation and restarts app pods
+even when their image is unchanged. Update or remove the pin during the next
+intentional app rollout; image and other pod-template changes still trigger a
+rollout independently. A mutable image tag requires an updated rollout commit.
+
+Internal caches use a 40% memory allowance; search concurrency is capped at two
+queries with a 128 MiB per-query budget. These flags do not bound all process
+memory: ingestion, merges and runtime overhead need headroom too. Queries over
+the budget fail explicitly rather than qualifying as successful monitoring.
+See [VictoriaMetrics resource limits](https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/#resource-usage-limits).
+
+Preview the refreshed stack before applying; only the metrics server's pod
+resources and arguments should change among running workloads. Full-stack
+previews can also recreate completed ingress admission hooks and reconcile
+chart RBAC metadata; inspect those separately. Preserve the existing PVC. Afterward,
+verify stable restarts and memory through ingestion catch-up, successful bounded
+queries, and fresh Grafana evaluations without datasource errors. Backfill
+historical coverage in bounded windows only after recovery; a healthy current
+query does not establish that old samples survived the outage.
+
 For arrival/completion metrics, database-pool timing, and ingress cache logs, see
 [Diagnosing production overload](../docs/administration/performance-observability.md).
 

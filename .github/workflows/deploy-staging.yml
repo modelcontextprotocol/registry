@@ -98,8 +98,13 @@ jobs:
         working-directory: ./deploy
         env:
           PULUMI_STAGING_PASSPHRASE: ${{ secrets.PULUMI_STAGING_PASSPHRASE }}
+          # Use the same service account imported by setup-gcloud, avoiding the
+          # config-helper file-override loader's missing private_key_id error.
+          CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: ""
         run: |
           umask 077
+          gcloud auth print-access-token > /dev/null
+          gke-gcloud-auth-plugin > /dev/null
           printf '%s' "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
           trap 'rm -f passphrase.staging.txt' EXIT
           export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt
