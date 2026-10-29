@@ -637,8 +637,9 @@ kubectl get backup
 
 `mcp-registry:nodeAutoscaling` enables GKE node scaling independently of the
 experimental ingress/app profile. `nodeMinCount` and `nodeMaxCount` specify total
-node bounds. Both hosted stack files now propose **3–4 e2-standard-4 nodes**; changing
-these files does not deploy production. Staging is validated first. Always
+node bounds. Staging proposes **3–4 e2-standard-4 nodes**; production configuration
+is unchanged until acceptance and a separate promotion. Changing its stack file
+triggers the production workflow, so keep that change out of staging-only PRs. Always
 refresh Pulumi state before applying, since the autoscaler owns `nodeCount`.
 Both singleton database pods retain voluntary-eviction protection with either
 node autoscaling or the legacy burst profile enabled.
