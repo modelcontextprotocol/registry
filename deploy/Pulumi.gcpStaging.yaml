@@ -1,6 +1,8 @@
 config:
   mcp-registry:environment: staging
   mcp-registry:victoriaMetricsCapacity: "true"
+  # Preserve the pinned staging app during the monitoring-only repair.
+  mcp-registry:registryRolloutCommit: e1c5d4e009b8ee671ce796226fb1659cacce485f
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:nodeAutoscaling: "true"

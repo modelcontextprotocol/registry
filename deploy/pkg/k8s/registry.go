@@ -32,6 +32,10 @@ func getGitCommitHash() string {
 func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart, pgCluster *apiextensions.CustomResource) (*corev1.Service, error) {
 	conf := config.New(ctx, "mcp-registry")
 	githubClientId := conf.Require("githubClientId")
+	rolloutCommit := conf.Get("registryRolloutCommit")
+	if rolloutCommit == "" {
+		rolloutCommit = getGitCommitHash()
+	}
 
 	// Determine Docker image tag based on environment
 	imageTag := "main" // Default for staging
@@ -139,7 +143,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					},
 					Annotations: pulumi.StringMap{
 						// Use git commit hash to trigger pod restarts when deploying new infra versions
-						"registry.modelcontextprotocol.io/deployCommit": pulumi.String(getGitCommitHash()),
+						"registry.modelcontextprotocol.io/deployCommit": pulumi.String(rolloutCommit),
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
