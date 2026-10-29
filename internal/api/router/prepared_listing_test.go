@@ -33,6 +33,7 @@ func TestPreparedListingActivationAndRollback(t *testing.T) {
 	for _, enabled := range []string{"false", "true", "false"} {
 		t.Setenv("MCP_REGISTRY_PREPARED_LISTING_JSON", enabled)
 		cfg := config.NewConfig()
+		cfg.JWTPrivateKey = "0000000000000000000000000000000000000000000000000000000000000000"
 		svc := &listingSwitchService{}
 		mux := http.NewServeMux()
 		hc := huma.DefaultConfig("test", "1")
