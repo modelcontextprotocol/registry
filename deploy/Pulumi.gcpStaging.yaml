@@ -1,5 +1,6 @@
 config:
   mcp-registry:environment: staging
+  mcp-registry:victoriaMetricsCapacity: "true"
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:nodeAutoscaling: "true"

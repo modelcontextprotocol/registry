@@ -106,6 +106,27 @@ Pre-requisites:
 
 ## Ingress stability rollout
 
+### Metrics storage capacity
+
+`victoriaMetricsCapacity: true` reserves 250m CPU and 1 GiB memory for the
+VictoriaMetrics server, with a 2 GiB memory limit. The previous 128/256 MiB
+request/limit repeatedly OOM-restarted during the October 29 traffic cycle.
+The profile retains the chart/image, storage volume and 14-day retention.
+It does not change the registry application or its database.
+
+Internal caches use a 40% memory allowance; search concurrency is capped at two
+queries with a 128 MiB per-query budget. These flags do not bound all process
+memory: ingestion, merges and runtime overhead need headroom too. Queries over
+the budget fail explicitly rather than qualifying as successful monitoring.
+See [VictoriaMetrics resource limits](https://docs.victoriametrics.com/victoriametrics/single-server-victoriametrics/#resource-usage-limits).
+
+Preview the refreshed stack before applying; only the metrics server's pod
+resources and arguments should change. Preserve its existing PVC. Afterward,
+verify stable restarts and memory through ingestion catch-up, successful bounded
+queries, and fresh Grafana evaluations without datasource errors. Backfill
+historical coverage in bounded windows only after recovery; a healthy current
+query does not establish that old samples survived the outage.
+
 For arrival/completion metrics, database-pool timing, and ingress cache logs, see
 [Diagnosing production overload](../docs/administration/performance-observability.md).
 
