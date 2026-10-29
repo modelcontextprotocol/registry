@@ -22,7 +22,7 @@ func (m *capacityMonitor) NewResource(a pulumi.MockResourceArgs) (string, resour
 	if a.TypeToken == "kubernetes:autoscaling/v2:HorizontalPodAutoscaler" {
 		m.hpaSeen = true
 		spec := a.Inputs["spec"].ObjectValue()
-		if spec["minReplicas"].NumberValue() != 2 || spec["maxReplicas"].NumberValue()*30 > 120 {
+		if spec["minReplicas"].NumberValue() != 3 || spec["maxReplicas"].NumberValue()*30 > 120 {
 			m.t.Error("HPA exceeds connection budget or changes idle count")
 		}
 		target := spec["scaleTargetRef"].ObjectValue()
@@ -48,13 +48,15 @@ func TestCapacityRejectsIncompleteOrProductionProfile(t *testing.T) {
 		{"valid", "environment", "staging", false},
 		{"production", "environment", "prod", true},
 		{"no node scaling", "burstAutoscaling", "false", true},
+		{"old node minimum", "nodeMinCount", "2", true},
+		{"unmatched node maximum", "nodeMaxCount", "5", true},
 		{"undersized nodes", "nodeMachineType", "e2-standard-2", true},
 		{"unmatched database request", "postgresCPURequest", "2", true},
 		{"unmatched app request", "registryCPURequest", "400m", true},
 		{"disabled", "coordinatedCapacity", "false", false},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			values := map[string]string{"coordinatedCapacity": "true", "burstAutoscaling": "true", "provider": "gcp", "environment": "staging", "nodeMachineType": "e2-standard-4", "registryCPURequest": "800m", "postgresCPURequest": "1500m", "postgresCPULimit": "3"}
+			values := map[string]string{"coordinatedCapacity": "true", "burstAutoscaling": "true", "provider": "gcp", "environment": "staging", "nodeMachineType": "e2-standard-4", "registryCPURequest": "800m", "postgresCPURequest": "1500m", "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "4"}
 			values[tt.key] = tt.value
 			cfg := map[string]string{}
 			for k, v := range values {

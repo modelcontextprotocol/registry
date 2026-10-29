@@ -36,7 +36,8 @@ func ingressAutoscalingValues() pulumi.Map {
 // prevent node failure or operator-managed restarts. CNPG propagates inherited
 // metadata to its generated pods; setting this only on the Cluster is ineffective.
 func protectDatabase(ctx *pulumi.Context, spec map[string]any) map[string]any {
-	if config.New(ctx, "mcp-registry").GetBool("burstAutoscaling") {
+	conf := config.New(ctx, "mcp-registry")
+	if conf.GetBool("burstAutoscaling") || conf.GetBool("nodeAutoscaling") {
 		spec["enablePDB"] = true
 		spec["inheritedMetadata"] = map[string]any{
 			"annotations": map[string]any{"cluster-autoscaler.kubernetes.io/safe-to-evict": "false"},

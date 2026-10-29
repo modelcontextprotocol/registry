@@ -633,11 +633,35 @@ kubectl describe schedule.k8up.io
 kubectl get backup
 ```
 
+### Node capacity
+
+`mcp-registry:nodeAutoscaling` enables GKE node scaling independently of the
+experimental ingress/app profile. `nodeMinCount` and `nodeMaxCount` specify the
+bounds. Both hosted stack files now propose **3–4 e2-standard-4 nodes**; changing
+these files does not deploy production. Staging is validated first. Always
+refresh Pulumi state before applying, since the autoscaler owns `nodeCount`.
+Both singleton database pods retain voluntary-eviction protection with either
+node autoscaling or the legacy burst profile enabled.
+
+The coordinated candidate keeps three app and three ingress replicas ready,
+with maxima of four and six respectively. Reserving three nodes alone does not
+prewarm caches or redistribute existing pods. Verify Ready replicas, placement,
+load-balancer health and actual node consolidation during the acceptance test.
+Keep staging's image, CPU/memory budget, pools and scaling settings aligned with
+the intended production configuration until that test passes. Existing live
+production remains the comparison baseline until promotion.
+
+Staging's node bounds can be reduced independently later. Disable or revise the
+coordinated profile first: its guard deliberately requires the tested 3–4 node
+budget. Recheck pod fit and database protection before reducing capacity, and
+restore production parity for future capacity acceptance tests. Scale-down can
+be delayed by placement and disruption budgets; a minimum is not a guarantee.
+
 ### Burst capacity (staging validation)
 
 The additional `coordinatedCapacity` opt-in is staged separately and currently
 disabled. See the [candidate and test gates](../tools/ingressbench/COORDINATED_CAPACITY.md)
-for its 2–4 app HPA, 30/5 pools and required CPU settings. It is rejected outside
+for its 3–4 app HPA, 30/5 pools and required CPU settings. It is rejected outside
 staging until the full validation passes. The configuration below describes the
 earlier ingress-only profile.
 
@@ -663,13 +687,13 @@ Measure node count and placement through recovery, not just request latency.
 The replica count and each pool's 60 maximum / 10 minimum remain unchanged.
 
 `mcp-registry:burstAutoscaling` opts a hosted stack into ingress and GKE node
-scaling. It is enabled in staging for validation; production keeps its existing
+scaling (legacy default 2–4 nodes; explicit node bounds take precedence). It is enabled in staging for validation; production keeps its existing
 configuration until a separate promotion. Application replicas and their
 connection pools stay fixed at two replicas, each with a maximum of 60 connections.
 
 | Setting | Fixed baseline | With burst capacity |
 | --- | --- | --- |
-| GKE nodes | 2 | 2–4, same machine type |
+| GKE nodes | 2 | Configured bounds; hosted stack proposal is 3–4 |
 | Ingress controllers | 2 | 2–6 |
 | Ingress CPU request | 300m | 800m, no CPU limit |
 | Ingress memory request | 90 MiB | 512 MiB |

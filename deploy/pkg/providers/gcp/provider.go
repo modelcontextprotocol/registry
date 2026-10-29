@@ -203,6 +203,11 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
+	nodeScaling, err := readNodeScaling(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create GKE cluster
 	clusterName := fmt.Sprintf("mcp-registry-%s", environment)
 
@@ -255,7 +260,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		Project:  pulumi.String(projectID),
 
 		// Node pool configuration
-		NodeCount: pulumi.Int(2),
+		NodeCount: pulumi.Int(nodeScaling.minimum),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
 			MachineType: pulumi.String(nodeMachineType),
 			// Boot disks also serve the ingress cache and container logs.
@@ -277,10 +282,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 
 	// Add provider if we have explicit credentials
 	nodePoolOpts := []pulumi.ResourceOption{}
-	if config.New(ctx, "mcp-registry").GetBool("burstAutoscaling") {
+	if nodeScaling.enabled {
 		nodePoolArgs.Autoscaling = &container.NodePoolAutoscalingArgs{
-			MinNodeCount: pulumi.IntPtr(2),
-			MaxNodeCount: pulumi.IntPtr(4),
+			MinNodeCount: pulumi.IntPtr(nodeScaling.minimum),
+			MaxNodeCount: pulumi.IntPtr(nodeScaling.maximum),
 		}
 		// The autoscaler owns the live count. Always refresh before updating.
 		nodePoolOpts = append(nodePoolOpts, pulumi.IgnoreChanges([]string{"nodeCount"}))

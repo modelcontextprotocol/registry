@@ -2,6 +2,9 @@ config:
   mcp-registry:environment: staging
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
+  mcp-registry:nodeAutoscaling: "true"
+  mcp-registry:nodeMinCount: "3"
+  mcp-registry:nodeMaxCount: "4"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"
   gcp:project: mcp-registry-staging

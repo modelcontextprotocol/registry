@@ -18,6 +18,25 @@ Latest follow-up: [the production read-trace comparison](WORKLOAD_COMPARISON.md)
 measures the app improvement and the infrastructure transition separately,
 with explicit cache-state and workload-coverage limitations.
 
+## Revised target — 2026-10-29
+
+The selected next candidate is **three idle nodes, up to four**, with three
+Ready apps (maximum four) and three Ready ingress controllers (maximum six).
+Keep staging at this intended production footprint until validation passes;
+production promotion remains gated. App CPU stays 800m, pool maximum/minimum
+30/5 per replica, ingress CPU 800m, and registry DB request/limit 1500m/3 CPUs.
+This is a new candidate, not a passing result. Historical measurements and the
+older two-node test procedure below remain unchanged for reproducibility.
+
+Use the ordered production trace and fidelity checks from
+[the latest comparison](WORKLOAD_COMPARISON.md) for acceptance. Record cache state
+and the rise from three Ready replicas, all offered work (including generator
+drops), errors, query mix, per-pod CPU/queues and publish behavior. If the short
+delivery gate fails, stop and identify the limiting stage. If it passes, run the
+full burst and recovery, requiring natural return to three nodes and three
+replicas of each workload. Do not force eviction to pass the recovery gate.
+Staging can be cheaper later, but must be rematched for capacity acceptance.
+
 ## Observed result
 
 The [saved result](evidence/coordinated-capacity-2026-10-28/summary.json)
@@ -152,6 +171,7 @@ budget.
 stack file. The program rejects it outside staging or without all of:
 
 - `provider=gcp`, `nodeMachineType=e2-standard-4`, `burstAutoscaling=true`;
+- `nodeMinCount=3`, `nodeMaxCount=4`;
 - `registryCPURequest=800m`, `postgresCPURequest=1500m`, `postgresCPULimit=3`.
 
 When enabled it registers the app HPA, gives it ownership of deployment replica

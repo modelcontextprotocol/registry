@@ -56,3 +56,38 @@ func TestChartChildrenKeepControllerOwnership(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestNodeScalingProtectsSingletonDatabases(t *testing.T) {
+	for _, flag := range []string{"", "nodeAutoscaling", "burstAutoscaling"} {
+		t.Run("enabled="+flag, func(t *testing.T) {
+			cfg := map[string]string{}
+			if flag != "" {
+				cfg["mcp-registry:"+flag] = "true"
+			}
+			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+				spec := protectDatabase(ctx, map[string]any{"instances": 1})
+				if flag == "" {
+					if _, exists := spec["inheritedMetadata"]; exists {
+						t.Error("disabled scaling changed eviction policy")
+					}
+					return nil
+				}
+				if spec["enablePDB"] != true {
+					t.Error("singleton disruption budget must be enabled")
+				}
+				metadata, ok := spec["inheritedMetadata"].(map[string]any)
+				if !ok {
+					t.Fatal("eviction annotation must propagate to generated pods")
+				}
+				annotations, ok := metadata["annotations"].(map[string]any)
+				if !ok || annotations["cluster-autoscaler.kubernetes.io/safe-to-evict"] != "false" {
+					t.Error("singleton database must not be voluntarily evicted for scale-down")
+				}
+				return nil
+			}, pulumi.WithMocks("eviction-test", "staging", ownershipMonitor{t}), func(info *pulumi.RunInfo) { info.Config = cfg })
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
