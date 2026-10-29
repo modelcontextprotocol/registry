@@ -12,7 +12,7 @@ func createDatabaseNodePool(ctx *pulumi.Context, cluster *container.Cluster, pro
 		opts = append(opts, pulumi.Provider(provider))
 	}
 	return container.NewNodePool(ctx, "registry-database-nodepool", &container.NodePoolArgs{
-		Name: pulumi.String("mcp-registry-staging-database"), Cluster: cluster.Name, Location: pulumi.String(zone), Project: pulumi.String(project), NodeCount: pulumi.Int(1),
+		Name: pulumi.String(project + "-database"), Cluster: cluster.Name, Location: pulumi.String(zone), Project: pulumi.String(project), NodeCount: pulumi.Int(1),
 		NodeConfig: &container.NodePoolNodeConfigArgs{
 			MachineType: pulumi.String(machineType), DiskSizeGb: pulumi.Int(50), DiskType: pulumi.String("pd-balanced"),
 			Labels: pulumi.StringMap{"registry-role": pulumi.String("database")},

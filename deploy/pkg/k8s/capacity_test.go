@@ -89,3 +89,41 @@ func TestRegistryAutoscalerBoundsDatabaseConnections(t *testing.T) {
 		t.Fatal("HPA was not registered")
 	}
 }
+
+func TestProductionInfrastructureKeepsFixedConnectionBudget(t *testing.T) {
+	for _, tc := range []struct {
+		name, key, value string
+		invalid          bool
+	}{
+		{"valid", "imageTag", "1.8.6", false},
+		{"requires explicit opt in", "productionInfrastructureOnly", "false", true},
+		{"requires isolation", "isolatedDatabase", "false", true},
+		{"requires full profile", "coordinatedCapacity", "false", true},
+		{"staging must retain app scaling", "environment", "staging", true},
+		{"reject mutable main", "imageTag", "main", true},
+		{"reject mutable latest", "imageTag", "latest", true},
+		{"reject unspecified image", "imageTag", "", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := map[string]string{}
+			values := map[string]string{"productionInfrastructureOnly": "true", "coordinatedCapacity": "true", "isolatedDatabase": "true", "burstAutoscaling": "true", "provider": "gcp", "environment": "prod", "nodeMachineType": "e2-standard-4", "registryCPURequest": "800m", "postgresCPURequest": "3", "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "4", "imageTag": "1.8.6"}
+			values[tc.key] = tc.value
+			for k, v := range values {
+				cfg["mcp-registry:"+k] = v
+			}
+			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+				if err := ValidateCapacityConfig(ctx); err != nil {
+					return err
+				}
+				replicas, autoscale := registryCapacitySettings(ctx)
+				if replicas != 2 || autoscale {
+					t.Fatal("production's fixed 60-connection pools must retain two replicas without HPA")
+				}
+				return nil
+			}, pulumi.WithMocks("capacity-test", "prod", &capacityMonitor{t: t}), func(info *pulumi.RunInfo) { info.Config = cfg })
+			if (err != nil) != tc.invalid {
+				t.Fatalf("unexpected validation: %v", err)
+			}
+		})
+	}
+}

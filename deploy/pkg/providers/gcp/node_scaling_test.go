@@ -27,6 +27,7 @@ func TestNodeScalingConfiguration(t *testing.T) {
 		{name: "three ready nodes independently", values: map[string]string{"nodeAutoscaling": "true", "nodeMinCount": "3", "nodeMaxCount": "4"}, enabled: true, min: 3, max: 4},
 		{name: "cheaper later", values: map[string]string{"nodeAutoscaling": "true", "nodeMinCount": "2", "nodeMaxCount": "3"}, enabled: true, min: 2, max: 3},
 		{name: "isolated database", values: map[string]string{"nodeAutoscaling": "true", "isolatedDatabase": "true", "coordinatedCapacity": "true", "environment": "staging", "nodeMinCount": "3", "nodeMaxCount": "4"}, enabled: true, min: 2, max: 3},
+		{name: "explicit production infrastructure", values: map[string]string{"nodeAutoscaling": "true", "isolatedDatabase": "true", "coordinatedCapacity": "true", "productionInfrastructureOnly": "true", "environment": "prod", "nodeMinCount": "3", "nodeMaxCount": "4"}, enabled: true, min: 2, max: 3},
 		{name: "reject isolated production", values: map[string]string{"nodeAutoscaling": "true", "isolatedDatabase": "true", "coordinatedCapacity": "true", "environment": "prod", "nodeMinCount": "3", "nodeMaxCount": "4"}, invalid: true},
 		{name: "reject uncoordinated isolation", values: map[string]string{"isolatedDatabase": "true"}, invalid: true},
 		{name: "inverted", values: map[string]string{"nodeAutoscaling": "true", "nodeMinCount": "4", "nodeMaxCount": "3"}, invalid: true},
