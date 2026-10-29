@@ -848,6 +848,9 @@ release are outside this infrastructure promotion.
 listing responses active while migration 018 adds nullable derived columns
 and `tools/prepare-listing-json` backfills existing records in bounded batches.
 New writes prepare their derived bytes regardless of the read-path switch.
+For hosted deployments, explicitly set the Pulumi `preparedListingJSON`
+boolean to control this variable. Omitting the setting preserves existing
+pod templates during unrelated infrastructure changes.
 Before enabling the switch, verify codec-1 coverage, response equivalence,
 fresh metadata after writes, and representative burst/publish/recovery results
 with the intended application resources and connection budget. The fallback

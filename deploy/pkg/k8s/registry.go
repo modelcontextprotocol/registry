@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apiextensions"
@@ -110,6 +111,15 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"), Value: pulumi.String("30")},
 			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"), Value: pulumi.String("5")},
 		}
+	}
+
+	// Omission preserves existing pod templates during infrastructure-only
+	// applies. Set explicitly when activating or rolling back prepared reads.
+	if conf.Get("preparedListingJSON") != "" {
+		poolEnv = append(poolEnv, &corev1.EnvVarArgs{
+			Name:  pulumi.String("MCP_REGISTRY_PREPARED_LISTING_JSON"),
+			Value: pulumi.String(strconv.FormatBool(conf.GetBool("preparedListingJSON"))),
+		})
 	}
 
 	// Create Deployment
