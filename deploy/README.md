@@ -841,3 +841,20 @@ and existing volume while restoring workload scheduling/resources. A wholesale
 configuration revert that attempts to delete the protected pool is not a safe
 rollback procedure. Public node IPs, gateway configuration and application
 release are outside this infrastructure promotion.
+
+### Prepared listing JSON activation
+
+`MCP_REGISTRY_PREPARED_LISTING_JSON` defaults to `false`. This keeps typed
+listing responses active while migration 018 adds nullable derived columns
+and `tools/prepare-listing-json` backfills existing records in bounded batches.
+New writes prepare their derived bytes regardless of the read-path switch.
+Before enabling the switch, verify codec-1 coverage, response equivalence,
+fresh metadata after writes, and representative burst/publish/recovery results
+with the intended application resources and connection budget. The fallback
+path preserves correctness but is not a substitute for backfill coverage.
+
+For rollback, disable the switch to return to typed listing responses. Keep
+migration 018 and the derived columns: older writers invalidate derived bytes
+through its trigger. Recheck coverage before re-enabling after an older writer
+has run. Rolling back the application does not require a database downgrade,
+node-pool deletion, or volume replacement.
