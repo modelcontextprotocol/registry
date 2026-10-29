@@ -776,3 +776,38 @@ scale-up under load and recovery/scale-down after it stops. Do not promote based
 on a quiet run or a synthetic workload that fails to reproduce the failure.
 To disable autoscaling, remove the opt-in and preview the transition back to
 fixed counts; scale-in and a database request rollback may interrupt service.
+
+### Production infrastructure-only isolation
+
+`productionInfrastructureOnly: true` explicitly enables the isolated capacity
+profile in production while retaining the configured application release. It
+requires `coordinatedCapacity`, `isolatedDatabase`, `burstAutoscaling`,
+`e2-standard-4` nodes, total node bounds 3–4, an 800m app CPU request, and a
+PostgreSQL CPU request/limit of 3/3.
+
+This profile keeps **two fixed app replicas** and does not set pool environment
+variables or create an app HPA. Production 1.8.6 has hardcoded max/min pools of
+60/10 per replica; four replicas could exceed PostgreSQL's 200-connection limit.
+Staging retains its separate 3–4 app HPA and configurable 30/5 pools. An app
+release and separate promotion are required before enabling that behavior in
+production.
+
+The layout is one protected database node plus 2–3 worker nodes. Ingress scales
+3–6 on CPU with 800m CPU/512Mi memory requests, a 70% target, and conservative
+scale-down. Existing connections have a 60-second maximum keepalive age so new
+controllers can receive traffic. Both singleton databases are protected from
+node-autoscaler eviction; this does not provide database failover. The registry
+DB move can interrupt service while its existing volume is reattached.
+
+Run the production workflow manually on the proposed ref for a **preview only**.
+A production stack-config merge still triggers the apply. Both paths refresh
+state first. Review the preview for unexpected replacement/deletion, especially
+the cluster, registry database and PVC, before merging. Keep a fresh successful
+backup and capture health, workload placement and request metrics through the
+transition. Observe a real traffic cycle before declaring a performance fix.
+
+If recovery requires reverting placement, retain the protected database pool
+and existing volume while restoring workload scheduling/resources. A wholesale
+configuration revert that attempts to delete the protected pool is not a safe
+rollback procedure. Public node IPs, gateway configuration and application
+release are outside this infrastructure promotion.

@@ -39,7 +39,7 @@ prod-login: ## Login to production Pulumi backend
 	pulumi login gs://mcp-registry-prod-pulumi-state
 
 prod-preview: build prod-login ## Preview production infrastructure changes
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi preview --stack gcpProd
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi preview --refresh --diff --stack gcpProd
 
 prod-up: build prod-login ## Deploy production infrastructure
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --yes --stack gcpProd
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --refresh --yes --stack gcpProd

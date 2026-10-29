@@ -25,21 +25,28 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	if c.GetBool("isolatedDatabase") && !c.GetBool("coordinatedCapacity") {
 		return fmt.Errorf("isolatedDatabase requires coordinatedCapacity")
 	}
+	infraOnly := c.GetBool("productionInfrastructureOnly")
+	if infraOnly && (c.Get("environment") != "prod" || !c.GetBool("coordinatedCapacity") || !c.GetBool("isolatedDatabase")) {
+		return fmt.Errorf("productionInfrastructureOnly requires the complete isolated production coordinatedCapacity profile")
+	}
 	if !c.GetBool("coordinatedCapacity") {
 		return nil
 	}
 	if !c.GetBool("burstAutoscaling") || c.Get("provider") != "gcp" || c.Get("nodeMachineType") != "e2-standard-4" {
 		return fmt.Errorf("coordinatedCapacity requires GCP e2-standard-4 nodes and burstAutoscaling")
 	}
-	if c.Get("environment") != coordinatedEnvironment {
+	if c.Get("environment") != coordinatedEnvironment && !infraOnly {
 		return fmt.Errorf("coordinatedCapacity is staging-only until burst and recovery validation passes")
+	}
+	if infraOnly && (c.Get("imageTag") == "" || c.Get("imageTag") == "main" || c.Get("imageTag") == "latest") {
+		return fmt.Errorf("productionInfrastructureOnly requires an explicit production imageTag")
 	}
 	dbCPU := coordinatedDBCPU
 	if c.GetBool("isolatedDatabase") {
 		dbCPU = "3"
 		image, digest, pinned := strings.Cut(c.Get("stagingImage"), "@sha256:")
 		_, digestErr := hex.DecodeString(digest)
-		if !pinned || image == "" || len(digest) != 64 || digestErr != nil {
+		if !infraOnly && (!pinned || image == "" || len(digest) != 64 || digestErr != nil) {
 			return fmt.Errorf("coordinatedCapacity with isolatedDatabase requires a digest-pinned stagingImage")
 		}
 	}
@@ -73,4 +80,14 @@ func deployRegistryAutoscaler(ctx *pulumi.Context, provider pulumi.ProviderResou
 		Spec:     registryAutoscalerSpec(),
 	}, pulumi.Provider(provider))
 	return err
+}
+
+// Production's older binary has a fixed 60-connection pool. Keep two replicas
+// until an application release explicitly enables the bounded-pool profile.
+func registryCapacitySettings(ctx *pulumi.Context) (replicas int, autoscale bool) {
+	c := config.New(ctx, "mcp-registry")
+	if c.GetBool("coordinatedCapacity") && !c.GetBool("productionInfrastructureOnly") {
+		return coordinatedIdleReplicas, true
+	}
+	return 2, false
 }

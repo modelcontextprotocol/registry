@@ -1,6 +1,7 @@
 name: Deploy to Production
 
 on:
+  workflow_dispatch: # Read-only preview of the selected ref; pushes apply normally.
   push:
     branches:
       - main
@@ -52,5 +53,11 @@ jobs:
         env:
           PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
         run: |
-          echo "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
-          make prod-up
+          umask 077
+          trap 'rm -f passphrase.prod.txt' EXIT
+          printf '%s' "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            make prod-preview
+          else
+            make prod-up
+          fi

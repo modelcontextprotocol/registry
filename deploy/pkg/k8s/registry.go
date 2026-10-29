@@ -91,9 +91,12 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	coordinatedCapacity := conf.GetBool("coordinatedCapacity")
 	deploymentOptions := []pulumi.ResourceOption{pulumi.Provider(cluster.Provider)}
 	maxSurge, maxUnavailable := 1, 0
-	replicaCount := 2
+	replicaCount, appAutoscaling := registryCapacitySettings(ctx)
 	poolEnv := corev1.EnvVarArray{}
 	if coordinatedCapacity {
+		maxSurge, maxUnavailable = 0, 1
+	}
+	if appAutoscaling {
 		// HPA owns the live count; keep the steady-state connection budget at
 		// 90–120 across 3–4 apps. Terminating pods may overlap during rollouts.
 		deploymentOptions = append(deploymentOptions, pulumi.IgnoreChanges([]string{"spec.replicas"}))
@@ -280,7 +283,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		return nil, err
 	}
 
-	if coordinatedCapacity {
+	if appAutoscaling {
 		if err := deployRegistryAutoscaler(ctx, cluster.Provider); err != nil {
 			return nil, err
 		}
