@@ -2,9 +2,9 @@
 config:
   mcp-registry:environment: prod
   mcp-registry:victoriaMetricsCapacity: "true"
-  # Explicit app source for the prepared-JSON release; reads stay disabled until backfill.
+  # Tested prepared-JSON release; derived-row coverage verified before activation.
   mcp-registry:registryRolloutCommit: 741d575fc2ffe774fa51f442ec6fb2987dd03e18
-  mcp-registry:preparedListingJSON: "false"
+  mcp-registry:preparedListingJSON: "true"
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:nodeAutoscaling: "true"
