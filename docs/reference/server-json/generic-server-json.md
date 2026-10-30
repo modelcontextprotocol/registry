@@ -30,6 +30,64 @@ The optional `_meta` field allows publishers to include custom metadata alongsid
 
 When publishing to the official registry, custom metadata must be placed under the key `io.modelcontextprotocol.registry/publisher-provided`. See the [official registry requirements](./official-registry-requirements.md) for detailed restrictions and examples.
 
+### Security scan receipts (`io.modelcontextprotocol.registry/security-scan`)
+
+The optional `io.modelcontextprotocol.registry/security-scan` extension carries an array of scanner-neutral security scan receipts. Each receipt is evidence-scoped: it records a verdict bound to a specific scanner, rule set, policy profile, and scanned artifact digest, rather than asserting a server-level safety property. The `scanner` and `rule_set_ref` fields are open strings, so any community scanner can produce receipts; the registry does not endorse any particular one.
+
+```jsonc
+{
+  "_meta": {
+    "io.modelcontextprotocol.registry/security-scan": [
+      {
+        "scanner": "example-scanner",
+        "scanner_version": "1.2.3",
+        "rule_set_ref": "example-ruleset@sha256:...",
+        "policy_profile": "default-mcp-registry-v1",
+        "scanned_artifact_ref": "pkg:npm/example/server@1.0.0",
+        "scanned_artifact_digest": "sha256:...",
+        "scan_scope": ["dependency", "package"],
+        "verdict": "clean",
+        "scanned_at": "2026-06-28T00:00:00Z",
+        "freshness_expires_at": "2026-07-28T00:00:00Z",
+        "evidence_ref": "https://example.org/report.json",
+        "evidence_digest": "sha256:...",
+        "attestation": "publisher-asserted"
+      }
+    ]
+  }
+}
+```
+
+A `clean` verdict means clean only under the named `scanner_version`, `rule_set_ref`, `policy_profile`, and `scanned_artifact_digest`, for the surfaces listed in `scan_scope`. It does not mean the server is globally safe.
+
+The `scanned_artifact_digest` binds the verdict to exact bytes, and `scan_scope` records what was actually evaluated (for example `dependency`, `package`, or `handler-validation`). These two fields encode an invariant for clients:
+
+- Do not render `clean` unless the receipt binds to the current package or artifact digest, and the displayed claim names the covered `scan_scope`.
+- A dependency or package scan can be `clean` while handler-side validation remains unassessed, so a receipt that did not cover that surface should keep the reason machine-readable (for example `verdict: "inconclusive"` with `inconclusive_reason: "scope_excludes_handler_validation"`) rather than implying a global clean badge.
+
+`verdict` is one of `clean`, `warnings`, `findings`, or `inconclusive`. `inconclusive` is first-class: it covers reports that cannot bind to the current artifact, use an unsupported package type, or omit handler-side checks, and these should not collapse into `clean` or `findings`. When `verdict` is `inconclusive`, `inconclusive_reason` carries one of `artifact_digest_mismatch`, `unsupported_package_type`, `scope_excludes_handler_validation`, `evidence_unavailable`, or `stale_scan`.
+
+`attestation` distinguishes who asserts the receipt: `publisher-asserted` (self-asserted by the publisher), `registry-attested`, or `third-party-attested`. Signatures are intentionally left out of this version; `attestation` together with `evidence_digest` provides a verifiability hook without pulling in key distribution.
+
+This extension describes only what evidence was checked. A server's declared capability posture (what authority it exposes) is a separate concern and is not part of a scan receipt.
+
+The example above shows the receipt shape at the format level, which any registry or client can read. The official registry currently preserves only the `io.modelcontextprotocol.registry/publisher-provided` key, so a publisher-asserted receipt is carried nested under that key when publishing there; see [official registry requirements](./official-registry-requirements.md#security-scan-receipts).
+
+#### Render invariant
+
+A client MUST NOT surface a `clean` claim for a receipt unless both of the following hold, and a displayed claim MUST name the covered `scan_scope` so the user sees what was actually evaluated:
+
+- The receipt binds to the current artifact: the receipt's `scanned_artifact_digest` equals the digest of the package or artifact the client is about to install or display. A receipt whose `scanned_artifact_digest` is missing, malformed (not `algorithm:hex`), or does not match the current artifact does not bind, and the client MUST treat it as `inconclusive` (reason `artifact_digest_mismatch`) rather than rendering `clean`.
+- The receipt names a non-empty `scan_scope`. A receipt with an absent or empty `scan_scope` does not say what was evaluated and MUST NOT be rendered as `clean`.
+
+Because `scan_scope` records only the surfaces that were actually checked, a `clean` receipt that omits a surface (for example a `["dependency", "package"]` receipt that never assessed `handler-validation`) MUST NOT be presented as a global clean badge; the displayed claim names the covered scope, and the unassessed surface stays representable as `inconclusive` with `inconclusive_reason: "scope_excludes_handler_validation"` rather than collapsing into `clean`.
+
+#### Scope boundary: name custody
+
+`scan_scope` records surfaces internal to a fixed artifact — for example `dependency`, `package`, or `handler-validation`. It does not, and cannot, cover who controls the *name* the artifact is published under. A receipt bound to `scanned_artifact_digest` `D` stays joinable, with `verdict: "clean"` and `freshness_expires_at` still in the future, through events that leave those bytes byte-identical while changing custody of the name: an ownership transfer to a different maintainer set, removal or relocation of the source repository, an unpublish that frees a name carrying accumulated installs, or a removed name republished by a different party. Registry-population measurement motivates this boundary rather than asserting it: a substantial share of ownership and source-control changes arrive with no same-day artifact publish, so a digest-bound `clean` receipt keeps matching after custody has already moved.
+
+Custody is therefore a distinct axis, not a surface a scanner assesses, so it is not modelled as a `scan_scope` value or an `inconclusive_reason` in this version. A client MUST NOT infer any guarantee about name custody, ownership continuity, or source-link availability from a content-scoped receipt; those properties, if surfaced at all, belong to a separate event-stream signal with its own publisher rather than to a point-in-time receipt.
+
 ## Examples
 
 <!-- As a heads up, these are used as part of tests/integration/main.go -->
