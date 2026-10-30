@@ -2,8 +2,9 @@
 config:
   mcp-registry:environment: prod
   mcp-registry:victoriaMetricsCapacity: "true"
-  # Preserve app pods during the monitoring-only repair.
-  mcp-registry:registryRolloutCommit: e1c5d4e009b8ee671ce796226fb1659cacce485f
+  # Explicit app source for the prepared-JSON release; reads stay disabled until backfill.
+  mcp-registry:registryRolloutCommit: 741d575fc2ffe774fa51f442ec6fb2987dd03e18
+  mcp-registry:preparedListingJSON: "false"
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:nodeAutoscaling: "true"
@@ -17,7 +18,7 @@ config:
   mcp-registry:postgresCPURequest: "3"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"
-  mcp-registry:imageTag: 1.8.6  # Set specific image tag for production (change this to deploy different versions)
+  mcp-registry:imageTag: 1.8.7  # Set specific image tag for production (change this to deploy different versions)
   gcp:project: mcp-registry-prod
   mcp-registry:githubClientId: Iv23liUydBbI7Z2Q9bOZ
   mcp-registry:githubClientSecret:
