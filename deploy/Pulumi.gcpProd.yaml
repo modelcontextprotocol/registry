@@ -14,7 +14,7 @@ config:
   mcp-registry:coordinatedCapacity: "true"
   mcp-registry:isolatedDatabase: "true"
   mcp-registry:productionInfrastructureOnly: "true"
-  mcp-registry:registryCPURequest: "800m"
+  mcp-registry:registryCPURequest: "1200m"
   mcp-registry:postgresCPURequest: "3"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"

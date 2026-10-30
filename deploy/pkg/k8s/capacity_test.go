@@ -53,6 +53,7 @@ func TestCapacityRejectsIncompleteOrProductionProfile(t *testing.T) {
 		{"undersized nodes", "nodeMachineType", "e2-standard-2", true},
 		{"unmatched database request", "postgresCPURequest", "2", true},
 		{"unmatched app request", "registryCPURequest", "400m", true},
+		{"production reservation is not a staging opt in", "registryCPURequest", "1200m", true},
 		{"disabled", "coordinatedCapacity", "false", false},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,6 +97,9 @@ func TestProductionInfrastructureKeepsFixedConnectionBudget(t *testing.T) {
 		invalid          bool
 	}{
 		{"valid", "imageTag", "1.8.6", false},
+		{"higher app reservation", "registryCPURequest", "1200m", false},
+		{"reject unreviewed reservation", "registryCPURequest", "1000m", true},
+		{"reject oversized reservation", "registryCPURequest", "1600m", true},
 		{"requires explicit opt in", "productionInfrastructureOnly", "false", true},
 		{"requires isolation", "isolatedDatabase", "false", true},
 		{"requires full profile", "coordinatedCapacity", "false", true},

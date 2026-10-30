@@ -812,8 +812,16 @@ fixed counts; scale-in and a database request rollback may interrupt service.
 `productionInfrastructureOnly: true` explicitly enables the isolated capacity
 profile in production while retaining the configured application release. It
 requires `coordinatedCapacity`, `isolatedDatabase`, `burstAutoscaling`,
-`e2-standard-4` nodes, total node bounds 3–4, an 800m app CPU request, and a
+`e2-standard-4` nodes, total node bounds 3–4, an 800m or 1200m app CPU request, and a
 PostgreSQL CPU request/limit of 3/3.
+
+The 1200m app reservation gives each replica more relative CPU weight under
+contention and reserves scheduling capacity. It does not impose a CPU limit or
+provide exclusive cores. Before applying it, verify requests for all pods fit
+on the current workers and at the two-worker minimum, including system pods.
+Keep ingress hostname spread and its CPU reservation intact. Roll back by
+restoring `registryCPURequest: "800m"`; both changes roll the app pods. This
+setting leaves the application release, replica and connection counts unchanged.
 
 This profile keeps **two fixed app replicas** and does not set pool environment
 variables or create an app HPA. Production 1.8.6 has hardcoded max/min pools of

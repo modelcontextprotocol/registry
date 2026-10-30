@@ -50,7 +50,14 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 			return fmt.Errorf("coordinatedCapacity with isolatedDatabase requires a digest-pinned stagingImage")
 		}
 	}
-	for key, expected := range map[string]string{"registryCPURequest": coordinatedAppCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "4"} {
+	appCPU := coordinatedAppCPU
+	// Keep staging's matched profile fixed. Production can reserve more CPU
+	// for its two app replicas without increasing nodes or pool connections.
+	// Retain 800m as the rollback setting; larger requests need a new fit review.
+	if infraOnly && c.Get("registryCPURequest") == "1200m" {
+		appCPU = "1200m"
+	}
+	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "4"} {
 		if c.Get(key) != expected {
 			return fmt.Errorf("coordinatedCapacity requires %s=%s", key, expected)
 		}
