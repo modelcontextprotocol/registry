@@ -245,10 +245,30 @@ def parse_preview_events(text):
             "maybeCorrupt": summary.get("maybeCorrupt", False)}
 
 
+
+def apply_failure_category(text):
+    text = text.lower()
+    categories = {
+        "plan-constraint": ("violates plan", "plan violation", "resource plan", "not allowed by the plan"),
+        "field-ownership": ("fieldmanager", "field manager", "conflict"),
+        "immutable-field": ("field is immutable", "may not change"),
+        "access": ("forbidden", "permission denied", "unauthorized"),
+        "missing-resource": ("not found", "does not exist"),
+        "dependency": ("dependency", "dependents", "untargeted"),
+        "timeout": ("timeout", "timed out", "deadline exceeded"),
+        "provider": ("provider plugin", "plugin version"),
+        "validation": ("invalid", "validation"),
+        "concurrent-operation": ("already running", "another update", "locked"),
+    }
+    return ",".join(sorted(k for k, patterns in categories.items() if any(p in text for p in patterns))) or "unclassified"
+
+
 def quiet(command, directory, name, env, timeout=1800):
     stdout, stderr = directory / (name + ".out"), directory / (name + ".err")
     with stdout.open("wb") as out, stderr.open("wb") as err:
         result = subprocess.run(command, stdout=out, stderr=err, env=env, timeout=timeout, check=False)
+    if result.returncode and name == "apply":
+        raise Blocked("apply-failed-" + apply_failure_category(stdout.read_text(errors="replace") + stderr.read_text(errors="replace")))
     require(result.returncode == 0, name + "-failed")
     return stdout
 
@@ -286,7 +306,7 @@ def main(mode):
         if mode == "apply":
             # Recheck live pool/replica transitions immediately before applying the validated plan.
             quiet([sys.executable, "scripts/check_production_scaling.py"], directory, "preapply", env)
-            quiet(["pulumi", "up", "--refresh", "--yes", "--skip-preview", "--plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "apply", env)
+            quiet(["pulumi", "up", "--json", "--refresh", "--yes", "--skip-preview", "--plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "apply", env)
             print("Production apply completed; live verification remains required.")
 
 

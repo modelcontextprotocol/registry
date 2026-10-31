@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events
+from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category
 
 
 def app_inputs(prepared):
@@ -132,6 +132,11 @@ class PrivateProductionPreview(unittest.TestCase):
         change["newState"]["inputs"]["rules"] = [{"verbs": ["*"]}]
         with self.assertRaises(Blocked):
             validate_preview(preview([change]), "prepare", completed_hooks=previous)
+
+    def test_apply_failure_categories_never_echo_details(self):
+        self.assertEqual(apply_failure_category("private resource violates plan: secret-value"), "plan-constraint")
+        self.assertEqual(apply_failure_category("unknown private diagnostic secret-value"), "unclassified")
+        self.assertEqual(apply_failure_category("field manager conflict with secret-value"), "field-ownership")
 
     def test_child_errors_do_not_echo_private_output(self):
         captured = io.StringIO()
