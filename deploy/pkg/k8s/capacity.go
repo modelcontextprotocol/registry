@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/mod/semver"
+
 	autoscalingv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/autoscaling/v2"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -26,6 +28,16 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 		return fmt.Errorf("isolatedDatabase requires coordinatedCapacity")
 	}
 	infraOnly := c.GetBool("productionInfrastructureOnly")
+	phase := c.Get("productionAppScaling")
+	if phase != "" && phase != "off" {
+		if (phase != "prepare" && phase != "enabled") || !infraOnly || c.Get("environment") != "prod" {
+			return fmt.Errorf("productionAppScaling requires prepare or enabled on the isolated production profile")
+		}
+		version := "v" + c.Get("imageTag")
+		if !semver.IsValid(version) || semver.Canonical(version) != version || semver.Prerelease(version) != "" || semver.Compare(version, "v1.8.7") < 0 {
+			return fmt.Errorf("productionAppScaling requires a stable imageTag >= 1.8.7 with configurable connection pools")
+		}
+	}
 	if infraOnly && (c.Get("environment") != "prod" || !c.GetBool("coordinatedCapacity") || !c.GetBool("isolatedDatabase")) {
 		return fmt.Errorf("productionInfrastructureOnly requires the complete isolated production coordinatedCapacity profile")
 	}
@@ -50,17 +62,22 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 			return fmt.Errorf("coordinatedCapacity with isolatedDatabase requires a digest-pinned stagingImage")
 		}
 	}
-	for key, expected := range map[string]string{"registryCPURequest": coordinatedAppCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "4"} {
+	appCPU, nodeMax := coordinatedAppCPU, "4"
+	if phase == "prepare" || phase == "enabled" {
+		appCPU, nodeMax = "1200m", "5"
+	}
+	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": nodeMax} {
 		if c.Get(key) != expected {
 			return fmt.Errorf("coordinatedCapacity requires %s=%s", key, expected)
 		}
 	}
+
 	return nil
 }
 
-func registryAutoscalerSpec() *autoscalingv2.HorizontalPodAutoscalerSpecArgs {
+func registryAutoscalerSpec(minReplicas int) *autoscalingv2.HorizontalPodAutoscalerSpecArgs {
 	return &autoscalingv2.HorizontalPodAutoscalerSpecArgs{
-		MinReplicas: pulumi.Int(coordinatedIdleReplicas), MaxReplicas: pulumi.Int(4),
+		MinReplicas: pulumi.Int(minReplicas), MaxReplicas: pulumi.Int(4),
 		ScaleTargetRef: &autoscalingv2.CrossVersionObjectReferenceArgs{ApiVersion: pulumi.String("apps/v1"), Kind: pulumi.String("Deployment"), Name: pulumi.String("mcp-registry")},
 		Metrics: autoscalingv2.MetricSpecArray{&autoscalingv2.MetricSpecArgs{
 			Type: pulumi.String("Resource"), Resource: &autoscalingv2.ResourceMetricSourceArgs{
@@ -75,17 +92,23 @@ func registryAutoscalerSpec() *autoscalingv2.HorizontalPodAutoscalerSpecArgs {
 }
 
 func deployRegistryAutoscaler(ctx *pulumi.Context, provider pulumi.ProviderResource) error {
+	minimum := coordinatedIdleReplicas
+	if config.New(ctx, "mcp-registry").Get("productionAppScaling") == "enabled" {
+		minimum = 2
+	}
 	_, err := autoscalingv2.NewHorizontalPodAutoscaler(ctx, "mcp-registry-capacity", &autoscalingv2.HorizontalPodAutoscalerArgs{
 		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String("mcp-registry"), Namespace: pulumi.String("default")},
-		Spec:     registryAutoscalerSpec(),
+		Spec:     registryAutoscalerSpec(minimum),
 	}, pulumi.Provider(provider))
 	return err
 }
 
-// Production's older binary has a fixed 60-connection pool. Keep two replicas
-// until an application release explicitly enables the bounded-pool profile.
+// Preparation keeps two replicas while the smaller connection pools roll out.
 func registryCapacitySettings(ctx *pulumi.Context) (replicas int, autoscale bool) {
 	c := config.New(ctx, "mcp-registry")
+	if c.Get("productionAppScaling") == "enabled" {
+		return 2, true
+	}
 	if c.GetBool("coordinatedCapacity") && !c.GetBool("productionInfrastructureOnly") {
 		return coordinatedIdleReplicas, true
 	}

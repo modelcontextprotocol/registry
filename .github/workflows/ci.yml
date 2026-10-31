@@ -55,6 +55,7 @@ jobs:
       with:
         go-version: 'stable'
         cache: true
+        cache-dependency-path: deploy/go.sum
 
     - name: Set up ko
       uses: ko-build/setup-ko@v0.10

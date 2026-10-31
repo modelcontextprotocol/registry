@@ -9,12 +9,13 @@ config:
   mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:nodeAutoscaling: "true"
   mcp-registry:nodeMinCount: "3"
-  mcp-registry:nodeMaxCount: "4"
+  mcp-registry:nodeMaxCount: "5"
   mcp-registry:burstAutoscaling: "true"
   mcp-registry:coordinatedCapacity: "true"
   mcp-registry:isolatedDatabase: "true"
+  mcp-registry:productionAppScaling: prepare
   mcp-registry:productionInfrastructureOnly: "true"
-  mcp-registry:registryCPURequest: "800m"
+  mcp-registry:registryCPURequest: "1200m"
   mcp-registry:postgresCPURequest: "3"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"

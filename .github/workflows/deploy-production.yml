@@ -31,6 +31,7 @@ jobs:
         with:
           go-version: 'stable'
           cache: true
+          cache-dependency-path: deploy/go.sum
 
       - name: Setup Pulumi
         uses: pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d
@@ -68,7 +69,7 @@ jobs:
           trap 'rm -f passphrase.prod.txt' EXIT
           printf '%s' "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            make prod-preview
+            python3 scripts/production_apply.py preview
           else
-            make prod-up
+            python3 scripts/production_apply.py apply
           fi
