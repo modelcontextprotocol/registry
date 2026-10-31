@@ -859,7 +859,10 @@ Pulumi output and plans in a private temporary directory outside the checkout,
 then deletes them. Public logs contain fixed validation labels only; no raw
 logs or plans are uploaded as artifacts. The wrapper validates the complete
 input differences against this scaling profile, rejects unrelated changes or
-replacements, and applies only the validated saved plan. Future changes outside
+replacements, and applies only the validated saved plan. Completed, TTL-expired ingress
+setup jobs may be excluded only when their complete definitions match prior
+state. A second preview targets just the reviewed scaling resources and must
+contain none of those setup jobs; all other unrelated changes remain blocked. Future changes outside
 this profile need an explicitly reviewed validation policy; do not bypass it.
 
 `make prod-preview` and `make prod-up` run a read-only transition preflight.

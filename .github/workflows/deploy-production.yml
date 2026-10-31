@@ -31,9 +31,7 @@ jobs:
         with:
           go-version: 'stable'
           cache: true
-          cache-dependency-path: |
-            go.sum
-            deploy/go.sum
+          cache-dependency-path: deploy/go.sum
 
       - name: Setup Pulumi
         uses: pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d

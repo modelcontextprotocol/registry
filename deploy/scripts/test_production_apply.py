@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from production_apply import ANTI_AFFINITY, APP, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events
+from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events
 
 
 def app_inputs(prepared):
@@ -103,6 +103,23 @@ class PrivateProductionPreview(unittest.TestCase):
     def test_truncated_stream_is_not_a_pass(self):
         with self.assertRaises(Blocked):
             parse_preview_events(json.dumps({"resourcePreEvent": {"metadata": {"op": "same", "urn": APP}}}))
+
+    def test_only_unchanged_completed_ttl_hooks_can_be_excluded(self):
+        urn = sorted(COMPLETED_HOOKS)[0]
+        inputs = {"metadata": {"name": "fixture"}, "spec": {"ttlSecondsAfterFinished": 0}}
+        previous = {urn: {"inputs": copy.deepcopy(inputs), "outputs": {"status": {"succeeded": 1, "completionTime": "fixture"}}}}
+        change = step(urn, None, copy.deepcopy(inputs), "create")
+        validate_preview(preview([change]), "prepare", completed_hooks=previous)
+        # The actual targeted plan must still reject the setup job.
+        with self.assertRaises(Blocked):
+            validate_preview(preview([change]), "prepare")
+        change["newState"]["inputs"]["spec"]["template"] = {"changed": True}
+        with self.assertRaises(Blocked):
+            validate_preview(preview([change]), "prepare", completed_hooks=previous)
+        change["newState"]["inputs"] = inputs
+        previous[urn]["outputs"]["status"]["succeeded"] = 0
+        with self.assertRaises(Blocked):
+            validate_preview(preview([change]), "prepare", completed_hooks=previous)
 
     def test_child_errors_do_not_echo_private_output(self):
         captured = io.StringIO()
