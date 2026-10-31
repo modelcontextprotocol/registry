@@ -1,7 +1,13 @@
 name: Deploy to Production
 
 on:
-  workflow_dispatch: # Read-only preview of the selected ref; pushes apply normally.
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Preview the selected ref, or retry a failed apply on main
+        type: choice
+        options: [preview, apply]
+        default: preview
   push:
     branches:
       - main
@@ -31,7 +37,9 @@ jobs:
         with:
           go-version: 'stable'
           cache: true
-          cache-dependency-path: deploy/go.sum
+          cache-dependency-path: |
+            deploy/go.sum
+            deploy/scripts/production_apply.py
 
       - name: Setup Pulumi
         uses: pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d
@@ -68,8 +76,12 @@ jobs:
           umask 077
           trap 'rm -f passphrase.prod.txt' EXIT
           printf '%s' "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.operation }}" != "apply" ]; then
             python3 scripts/production_apply.py preview
           else
+            if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+              echo "Production apply requires main."
+              exit 1
+            fi
             python3 scripts/production_apply.py apply
           fi
