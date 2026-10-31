@@ -328,6 +328,7 @@ def apply_failure_category(text):
         "access": ("forbidden", "permission denied", "unauthorized"),
         "missing-resource": ("not found", "does not exist"),
         "dependency": ("dependency", "dependents", "untargeted"),
+        "target-selection": ("target", "did not match"),
         "timeout": ("timeout", "timed out", "deadline exceeded"),
         "provider": ("provider plugin", "plugin version"),
         "validation": ("invalid", "validation"),
@@ -357,8 +358,8 @@ def quiet(command, directory, name, env, timeout=1800):
     stdout, stderr = directory / (name + ".out"), directory / (name + ".err")
     with stdout.open("wb") as out, stderr.open("wb") as err:
         result = subprocess.run(command, stdout=out, stderr=err, env=env, timeout=timeout, check=False)
-    if result.returncode and name == "apply":
-        raise Blocked("apply-failed-" + apply_failure_category(apply_error_messages(stdout.read_text(errors="replace"), stderr.read_text(errors="replace"))))
+    if result.returncode and name in ("apply", "preview", "full-preview", "confirm-preview"):
+        raise Blocked(name + "-failed-" + apply_failure_category(apply_error_messages(stdout.read_text(errors="replace"), stderr.read_text(errors="replace"))))
     require(result.returncode == 0, name + "-failed")
     return stdout
 
