@@ -322,6 +322,11 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		}
 	}
 
+	// Idle staging permits eviction of its singleton so workers can consolidate.
+	minimumAvailable := 1
+	if conf.GetBool("stagingIdleCapacity") {
+		minimumAvailable = 0
+	}
 	// Keep at least one registry pod available during voluntary disruptions
 	// (node drains, evictions, etc.) so a synchronized eviction can't take both
 	// pods down at once.
@@ -335,7 +340,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			},
 		},
 		Spec: &policyv1.PodDisruptionBudgetSpecArgs{
-			MinAvailable: pulumi.Int(1),
+			MinAvailable: pulumi.Int(minimumAvailable),
 			Selector: &metav1.LabelSelectorArgs{
 				MatchLabels: pulumi.StringMap{
 					"app": pulumi.String("mcp-registry"),

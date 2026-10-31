@@ -15,7 +15,9 @@ PREFIX = 'urn:pulumi:gcpStaging::mcp-registry-infra::'
 WORKERS = PREFIX + 'gcp:container/nodePool:NodePool::mcp-registry-staging-nodepool'
 APP_HPA = PREFIX + 'kubernetes:autoscaling/v2:HorizontalPodAutoscaler::mcp-registry-capacity'
 INGRESS_HPA = PREFIX + 'kubernetes:helm.sh/v3:Chart$kubernetes:autoscaling/v2:HorizontalPodAutoscaler::ingress-nginx/ingress-nginx-controller'
-TARGETS = (WORKERS, APP_HPA, INGRESS_HPA)
+APP_PDB = PREFIX + 'kubernetes:policy/v1:PodDisruptionBudget::mcp-registry'
+INGRESS_PDB = PREFIX + 'kubernetes:helm.sh/v3:Chart$kubernetes:policy/v1:PodDisruptionBudget::ingress-nginx/ingress-nginx-controller'
+TARGETS = (WORKERS, APP_HPA, INGRESS_HPA, APP_PDB, INGRESS_PDB)
 STACK = PREFIX + 'pulumi:pulumi:Stack::mcp-registry-infra-gcpStaging'
 HOOKS = {PREFIX + 'kubernetes:helm.sh/v3:Chart$kubernetes:batch/v1:Job::ingress-nginx/ingress-nginx-admission-' + name for name in ('create', 'patch')}
 
@@ -44,6 +46,15 @@ def validate(preview, idle, previous=None):
         if previous is not None and (completed_hook(step, previous) or excluded_unchanged_rbac(step, previous)):
             continue
         old, new = step.get('oldState'), step.get('newState')
+        if urn == INGRESS_PDB:
+            require((idle and op == 'delete' and old and not new) or (not idle and op == 'create' and new and not old), 'ingress-pdb-operation')
+            state = old if idle else new
+            require(not state.get('protect') and not step.get('replaceReasons'), 'ingress-pdb-protection')
+            inputs = state['inputs']
+            require(inputs['metadata']['name'] == 'ingress-nginx-controller' and inputs['metadata']['namespace'] == 'ingress-nginx', 'ingress-pdb-identity')
+            require(inputs['spec'] == {'minAvailable': 1, 'selector': {'matchLabels': {'app.kubernetes.io/component': 'controller', 'app.kubernetes.io/instance': 'ingress-nginx', 'app.kubernetes.io/name': 'ingress-nginx'}}}, 'ingress-pdb-spec')
+            labels.add('singleton ingress disruption budget')
+            continue
         require(op == 'update' and old and new and not step.get('replaceReasons'), 'non-update-operation')
         require(all(old.get(k) == new.get(k) for k in ('provider', 'parent', 'protect')), 'resource-identity')
         if urn == STACK:
@@ -55,6 +66,10 @@ def validate(preview, idle, previous=None):
             require(after['autoscaling'].pop('minNodeCount') == (1 if idle else 2), 'target-worker-minimum')
             require(after['autoscaling']['maxNodeCount'] == 3, 'worker-ceiling')
             labels.add('worker minimum')
+        elif urn == APP_PDB:
+            require(before['spec'].pop('minAvailable') in (0, 1), 'existing-app-disruption-budget')
+            require(after['spec'].pop('minAvailable') == (0 if idle else 1), 'target-app-disruption-budget')
+            labels.add('singleton application disruption budget')
         else:
             require(before['spec'].pop('minReplicas') in (1, 3), 'existing-replica-minimum')
             require(after['spec'].pop('minReplicas') == (1 if idle else 3), 'target-replica-minimum')
@@ -98,15 +113,16 @@ def main(mode):
         exported = directory / 'before.json'
         quiet(['pulumi', 'stack', 'export', '--stack', 'gcpStaging', '--file', str(exported), '--non-interactive'], directory, 'state', env)
         previous = {r['urn']: r for r in json.loads(exported.read_text())['deployment']['resources']}
-        require(all(u in previous for u in TARGETS), 'existing-staging-targets')
+        require(all(u in previous for u in TARGETS if u != INGRESS_PDB), 'existing-staging-targets')
         base = ['--stack', 'gcpStaging', '--non-interactive']
         full_plan = directory / 'full-plan.json'
         full = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(full_plan)] + base, directory, 'full-preview', env)
         validate(parse_preview_events(full.read_text()), idle, previous)
         print('Full refreshed staging scope validation passed.', flush=True)
-        targets = [arg for urn in TARGETS for arg in ('--target', urn)]
+        targets = [arg for urn in TARGETS if urn != INGRESS_PDB or urn in previous or not idle for arg in ('--target', urn)]
+        refresh = ['--refresh=false'] if not idle and INGRESS_PDB not in previous else ['--refresh']
         plan = directory / 'plan.json'
-        preview = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(plan)] + base + targets, directory, 'preview', env)
+        preview = quiet(['pulumi', 'preview', '--json', '--save-plan', str(plan)] + refresh + base + targets, directory, 'preview', env)
         labels = validate(parse_preview_events(preview.read_text()), idle)
         full_graph = decode_plan(full_plan.read_text())
         graph, changes = reconcile(full_graph, decode_plan(plan.read_text()))
@@ -125,7 +141,7 @@ def main(mode):
         apply_plan.write_text(json.dumps(document))
         print('Private preview validated: ' + (', '.join(labels) or 'no capacity changes'), flush=True)
         if mode == 'apply':
-            quiet(['pulumi', 'up', '--refresh', '--json', '--yes', '--skip-preview', '--plan', str(apply_plan)] + base + targets, directory, 'apply', env)
+            quiet(['pulumi', 'up', '--json', '--yes', '--skip-preview', '--plan', str(apply_plan)] + refresh + base + targets, directory, 'apply', env)
             print('Staging capacity apply completed; live verification remains required.')
 
 

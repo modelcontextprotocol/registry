@@ -1,6 +1,6 @@
 import copy
 import unittest
-from staging_idle_apply import validate, WORKERS, APP_HPA, INGRESS_HPA, Blocked
+from staging_idle_apply import validate, WORKERS, APP_HPA, INGRESS_HPA, APP_PDB, INGRESS_PDB, Blocked
 
 
 def step(urn, before, after, op='update'):
@@ -35,3 +35,18 @@ class IdleScopeTests(unittest.TestCase):
         for p in [{}, {'steps': [], 'changeSummary': {}}, dict(preview(step(WORKERS, {}, {})), maybeCorrupt=True)]:
             with self.assertRaises(Blocked):
                 validate(p, True)
+
+    def test_singleton_budget_transition_and_database_rejection(self):
+        old = {'spec': {'minAvailable': 1, 'selector': {'matchLabels': {'app': 'mcp-registry'}}}}
+        new = copy.deepcopy(old)
+        new['spec']['minAvailable'] = 0
+        validate(preview(step(APP_PDB, old, new)), True)
+        validate(preview(step(APP_PDB, new, old)), False)
+        with self.assertRaises(Blocked):
+            validate(preview(step('registry-pg-primary', old, new)), True)
+        ingress = {'metadata': {'name': 'ingress-nginx-controller', 'namespace': 'ingress-nginx'}, 'spec': {'minAvailable': 1, 'selector': {'matchLabels': {'app.kubernetes.io/component': 'controller', 'app.kubernetes.io/instance': 'ingress-nginx', 'app.kubernetes.io/name': 'ingress-nginx'}}}}
+        change = {'urn': INGRESS_PDB, 'op': 'delete', 'oldState': {'inputs': ingress}, 'newState': None}
+        validate(preview(change), True)
+        change['oldState']['inputs']['spec']['minAvailable'] = 2
+        with self.assertRaises(Blocked):
+            validate(preview(change), True)

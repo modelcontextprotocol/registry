@@ -695,6 +695,9 @@ bounds 2–4, it retains the protected database node and lets workers scale 1–
 App and ingress autoscalers start at one replica; their existing ceilings remain.
 Database settings, images, connection pools, storage and networking are unchanged.
 This saves idle worker cost at the expense of redundant app/ingress availability.
+The app permits singleton eviction; the chart omits the singleton ingress PDB.
+Worker consolidation can therefore briefly interrupt staging. Database eviction
+protection remains enabled.
 Before capacity acceptance testing, disable this setting and restore the total
 node minimum to three. Review a refreshed preview before either transition.
 
