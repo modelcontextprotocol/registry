@@ -2,6 +2,8 @@ package k8s
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
@@ -37,6 +39,14 @@ func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environmen
 		},
 	}
 
+	// Depend on the parsed CRDs directly. Component children register
+	// asynchronously, so expanding the ConfigFile component can capture an
+	// incomplete dependency set while constructing a saved plan.
+	crdDependencies := make([]pulumi.Resource, 0, len(k8upCRDs.Resources))
+	for _, name := range slices.Sorted(maps.Keys(k8upCRDs.Resources)) {
+		crdDependencies = append(crdDependencies, k8upCRDs.Resources[name])
+	}
+
 	_, err = helm.NewChart(ctx, "k8up", helm.ChartArgs{
 		Chart:   pulumi.String("k8up"),
 		Version: pulumi.String("4.8.4"),
@@ -44,7 +54,7 @@ func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environmen
 			Repo: pulumi.String("https://k8up-io.github.io/k8up"),
 		},
 		Values: k8upValues,
-	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn([]pulumi.Resource{k8upCRDs}))
+	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn(crdDependencies))
 	if err != nil {
 		return fmt.Errorf("failed to install k8up: %w", err)
 	}
