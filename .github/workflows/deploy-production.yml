@@ -68,7 +68,7 @@ jobs:
           trap 'rm -f passphrase.prod.txt' EXIT
           printf '%s' "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            make prod-preview
+            python3 scripts/production_apply.py preview
           else
-            make prod-up
+            python3 scripts/production_apply.py apply
           fi

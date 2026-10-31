@@ -854,6 +854,14 @@ separate applies:
    per minute; scale-down waits ten minutes and removes at most one every two
    minutes. Pulumi then leaves the replica count to the HPA.
 
+The production GitHub workflow uses `scripts/production_apply.py` to keep raw
+Pulumi output and plans in a private temporary directory outside the checkout,
+then deletes them. Public logs contain fixed validation labels only; no raw
+logs or plans are uploaded as artifacts. The wrapper validates the complete
+input differences against this scaling profile, rejects unrelated changes or
+replacements, and applies only the validated saved plan. Future changes outside
+this profile need an explicitly reviewed validation policy; do not bypass it.
+
 `make prod-preview` and `make prod-up` run a read-only transition preflight.
 Activation requires a completed, healthy deployment with explicit 30/5 pools
 on every live app and no old or terminating app pods. The preparation apply

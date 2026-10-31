@@ -1,0 +1,99 @@
+import contextlib
+import copy
+import io
+import os
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+
+from production_apply import ANTI_AFFINITY, APP, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview
+
+
+def app_inputs(prepared):
+    app = {"name": "mcp-registry", "image": "fixture:1.8.7", "resources": {"requests": {"cpu": "800m", "memory": "512Mi"}, "limits": {"memory": "1Gi"}}, "env": [{"name": "UNCHANGED", "value": "private-sentinel"}]}
+    spec = {"replicas": 2, "template": {"spec": {"containers": [app]}}}
+    if prepared:
+        spec["minReadySeconds"] = 35
+        spec["template"]["spec"].update({"terminationGracePeriodSeconds": 30, "affinity": copy.deepcopy(ANTI_AFFINITY)})
+        app["resources"]["requests"]["cpu"] = "1200m"
+        app["env"].extend([{"name": POOL_MAX, "value": "30"}, {"name": POOL_MIN, "value": "5"}])
+    return {"apiVersion": "apps/v1", "kind": "Deployment", "metadata": {"name": "mcp-registry", "namespace": "default"}, "spec": spec}
+
+
+def step(urn, before, after, op="update"):
+    return {"urn": urn, "op": op, "oldState": {"inputs": before} if before else None, "newState": {"inputs": after} if after else None}
+
+
+def preview(steps):
+    return {"steps": steps, "changeSummary": {"update": len(steps)}}
+
+
+def hpa_inputs():
+    return {"apiVersion": "autoscaling/v2", "kind": "HorizontalPodAutoscaler", "metadata": {"name": "mcp-registry", "namespace": "default"}, "spec": copy.deepcopy(HPA_SPEC)}
+
+
+class PrivateProductionPreview(unittest.TestCase):
+    def test_prepare_exact_app_and_worker_changes(self):
+        changes = [step(APP, app_inputs(False), app_inputs(True)), step(WORKERS, {"nodeCount": 2, "autoscaling": {"minNodeCount": 2, "maxNodeCount": 3}}, {"nodeCount": 2, "autoscaling": {"minNodeCount": 2, "maxNodeCount": 4}})]
+        self.assertEqual(validate_preview(preview(changes), "prepare"), ["application scaling settings", "worker autoscaling ceiling"])
+
+    def test_activation_only_bounded_hpa(self):
+        self.assertEqual(validate_preview(preview([step(HPA, None, hpa_inputs(), "create")]), "enabled"), ["bounded application autoscaler"])
+        invalid = hpa_inputs()
+        invalid["spec"]["maxReplicas"] = 5
+        with self.assertRaises(Blocked):
+            validate_preview(preview([step(HPA, None, invalid, "create")]), "enabled")
+
+    def test_unrelated_app_changes_fail_closed(self):
+        for field in ("image", "secret", "memory", "affinity"):
+            after = app_inputs(True)
+            container = after["spec"]["template"]["spec"]["containers"][0]
+            if field == "image":
+                container["image"] = "fixture:unreviewed"
+            elif field == "secret":
+                container["env"][0]["value"] = "changed-private-sentinel"
+            elif field == "memory":
+                container["resources"]["limits"]["memory"] = "2Gi"
+            else:
+                after["spec"]["template"]["spec"]["affinity"] = {}
+            with self.subTest(field=field), self.assertRaises(Blocked):
+                validate_preview(preview([step(APP, app_inputs(False), after)]), "prepare")
+
+    def test_node_count_or_minimum_cannot_change(self):
+        before = {"nodeCount": 3, "autoscaling": {"minNodeCount": 2, "maxNodeCount": 3}}
+        for field in ("nodeCount", "minNodeCount"):
+            after = copy.deepcopy(before)
+            after["autoscaling"]["maxNodeCount"] = 4
+            if field == "nodeCount":
+                after[field] = 2
+            else:
+                after["autoscaling"][field] = 3
+            with self.subTest(field=field), self.assertRaises(Blocked):
+                validate_preview(preview([step(WORKERS, before, after)]), "prepare")
+
+    def test_deletions_replacements_and_other_resources_block(self):
+        for change in (step(APP, app_inputs(False), None, "delete"), step(APP, app_inputs(False), app_inputs(True), "replace"), step("private-database-urn", {}, {}, "update")):
+            with self.subTest(op=change["op"]), self.assertRaises(Blocked):
+                validate_preview(preview([change]), "prepare")
+
+    def test_hpa_removal_and_legacy_rollback(self):
+        validate_preview(preview([step(HPA, hpa_inputs(), None, "delete")]), "prepare")
+        validate_preview(preview([step(APP, app_inputs(True), app_inputs(False))]), "off")
+
+    def test_empty_or_failed_preview_is_not_a_pass(self):
+        for value in ({}, {"steps": [], "changeSummary": {}}, {"steps": [{"op": "same", "urn": APP}], "changeSummary": {"same": 1}, "maybeCorrupt": True}):
+            with self.assertRaises(Blocked):
+                validate_preview(value, "prepare")
+
+    def test_child_errors_do_not_echo_private_output(self):
+        captured = io.StringIO()
+        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(captured), contextlib.redirect_stderr(captured):
+            with self.assertRaisesRegex(Blocked, "fixture-failed"):
+                quiet([sys.executable, "-c", "import sys; print('private-sentinel'); print('private-sentinel',file=sys.stderr); sys.exit(1)"], Path(directory), "fixture", os.environ)
+        self.assertEqual(captured.getvalue(), "")
+        self.assertFalse(Path(directory).exists())
+
+
+if __name__ == "__main__":
+    unittest.main()
