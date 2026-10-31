@@ -23,6 +23,9 @@ jobs:
       with:
         go-version: 'stable'
         cache: true
+        cache-dependency-path: |
+          go.sum
+          deploy/go.sum
 
     - name: Run lint
       uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a
@@ -55,6 +58,9 @@ jobs:
       with:
         go-version: 'stable'
         cache: true
+        cache-dependency-path: |
+          go.sum
+          deploy/go.sum
 
     - name: Set up ko
       uses: ko-build/setup-ko@v0.10

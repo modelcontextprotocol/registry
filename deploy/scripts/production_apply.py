@@ -144,6 +144,31 @@ def validate_preview(preview, phase):
     return sorted(set(labels))
 
 
+def parse_preview_events(text):
+    # The combined preview digest rewrites refresh output events as updates.
+    # Pre-events retain the true operation: refresh is read-only; a later
+    # update/create/delete pre-event describes an operation in the saved plan.
+    steps, diagnostics, summary = [], [], None
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        if "resourcePreEvent" in event:
+            m = event["resourcePreEvent"]["metadata"]
+            steps.append({"op": m["op"], "urn": m["urn"],
+                          "oldState": m.get("old"), "newState": m.get("new"),
+                          "replaceReasons": m.get("keys", [])})
+        if "diagnosticEvent" in event:
+            diagnostics.append(event["diagnosticEvent"])
+        if "summaryEvent" in event:
+            summary = event["summaryEvent"]
+        require("resOpFailedEvent" not in event, "preview-resource-operation")
+    require(summary is not None, "preview-missing-summary")
+    return {"steps": steps, "diagnostics": diagnostics,
+            "changeSummary": summary.get("resourceChanges"),
+            "maybeCorrupt": summary.get("maybeCorrupt", False)}
+
+
 def quiet(command, directory, name, env, timeout=1800):
     stdout, stderr = directory / (name + ".out"), directory / (name + ".err")
     with stdout.open("wb") as out, stderr.open("wb") as err:
@@ -157,17 +182,18 @@ def main(mode):
     os.umask(0o077)
     env = dict(os.environ, PULUMI_BACKEND_URL="gs://mcp-registry-prod-pulumi-state",
                PULUMI_CONFIG_PASSPHRASE_FILE=str(Path("passphrase.prod.txt").resolve()),
-               PULUMI_SKIP_UPDATE_CHECK="true")
-    env.pop("PULUMI_ENABLE_STREAMING_JSON_PREVIEW", None)
+               PULUMI_SKIP_UPDATE_CHECK="true", PULUMI_ENABLE_STREAMING_JSON_PREVIEW="true")
     with tempfile.TemporaryDirectory(prefix="registry-private-pulumi-") as temp:
         directory = Path(temp)
         quiet(["go", "build"], directory, "build", env)
+        print("Deployment program build passed.", flush=True)
         config = json.loads(quiet(["pulumi", "config", "--json", "--stack", "gcpProd", "--non-interactive"], directory, "config", env).read_text())
         phase = config.get("mcp-registry:productionAppScaling", {}).get("value", "off")
         quiet([sys.executable, "scripts/check_production_scaling.py"], directory, "preflight", env)
+        print("Read-only transition preflight passed.", flush=True)
         plan = directory / "plan.json"
         result = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(plan), "--stack", "gcpProd", "--non-interactive"], directory, "preview", env)
-        labels = validate_preview(json.loads(result.read_text()), phase)
+        labels = validate_preview(parse_preview_events(result.read_text()), phase)
         print("Private preview validation passed: " + (", ".join(labels) if labels else "no infrastructure changes"), flush=True)
         if mode == "apply":
             # Recheck live pool/replica transitions immediately before applying the validated plan.

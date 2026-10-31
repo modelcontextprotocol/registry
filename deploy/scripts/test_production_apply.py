@@ -1,13 +1,14 @@
 import contextlib
 import copy
 import io
+import json
 import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
 
-from production_apply import ANTI_AFFINITY, APP, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview
+from production_apply import ANTI_AFFINITY, APP, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events
 
 
 def app_inputs(prepared):
@@ -85,6 +86,23 @@ class PrivateProductionPreview(unittest.TestCase):
         for value in ({}, {"steps": [], "changeSummary": {}}, {"steps": [{"op": "same", "urn": APP}], "changeSummary": {"same": 1}, "maybeCorrupt": True}):
             with self.assertRaises(Blocked):
                 validate_preview(value, "prepare")
+
+    def test_refresh_status_updates_are_not_planned_changes(self):
+        events = [
+            {"resourcePreEvent": {"metadata": {"op": "refresh", "urn": "private-other-resource"}}},
+            {"resOutputsEvent": {"metadata": {"op": "update", "urn": "private-other-resource"}}},
+            {"resourcePreEvent": {"metadata": {"op": "create", "urn": HPA, "new": {"inputs": hpa_inputs()}}}},
+            {"summaryEvent": {"resourceChanges": {"create": 1}, "maybeCorrupt": False}},
+        ]
+        parsed = parse_preview_events("\n".join(json.dumps(e) for e in events))
+        self.assertEqual(validate_preview(parsed, "enabled"), ["bounded application autoscaler"])
+        events.insert(2, {"resourcePreEvent": {"metadata": {"op": "update", "urn": "private-other-resource", "old": {}, "new": {}}}})
+        with self.assertRaises(Blocked):
+            validate_preview(parse_preview_events("\n".join(json.dumps(e) for e in events)), "enabled")
+
+    def test_truncated_stream_is_not_a_pass(self):
+        with self.assertRaises(Blocked):
+            parse_preview_events(json.dumps({"resourcePreEvent": {"metadata": {"op": "same", "urn": APP}}}))
 
     def test_child_errors_do_not_echo_private_output(self):
         captured = io.StringIO()
