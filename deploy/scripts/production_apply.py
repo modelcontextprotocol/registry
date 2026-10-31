@@ -256,6 +256,8 @@ def decode_plan(text):
 
 
 def resource_kind_label(urn):
+    if urn == PREFIX + "kubernetes:helm.sh/v3:Chart::k8up":
+        return "backup-chart"
     for token, label in (("pulumi:pulumi:Stack", "stack"), ("kubernetes:networking.k8s.io/v1:Ingress", "ingress"), ("kubernetes:helm.sh/v3:Chart", "chart"), ("kubernetes:cert-manager.io/v1:ClusterIssuer", "certificate"), ("kubernetes:apps/v1:Deployment", "deployment"), ("kubernetes:core/v1:Service", "service")):
         if token in urn:
             return label
