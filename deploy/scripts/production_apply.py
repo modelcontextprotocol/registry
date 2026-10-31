@@ -321,7 +321,8 @@ def main(mode):
         quiet(["pulumi", "stack", "export", "--stack", "gcpProd", "--file", str(exported), "--non-interactive"], directory, "state", env)
         previous = {r["urn"]: r for r in json.loads(exported.read_text())["deployment"]["resources"]}
         require(all(urn in previous for urn in (STACK, APP, WORKERS)), "existing-production-stack")
-        full = quiet(["pulumi", "preview", "--refresh", "--json", "--stack", "gcpProd", "--non-interactive"], directory, "full-preview", env)
+        full_plan = directory / "full-plan.json"
+        full = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(full_plan), "--stack", "gcpProd", "--non-interactive"], directory, "full-preview", env)
         validate_preview(parse_preview_events(full.read_text()), phase, completed_hooks=previous)
         print("Full change scope validation passed.", flush=True)
         # Never recreate TTL-expired setup jobs as a side effect of scaling.
@@ -331,7 +332,21 @@ def main(mode):
             targets += ["--target", HPA]
         plan = directory / "plan.json"
         result = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "preview", env)
+        full_graph = json.loads(full_plan.read_text())
+        target_graph = json.loads(plan.read_text())
+        require("resourcePlans" in full_graph and "resourcePlans" in target_graph, "plan-schema")
+        changed = []
+        for urn, target in target_graph["resourcePlans"].items():
+            full_goal = full_graph["resourcePlans"].get(urn, {}).get("goal")
+            target_goal = target.get("goal")
+            if full_goal and target_goal and (full_goal.get("dependencies") != target_goal.get("dependencies") or full_goal.get("propertyDependencies") != target_goal.get("propertyDependencies")):
+                changed.append(urn)
         labels = validate_preview(parse_preview_events(result.read_text()), phase)
+        if changed:
+            kinds = sorted(set("app" if u == APP else "worker" if u == WORKERS else "hpa" if u == HPA else "outside-target" for u in changed))
+            print("Full versus targeted dependency comparison: " + ",".join(kinds), flush=True)
+        else:
+            print("Full versus targeted dependency comparison: identical.", flush=True)
         print("Private preview validation passed: " + (", ".join(labels) if labels else "no infrastructure changes"), flush=True)
         if mode == "apply":
             # Recheck live pool/replica transitions immediately before applying the validated plan.
