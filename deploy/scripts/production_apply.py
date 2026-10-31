@@ -108,6 +108,26 @@ def excluded_completed_hook(step, previous):
             and before.get("parent") == after.get("parent"))
 
 
+
+def excluded_unchanged_rbac(step, previous):
+    if step.get("op") != "update":
+        return False
+    before, after = previous.get(step.get("urn")), step.get("newState")
+    if not before or not after:
+        return False
+    if before.get("type") not in (
+        "kubernetes:rbac.authorization.k8s.io/v1:Role",
+        "kubernetes:rbac.authorization.k8s.io/v1:ClusterRole",
+    ):
+        return False
+    # Provider reconciliation may report a change with identical desired inputs.
+    # Exclude only exact existing definitions; never apply an RBAC operation.
+    return (before["inputs"] == after["inputs"]
+            and before.get("provider") == after.get("provider")
+            and before.get("parent") == after.get("parent")
+            and before.get("protect", False) == after.get("protect", False))
+
+
 def validate_preview(preview, phase, completed_hooks=None):
     require(phase in ("off", "prepare", "enabled"), "scaling-phase")
     require(preview.get("steps") and isinstance(preview.get("changeSummary"), dict), "preview-incomplete")
@@ -115,7 +135,7 @@ def validate_preview(preview, phase, completed_hooks=None):
     require(not any(d.get("severity") == "error" for d in preview.get("diagnostics", [])), "preview-diagnostics")
     labels, failures = [], []
     for step in preview["steps"]:
-        if completed_hooks is not None and excluded_completed_hook(step, completed_hooks):
+        if completed_hooks is not None and (excluded_completed_hook(step, completed_hooks) or excluded_unchanged_rbac(step, completed_hooks)):
             continue
         try:
             label = validate_step(step, phase)

@@ -121,6 +121,18 @@ class PrivateProductionPreview(unittest.TestCase):
         with self.assertRaises(Blocked):
             validate_preview(preview([change]), "prepare", completed_hooks=previous)
 
+    def test_unchanged_rbac_is_excluded_only_from_full_review(self):
+        urn = "fixture-role"
+        inputs = {"metadata": {"name": "fixture"}, "rules": []}
+        previous = {urn: {"type": "kubernetes:rbac.authorization.k8s.io/v1:Role", "inputs": copy.deepcopy(inputs)}}
+        change = step(urn, copy.deepcopy(inputs), copy.deepcopy(inputs))
+        validate_preview(preview([change]), "prepare", completed_hooks=previous)
+        with self.assertRaises(Blocked):
+            validate_preview(preview([change]), "prepare")
+        change["newState"]["inputs"]["rules"] = [{"verbs": ["*"]}]
+        with self.assertRaises(Blocked):
+            validate_preview(preview([change]), "prepare", completed_hooks=previous)
+
     def test_child_errors_do_not_echo_private_output(self):
         captured = io.StringIO()
         with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(captured), contextlib.redirect_stderr(captured):
