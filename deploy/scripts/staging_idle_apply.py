@@ -122,6 +122,14 @@ def main(mode):
         previous = {r['urn']: r for r in json.loads(exported.read_text())['deployment']['resources']}
         require(all(u in previous for u in TARGETS if u != INGRESS_PDB), 'existing-staging-targets')
         base = ['--stack', 'gcpStaging', '--non-interactive']
+        if mode == 'apply' and idle and INGRESS_PDB in previous:
+            # The singleton chart omits this budget. A prior targeted update may
+            # retain its checkpoint after the live budget has been removed.
+            # Refresh only this exact resource; never delete live objects here.
+            validate({'steps': [{'urn': INGRESS_PDB, 'op': 'delete', 'oldState': previous[INGRESS_PDB], 'newState': None}], 'changeSummary': {'delete': 1}}, True)
+            quiet(['pulumi', 'refresh', '--json', '--yes', '--skip-preview', '--target', INGRESS_PDB] + base, directory, 'budget-refresh', env)
+            quiet(['pulumi', 'stack', 'export', '--file', str(exported)] + base, directory, 'refreshed-state', env)
+            previous = {r['urn']: r for r in json.loads(exported.read_text())['deployment']['resources']}
         full_plan = directory / 'full-plan.json'
         try:
             full = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(full_plan)] + base, directory, 'full-preview', env)
@@ -134,7 +142,10 @@ def main(mode):
             raise
         validate(parse_preview_events(full.read_text()), idle, previous)
         print('Full refreshed staging scope validation passed.', flush=True)
-        targets = [arg for urn in TARGETS if urn != INGRESS_PDB or urn in previous or not idle for arg in ('--target', urn)]
+        # An omitted chart child is not a valid update target after refresh.
+        # Its full-preview deletion remains validated above; live verification
+        # must confirm that an obsolete singleton budget is absent.
+        targets = [arg for urn in TARGETS if urn != INGRESS_PDB or not idle for arg in ('--target', urn)]
         refresh = ['--refresh=false'] if not idle and INGRESS_PDB not in previous else ['--refresh']
         plan = directory / 'plan.json'
         preview = quiet(['pulumi', 'preview', '--json', '--save-plan', str(plan)] + refresh + base + targets, directory, 'preview', env)
