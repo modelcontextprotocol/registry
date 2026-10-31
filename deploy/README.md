@@ -867,6 +867,12 @@ scaling resources and rejects any setup job or RBAC operation. All other
 unrelated changes remain blocked. Future changes outside
 this profile need an explicitly reviewed validation policy; do not bypass it.
 
+A targeted preview can retain old dependency metadata for untargeted resources.
+The wrapper reconciles only those dependency fields from two agreeing full
+previews. Targeted resources and providers cannot be reconciled this way; all
+input, output, operation, protection and identity constraints remain unchanged.
+Pulumi still checks the resulting saved plan during apply.
+
 `make prod-preview` and `make prod-up` run a read-only transition preflight.
 Activation requires a completed, healthy deployment with explicit 30/5 pools
 on every live app and no old or terminating app pods. The preparation apply
