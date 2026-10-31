@@ -812,23 +812,56 @@ fixed counts; scale-in and a database request rollback may interrupt service.
 `productionInfrastructureOnly: true` explicitly enables the isolated capacity
 profile in production while retaining the configured application release. It
 requires `coordinatedCapacity`, `isolatedDatabase`, `burstAutoscaling`,
-`e2-standard-4` nodes, total node bounds 3–4, an 800m or 1200m app CPU request, and a
+`e2-standard-4` nodes, total node bounds 3–4, an 800m app CPU request, and a
 PostgreSQL CPU request/limit of 3/3.
 
-The 1200m app reservation gives each replica more relative CPU weight under
-contention and reserves scheduling capacity. It does not impose a CPU limit or
-provide exclusive cores. Before applying it, verify requests for all pods fit
-on the current workers and at the two-worker minimum, including system pods.
-Keep ingress hostname spread and its CPU reservation intact. Roll back by
-restoring `registryCPURequest: "800m"`; both changes roll the app pods. This
-setting leaves the application release, replica and connection counts unchanged.
+By default this profile keeps **two fixed app replicas** and leaves pool
+configuration at the release defaults. Staging retains its separate 3–4 app
+HPA and 30/5 pools.
 
-This profile keeps **two fixed app replicas** and does not set pool environment
-variables or create an app HPA. Production 1.8.6 has hardcoded max/min pools of
-60/10 per replica; four replicas could exceed PostgreSQL's 200-connection limit.
-Staging retains its separate 3–4 app HPA and configurable 30/5 pools. An app
-release and separate promotion are required before enabling that behavior in
-production.
+### Bounded production app scaling
+
+Production releases from 1.8.7 support configurable connection pools. The
+`productionAppScaling` opt-in extends the isolated production profile in two
+separate applies:
+
+1. Set `productionAppScaling: prepare`, `registryCPURequest: "1200m"` and
+   `nodeMaxCount: "5"`. This keeps two fixed apps and rolls out explicit max/min
+   pools of 30/5. Total node bounds become 3–5: one protected database node plus
+   2–4 workers. Verify the rollout and pool settings before proceeding.
+2. Set only `productionAppScaling: enabled`. This creates the app HPA with
+   2–4 replicas and a 70% CPU target (840m per app). Scale-up permits two apps
+   per minute; scale-down waits ten minutes and removes at most one every two
+   minutes. Pulumi then leaves the replica count to the HPA.
+
+`make prod-preview` and `make prod-up` run a read-only transition preflight.
+Activation requires a completed, healthy deployment with explicit 30/5 pools
+on every live app and no old or terminating app pods. The preparation apply
+must finish before activation: combining old 60-connection pools with four
+new apps could exhaust database connections. Do not bypass the preflight with
+an unguarded `pulumi up`.
+
+The steady-state app connection ceiling is 120. Terminating pods can still
+hold connections: zero surge is not a hard connection cap. Replacements must
+remain Ready for 35 seconds, longer than the normal 30-second termination
+window, to reduce routine rollout overlap. Monitor total database connections
+and draining pods during changes; stalled termination or unreachable nodes
+require investigation before continuing. Leave capacity for database
+administration and other clients.
+
+The CPU request reserves scheduling capacity and gives relative CPU weight;
+it is neither a CPU limit nor an exclusive core. Check system pod requests,
+memory and hostname spread when reviewing worker fit. Node autoscaling reacts
+to unschedulable pods, not CPU utilization alone; raising its maximum does not
+create ready capacity immediately. The extra worker is available on demand,
+so scaling cannot guarantee absorption of an instantaneous burst.
+
+For rollback, first return to `prepare` while keeping 1200m, 30/5 pools and the
+3–5 node bounds. Verify the HPA is gone and exactly two healthy apps remain,
+with no terminating pods. Only then set `productionAppScaling: off`, restore
+800m and total node bounds 3–4. The transition preflight blocks a direct
+return to legacy pools while the HPA or extra apps remain. Preserve the
+protected database pool, existing volume, application release and networking.
 
 The layout is one protected database node plus 2–3 worker nodes. Ingress scales
 3–6 on CPU with 800m CPU/512Mi memory requests, a 70% target, and conservative

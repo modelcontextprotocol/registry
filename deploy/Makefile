@@ -1,4 +1,4 @@
-.PHONY: help build local-login local-preview local-up staging-login staging-preview staging-up prod-login prod-preview prod-up
+.PHONY: help build local-login local-preview local-up staging-login staging-preview staging-up prod-login prod-preflight prod-preview prod-up
 
 # Default target
 help: ## Show this help message
@@ -38,8 +38,11 @@ staging-up: build staging-login ## Deploy staging infrastructure
 prod-login: ## Login to production Pulumi backend
 	pulumi login gs://mcp-registry-prod-pulumi-state
 
-prod-preview: build prod-login ## Preview production infrastructure changes
+prod-preflight: build prod-login
+	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt python3 scripts/check_production_scaling.py
+
+prod-preview: prod-preflight ## Preview production infrastructure changes
 	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi preview --refresh --diff --stack gcpProd
 
-prod-up: build prod-login ## Deploy production infrastructure
+prod-up: prod-preflight ## Deploy production infrastructure
 	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --refresh --yes --stack gcpProd

@@ -97,7 +97,7 @@ func TestProductionInfrastructureKeepsFixedConnectionBudget(t *testing.T) {
 		invalid          bool
 	}{
 		{"valid", "imageTag", "1.8.6", false},
-		{"higher app reservation", "registryCPURequest", "1200m", false},
+		{"higher reservation requires complete scaling profile", "registryCPURequest", "1200m", true},
 		{"reject unreviewed reservation", "registryCPURequest", "1000m", true},
 		{"reject oversized reservation", "registryCPURequest", "1600m", true},
 		{"requires explicit opt in", "productionInfrastructureOnly", "false", true},

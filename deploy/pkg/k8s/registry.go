@@ -97,16 +97,23 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	deploymentOptions := []pulumi.ResourceOption{pulumi.Provider(cluster.Provider)}
 	maxSurge, maxUnavailable := 1, 0
 	replicaCount, appAutoscaling := registryCapacitySettings(ctx)
+	var minReadySeconds, terminationGraceSeconds pulumi.IntPtrInput
+	if phase := conf.Get("productionAppScaling"); phase == "prepare" || phase == "enabled" {
+		// A replacement must remain Ready longer than a normal termination window.
+		// This limits routine rollout overlap; unreachable nodes still need operator review.
+		minReadySeconds, terminationGraceSeconds = pulumi.IntPtr(35), pulumi.IntPtr(30)
+	}
 	poolEnv := corev1.EnvVarArray{}
 	if coordinatedCapacity {
 		maxSurge, maxUnavailable = 0, 1
 	}
 	if appAutoscaling {
-		// HPA owns the live count; keep the steady-state connection budget at
-		// 90–120 across 3–4 apps. Terminating pods may overlap during rollouts.
+		// HPA owns the live count; keep the steady-state connection budget
+		// at most 120 across four apps. Terminating pods may overlap during rollouts.
 		deploymentOptions = append(deploymentOptions, pulumi.IgnoreChanges([]string{"spec.replicas"}))
 		maxSurge, maxUnavailable = 0, 1
-		replicaCount = coordinatedIdleReplicas
+	}
+	if appAutoscaling || conf.Get("productionAppScaling") == "prepare" {
 		poolEnv = corev1.EnvVarArray{
 			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"), Value: pulumi.String("30")},
 			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"), Value: pulumi.String("5")},
@@ -133,7 +140,8 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			},
 		},
 		Spec: &v1.DeploymentSpecArgs{
-			Replicas: pulumi.Int(replicaCount),
+			Replicas:        pulumi.Int(replicaCount),
+			MinReadySeconds: minReadySeconds,
 			Strategy: &v1.DeploymentStrategyArgs{
 				Type: pulumi.String("RollingUpdate"),
 				RollingUpdate: &v1.RollingUpdateDeploymentArgs{
@@ -157,8 +165,9 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
-					TopologySpreadConstraints: corev1.TopologySpreadConstraintArray{spreadConstraint},
-					NodeSelector:              workerNodeSelector(ctx),
+					TerminationGracePeriodSeconds: terminationGraceSeconds,
+					TopologySpreadConstraints:     corev1.TopologySpreadConstraintArray{spreadConstraint},
+					NodeSelector:                  workerNodeSelector(ctx),
 					Containers: corev1.ContainerArray{
 						&corev1.ContainerArgs{
 							Name:            pulumi.String("mcp-registry"),
