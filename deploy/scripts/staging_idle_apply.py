@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 from production_apply import (Blocked, require, quiet, parse_preview_events,
-                              decode_plan, dependency_signature, excluded_unchanged_rbac)
+                              decode_plan, dependency_signature, excluded_unchanged_rbac, apply_error_messages)
 
 PREFIX = 'urn:pulumi:gcpStaging::mcp-registry-infra::'
 WORKERS = PREFIX + 'gcp:container/nodePool:NodePool::mcp-registry-staging-nodepool'
@@ -116,7 +116,15 @@ def main(mode):
         require(all(u in previous for u in TARGETS if u != INGRESS_PDB), 'existing-staging-targets')
         base = ['--stack', 'gcpStaging', '--non-interactive']
         full_plan = directory / 'full-plan.json'
-        full = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(full_plan)] + base, directory, 'full-preview', env)
+        try:
+            full = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(full_plan)] + base, directory, 'full-preview', env)
+        except Blocked:
+            # Only fixed component labels reach CI; never emit provider diagnostics.
+            errors = apply_error_messages((directory / 'full-preview.out').read_text(), (directory / 'full-preview.err').read_text())
+            for label, token in {'ingress-controller': 'ingress-nginx-controller', 'metrics-server': 'victoria-metrics-server', 'metrics-agent': 'victoria-metrics-agent', 'grafana': 'grafana', 'application': 'default/mcp-registry'}.items():
+                if token in errors:
+                    print('Preview conflict component: ' + label, flush=True)
+            raise
         validate(parse_preview_events(full.read_text()), idle, previous)
         print('Full refreshed staging scope validation passed.', flush=True)
         targets = [arg for urn in TARGETS if urn != INGRESS_PDB or urn in previous or not idle for arg in ('--target', urn)]
