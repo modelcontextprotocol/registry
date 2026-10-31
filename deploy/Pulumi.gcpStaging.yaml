@@ -6,7 +6,8 @@ config:
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
   mcp-registry:nodeAutoscaling: "true"
-  mcp-registry:nodeMinCount: "3"
+  mcp-registry:nodeMinCount: "2"
+  mcp-registry:stagingIdleCapacity: "true"
   mcp-registry:nodeMaxCount: "4"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"

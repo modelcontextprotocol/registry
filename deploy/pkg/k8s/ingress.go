@@ -89,8 +89,8 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		clientKeepaliveSnippet = "keepalive_time 60s;\n"
 		autoscaling = ingressAutoscalingValues()
 		if conf.GetBool("coordinatedCapacity") {
-			replicaCount = coordinatedIdleReplicas
-			autoscaling["minReplicas"] = pulumi.Int(coordinatedIdleReplicas)
+			replicaCount = coordinatedMinimum(ctx)
+			autoscaling["minReplicas"] = pulumi.Int(coordinatedMinimum(ctx))
 			// Scale at 560m instead of 704m to add capacity before contention.
 			autoscaling["targetCPUUtilizationPercentage"] = pulumi.Int(70)
 		}

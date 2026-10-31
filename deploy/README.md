@@ -688,6 +688,16 @@ budget. Recheck pod fit and database protection before reducing capacity, and
 restore production parity for future capacity acceptance tests. Scale-down can
 be delayed by placement and disruption budgets; a minimum is not a guarantee.
 
+### Idle staging capacity
+
+`stagingIdleCapacity: true` is restricted to isolated staging. With total node
+bounds 2–4, it retains the protected database node and lets workers scale 1–3.
+App and ingress autoscalers start at one replica; their existing ceilings remain.
+Database settings, images, connection pools, storage and networking are unchanged.
+This saves idle worker cost at the expense of redundant app/ingress availability.
+Before capacity acceptance testing, disable this setting and restore the total
+node minimum to three. Review a refreshed preview before either transition.
+
 ### Burst capacity (staging validation)
 
 The `coordinatedCapacity` and `isolatedDatabase` opt-ins are enabled in the
