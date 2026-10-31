@@ -255,6 +255,13 @@ def decode_plan(text):
     return data
 
 
+def resource_kind_label(urn):
+    for token, label in (("pulumi:pulumi:Stack", "stack"), ("kubernetes:networking.k8s.io/v1:Ingress", "ingress"), ("kubernetes:helm.sh/v3:Chart", "chart"), ("kubernetes:cert-manager.io/v1:ClusterIssuer", "certificate"), ("kubernetes:apps/v1:Deployment", "deployment"), ("kubernetes:core/v1:Service", "service")):
+        if token in urn:
+            return label
+    return "other"
+
+
 def dependency_mismatch_labels(full_graph, target_graph):
     labels = set()
     for urn, target in target_graph["resourcePlans"].items():
@@ -395,7 +402,7 @@ def main(mode):
             validate_preview(parse_preview_events(confirmed.read_text()), phase, completed_hooks=previous)
             confirmation_graph = decode_plan(confirmed_plan.read_text())
             for urn in dependency_changes:
-                require(dependency_signature(full_graph["resourcePlans"][urn]["goal"]) == dependency_signature(confirmation_graph["resourcePlans"][urn]["goal"]), "unstable-full-dependency-graph")
+                require(dependency_signature(full_graph["resourcePlans"][urn]["goal"]) == dependency_signature(confirmation_graph["resourcePlans"][urn]["goal"]), "unstable-full-dependency-graph-" + resource_kind_label(urn))
             print("Untargeted dependency metadata confirmed; input and operation constraints preserved.", flush=True)
         plan_document = json.loads(plan.read_text())
         if "version" in plan_document:
