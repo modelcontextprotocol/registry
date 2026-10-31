@@ -246,6 +246,23 @@ def parse_preview_events(text):
 
 
 
+
+def apply_error_messages(stdout, stderr):
+    messages = []
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        diagnostic = event.get("diagnosticEvent", {})
+        if diagnostic.get("severity") == "error":
+            messages.append(diagnostic.get("message", ""))
+    # CLI startup failures may precede the JSON event stream. Never include
+    # resource event data, which can contain unrelated words or private values.
+    messages.extend(line for line in stderr.splitlines() if "error" in line.lower())
+    return "\n".join(messages)
+
+
 def apply_failure_category(text):
     text = text.lower()
     categories = {
@@ -260,7 +277,20 @@ def apply_failure_category(text):
         "validation": ("invalid", "validation"),
         "concurrent-operation": ("already running", "another update", "locked"),
     }
-    return ",".join(sorted(k for k, patterns in categories.items() if any(p in text for p in patterns))) or "unclassified"
+    labels = [k for k, patterns in categories.items() if any(p in text for p in patterns)]
+    for kind, token in {
+        "application": "kubernetes:apps/v1:deployment::mcp-registry",
+        "secret": "kubernetes:core/v1:secret",
+        "provider": "pulumi:providers:",
+        "job": "kubernetes:batch/v1:job",
+        "worker": "gcp:container/nodepool:",
+    }.items():
+        if token in text:
+            labels.append("resource-" + kind)
+    for field in ("inputs", "outputs", "dependencies", "provider", "metadata", "affinity", "replicas", "resources", "env", "kubeconfig"):
+        if field in text:
+            labels.append("field-" + field)
+    return ",".join(sorted(set(labels))) or "unclassified"
 
 
 def quiet(command, directory, name, env, timeout=1800):
@@ -268,7 +298,7 @@ def quiet(command, directory, name, env, timeout=1800):
     with stdout.open("wb") as out, stderr.open("wb") as err:
         result = subprocess.run(command, stdout=out, stderr=err, env=env, timeout=timeout, check=False)
     if result.returncode and name == "apply":
-        raise Blocked("apply-failed-" + apply_failure_category(stdout.read_text(errors="replace") + stderr.read_text(errors="replace")))
+        raise Blocked("apply-failed-" + apply_failure_category(apply_error_messages(stdout.read_text(errors="replace"), stderr.read_text(errors="replace"))))
     require(result.returncode == 0, name + "-failed")
     return stdout
 
