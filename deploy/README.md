@@ -872,6 +872,9 @@ The wrapper reconciles only those dependency fields from two agreeing full
 previews. Targeted resources and providers cannot be reconciled this way; all
 input, output, operation, protection and identity constraints remain unchanged.
 Pulumi still checks the resulting saved plan during apply.
+For initial HPA creation, the targeted preview and apply omit refresh because
+Pulumi requires refresh targets to exist already. The full preview still
+refreshes live state, and saved-plan checks and the pre-apply live guard remain.
 
 `make prod-preview` and `make prod-up` run a read-only transition preflight.
 Activation requires a completed, healthy deployment with explicit 30/5 pools

@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category, apply_error_messages, dependency_signature, decode_plan, reconcile_plan_dependencies
+from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category, apply_error_messages, dependency_signature, decode_plan, reconcile_plan_dependencies, targeted_refresh_args
 
 
 def app_inputs(prepared):
@@ -155,6 +155,12 @@ class PrivateProductionPreview(unittest.TestCase):
                 full["resourcePlans"][urn]["goal"]["provider"] = "changed"
             with self.assertRaises(Blocked):
                 reconcile_plan_dependencies(full, original)
+
+    def test_refresh_omitted_only_for_new_hpa_target(self):
+        self.assertEqual(targeted_refresh_args("enabled", {}), ["--refresh=false"])
+        self.assertEqual(targeted_refresh_args("enabled", {HPA: {}}), ["--refresh"])
+        for phase in ("prepare", "off"):
+            self.assertEqual(targeted_refresh_args(phase, {}), ["--refresh"])
 
     def test_versioned_plan_schema(self):
         self.assertEqual(decode_plan(json.dumps({"version": 1, "plan": {"resourcePlans": {}}})), {"resourcePlans": {}})

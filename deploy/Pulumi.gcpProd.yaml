@@ -13,7 +13,7 @@ config:
   mcp-registry:burstAutoscaling: "true"
   mcp-registry:coordinatedCapacity: "true"
   mcp-registry:isolatedDatabase: "true"
-  mcp-registry:productionAppScaling: prepare
+  mcp-registry:productionAppScaling: enabled
   mcp-registry:productionInfrastructureOnly: "true"
   mcp-registry:registryCPURequest: "1200m"
   mcp-registry:postgresCPURequest: "3"

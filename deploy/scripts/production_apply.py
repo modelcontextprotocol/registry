@@ -328,6 +328,7 @@ def apply_failure_category(text):
         "access": ("forbidden", "permission denied", "unauthorized"),
         "missing-resource": ("not found", "does not exist"),
         "dependency": ("dependency", "dependents", "untargeted"),
+        "target-selection": ("target", "did not match"),
         "timeout": ("timeout", "timed out", "deadline exceeded"),
         "provider": ("provider plugin", "plugin version"),
         "validation": ("invalid", "validation"),
@@ -357,10 +358,18 @@ def quiet(command, directory, name, env, timeout=1800):
     stdout, stderr = directory / (name + ".out"), directory / (name + ".err")
     with stdout.open("wb") as out, stderr.open("wb") as err:
         result = subprocess.run(command, stdout=out, stderr=err, env=env, timeout=timeout, check=False)
-    if result.returncode and name == "apply":
-        raise Blocked("apply-failed-" + apply_failure_category(apply_error_messages(stdout.read_text(errors="replace"), stderr.read_text(errors="replace"))))
+    if result.returncode and name in ("apply", "preview", "full-preview", "confirm-preview"):
+        raise Blocked(name + "-failed-" + apply_failure_category(apply_error_messages(stdout.read_text(errors="replace"), stderr.read_text(errors="replace"))))
     require(result.returncode == 0, name + "-failed")
     return stdout
+
+
+def targeted_refresh_args(phase, previous):
+    # Refresh validates literal targets against the existing checkpoint before
+    # the program runs, so a new HPA cannot be a refresh target. The full preview
+    # above still refreshes and validates scope, and the live preflight is rerun
+    # before apply. Keep the saved plan and exact update targets in both cases.
+    return ["--refresh=false"] if phase == "enabled" and HPA not in previous else ["--refresh"]
 
 
 def main(mode):
@@ -391,7 +400,8 @@ def main(mode):
         if phase == "enabled" or HPA in previous:
             targets += ["--target", HPA]
         plan = directory / "plan.json"
-        result = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "preview", env)
+        refresh_args = targeted_refresh_args(phase, previous)
+        result = quiet(["pulumi", "preview", "--json", "--save-plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + refresh_args + targets, directory, "preview", env)
         full_graph = decode_plan(full_plan.read_text())
         target_graph = decode_plan(plan.read_text())
         changed = dependency_mismatch_labels(full_graph, target_graph)
@@ -417,7 +427,7 @@ def main(mode):
         if mode == "apply":
             # Recheck live pool/replica transitions immediately before applying the validated plan.
             quiet([sys.executable, "scripts/check_production_scaling.py"], directory, "preapply", env)
-            quiet(["pulumi", "up", "--json", "--refresh", "--yes", "--skip-preview", "--plan", str(apply_plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "apply", env)
+            quiet(["pulumi", "up", "--json", "--yes", "--skip-preview", "--plan", str(apply_plan), "--stack", "gcpProd", "--non-interactive"] + refresh_args + targets, directory, "apply", env)
             print("Production apply completed; live verification remains required.")
 
 
