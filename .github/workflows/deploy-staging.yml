@@ -1,6 +1,13 @@
 name: Deploy to Staging
 
 on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Preview the selected ref or apply idle capacity on main
+        type: choice
+        options: [preview, apply]
+        default: preview
   push:
     branches:
       - main
@@ -15,6 +22,7 @@ env:
 
 jobs:
   ko-push:
+    if: github.event_name == 'push'
     name: Build and Push Image with ko
     runs-on: ubuntu-latest
     permissions:
@@ -61,6 +69,7 @@ jobs:
             --tags=main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }},main
 
   deploy-staging:
+    if: ${{ !cancelled() && (needs.ko-push.result == 'success' || github.event_name == 'workflow_dispatch') }}
     name: Deploy to Staging
     runs-on: ubuntu-latest
     environment: staging
@@ -108,6 +117,18 @@ jobs:
           printf '%s' "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
           trap 'rm -f passphrase.staging.txt' EXIT
           export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ inputs.operation }}" = "apply" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+              echo "Staging apply requires main."
+              exit 1
+            fi
+            python3 scripts/staging_idle_apply.py "${{ inputs.operation }}"
+            exit
+          fi
+          if grep -q 'stagingIdleCapacity: "true"' Pulumi.gcpStaging.yaml; then
+            python3 scripts/staging_idle_apply.py apply
+            exit
+          fi
           # Adopt the existing staging experiment before applying its code.
           # This is idempotent, uses the staging backend only, and fails closed.
           python3 scripts/adopt_staging_capacity.py

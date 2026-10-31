@@ -27,6 +27,10 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	if c.GetBool("isolatedDatabase") && !c.GetBool("coordinatedCapacity") {
 		return fmt.Errorf("isolatedDatabase requires coordinatedCapacity")
 	}
+	idle := c.GetBool("stagingIdleCapacity")
+	if idle && (c.Get("environment") != "staging" || !c.GetBool("coordinatedCapacity") || !c.GetBool("isolatedDatabase")) {
+		return fmt.Errorf("stagingIdleCapacity requires the isolated staging capacity profile")
+	}
 	infraOnly := c.GetBool("productionInfrastructureOnly")
 	phase := c.Get("productionAppScaling")
 	if phase != "" && phase != "off" {
@@ -62,11 +66,14 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 			return fmt.Errorf("coordinatedCapacity with isolatedDatabase requires a digest-pinned stagingImage")
 		}
 	}
-	appCPU, nodeMax := coordinatedAppCPU, "4"
+	appCPU, nodeMin, nodeMax := coordinatedAppCPU, "3", "4"
+	if idle {
+		nodeMin = "2"
+	}
 	if phase == "prepare" || phase == "enabled" {
 		appCPU, nodeMax = "1200m", "5"
 	}
-	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": nodeMax} {
+	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": nodeMin, "nodeMaxCount": nodeMax} {
 		if c.Get(key) != expected {
 			return fmt.Errorf("coordinatedCapacity requires %s=%s", key, expected)
 		}
@@ -91,13 +98,21 @@ func registryAutoscalerSpec(minReplicas int) *autoscalingv2.HorizontalPodAutosca
 	}
 }
 
+// Only the idle staging transition takes ownership of previously patched HPA fields.
+func stagingAutoscalerAnnotations(ctx *pulumi.Context) pulumi.StringMap {
+	if config.New(ctx, "mcp-registry").GetBool("stagingIdleCapacity") {
+		return pulumi.StringMap{"pulumi.com/patchForce": pulumi.String("true")}
+	}
+	return nil
+}
+
 func deployRegistryAutoscaler(ctx *pulumi.Context, provider pulumi.ProviderResource) error {
-	minimum := coordinatedIdleReplicas
+	minimum := coordinatedMinimum(ctx)
 	if config.New(ctx, "mcp-registry").Get("productionAppScaling") == "enabled" {
 		minimum = 2
 	}
 	_, err := autoscalingv2.NewHorizontalPodAutoscaler(ctx, "mcp-registry-capacity", &autoscalingv2.HorizontalPodAutoscalerArgs{
-		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String("mcp-registry"), Namespace: pulumi.String("default")},
+		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String("mcp-registry"), Namespace: pulumi.String("default"), Annotations: stagingAutoscalerAnnotations(ctx)},
 		Spec:     registryAutoscalerSpec(minimum),
 	}, pulumi.Provider(provider))
 	return err
@@ -110,7 +125,15 @@ func registryCapacitySettings(ctx *pulumi.Context) (replicas int, autoscale bool
 		return 2, true
 	}
 	if c.GetBool("coordinatedCapacity") && !c.GetBool("productionInfrastructureOnly") {
-		return coordinatedIdleReplicas, true
+		return coordinatedMinimum(ctx), true
 	}
 	return 2, false
+}
+
+// Idle staging retains autoscaling headroom but does not reserve test replicas.
+func coordinatedMinimum(ctx *pulumi.Context) int {
+	if config.New(ctx, "mcp-registry").GetBool("stagingIdleCapacity") {
+		return 1
+	}
+	return coordinatedIdleReplicas
 }
