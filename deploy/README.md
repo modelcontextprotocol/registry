@@ -819,6 +819,26 @@ By default this profile keeps **two fixed app replicas** and leaves pool
 configuration at the release defaults. Staging retains its separate 3–4 app
 HPA and 30/5 pools.
 
+The layout is one protected database node plus 2–3 worker nodes. Ingress scales
+3–6 on CPU with 800m CPU/512Mi memory requests, a 70% target, and conservative
+scale-down. Existing connections have a 60-second maximum keepalive age so new
+controllers can receive traffic. Both singleton databases are protected from
+node-autoscaler eviction; this does not provide database failover. The registry
+DB move can interrupt service while its existing volume is reattached.
+
+Run the production workflow manually on the proposed ref for a **preview only**.
+A production stack-config merge still triggers the apply. Both paths refresh
+state first. Review the preview for unexpected replacement/deletion, especially
+the cluster, registry database and PVC, before merging. Keep a fresh successful
+backup and capture health, workload placement and request metrics through the
+transition. Observe a real traffic cycle before declaring a performance fix.
+
+If recovery requires reverting placement, retain the protected database pool
+and existing volume while restoring workload scheduling/resources. A wholesale
+configuration revert that attempts to delete the protected pool is not a safe
+rollback procedure. Public node IPs, gateway configuration and application
+release are outside this infrastructure promotion.
+
 ### Bounded production app scaling
 
 Production releases from 1.8.7 support configurable connection pools. The
@@ -868,26 +888,6 @@ with no terminating pods. Only then set `productionAppScaling: off`, restore
 800m and total node bounds 3–4. The transition preflight blocks a direct
 return to legacy pools while the HPA or extra apps remain. Preserve the
 protected database pool, existing volume, application release and networking.
-
-The layout is one protected database node plus 2–3 worker nodes. Ingress scales
-3–6 on CPU with 800m CPU/512Mi memory requests, a 70% target, and conservative
-scale-down. Existing connections have a 60-second maximum keepalive age so new
-controllers can receive traffic. Both singleton databases are protected from
-node-autoscaler eviction; this does not provide database failover. The registry
-DB move can interrupt service while its existing volume is reattached.
-
-Run the production workflow manually on the proposed ref for a **preview only**.
-A production stack-config merge still triggers the apply. Both paths refresh
-state first. Review the preview for unexpected replacement/deletion, especially
-the cluster, registry database and PVC, before merging. Keep a fresh successful
-backup and capture health, workload placement and request metrics through the
-transition. Observe a real traffic cycle before declaring a performance fix.
-
-If recovery requires reverting placement, retain the protected database pool
-and existing volume while restoring workload scheduling/resources. A wholesale
-configuration revert that attempts to delete the protected pool is not a safe
-rollback procedure. Public node IPs, gateway configuration and application
-release are outside this infrastructure promotion.
 
 ### Prepared listing JSON activation
 
