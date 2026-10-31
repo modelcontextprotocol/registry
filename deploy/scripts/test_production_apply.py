@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category, apply_error_messages, dependency_signature, decode_plan
+from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category, apply_error_messages, dependency_signature, decode_plan, reconcile_plan_dependencies
 
 
 def app_inputs(prepared):
@@ -132,6 +132,29 @@ class PrivateProductionPreview(unittest.TestCase):
         change["newState"]["inputs"]["rules"] = [{"verbs": ["*"]}]
         with self.assertRaises(Blocked):
             validate_preview(preview([change]), "prepare", completed_hooks=previous)
+
+    def test_dependency_reconciliation_preserves_all_other_constraints(self):
+        goal = {"type": "fixture:Resource", "name": "fixture", "custom": True, "provider": "fixed", "dependencies": ["old"], "inputDiff": {"updates": {"fixed": "value"}}}
+        original = {"resourcePlans": {"untargeted": {"goal": goal, "steps": ["same"], "state": {"fixed": "output"}, "seed": "fixed"}}}
+        full = copy.deepcopy(original)
+        full["resourcePlans"]["untargeted"]["goal"]["dependencies"] = ["new"]
+        full["resourcePlans"]["untargeted"]["goal"]["inputDiff"] = {"updates": {"must_not_copy": True}}
+        changed, names = reconcile_plan_dependencies(full, original)
+        self.assertEqual(names, ["untargeted"])
+        expected = copy.deepcopy(original)
+        expected["resourcePlans"]["untargeted"]["goal"]["dependencies"] = ["new"]
+        self.assertEqual(changed, expected)
+        self.assertEqual(original["resourcePlans"]["untargeted"]["goal"]["dependencies"], ["old"])
+
+    def test_dependency_reconciliation_rejects_targets_and_identity_changes(self):
+        for urn, kind, identity_change in [(APP, "kubernetes:apps/v1:Deployment", False), ("provider", "pulumi:providers:kubernetes", False), ("other", "fixture:Resource", True)]:
+            original = {"resourcePlans": {urn: {"goal": {"type": kind, "provider": "fixed", "dependencies": ["old"]}, "steps": ["same"]}}}
+            full = copy.deepcopy(original)
+            full["resourcePlans"][urn]["goal"]["dependencies"] = ["new"]
+            if identity_change:
+                full["resourcePlans"][urn]["goal"]["provider"] = "changed"
+            with self.assertRaises(Blocked):
+                reconcile_plan_dependencies(full, original)
 
     def test_versioned_plan_schema(self):
         self.assertEqual(decode_plan(json.dumps({"version": 1, "plan": {"resourcePlans": {}}})), {"resourcePlans": {}})

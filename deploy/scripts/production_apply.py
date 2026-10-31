@@ -246,10 +246,6 @@ def parse_preview_events(text):
             "maybeCorrupt": summary.get("maybeCorrupt", False)}
 
 
-
-
-
-
 def decode_plan(text):
     data = json.loads(text)
     if "version" in data:
@@ -269,6 +265,30 @@ def dependency_mismatch_labels(full_graph, target_graph):
     return sorted(labels)
 
 
+def reconcile_plan_dependencies(full_graph, target_graph):
+    result = copy.deepcopy(target_graph)
+    changed = []
+    identity_fields = ("type", "name", "custom", "parent", "provider", "protect", "deleteBeforeReplace",
+                       "ignoreChanges", "additionalSecretOutputs", "aliases", "structuredAliases", "id", "customTimeouts")
+    for urn, resource in result["resourcePlans"].items():
+        full = full_graph["resourcePlans"].get(urn, {}).get("goal")
+        target = resource.get("goal")
+        if not full or not target or dependency_signature(full) == dependency_signature(target):
+            continue
+        require(urn not in (APP, WORKERS, HPA) and not target.get("type", "").startswith("pulumi:providers:"), "target-dependency-mismatch")
+        require(all(full.get(k) == target.get(k) for k in identity_fields), "dependency-goal-identity-mismatch")
+        # Untargeted resources retain their old inputs in a targeted preview.
+        # Use the full program's dependency metadata, while retaining EVERY
+        # targeted-plan input, output, operation and identity constraint.
+        for field in ("dependencies", "propertyDependencies"):
+            if field in full:
+                target[field] = copy.deepcopy(full[field])
+            else:
+                target.pop(field, None)
+        changed.append(urn)
+    return result, changed
+
+
 def dependency_signature(goal):
     return (frozenset(goal.get("dependencies") or []),
             {k: frozenset(v) for k, v in (goal.get("propertyDependencies") or {}).items() if v})
@@ -283,7 +303,7 @@ def apply_error_messages(stdout, stderr):
             continue
         diagnostic = event.get("diagnosticEvent", {})
         if diagnostic.get("severity") == "error":
-            messages.append(diagnostic.get("message", ""))
+            messages.append(diagnostic.get("urn", "") + " " + diagnostic.get("message", ""))
     # CLI startup failures may precede the JSON event stream. Never include
     # resource event data, which can contain unrelated words or private values.
     messages.extend(line for line in stderr.splitlines() if "error" in line.lower())
@@ -311,6 +331,10 @@ def apply_failure_category(text):
         "provider": "pulumi:providers:",
         "job": "kubernetes:batch/v1:job",
         "worker": "gcp:container/nodepool:",
+        "database": "kubernetes:postgresql.cnpg.io/v1:cluster",
+        "ingress": "kubernetes:networking.k8s.io/v1:ingress",
+        "chart": "kubernetes:helm.sh/v3:chart",
+        "certificate": "kubernetes:cert-manager.io/v1:clusterissuer",
     }.items():
         if token in text:
             labels.append("resource-" + kind)
@@ -364,17 +388,27 @@ def main(mode):
         changed = dependency_mismatch_labels(full_graph, target_graph)
         labels = validate_preview(parse_preview_events(result.read_text()), phase)
         print("Full versus targeted dependency comparison: " + (",".join(changed) if changed else "identical"), flush=True)
-        if mode == "preview":
-            provider_plan = directory / "provider-plan.json"
-            provider_result = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(provider_plan), "--stack", "gcpProd", "--non-interactive"] + targets + ["--target", KUBE_PROVIDER], directory, "provider-preview", env)
-            validate_preview(parse_preview_events(provider_result.read_text()), phase)
-            changed = dependency_mismatch_labels(full_graph, decode_plan(provider_plan.read_text()))
-            print("Provider-inclusive dependency comparison: " + (",".join(changed) if changed else "identical"), flush=True)
+        reconciled, dependency_changes = reconcile_plan_dependencies(full_graph, target_graph)
+        if dependency_changes:
+            confirmed_plan = directory / "confirmed-full-plan.json"
+            confirmed = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(confirmed_plan), "--stack", "gcpProd", "--non-interactive"], directory, "confirm-preview", env)
+            validate_preview(parse_preview_events(confirmed.read_text()), phase, completed_hooks=previous)
+            confirmation_graph = decode_plan(confirmed_plan.read_text())
+            for urn in dependency_changes:
+                require(dependency_signature(full_graph["resourcePlans"][urn]["goal"]) == dependency_signature(confirmation_graph["resourcePlans"][urn]["goal"]), "unstable-full-dependency-graph")
+            print("Untargeted dependency metadata confirmed; input and operation constraints preserved.", flush=True)
+        plan_document = json.loads(plan.read_text())
+        if "version" in plan_document:
+            plan_document["plan"] = reconciled
+        else:
+            plan_document = reconciled
+        apply_plan = directory / "validated-apply-plan.json"
+        apply_plan.write_text(json.dumps(plan_document))
         print("Private preview validation passed: " + (", ".join(labels) if labels else "no infrastructure changes"), flush=True)
         if mode == "apply":
             # Recheck live pool/replica transitions immediately before applying the validated plan.
             quiet([sys.executable, "scripts/check_production_scaling.py"], directory, "preapply", env)
-            quiet(["pulumi", "up", "--json", "--refresh", "--yes", "--skip-preview", "--plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "apply", env)
+            quiet(["pulumi", "up", "--json", "--refresh", "--yes", "--skip-preview", "--plan", str(apply_plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "apply", env)
             print("Production apply completed; live verification remains required.")
 
 

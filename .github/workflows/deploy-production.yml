@@ -39,7 +39,7 @@ jobs:
           cache: true
           cache-dependency-path: |
             deploy/go.sum
-            deploy/scripts/production_apply.py
+            .github/workflows/deploy-production.yml
 
       - name: Setup Pulumi
         uses: pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d
