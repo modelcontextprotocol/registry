@@ -247,6 +247,12 @@ def parse_preview_events(text):
 
 
 
+
+def dependency_signature(goal):
+    return (frozenset(goal.get("dependencies") or []),
+            {k: frozenset(v or []) for k, v in (goal.get("propertyDependencies") or {}).items()})
+
+
 def apply_error_messages(stdout, stderr):
     messages = []
     for line in stdout.splitlines():
@@ -339,7 +345,7 @@ def main(mode):
         for urn, target in target_graph["resourcePlans"].items():
             full_goal = full_graph["resourcePlans"].get(urn, {}).get("goal")
             target_goal = target.get("goal")
-            if full_goal and target_goal and (full_goal.get("dependencies") != target_goal.get("dependencies") or full_goal.get("propertyDependencies") != target_goal.get("propertyDependencies")):
+            if full_goal and target_goal and dependency_signature(full_goal) != dependency_signature(target_goal):
                 changed.append(urn)
         labels = validate_preview(parse_preview_events(result.read_text()), phase)
         if changed:
