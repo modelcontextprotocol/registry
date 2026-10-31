@@ -63,6 +63,10 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 		if spec["minReadySeconds"].NumberValue() <= pod["terminationGracePeriodSeconds"].NumberValue() {
 			m.t.Error("replacement availability must wait beyond normal termination")
 		}
+		anti := pod["affinity"].ObjectValue()["podAntiAffinity"].ObjectValue()["requiredDuringSchedulingIgnoredDuringExecution"].ArrayValue()
+		if len(anti) != 1 || anti[0].ObjectValue()["topologyKey"].StringValue() != "kubernetes.io/hostname" || anti[0].ObjectValue()["labelSelector"].ObjectValue()["matchLabels"].ObjectValue()["app"].StringValue() != "mcp-registry" {
+			m.t.Error("apps must require separate workers across revisions")
+		}
 		container := pod["containers"].ArrayValue()[0].ObjectValue()
 		env := map[string]string{}
 		for _, e := range container["env"].ArrayValue() {

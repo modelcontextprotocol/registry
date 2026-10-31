@@ -98,10 +98,19 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	maxSurge, maxUnavailable := 1, 0
 	replicaCount, appAutoscaling := registryCapacitySettings(ctx)
 	var minReadySeconds, terminationGraceSeconds pulumi.IntPtrInput
+	var appAffinity corev1.AffinityPtrInput
 	if phase := conf.Get("productionAppScaling"); phase == "prepare" || phase == "enabled" {
 		// A replacement must remain Ready longer than a normal termination window.
 		// This limits routine rollout overlap; unreachable nodes still need operator review.
 		minReadySeconds, terminationGraceSeconds = pulumi.IntPtr(35), pulumi.IntPtr(30)
+		// Each extra app needs a different worker, including across revisions.
+		// Zero surge allows rolling replacement at the worker ceiling.
+		appAffinity = &corev1.AffinityArgs{PodAntiAffinity: &corev1.PodAntiAffinityArgs{
+			RequiredDuringSchedulingIgnoredDuringExecution: corev1.PodAffinityTermArray{&corev1.PodAffinityTermArgs{
+				TopologyKey:   pulumi.String("kubernetes.io/hostname"),
+				LabelSelector: &metav1.LabelSelectorArgs{MatchLabels: pulumi.StringMap{"app": pulumi.String("mcp-registry")}},
+			}},
+		}}
 	}
 	poolEnv := corev1.EnvVarArray{}
 	if coordinatedCapacity {
@@ -165,6 +174,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					},
 				},
 				Spec: &corev1.PodSpecArgs{
+					Affinity:                      appAffinity,
 					TerminationGracePeriodSeconds: terminationGraceSeconds,
 					TopologySpreadConstraints:     corev1.TopologySpreadConstraintArray{spreadConstraint},
 					NodeSelector:                  workerNodeSelector(ctx),

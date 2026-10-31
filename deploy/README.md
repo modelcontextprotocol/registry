@@ -849,6 +849,12 @@ and draining pods during changes; stalled termination or unreachable nodes
 require investigation before continuing. Leave capacity for database
 administration and other clients.
 
+Production app anti-affinity requires a different worker for each app,
+including across revisions. A third or fourth app therefore needs a third or
+fourth eligible worker. Zero surge lets replacements reuse a worker after its
+old app terminates. If a worker fails at the ceiling, a replacement app may
+remain Pending until worker capacity recovers; existing apps continue serving.
+
 The CPU request reserves scheduling capacity and gives relative CPU weight;
 it is neither a CPU limit nor an exclusive core. Check system pod requests,
 memory and hostname spread when reviewing worker fit. Node autoscaling reacts
