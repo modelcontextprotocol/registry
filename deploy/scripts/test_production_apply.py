@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category
+from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category, apply_error_messages
 
 
 def app_inputs(prepared):
@@ -132,6 +132,16 @@ class PrivateProductionPreview(unittest.TestCase):
         change["newState"]["inputs"]["rules"] = [{"verbs": ["*"]}]
         with self.assertRaises(Blocked):
             validate_preview(preview([change]), "prepare", completed_hooks=previous)
+
+    def test_only_actual_error_diagnostics_are_classified(self):
+        events = [
+            {"resourcePreEvent": {"metadata": {"inputs": {"private": "forbidden conflict timeout invalid"}}}},
+            {"diagnosticEvent": {"severity": "info", "message": "dependency timeout"}},
+            {"diagnosticEvent": {"severity": "error", "message": "private resource violates plan: secret-value"}},
+        ]
+        text = "\n".join(json.dumps(e) for e in events)
+        self.assertEqual(apply_failure_category(apply_error_messages(text, "")), "plan-constraint")
+        self.assertEqual(apply_error_messages(json.dumps(events[0]), ""), "")
 
     def test_apply_failure_categories_never_echo_details(self):
         self.assertEqual(apply_failure_category("private resource violates plan: secret-value"), "plan-constraint")
