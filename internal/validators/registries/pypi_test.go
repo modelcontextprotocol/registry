@@ -170,6 +170,33 @@ func TestValidatePyPI_PositivePathMock(t *testing.T) {
 	assert.NoError(t, err, "a version README containing the exact mcp-name token should validate")
 }
 
+func TestValidatePyPI_TokenMissingNamesVersion(t *testing.T) {
+	ctx := context.Background()
+	body := `{"info":{"description":"# Demo\n\nNo ownership token here.\n"}}`
+	mock := newPyPIMock(http.StatusOK, body, http.StatusOK)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypePyPI, RegistryBaseURL: mock.URL, Identifier: "demo-pkg", Version: "1.0.0"}
+	err := registries.ValidatePyPIPackage(ctx, pkg, "io.github.test/demo")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "PyPI package 'demo-pkg' version '1.0.0' ownership validation failed")
+	assert.Contains(t, err.Error(), "must appear as 'mcp-name: io.github.test/demo'")
+}
+
+func TestValidatePyPI_TokenGluedNamesVersion(t *testing.T) {
+	ctx := context.Background()
+	const serverName = "io.github.test/demo"
+	body := fmt.Sprintf(`{"info":{"description":"# Demo\n\nmcp-name: %s.\n"}}`, serverName)
+	mock := newPyPIMock(http.StatusOK, body, http.StatusOK)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypePyPI, RegistryBaseURL: mock.URL, Identifier: "demo-pkg", Version: "1.0.0"}
+	err := registries.ValidatePyPIPackage(ctx, pkg, serverName)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "PyPI package 'demo-pkg' version '1.0.0' ownership validation failed")
+	assert.Contains(t, err.Error(), "immediately followed by")
+}
+
 func TestValidatePyPI_RealPackages(t *testing.T) {
 	ctx := context.Background()
 
