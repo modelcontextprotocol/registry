@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 
-from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category, apply_error_messages, dependency_signature
+from production_apply import ANTI_AFFINITY, APP, COMPLETED_HOOKS, HPA, HPA_SPEC, POOL_MAX, POOL_MIN, WORKERS, Blocked, quiet, validate_preview, parse_preview_events, apply_failure_category, apply_error_messages, dependency_signature, decode_plan
 
 
 def app_inputs(prepared):
@@ -133,7 +133,13 @@ class PrivateProductionPreview(unittest.TestCase):
         with self.assertRaises(Blocked):
             validate_preview(preview([change]), "prepare", completed_hooks=previous)
 
+    def test_versioned_plan_schema(self):
+        self.assertEqual(decode_plan(json.dumps({"version": 1, "plan": {"resourcePlans": {}}})), {"resourcePlans": {}})
+        with self.assertRaises(Blocked):
+            decode_plan(json.dumps({"version": 2, "plan": {"resourcePlans": {}}}))
+
     def test_dependency_comparison_ignores_order(self):
+        self.assertEqual(dependency_signature({"propertyDependencies": {"metadata": []}}), dependency_signature({}))
         self.assertEqual(dependency_signature({"dependencies": ["a", "b"]}), dependency_signature({"dependencies": ["b", "a"]}))
         self.assertNotEqual(dependency_signature({"dependencies": ["a"]}), dependency_signature({"dependencies": ["b"]}))
 

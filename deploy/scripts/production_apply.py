@@ -35,6 +35,7 @@ APP = PREFIX + "kubernetes:apps/v1:Deployment::mcp-registry"
 WORKERS = PREFIX + "gcp:container/nodePool:NodePool::mcp-registry-prod-nodepool"
 HPA = PREFIX + "kubernetes:autoscaling/v2:HorizontalPodAutoscaler::mcp-registry-capacity"
 STACK = PREFIX + "pulumi:pulumi:Stack::mcp-registry-infra-gcpProd"
+KUBE_PROVIDER = PREFIX + "pulumi:providers:kubernetes::k8s-provider"
 COMPLETED_HOOKS = {
     PREFIX + "kubernetes:helm.sh/v3:Chart$kubernetes:batch/v1:Job::ingress-nginx/ingress-nginx-admission-create",
     PREFIX + "kubernetes:helm.sh/v3:Chart$kubernetes:batch/v1:Job::ingress-nginx/ingress-nginx-admission-patch",
@@ -248,9 +249,29 @@ def parse_preview_events(text):
 
 
 
+
+def decode_plan(text):
+    data = json.loads(text)
+    if "version" in data:
+        require(data["version"] == 1, "plan-version")
+        data = data["plan"]
+    require(isinstance(data.get("resourcePlans"), dict), "plan-schema")
+    return data
+
+
+def dependency_mismatch_labels(full_graph, target_graph):
+    labels = set()
+    for urn, target in target_graph["resourcePlans"].items():
+        full_goal = full_graph["resourcePlans"].get(urn, {}).get("goal")
+        target_goal = target.get("goal")
+        if full_goal and target_goal and dependency_signature(full_goal) != dependency_signature(target_goal):
+            labels.add({APP: "app", WORKERS: "worker", HPA: "hpa", KUBE_PROVIDER: "kubernetes-provider"}.get(urn, "outside-target"))
+    return sorted(labels)
+
+
 def dependency_signature(goal):
     return (frozenset(goal.get("dependencies") or []),
-            {k: frozenset(v or []) for k, v in (goal.get("propertyDependencies") or {}).items()})
+            {k: frozenset(v) for k, v in (goal.get("propertyDependencies") or {}).items() if v})
 
 
 def apply_error_messages(stdout, stderr):
@@ -338,21 +359,17 @@ def main(mode):
             targets += ["--target", HPA]
         plan = directory / "plan.json"
         result = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + targets, directory, "preview", env)
-        full_graph = json.loads(full_plan.read_text())
-        target_graph = json.loads(plan.read_text())
-        require("resourcePlans" in full_graph and "resourcePlans" in target_graph, "plan-schema")
-        changed = []
-        for urn, target in target_graph["resourcePlans"].items():
-            full_goal = full_graph["resourcePlans"].get(urn, {}).get("goal")
-            target_goal = target.get("goal")
-            if full_goal and target_goal and dependency_signature(full_goal) != dependency_signature(target_goal):
-                changed.append(urn)
+        full_graph = decode_plan(full_plan.read_text())
+        target_graph = decode_plan(plan.read_text())
+        changed = dependency_mismatch_labels(full_graph, target_graph)
         labels = validate_preview(parse_preview_events(result.read_text()), phase)
-        if changed:
-            kinds = sorted(set("app" if u == APP else "worker" if u == WORKERS else "hpa" if u == HPA else "outside-target" for u in changed))
-            print("Full versus targeted dependency comparison: " + ",".join(kinds), flush=True)
-        else:
-            print("Full versus targeted dependency comparison: identical.", flush=True)
+        print("Full versus targeted dependency comparison: " + (",".join(changed) if changed else "identical"), flush=True)
+        if mode == "preview":
+            provider_plan = directory / "provider-plan.json"
+            provider_result = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(provider_plan), "--stack", "gcpProd", "--non-interactive"] + targets + ["--target", KUBE_PROVIDER], directory, "provider-preview", env)
+            validate_preview(parse_preview_events(provider_result.read_text()), phase)
+            changed = dependency_mismatch_labels(full_graph, decode_plan(provider_plan.read_text()))
+            print("Provider-inclusive dependency comparison: " + (",".join(changed) if changed else "identical"), flush=True)
         print("Private preview validation passed: " + (", ".join(labels) if labels else "no infrastructure changes"), flush=True)
         if mode == "apply":
             # Recheck live pool/replica transitions immediately before applying the validated plan.
