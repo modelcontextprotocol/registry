@@ -91,6 +91,9 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		if conf.GetBool("coordinatedCapacity") {
 			replicaCount = coordinatedMinimum(ctx)
 			autoscaling["minReplicas"] = pulumi.Int(coordinatedMinimum(ctx))
+			if conf.GetBool("stagingIdleCapacity") {
+				autoscaling["annotations"] = stagingAutoscalerAnnotations(ctx)
+			}
 			// Scale at 560m instead of 704m to add capacity before contention.
 			autoscaling["targetCPUUtilizationPercentage"] = pulumi.Int(70)
 		}

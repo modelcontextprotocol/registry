@@ -50,3 +50,13 @@ class IdleScopeTests(unittest.TestCase):
         change['oldState']['inputs']['spec']['minAvailable'] = 2
         with self.assertRaises(Blocked):
             validate(preview(change), True)
+
+    def test_hpa_ownership_annotation_is_narrow(self):
+        old = {'metadata': {}, 'spec': {'minReplicas': 3, 'maxReplicas': 4}}
+        new = copy.deepcopy(old)
+        new['spec']['minReplicas'] = 1
+        new['metadata']['annotations'] = {'pulumi.com/patchForce': 'true'}
+        validate(preview(step(APP_HPA, old, new)), True)
+        new['metadata']['annotations']['unrelated'] = 'value'
+        with self.assertRaises(Blocked):
+            validate(preview(step(APP_HPA, old, new)), True)

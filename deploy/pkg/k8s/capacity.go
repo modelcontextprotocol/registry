@@ -98,13 +98,21 @@ func registryAutoscalerSpec(minReplicas int) *autoscalingv2.HorizontalPodAutosca
 	}
 }
 
+// Only the idle staging transition takes ownership of previously patched HPA fields.
+func stagingAutoscalerAnnotations(ctx *pulumi.Context) pulumi.StringMap {
+	if config.New(ctx, "mcp-registry").GetBool("stagingIdleCapacity") {
+		return pulumi.StringMap{"pulumi.com/patchForce": pulumi.String("true")}
+	}
+	return nil
+}
+
 func deployRegistryAutoscaler(ctx *pulumi.Context, provider pulumi.ProviderResource) error {
 	minimum := coordinatedMinimum(ctx)
 	if config.New(ctx, "mcp-registry").Get("productionAppScaling") == "enabled" {
 		minimum = 2
 	}
 	_, err := autoscalingv2.NewHorizontalPodAutoscaler(ctx, "mcp-registry-capacity", &autoscalingv2.HorizontalPodAutoscalerArgs{
-		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String("mcp-registry"), Namespace: pulumi.String("default")},
+		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String("mcp-registry"), Namespace: pulumi.String("default"), Annotations: stagingAutoscalerAnnotations(ctx)},
 		Spec:     registryAutoscalerSpec(minimum),
 	}, pulumi.Provider(provider))
 	return err

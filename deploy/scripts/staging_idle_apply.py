@@ -71,6 +71,13 @@ def validate(preview, idle, previous=None):
             require(after['spec'].pop('minAvailable') == (0 if idle else 1), 'target-app-disruption-budget')
             labels.add('singleton application disruption budget')
         else:
+            for inputs in (before, after):
+                metadata = inputs.get('metadata', {})
+                annotations = metadata.get('annotations', {})
+                if 'pulumi.com/patchForce' in annotations:
+                    require(annotations.pop('pulumi.com/patchForce') == 'true', 'hpa-ownership-annotation')
+                if not annotations:
+                    metadata.pop('annotations', None)
             require(before['spec'].pop('minReplicas') in (1, 3), 'existing-replica-minimum')
             require(after['spec'].pop('minReplicas') == (1 if idle else 3), 'target-replica-minimum')
             require(after['spec']['maxReplicas'] == (4 if urn == APP_HPA else 6), 'replica-ceiling')
