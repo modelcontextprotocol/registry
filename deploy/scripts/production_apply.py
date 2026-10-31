@@ -105,7 +105,20 @@ def validate_preview(preview, phase):
         if urn == STACK:
             require(op == "update" and old and new, "stack-operation")
             continue
-        require(urn in (APP, WORKERS, HPA), "resource-outside-scaling-scope")
+        if urn not in (APP, WORKERS, HPA):
+            # Fixed categories only: never echo URNs, property values, or diagnostics.
+            category = {
+                "pulumi:providers:gcp": "cloud-provider",
+                "pulumi:providers:kubernetes": "kubernetes-provider",
+                "kubernetes:helm.sh/v3:Chart": "chart-component",
+                "kubernetes:core/v1:Secret": "secret",
+                "kubernetes:core/v1:ConfigMap": "configmap",
+                "kubernetes:apps/v1:Deployment": "other-deployment",
+                "kubernetes:apps/v1:StatefulSet": "stateful-workload",
+                "kubernetes:postgresql.cnpg.io/v1:Cluster": "database",
+                "gcp:container/cluster:Cluster": "cluster",
+            }.get((new or old or {}).get("type"), "other-resource")
+            raise Blocked("resource-outside-scaling-scope-" + category)
         if old and new:
             require(old.get("provider") == new.get("provider") and old.get("parent") == new.get("parent"), "resource-provider-or-parent")
             require(old.get("protect", False) == new.get("protect", False), "resource-protection")
