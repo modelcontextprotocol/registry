@@ -294,7 +294,7 @@ func (h *GitHubHandler) buildPermissions(username string, orgs []GitHubUserOrOrg
 	// Add permission for user's own namespace
 	permissions := []auth.Permission{{
 		Action:          auth.PermissionActionPublish,
-		ResourcePattern: fmt.Sprintf("io.github.%s/*", username),
+		ResourcePattern: fmt.Sprintf("io.github.%s/*", strings.ToLower(username)),
 	}}
 
 	// Add permissions for each organization the user administers (Owner role). Skip
@@ -307,7 +307,7 @@ func (h *GitHubHandler) buildPermissions(username string, orgs []GitHubUserOrOrg
 		}
 		permissions = append(permissions, auth.Permission{
 			Action:          auth.PermissionActionPublish,
-			ResourcePattern: fmt.Sprintf("io.github.%s/*", org.Login),
+			ResourcePattern: fmt.Sprintf("io.github.%s/*", strings.ToLower(org.Login)),
 		})
 	}
 
