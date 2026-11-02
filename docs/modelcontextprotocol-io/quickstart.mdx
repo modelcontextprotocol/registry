@@ -20,18 +20,15 @@ If your MCP server is available only at a public remote endpoint, you can publis
 ```json server.json
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.my-username/weather",
-  "title": "Weather",
-  "description": "A remote MCP server for weather information.",
-  "repository": {
-    "url": "https://github.com/my-username/mcp-weather-server",
-    "source": "github"
-  },
-  "version": "1.0.0",
+  "name": "co.paperjoy/paperjoy",
+  "title": "Paperjoy",
+  "description": "Send real handwritten postcards, written by robot pen and mailed in envelopes. Poland only.",
+  "version": "1.2.0",
+  "websiteUrl": "https://paperjoy.co",
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://weather.example.com/mcp"
+      "url": "https://paperjoy.co/mcp"
     }
   ]
 }
