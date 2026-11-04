@@ -979,3 +979,24 @@ guard permits only the ingress HPA maximum and worker maximum to change.
 This adds on-demand headroom, not a latency guarantee or an immediate node
 allocation. Validate placement, origin pressure, and recovery during real
 traffic. App scaling beyond four requires a separate database budget review.
+
+### Always-on functional staging
+
+`stagingSmallCapacity: prepare` requires isolated idle staging and lowers CPU
+requests to 100m for the app and ingress and 250m for PostgreSQL. Memory,
+images, pools, persistent storage, database isolation and HPA bounds remain
+unchanged. First deploy and verify these reservations on the existing nodes.
+Then set `stagingSmallCapacity: enabled` and `nodeMachineType: e2-standard-2`
+to resize both pools in place, retaining one worker and one protected DB node.
+
+The private deployment wrapper validates the full preview and applies only a
+saved plan within the phase's exact scope. Node resize requires all live
+workloads to have the smaller requests. Take private database backups before
+resizing. During pool updates the wrapper temporarily enables the two staging
+databases' maintenance windows with PVC reuse and restores the prior settings
+in a finally block. The singleton databases can be briefly unavailable while
+their existing volumes move; this is not a highly available staging profile.
+It checks PVC identities before and after; verify health, actual pool shapes,
+maintenance restoration, functional reads/writes and rollout completion too.
+On interrupted CI, check and restore maintenance windows before retrying.
+This profile is for functional checks, not production capacity benchmarks.

@@ -43,3 +43,35 @@ func TestStagingIdleCapacityGuards(t *testing.T) {
 		})
 	}
 }
+
+func TestSmallStagingProfile(t *testing.T) {
+	for _, tc := range []struct {
+		key, value string
+		invalid    bool
+	}{
+		{"stagingSmallCapacity", "prepare", false},
+		{"environment", "prod", true}, {"stagingIdleCapacity", "false", true},
+		{"nodeMachineType", "e2-standard-2", true}, {"registryCPURequest", "800m", true},
+		{"postgresCPURequest", "3", true}, {"stagingSmallCapacity", "unknown", true},
+	} {
+		t.Run(tc.key+tc.value, func(t *testing.T) {
+			cfg := map[string]string{}
+			values := map[string]string{"stagingSmallCapacity": "prepare", "stagingIdleCapacity": "true", "isolatedDatabase": "true", "coordinatedCapacity": "true", "burstAutoscaling": "true", "environment": "staging", "provider": "gcp", "nodeMachineType": "e2-standard-4", "nodeMinCount": "2", "nodeMaxCount": "4", "registryCPURequest": "100m", "postgresCPURequest": "250m", "postgresCPULimit": "3", "stagingImage": "example/image@sha256:" + strings.Repeat("a", 64)}
+			values[tc.key] = tc.value
+			for k, v := range values {
+				cfg["mcp-registry:"+k] = v
+			}
+			err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("test", "staging", ownershipMonitor{t}), func(i *pulumi.RunInfo) { i.Config = cfg })
+			if (err != nil) != tc.invalid {
+				t.Fatalf("unexpected validation: %v", err)
+			}
+			if !tc.invalid {
+				cfg["mcp-registry:stagingSmallCapacity"] = "enabled"
+				cfg["mcp-registry:nodeMachineType"] = "e2-standard-2"
+				if err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("test", "staging", ownershipMonitor{t}), func(i *pulumi.RunInfo) { i.Config = cfg }); err != nil {
+					t.Fatal(err)
+				}
+			}
+		})
+	}
+}

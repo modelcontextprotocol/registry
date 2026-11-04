@@ -31,6 +31,10 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	if idle && (c.Get("environment") != "staging" || !c.GetBool("coordinatedCapacity") || !c.GetBool("isolatedDatabase")) {
 		return fmt.Errorf("stagingIdleCapacity requires the isolated staging capacity profile")
 	}
+	small := c.Get("stagingSmallCapacity")
+	if small != "" && ((small != "prepare" && small != "enabled") || !idle) {
+		return fmt.Errorf("stagingSmallCapacity requires prepare or enabled on isolated idle staging")
+	}
 	infraOnly := c.GetBool("productionInfrastructureOnly")
 	phase := c.Get("productionAppScaling")
 	ingressScaling := c.GetBool("productionIngressScaling")
@@ -56,7 +60,11 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	if !c.GetBool("coordinatedCapacity") {
 		return nil
 	}
-	if !c.GetBool("burstAutoscaling") || c.Get("provider") != "gcp" || c.Get("nodeMachineType") != "e2-standard-4" {
+	machineType := "e2-standard-4"
+	if small == "enabled" {
+		machineType = "e2-standard-2"
+	}
+	if !c.GetBool("burstAutoscaling") || c.Get("provider") != "gcp" || c.Get("nodeMachineType") != machineType {
 		return fmt.Errorf("coordinatedCapacity requires GCP e2-standard-4 nodes and burstAutoscaling")
 	}
 	if c.Get("environment") != coordinatedEnvironment && !infraOnly {
@@ -77,6 +85,9 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	appCPU, nodeMin, nodeMax := coordinatedAppCPU, "3", "4"
 	if idle {
 		nodeMin = "2"
+	}
+	if small != "" {
+		appCPU, dbCPU = "100m", "250m"
 	}
 	if phase == "prepare" || phase == "enabled" {
 		appCPU, nodeMax = "1200m", "5"
