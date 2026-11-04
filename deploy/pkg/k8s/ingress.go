@@ -97,6 +97,12 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 			// Scale at 560m instead of 704m to add capacity before contention.
 			autoscaling["targetCPUUtilizationPercentage"] = pulumi.Int(70)
 		}
+		if conf.GetBool("productionIngressScaling") {
+			ingressCPURequest = "1000m"
+			autoscaling["maxReplicas"] = pulumi.Int(8)
+			// Preserve the 560m CPU target when increasing the scheduling request.
+			autoscaling["targetCPUUtilizationPercentage"] = pulumi.Int(56)
+		}
 		// HPA owns replicas. Refresh before updates so the checkpoint follows
 		// the controller rather than resetting a scaled Deployment to two.
 		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{burstResourceTransform}))
