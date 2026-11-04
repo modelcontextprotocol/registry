@@ -1,5 +1,7 @@
 import copy
 import unittest
+from unittest.mock import patch
+from staging_small_apply import maintenance
 from staging_small_apply import validate, APP, INGRESS, DATABASE, WORKERS, DATABASE_POOL, Blocked
 from test_staging_idle_apply import step, preview
 
@@ -56,3 +58,17 @@ class SmallCapacityScope(unittest.TestCase):
                 validate(preview(step('unrelated', {}, {})), phase)
             with self.assertRaises(Blocked):
                 validate({'steps': []}, phase)
+
+
+class MaintenanceRestoration(unittest.TestCase):
+    def test_exact_previous_window_or_absence_is_restored(self):
+        previous = {('default', 'registry-pg'): None, ('monitoring', 'grafana-pg'): {'inProgress': False, 'reusePVC': False}}
+        with patch('staging_small_apply.kube', return_value={}) as call:
+            maintenance(None, {}, previous)
+        args = [c.args[0] for c in call.call_args_list]
+        self.assertEqual(len(args), 2)
+        import json
+        first = json.loads(args[0][args[0].index('-p')+1])
+        second = json.loads(args[1][args[1].index('-p')+1])
+        self.assertEqual(first, [{'op': 'remove', 'path': '/spec/nodeMaintenanceWindow'}])
+        self.assertEqual(second[0]['value'], previous[('monitoring', 'grafana-pg')])
