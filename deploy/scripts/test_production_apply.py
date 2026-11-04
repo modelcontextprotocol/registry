@@ -199,37 +199,47 @@ class PrivateProductionPreview(unittest.TestCase):
 
 class PrivateIngressPromotion(unittest.TestCase):
     def fixtures(self):
-        deployment = {"metadata": {"name": "ingress-nginx-controller"}, "spec": {"replicas": 3, "template": {"spec": {"containers": [{"name": "controller", "image": "unchanged", "resources": {"requests": {"cpu": "800m", "memory": "512Mi"}}}]}}}}
+        deployment = {"metadata": {"name": "ingress-nginx-controller"}, "spec": {"replicas": 3, "template": {"spec": {"containers": [{"name": "controller", "image": "unchanged", "resources": {"requests": {"cpu": "1000m", "memory": "512Mi"}}}]}}}}
         hpa = {"metadata": {"name": "ingress-nginx-controller"}, "spec": copy.deepcopy(HPA_SPEC)}
-        hpa["spec"].update({"minReplicas": 3, "maxReplicas": 6})
+        hpa["spec"].update({"minReplicas": 3, "maxReplicas": 8})
+        hpa["spec"]["metrics"][0]["resource"]["target"]["averageUtilization"] = 56
         hpa["spec"]["scaleTargetRef"]["name"] = "ingress-nginx-controller"
         worker = {"nodeCount": 2, "autoscaling": {"minNodeCount": 2, "maxNodeCount": 4}}
         after_deployment, after_hpa, after_worker = copy.deepcopy((deployment, hpa, worker))
-        after_deployment["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "1000m"
+        after_deployment["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "800m"
         after_hpa["spec"]["maxReplicas"] = 8
-        after_hpa["spec"]["metrics"][0]["resource"]["target"]["averageUtilization"] = 56
+        after_hpa["spec"]["metrics"][0]["resource"]["target"]["averageUtilization"] = 70
         after_worker["autoscaling"]["maxNodeCount"] = 5
         return [step(INGRESS_DEPLOYMENT, deployment, after_deployment), step(INGRESS_HPA, hpa, after_hpa), step(WORKERS, worker, after_worker)]
 
-    def test_exact_ingress_promotion(self):
+    def test_restores_reservation_while_retaining_scaling_headroom(self):
         self.assertEqual(validate_preview(preview(self.fixtures()), "enabled", ingress_scaling=True), ["bounded ingress autoscaler", "ingress scheduling reservation", "worker autoscaling ceiling"])
 
     def test_kubernetes_canonical_cpu_quantities(self):
         changes = self.fixtures()
-        changes[0]["oldState"]["inputs"]["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "0.8"
-        changes[0]["newState"]["inputs"]["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "1"
+        changes[0]["oldState"]["inputs"]["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "1"
+        changes[0]["newState"]["inputs"]["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "0.8"
+        validate_preview(preview(changes), "enabled", ingress_scaling=True)
+
+    def test_accepts_reconciliation_after_reservation_restore(self):
+        changes = self.fixtures()
+        for change in changes:
+            change["oldState"] = copy.deepcopy(change["newState"])
         validate_preview(preview(changes), "enabled", ingress_scaling=True)
 
     def test_blocks_unrelated_and_incomplete_changes(self):
-        for field in ("image", "memory", "replicas", "target", "min", "worker-min", "worker-count", "app", "delete", "replace", "cpu"):
+        for field in ("image", "memory", "replicas", "target", "min", "max", "spread", "worker-min", "worker-count", "app", "delete", "replace", "cpu", "old-cpu"):
             changes = self.fixtures()
             pod = changes[0]["newState"]["inputs"]["spec"]["template"]["spec"]["containers"][0]
             if field == "image": pod["image"] = "changed"
             elif field == "memory": pod["resources"]["requests"]["memory"] = "1Gi"
             elif field == "cpu": pod["resources"]["requests"]["cpu"] = "1200m"
+            elif field == "old-cpu": pod["resources"]["requests"]["cpu"] = "1"
+            elif field == "spread": changes[0]["newState"]["inputs"]["spec"]["template"]["spec"]["topologySpreadConstraints"] = []
             elif field == "replicas": changes[0]["newState"]["inputs"]["spec"]["replicas"] = 4
-            elif field == "target": changes[1]["newState"]["inputs"]["spec"]["metrics"][0]["resource"]["target"]["averageUtilization"] = 70
+            elif field == "target": changes[1]["newState"]["inputs"]["spec"]["metrics"][0]["resource"]["target"]["averageUtilization"] = 56
             elif field == "min": changes[1]["newState"]["inputs"]["spec"]["minReplicas"] = 4
+            elif field == "max": changes[1]["newState"]["inputs"]["spec"]["maxReplicas"] = 6
             elif field == "worker-min": changes[2]["newState"]["inputs"]["autoscaling"]["minNodeCount"] = 3
             elif field == "worker-count": changes[2]["newState"]["inputs"]["nodeCount"] = 3
             elif field == "app": changes.append(step(APP, app_inputs(True), app_inputs(True)))
