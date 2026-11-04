@@ -106,6 +106,9 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 			// Retain burst headroom and the 560m target with the prior reservation.
 			autoscaling["targetCPUUtilizationPercentage"] = pulumi.Int(70)
 		}
+		if conf.Get("stagingSmallCapacity") != "" {
+			ingressCPURequest = "100m"
+		}
 		// HPA owns replicas. Refresh before updates so the checkpoint follows
 		// the controller rather than resetting a scaled Deployment to two.
 		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{burstResourceTransform}))

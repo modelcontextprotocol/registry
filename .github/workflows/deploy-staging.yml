@@ -122,7 +122,15 @@ jobs:
               echo "Staging apply requires main."
               exit 1
             fi
-            python3 scripts/staging_idle_apply.py "${{ inputs.operation }}"
+            if grep -q "stagingSmallCapacity:" Pulumi.gcpStaging.yaml; then
+              python3 scripts/staging_small_apply.py "${{ inputs.operation }}"
+            else
+              python3 scripts/staging_idle_apply.py "${{ inputs.operation }}"
+            fi
+            exit
+          fi
+          if grep -q "stagingSmallCapacity:" Pulumi.gcpStaging.yaml; then
+            python3 scripts/staging_small_apply.py apply
             exit
           fi
           if grep -q 'stagingIdleCapacity: "true"' Pulumi.gcpStaging.yaml; then
