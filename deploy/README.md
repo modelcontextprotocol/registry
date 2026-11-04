@@ -968,3 +968,14 @@ migration 018 and the derived columns: older writers invalidate derived bytes
 through its trigger. Recheck coverage before re-enabling after an older writer
 has run. Rolling back the application does not require a database downgrade,
 node-pool deletion, or volume replacement.
+
+### Additional production burst headroom
+
+`productionBurstHeadroom: true` extends the enabled production ingress profile
+to 3–16 ingress replicas and 2–7 workers (`nodeMaxCount: "8"` includes the
+protected database node). The 800m ingress reservation, 70% target, application
+2–4 HPA, pools, and minimum node count remain unchanged. The private apply
+guard permits only the ingress HPA maximum and worker maximum to change.
+This adds on-demand headroom, not a latency guarantee or an immediate node
+allocation. Validate placement, origin pressure, and recovery during real
+traffic. App scaling beyond four requires a separate database budget review.

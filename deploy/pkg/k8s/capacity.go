@@ -34,6 +34,10 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	infraOnly := c.GetBool("productionInfrastructureOnly")
 	phase := c.Get("productionAppScaling")
 	ingressScaling := c.GetBool("productionIngressScaling")
+	burstHeadroom := c.GetBool("productionBurstHeadroom")
+	if burstHeadroom && !ingressScaling {
+		return fmt.Errorf("productionBurstHeadroom requires productionIngressScaling")
+	}
 	if ingressScaling && (!infraOnly || c.Get("environment") != "prod" || phase != "enabled") {
 		return fmt.Errorf("productionIngressScaling requires enabled isolated production app scaling")
 	}
@@ -79,6 +83,9 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	}
 	if ingressScaling {
 		nodeMax = "6"
+		if burstHeadroom {
+			nodeMax = "8"
+		}
 	}
 	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": nodeMin, "nodeMaxCount": nodeMax} {
 		if c.Get(key) != expected {
