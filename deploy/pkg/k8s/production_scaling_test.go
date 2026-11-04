@@ -129,3 +129,29 @@ func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
 		})
 	}
 }
+
+func TestProductionIngressScalingRequiresCompleteProfile(t *testing.T) {
+	for _, tc := range []struct {
+		key, value string
+		invalid    bool
+	}{
+		{"productionIngressScaling", "true", false},
+		{"nodeMaxCount", "5", true},
+		{"nodeMinCount", "4", true},
+		{"productionAppScaling", "prepare", true},
+		{"environment", "staging", true},
+		{"isolatedDatabase", "false", true},
+		{"burstAutoscaling", "false", true},
+	} {
+		t.Run(tc.key+"="+tc.value, func(t *testing.T) {
+			cfg := productionScalingConfig("enabled")
+			cfg["mcp-registry:productionIngressScaling"] = "true"
+			cfg["mcp-registry:nodeMaxCount"] = "6"
+			cfg["mcp-registry:"+tc.key] = tc.value
+			err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("scaling-test", "prod", &capacityMonitor{t: t}), func(info *pulumi.RunInfo) { info.Config = cfg })
+			if (err != nil) != tc.invalid {
+				t.Fatalf("unexpected validation: %v", err)
+			}
+		})
+	}
+}

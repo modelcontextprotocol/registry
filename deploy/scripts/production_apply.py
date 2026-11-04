@@ -34,6 +34,8 @@ PREFIX = "urn:pulumi:gcpProd::mcp-registry-infra::"
 APP = PREFIX + "kubernetes:apps/v1:Deployment::mcp-registry"
 WORKERS = PREFIX + "gcp:container/nodePool:NodePool::mcp-registry-prod-nodepool"
 HPA = PREFIX + "kubernetes:autoscaling/v2:HorizontalPodAutoscaler::mcp-registry-capacity"
+INGRESS_DEPLOYMENT = PREFIX + "kubernetes:helm.sh/v3:Chart$kubernetes:apps/v1:Deployment::ingress-nginx/ingress-nginx-controller"
+INGRESS_HPA = PREFIX + "kubernetes:helm.sh/v3:Chart$kubernetes:autoscaling/v2:HorizontalPodAutoscaler::ingress-nginx/ingress-nginx-controller"
 STACK = PREFIX + "pulumi:pulumi:Stack::mcp-registry-infra-gcpProd"
 KUBE_PROVIDER = PREFIX + "pulumi:providers:kubernetes::k8s-provider"
 COMPLETED_HOOKS = {
@@ -129,7 +131,7 @@ def excluded_unchanged_rbac(step, previous):
             and before.get("protect", False) == after.get("protect", False))
 
 
-def validate_preview(preview, phase, completed_hooks=None):
+def validate_preview(preview, phase, completed_hooks=None, ingress_scaling=False):
     require(phase in ("off", "prepare", "enabled"), "scaling-phase")
     require(preview.get("steps") and isinstance(preview.get("changeSummary"), dict), "preview-incomplete")
     require(not preview.get("maybeCorrupt"), "preview-state")
@@ -139,7 +141,7 @@ def validate_preview(preview, phase, completed_hooks=None):
         if completed_hooks is not None and (excluded_completed_hook(step, completed_hooks) or excluded_unchanged_rbac(step, completed_hooks)):
             continue
         try:
-            label = validate_step(step, phase)
+            label = validate_step(step, phase, ingress_scaling)
             if label:
                 labels.append(label)
         except Blocked as error:
@@ -148,7 +150,7 @@ def validate_preview(preview, phase, completed_hooks=None):
     return sorted(set(labels))
 
 
-def validate_step(step, phase):
+def validate_step(step, phase, ingress_scaling=False):
     op, urn = step["op"], step["urn"]
     if op in ("same", "refresh", "read"):
         return None
@@ -157,6 +159,11 @@ def validate_step(step, phase):
     if urn == STACK:
         require(op == "update" and old and new, "stack-operation")
         return None
+    if ingress_scaling:
+        require(phase == "enabled", "ingress-scaling-phase")
+        require(urn not in (APP, HPA), "ingress-promotion-app-change")
+        if urn in (INGRESS_DEPLOYMENT, INGRESS_HPA):
+            return validate_ingress_step(step)
     if urn not in (APP, WORKERS, HPA):
         # Fixed categories only: never echo URNs, property values, or diagnostics.
         category = {
@@ -207,8 +214,8 @@ def validate_step(step, phase):
     elif urn == WORKERS:
         require(op == "update" and old and new, "worker-operation")
         before, after = copy.deepcopy(old["inputs"]), copy.deepcopy(new["inputs"])
-        require(before["autoscaling"].pop("maxNodeCount") in (3, 4), "worker-existing-maximum")
-        require(after["autoscaling"].pop("maxNodeCount") == (3 if phase == "off" else 4), "worker-target-maximum")
+        require(before["autoscaling"].pop("maxNodeCount") in ((4, 5) if ingress_scaling else (3, 4)), "worker-existing-maximum")
+        require(after["autoscaling"].pop("maxNodeCount") == (5 if ingress_scaling else (3 if phase == "off" else 4)), "worker-target-maximum")
         require(before == after, "worker-unrelated-input-change")
         return "worker autoscaling ceiling"
     else:
@@ -219,6 +226,37 @@ def validate_step(step, phase):
             require(op == "delete" and old, "hpa-removal-operation")
             check_hpa(old["inputs"])
         return "bounded application autoscaler"
+
+
+def validate_ingress_step(step):
+    old, new = step.get("oldState"), step.get("newState")
+    require(step["op"] == "update" and old and new, "ingress-operation")
+    require(all(old.get(k) == new.get(k) for k in ("provider", "parent", "protect")), "ingress-identity")
+    before, after = copy.deepcopy(old["inputs"]), copy.deepcopy(new["inputs"])
+    if step["urn"] == INGRESS_DEPLOYMENT:
+        # HPA owns replica count; refreshed old/new values must still agree.
+        require(before["spec"]["replicas"] == after["spec"]["replicas"], "ingress-replica-ownership")
+        for value, desired in ((before, False), (after, True)):
+            containers = value["spec"]["template"]["spec"]["containers"]
+            require(len(containers) == 1 and containers[0]["name"] == "controller", "ingress-container-shape")
+            cpu = containers[0]["resources"]["requests"].pop("cpu")
+            require(cpu == "1000m" if desired else cpu in ("800m", "1000m", "1"), "ingress-cpu-request")
+        label = "ingress scheduling reservation"
+    else:
+        for value, desired in ((before, False), (after, True)):
+            spec = value["spec"]
+            require(spec["minReplicas"] == 3, "ingress-minimum")
+            require(spec["scaleTargetRef"] == {"apiVersion": "apps/v1", "kind": "Deployment", "name": "ingress-nginx-controller"}, "ingress-hpa-target")
+            maximum = spec.pop("maxReplicas")
+            metrics = spec["metrics"]
+            require(len(metrics) == 1 and metrics[0]["type"] == "Resource", "ingress-hpa-metrics")
+            metric = metrics[0]["resource"]
+            require(metric["name"] == "cpu" and metric["target"]["type"] == "Utilization", "ingress-hpa-cpu")
+            percent = metric["target"].pop("averageUtilization")
+            require((maximum, percent) == (8, 56) if desired else (maximum, percent) in ((6, 70), (8, 56)), "ingress-hpa-bounds")
+        label = "bounded ingress autoscaler"
+    require(before == after, "ingress-unrelated-input-change")
+    return label
 
 
 def parse_preview_events(text):
@@ -284,7 +322,7 @@ def reconcile_plan_dependencies(full_graph, target_graph):
         target = resource.get("goal")
         if not full or not target or dependency_signature(full) == dependency_signature(target):
             continue
-        require(urn not in (APP, WORKERS, HPA) and not target.get("type", "").startswith("pulumi:providers:"), "target-dependency-mismatch")
+        require(urn not in (APP, WORKERS, HPA, INGRESS_DEPLOYMENT, INGRESS_HPA) and not target.get("type", "").startswith("pulumi:providers:"), "target-dependency-mismatch")
         require(all(full.get(k) == target.get(k) for k in identity_fields), "dependency-goal-identity-mismatch")
         # Untargeted resources retain their old inputs in a targeted preview.
         # Use the full program's dependency metadata, while retaining EVERY
@@ -384,6 +422,7 @@ def main(mode):
         print("Deployment program build passed.", flush=True)
         config = json.loads(quiet(["pulumi", "config", "--json", "--stack", "gcpProd", "--non-interactive"], directory, "config", env).read_text())
         phase = config.get("mcp-registry:productionAppScaling", {}).get("value", "off")
+        ingress_scaling = config.get("mcp-registry:productionIngressScaling", {}).get("value", "false") == "true"
         quiet([sys.executable, "scripts/check_production_scaling.py"], directory, "preflight", env)
         print("Read-only transition preflight passed.", flush=True)
         exported = directory / "before.json"
@@ -392,26 +431,29 @@ def main(mode):
         require(all(urn in previous for urn in (STACK, APP, WORKERS)), "existing-production-stack")
         full_plan = directory / "full-plan.json"
         full = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(full_plan), "--stack", "gcpProd", "--non-interactive"], directory, "full-preview", env)
-        validate_preview(parse_preview_events(full.read_text()), phase, completed_hooks=previous)
+        validate_preview(parse_preview_events(full.read_text()), phase, completed_hooks=previous, ingress_scaling=ingress_scaling)
         print("Full change scope validation passed.", flush=True)
         # Never recreate TTL-expired setup jobs as a side effect of scaling.
         # The full preview above still blocks every other unrelated change.
         targets = ["--target", APP, "--target", WORKERS]
         if phase == "enabled" or HPA in previous:
             targets += ["--target", HPA]
+        if ingress_scaling:
+            require(all(urn in previous for urn in (INGRESS_DEPLOYMENT, INGRESS_HPA)), "existing-ingress-resources")
+            targets = ["--target", WORKERS, "--target", INGRESS_DEPLOYMENT, "--target", INGRESS_HPA]
         plan = directory / "plan.json"
         refresh_args = targeted_refresh_args(phase, previous)
         result = quiet(["pulumi", "preview", "--json", "--save-plan", str(plan), "--stack", "gcpProd", "--non-interactive"] + refresh_args + targets, directory, "preview", env)
         full_graph = decode_plan(full_plan.read_text())
         target_graph = decode_plan(plan.read_text())
         changed = dependency_mismatch_labels(full_graph, target_graph)
-        labels = validate_preview(parse_preview_events(result.read_text()), phase)
+        labels = validate_preview(parse_preview_events(result.read_text()), phase, ingress_scaling=ingress_scaling)
         print("Full versus targeted dependency comparison: " + (",".join(changed) if changed else "identical"), flush=True)
         reconciled, dependency_changes = reconcile_plan_dependencies(full_graph, target_graph)
         if dependency_changes:
             confirmed_plan = directory / "confirmed-full-plan.json"
             confirmed = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(confirmed_plan), "--stack", "gcpProd", "--non-interactive"], directory, "confirm-preview", env)
-            validate_preview(parse_preview_events(confirmed.read_text()), phase, completed_hooks=previous)
+            validate_preview(parse_preview_events(confirmed.read_text()), phase, completed_hooks=previous, ingress_scaling=ingress_scaling)
             confirmation_graph = decode_plan(confirmed_plan.read_text())
             for urn in dependency_changes:
                 require(dependency_signature(full_graph["resourcePlans"][urn]["goal"]) == dependency_signature(confirmation_graph["resourcePlans"][urn]["goal"]), "unstable-full-dependency-graph-" + resource_kind_label(urn))
