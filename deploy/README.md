@@ -924,6 +924,30 @@ with no terminating pods. Only then set `productionAppScaling: off`, restore
 return to legacy pools while the HPA or extra apps remain. Preserve the
 protected database pool, existing volume, application release and networking.
 
+### Bounded production ingress scaling
+
+With production app scaling enabled, `productionIngressScaling: true` and
+`nodeMaxCount: "6"` enable an ingress-only capacity promotion. Ingress requests
+1000m CPU with 3–8 replicas. Its 56% CPU target preserves the previous 560m
+absolute scaling target. Total node bounds are 3–6: one protected database
+node and 2–5 workers. The worker minimum, app settings and database remain
+unchanged. Additional workers are billed while provisioned, including any
+scale-down delay; the higher maximum does not itself provision nodes.
+
+The production workflow permits only the ingress CPU request, ingress HPA
+maximum/CPU target and worker maximum to change in this mode. It rejects app
+changes and unrelated ingress configuration changes. Check rollout surge,
+system pod requests, topology constraints and protected volumes when reviewing
+scheduling capacity and eventual scale-down. New ingress replicas start with
+cold caches, and per-controller rate limits mean additional replicas can
+increase aggregate admitted traffic. Verify origin health as well as ingress
+and worker CPU after promotion.
+
+This opt-in requires the complete enabled production profile; staging keeps
+its existing settings. Reverting this promotion, or subsequently changing app
+scaling, requires a reviewed rollback plan and corresponding deployment guard
+policy before changing the configuration.
+
 ### Prepared listing JSON activation
 
 `MCP_REGISTRY_PREPARED_LISTING_JSON` defaults to `false`. This keeps typed
