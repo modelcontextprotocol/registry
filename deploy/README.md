@@ -928,8 +928,9 @@ protected database pool, existing volume, application release and networking.
 
 With production app scaling enabled, `productionIngressScaling: true` and
 `nodeMaxCount: "6"` enable an ingress-only capacity promotion. Ingress requests
-1000m CPU with 3–8 replicas. Its 56% CPU target preserves the previous 560m
-absolute scaling target. Total node bounds are 3–6: one protected database
+800m CPU with 3–8 replicas. Its 70% CPU target preserves the 560m absolute
+scaling target while retaining the lower scheduling reservation. There is no
+CPU limit. Total node bounds are 3–6: one protected database
 node and 2–5 workers. The worker minimum, app settings and database remain
 unchanged. Additional workers are billed while provisioned, including any
 scale-down delay; the higher maximum does not itself provision nodes.

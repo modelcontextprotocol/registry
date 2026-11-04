@@ -240,7 +240,7 @@ def validate_ingress_step(step):
             containers = value["spec"]["template"]["spec"]["containers"]
             require(len(containers) == 1 and containers[0]["name"] == "controller", "ingress-container-shape")
             cpu = containers[0]["resources"]["requests"].pop("cpu")
-            require(cpu in ("1000m", "1") if desired else cpu in ("800m", "0.8", "1000m", "1"), "ingress-cpu-request")
+            require(cpu in ("800m", "0.8") if desired else cpu in ("800m", "0.8", "1000m", "1"), "ingress-cpu-request")
         label = "ingress scheduling reservation"
     else:
         for value, desired in ((before, False), (after, True)):
@@ -253,7 +253,7 @@ def validate_ingress_step(step):
             metric = metrics[0]["resource"]
             require(metric["name"] == "cpu" and metric["target"]["type"] == "Utilization", "ingress-hpa-cpu")
             percent = metric["target"].pop("averageUtilization")
-            require((maximum, percent) == (8, 56) if desired else (maximum, percent) in ((6, 70), (8, 56)), "ingress-hpa-bounds")
+            require((maximum, percent) == (8, 70) if desired else (maximum, percent) in ((6, 70), (8, 56), (8, 70)), "ingress-hpa-bounds")
         label = "bounded ingress autoscaler"
     require(before == after, "ingress-unrelated-input-change")
     return label
