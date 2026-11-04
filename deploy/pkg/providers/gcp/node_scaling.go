@@ -32,6 +32,9 @@ func readNodeScaling(ctx *pulumi.Context) (nodeScalingConfig, error) {
 	}
 	idle := c.GetBool("stagingIdleCapacity")
 	ingressScaling := c.GetBool("productionIngressScaling")
+	if c.GetBool("productionBurstHeadroom") && !ingressScaling {
+		return result, fmt.Errorf("productionBurstHeadroom requires productionIngressScaling")
+	}
 	if ingressScaling && (!c.GetBool("isolatedDatabase") || !c.GetBool("productionInfrastructureOnly") || c.Get("environment") != "prod" || c.Get("productionAppScaling") != "enabled") {
 		return result, fmt.Errorf("productionIngressScaling requires enabled isolated production app scaling")
 	}
@@ -50,6 +53,9 @@ func readNodeScaling(ctx *pulumi.Context) (nodeScalingConfig, error) {
 		}
 		if ingressScaling {
 			maximum = 6
+			if c.GetBool("productionBurstHeadroom") {
+				maximum = 8
+			}
 		}
 		if !c.GetBool("coordinatedCapacity") || (c.Get("environment") != "staging" && !productionInfra) || !result.enabled || result.minimum != minimum || result.maximum != maximum {
 			return result, fmt.Errorf("isolatedDatabase requires an explicitly enabled coordinatedCapacity profile and total node bounds %d–%d", minimum, maximum)

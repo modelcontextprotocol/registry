@@ -100,6 +100,9 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		if conf.GetBool("productionIngressScaling") {
 			ingressCPURequest = "800m"
 			autoscaling["maxReplicas"] = pulumi.Int(8)
+			if conf.GetBool("productionBurstHeadroom") {
+				autoscaling["maxReplicas"] = pulumi.Int(16)
+			}
 			// Retain burst headroom and the 560m target with the prior reservation.
 			autoscaling["targetCPUUtilizationPercentage"] = pulumi.Int(70)
 		}

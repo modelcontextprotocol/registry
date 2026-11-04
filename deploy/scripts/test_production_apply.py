@@ -248,5 +248,28 @@ class PrivateIngressPromotion(unittest.TestCase):
                 validate_preview(preview(changes), "enabled", ingress_scaling=True)
 
 
+class PrivateBurstHeadroom(PrivateIngressPromotion):
+    def headroom(self):
+        changes = self.fixtures()[1:]
+        for change in changes:
+            change['oldState'] = copy.deepcopy(change['newState'])
+        changes[0]['newState']['inputs']['spec']['maxReplicas'] = 16
+        changes[1]['newState']['inputs']['autoscaling']['maxNodeCount'] = 7
+        return changes
+
+    def test_headroom_preserves_minimum_and_all_other_inputs(self):
+        changes = self.headroom()
+        self.assertEqual(validate_preview(preview(changes), 'enabled', ingress_scaling=True, burst_headroom=True), ['bounded ingress autoscaler', 'worker autoscaling ceiling'])
+        for index, field, value in [(0, 'minReplicas', 4), (0, 'maxReplicas', 17)]:
+            invalid = copy.deepcopy(changes)
+            invalid[index]['newState']['inputs']['spec'][field] = value
+            with self.assertRaises(Blocked):
+                validate_preview(preview(invalid), 'enabled', ingress_scaling=True, burst_headroom=True)
+        with self.assertRaises(Blocked):
+            validate_preview(preview(changes + self.fixtures()[:1]), 'enabled', ingress_scaling=True, burst_headroom=True)
+        with self.assertRaises(Blocked):
+            validate_preview(preview(changes), 'enabled', ingress_scaling=True)
+
+
 if __name__ == "__main__":
     unittest.main()

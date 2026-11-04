@@ -131,8 +131,9 @@ def excluded_unchanged_rbac(step, previous):
             and before.get("protect", False) == after.get("protect", False))
 
 
-def validate_preview(preview, phase, completed_hooks=None, ingress_scaling=False):
+def validate_preview(preview, phase, completed_hooks=None, ingress_scaling=False, burst_headroom=False):
     require(phase in ("off", "prepare", "enabled"), "scaling-phase")
+    require(not burst_headroom or (ingress_scaling and phase == "enabled"), "headroom-profile")
     require(preview.get("steps") and isinstance(preview.get("changeSummary"), dict), "preview-incomplete")
     require(not preview.get("maybeCorrupt"), "preview-state")
     require(not any(d.get("severity") == "error" for d in preview.get("diagnostics", [])), "preview-diagnostics")
@@ -141,7 +142,7 @@ def validate_preview(preview, phase, completed_hooks=None, ingress_scaling=False
         if completed_hooks is not None and (excluded_completed_hook(step, completed_hooks) or excluded_unchanged_rbac(step, completed_hooks)):
             continue
         try:
-            label = validate_step(step, phase, ingress_scaling)
+            label = validate_step(step, phase, ingress_scaling, burst_headroom)
             if label:
                 labels.append(label)
         except Blocked as error:
@@ -150,7 +151,7 @@ def validate_preview(preview, phase, completed_hooks=None, ingress_scaling=False
     return sorted(set(labels))
 
 
-def validate_step(step, phase, ingress_scaling=False):
+def validate_step(step, phase, ingress_scaling=False, burst_headroom=False):
     op, urn = step["op"], step["urn"]
     if op in ("same", "refresh", "read"):
         return None
@@ -163,7 +164,7 @@ def validate_step(step, phase, ingress_scaling=False):
         require(phase == "enabled", "ingress-scaling-phase")
         require(urn not in (APP, HPA), "ingress-promotion-app-change")
         if urn in (INGRESS_DEPLOYMENT, INGRESS_HPA):
-            return validate_ingress_step(step)
+            return validate_ingress_step(step, burst_headroom)
     if urn not in (APP, WORKERS, HPA):
         # Fixed categories only: never echo URNs, property values, or diagnostics.
         category = {
@@ -214,8 +215,8 @@ def validate_step(step, phase, ingress_scaling=False):
     elif urn == WORKERS:
         require(op == "update" and old and new, "worker-operation")
         before, after = copy.deepcopy(old["inputs"]), copy.deepcopy(new["inputs"])
-        require(before["autoscaling"].pop("maxNodeCount") in ((4, 5) if ingress_scaling else (3, 4)), "worker-existing-maximum")
-        require(after["autoscaling"].pop("maxNodeCount") == (5 if ingress_scaling else (3 if phase == "off" else 4)), "worker-target-maximum")
+        require(before["autoscaling"].pop("maxNodeCount") in ((5, 7) if burst_headroom else ((4, 5) if ingress_scaling else (3, 4))), "worker-existing-maximum")
+        require(after["autoscaling"].pop("maxNodeCount") == (7 if burst_headroom else (5 if ingress_scaling else (3 if phase == "off" else 4))), "worker-target-maximum")
         require(before == after, "worker-unrelated-input-change")
         return "worker autoscaling ceiling"
     else:
@@ -228,12 +229,13 @@ def validate_step(step, phase, ingress_scaling=False):
         return "bounded application autoscaler"
 
 
-def validate_ingress_step(step):
+def validate_ingress_step(step, burst_headroom=False):
     old, new = step.get("oldState"), step.get("newState")
     require(step["op"] == "update" and old and new, "ingress-operation")
     require(all(old.get(k) == new.get(k) for k in ("provider", "parent", "protect")), "ingress-identity")
     before, after = copy.deepcopy(old["inputs"]), copy.deepcopy(new["inputs"])
     if step["urn"] == INGRESS_DEPLOYMENT:
+        require(not burst_headroom, "headroom-must-not-change-ingress-deployment")
         # HPA owns replica count; refreshed old/new values must still agree.
         require(before["spec"]["replicas"] == after["spec"]["replicas"], "ingress-replica-ownership")
         for value, desired in ((before, False), (after, True)):
@@ -253,7 +255,9 @@ def validate_ingress_step(step):
             metric = metrics[0]["resource"]
             require(metric["name"] == "cpu" and metric["target"]["type"] == "Utilization", "ingress-hpa-cpu")
             percent = metric["target"].pop("averageUtilization")
-            require((maximum, percent) == (8, 70) if desired else (maximum, percent) in ((6, 70), (8, 56), (8, 70)), "ingress-hpa-bounds")
+            expected = (16, 70) if burst_headroom else (8, 70)
+            allowed = ((8, 70), (16, 70)) if burst_headroom else ((6, 70), (8, 56), (8, 70))
+            require((maximum, percent) == expected if desired else (maximum, percent) in allowed, "ingress-hpa-bounds")
         label = "bounded ingress autoscaler"
     require(before == after, "ingress-unrelated-input-change")
     return label
@@ -423,6 +427,8 @@ def main(mode):
         config = json.loads(quiet(["pulumi", "config", "--json", "--stack", "gcpProd", "--non-interactive"], directory, "config", env).read_text())
         phase = config.get("mcp-registry:productionAppScaling", {}).get("value", "off")
         ingress_scaling = config.get("mcp-registry:productionIngressScaling", {}).get("value", "false") == "true"
+        burst_headroom = config.get("mcp-registry:productionBurstHeadroom", {}).get("value", "false") == "true"
+        require(not burst_headroom or ingress_scaling, "headroom-requires-ingress-profile")
         quiet([sys.executable, "scripts/check_production_scaling.py"], directory, "preflight", env)
         print("Read-only transition preflight passed.", flush=True)
         exported = directory / "before.json"
@@ -431,7 +437,7 @@ def main(mode):
         require(all(urn in previous for urn in (STACK, APP, WORKERS)), "existing-production-stack")
         full_plan = directory / "full-plan.json"
         full = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(full_plan), "--stack", "gcpProd", "--non-interactive"], directory, "full-preview", env)
-        validate_preview(parse_preview_events(full.read_text()), phase, completed_hooks=previous, ingress_scaling=ingress_scaling)
+        validate_preview(parse_preview_events(full.read_text()), phase, completed_hooks=previous, ingress_scaling=ingress_scaling, burst_headroom=burst_headroom)
         print("Full change scope validation passed.", flush=True)
         # Never recreate TTL-expired setup jobs as a side effect of scaling.
         # The full preview above still blocks every other unrelated change.
@@ -447,13 +453,13 @@ def main(mode):
         full_graph = decode_plan(full_plan.read_text())
         target_graph = decode_plan(plan.read_text())
         changed = dependency_mismatch_labels(full_graph, target_graph)
-        labels = validate_preview(parse_preview_events(result.read_text()), phase, ingress_scaling=ingress_scaling)
+        labels = validate_preview(parse_preview_events(result.read_text()), phase, ingress_scaling=ingress_scaling, burst_headroom=burst_headroom)
         print("Full versus targeted dependency comparison: " + (",".join(changed) if changed else "identical"), flush=True)
         reconciled, dependency_changes = reconcile_plan_dependencies(full_graph, target_graph)
         if dependency_changes:
             confirmed_plan = directory / "confirmed-full-plan.json"
             confirmed = quiet(["pulumi", "preview", "--refresh", "--json", "--save-plan", str(confirmed_plan), "--stack", "gcpProd", "--non-interactive"], directory, "confirm-preview", env)
-            validate_preview(parse_preview_events(confirmed.read_text()), phase, completed_hooks=previous, ingress_scaling=ingress_scaling)
+            validate_preview(parse_preview_events(confirmed.read_text()), phase, completed_hooks=previous, ingress_scaling=ingress_scaling, burst_headroom=burst_headroom)
             confirmation_graph = decode_plan(confirmed_plan.read_text())
             for urn in dependency_changes:
                 require(dependency_signature(full_graph["resourcePlans"][urn]["goal"]) == dependency_signature(confirmation_graph["resourcePlans"][urn]["goal"]), "unstable-full-dependency-graph-" + resource_kind_label(urn))
