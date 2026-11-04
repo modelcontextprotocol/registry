@@ -221,6 +221,23 @@ func TestBuildPermissionsFromOIDC(t *testing.T) {
 			},
 		},
 		{
+			name: "mixed-case repository owner is normalized to lowercase",
+			claims: &auth.GitHubOIDCClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					Subject:   "repo:Skymly/octo-repo:environment:prod",
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+					Audience:  jwt.ClaimStrings{"mcp-registry"},
+				},
+				RepositoryOwner: "Skymly",
+			},
+			expectedPerms: []internalauth.Permission{
+				{
+					Action:          internalauth.PermissionActionPublish,
+					ResourcePattern: "io.github.skymly/*",
+				},
+			},
+		},
+		{
 			name: "invalid repository owner name",
 			claims: &auth.GitHubOIDCClaims{
 				RegisteredClaims: jwt.RegisteredClaims{
