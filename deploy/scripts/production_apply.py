@@ -240,7 +240,7 @@ def validate_ingress_step(step):
             containers = value["spec"]["template"]["spec"]["containers"]
             require(len(containers) == 1 and containers[0]["name"] == "controller", "ingress-container-shape")
             cpu = containers[0]["resources"]["requests"].pop("cpu")
-            require(cpu == "1000m" if desired else cpu in ("800m", "1000m", "1"), "ingress-cpu-request")
+            require(cpu in ("1000m", "1") if desired else cpu in ("800m", "0.8", "1000m", "1"), "ingress-cpu-request")
         label = "ingress scheduling reservation"
     else:
         for value, desired in ((before, False), (after, True)):

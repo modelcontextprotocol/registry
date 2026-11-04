@@ -214,6 +214,12 @@ class PrivateIngressPromotion(unittest.TestCase):
     def test_exact_ingress_promotion(self):
         self.assertEqual(validate_preview(preview(self.fixtures()), "enabled", ingress_scaling=True), ["bounded ingress autoscaler", "ingress scheduling reservation", "worker autoscaling ceiling"])
 
+    def test_kubernetes_canonical_cpu_quantities(self):
+        changes = self.fixtures()
+        changes[0]["oldState"]["inputs"]["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "0.8"
+        changes[0]["newState"]["inputs"]["spec"]["template"]["spec"]["containers"][0]["resources"]["requests"]["cpu"] = "1"
+        validate_preview(preview(changes), "enabled", ingress_scaling=True)
+
     def test_blocks_unrelated_and_incomplete_changes(self):
         for field in ("image", "memory", "replicas", "target", "min", "worker-min", "worker-count", "app", "delete", "replace", "cpu"):
             changes = self.fixtures()
