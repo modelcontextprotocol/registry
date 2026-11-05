@@ -45,7 +45,14 @@ def validate(preview, environment, compression, sampling, previous=None):
         if urn == f'urn:pulumi:{stack}::mcp-registry-infra::pulumi:pulumi:Stack::mcp-registry-infra-{stack}':
             require(op == 'update' and old and new, 'stack-update-only')
             continue
-        require(urn in (cm, exclusion), 'outside-public-read-scope')
+        kind = (new or old or {}).get('type', step.get('type'))
+        category = {'pulumi:providers:kubernetes': 'kubernetes-provider',
+                    'kubernetes:apps/v1:Deployment': 'deployment',
+                    'kubernetes:core/v1:ConfigMap': 'configmap',
+                    'kubernetes:batch/v1:Job': 'job',
+                    'kubernetes:helm.sh/v3:Chart': 'chart',
+                    'kubernetes:core/v1:Secret': 'secret'}.get(kind, 'other')
+        require(urn in (cm, exclusion), 'outside-public-read-scope-'+category+'-'+(op if op in ('create', 'update', 'delete', 'replace') else 'other'))
         # Streaming event keys can list ordinary changed ConfigMap fields.
         # The operation itself must be update/create, never replace or delete.
         require(op in ('update', 'create') and new, 'no-delete-or-replacement')
