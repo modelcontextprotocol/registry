@@ -1,5 +1,7 @@
 # Production capacity and database buffers are promoted independently.
 config:
+  mcp-registry:publicReadCompression: "true"
+  mcp-registry:publicReadLogSampling: "true"
   mcp-registry:environment: prod
   mcp-registry:victoriaMetricsCapacity: "true"
   # Tested prepared-JSON release; derived-row coverage verified before activation.
