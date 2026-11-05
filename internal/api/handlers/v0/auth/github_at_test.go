@@ -884,10 +884,11 @@ func TestValidGitHubNames(t *testing.T) {
 	}
 
 	validNameTests := []struct {
-		name      string
-		username  string
-		orgs      []v0auth.GitHubUserOrOrg
-		wantPerms int
+		name         string
+		username     string
+		orgs         []v0auth.GitHubUserOrOrg
+		wantPerms    int
+		wantPatterns []string
 	}{
 		{
 			name:      "valid username only",
@@ -908,6 +909,22 @@ func TestValidGitHubNames(t *testing.T) {
 				{Login: "valid-org", ID: 1},
 			},
 			wantPerms: 2,
+		},
+		{
+			name:         "mixed-case username is lowercased",
+			username:     "MiXeD-User",
+			orgs:         []v0auth.GitHubUserOrOrg{},
+			wantPerms:    1,
+			wantPatterns: []string{"io.github.mixed-user/*"},
+		},
+		{
+			name:     "mixed-case administered org is lowercased",
+			username: "valid-user",
+			orgs: []v0auth.GitHubUserOrOrg{
+				{Login: "MiXeD-Org", ID: 1},
+			},
+			wantPerms:    2,
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.mixed-org/*"},
 		},
 		{
 			name:      "invalid username with spaces",
@@ -973,6 +990,14 @@ func TestValidGitHubNames(t *testing.T) {
 			claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
 			require.NoError(t, err)
 			assert.Len(t, claims.Permissions, tc.wantPerms)
+
+			if tc.wantPatterns != nil {
+				patterns := make([]string, 0, len(claims.Permissions))
+				for _, perm := range claims.Permissions {
+					patterns = append(patterns, perm.ResourcePattern)
+				}
+				assert.ElementsMatch(t, tc.wantPatterns, patterns)
+			}
 		})
 	}
 }
