@@ -1049,3 +1049,72 @@ use the same workflow to roll it back independently; keep the sampling key so th
 exclusion is disabled rather than deleted. Previously excluded log records cannot
 be recovered. The deployment reloads NGINX configuration without changing pod
 resource requests or rolling application/database pods.
+
+### November 2026 component security upgrade
+
+`mcp-registry:securityPatch202611: "true"` opts a stack into CloudNativePG
+1.30.1 (chart 0.29.1), ingress-nginx 1.15.1 (chart 4.15.1), and Grafana
+12.4.14 (the existing chart 9.4.4 with an explicit image tag). Qualify staging
+before enabling the identical profile in production. PostgreSQL remains explicitly
+pinned to the existing 17.5 image; database engine patching needs its own rollout.
+
+The workflow uses `scripts/security_patch_apply.py` to validate a refreshed, saved
+full plan against `scripts/security_patch_202611.json`. It allows only the reviewed
+field transitions: chart labels, controller/container versions and probes,
+CloudNativePG monitoring queries, upstream CRD schemas/RBAC, and the existing
+PostgreSQL image pin. It rejects unrelated changes, deletions, and replacements.
+The manifest hashes canonical JSON, with sorted keys and compact separators;
+missing fields are distinct from null. CRD schema hashes were checked against the
+upstream chart archive. The release archive SHA-256 values from the official Helm
+indexes are:
+
+- CloudNativePG 0.29.1: `b53d3991fe84bcf38767e7702cae78666265427a127a26fff168ab4207d2b1df`
+- ingress-nginx 4.15.1: `3eff0bd18151d6e6b1c441463410571443dda1ac78292cb189346628de784f0c`
+
+For future upgrades, review the upstream manifests and actual preview before
+updating the allowlist; do not regenerate it blindly from a failed deployment.
+The profile is deliberately bounded and will reject unrelated infrastructure
+changes until their deployment policy is reviewed. Ordinary application PR checks
+and main-only environment protections are unchanged.
+
+Before an apply, the wrapper takes consistent custom-format dumps of **both**
+`default/registry-pg` and `monitoring/grafana-pg`, checks their complete archive streams, and
+uploads and reads them back from the existing private backup bucket under
+`security-upgrades/202611/<unique-run>/`. Keep these backups until the upgrade has
+been accepted; they are separate from the registry-only daily Restic backups.
+Raw state, plans, diagnostics, and dumps never become Actions artifacts.
+
+CloudNativePG automatically restarts both singleton databases to update their
+instance managers. Expect a brief interruption and client reconnection. After
+staging, check both instance-manager images, database readiness, unchanged PVC
+UIDs/volumes, registry health/listing/compression/cache behavior, and Grafana's
+health, OAuth redirect, data sources and dashboards. Repeat after production.
+A Grafana rollback may require restoring its pre-upgrade database: do not simply
+change the image after schema migrations. Do not downgrade CNPG CRDs or disable
+the profile as an unreviewed rollback. For failures, preserve the database volumes,
+inspect private diagnostics, and prepare a narrowly reviewed recovery plan.
+
+The patched releases address [CloudNativePG GHSA-x8c2-3p4r-v9r6](https://github.com/cloudnative-pg/cloudnative-pg/security/advisories/GHSA-x8c2-3p4r-v9r6),
+[ingress-nginx CVE-2026-4342](https://discuss.kubernetes.io/t/security-advisory-cve-2026-4342-ingress-nginx-comment-based-nginx-configuration-injection/34349),
+and [Grafana CVE-2026-27880](https://grafana.com/security/security-advisories/cve-2026-27880/).
+
+#### ingress-nginx replacement plan
+
+1. Evaluate a maintained Gateway API implementation in staging (start with Envoy
+   Gateway), on a separate load balancer and test hostname. Keep existing traffic
+   on ingress-nginx during qualification. Select the release against the cluster's
+   Kubernetes version and documented support policy.
+2. Map all existing ingress behavior: ACME/cert-manager certificates, HTTPS
+   redirects, real client IP and rate limits, OAuth callbacks, health checks,
+   body/time limits, metrics, HPA and node placement. NGINX snippets are not portable:
+   explicitly implement public listing cache keys/TTL, public versus authenticated route isolation, invalidation behavior, gzip negotiation and `Vary` handling (including credential/cookie compression bypass); confirm that
+   publishing and other authenticated routes are never cached.
+3. Run the existing traffic tests against both controllers, including publishing
+   in staging, cache isolation, burst/rollout capacity and certificate renewal.
+   Compare error rates, tail latency, cache hits, CPU and memory under equivalent load.
+4. After parity is demonstrated, use a separate reviewed production rollout with
+   a low DNS TTL and a reversible traffic cutover. Retain the old load balancer
+   during observation; only then remove its controller, admission webhook and RBAC.
+
+The interim patch does not restore upstream maintenance for the retired project.
+The controller migration remains a separate rollout, not part of this version bump.

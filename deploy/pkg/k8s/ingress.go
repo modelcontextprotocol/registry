@@ -124,7 +124,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 	// Install NGINX Ingress Controller
 	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
-		Version: pulumi.String("4.13.0"),
+		Version: securityPatchVersion(ctx, "4.13.0", "4.15.1"),
 		FetchArgs: helm.FetchArgs{
 			Repo: pulumi.String("https://kubernetes.github.io/ingress-nginx"),
 		},

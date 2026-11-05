@@ -1,0 +1,1549 @@
+{
+  "description": "Reviewed field transitions for CNPG chart 0.29.1, ingress chart 4.15.1, Grafana image 12.4.14 and explicit existing PostgreSQL 17.5 pins. Hashes use canonical JSON (sorted keys, compact separators).",
+  "resources": {
+    "kubernetes:helm.sh/v3:Chart$kubernetes:admissionregistration.k8s.io/v1:MutatingWebhookConfiguration::cnpg-mutating-webhook-configuration": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:admissionregistration.k8s.io/v1:ValidatingWebhookConfiguration::cnpg-validating-webhook-configuration": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:admissionregistration.k8s.io/v1:ValidatingWebhookConfiguration::ingress-nginx-admission": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::backups.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "add51be663907d20969fd5a30918783f67eafda11888dec2e949052ee3fb2c3d",
+          "before": [
+            "e9cd95a4b81af9926569d8b7dcb8344e7bd243976cc3675b0eb431110a22c229"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::clusterimagecatalogs.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "6e7a342e273079960ddd7ee038619fb5b39db06d958f5bc73da3d8ad4198d547",
+          "before": [
+            "8c164c71b0a3dfc85211e145f42643140b35fb7ecdb8111a90a2e8fffe3e0122"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::clusters.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "f0a38f0ef7b3f2abac66c14ed28612b7e3c45675ddc86784f9981c805da62314",
+          "before": [
+            "abe061ae28aa1b662d446e2575c83fd45a9d36039a3f2443e5e2fc9b08c24883"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::databaseroles.postgresql.cnpg.io": {
+      "create": "079766b5d794f0466a518326a0d7666b08a9510e4abf106f77f2939659b2bf56"
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::databases.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "c7aa9524b6f14a7c015f0c5433b8b457b5bb769d3738054e66956c7236ab9e44",
+          "before": [
+            "af038b0cdb7b06bd361a26cce74bcb17f8de2681c29cde9d4d42b372b73876e3"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::failoverquorums.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::imagecatalogs.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "487160c70765ab2f4c95ad34aff7ac82e145baddb24e0d1799cda05a006cdfb2",
+          "before": [
+            "31ca921fcab16a60890b76ba79c19ea9bc3b4f70594146fdbb6827c40b2c5e26"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::poolers.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "7f9123388cb26c661797c3aec0999fd620aad6d60aee12027cd25242ef620d75",
+          "before": [
+            "3bd2c4dcc0fa8ccb323d998a9188545629b0a24d5031891a05fb046335ffc93b"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::publications.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "992655d3f3d1c567201813bb4bfa70a80fbdbedea970e156a36dba11f7fa13d8",
+          "before": [
+            "55bc8e8a35c8b797d379cd5e98a7d81363dee591074a2c1da876f350160c55c9"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::scheduledbackups.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "547dcfd431977962cbee648dfc2860f1ac517dca74d957dfa68a855d7653eac4",
+          "before": [
+            "04b070b3f707a622f18772cf846a7e7e17110830484a6cf5b9d98144f7b99a63"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::subscriptions.postgresql.cnpg.io": {
+      "changes": [
+        {
+          "after": "82cfc795a731f3d7078bd274c298c018c4fbeadd7fffc8d00522ae1b9af93777",
+          "before": [
+            "5481f2e0c991f1a03eb3537ca4bb836c1a9a8fe4c8f1ba94c4450e3df6f80617"
+          ],
+          "path": [
+            "metadata",
+            "annotations",
+            "controller-gen.kubebuilder.io/version"
+          ]
+        },
+        {
+          "after": "3ffdd7d8be544e365edf77f20214326fa75cd8137664f38f0d07f0acd0430aff",
+          "before": [
+            "4d44c31b0bf352e6fa2b66cda0fba425851944e8e01ea86f32c6d5c66a261ddf"
+          ],
+          "path": [
+            "spec",
+            "versions"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apps/v1:Deployment::cnpg-system/cloudnative-pg": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "f93f0796f1237961ee99dbea64908124b816e90892448f062288d2a8f03990f6",
+          "before": [
+            "9a340c5337a3916723cb299992e156cd8d7d15fb18e578aa64138525b550797c"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "annotations",
+            "checksum/config"
+          ]
+        },
+        {
+          "after": "7baf862a5cdba4c7690bec054a0c1f602c4edac2245eac5bab6cd9592b0cabbd",
+          "before": [
+            "48f1cebe03b7f3fbec9b767b73818e2e9873d6f53d570255a32473bf79c3cf47"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "annotations",
+            "checksum/monitoring-config"
+          ]
+        },
+        {
+          "after": "ebdd72e58e4bb9550dac596fc48868b83a85a4e16c1c54b30edd7e7de402da48",
+          "before": [
+            "7ebdc69c5f379cacdb83809b1f04b96c2aa697e1da058aa95a231416c2779a23"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "annotations",
+            "checksum/rbac"
+          ]
+        },
+        {
+          "after": "8278ba1609d0295e55c0ba99ba07494897cc7e1e233d4267f0134247039a7ef0",
+          "before": [
+            "2900ebe3415b3e4a12e405d26d983a593b7a25f245e1802166e002bdf746957e"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "env",
+            0,
+            "value"
+          ]
+        },
+        {
+          "after": "8278ba1609d0295e55c0ba99ba07494897cc7e1e233d4267f0134247039a7ef0",
+          "before": [
+            "2900ebe3415b3e4a12e405d26d983a593b7a25f245e1802166e002bdf746957e"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "image"
+          ]
+        },
+        {
+          "after": "8575ddfb71d56b68632e1806612432cd3486aa715636faaaf97576cebe0fc002",
+          "before": [
+            "136e34f998a68d208fc88ee13b8a12395b0451c97087f14023a91c941786e041"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "livenessProbe",
+            "httpGet",
+            "port"
+          ]
+        },
+        {
+          "after": "8575ddfb71d56b68632e1806612432cd3486aa715636faaaf97576cebe0fc002",
+          "before": [
+            "136e34f998a68d208fc88ee13b8a12395b0451c97087f14023a91c941786e041"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "readinessProbe",
+            "httpGet",
+            "port"
+          ]
+        },
+        {
+          "after": "8575ddfb71d56b68632e1806612432cd3486aa715636faaaf97576cebe0fc002",
+          "before": [
+            "136e34f998a68d208fc88ee13b8a12395b0451c97087f14023a91c941786e041"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "startupProbe",
+            "httpGet",
+            "port"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apps/v1:Deployment::ingress-nginx/ingress-nginx-controller": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "201c586100f7f3ce50089cff7b0ca48e244b02a9a193318246b1af776d062b9e",
+          "before": [
+            "4114697043c25c85e9b8918927d7e25cd0b81254e0492a2dc80051e3e8521514"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "image"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:apps/v1:Deployment::monitoring/grafana": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "e3af75002a6c6b2f9b81772bf97e175552aee71c621f10ef14e17e6366608dfb",
+          "before": [
+            "9940b5efb7231302c4e1ed896ce99eab0a78afbf69da78157817715f89d598cf"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "image"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:autoscaling/v2:HorizontalPodAutoscaler::ingress-nginx/ingress-nginx-controller": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:batch/v1:Job::ingress-nginx/ingress-nginx-admission-create": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "0e9668aab618cf33d2ddc6d1e4321b1a605c4bc7150a33f94afe9dd893b4fa25",
+          "before": [
+            "57a5b183df57e93321354e1b809c89533662ece84ca56fbea803a55b2979229f"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "image"
+          ]
+        }
+      ],
+      "completedHook": true
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:batch/v1:Job::ingress-nginx/ingress-nginx-admission-patch": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "0e9668aab618cf33d2ddc6d1e4321b1a605c4bc7150a33f94afe9dd893b4fa25",
+          "before": [
+            "57a5b183df57e93321354e1b809c89533662ece84ca56fbea803a55b2979229f"
+          ],
+          "path": [
+            "spec",
+            "template",
+            "spec",
+            "containers",
+            0,
+            "image"
+          ]
+        }
+      ],
+      "completedHook": true
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ConfigMap::cnpg-system/cnpg-controller-manager-config": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ConfigMap::cnpg-system/cnpg-default-monitoring": {
+      "changes": [
+        {
+          "after": "a7fdd540aea2a6bdd63aa77968b16871a11da0a99dd8241f6bde741e8602b79d",
+          "before": [
+            "cbab5b8367bd3a0591f228f897f74982757a57856682650aaee14a1535d5cde8"
+          ],
+          "path": [
+            "data",
+            "queries"
+          ]
+        },
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ConfigMap::ingress-nginx/ingress-nginx-controller": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ConfigMap::monitoring/grafana": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:Service::cnpg-system/cnpg-webhook-service": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:Service::ingress-nginx/ingress-nginx-controller": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:Service::ingress-nginx/ingress-nginx-controller-admission": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:Service::ingress-nginx/ingress-nginx-controller-metrics": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:Service::monitoring/grafana": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ServiceAccount::cnpg-system/cloudnative-pg": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ServiceAccount::ingress-nginx/ingress-nginx": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ServiceAccount::ingress-nginx/ingress-nginx-admission": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:core/v1:ServiceAccount::monitoring/grafana": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:networking.k8s.io/v1:IngressClass::nginx": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:policy/v1:PodDisruptionBudget::ingress-nginx/ingress-nginx-controller": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::cloudnative-pg": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "5f033476a7876a91a3508c526cc710149c4c5878b0429f3b174d795b7a64f85e",
+          "before": [
+            "77815ac47e1a7aa36957ccecf0c7c054daa31ab0d36fd9d7da7077809251c6ea"
+          ],
+          "path": [
+            "rules"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::cloudnative-pg-edit": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "21fcefad5feff888c00e7b8a0df7846156f4a1c9a8a1b224dd16d3b5febe960e",
+          "before": [
+            "a35e3f37ee4cf6179f89d1416facd586ad319a06c76f895719e0316367a7bd27"
+          ],
+          "path": [
+            "rules"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::cloudnative-pg-view": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        },
+        {
+          "after": "b2013719a69b85e1262c4671086e9c0a35ddc3596e4896b0766a094e9f210fb7",
+          "before": [
+            "9e30e788e51e5d6ac5b1f457355834a84626ce6201973e971c260420b1d9b961"
+          ],
+          "path": [
+            "rules"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::grafana-clusterrole": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "before": [
+            "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+          ],
+          "path": [
+            "rules"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::ingress-nginx": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::ingress-nginx-admission": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRoleBinding::cloudnative-pg": {
+      "changes": [
+        {
+          "after": "df1e6c5f826ea39a7fe8c5ff2b3b4cd532579101df8b4e7ba38bc10d71cc865f",
+          "before": [
+            "c393de6a2379e99e3b538495da3acefa85490ae7e09217b9192f9b663f2f9603"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "3c83662f772c88e7c6c30f8db3b8fa37b5e3245ea255b06fbeebb2e9660b2a45",
+          "before": [
+            "deb76b014d7befd62d0b5d835562b58b541ee16a1b2b4795740652734f7a7dcd"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRoleBinding::grafana-clusterrolebinding": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRoleBinding::ingress-nginx": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRoleBinding::ingress-nginx-admission": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:Role::ingress-nginx/ingress-nginx": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:Role::ingress-nginx/ingress-nginx-admission": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:Role::monitoring/grafana": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+          "before": [
+            "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+          ],
+          "path": [
+            "rules"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:RoleBinding::ingress-nginx/ingress-nginx": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:RoleBinding::ingress-nginx/ingress-nginx-admission": {
+      "changes": [
+        {
+          "after": "1e9d6a87acd36d647e8d77456feb6a02b09915dca5166121a5df0a702668ff2f",
+          "before": [
+            "e1e8cc8618727cd039ed874abf5d610f39b82db47e3a5506696ea58f8f36e9f5"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        },
+        {
+          "after": "6ea722bfe3181a9e9c2d63ea1c7394bd0ce449ed56d8c0801988c3e8e6403de7",
+          "before": [
+            "2bd65de872aa6ca7cb59c02f9953cc9a936bc026040091353445eb888dee1ebf"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "helm.sh/chart"
+          ]
+        }
+      ]
+    },
+    "kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:RoleBinding::monitoring/grafana": {
+      "changes": [
+        {
+          "after": "9814583c8a68e1f3ccef279a860596eb47d194ce7d6b9c312e5731001b4ea6a4",
+          "before": [
+            "3d3c49592b9c2fe094140226deee00032f1afb900026a7fd40220d5864c0a987"
+          ],
+          "path": [
+            "metadata",
+            "labels",
+            "app.kubernetes.io/version"
+          ]
+        }
+      ]
+    },
+    "kubernetes:postgresql.cnpg.io/v1:Cluster::grafana-pg": {
+      "changes": [
+        {
+          "after": "64403c174e4dd6d030af08f09775b8c3e739633f25ed900c399c645e4d63fbaa",
+          "before": [
+            "75a7176208f9924fdb199284eb30af395183ddf65c3d10347ae7f59513a5fc18"
+          ],
+          "path": [
+            "spec",
+            "imageName"
+          ]
+        }
+      ]
+    },
+    "kubernetes:postgresql.cnpg.io/v1:Cluster::registry-pg": {
+      "changes": [
+        {
+          "after": "64403c174e4dd6d030af08f09775b8c3e739633f25ed900c399c645e4d63fbaa",
+          "before": [
+            "75a7176208f9924fdb199284eb30af395183ddf65c3d10347ae7f59513a5fc18"
+          ],
+          "path": [
+            "spec",
+            "imageName"
+          ]
+        }
+      ]
+    }
+  }
+}
