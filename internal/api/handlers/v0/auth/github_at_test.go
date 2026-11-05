@@ -106,26 +106,47 @@ func TestGitHubHandler_ExchangeTokenMixedCaseGrants(t *testing.T) {
 	require.NoError(t, err)
 	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		switch r.URL.Path {
-		case githubUserEndpoint:
-			err := json.NewEncoder(w).Encode(v0auth.GitHubUserOrOrg{Login: "MiXeD-User", ID: 12345})
-			assert.NoError(t, err)
-		case githubOrgsEndpoint:
-			memberships := adminMemberships([]v0auth.GitHubUserOrOrg{
-				{Login: "MiXeD-Org", ID: 1},
-			})
-			err := json.NewEncoder(w).Encode(memberships)
-			assert.NoError(t, err)
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer server.Close()
+	tests := []struct {
+		name         string
+		userLogin    string
+		orgLogins    []string
+		wantPatterns []string
+	}{
+		{
+			name:         "mixed-case user login",
+			userLogin:    "MiXeD-User",
+			wantPatterns: []string{"io.github.mixed-user/*"},
+		},
+		{
+			name:         "mixed-case administered organization login",
+			userLogin:    "valid-user",
+			orgLogins:    []string{"MiXeD-Org"},
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.mixed-org/*"},
+		},
+	}
 
-	assert.Equal(t, []string{"io.github.mixed-user/*", "io.github.mixed-org/*"},
-		grantedPatterns(t, cfg, server))
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch r.URL.Path {
+				case githubUserEndpoint:
+					json.NewEncoder(w).Encode(v0auth.GitHubUserOrOrg{Login: tc.userLogin, ID: 12345}) //nolint:errcheck
+				case githubOrgsEndpoint:
+					orgs := make([]v0auth.GitHubUserOrOrg, 0, len(tc.orgLogins))
+					for i, login := range tc.orgLogins {
+						orgs = append(orgs, v0auth.GitHubUserOrOrg{Login: login, ID: i + 1})
+					}
+					json.NewEncoder(w).Encode(adminMemberships(orgs)) //nolint:errcheck
+				default:
+					http.NotFound(w, r)
+				}
+			}))
+			defer server.Close()
+
+			assert.Equal(t, tc.wantPatterns, grantedPatterns(t, cfg, server))
+		})
+	}
 }
 
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
@@ -891,16 +912,18 @@ func TestValidGitHubNames(t *testing.T) {
 		wantPatterns []string
 	}{
 		{
-			name:      "valid username only",
-			username:  "valid-user",
-			orgs:      []v0auth.GitHubUserOrOrg{},
-			wantPerms: 1,
+			name:         "valid username only",
+			username:     "valid-user",
+			orgs:         []v0auth.GitHubUserOrOrg{},
+			wantPerms:    1,
+			wantPatterns: []string{"io.github.valid-user/*"},
 		},
 		{
-			name:      "valid username with numbers",
-			username:  "user123",
-			orgs:      []v0auth.GitHubUserOrOrg{},
-			wantPerms: 1,
+			name:         "valid username with numbers",
+			username:     "user123",
+			orgs:         []v0auth.GitHubUserOrOrg{},
+			wantPerms:    1,
+			wantPatterns: []string{"io.github.user123/*"},
 		},
 		{
 			name:     "valid username with org",
@@ -908,7 +931,8 @@ func TestValidGitHubNames(t *testing.T) {
 			orgs: []v0auth.GitHubUserOrOrg{
 				{Login: "valid-org", ID: 1},
 			},
-			wantPerms: 2,
+			wantPerms:    2,
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.valid-org/*"},
 		},
 		{
 			name:         "mixed-case username is lowercased",
@@ -944,7 +968,8 @@ func TestValidGitHubNames(t *testing.T) {
 			orgs: []v0auth.GitHubUserOrOrg{
 				{Login: "invalid org", ID: 1},
 			},
-			wantPerms: 1, // Personal namespace kept; the invalid org is skipped
+			wantPerms:    1, // Personal namespace kept; the invalid org is skipped
+			wantPatterns: []string{"io.github.valid-user/*"},
 		},
 		{
 			name:     "valid username with one valid and one invalid org",
@@ -953,7 +978,8 @@ func TestValidGitHubNames(t *testing.T) {
 				{Login: "valid-org", ID: 1},
 				{Login: "invalid org", ID: 2},
 			},
-			wantPerms: 2, // Personal + valid org; the invalid org is skipped
+			wantPerms:    2, // Personal + valid org; the invalid org is skipped
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.valid-org/*"},
 		},
 	}
 
