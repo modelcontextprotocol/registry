@@ -1030,7 +1030,8 @@ Enable in staging, validate gzip/identity decoded-body equivalence through cold
 and warm caches, Vary, credential/cookie bypass, CPU, latency and log selection,
 then enable production. `scripts/public_read_apply.py ENV preview|apply` validates
 full scope and applies a saved plan targeting only the ingress ConfigMap and the
-named exclusion. Diagnostic plans stay private. Set either flag to `"false"` and
+named exclusion. This entry point enables Pulumi ConfigMap mutation so the existing
+controller configuration is updated in place, not replaced. Diagnostic plans stay private. Set either flag to `"false"` and
 use the same workflow to roll it back independently; keep the sampling key so the
 exclusion is disabled rather than deleted. Previously excluded log records cannot
 be recovered. The deployment reloads NGINX configuration without changing pod

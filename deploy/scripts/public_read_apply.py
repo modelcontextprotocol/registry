@@ -97,7 +97,8 @@ def main(environment, mode):
     os.umask(0o077)
     env = dict(os.environ, PULUMI_BACKEND_URL=f'gs://mcp-registry-{environment}-pulumi-state',
                PULUMI_CONFIG_PASSPHRASE_FILE=str(Path(f'passphrase.{environment}.txt').resolve()),
-               PULUMI_SKIP_UPDATE_CHECK='true', PULUMI_ENABLE_STREAMING_JSON_PREVIEW='true')
+               PULUMI_SKIP_UPDATE_CHECK='true', PULUMI_ENABLE_STREAMING_JSON_PREVIEW='true',
+               PULUMI_K8S_ENABLE_CONFIGMAP_MUTABLE='true')
     with tempfile.TemporaryDirectory(prefix='registry-private-public-read-') as temp:
         directory = Path(temp); base = ['--stack', stack, '--non-interactive']
         quiet(['go', 'build'], directory, 'build', env)
