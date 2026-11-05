@@ -57,7 +57,7 @@ def fix_new_crd_reference(graph, full_graph, stack):
     chart = prefix+'kubernetes:helm.sh/v3:Chart::cloudnative-pg'
     name = 'databaseroles.postgresql.cnpg.io'
     key = 'apiextensions.k8s.io/v1/CustomResourceDefinition::'+name
-    urn = prefix+'kubernetes:helm.sh/v3:Chart$kubernetes:'+key
+    urn = prefix+'kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::'+name
     resource = graph['resourcePlans'].get(urn)
     if not resource or resource.get('steps') != ['create']:
         return graph

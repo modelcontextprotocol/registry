@@ -79,7 +79,7 @@ class SecurityPatchTests(unittest.TestCase):
 
     def test_new_crd_reference_fills_only_deterministic_id(self):
         key = 'apiextensions.k8s.io/v1/CustomResourceDefinition::databaseroles.postgresql.cnpg.io'
-        urn = PREFIX+'kubernetes:helm.sh/v3:Chart$kubernetes:'+key
+        urn = PREFIX+'kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::databaseroles.postgresql.cnpg.io'
         chart = PREFIX+'kubernetes:helm.sh/v3:Chart::cloudnative-pg'
         graph = {'resourcePlans': {
             urn: {'steps': ['create'], 'goal': {
