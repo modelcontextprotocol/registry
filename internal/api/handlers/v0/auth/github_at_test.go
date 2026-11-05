@@ -98,6 +98,36 @@ func assertExchangeFailsClosed(t *testing.T, cfg *config.Config, server *httptes
 	assert.Nil(t, response)
 }
 
+// GitHub preserves login capitalization, but registry namespace grants must
+// always be lowercase for both the authenticated user and owned organizations.
+func TestGitHubHandler_ExchangeTokenMixedCaseGrants(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case githubUserEndpoint:
+			err := json.NewEncoder(w).Encode(v0auth.GitHubUserOrOrg{Login: "MiXeD-User", ID: 12345})
+			assert.NoError(t, err)
+		case githubOrgsEndpoint:
+			memberships := adminMemberships([]v0auth.GitHubUserOrOrg{
+				{Login: "MiXeD-Org", ID: 1},
+			})
+			err := json.NewEncoder(w).Encode(memberships)
+			assert.NoError(t, err)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	assert.Equal(t, []string{"io.github.mixed-user/*", "io.github.mixed-org/*"},
+		grantedPatterns(t, cfg, server))
+}
+
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
 	// Create test handler with mock config
 	testSeed := make([]byte, ed25519.SeedSize)
