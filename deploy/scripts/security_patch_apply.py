@@ -14,7 +14,8 @@ import sys
 import tempfile
 import time
 
-from production_apply import Blocked, require, quiet, parse_preview_events, excluded_unchanged_rbac
+from production_apply import (Blocked, require, quiet, parse_preview_events, excluded_unchanged_rbac,
+                              decode_plan, dependency_signature, reconcile_plan_dependencies)
 from public_read_apply import preflight as volume_preflight
 
 POLICY_PATH = Path(__file__).with_name('security_patch_202611.json')
@@ -80,7 +81,9 @@ def validate(preview, environment, previous, policy):
                 require(change and digest(before) in change['before'] and digest(after) == change['after'], 'unreviewed-field-transition')
         else:
             require(op == 'create' and digest(new['inputs']) == rule.get('create'), 'unreviewed-create')
-        if not hook or old['inputs'] != new['inputs']:
+        # The admission certificate already exists. Keep completed, TTL-expired
+        # setup jobs out of the apply, including their reviewed image-only change.
+        if not hook:
             changed.add(suffix)
     return sorted(changed)
 
@@ -144,14 +147,41 @@ def main(environment, mode):
         exported = directory/'before.json'
         quiet(['pulumi', 'stack', 'export', '--file', str(exported)]+base, directory, 'state', env)
         previous = {r['urn']: r for r in json.loads(exported.read_text())['deployment']['resources']}
-        plan = directory/'plan.json'
-        result = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(plan)]+base, directory, 'preview', env)
+        full_plan = directory/'full-plan.json'
+        result = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(full_plan)]+base, directory, 'full-preview', env)
         changes = validate(parse_preview_events(result.read_text()), environment, previous, policy)
-        print(f'Private security plan validated: {len(changes)} reviewed resource changes; no deletes or replacements.', flush=True)
+        print(f'Full security scope validated: {len(changes)} reviewed resource changes; no deletes or replacements.', flush=True)
+        if not changes:
+            print('Private security plan validated: no changes.', flush=True)
+            return
+        prefix = f'urn:pulumi:{stack}::mcp-registry-infra::'
+        target_urns = [prefix+suffix for suffix in changes]
+        targets = [arg for urn in target_urns for arg in ('--target', urn)]
+        plan = directory/'target-plan.json'
+        result = quiet(['pulumi', 'preview', '--refresh=false', '--json', '--save-plan', str(plan)]+base+targets, directory, 'preview', env)
+        validate(parse_preview_events(result.read_text()), environment, previous, policy)
+        full_graph, target_graph = decode_plan(full_plan.read_text()), decode_plan(plan.read_text())
+        for urn in target_urns:
+            require(dependency_signature(full_graph['resourcePlans'][urn]['goal']) == dependency_signature(target_graph['resourcePlans'][urn]['goal']), 'target-dependencies')
+        graph, dependency_changes = reconcile_plan_dependencies(full_graph, target_graph)
+        if dependency_changes:
+            confirmation = directory/'confirmed-plan.json'
+            result = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(confirmation)]+base, directory, 'confirm-preview', env)
+            validate(parse_preview_events(result.read_text()), environment, previous, policy)
+            confirmed = decode_plan(confirmation.read_text())
+            require(all(dependency_signature(full_graph['resourcePlans'][u]['goal']) == dependency_signature(confirmed['resourcePlans'][u]['goal']) for u in dependency_changes), 'stable-dependency-graph')
+        document = json.loads(plan.read_text())
+        if 'version' in document:
+            document['plan'] = graph
+        else:
+            document = graph
+        plan = directory/'validated-plan.json'
+        plan.write_text(json.dumps(document))
+        print('Private targeted security plan validated; completed admission jobs excluded.', flush=True)
         if mode == 'apply' and changes:
             backup(environment, directory, env)
             require(preflight(environment, directory, env, 'preapply') == volumes, 'volume-identity-before-apply')
-            quiet(['pulumi', 'up', '--refresh=false', '--json', '--yes', '--skip-preview', '--plan', str(plan)]+base, directory, 'apply', env)
+            quiet(['pulumi', 'up', '--refresh=false', '--json', '--yes', '--skip-preview', '--plan', str(plan)]+base+targets, directory, 'apply', env)
             # Operator readiness precedes asynchronous database instance-manager
             # rollouts. Wait for both upgraded databases, not just Helm resources.
             deadline = time.monotonic()+900

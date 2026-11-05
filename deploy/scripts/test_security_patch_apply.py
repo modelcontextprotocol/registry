@@ -65,6 +65,18 @@ class SecurityPatchTests(unittest.TestCase):
         self.step['oldState'] = copy.deepcopy(self.new)
         self.check()
 
+    def test_completed_hook_is_validated_but_not_targeted(self):
+        self.policy['resources'][RESOURCE]['completedHook'] = True
+        self.old['outputs'] = {'status': {'succeeded': 1}}
+        step = dict(self.step, oldState=None, op='create')
+        preview = {'steps': [step], 'changeSummary': {'create': 1}}
+        self.assertEqual(validate(preview, 'staging', {PREFIX+RESOURCE: self.old}, self.policy), [])
+        self.new['inputs']['spec']['template']['spec']['containers'][0]['env'][0]['value'] = 'changed'
+        with self.assertRaises(Blocked):
+            validate(preview, 'staging', {PREFIX+RESOURCE: self.old}, self.policy)
+        with self.assertRaises(Blocked):
+            validate(preview, 'staging', {}, self.policy)
+
     def test_rejects_incomplete_preview(self):
         with self.assertRaises(Blocked): validate({'steps': [self.step]}, 'staging', {}, self.policy)
 
