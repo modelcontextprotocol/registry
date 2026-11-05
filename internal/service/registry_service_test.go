@@ -41,6 +41,24 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 				{Type: "streamable-http", URL: "https://api.microsoft.com/mcp"},
 			},
 		},
+		"deleted": {
+			Schema:      model.CurrentSchemaURL,
+			Name:        "com.example/deleted-server",
+			Description: "A deleted server",
+			Version:     "1.0.0",
+			Remotes: []model.Transport{
+				{Type: "streamable-http", URL: "https://deleted.example.com/mcp"},
+			},
+		},
+		"deprecated": {
+			Schema:      model.CurrentSchemaURL,
+			Name:        "com.example/deprecated-server",
+			Description: "A deprecated server",
+			Version:     "1.0.0",
+			Remotes: []model.Transport{
+				{Type: "streamable-http", URL: "https://deprecated.example.com/mcp"},
+			},
+		},
 	}
 
 	testDB := database.NewTestDB(t)
@@ -51,6 +69,18 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 		_, err := service.CreateServer(ctx, server)
 		require.NoError(t, err, "failed to create server: %v", err)
 	}
+
+	deletedServer := existingServers["deleted"]
+	_, err := service.UpdateServerStatus(ctx, deletedServer.Name, deletedServer.Version, &StatusChangeRequest{
+		NewStatus: model.StatusDeleted,
+	})
+	require.NoError(t, err)
+
+	deprecatedServer := existingServers["deprecated"]
+	_, err = service.UpdateServerStatus(ctx, deprecatedServer.Name, deprecatedServer.Version, &StatusChangeRequest{
+		NewStatus: model.StatusDeprecated,
+	})
+	require.NoError(t, err)
 
 	tests := []struct {
 		name         string
@@ -96,6 +126,33 @@ func TestValidateNoDuplicateRemoteURLs(t *testing.T) {
 			},
 			expectError: true,
 			errorMsg:    "remote URL https://api.example.com/mcp is already used by server com.example/existing-server",
+		},
+		{
+			name: "duplicate remote URL used only by deleted server - should pass",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/new-server-with-deleted-conflict",
+				Description: "A new server reusing a deleted remote URL",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://deleted.example.com/mcp"},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "duplicate remote URL used by deprecated server - should fail",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/new-server-with-deprecated-conflict",
+				Description: "A new server reusing a deprecated remote URL",
+				Version:     "1.0.0",
+				Remotes: []model.Transport{
+					{Type: "streamable-http", URL: "https://deprecated.example.com/mcp"},
+				},
+			},
+			expectError: true,
+			errorMsg:    "remote URL https://deprecated.example.com/mcp is already used by server com.example/deprecated-server",
 		},
 		{
 			name: "updating same server with same URLs - should pass",
