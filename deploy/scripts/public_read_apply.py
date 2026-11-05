@@ -63,9 +63,15 @@ def validate(preview, environment, compression, sampling, previous=None):
         else:
             expected = {'project': 'mcp-registry-'+environment, 'name': POLICY['exclusion_name'],
                         'description': POLICY['exclusion_description'], 'filter': POLICY['exclusion_filter'], 'disabled': not sampling}
-            require(new['inputs'] == expected, 'exact-log-policy')
+            actual = dict(new['inputs'])
+            # The Terraform bridge may annotate which optional inputs it defaulted.
+            defaults = actual.pop('__defaults', [])
+            require(isinstance(defaults, list) and set(defaults) <= set(expected), 'exclusion-default-metadata')
+            require(set(actual) <= set(expected), 'exclusion-extra-input')
+            for field in expected:
+                require(actual.get(field) == expected[field], 'exclusion-field-'+field)
             if old:
-                before = dict(old['inputs']); before['disabled'] = not sampling
+                before = dict(old['inputs']); before.pop('__defaults', None); before['disabled'] = not sampling
                 require(before == expected, 'unexpected-existing-log-policy')
             labels.add('successful listing log sampling')
     return sorted(labels)
