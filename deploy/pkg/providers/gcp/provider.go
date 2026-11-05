@@ -338,8 +338,14 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
+	// Keep ingress configuration reloads in place once the public-read policy is managed.
+	var configMapMutable pulumi.BoolPtrInput
+	if config.New(ctx, "mcp-registry").Get("publicReadCompression") != "" {
+		configMapMutable = pulumi.BoolPtr(true)
+	}
 	// Create Kubernetes provider using the cluster directly
 	k8sProvider, err := kubernetes.NewProvider(ctx, "k8s-provider", &kubernetes.ProviderArgs{
+		EnableConfigMapMutable: configMapMutable,
 		Kubeconfig: pulumi.All(cluster.Endpoint, cluster.MasterAuth).ApplyT(func(args []any) (string, error) {
 			endpoint := args[0].(string)
 			masterAuth := args[1].(container.ClusterMasterAuth)

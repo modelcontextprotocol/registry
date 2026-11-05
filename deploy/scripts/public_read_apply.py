@@ -29,6 +29,7 @@ def identities(environment):
 
 def validate(preview, environment, compression, sampling, previous=None):
     stack, cm, exclusion = identities(environment)
+    provider = f'urn:pulumi:{stack}::mcp-registry-infra::pulumi:providers:kubernetes::k8s-provider'
     require(preview.get('steps') and isinstance(preview.get('changeSummary'), dict), 'preview-complete')
     require(not preview.get('maybeCorrupt'), 'preview-state')
     require(not any(d.get('severity') == 'error' for d in preview.get('diagnostics', [])), 'preview-errors')
@@ -44,6 +45,15 @@ def validate(preview, environment, compression, sampling, previous=None):
         old, new = step.get('oldState'), step.get('newState')
         if urn == f'urn:pulumi:{stack}::mcp-registry-infra::pulumi:pulumi:Stack::mcp-registry-infra-{stack}':
             require(op == 'update' and old and new, 'stack-update-only')
+            continue
+        if urn == provider:
+            require(op == 'update' and old and new, 'provider-update-only')
+            require(all(old.get(k) == new.get(k) for k in ('parent', 'protect', 'retainOnDelete')), 'provider-identity')
+            before, after = copy.deepcopy(old['inputs']), copy.deepcopy(new['inputs'])
+            require(before.pop('enableConfigMapMutable', None) in (None, False, True, 'false', 'true'), 'provider-existing-mode')
+            require(after.pop('enableConfigMapMutable', None) in (True, 'true'), 'provider-mutable-mode')
+            require(before == after, 'unrelated-provider-change')
+            labels.add('in-place ConfigMap provider mode')
             continue
         kind = (new or old or {}).get('type', step.get('type'))
         category = {'pulumi:providers:kubernetes': 'kubernetes-provider',
@@ -100,12 +110,12 @@ def preflight(environment, directory, env, label):
 
 def main(environment, mode):
     stack, cm, exclusion = identities(environment)
+    provider = f'urn:pulumi:{stack}::mcp-registry-infra::pulumi:providers:kubernetes::k8s-provider'
     require(mode in ('preview', 'apply'), 'mode')
     os.umask(0o077)
     env = dict(os.environ, PULUMI_BACKEND_URL=f'gs://mcp-registry-{environment}-pulumi-state',
                PULUMI_CONFIG_PASSPHRASE_FILE=str(Path(f'passphrase.{environment}.txt').resolve()),
-               PULUMI_SKIP_UPDATE_CHECK='true', PULUMI_ENABLE_STREAMING_JSON_PREVIEW='true',
-               PULUMI_K8S_ENABLE_CONFIGMAP_MUTABLE='true')
+               PULUMI_SKIP_UPDATE_CHECK='true', PULUMI_ENABLE_STREAMING_JSON_PREVIEW='true')
     with tempfile.TemporaryDirectory(prefix='registry-private-public-read-') as temp:
         directory = Path(temp); base = ['--stack', stack, '--non-interactive']
         quiet(['go', 'build'], directory, 'build', env)
@@ -123,12 +133,12 @@ def main(environment, mode):
         full = quiet(['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(full_plan)]+base, directory, 'full-preview', env)
         validate(parse_preview_events(full.read_text()), environment, compression, sampling, previous)
         print('Full public-read change scope validated.', flush=True)
-        targets = ['--target', cm, '--target', exclusion]
+        targets = ['--target', provider, '--target', cm, '--target', exclusion]
         plan = directory/'target-plan.json'
         result = quiet(['pulumi', 'preview', '--refresh=false', '--json', '--save-plan', str(plan)]+base+targets, directory, 'preview', env)
         labels = validate(parse_preview_events(result.read_text()), environment, compression, sampling)
         full_graph = decode_plan(full_plan.read_text()); target_graph = decode_plan(plan.read_text())
-        for u in (cm, exclusion):
+        for u in (provider, cm, exclusion):
             require(dependency_signature(full_graph['resourcePlans'][u]['goal']) == dependency_signature(target_graph['resourcePlans'][u]['goal']), 'target-dependencies')
         graph, changes = reconcile_plan_dependencies(full_graph, target_graph)
         if changes:

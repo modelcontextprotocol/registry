@@ -36,6 +36,15 @@ class PublicReadPolicyTests(unittest.TestCase):
             with self.assertRaises(Blocked): validate(dict(step, op=op))
         with self.assertRaises(Blocked): validate(dict(step, urn='database'))
 
+    def test_provider_can_only_enable_mutable_configmaps(self):
+        urn = 'urn:pulumi:gcpStaging::mcp-registry-infra::pulumi:providers:kubernetes::k8s-provider'
+        old = {'inputs': {'kubeconfig': 'unchanged', 'version': '4'}}
+        new = copy.deepcopy(old); new['inputs']['enableConfigMapMutable'] = True
+        step = {'urn': urn, 'op': 'update', 'oldState': old, 'newState': new}
+        self.assertTrue(policy.validate({'steps': [step], 'changeSummary': {}}, 'staging', True, True))
+        new['inputs']['kubeconfig'] = 'different-cluster'
+        with self.assertRaises(Blocked): policy.validate({'steps': [step], 'changeSummary': {}}, 'staging', True, True)
+
     def test_exclusion_must_match_exact_policy(self):
         _, _, exclusion = policy.identities('prod')
         inputs = {'project': 'mcp-registry-prod', 'name': policy.POLICY['exclusion_name'], 'description': policy.POLICY['exclusion_description'], 'filter': policy.POLICY['exclusion_filter'], 'disabled': False}
