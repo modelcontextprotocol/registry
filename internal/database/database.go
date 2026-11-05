@@ -23,7 +23,7 @@ var (
 // ServerFilter defines filtering options for server queries
 type ServerFilter struct {
 	Name           *string    // for finding versions of same server
-	RemoteURL      *string    // for duplicate URL detection
+	RemoteURL      *string    // exact remote URL lookup; may match multiple server names
 	UpdatedSince   *time.Time // for incremental sync filtering
 	SubstringName  *string    // for substring search on name
 	Version        *string    // for exact version matching

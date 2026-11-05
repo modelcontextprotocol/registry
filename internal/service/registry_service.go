@@ -23,14 +23,13 @@ const maxServerVersionsPerServer = 10000
 // transaction; the rest inside createServerInTransaction. Constants because
 // version_checks is reported from multiple branches.
 const (
-	phaseValidate           = "validate"
-	phaseTxBegin            = "tx_begin"
-	phaseAcquireLock        = "acquire_lock"
-	phaseValidateRemoteURLs = "validate_remote_urls"
-	phaseVersionChecks      = "version_checks"
-	phaseUnmarkLatest       = "unmark_latest"
-	phaseDBCreate           = "db_create"
-	phaseCommit             = "commit"
+	phaseValidate      = "validate"
+	phaseTxBegin       = "tx_begin"
+	phaseAcquireLock   = "acquire_lock"
+	phaseVersionChecks = "version_checks"
+	phaseUnmarkLatest  = "unmark_latest"
+	phaseDBCreate      = "db_create"
+	phaseCommit        = "commit"
 )
 
 // publishTimings accumulates the per-phase durations reported on the single
@@ -57,7 +56,6 @@ type publishTimings struct {
 	validateMs      int64
 	txBeginMs       int64
 	lockMs          int64
-	remotesMs       int64
 	versionChecksMs int64
 	unmarkMs        int64
 	createMs        int64
@@ -86,7 +84,8 @@ func (t *publishTimings) log(ctx context.Context, serverJSON apiv0.ServerJSON, t
 		"validate_ms", t.validateMs,
 		"tx_begin_ms", t.txBeginMs,
 		"lock_ms", t.lockMs,
-		"remotes_ms", t.remotesMs,
+		// Retain the former URL uniqueness timing field for log consumers.
+		"remotes_ms", int64(0),
 		"version_checks_ms", t.versionChecksMs,
 		"unmark_ms", t.unmarkMs,
 		"create_ms", t.createMs,
@@ -275,13 +274,6 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 		return nil, err
 	}
 
-	// Check for duplicate remote URLs
-	if err = t.run(phaseValidateRemoteURLs, &t.remotesMs, func() error {
-		return s.validateNoDuplicateRemoteURLs(ctx, tx, serverJSON)
-	}); err != nil {
-		return nil, err
-	}
-
 	// Version checks: count, exists, current-latest (small DB lookups, but on a
 	// starved pool any of them stalls until a connection is free). Bundled under
 	// one phase since they share a logical step.
@@ -407,29 +399,6 @@ func pickLatestVersion(versions []*apiv0.ServerResponse, allowDeleted bool) *api
 	return winner
 }
 
-// validateNoDuplicateRemoteURLs checks that no other server is using the same remote URLs
-func (s *registryServiceImpl) validateNoDuplicateRemoteURLs(ctx context.Context, tx pgx.Tx, serverDetail apiv0.ServerJSON) error {
-	// Check each remote URL in the new server for conflicts
-	for _, remote := range serverDetail.Remotes {
-		// Use filter to find servers with this remote URL
-		filter := &database.ServerFilter{RemoteURL: &remote.URL}
-
-		conflictingServers, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
-		if err != nil {
-			return fmt.Errorf("failed to check remote URL conflict: %w", err)
-		}
-
-		// Check if any conflicting server has a different name
-		for _, conflictingServer := range conflictingServers {
-			if conflictingServer.Server.Name != serverDetail.Name {
-				return fmt.Errorf("remote URL %s is already used by server %s", remote.URL, conflictingServer.Server.Name)
-			}
-		}
-	}
-
-	return nil
-}
-
 // UpdateServer updates an existing server with new details
 func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
 	// Wrap the entire operation in a transaction
@@ -475,11 +444,6 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 	// Merge the request with the current server, preserving metadata
 	updatedServer := *req
 
-	// Check for duplicate remote URLs using the updated server
-	if err := s.validateNoDuplicateRemoteURLs(ctx, tx, updatedServer); err != nil {
-		return nil, err
-	}
-
 	// Update server in database
 	updatedServerResponse, err := s.db.UpdateServer(ctx, tx, serverName, version, &updatedServer)
 	if err != nil {
@@ -511,25 +475,9 @@ func (s *registryServiceImpl) UpdateServerStatus(ctx context.Context, serverName
 
 // updateServerStatusInTransaction contains the actual UpdateServerStatus logic within a transaction
 func (s *registryServiceImpl) updateServerStatusInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
-	// Get current server to verify it exists and check current status
-	// Include deleted servers since we may need to restore them
-	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
-	if err != nil {
-		return nil, err
-	}
-
 	// Acquire advisory lock to prevent concurrent edits of servers with same name
 	if err := s.db.AcquirePublishLock(ctx, tx, serverName); err != nil {
 		return nil, err
-	}
-
-	// When transitioning to active from deleted, validate remote URLs don't conflict
-	if statusChange.NewStatus == model.StatusActive &&
-		currentServer.Meta.Official != nil &&
-		currentServer.Meta.Official.Status == model.StatusDeleted {
-		if err := s.validateNoDuplicateRemoteURLs(ctx, tx, currentServer.Server); err != nil {
-			return nil, err
-		}
 	}
 
 	// Update only the status metadata
@@ -556,27 +504,6 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 	// Acquire advisory lock to prevent concurrent edits of servers with same name
 	if err := s.db.AcquirePublishLock(ctx, tx, serverName); err != nil {
 		return nil, err
-	}
-
-	// When transitioning to active, validate remote URLs for any versions currently deleted
-	if statusChange.NewStatus == model.StatusActive {
-		includeDeleted := true
-
-		// When transitioning to active, it means the current status is either deprecated or deleted, so it should include deleted server also
-		filter := &database.ServerFilter{Name: &serverName, IncludeDeleted: &includeDeleted}
-		versions, _, err := s.db.ListServers(ctx, tx, filter, "", 1000)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list server versions: %w", err)
-		}
-
-		for _, version := range versions {
-			if version.Meta.Official != nil &&
-				version.Meta.Official.Status == model.StatusDeleted {
-				if err := s.validateNoDuplicateRemoteURLs(ctx, tx, version.Server); err != nil {
-					return nil, err
-				}
-			}
-		}
 	}
 
 	// Update all versions' status in a single database call

@@ -4,6 +4,16 @@ Changes to the REST API endpoints and responses.
 
 ## Unreleased
 
+### Changed
+
+#### Remote URLs may be shared across server names
+
+The official registry no longer rejects publishing, admin metadata edits, or restoring deleted versions because another server name references the same remote URL. This applies to both `/v0` and `/v0.1`. Namespace authorization, remote URL validation, and uniqueness of server name/version pairs remain unchanged. Existing records and API response schemas are unchanged; no data migration is required.
+
+**Downstream compatibility:** This relaxes a previously documented publishing restriction and changes the guarantee that a remote URL belongs to only one server name. Consumers that index records by remote URL or select a single canonical listing from a URL must support multiple matching server names. Identify records by server name and version (and registry when combining sources), and preserve each listing's metadata and configuration separately. A shared URL does not establish ownership or endorsement.
+
+Operators should communicate this change to downstream consumers before rollout. Re-enabling the restriction after shared URLs have been published could block subsequent publications, edits, or restores for those servers.
+
 ### Added
 
 #### Server Status Management Endpoints
