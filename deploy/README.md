@@ -1059,7 +1059,12 @@ before enabling the identical profile in production. PostgreSQL remains explicit
 pinned to the existing 17.5 image; database engine patching needs its own rollout.
 
 The workflow uses `scripts/security_patch_apply.py` to validate a refreshed, saved
-full plan against `scripts/security_patch_202611.json`. It allows only the reviewed
+full preview against `scripts/security_patch_202611.json`, then saves and validates
+a targeted apply plan. Completed, TTL-expired ingress admission setup jobs are
+excluded: the existing certificate remains valid, and recreating these ephemeral
+jobs can violate saved-plan output constraints. Untargeted dependency metadata is
+reconciled only when two full previews agree; all input and operation constraints
+remain intact. It allows only the reviewed
 field transitions: chart labels, controller/container versions and probes,
 CloudNativePG monitoring queries, upstream CRD schemas/RBAC, and the existing
 PostgreSQL image pin. It rejects unrelated changes, deletions, and replacements.
