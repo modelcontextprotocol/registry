@@ -839,8 +839,13 @@ controllers can receive traffic. Both singleton databases are protected from
 node-autoscaler eviction; this does not provide database failover. The registry
 DB move can interrupt service while its existing volume is reattached.
 
-Run the production workflow manually on the proposed ref for a **preview only**.
-A production stack-config merge still triggers the apply. Both paths refresh
+Before merging, an authorized maintainer should check out the proposed ref locally
+and run `make -C deploy prod-preview` from the repository root, using production
+credentials and the existing `deploy/passphrase.prod.txt` file. The GitHub Actions
+production environment permits only `main`, so manual workflow previews must
+select `main` and cannot preview an unmerged branch.
+A production stack-config merge still triggers the automatic apply without an
+additional deployment approval. The local preview and deployment both refresh
 state first. Review the preview for unexpected replacement/deletion, especially
 the cluster, registry database and PVC, before merging. Keep a fresh successful
 backup and capture health, workload placement and request metrics through the
