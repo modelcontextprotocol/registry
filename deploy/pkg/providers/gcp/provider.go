@@ -8,6 +8,7 @@ import (
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/compute"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/logging"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/projects"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
@@ -17,6 +18,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/traffic"
 )
 
 // Provider implements the ClusterProvider interface for Google Kubernetes Engine
@@ -203,6 +205,22 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
+	if config.New(ctx, "mcp-registry").Get("publicReadLogSampling") != "" {
+		policy := traffic.ReadPolicy()
+		opts := []pulumi.ResourceOption{}
+		if gcpProvider != nil {
+			opts = append(opts, pulumi.Provider(gcpProvider))
+		}
+		_, err := logging.NewProjectExclusion(ctx, "registry-fast-public-read-sampling", &logging.ProjectExclusionArgs{
+			Project: pulumi.String(projectID), Name: pulumi.String(policy.ExclusionName),
+			Description: pulumi.String(policy.ExclusionDescription), Filter: pulumi.String(policy.ExclusionFilter),
+			Disabled: pulumi.Bool(!config.New(ctx, "mcp-registry").GetBool("publicReadLogSampling")),
+		}, opts...)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	nodeScaling, err := readNodeScaling(ctx)
 	if err != nil {
 		return nil, err
@@ -320,8 +338,14 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
+	// Keep ingress configuration reloads in place once the public-read policy is managed.
+	var configMapMutable pulumi.BoolPtrInput
+	if config.New(ctx, "mcp-registry").Get("publicReadCompression") != "" {
+		configMapMutable = pulumi.BoolPtr(true)
+	}
 	// Create Kubernetes provider using the cluster directly
 	k8sProvider, err := kubernetes.NewProvider(ctx, "k8s-provider", &kubernetes.ProviderArgs{
+		EnableConfigMapMutable: configMapMutable,
 		Kubeconfig: pulumi.All(cluster.Endpoint, cluster.MasterAuth).ApplyT(func(args []any) (string, error) {
 			endpoint := args[0].(string)
 			masterAuth := args[1].(container.ClusterMasterAuth)

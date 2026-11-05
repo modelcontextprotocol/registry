@@ -1,4 +1,6 @@
 config:
+  mcp-registry:publicReadCompression: "true"
+  mcp-registry:publicReadLogSampling: "true"
   mcp-registry:environment: staging
   mcp-registry:victoriaMetricsCapacity: "true"
   # Preserve the pinned staging app during the monitoring-only repair.
