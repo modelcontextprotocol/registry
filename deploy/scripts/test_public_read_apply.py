@@ -28,6 +28,7 @@ class PublicReadPolicyTests(unittest.TestCase):
         def validate(s, enabled=True):
             return policy.validate({'steps': [s], 'changeSummary': {'update': 1}}, 'staging', enabled, True)
         self.assertTrue(validate(step))
+        self.assertTrue(validate(dict(step, replaceReasons=['data'])))
         self.assertTrue(validate(dict(step, oldState=new, newState=old), False))
         bad = copy.deepcopy(step); bad['newState']['inputs']['data']['location-snippet'] += 'proxy_cache off;'
         with self.assertRaises(Blocked): validate(bad)

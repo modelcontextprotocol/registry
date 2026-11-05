@@ -46,7 +46,9 @@ def validate(preview, environment, compression, sampling, previous=None):
             require(op == 'update' and old and new, 'stack-update-only')
             continue
         require(urn in (cm, exclusion), 'outside-public-read-scope')
-        require(op in ('update', 'create') and new and not step.get('replaceReasons'), 'no-delete-or-replacement')
+        # Streaming event keys can list ordinary changed ConfigMap fields.
+        # The operation itself must be update/create, never replace or delete.
+        require(op in ('update', 'create') and new, 'no-delete-or-replacement')
         if old:
             require(all(old.get(k) == new.get(k) for k in ('provider', 'parent', 'protect', 'retainOnDelete')), 'identity-unchanged')
         if urn == cm:
