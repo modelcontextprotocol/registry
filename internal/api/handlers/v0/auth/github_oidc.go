@@ -290,7 +290,7 @@ func (h *GitHubOIDCHandler) buildPermissions(claims *GitHubOIDCClaims) []auth.Pe
 	// This also reflects GitHub's permission model, in that GitHub Actions can push to any GitHub package in the repository owner's namespace (e.g. for GHCR)
 	permissions = append(permissions, auth.Permission{
 		Action:          auth.PermissionActionPublish,
-		ResourcePattern: fmt.Sprintf("io.github.%s/*", strings.ToLower(claims.RepositoryOwner)),
+		ResourcePattern: fmt.Sprintf("io.github.%s/*", claims.RepositoryOwner),
 	})
 
 	return permissions
