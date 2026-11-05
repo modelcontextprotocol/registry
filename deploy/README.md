@@ -1078,7 +1078,7 @@ changes until their deployment policy is reviewed. Ordinary application PR check
 and main-only environment protections are unchanged.
 
 Before an apply, the wrapper takes consistent custom-format dumps of **both**
-`default/registry-pg` and `monitoring/grafana-pg`, checks their archive indexes, and
+`default/registry-pg` and `monitoring/grafana-pg`, checks their complete archive streams, and
 uploads and reads them back from the existing private backup bucket under
 `security-upgrades/202611/<unique-run>/`. Keep these backups until the upgrade has
 been accepted; they are separate from the registry-only daily Restic backups.
@@ -1107,8 +1107,7 @@ and [Grafana CVE-2026-27880](https://grafana.com/security/security-advisories/cv
 2. Map all existing ingress behavior: ACME/cert-manager certificates, HTTPS
    redirects, real client IP and rate limits, OAuth callbacks, health checks,
    body/time limits, metrics, HPA and node placement. NGINX snippets are not portable:
-   explicitly implement public listing cache keys/TTL, authorization and cookie
-   bypass, invalidation behavior, gzip negotiation and `Vary` handling; confirm that
+   explicitly implement public listing cache keys/TTL, public versus authenticated route isolation, invalidation behavior, gzip negotiation and `Vary` handling (including credential/cookie compression bypass); confirm that
    publishing and other authenticated routes are never cached.
 3. Run the existing traffic tests against both controllers, including publishing
    in staging, cache isolation, burst/rollout capacity and certificate renewal.

@@ -5,7 +5,6 @@ The allowlist contains hashes of reviewed field transitions, never secret values
 No delete/replacement is allowed. Raw plans, state and backups remain private;
 backups are retained in the existing private GCS bucket, not Actions artifacts.
 """
-import copy
 import hashlib
 import json
 import os
@@ -108,15 +107,16 @@ def preflight(environment, directory, env, label, patched=False):
 
 def backup(environment, directory, env):
     context = f'gke_mcp-registry-{environment}_us-central1-b_mcp-registry-{environment}'
+    env = dict(env, KUBECTL_REMOTE_COMMAND_WEBSOCKETS='false')
     destination = f'gs://mcp-registry-{environment}-backups/security-upgrades/202611/{time.time_ns()}'
     for namespace, name in [('default', 'registry-pg'), ('monitoring', 'grafana-pg')]:
         command = ['kubectl', '--context', context, '-n', namespace, 'exec', name+'-1', '-c', 'postgres', '--']
         dump = quiet(command+['pg_dump', '-U', 'postgres', '-d', 'app', '-Fc'], directory, 'backup-'+name, env)
         require(dump.stat().st_size > 1000 and dump.read_bytes()[:5] == b'PGDMP', 'backup-format')
-        # Force the legacy streaming transport: some GKE proxies reset a WebSocket
-        # when pg_restore exits before the sender has closed its input stream.
+        # Read the entire archive, including table data: a readable archive index
+        # alone does not detect truncated dumps. Keep all diagnostic output private.
         with dump.open('rb') as src, (directory/(name+'-toc')).open('wb') as out, (directory/(name+'-verify.err')).open('wb') as err:
-            command = ['kubectl', '--context', context, '-n', namespace, 'exec', '-i', name+'-1', '-c', 'postgres', '--', 'pg_restore', '--list']
+            command = ['kubectl', '--context', context, '-n', namespace, 'exec', '-i', name+'-1', '-c', 'postgres', '--', 'pg_restore', '--file=/dev/null']
             result = subprocess.run(command, stdin=src, stdout=out, stderr=err, env=dict(env, KUBECTL_REMOTE_COMMAND_WEBSOCKETS='false'), timeout=180)
         require(result.returncode == 0, 'backup-archive-verification')
         quiet(['gcloud', 'storage', 'cp', str(dump), destination+'/'+name+'.dump', '--quiet'], directory, 'upload-'+name, env)
