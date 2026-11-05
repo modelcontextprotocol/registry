@@ -2,7 +2,7 @@ import copy
 import unittest
 
 from production_apply import Blocked
-from security_patch_apply import validate, digest, differences, MISSING
+from security_patch_apply import validate, digest, differences, MISSING, fix_new_crd_reference
 
 
 PREFIX = 'urn:pulumi:gcpStaging::mcp-registry-infra::'
@@ -76,6 +76,26 @@ class SecurityPatchTests(unittest.TestCase):
             validate(preview, 'staging', {PREFIX+RESOURCE: self.old}, self.policy)
         with self.assertRaises(Blocked):
             validate(preview, 'staging', {}, self.policy)
+
+    def test_new_crd_reference_fills_only_deterministic_id(self):
+        key = 'apiextensions.k8s.io/v1/CustomResourceDefinition::databaseroles.postgresql.cnpg.io'
+        urn = PREFIX+'kubernetes:helm.sh/v3:Chart$kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition::databaseroles.postgresql.cnpg.io'
+        chart = PREFIX+'kubernetes:helm.sh/v3:Chart::cloudnative-pg'
+        graph = {'resourcePlans': {
+            urn: {'steps': ['create'], 'goal': {
+                'type': 'kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition',
+                'inputDiff': {'adds': {'metadata': {'name': 'databaseroles.postgresql.cnpg.io'}, 'spec': {'reviewed': True}}}}},
+            chart: {'goal': {'outputDiff': {'updates': {'resources': {key: {'urn': urn, 'id': ''}}}}}},
+        }}
+        expected = copy.deepcopy(graph)
+        expected['resourcePlans'][chart]['goal']['outputDiff']['updates']['resources'][key]['id'] = 'databaseroles.postgresql.cnpg.io'
+        self.assertEqual(fix_new_crd_reference(graph, graph, 'gcpStaging'), expected)
+        self.assertEqual(graph['resourcePlans'][chart]['goal']['outputDiff']['updates']['resources'][key]['id'], '')
+        different = copy.deepcopy(graph)
+        different['resourcePlans'][chart]['goal']['outputDiff']['updates']['resources'][key]['urn'] = 'other'
+        with self.assertRaises(Blocked): fix_new_crd_reference(graph, different, 'gcpStaging')
+        graph['resourcePlans'][urn]['goal']['inputDiff']['adds']['metadata']['name'] = 'other'
+        with self.assertRaises(Blocked): fix_new_crd_reference(graph, graph, 'gcpStaging')
 
     def test_rejects_incomplete_preview(self):
         with self.assertRaises(Blocked): validate({'steps': [self.step]}, 'staging', {}, self.policy)
