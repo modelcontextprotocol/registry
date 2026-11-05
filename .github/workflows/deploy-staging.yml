@@ -117,6 +117,12 @@ jobs:
           printf '%s' "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
           trap 'rm -f passphrase.staging.txt' EXIT
           export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt
+          if grep -q 'securityPatch202611: "true"' Pulumi.gcpStaging.yaml; then
+            mode=apply
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then mode="${{ inputs.operation }}"; fi
+            python3 scripts/security_patch_apply.py staging "$mode"
+            exit
+          fi
           if grep -q "publicReadCompression:" Pulumi.gcpStaging.yaml; then
             mode=apply
             if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then mode="${{ inputs.operation }}"; fi

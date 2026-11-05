@@ -28,7 +28,7 @@ func DeployPostgresDatabases(ctx *pulumi.Context, cluster *providers.ProviderInf
 	// Install cloudnative-pg Helm chart
 	cloudNativePG, err := helm.NewChart(ctx, "cloudnative-pg", helm.ChartArgs{
 		Chart:   pulumi.String("cloudnative-pg"),
-		Version: pulumi.String("v0.26.0"),
+		Version: securityPatchVersion(ctx, "v0.26.0", "0.29.1"),
 		FetchArgs: helm.FetchArgs{
 			Repo: pulumi.String("https://cloudnative-pg.github.io/charts"),
 		},

@@ -37,6 +37,11 @@ func ingressAutoscalingValues() pulumi.Map {
 // metadata to its generated pods; setting this only on the Cluster is ineffective.
 func protectDatabase(ctx *pulumi.Context, spec map[string]any) map[string]any {
 	conf := config.New(ctx, "mcp-registry")
+	if conf.GetBool("securityPatch202611") {
+		// Preserve the existing database engine across the operator upgrade.
+		// PostgreSQL patching is a separate, explicitly qualified rollout.
+		spec["imageName"] = "ghcr.io/cloudnative-pg/postgresql:17.5"
+	}
 	if conf.GetBool("burstAutoscaling") || conf.GetBool("nodeAutoscaling") {
 		spec["enablePDB"] = true
 		spec["inheritedMetadata"] = map[string]any{

@@ -561,6 +561,10 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		Namespace: ns.Metadata.Name().Elem(),
 		Values: pulumi.Map{
 			// Match grafana.ini so the chart omits the unused, randomly generated admin Secret.
+			// Keep the chart configuration stable while upgrading the Grafana binary.
+			"image": pulumi.Map{
+				"tag": securityPatchVersion(ctx, "12.1.1", "12.4.14"),
+			},
 			"env": pulumi.Map{
 				"GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION": pulumi.String("true"),
 			},
