@@ -98,8 +98,9 @@ func assertExchangeFailsClosed(t *testing.T, cfg *config.Config, server *httptes
 	assert.Nil(t, response)
 }
 
-// GitHub preserves login capitalization, but registry namespace grants must
-// always be lowercase for both the authenticated user and owned organizations.
+// Preserve GitHub login capitalization in issued grants for compatibility with
+// already-published mixed-case server names. Matching is case-insensitive
+// for GitHub owner wildcard grants at the authorization boundary.
 func TestGitHubHandler_ExchangeTokenMixedCaseGrants(t *testing.T) {
 	testSeed := make([]byte, ed25519.SeedSize)
 	_, err := rand.Read(testSeed)
@@ -113,15 +114,15 @@ func TestGitHubHandler_ExchangeTokenMixedCaseGrants(t *testing.T) {
 		wantPatterns []string
 	}{
 		{
-			name:         "mixed-case user login",
+			name:         "mixed-case user login retains original case",
 			userLogin:    "MiXeD-User",
-			wantPatterns: []string{"io.github.mixed-user/*"},
+			wantPatterns: []string{"io.github.MiXeD-User/*"},
 		},
 		{
-			name:         "mixed-case administered organization login",
+			name:         "mixed-case administered organization login retains original case",
 			userLogin:    "valid-user",
 			orgLogins:    []string{"MiXeD-Org"},
-			wantPatterns: []string{"io.github.valid-user/*", "io.github.mixed-org/*"},
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.MiXeD-Org/*"},
 		},
 	}
 
@@ -935,20 +936,20 @@ func TestValidGitHubNames(t *testing.T) {
 			wantPatterns: []string{"io.github.valid-user/*", "io.github.valid-org/*"},
 		},
 		{
-			name:         "mixed-case username is lowercased",
+			name:         "mixed-case username casing is preserved",
 			username:     "MiXeD-User",
 			orgs:         []v0auth.GitHubUserOrOrg{},
 			wantPerms:    1,
-			wantPatterns: []string{"io.github.mixed-user/*"},
+			wantPatterns: []string{"io.github.MiXeD-User/*"},
 		},
 		{
-			name:     "mixed-case administered org is lowercased",
+			name:     "mixed-case administered org casing is preserved",
 			username: "valid-user",
 			orgs: []v0auth.GitHubUserOrOrg{
 				{Login: "MiXeD-Org", ID: 1},
 			},
 			wantPerms:    2,
-			wantPatterns: []string{"io.github.valid-user/*", "io.github.mixed-org/*"},
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.MiXeD-Org/*"},
 		},
 		{
 			name:      "invalid username with spaces",
