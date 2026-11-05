@@ -1,5 +1,6 @@
 # Production capacity and database buffers are promoted independently.
 config:
+  mcp-registry:securityPatch202611: "true"
   mcp-registry:publicReadCompression: "true"
   mcp-registry:publicReadLogSampling: "true"
   mcp-registry:environment: prod
