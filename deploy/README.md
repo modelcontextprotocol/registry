@@ -1011,6 +1011,14 @@ identity responses for clients that do not accept gzip, and adds `Vary:
 Accept-Encoding`. JSON payloads, the 30-second cache lifetime, authentication,
 publishing, resource reservations and autoscaling bounds are unchanged.
 
+Before enabling sampling, the existing Pulumi service account needs exclusion
+management permissions. Bootstrap a project custom role with only
+`logging.exclusions.get`, `logging.exclusions.list`, `logging.exclusions.create`
+and `logging.exclusions.update`, and bind it to that deployment account in each
+environment. The role used for this deployment is `registryPublicReadLogExclusions`.
+It does not grant log/bucket deletion, sink management or general Logging Admin
+access. Rollback disables the managed exclusion instead of deleting it.
+
 `mcp-registry:publicReadLogSampling` retains approximately 10% of fast successful
 listing access records in the default Cloud Logging bucket. Only recognized
 stdout records with status 200/304, request time below one second, and no failed
