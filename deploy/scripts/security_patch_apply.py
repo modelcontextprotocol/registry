@@ -5,6 +5,7 @@ The allowlist contains hashes of reviewed field transitions, never secret values
 No delete/replacement is allowed. Raw plans, state and backups remain private;
 backups are retained in the existing private GCS bucket, not Actions artifacts.
 """
+import copy
 import hashlib
 import json
 import os
@@ -43,6 +44,31 @@ def differences(before, after, path=()):
     if isinstance(before, list) and isinstance(after, list) and len(before) == len(after) and path[-1:] not in [('versions',), ('rules',)]:
         return [d for i, (a, b) in enumerate(zip(before, after)) for d in differences(a, b, path+(i,))]
     return [(path, before, after)]
+
+
+def fix_new_crd_reference(graph, full_graph, stack):
+    """Constrain the chart's new resource reference to its fixed Kubernetes ID.
+
+    Helm v3 serializes an unknown new CRD ID as an empty string during preview.
+    Pulumi then treats that as an exact output constraint during apply. Only this
+    reviewed, cluster-scoped CRD has a deterministic ID that we may fill in.
+    """
+    prefix = f'urn:pulumi:{stack}::mcp-registry-infra::'
+    chart = prefix+'kubernetes:helm.sh/v3:Chart::cloudnative-pg'
+    name = 'databaseroles.postgresql.cnpg.io'
+    key = 'apiextensions.k8s.io/v1/CustomResourceDefinition::'+name
+    urn = prefix+'kubernetes:helm.sh/v3:Chart$kubernetes:'+key
+    resource = graph['resourcePlans'].get(urn)
+    if not resource or resource.get('steps') != ['create']:
+        return graph
+    require(resource['goal']['type'] == 'kubernetes:apiextensions.k8s.io/v1:CustomResourceDefinition', 'new-crd-type')
+    require(resource['goal']['inputDiff']['adds']['metadata']['name'] == name, 'new-crd-name')
+    reference = graph['resourcePlans'][chart]['goal']['outputDiff']['updates']['resources'][key]
+    full_reference = full_graph['resourcePlans'][chart]['goal']['outputDiff']['updates']['resources'][key]
+    require(reference == full_reference and reference['urn'] == urn and reference['id'] == '', 'new-crd-reference')
+    result = copy.deepcopy(graph)
+    result['resourcePlans'][chart]['goal']['outputDiff']['updates']['resources'][key]['id'] = name
+    return result
 
 
 def validate(preview, environment, previous, policy):
@@ -170,6 +196,7 @@ def main(environment, mode):
             validate(parse_preview_events(result.read_text()), environment, previous, policy)
             confirmed = decode_plan(confirmation.read_text())
             require(all(dependency_signature(full_graph['resourcePlans'][u]['goal']) == dependency_signature(confirmed['resourcePlans'][u]['goal']) for u in dependency_changes), 'stable-dependency-graph')
+        graph = fix_new_crd_reference(graph, full_graph, stack)
         document = json.loads(plan.read_text())
         if 'version' in document:
             document['plan'] = graph

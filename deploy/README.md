@@ -1064,7 +1064,10 @@ a targeted apply plan. Completed, TTL-expired ingress admission setup jobs are
 excluded: the existing certificate remains valid, and recreating these ephemeral
 jobs can violate saved-plan output constraints. Untargeted dependency metadata is
 reconciled only when two full previews agree; all input and operation constraints
-remain intact. It allows only the reviewed
+remain intact. For the newly created, cluster-scoped DatabaseRole CRD, the chart
+serializes its preview reference ID as an empty string; the wrapper constrains
+that single output reference to its reviewed, fixed Kubernetes name instead.
+It allows only the reviewed
 field transitions: chart labels, controller/container versions and probes,
 CloudNativePG monitoring queries, upstream CRD schemas/RBAC, and the existing
 PostgreSQL image pin. It rejects unrelated changes, deletions, and replacements.
