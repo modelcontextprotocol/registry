@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Preview the selected ref, or retry a failed apply on main
+        description: Preview main, or retry a failed apply on main
         type: choice
         options: [preview, apply]
         default: preview
