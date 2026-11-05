@@ -8,6 +8,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/traffic"
 )
 
 // Preserve ingress-nginx's combined-log prefix for existing consumers. Append
@@ -114,6 +115,12 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{burstResourceTransform}))
 	}
 
+	compressionHTTP, compressionLocation := "", ""
+	if conf.GetBool("publicReadCompression") {
+		policy := traffic.ReadPolicy()
+		compressionHTTP, compressionLocation = policy.HTTPSnippet, policy.LocationSnippet
+	}
+
 	// Install NGINX Ingress Controller
 	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
 		Chart:   pulumi.String("ingress-nginx"),
@@ -168,7 +175,7 @@ map "$request_method:$uri" $registry_read_cache_zone {
     default off;
     ~^GET:/v0(?:\.1)?/servers$ registry_read_cache;
 }
-` + clientKeepaliveSnippet),
+` + clientKeepaliveSnippet + compressionHTTP),
 					"location-snippet": pulumi.String(`
 proxy_cache $registry_read_cache_zone;
 proxy_cache_key "$scheme$request_method$host$request_uri";
@@ -178,7 +185,7 @@ proxy_cache_lock_timeout 5s;
 proxy_cache_background_update on;
 proxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;
 add_header X-Registry-Cache $upstream_cache_status always;
-`),
+` + compressionLocation),
 					// Disable strict path validation, to work around a bug in ingress-nginx
 					// https://cert-manager.io/docs/releases/release-notes/release-notes-1.18/#acme-http01-challenge-paths-now-use-pathtype-exact-in-ingress-routes
 					// https://github.com/kubernetes/ingress-nginx/issues/11176

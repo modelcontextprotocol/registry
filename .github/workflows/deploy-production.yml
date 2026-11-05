@@ -76,6 +76,13 @@ jobs:
           umask 077
           trap 'rm -f passphrase.prod.txt' EXIT
           printf '%s' "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
+          if grep -q "publicReadCompression:" Pulumi.gcpProd.yaml; then
+            mode=apply
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then mode="${{ inputs.operation }}"; fi
+            if [ "$mode" = "apply" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then exit 1; fi
+            python3 scripts/public_read_apply.py prod "$mode"
+            exit
+          fi
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.operation }}" != "apply" ]; then
             python3 scripts/production_apply.py preview
           else

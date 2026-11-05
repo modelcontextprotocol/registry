@@ -1000,3 +1000,38 @@ It checks PVC identities before and after; verify health, actual pool shapes,
 maintenance restoration, functional reads/writes and rollout completion too.
 On interrupted CI, check and restore maintenance windows before retrying.
 This profile is for functional checks, not production capacity benchmarks.
+
+
+### Public listing bandwidth and access logs
+
+`mcp-registry:publicReadCompression` enables gzip level 1 for unauthenticated,
+cookie-free GET/HEAD requests to the public `/v0/servers` and `/v0.1/servers`
+listing paths on the registry hosts. Compression runs after cache lookup, retains
+identity responses for clients that do not accept gzip, and adds `Vary:
+Accept-Encoding`. JSON payloads, the 30-second cache lifetime, authentication,
+publishing, resource reservations and autoscaling bounds are unchanged.
+
+`mcp-registry:publicReadLogSampling` retains approximately 10% of fast successful
+listing access records in the default Cloud Logging bucket. Only recognized
+stdout records with status 200/304, request time below one second, and no failed
+or retried upstream response are eligible. Errors, 499/429 responses, slow
+requests, authentication, publishing, malformed/unrecognized records, other
+containers and audit logs remain retained. This also samples eligible successful
+background cache-refresh records. The rule uses `insertId` for sampling.
+
+**Stored access-log counts and their latency distribution are no longer a census.**
+A fully paginated log query only proves retrieval completeness. Use unsampled
+Prometheus/Cloud Monitoring counters and histograms for traffic, error rates and
+latency; use retained logs for examples and investigation. Do not extrapolate a
+mixed retained log population by a single multiplier. Check log-based alert and
+metric dependencies before changing the filter.
+
+Enable in staging, validate gzip/identity decoded-body equivalence through cold
+and warm caches, Vary, credential/cookie bypass, CPU, latency and log selection,
+then enable production. `scripts/public_read_apply.py ENV preview|apply` validates
+full scope and applies a saved plan targeting only the ingress ConfigMap and the
+named exclusion. Diagnostic plans stay private. Set either flag to `"false"` and
+use the same workflow to roll it back independently; keep the sampling key so the
+exclusion is disabled rather than deleted. Previously excluded log records cannot
+be recovered. The deployment reloads NGINX configuration without changing pod
+resource requests or rolling application/database pods.
