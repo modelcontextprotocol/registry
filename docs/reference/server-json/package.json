@@ -1,0 +1,20 @@
+{
+  "name": "@modelcontextprotocol/registry-server-json-schema",
+  "version": "0.0.0",
+  "private": true,
+  "description": "TypeScript source of truth and generator for the server.json JSON Schema.",
+  "type": "module",
+  "scripts": {
+    "generate": "tsx scripts/generate-schema.ts",
+    "check": "tsx scripts/generate-schema.ts --check && tsx scripts/check-openapi.ts && tsc --noEmit",
+    "validate": "tsx scripts/validate-examples.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "yaml": "^2.6.1"
+  }
+}

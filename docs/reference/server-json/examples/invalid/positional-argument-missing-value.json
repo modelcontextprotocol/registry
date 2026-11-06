@@ -1,0 +1,16 @@
+{
+  "name": "io.github.user/bad-argument",
+  "description": "Positional argument provides neither valueHint nor value.",
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@modelcontextprotocol/server-weather",
+      "version": "1.0.0",
+      "transport": { "type": "stdio" },
+      "packageArguments": [
+        { "type": "positional", "isRepeated": false }
+      ]
+    }
+  ]
+}

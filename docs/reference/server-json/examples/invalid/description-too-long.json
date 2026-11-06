@@ -1,0 +1,5 @@
+{
+  "name": "io.github.user/verbose",
+  "description": "This description deliberately exceeds the one-hundred character maximum length enforced by the schema for sure.",
+  "version": "1.0.0"
+}
