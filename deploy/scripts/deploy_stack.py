@@ -17,9 +17,11 @@ from staging_image import resolve, validate
 
 
 def commands(stack, plan):
+    # Preview refresh is read-only. Apply must refresh too, otherwise TTL-deleted
+    # resources still in the checkpoint can turn planned creates into replacements.
     base = ['--stack', stack, '--non-interactive']
     return (['pulumi', 'preview', '--refresh', '--json', '--save-plan', str(plan)] + base,
-            ['pulumi', 'up', '--refresh=false', '--json', '--yes', '--skip-preview', '--plan', str(plan)] + base)
+            ['pulumi', 'up', '--refresh', '--json', '--yes', '--skip-preview', '--plan', str(plan)] + base)
 
 
 def summary(events):

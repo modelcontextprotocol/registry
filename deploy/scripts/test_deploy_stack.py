@@ -10,10 +10,11 @@ from staging_image import validate
 
 
 class NormalDeploymentTests(unittest.TestCase):
-    def test_apply_uses_same_full_plan_without_second_refresh(self):
+    def test_apply_refreshes_to_match_the_preview_and_uses_the_same_full_plan(self):
         preview, apply = commands('gcpProd', Path('/private/plan.json'))
         self.assertIn('--refresh', preview)
-        self.assertIn('--refresh=false', apply)
+        self.assertIn('--refresh', apply)
+        self.assertNotIn('--refresh=false', apply)
         self.assertEqual(preview[preview.index('--save-plan')+1], apply[apply.index('--plan')+1])
         self.assertNotIn('--target', preview + apply)
         self.assertIn('--skip-preview', apply)

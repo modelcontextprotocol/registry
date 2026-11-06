@@ -57,7 +57,10 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
 3. Wait for the Release workflow to finish publishing the image before merging the production tag change. The production deployment workflow then deploys the specified version. Publishing a GitHub release alone does not deploy production.
 
 Both workflows now use the normal full-stack deployment path. Each operation
-refreshes and previews the stack; applies use that exact saved plan. GitHub
+refreshes and previews the stack; applies refresh again and use that exact saved
+plan. Preview refresh is read-only, so the apply refresh is necessary to recognize
+resources removed by Kubernetes TTL cleanup rather than replacing stale checkpoint
+entries. The plan still rejects changes outside what was previewed. GitHub
 applies remain restricted to `main` and the existing environment-scoped
 credentials/protections. Helm v3 serializes the two fixed-name ingress admission
 Job references as empty IDs during preview after their TTL cleanup. The runner

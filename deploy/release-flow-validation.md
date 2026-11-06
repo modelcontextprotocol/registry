@@ -79,3 +79,23 @@ Raw state, plans and preview events remain in the owner-only local directory
 `/tmp/registry-release-flow`, outside Git. Only sanitized evidence is committed
 with the implementation when reviewed. The separate Gateway Fabric/Vector
 research changes remain pending; this release-flow change does not deploy them.
+
+## First staging apply and refresh correction
+
+The first automatic run after PR #1809 failed before rolling the application:
+preview's read-only refresh recognized the TTL-deleted admission jobs, but apply
+used `--refresh=false` and still saw their old checkpoint entries. Pulumi correctly
+rejected replacements where the plan constrained those jobs to creates.
+
+The runner now refreshes during apply as well as preview, retaining the saved plan
+and fixed-ID checks. A staging apply of merge `02bc451` then completed with image
+`ghcr.io/modelcontextprotocol/registry@sha256:8d26b820df360be2f08d2136821160ddd33ed62370f8b014e9aa07f95d94d7b2`.
+The application had one Ready replica and zero restarts. Public v0/v0.1 list
+requests and health returned 200, Grafana login returned 200 and its database
+health was `ok`, and both vmagent scrape targets were up. Original nodes and PVC
+identities were preserved; both databases were ready. Production remained on
+`1.8.7`. This corrects the earlier statement about live applies not yet being
+exercised. The corrected workflow is subsequently verified through Actions.
+
+The staging deployment's Go cache now keys on `deploy/go.sum`, matching the
+infrastructure dependency graph rather than the application module alone.
