@@ -8,8 +8,9 @@ import (
 
 // ProviderInfo represents the information returned by a cluster provider
 type ProviderInfo struct {
-	Name     pulumi.StringOutput
-	Provider *kubernetes.Provider
+	CanaryAddress pulumi.StringOutput
+	Name          pulumi.StringOutput
+	Provider      *kubernetes.Provider
 }
 
 // BackupStorageInfo represents S3-compatible backup storage configuration

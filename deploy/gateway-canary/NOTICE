@@ -1,0 +1,20 @@
+The vendored Gateway API and NGINX Gateway Fabric Kubernetes API definitions,
+and the rendered ingress-nginx and Gateway Fabric chart resources, derive from:
+
+- Kubernetes SIG Network Gateway API, v1.6.3
+  https://github.com/kubernetes-sigs/gateway-api/tree/v1.6.3
+- NGINX Gateway Fabric, v2.8.1
+  https://github.com/nginx/nginx-gateway-fabric/tree/v2.8.1
+- Kubernetes ingress-nginx chart 4.15.1 / controller v1.15.1
+  https://github.com/kubernetes/ingress-nginx/tree/helm-chart-4.15.1
+
+These upstream projects use Apache License 2.0; see the Apache-2.0 text in the
+repository's root LICENSE. Copyright belongs to the respective upstream authors.
+The renders have been modified for the isolated staging deployment (names,
+images, scheduling, security settings, monitoring and resource ownership).
+The hand-authored routes and policies are registry configuration.
+
+Container images are referenced by digest, not redistributed in this directory;
+their bundled licenses and notices remain applicable. The core runtime components
+are OSS (NGINX: BSD-2-Clause; Vector: MPL-2.0). This notice is not a transitive
+image dependency audit.

@@ -1,0 +1,22 @@
+{
+  "ngf_chart": "oci://ghcr.io/nginx/charts/nginx-gateway-fabric:2.8.1",
+  "ngf_chart_digest": "sha256:f474def07eae1ebe37591507801118fbe11b676fa93ad50d28f5097df9b3f94b",
+  "gateway_api_version": "1.6.3",
+  "files": {
+    "baseline.json": "f1ad26a5b234d9a22e15da521956b620f08f5a1fef38dc722b1785c152507bbc",
+    "controller.json": "5c57809cb238d132de7e15277ff7f881789cb35a3ce3239e58cf8ab11f3799b4",
+    "crds.json": "a6cb76bbdb1f6b4b9baa979926c46fe7f5ba7541f1551668ab383b2ca10f179c",
+    "dashboard.json": "a018a0ee597a59959171f845fd648952e2172c1122ba5f7e9c17d9739474859e",
+    "fixture.json": "465ba9db8d3f6ff5f5013566538c122f01f19f4c6ac5cfccf6101c0608674028",
+    "routes.json": "8e08ea9e72925e13a1b1bad2ab5fbdb22022f2dfd4971a74e7f71245b17895bc",
+    "vector.json": "a14d946cf517b3d376320ada5cc9360bcbdf2041b98f62214cd28d38d450c328"
+  },
+  "fixture_payload_sha256": "62ec9f4018816e49f5ed83776951b5d053b1d6d2675b37699fc8d2ed6cbff43f",
+  "baseline_chart": "ingress-nginx/ingress-nginx:4.15.1",
+  "modifications": [
+    "Reviewed upstream render registered as individual Pulumi resources",
+    "Digest-pinned OSS images; staging scheduling and resource budgets",
+    "Certificate hook retained after completion instead of TTL deletion",
+    "Hand-authored native policies/routes, fixture, dashboard and Vector configuration"
+  ]
+}

@@ -1,0 +1,46 @@
+package gcp
+
+import (
+	"fmt"
+
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/compute"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/logging"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+)
+
+func createGatewayCanary(ctx *pulumi.Context, cluster *container.Cluster, project, region, zone string, provider *gcp.Provider) (*container.NodePool, *compute.Address, error) {
+	if project != "mcp-registry-staging" {
+		return nil, nil, fmt.Errorf("gateway canary requires the staging GCP project")
+	}
+	opts := []pulumi.ResourceOption{}
+	if provider != nil {
+		opts = append(opts, pulumi.Provider(provider))
+	}
+	pool, err := container.NewNodePool(ctx, "registry-gateway-canary-nodepool", &container.NodePoolArgs{
+		Name: pulumi.String("registry-gateway-canary"), Cluster: cluster.Name, Project: pulumi.String(project), Location: pulumi.String(zone), NodeCount: pulumi.Int(2),
+		NodeConfig:  &container.NodePoolNodeConfigArgs{MachineType: pulumi.String("e2-standard-2"), DiskSizeGb: pulumi.Int(50), DiskType: pulumi.String("pd-balanced"), Labels: pulumi.StringMap{"registry-role": pulumi.String("gateway-canary")}, Taints: container.NodePoolNodeConfigTaintArray{&container.NodePoolNodeConfigTaintArgs{Key: pulumi.String("registry-role"), Value: pulumi.String("gateway-canary"), Effect: pulumi.String("NO_SCHEDULE")}}},
+		Autoscaling: &container.NodePoolAutoscalingArgs{MinNodeCount: pulumi.Int(2), MaxNodeCount: pulumi.Int(3)}, Management: &container.NodePoolManagementArgs{AutoRepair: pulumi.Bool(true), AutoUpgrade: pulumi.Bool(true)}, UpgradeSettings: &container.NodePoolUpgradeSettingsArgs{Strategy: pulumi.String("SURGE"), MaxSurge: pulumi.Int(1), MaxUnavailable: pulumi.Int(0)},
+	}, append(opts, pulumi.IgnoreChanges([]string{"nodeCount"}))...)
+	if err != nil {
+		return nil, nil, err
+	}
+	address, err := compute.NewAddress(ctx, "registry-gateway-canary-ip", &compute.AddressArgs{Project: pulumi.String(project), Region: pulumi.String(region), AddressType: pulumi.String("EXTERNAL")}, opts...)
+	if err != nil {
+		return nil, nil, err
+	}
+	_, err = logging.NewProjectExclusion(ctx, "registry-gateway-canary-fast-read-sampling", &logging.ProjectExclusionArgs{Project: pulumi.String(project), Name: pulumi.String("registry-gateway-canary-fast-read-sampling"), Description: pulumi.String("Keep 10% of fast successful canary listing logs; metrics use unsampled local logs."), Filter: pulumi.String(`resource.type="k8s_container"
+resource.labels.namespace_name="registry-gateway-canary"
+resource.labels.container_name="nginx"
+log_id("stdout")
+severity < WARNING
+jsonPayload.kind="registry_access"
+jsonPayload.method=("GET" OR "HEAD")
+jsonPayload.status=("200" OR "304")
+jsonPayload.uri =~ "^/v0(\\.1)?/servers(\\?|$)"
+jsonPayload.duration =~ "^0\\."
+insertId:*
+sample(insertId, 0.9)`)}, opts...)
+	return pool, address, err
+}

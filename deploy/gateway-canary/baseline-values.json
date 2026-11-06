@@ -1,0 +1,53 @@
+{
+  "fullnameOverride": "registry-canary-baseline",
+  "controller": {
+    "replicaCount": 2,
+    "ingressClass": "registry-canary-baseline",
+    "ingressClassResource": {
+      "name": "registry-canary-baseline",
+      "controllerValue": "k8s.io/registry-canary-baseline"
+    },
+    "electionID": "registry-canary-baseline",
+    "watchIngressWithoutClass": false,
+    "admissionWebhooks": {
+      "enabled": false
+    },
+    "service": {
+      "type": "ClusterIP",
+      "externalTrafficPolicy": ""
+    },
+    "nodeSelector": {
+      "registry-role": "gateway-canary"
+    },
+    "tolerations": [
+      {
+        "key": "registry-role",
+        "operator": "Equal",
+        "value": "gateway-canary",
+        "effect": "NoSchedule"
+      }
+    ],
+    "resources": {
+      "requests": {
+        "cpu": "500m",
+        "memory": "256Mi",
+        "ephemeral-storage": "2Gi"
+      },
+      "limits": {
+        "memory": "1Gi",
+        "ephemeral-storage": "4Gi"
+      }
+    },
+    "metrics": {
+      "enabled": true
+    },
+    "config": {
+      "http-snippet": "\nproxy_cache_path /tmp/registry-read-cache levels=1:2 keys_zone=registry_read_cache:20m max_size=1g inactive=5m use_temp_path=off;\nmap \"$request_method:$uri\" $registry_read_cache_zone {\n    default off;\n    ~^GET:/v0(?:\\.1)?/servers$ registry_read_cache;\n}\nkeepalive_time 60s;\n\n# Public listing responses contain no user-specific data. Leave credentials/cookies uncompressed.\nmap \"$request_method:$host:$uri:$http_authorization:$http_cookie\" $registry_public_json_gzip {\n    default 0;\n    ~^(GET|HEAD):(registry\\.modelcontextprotocol\\.io|prod\\.registry\\.modelcontextprotocol\\.io|staging\\.registry\\.modelcontextprotocol\\.io|fixture\\.gateway-canary\\.invalid):/v0(?:\\.1)?/servers::$ 1;\n}\n",
+      "limit-req-status-code": "429",
+      "location-snippet": "\nproxy_cache $registry_read_cache_zone;\nproxy_cache_key \"$scheme$request_method$host$request_uri\";\nproxy_cache_valid 200 30s;\nproxy_cache_lock on;\nproxy_cache_lock_timeout 5s;\nproxy_cache_background_update on;\nproxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;\nadd_header X-Registry-Cache $upstream_cache_status always;\n\n# Compress the public JSON representation after cache lookup; preserve identity fallback.\ngzip off;\ngzip_types application/json;\ngzip_min_length 1024;\ngzip_comp_level 1;\ngzip_proxied any;\ngzip_vary on;\nif ($registry_public_json_gzip) {\n    gzip on;\n}\n",
+      "log-format-upstream": "$remote_addr - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id cache_status=\"$upstream_cache_status\" scheme=\"$scheme\" host=\"$host\" ingress_pod=\"$hostname\" upstream_connect_time=\"$upstream_connect_time\" upstream_header_time=\"$upstream_header_time\" completed_at=\"$msec\"",
+      "strict-validate-path-type": "false",
+      "use-forwarded-headers": "false"
+    }
+  }
+}

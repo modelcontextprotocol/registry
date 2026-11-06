@@ -331,6 +331,16 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		clusterDependencies = append(clusterDependencies, dbPool)
 	}
 
+	var canaryAddress pulumi.StringOutput
+	if config.New(ctx, "mcp-registry").GetBool("gatewayCanary") {
+		pool, address, err := createGatewayCanary(ctx, cluster, projectID, region, zone, gcpProvider)
+		if err != nil {
+			return nil, err
+		}
+		clusterDependencies = append(clusterDependencies, pool)
+		canaryAddress = address.Address
+	}
+
 	// Grant the default compute service account the standard GKE node roles so the
 	// fluentbit-gke and managed Prometheus collectors can ship logs and metrics.
 	// Without these, every pod log line and time series fails with IAM_PERMISSION_DENIED.
@@ -391,8 +401,9 @@ users:
 	}
 
 	return &providers.ProviderInfo{
-		Name:     nodePool.Cluster,
-		Provider: k8sProvider,
+		CanaryAddress: canaryAddress,
+		Name:          nodePool.Cluster,
+		Provider:      k8sProvider,
 	}, nil
 }
 
