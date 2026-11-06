@@ -262,6 +262,96 @@ func TestJWTManager_HasPermission(t *testing.T) {
 			permissions: []auth.Permission{},
 			expected:    false,
 		},
+		{
+			name:     "existing mixed-case GitHub publisher still authorized",
+			resource: "io.github.Skymly/dotnet-mcp",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Skymly/*"},
+			},
+			expected: true,
+		},
+		{
+			name:     "mixed-case GitHub owner can publish lowercase namespace",
+			resource: "io.github.skymly/dotnet-mcp",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Skymly/*"},
+			},
+			expected: true,
+		},
+		{
+			name:     "lowercase GitHub grant still accepts legacy mixed-case name",
+			resource: "io.github.Skymly/dotnet-mcp",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.skymly/*"},
+			},
+			expected: true,
+		},
+		{
+			name:     "mixed-case GitHub organization can publish lowercase namespace",
+			resource: "io.github.prefecthq/prefect-mcp-server",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.PrefectHQ/*"},
+			},
+			expected: true,
+		},
+		{
+			name:     "different GitHub owner remains unauthorized",
+			resource: "io.github.other/dotnet-mcp",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Skymly/*"},
+			},
+			expected: false,
+		},
+		{
+			name:     "similar GitHub owner prefix remains unauthorized",
+			resource: "io.github.SkymlyExtra/dotnet-mcp",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Skymly/*"},
+			},
+			expected: false,
+		},
+		{
+			name:     "GitHub namespace prefix remains case-sensitive",
+			resource: "IO.GITHUB.skymly/dotnet-mcp",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Skymly/*"},
+			},
+			expected: false,
+		},
+		{
+			name:     "non-GitHub namespace remains case-sensitive",
+			resource: "com.example/server",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "com.Example/*"},
+			},
+			expected: false,
+		},
+		{
+			name:     "GitHub exact grant remains case-sensitive",
+			resource: "io.github.skymly/Server",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Skymly/Server"},
+			},
+			expected: false,
+		},
+		{
+			name:     "nested wildcard grant remains case-sensitive",
+			resource: "io.github.skymly/project/tool",
+			action:   auth.PermissionActionPublish,
+			permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Skymly/project/*"},
+			},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -316,6 +406,25 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 
 		tokenResponse, err := jwtManager.GenerateTokenResponse(ctx, claims)
 		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "your namespace is blocked")
+		assert.Nil(t, tokenResponse)
+	})
+
+	t.Run("mixed-case GitHub grants cannot bypass blocked namespace", func(t *testing.T) {
+		originalBlocked := auth.BlockedNamespaces
+		auth.BlockedNamespaces = []string{"io.github.spammer"}
+		defer func() { auth.BlockedNamespaces = originalBlocked }()
+
+		jwtManager := auth.NewJWTManager(cfg)
+		claims := auth.JWTClaims{
+			AuthMethod:        auth.MethodGitHubAT,
+			AuthMethodSubject: "Spammer",
+			Permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.Spammer/*"},
+			},
+		}
+		tokenResponse, err := jwtManager.GenerateTokenResponse(ctx, claims)
+		require.Error(t, err)
 		assert.Contains(t, err.Error(), "your namespace is blocked")
 		assert.Nil(t, tokenResponse)
 	})

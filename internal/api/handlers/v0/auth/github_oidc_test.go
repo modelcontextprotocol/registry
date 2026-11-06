@@ -221,6 +221,23 @@ func TestBuildPermissionsFromOIDC(t *testing.T) {
 			},
 		},
 		{
+			name: "mixed-case repository owner retains original case",
+			claims: &auth.GitHubOIDCClaims{
+				RegisteredClaims: jwt.RegisteredClaims{
+					Subject:   "repo:Skymly/octo-repo:environment:prod",
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+					Audience:  jwt.ClaimStrings{"mcp-registry"},
+				},
+				RepositoryOwner: "Skymly",
+			},
+			expectedPerms: []internalauth.Permission{
+				{
+					Action:          internalauth.PermissionActionPublish,
+					ResourcePattern: "io.github.Skymly/*",
+				},
+			},
+		},
+		{
 			name: "invalid repository owner name",
 			claims: &auth.GitHubOIDCClaims{
 				RegisteredClaims: jwt.RegisteredClaims{
@@ -284,6 +301,10 @@ func TestBuildPermissionsFromOIDC(t *testing.T) {
 				claims, err := jwtManager.ValidateToken(context.Background(), response.RegistryToken)
 				require.NoError(t, err)
 				assert.Equal(t, tt.expectedPerms, claims.Permissions)
+				if tt.claims.RepositoryOwner == "Skymly" {
+					assert.True(t, jwtManager.HasPermission("io.github.Skymly/dotnet-mcp", internalauth.PermissionActionPublish, claims.Permissions))
+					assert.True(t, jwtManager.HasPermission("io.github.skymly/dotnet-mcp", internalauth.PermissionActionPublish, claims.Permissions))
+				}
 			}
 		})
 	}
