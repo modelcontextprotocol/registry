@@ -4,7 +4,7 @@ Changes to the REST API endpoints and responses.
 
 ## Unreleased
 
-### Changed
+### ⚠️ BREAKING CHANGES
 
 #### Remote URLs may be shared across server names
 
