@@ -31,7 +31,7 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
 
 **Note:** Deployments are automatically handled by GitHub Actions with separate workflows for staging and production:
 
-- **Staging:** All merges to the `main` branch automatically build and deploy the latest code to the `staging` environment via [deploy-staging.yml](../.github/workflows/deploy-staging.yml). Staging always uses the `:main` Docker image tag.
+- **Staging:** All merges to the `main` branch automatically build and deploy the latest code to the `staging` environment via [deploy-staging.yml](../.github/workflows/deploy-staging.yml). The deployment uses the digest returned by that build; it does not remain pinned to an old experiment image. Manual runs resolve the current published `:main` image to a digest once.
 
 - **Production:** Deployment requires explicit configuration of the Docker image tag in `Pulumi.gcpProd.yaml` and is triggered automatically via [deploy-production.yml](../.github/workflows/deploy-production.yml) when this config file is pushed to `main`. This GitOps-style approach provides manual control and an audit trail for production versions.
 
@@ -54,7 +54,39 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
    git push
    ```
 
-3. The production deployment workflow will automatically trigger and deploy the specified version
+3. Wait for the Release workflow to finish publishing the image before merging the production tag change. The production deployment workflow then deploys the specified version. Publishing a GitHub release alone does not deploy production.
+
+Both workflows now use the normal full-stack deployment path. Each operation
+refreshes and previews the stack; applies use that exact saved plan. GitHub
+applies remain restricted to `main` and the existing environment-scoped
+credentials/protections. Helm v3 serializes the two fixed-name ingress admission
+Job references as empty IDs during preview after their TTL cleanup. The runner
+fills those exact namespace/name IDs in the saved plan; it changes no resource
+inputs or operations. Recreating those jobs is normal chart housekeeping. Empty
+Grafana RBAC rules can also reconcile from null to an empty list without granting
+permissions. The temporary capacity, compression and security-upgrade
+wrappers remain available for their original operations, but no longer intercept
+ordinary releases. `securityPatch202611: true` still selects the patched CNPG,
+ingress-nginx and Grafana versions; keep it enabled.
+
+`REGISTRY_STAGING_IMAGE` supplies the current build digest to staging without
+editing committed stack configuration. An optional `stagingImage` configuration
+value overrides it for an intentional diagnostic freeze and must be digest-pinned.
+Normal staging has neither that override nor `registryRolloutCommit`, so a new
+main commit deploys automatically. Production keeps its explicit `imageTag`;
+its existing rollout annotation pin does not prevent image changes from rolling.
+
+Run `make staging-preview` and `make prod-preview` from this directory for read-only
+previews. `PULUMI_CONFIG_PASSPHRASE_FILE` can point to an existing local passphrase
+file; otherwise the scripts use `passphrase.staging.txt` / `passphrase.prod.txt`.
+The staging preview resolves the current published main image unless
+`REGISTRY_STAGING_IMAGE` is supplied; an explicit diagnostic config override
+takes precedence over the resolved image. Preview
+logs show operations and resource identities; raw plans/state stay private and
+are deleted after the operation. No plan containing private state is uploaded.
+
+See [release-flow-validation.md](release-flow-validation.md) for the staging and
+production previews performed when restoring this flow.
 
 **Manual Override:** The steps below are preserved if a manual deployment override is needed.
 
@@ -872,7 +904,7 @@ separate applies:
    per minute; scale-down waits ten minutes and removes at most one every two
    minutes. Pulumi then leaves the replica count to the HPA.
 
-The production GitHub workflow uses `scripts/production_apply.py` to keep raw
+The historical scaling promotion uses `scripts/production_apply.py` to keep raw
 Pulumi output and plans in a private temporary directory outside the checkout,
 then deletes them. Public logs contain fixed validation labels only; no raw
 logs or plans are uploaded as artifacts. The wrapper validates the complete
@@ -883,7 +915,8 @@ state. RBAC reconciliation is likewise excluded only if its complete desired
 definition matches prior state. A second preview targets just the reviewed
 scaling resources and rejects any setup job or RBAC operation. All other
 unrelated changes remain blocked. Future changes outside
-this profile need an explicitly reviewed validation policy; do not bypass it.
+this historical profile are handled by the normal full-stack release path above;
+capacity transitions still require review and the live preflight.
 
 A targeted preview can retain old dependency metadata for untargeted resources.
 The wrapper reconciles only those dependency fields from two agreeing full
@@ -940,7 +973,7 @@ node and 2–5 workers. The worker minimum, app settings and database remain
 unchanged. Additional workers are billed while provisioned, including any
 scale-down delay; the higher maximum does not itself provision nodes.
 
-The production workflow permits only the ingress CPU request, ingress HPA
+The historical ingress-scaling wrapper permits only the ingress CPU request, ingress HPA
 maximum/CPU target and worker maximum to change in this mode. It rejects app
 changes and unrelated ingress configuration changes. Check rollout surge,
 system pod requests, topology constraints and protected volumes when reviewing
@@ -1058,7 +1091,7 @@ resource requests or rolling application/database pods.
 before enabling the identical profile in production. PostgreSQL remains explicitly
 pinned to the existing 17.5 image; database engine patching needs its own rollout.
 
-The workflow uses `scripts/security_patch_apply.py` to validate a refreshed, saved
+The dedicated upgrade command uses `scripts/security_patch_apply.py` to validate a refreshed, saved
 full preview against `scripts/security_patch_202611.json`, then saves and validates
 a targeted apply plan. Completed, TTL-expired ingress admission setup jobs are
 excluded: the existing certificate remains valid, and recreating these ephemeral
@@ -1081,8 +1114,9 @@ indexes are:
 
 For future upgrades, review the upstream manifests and actual preview before
 updating the allowlist; do not regenerate it blindly from a failed deployment.
-The profile is deliberately bounded and will reject unrelated infrastructure
-changes until their deployment policy is reviewed. Ordinary application PR checks
+The historical security-upgrade wrapper is deliberately bounded and rejects
+unrelated changes. Normal release workflows no longer select that wrapper; they
+use the full-stack saved-plan deployment path described above. Ordinary application PR checks
 and main-only environment protections are unchanged.
 
 Before an apply, the wrapper takes consistent custom-format dumps of **both**

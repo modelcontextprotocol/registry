@@ -1,0 +1,115 @@
+{
+  "date": "2026-11-06",
+  "pulumi_version": "3.188.0",
+  "applied": false,
+  "environments": {
+    "staging": {
+      "summary": {
+        "create": 2,
+        "same": 183,
+        "update": 3
+      },
+      "changes": [
+        {
+          "operation": "create",
+          "resource": "ingress-nginx/ingress-nginx-admission-create",
+          "explanation": "Recreate TTL-expired Helm setup job with already-reviewed patched chart/certgen version"
+        },
+        {
+          "operation": "create",
+          "resource": "ingress-nginx/ingress-nginx-admission-patch",
+          "explanation": "Recreate TTL-expired Helm setup job with already-reviewed patched chart/certgen version"
+        },
+        {
+          "operation": "update",
+          "resource": "mcp-registry",
+          "explanation": "Current main application image digest and deploy-commit annotation only"
+        },
+        {
+          "operation": "update",
+          "resource": "grafana-clusterrole",
+          "explanation": "Empty rules normalized from null to []; no permissions added"
+        },
+        {
+          "operation": "update",
+          "resource": "monitoring/grafana",
+          "explanation": "Empty rules normalized from null to []; no permissions added"
+        }
+      ],
+      "images": {
+        "ingress-nginx/ingress-nginx-controller": [
+          "registry.k8s.io/ingress-nginx/controller:v1.15.1@sha256:594ceea76b01c592858f803f9ff4d2cb40542cae2060410b2c95f75907d659e1"
+        ],
+        "cnpg-system/cloudnative-pg": [
+          "ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1"
+        ],
+        "mcp-registry": [
+          "ghcr.io/modelcontextprotocol/registry@sha256:2ed3fe1208ff065b51a5bd4a216ba274be00ac5edb813b3a45792b40641480fe"
+        ],
+        "monitoring/grafana": [
+          "docker.io/grafana/grafana:12.4.14"
+        ]
+      },
+      "database_images": {
+        "grafana-pg": "ghcr.io/cloudnative-pg/postgresql:17.5",
+        "registry-pg": "ghcr.io/cloudnative-pg/postgresql:17.5"
+      },
+      "deletions_or_replacements": 0,
+      "node_storage_database_networking_changes": 0,
+      "application_changes": 1,
+      "saved_plan_fixed_reference_ids": 2
+    },
+    "prod": {
+      "summary": {
+        "create": 2,
+        "same": 188,
+        "update": 2
+      },
+      "changes": [
+        {
+          "operation": "create",
+          "resource": "ingress-nginx/ingress-nginx-admission-patch",
+          "explanation": "Recreate TTL-expired Helm setup job with already-reviewed patched chart/certgen version"
+        },
+        {
+          "operation": "create",
+          "resource": "ingress-nginx/ingress-nginx-admission-create",
+          "explanation": "Recreate TTL-expired Helm setup job with already-reviewed patched chart/certgen version"
+        },
+        {
+          "operation": "update",
+          "resource": "monitoring/grafana",
+          "explanation": "Empty rules normalized from null to []; no permissions added"
+        },
+        {
+          "operation": "update",
+          "resource": "grafana-clusterrole",
+          "explanation": "Empty rules normalized from null to []; no permissions added"
+        }
+      ],
+      "images": {
+        "ingress-nginx/ingress-nginx-controller": [
+          "registry.k8s.io/ingress-nginx/controller:v1.15.1@sha256:594ceea76b01c592858f803f9ff4d2cb40542cae2060410b2c95f75907d659e1"
+        ],
+        "cnpg-system/cloudnative-pg": [
+          "ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1"
+        ],
+        "mcp-registry": [
+          "ghcr.io/modelcontextprotocol/registry:1.8.7"
+        ],
+        "monitoring/grafana": [
+          "docker.io/grafana/grafana:12.4.14"
+        ]
+      },
+      "database_images": {
+        "grafana-pg": "ghcr.io/cloudnative-pg/postgresql:17.5",
+        "registry-pg": "ghcr.io/cloudnative-pg/postgresql:17.5"
+      },
+      "deletions_or_replacements": 0,
+      "node_storage_database_networking_changes": 0,
+      "application_changes": 0,
+      "saved_plan_fixed_reference_ids": 2
+    }
+  },
+  "remote_checkpoints_unchanged": true
+}

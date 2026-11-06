@@ -13,6 +13,7 @@ func TestIsolatedDatabaseRequiresCompleteStagingProfile(t *testing.T) {
 		invalid          bool
 	}{
 		{"valid", "environment", "staging", false},
+		{"automatic staging", "stagingImage", "", false},
 		{"production", "environment", "prod", true},
 		{"uncoordinated", "coordinatedCapacity", "false", true},
 		{"underreserved DB", "postgresCPURequest", "1500m", true},

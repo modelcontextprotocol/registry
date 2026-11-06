@@ -72,29 +72,19 @@ jobs:
         env:
           PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
           CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: ""
+          DEPLOY_OPERATION: ${{ inputs.operation }}
         run: |
           umask 077
           trap 'rm -f passphrase.prod.txt' EXIT
           printf '%s' "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
-          if grep -q 'securityPatch202611: "true"' Pulumi.gcpProd.yaml; then
-            mode=apply
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then mode="${{ inputs.operation }}"; fi
-            python3 scripts/security_patch_apply.py prod "$mode"
-            exit
-          fi
-          if grep -q "publicReadCompression:" Pulumi.gcpProd.yaml; then
-            mode=apply
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then mode="${{ inputs.operation }}"; fi
-            if [ "$mode" = "apply" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then exit 1; fi
-            python3 scripts/public_read_apply.py prod "$mode"
-            exit
-          fi
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.operation }}" != "apply" ]; then
-            python3 scripts/production_apply.py preview
-          else
+          export PULUMI_CONFIG_PASSPHRASE_FILE="$PWD/passphrase.prod.txt"
+          mode="${DEPLOY_OPERATION:-apply}"
+          if [ "$mode" = "apply" ]; then
             if [ "$GITHUB_REF" != "refs/heads/main" ]; then
               echo "Production apply requires main."
               exit 1
             fi
-            python3 scripts/production_apply.py apply
+            make prod-up
+          else
+            make prod-preview
           fi
