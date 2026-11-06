@@ -98,9 +98,12 @@ func TestUpdateServerAllowsSharedRemoteURL(t *testing.T) {
 
 	b.Remotes[0].URL = a.Remotes[0].URL
 	b.Description = "Updated official listing"
-	updated, err := svc.UpdateServer(ctx, b.Name, b.Version, b, nil)
+	_, err := svc.UpdateServer(ctx, b.Name, b.Version, b, nil)
 	require.NoError(t, err)
-	assert.Equal(t, *b, updated.Server)
+	// UpdateServer echoes the request, so re-read to verify the stored edit.
+	edited, err := svc.GetServerByNameAndVersion(ctx, b.Name, b.Version, false)
+	require.NoError(t, err)
+	assert.Equal(t, *b, edited.Server)
 	unchanged, err := svc.GetServerByName(ctx, a.Name, false)
 	require.NoError(t, err)
 	assert.Equal(t, *a, unchanged.Server)
