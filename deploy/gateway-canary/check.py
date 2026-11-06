@@ -11,9 +11,10 @@ class Client:
 
         class Connection(http.client.HTTPSConnection):
 
-            def connect(conn):
+            def connect(self):
                 context = ssl.create_default_context(cafile=fixture_ca if host == FIXTURE else None)
-                conn.sock = context.wrap_socket(socket.create_connection((ip, 443), timeout=20), server_hostname=host)
+                context.minimum_version = ssl.TLSVersion.TLSv1_2
+                self.sock = context.wrap_socket(socket.create_connection((ip, 443), timeout=20), server_hostname=host)
         self.conn = Connection(host, timeout=20)
         self.host = host
 

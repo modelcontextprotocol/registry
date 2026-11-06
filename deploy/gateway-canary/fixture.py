@@ -28,5 +28,7 @@ class Handler(BaseHTTPRequestHandler):
   self.end_headers()
   if self.command!='HEAD':
    try:self.wfile.write(body)
-   except (BrokenPipeError,ConnectionResetError):pass
+   except (BrokenPipeError,ConnectionResetError):
+    # A client may disconnect during a deliberate canary failure/replacement test.
+    pass
 ThreadingHTTPServer(('0.0.0.0',8080),Handler).serve_forever()

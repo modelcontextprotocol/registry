@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Bounded staging source-IP and request-limit probes (1920 health GETs)."""
-import argparse, sys, json, concurrent.futures, collections, time, http.client
+import argparse, json, concurrent.futures, collections, time, http.client
 from check import Client, FIXTURE, STAGING
 p = argparse.ArgumentParser()
 p.add_argument('--ip', required=True)
@@ -44,5 +44,6 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=16) as p:
 assert counts[429] > 0 and counts[200] > 0 and (sum(counts.values()) == 1920), counts
 assert set(counts) <= set([200, 429]), counts
 report['source_ip_limit_ignores_spoofed_xff'] = {'statuses': dict(counts), 'seconds': time.time() - start}
-open(a.output, 'w').write(json.dumps(report, indent=2) + '\n')
+with open(a.output, 'w') as output:
+    output.write(json.dumps(report, indent=2) + '\n')
 print(json.dumps(report, indent=2))

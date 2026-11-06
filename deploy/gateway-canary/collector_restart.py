@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Quiescent same-node collector restart: check recovery without historical replay."""
-import argparse, sys, json, subprocess, time
+import argparse, json, subprocess, time
 from pathlib import Path
 import measure
 a = argparse.ArgumentParser()
