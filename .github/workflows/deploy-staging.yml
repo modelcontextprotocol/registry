@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Preview the selected ref or apply idle capacity on main
+        description: Preview the selected ref or deploy staging on main
         type: choice
         options: [preview, apply]
         default: preview
@@ -24,6 +24,8 @@ jobs:
   ko-push:
     if: github.event_name == 'push'
     name: Build and Push Image with ko
+    outputs:
+      image: ${{ steps.build.outputs.image }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -56,17 +58,21 @@ jobs:
           echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and push with ko
+        id: build
         env:
           KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
           VERSION: main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }}
           GIT_COMMIT: ${{ github.sha }}
           BUILD_TIME: ${{ steps.build-info.outputs.timestamp }}
         run: |
-          # Build and push multi-platform image
+          # Deploy this build digest even if another push moves the main tag.
           ko build ./cmd/registry \
             --bare \
             --platform=linux/amd64,linux/arm64 \
-            --tags=main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }},main
+            --tags=main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }},main > "$RUNNER_TEMP/registry-image.txt"
+          image="$(cat "$RUNNER_TEMP/registry-image.txt")"
+          python3 deploy/scripts/staging_image.py "$image" > "$RUNNER_TEMP/registry-image-validated.txt"
+          echo "image=$(cat "$RUNNER_TEMP/registry-image-validated.txt")" >> "$GITHUB_OUTPUT"
 
   deploy-staging:
     if: ${{ !cancelled() && (needs.ko-push.result == 'success' || github.event_name == 'workflow_dispatch') }}
@@ -107,6 +113,8 @@ jobs:
         working-directory: ./deploy
         env:
           PULUMI_STAGING_PASSPHRASE: ${{ secrets.PULUMI_STAGING_PASSPHRASE }}
+          REGISTRY_STAGING_IMAGE: ${{ needs.ko-push.outputs.image }}
+          DEPLOY_OPERATION: ${{ inputs.operation }}
           # Use the same service account imported by setup-gcloud, avoiding the
           # config-helper file-override loader's missing private_key_id error.
           CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: ""
@@ -117,40 +125,17 @@ jobs:
           printf '%s' "$PULUMI_STAGING_PASSPHRASE" > passphrase.staging.txt
           trap 'rm -f passphrase.staging.txt' EXIT
           export PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt
-          if grep -q 'securityPatch202611: "true"' Pulumi.gcpStaging.yaml; then
-            mode=apply
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then mode="${{ inputs.operation }}"; fi
-            python3 scripts/security_patch_apply.py staging "$mode"
-            exit
+          if [ -z "$REGISTRY_STAGING_IMAGE" ]; then
+            REGISTRY_STAGING_IMAGE="$(python3 scripts/staging_image.py)"
+            export REGISTRY_STAGING_IMAGE
           fi
-          if grep -q "publicReadCompression:" Pulumi.gcpStaging.yaml; then
-            mode=apply
-            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then mode="${{ inputs.operation }}"; fi
-            if [ "$mode" = "apply" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then exit 1; fi
-            python3 scripts/public_read_apply.py staging "$mode"
-            exit
-          fi
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            if [ "${{ inputs.operation }}" = "apply" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+          mode="${DEPLOY_OPERATION:-apply}"
+          if [ "$mode" = "apply" ]; then
+            if [ "$GITHUB_REF" != "refs/heads/main" ]; then
               echo "Staging apply requires main."
               exit 1
             fi
-            if grep -q "stagingSmallCapacity:" Pulumi.gcpStaging.yaml; then
-              python3 scripts/staging_small_apply.py "${{ inputs.operation }}"
-            else
-              python3 scripts/staging_idle_apply.py "${{ inputs.operation }}"
-            fi
-            exit
+            make staging-up
+          else
+            make staging-preview
           fi
-          if grep -q "stagingSmallCapacity:" Pulumi.gcpStaging.yaml; then
-            python3 scripts/staging_small_apply.py apply
-            exit
-          fi
-          if grep -q 'stagingIdleCapacity: "true"' Pulumi.gcpStaging.yaml; then
-            python3 scripts/staging_idle_apply.py apply
-            exit
-          fi
-          # Adopt the existing staging experiment before applying its code.
-          # This is idempotent, uses the staging backend only, and fails closed.
-          python3 scripts/adopt_staging_capacity.py
-          make staging-up

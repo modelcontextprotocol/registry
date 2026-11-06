@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -29,6 +30,15 @@ func getGitCommitHash() string {
 	return strings.TrimSpace(string(output))
 }
 
+// stagingImage permits an explicit diagnostic pin; normal CI supplies its build
+// digest without persisting a freeze in stack configuration. Production ignores it.
+func stagingImage(conf *config.Config) string {
+	if image := conf.Get("stagingImage"); image != "" {
+		return image
+	}
+	return os.Getenv("REGISTRY_STAGING_IMAGE")
+}
+
 // DeployMCPRegistry deploys the MCP Registry to the Kubernetes cluster
 func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart, pgCluster *apiextensions.CustomResource) (*corev1.Service, error) {
 	conf := config.New(ctx, "mcp-registry")
@@ -47,8 +57,10 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	}
 
 	image := "ghcr.io/modelcontextprotocol/registry:" + imageTag
-	if environment == coordinatedEnvironment && conf.Get("stagingImage") != "" {
-		image = conf.Get("stagingImage")
+	if environment == coordinatedEnvironment {
+		if pinned := stagingImage(conf); pinned != "" {
+			image = pinned
+		}
 	}
 
 	registryCPURequest := "100m"

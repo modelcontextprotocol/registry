@@ -76,10 +76,11 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	dbCPU := coordinatedDBCPU
 	if c.GetBool("isolatedDatabase") {
 		dbCPU = "3"
-		image, digest, pinned := strings.Cut(c.Get("stagingImage"), "@sha256:")
+		staging := stagingImage(c)
+		image, digest, pinned := strings.Cut(staging, "@sha256:")
 		_, digestErr := hex.DecodeString(digest)
-		if !infraOnly && (!pinned || image == "" || len(digest) != 64 || digestErr != nil) {
-			return fmt.Errorf("coordinatedCapacity with isolatedDatabase requires a digest-pinned stagingImage")
+		if !infraOnly && staging != "" && (!pinned || image == "" || len(digest) != 64 || digestErr != nil) {
+			return fmt.Errorf("explicit stagingImage or REGISTRY_STAGING_IMAGE must be digest-pinned")
 		}
 	}
 	appCPU, nodeMin, nodeMax := coordinatedAppCPU, "3", "4"

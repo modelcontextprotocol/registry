@@ -68,6 +68,9 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 			m.t.Error("apps must require separate workers across revisions")
 		}
 		container := pod["containers"].ArrayValue()[0].ObjectValue()
+		if container["image"].StringValue() != "ghcr.io/modelcontextprotocol/registry:1.8.7" {
+			m.t.Error("production must retain its explicit release image")
+		}
 		env := map[string]string{}
 		for _, e := range container["env"].ArrayValue() {
 			v := e.ObjectValue()
@@ -101,6 +104,7 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 }
 
 func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
+	t.Setenv("REGISTRY_STAGING_IMAGE", "must-not-affect-production")
 	for _, phase := range []string{"prepare", "enabled"} {
 		t.Run(phase, func(t *testing.T) {
 			m := &productionScalingMonitor{t: t, phase: phase}

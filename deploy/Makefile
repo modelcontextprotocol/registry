@@ -29,20 +29,20 @@ staging-login: ## Login to staging Pulumi backend
 	pulumi login gs://mcp-registry-staging-pulumi-state
 
 staging-preview: build staging-login ## Preview staging infrastructure changes
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi preview --stack gcpStaging
+	python3 scripts/deploy_stack.py staging preview
 
 staging-up: build staging-login ## Deploy staging infrastructure
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.staging.txt pulumi up --refresh --yes --stack gcpStaging
+	python3 scripts/deploy_stack.py staging apply
 
 # Production stack commands
 prod-login: ## Login to production Pulumi backend
 	pulumi login gs://mcp-registry-prod-pulumi-state
 
 prod-preflight: build prod-login
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt python3 scripts/check_production_scaling.py
+	PULUMI_CONFIG_PASSPHRASE_FILE="$${PULUMI_CONFIG_PASSPHRASE_FILE:-$$PWD/passphrase.prod.txt}" python3 scripts/check_production_scaling.py
 
 prod-preview: prod-preflight ## Preview production infrastructure changes
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi preview --refresh --diff --stack gcpProd
+	python3 scripts/deploy_stack.py prod preview
 
 prod-up: prod-preflight ## Deploy production infrastructure
-	PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt pulumi up --refresh --yes --stack gcpProd
+	python3 scripts/deploy_stack.py prod apply
