@@ -1163,3 +1163,10 @@ and [Grafana CVE-2026-27880](https://grafana.com/security/security-advisories/cv
 
 The interim patch does not restore upstream maintenance for the retired project.
 The controller migration remains a separate rollout, not part of this version bump.
+
+### Parallel Gateway Fabric canary
+
+The staging-only [Gateway Fabric canary](gateway-canary/README.md) runs alongside
+ingress-nginx using an explicit test IP. It preserves the normal release flow
+and does not change production or public DNS. See its qualification record
+before considering a traffic cutover.

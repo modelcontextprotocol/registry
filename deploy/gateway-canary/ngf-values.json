@@ -1,0 +1,146 @@
+{
+  "fullnameOverride": "registry-gateway-canary",
+  "nginxGateway": {
+    "watchNamespaces": [
+      "registry-gateway-canary",
+      "default",
+      "monitoring"
+    ],
+    "gatewayClassName": "registry-gateway-canary",
+    "gatewayControllerName": "gateway.nginx.org/registry-canary",
+    "snippets": {
+      "enable": true
+    },
+    "productTelemetry": {
+      "enable": false
+    },
+    "replicas": 1,
+    "nodeSelector": {
+      "registry-role": "gateway-canary"
+    },
+    "resources": {
+      "requests": {
+        "cpu": "100m",
+        "memory": "128Mi"
+      },
+      "limits": {
+        "cpu": "500m",
+        "memory": "512Mi"
+      }
+    },
+    "tolerations": [
+      {
+        "key": "registry-role",
+        "operator": "Equal",
+        "value": "gateway-canary",
+        "effect": "NoSchedule"
+      }
+    ],
+    "image": {
+      "repository": "ghcr.io/nginx/nginx-gateway-fabric",
+      "tag": "2.8.1@sha256:f0aa8a3b301dc594f300e566060cdb7e75b6425c076e2fc62e4ce96f6e78b766"
+    }
+  },
+  "nginx": {
+    "plus": false,
+    "replicas": 1,
+    "autoscaling": {
+      "enable": true,
+      "minReplicas": 2,
+      "maxReplicas": 4,
+      "targetCPUUtilizationPercentage": 80,
+      "targetMemoryUtilizationPercentage": 0,
+      "behavior": {
+        "scaleDown": {
+          "stabilizationWindowSeconds": 300
+        },
+        "scaleUp": {
+          "stabilizationWindowSeconds": 0
+        }
+      }
+    },
+    "service": {
+      "type": "LoadBalancer",
+      "externalTrafficPolicy": "Local"
+    },
+    "pod": {
+      "nodeSelector": {
+        "registry-role": "gateway-canary"
+      },
+      "tolerations": [
+        {
+          "key": "registry-role",
+          "operator": "Equal",
+          "value": "gateway-canary",
+          "effect": "NoSchedule"
+        }
+      ]
+    },
+    "container": {
+      "resources": {
+        "requests": {
+          "cpu": "500m",
+          "memory": "256Mi",
+          "ephemeral-storage": "2Gi"
+        },
+        "limits": {
+          "memory": "1Gi",
+          "ephemeral-storage": "4Gi"
+        }
+      }
+    },
+    "config": {
+      "disableBaseHeaders": [
+        "X-Forwarded-For"
+      ],
+      "logging": {
+        "accessLog": {
+          "format": "{\"kind\":\"registry_access\",\"method\":\"$request_method\",\"uri\":\"$request_uri\",\"status\":\"$status\",\"body_bytes\":\"$body_bytes_sent\",\"request_bytes\":\"$request_length\",\"duration\":\"$request_time\",\"upstream\":\"$proxy_host\",\"upstream_time\":\"$upstream_response_time\",\"proxy_pod\":\"$hostname\",\"cache\":\"$upstream_cache_status\",\"connect\":\"$upstream_connect_time\",\"header\":\"$upstream_header_time\",\"response_bytes\":\"$bytes_sent\",\"request_id\":\"$registry_request_id\",\"host\":\"$host\",\"client_ip\":\"$remote_addr\"}",
+          "escape": "json"
+        }
+      },
+      "workerConnections": 16384
+    },
+    "image": {
+      "repository": "ghcr.io/nginx/nginx-gateway-fabric/nginx",
+      "tag": "2.8.1@sha256:20682e5ea9263d914ffd032bea14bf83a5c284f23f079647b269205297bbc3e6"
+    },
+    "podDisruptionBudget": {
+      "enable": true,
+      "minAvailable": 1
+    },
+    "patches": [
+      {
+        "type": "StrategicMerge",
+        "value": {
+          "spec": {
+            "strategy": {
+              "type": "RollingUpdate",
+              "rollingUpdate": {
+                "maxSurge": 1,
+                "maxUnavailable": 0
+              }
+            },
+            "minReadySeconds": 15,
+            "template": {
+              "spec": {
+                "topologySpreadConstraints": [
+                  {
+                    "maxSkew": 1,
+                    "topologyKey": "kubernetes.io/hostname",
+                    "whenUnsatisfiable": "ScheduleAnyway",
+                    "labelSelector": {
+                      "matchLabels": {
+                        "gateway.networking.k8s.io/gateway-name": "registry-canary"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

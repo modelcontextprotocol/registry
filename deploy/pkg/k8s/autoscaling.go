@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
@@ -85,7 +86,10 @@ func burstResourceTransform(args *pulumi.ResourceTransformationArgs) *pulumi.Res
 
 func withIngressScrape(ctx *pulumi.Context, configs pulumi.Array) pulumi.Array {
 	if config.New(ctx, "mcp-registry").GetBool("burstAutoscaling") {
-		return append(configs, ingressScrapeConfig())
+		configs = append(configs, ingressScrapeConfig())
+	}
+	if gatewaycanary.Enabled(ctx) {
+		configs = append(configs, gatewaycanary.Scrapes()...)
 	}
 	return configs
 }

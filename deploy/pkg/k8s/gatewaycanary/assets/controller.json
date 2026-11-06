@@ -1,0 +1,1543 @@
+[
+  {
+    "apiVersion": "v1",
+    "kind": "ServiceAccount",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "automountServiceAccountToken": false
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "ClusterRole",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "namespaces"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "authentication.k8s.io"
+        ],
+        "resources": [
+          "tokenreviews"
+        ],
+        "verbs": [
+          "create"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apiextensions.k8s.io"
+        ],
+        "resources": [
+          "customresourcedefinitions"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "gatewayclasses"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "gatewayclasses/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "ClusterRoleBinding",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "roleRef": {
+      "apiGroup": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "registry-gateway-canary"
+    },
+    "subjects": [
+      {
+        "kind": "ServiceAccount",
+        "name": "registry-gateway-canary",
+        "namespace": "registry-gateway-canary"
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "Role",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "secrets",
+          "configmaps",
+          "serviceaccounts",
+          "services"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "services/status"
+        ],
+        "verbs": [
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "pods"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "events.k8s.io",
+          ""
+        ],
+        "resources": [
+          "events"
+        ],
+        "verbs": [
+          "create",
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "deployments",
+          "daemonsets"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "replicasets"
+        ],
+        "verbs": [
+          "get",
+          "list"
+        ]
+      },
+      {
+        "apiGroups": [
+          "autoscaling"
+        ],
+        "resources": [
+          "horizontalpodautoscalers"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "policy"
+        ],
+        "resources": [
+          "poddisruptionbudgets"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "monitoring.coreos.com"
+        ],
+        "resources": [
+          "servicemonitors"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "discovery.k8s.io"
+        ],
+        "resources": [
+          "endpointslices"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "gateways",
+          "httproutes",
+          "referencegrants",
+          "grpcroutes",
+          "backendtlspolicies",
+          "tlsroutes",
+          "listenersets",
+          "tcproutes",
+          "udproutes"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "httproutes/status",
+          "gateways/status",
+          "gateways/finalizers",
+          "gatewayclasses/status",
+          "grpcroutes/status",
+          "backendtlspolicies/status",
+          "tlsroutes/status",
+          "listenersets/status",
+          "tcproutes/status",
+          "udproutes/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxgateways"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxproxies",
+          "clientsettingspolicies",
+          "observabilitypolicies",
+          "upstreamsettingspolicies",
+          "authenticationfilters",
+          "proxysettingspolicies",
+          "accesspolicies",
+          "ratelimitpolicies",
+          "wafpolicies",
+          "snippetsfilters",
+          "snippetspolicies"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxgateways/status",
+          "clientsettingspolicies/status",
+          "observabilitypolicies/status",
+          "upstreamsettingspolicies/status",
+          "authenticationfilters/status",
+          "proxysettingspolicies/status",
+          "accesspolicies/status",
+          "ratelimitpolicies/status",
+          "wafpolicies/status",
+          "snippetsfilters/status",
+          "snippetspolicies/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "coordination.k8s.io"
+        ],
+        "resources": [
+          "leases"
+        ],
+        "verbs": [
+          "create",
+          "get",
+          "update"
+        ]
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "Role",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "default",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "secrets",
+          "configmaps",
+          "serviceaccounts",
+          "services"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "services/status"
+        ],
+        "verbs": [
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "pods"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "events.k8s.io",
+          ""
+        ],
+        "resources": [
+          "events"
+        ],
+        "verbs": [
+          "create",
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "deployments",
+          "daemonsets"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "replicasets"
+        ],
+        "verbs": [
+          "get",
+          "list"
+        ]
+      },
+      {
+        "apiGroups": [
+          "autoscaling"
+        ],
+        "resources": [
+          "horizontalpodautoscalers"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "policy"
+        ],
+        "resources": [
+          "poddisruptionbudgets"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "monitoring.coreos.com"
+        ],
+        "resources": [
+          "servicemonitors"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "discovery.k8s.io"
+        ],
+        "resources": [
+          "endpointslices"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "gateways",
+          "httproutes",
+          "referencegrants",
+          "grpcroutes",
+          "backendtlspolicies",
+          "tlsroutes",
+          "listenersets",
+          "tcproutes",
+          "udproutes"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "httproutes/status",
+          "gateways/status",
+          "gateways/finalizers",
+          "gatewayclasses/status",
+          "grpcroutes/status",
+          "backendtlspolicies/status",
+          "tlsroutes/status",
+          "listenersets/status",
+          "tcproutes/status",
+          "udproutes/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxgateways"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxproxies",
+          "clientsettingspolicies",
+          "observabilitypolicies",
+          "upstreamsettingspolicies",
+          "authenticationfilters",
+          "proxysettingspolicies",
+          "accesspolicies",
+          "ratelimitpolicies",
+          "wafpolicies",
+          "snippetsfilters",
+          "snippetspolicies"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxgateways/status",
+          "clientsettingspolicies/status",
+          "observabilitypolicies/status",
+          "upstreamsettingspolicies/status",
+          "authenticationfilters/status",
+          "proxysettingspolicies/status",
+          "accesspolicies/status",
+          "ratelimitpolicies/status",
+          "wafpolicies/status",
+          "snippetsfilters/status",
+          "snippetspolicies/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "coordination.k8s.io"
+        ],
+        "resources": [
+          "leases"
+        ],
+        "verbs": [
+          "create",
+          "get",
+          "update"
+        ]
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "Role",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "monitoring",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "secrets",
+          "configmaps",
+          "serviceaccounts",
+          "services"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "services/status"
+        ],
+        "verbs": [
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "pods"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "events.k8s.io",
+          ""
+        ],
+        "resources": [
+          "events"
+        ],
+        "verbs": [
+          "create",
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "deployments",
+          "daemonsets"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "apps"
+        ],
+        "resources": [
+          "replicasets"
+        ],
+        "verbs": [
+          "get",
+          "list"
+        ]
+      },
+      {
+        "apiGroups": [
+          "autoscaling"
+        ],
+        "resources": [
+          "horizontalpodautoscalers"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "policy"
+        ],
+        "resources": [
+          "poddisruptionbudgets"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "monitoring.coreos.com"
+        ],
+        "resources": [
+          "servicemonitors"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "delete",
+          "list",
+          "get",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "discovery.k8s.io"
+        ],
+        "resources": [
+          "endpointslices"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "gateways",
+          "httproutes",
+          "referencegrants",
+          "grpcroutes",
+          "backendtlspolicies",
+          "tlsroutes",
+          "listenersets",
+          "tcproutes",
+          "udproutes"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.networking.k8s.io"
+        ],
+        "resources": [
+          "httproutes/status",
+          "gateways/status",
+          "gateways/finalizers",
+          "gatewayclasses/status",
+          "grpcroutes/status",
+          "backendtlspolicies/status",
+          "tlsroutes/status",
+          "listenersets/status",
+          "tcproutes/status",
+          "udproutes/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxgateways"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxproxies",
+          "clientsettingspolicies",
+          "observabilitypolicies",
+          "upstreamsettingspolicies",
+          "authenticationfilters",
+          "proxysettingspolicies",
+          "accesspolicies",
+          "ratelimitpolicies",
+          "wafpolicies",
+          "snippetsfilters",
+          "snippetspolicies"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "gateway.nginx.org"
+        ],
+        "resources": [
+          "nginxgateways/status",
+          "clientsettingspolicies/status",
+          "observabilitypolicies/status",
+          "upstreamsettingspolicies/status",
+          "authenticationfilters/status",
+          "proxysettingspolicies/status",
+          "accesspolicies/status",
+          "ratelimitpolicies/status",
+          "wafpolicies/status",
+          "snippetsfilters/status",
+          "snippetspolicies/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "coordination.k8s.io"
+        ],
+        "resources": [
+          "leases"
+        ],
+        "verbs": [
+          "create",
+          "get",
+          "update"
+        ]
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "RoleBinding",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "roleRef": {
+      "apiGroup": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "registry-gateway-canary"
+    },
+    "subjects": [
+      {
+        "kind": "ServiceAccount",
+        "name": "registry-gateway-canary",
+        "namespace": "registry-gateway-canary"
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "RoleBinding",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "default",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "roleRef": {
+      "apiGroup": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "registry-gateway-canary"
+    },
+    "subjects": [
+      {
+        "kind": "ServiceAccount",
+        "name": "registry-gateway-canary",
+        "namespace": "registry-gateway-canary"
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "RoleBinding",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "monitoring",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "roleRef": {
+      "apiGroup": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "registry-gateway-canary"
+    },
+    "subjects": [
+      {
+        "kind": "ServiceAccount",
+        "name": "registry-gateway-canary",
+        "namespace": "registry-gateway-canary"
+      }
+    ]
+  },
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "spec": {
+      "type": "ClusterIP",
+      "selector": {
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary"
+      },
+      "ports": [
+        {
+          "name": "agent-grpc",
+          "port": 443,
+          "protocol": "TCP",
+          "targetPort": 8443
+        },
+        {
+          "name": "metrics",
+          "port": 9113,
+          "protocol": "TCP",
+          "targetPort": 9113
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "spec": {
+      "replicas": 1,
+      "selector": {
+        "matchLabels": {
+          "app.kubernetes.io/name": "nginx-gateway-fabric",
+          "app.kubernetes.io/instance": "registry-gateway-canary"
+        }
+      },
+      "template": {
+        "metadata": {
+          "labels": {
+            "app.kubernetes.io/name": "nginx-gateway-fabric",
+            "app.kubernetes.io/instance": "registry-gateway-canary"
+          },
+          "annotations": {
+            "prometheus.io/scrape": "true",
+            "prometheus.io/port": "9113"
+          }
+        },
+        "spec": {
+          "automountServiceAccountToken": true,
+          "containers": [
+            {
+              "args": [
+                "controller",
+                "--gateway-ctlr-name=gateway.nginx.org/registry-canary",
+                "--gatewayclass=registry-gateway-canary",
+                "--config=registry-gateway-canary-config",
+                "--service=registry-gateway-canary",
+                "--agent-tls-secret=agent-tls",
+                "--server-tls-domain=svc",
+                "--cluster-domain=cluster.local",
+                "--watch-namespaces=registry-gateway-canary,default,monitoring",
+                "--metrics-port=9113",
+                "--health-port=8081",
+                "--leader-election-lock-name=registry-gateway-canary-leader-election",
+                "--product-telemetry-disable",
+                "--snippets"
+              ],
+              "env": [
+                {
+                  "name": "POD_NAMESPACE",
+                  "valueFrom": {
+                    "fieldRef": {
+                      "fieldPath": "metadata.namespace"
+                    }
+                  }
+                },
+                {
+                  "name": "POD_NAME",
+                  "valueFrom": {
+                    "fieldRef": {
+                      "fieldPath": "metadata.name"
+                    }
+                  }
+                },
+                {
+                  "name": "POD_UID",
+                  "valueFrom": {
+                    "fieldRef": {
+                      "fieldPath": "metadata.uid"
+                    }
+                  }
+                },
+                {
+                  "name": "INSTANCE_NAME",
+                  "valueFrom": {
+                    "fieldRef": {
+                      "fieldPath": "metadata.labels['app.kubernetes.io/instance']"
+                    }
+                  }
+                },
+                {
+                  "name": "IMAGE_NAME",
+                  "value": "ghcr.io/nginx/nginx-gateway-fabric:2.8.1@sha256:f0aa8a3b301dc594f300e566060cdb7e75b6425c076e2fc62e4ce96f6e78b766"
+                }
+              ],
+              "image": "ghcr.io/nginx/nginx-gateway-fabric:2.8.1@sha256:f0aa8a3b301dc594f300e566060cdb7e75b6425c076e2fc62e4ce96f6e78b766",
+              "imagePullPolicy": "IfNotPresent",
+              "name": "nginx-gateway",
+              "resources": {
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "512Mi"
+                },
+                "requests": {
+                  "cpu": "100m",
+                  "memory": "128Mi"
+                }
+              },
+              "ports": [
+                {
+                  "name": "agent-grpc",
+                  "containerPort": 8443
+                },
+                {
+                  "name": "metrics",
+                  "containerPort": 9113
+                },
+                {
+                  "name": "health",
+                  "containerPort": 8081
+                }
+              ],
+              "readinessProbe": {
+                "httpGet": {
+                  "path": "/readyz",
+                  "port": "health"
+                },
+                "initialDelaySeconds": 3,
+                "periodSeconds": 10,
+                "failureThreshold": 3,
+                "timeoutSeconds": 1,
+                "successThreshold": 1
+              },
+              "securityContext": {
+                "seccompProfile": {
+                  "type": "RuntimeDefault"
+                },
+                "capabilities": {
+                  "drop": [
+                    "ALL"
+                  ]
+                },
+                "allowPrivilegeEscalation": false,
+                "readOnlyRootFilesystem": true,
+                "runAsUser": 101,
+                "runAsGroup": 1001
+              },
+              "volumeMounts": [
+                {
+                  "name": "nginx-agent-tls",
+                  "mountPath": "/var/run/secrets/ngf"
+                }
+              ]
+            }
+          ],
+          "terminationGracePeriodSeconds": 30,
+          "serviceAccountName": "registry-gateway-canary",
+          "securityContext": {
+            "fsGroup": 1001,
+            "runAsNonRoot": true
+          },
+          "tolerations": [
+            {
+              "effect": "NoSchedule",
+              "key": "registry-role",
+              "operator": "Equal",
+              "value": "gateway-canary"
+            }
+          ],
+          "nodeSelector": {
+            "registry-role": "gateway-canary"
+          },
+          "volumes": [
+            {
+              "name": "nginx-agent-tls",
+              "secret": {
+                "secretName": "server-tls"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "GatewayClass",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "spec": {
+      "controllerName": "gateway.nginx.org/registry-canary",
+      "parametersRef": {
+        "group": "gateway.nginx.org",
+        "kind": "NginxProxy",
+        "name": "registry-gateway-canary-proxy-config",
+        "namespace": "registry-gateway-canary"
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "NginxGateway",
+    "metadata": {
+      "name": "registry-gateway-canary-config",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "spec": {
+      "logging": {
+        "level": "info"
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha2",
+    "kind": "NginxProxy",
+    "metadata": {
+      "name": "registry-gateway-canary-proxy-config",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "spec": {
+      "disableBaseHeaders": [
+        "X-Forwarded-For"
+      ],
+      "logging": {
+        "accessLog": {
+          "escape": "json",
+          "format": "{\"kind\":\"registry_access\",\"method\":\"$request_method\",\"uri\":\"$request_uri\",\"status\":\"$status\",\"body_bytes\":\"$body_bytes_sent\",\"request_bytes\":\"$request_length\",\"duration\":\"$request_time\",\"upstream\":\"$proxy_host\",\"upstream_time\":\"$upstream_response_time\",\"proxy_pod\":\"$hostname\",\"cache\":\"$upstream_cache_status\",\"connect\":\"$upstream_connect_time\",\"header\":\"$upstream_header_time\",\"response_bytes\":\"$bytes_sent\",\"request_id\":\"$registry_request_id\",\"host\":\"$host\",\"client_ip\":\"$remote_addr\"}"
+        }
+      },
+      "workerConnections": 16384,
+      "kubernetes": {
+        "deployment": {
+          "replicas": 1,
+          "autoscaling": {
+            "enable": true,
+            "minReplicas": 2,
+            "maxReplicas": 4,
+            "targetCPUUtilizationPercentage": 80,
+            "behavior": {
+              "scaleDown": {
+                "stabilizationWindowSeconds": 300
+              },
+              "scaleUp": {
+                "stabilizationWindowSeconds": 0
+              }
+            }
+          },
+          "podDisruptionBudget": {
+            "minAvailable": 1
+          },
+          "pod": {
+            "nodeSelector": {
+              "registry-role": "gateway-canary"
+            },
+            "tolerations": [
+              {
+                "effect": "NoSchedule",
+                "key": "registry-role",
+                "operator": "Equal",
+                "value": "gateway-canary"
+              }
+            ]
+          },
+          "container": {
+            "resources": {
+              "limits": {
+                "ephemeral-storage": "4Gi",
+                "memory": "1Gi"
+              },
+              "requests": {
+                "cpu": "500m",
+                "ephemeral-storage": "2Gi",
+                "memory": "256Mi"
+              }
+            },
+            "image": {
+              "pullPolicy": "IfNotPresent",
+              "repository": "ghcr.io/nginx/nginx-gateway-fabric/nginx",
+              "tag": "2.8.1@sha256:20682e5ea9263d914ffd032bea14bf83a5c284f23f079647b269205297bbc3e6"
+            }
+          },
+          "patches": [
+            {
+              "type": "StrategicMerge",
+              "value": {
+                "spec": {
+                  "minReadySeconds": 15,
+                  "strategy": {
+                    "rollingUpdate": {
+                      "maxSurge": 1,
+                      "maxUnavailable": 0
+                    },
+                    "type": "RollingUpdate"
+                  },
+                  "template": {
+                    "spec": {
+                      "topologySpreadConstraints": [
+                        {
+                          "labelSelector": {
+                            "matchLabels": {
+                              "gateway.networking.k8s.io/gateway-name": "registry-canary"
+                            }
+                          },
+                          "maxSkew": 1,
+                          "topologyKey": "kubernetes.io/hostname",
+                          "whenUnsatisfiable": "ScheduleAnyway"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "service": {
+          "externalTrafficPolicy": "Local",
+          "type": "LoadBalancer"
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "v1",
+    "kind": "ServiceAccount",
+    "metadata": {
+      "name": "registry-gateway-canary-cert-generator",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "automountServiceAccountToken": false
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "Role",
+    "metadata": {
+      "name": "registry-gateway-canary-cert-generator",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "secrets"
+        ],
+        "verbs": [
+          "create",
+          "update",
+          "get"
+        ]
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "RoleBinding",
+    "metadata": {
+      "name": "registry-gateway-canary-cert-generator",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "roleRef": {
+      "apiGroup": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "registry-gateway-canary-cert-generator"
+    },
+    "subjects": [
+      {
+        "kind": "ServiceAccount",
+        "name": "registry-gateway-canary-cert-generator",
+        "namespace": "registry-gateway-canary"
+      }
+    ]
+  },
+  {
+    "apiVersion": "batch/v1",
+    "kind": "Job",
+    "metadata": {
+      "name": "registry-gateway-canary-cert-generator",
+      "namespace": "registry-gateway-canary",
+      "labels": {
+        "helm.sh/chart": "nginx-gateway-fabric-2.8.1",
+        "app.kubernetes.io/name": "nginx-gateway-fabric",
+        "app.kubernetes.io/instance": "registry-gateway-canary",
+        "app.kubernetes.io/version": "2.8.1",
+        "app.kubernetes.io/managed-by": "Helm"
+      }
+    },
+    "spec": {
+      "template": {
+        "metadata": {
+          "annotations": null
+        },
+        "spec": {
+          "automountServiceAccountToken": true,
+          "containers": [
+            {
+              "args": [
+                "generate-certs",
+                "--service=registry-gateway-canary",
+                "--cluster-domain=cluster.local",
+                "--server-tls-domain=svc",
+                "--server-tls-secret=server-tls",
+                "--agent-tls-secret=agent-tls"
+              ],
+              "env": [
+                {
+                  "name": "POD_NAMESPACE",
+                  "valueFrom": {
+                    "fieldRef": {
+                      "fieldPath": "metadata.namespace"
+                    }
+                  }
+                }
+              ],
+              "image": "ghcr.io/nginx/nginx-gateway-fabric:2.8.1@sha256:f0aa8a3b301dc594f300e566060cdb7e75b6425c076e2fc62e4ce96f6e78b766",
+              "imagePullPolicy": "IfNotPresent",
+              "name": "cert-generator",
+              "securityContext": {
+                "seccompProfile": {
+                  "type": "RuntimeDefault"
+                },
+                "capabilities": {
+                  "drop": [
+                    "ALL"
+                  ]
+                },
+                "allowPrivilegeEscalation": false,
+                "readOnlyRootFilesystem": true,
+                "runAsUser": 101,
+                "runAsGroup": 1001
+              }
+            }
+          ],
+          "restartPolicy": "Never",
+          "serviceAccountName": "registry-gateway-canary-cert-generator",
+          "securityContext": {
+            "fsGroup": 1001,
+            "runAsNonRoot": true
+          },
+          "nodeSelector": {
+            "registry-role": "gateway-canary"
+          },
+          "tolerations": [
+            {
+              "key": "registry-role",
+              "operator": "Equal",
+              "value": "gateway-canary",
+              "effect": "NoSchedule"
+            }
+          ]
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,623 @@
+{
+  "date_utc": "2026-11-06",
+  "software": {
+    "ngf": "2.8.1 OSS",
+    "gateway_api": "1.6.3",
+    "vector": "0.61.0, one thread",
+    "baseline_ingress_nginx": "1.15.1 / chart 4.15.1"
+  },
+  "fixture": {
+    "bytes": 74660,
+    "sha256": "62ec9f4018816e49f5ed83776951b5d053b1d6d2675b37699fc8d2ed6cbff43f",
+    "hot_keys": 32,
+    "transport": "HTTP/1.1 HTTPS; gzip; internal ClusterIP; validated fixture certificate"
+  },
+  "matched_topology": {
+    "proxy_replicas_per_arm": 2,
+    "canary_pool_nodes": 3,
+    "vector_collectors": 3,
+    "generator": "original staging worker, outside canary pool"
+  },
+  "matched_runs": [
+    {
+      "name": "baseline-500-a",
+      "arm": "baseline",
+      "rate": 500,
+      "seconds": 60,
+      "miss_percent": 0,
+      "offered": 30000,
+      "statuses": {
+        "200": 30000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 499.99252342013347,
+      "p50_ms": 2.3398619999999997,
+      "p95_ms": 3.92642,
+      "p99_ms": 7.814062,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 29872,
+        "MISS": 64,
+        "STALE": 64
+      },
+      "encoding": {
+        "gzip": 30000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": 0.8746163295978906,
+      "sum_container_peak_working_set_mib": 107.63671875,
+      "metric_delta": null,
+      "observed_metric_drain_seconds": null
+    },
+    {
+      "name": "ngf-500-a",
+      "arm": "ngf",
+      "rate": 500,
+      "seconds": 60,
+      "miss_percent": 0,
+      "offered": 30000,
+      "statuses": {
+        "200": 30000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 499.9969111107493,
+      "p50_ms": 2.093218,
+      "p95_ms": 3.898673,
+      "p99_ms": 8.492051,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 29872,
+        "MISS": 64,
+        "STALE": 64
+      },
+      "encoding": {
+        "gzip": 30000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": 1.1698856433442006,
+      "sum_container_peak_working_set_mib": 256.1484375,
+      "metric_delta": {
+        "registry_gateway_canary_internal_request_duration_seconds_sum": 0.27300000000000013,
+        "registry_gateway_canary_response_body_bytes_count": 30000.0,
+        "registry_gateway_canary_internal_requests_total": 64.0,
+        "registry_gateway_canary_upstream_header_seconds_sum": 2.7780000000000005,
+        "registry_gateway_canary_response_body_bytes_sum": 369690000.0,
+        "registry_gateway_canary_upstream_duration_seconds_count": 64.0,
+        "registry_gateway_canary_cache_responses_total": 30000.0,
+        "registry_gateway_canary_response_bytes_count": 30000.0,
+        "registry_gateway_canary_request_duration_seconds_sum": 6.612999999999994,
+        "registry_gateway_canary_internal_response_bytes_sum": 810944.0,
+        "registry_gateway_canary_request_bytes_count": 30000.0,
+        "registry_gateway_canary_response_bytes_sum": 380070062.0,
+        "registry_gateway_canary_request_bytes_sum": 5510620.0,
+        "registry_gateway_canary_upstream_header_seconds_count": 64.0,
+        "registry_gateway_canary_internal_response_bytes_count": 64.0,
+        "registry_gateway_canary_requests_total": 30000.0,
+        "registry_gateway_canary_upstream_connect_seconds_count": 64.0,
+        "registry_gateway_canary_internal_request_duration_seconds_count": 64.0,
+        "registry_gateway_canary_request_duration_seconds_count": 30000.0,
+        "registry_gateway_canary_upstream_duration_seconds_sum": 2.835,
+        "registry_gateway_canary_upstream_connect_seconds_sum": 2.147
+      },
+      "observed_metric_drain_seconds": 3.7860262393951416
+    },
+    {
+      "name": "baseline-1000-a",
+      "arm": "baseline",
+      "rate": 1000,
+      "seconds": 120,
+      "miss_percent": 0,
+      "offered": 120000,
+      "statuses": {
+        "200": 120000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 999.9835029971556,
+      "p50_ms": 2.9564679999999997,
+      "p95_ms": 15.281495000000001,
+      "p99_ms": 50.339764,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 119743,
+        "MISS": 64,
+        "STALE": 193
+      },
+      "encoding": {
+        "gzip": 120000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": 1.8767512053524111,
+      "sum_container_peak_working_set_mib": 122.3515625,
+      "metric_delta": null,
+      "observed_metric_drain_seconds": null
+    },
+    {
+      "name": "ngf-1000-a",
+      "arm": "ngf",
+      "rate": 1000,
+      "seconds": 120,
+      "miss_percent": 0,
+      "offered": 120000,
+      "statuses": {
+        "200": 120000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 999.9245799552788,
+      "p50_ms": 2.725968,
+      "p95_ms": 15.965193999999999,
+      "p99_ms": 38.477272,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 119735,
+        "MISS": 64,
+        "STALE": 192,
+        "UPDATING": 9
+      },
+      "encoding": {
+        "gzip": 120000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": 2.171526221450305,
+      "sum_container_peak_working_set_mib": 303.53125,
+      "metric_delta": {
+        "registry_gateway_canary_upstream_header_seconds_count": 64.0,
+        "registry_gateway_canary_upstream_connect_seconds_sum": 7.274000000000001,
+        "registry_gateway_canary_request_bytes_sum": 22162500.0,
+        "registry_gateway_canary_internal_response_bytes_sum": 2432992.0,
+        "registry_gateway_canary_response_body_bytes_sum": 1478760000.0,
+        "registry_gateway_canary_internal_request_duration_seconds_sum": 2.7159999999999993,
+        "registry_gateway_canary_upstream_header_seconds_sum": 9.213,
+        "registry_gateway_canary_request_bytes_count": 120000.0,
+        "registry_gateway_canary_cache_responses_total": 120000.0,
+        "registry_gateway_canary_request_duration_seconds_count": 120000.0,
+        "registry_gateway_canary_upstream_duration_seconds_count": 64.0,
+        "registry_gateway_canary_internal_requests_total": 192.0,
+        "registry_gateway_canary_upstream_connect_seconds_count": 64.0,
+        "registry_gateway_canary_upstream_duration_seconds_sum": 9.373999999999997,
+        "registry_gateway_canary_internal_request_duration_seconds_count": 192.0,
+        "registry_gateway_canary_response_bytes_count": 120000.0,
+        "registry_gateway_canary_response_body_bytes_count": 120000.0,
+        "registry_gateway_canary_requests_total": 120000.0,
+        "registry_gateway_canary_internal_response_bytes_count": 192.0,
+        "registry_gateway_canary_response_bytes_sum": 1520384684.0,
+        "registry_gateway_canary_request_duration_seconds_sum": 98.85700000000008
+      },
+      "observed_metric_drain_seconds": 3.965414047241211
+    },
+    {
+      "name": "baseline-mixed-a",
+      "arm": "baseline",
+      "rate": 250,
+      "seconds": 60,
+      "miss_percent": 20,
+      "offered": 15000,
+      "statuses": {
+        "200": 15000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 250.00247949125793,
+      "p50_ms": 2.441748,
+      "p95_ms": 5.177484000000001,
+      "p99_ms": 9.940086,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 11904,
+        "MISS": 3064,
+        "STALE": 32
+      },
+      "encoding": {
+        "gzip": 15000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": 0.5329390811688312,
+      "sum_container_peak_working_set_mib": 136.40625,
+      "metric_delta": null,
+      "observed_metric_drain_seconds": null
+    },
+    {
+      "name": "ngf-mixed-a",
+      "arm": "ngf",
+      "rate": 250,
+      "seconds": 60,
+      "miss_percent": 20,
+      "offered": 15000,
+      "statuses": {
+        "200": 15000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 250.0038306420277,
+      "p50_ms": 2.253258,
+      "p95_ms": 4.463882,
+      "p99_ms": 8.657135,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 11872,
+        "MISS": 3064,
+        "STALE": 64
+      },
+      "encoding": {
+        "gzip": 15000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": 0.656771894629045,
+      "sum_container_peak_working_set_mib": 283.73828125,
+      "metric_delta": {
+        "registry_gateway_canary_internal_requests_total": 64.0,
+        "registry_gateway_canary_upstream_header_seconds_count": 3064.0,
+        "registry_gateway_canary_request_duration_seconds_count": 15000.0,
+        "registry_gateway_canary_request_bytes_sum": 2793020.0,
+        "registry_gateway_canary_upstream_duration_seconds_count": 3064.0,
+        "registry_gateway_canary_upstream_header_seconds_sum": 4.243000000000089,
+        "registry_gateway_canary_upstream_connect_seconds_count": 3064.0,
+        "registry_gateway_canary_upstream_duration_seconds_sum": 5.812999999999841,
+        "registry_gateway_canary_internal_response_bytes_sum": 810939.0,
+        "registry_gateway_canary_response_body_bytes_count": 15000.0,
+        "registry_gateway_canary_internal_request_duration_seconds_sum": 0.20399999999999618,
+        "registry_gateway_canary_internal_request_duration_seconds_count": 64.0,
+        "registry_gateway_canary_internal_response_bytes_count": 64.0,
+        "registry_gateway_canary_cache_responses_total": 15000.0,
+        "registry_gateway_canary_upstream_connect_seconds_sum": 0.012000000000002231,
+        "registry_gateway_canary_request_duration_seconds_sum": 6.071999999998667,
+        "registry_gateway_canary_request_bytes_count": 15000.0,
+        "registry_gateway_canary_response_body_bytes_sum": 184845000.0,
+        "registry_gateway_canary_response_bytes_count": 15000.0,
+        "registry_gateway_canary_requests_total": 15000.0,
+        "registry_gateway_canary_response_bytes_sum": 190038127.0
+      },
+      "observed_metric_drain_seconds": 3.962433099746704
+    }
+  ],
+  "contract": {
+    "/v0.1/health": 200,
+    "/v0.1/version": 200,
+    "/v0.1/servers?limit=1": 200,
+    "/v0/servers?limit=1": 200,
+    "cache_miss_hit_origin_offload": true,
+    "conditional_gzip_identity_and_vary": true,
+    "head": true,
+    "private_cookie_errors_not_cached": true,
+    "original_query_key_preserved": true,
+    "forwarded_headers_and_request_id": true,
+    "cache_lock_at_most_one_origin_read_per_configured_replica": true,
+    "expiry_background_refresh": true,
+    "last_good_cache_survives_origin_503": true
+  },
+  "limits": {
+    "http_redirect_preserves_query": true,
+    "body_limit_1MiB": true,
+    "source_ip_limit_ignores_spoofed_xff": {
+      "statuses": {
+        "200": 1180,
+        "429": 740
+      },
+      "seconds": 17.06552219390869
+    },
+    "invalid_publish_rejected": 422
+  },
+  "pod_replacement": {
+    "replacement_ready_seconds": 37.06889724731445,
+    "result": {
+      "name": "rollout",
+      "arm": "ngf",
+      "rate": 500,
+      "seconds": 90,
+      "miss_percent": 0,
+      "offered": 45000,
+      "statuses": {
+        "200": 45000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 499.9984606714057,
+      "p50_ms": 2.273218,
+      "p95_ms": 21.689835000000002,
+      "p99_ms": 59.982631000000005,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 44840,
+        "MISS": 96,
+        "STALE": 64
+      },
+      "encoding": {
+        "gzip": 45000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": null,
+      "sum_container_peak_working_set_mib": null,
+      "metric_delta": {
+        "registry_gateway_canary_upstream_connect_seconds_count": 96.0,
+        "registry_gateway_canary_request_duration_seconds_sum": 2.0440000000000396,
+        "registry_gateway_canary_request_duration_seconds_count": 45000.0,
+        "registry_gateway_canary_response_body_bytes_sum": 554535000.0,
+        "registry_gateway_canary_upstream_connect_seconds_sum": 0.02400000000000091,
+        "registry_gateway_canary_cache_responses_total": 45000.0,
+        "registry_gateway_canary_requests_total": 45000.0,
+        "registry_gateway_canary_response_bytes_count": 45000.0,
+        "registry_gateway_canary_upstream_duration_seconds_count": 96.0,
+        "registry_gateway_canary_request_bytes_sum": 8355932.0,
+        "registry_gateway_canary_internal_requests_total": 64.0,
+        "registry_gateway_canary_response_bytes_sum": 570104869.0,
+        "registry_gateway_canary_internal_response_bytes_count": 64.0,
+        "registry_gateway_canary_upstream_duration_seconds_sum": 0.754999999999999,
+        "registry_gateway_canary_upstream_header_seconds_count": 96.0,
+        "registry_gateway_canary_internal_request_duration_seconds_count": 64.0,
+        "registry_gateway_canary_internal_request_duration_seconds_sum": 0.7859999999999969,
+        "registry_gateway_canary_request_bytes_count": 45000.0,
+        "registry_gateway_canary_internal_response_bytes_sum": 810944.0,
+        "registry_gateway_canary_response_body_bytes_count": 45000.0,
+        "registry_gateway_canary_upstream_header_seconds_sum": 0.671999999999997
+      },
+      "observed_metric_drain_seconds": 3.9934682846069336
+    },
+    "measurement_exit": 0
+  },
+  "collector_restart": {
+    "quiescent": true,
+    "observed_recovery_seconds": 10.98446774482727,
+    "historical_requests_replayed": 0,
+    "post_restart_result": {
+      "name": "post-collector-restart",
+      "arm": "ngf",
+      "rate": 100,
+      "seconds": 10,
+      "miss_percent": 0,
+      "offered": 1000,
+      "statuses": {
+        "200": 1000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 100.07325442282354,
+      "p50_ms": 2.443474,
+      "p95_ms": 3.7791,
+      "p99_ms": 4.744562,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 968,
+        "MISS": 32
+      },
+      "encoding": {
+        "gzip": 1000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": null,
+      "sum_container_peak_working_set_mib": null,
+      "metric_delta": {
+        "registry_gateway_canary_request_duration_seconds_sum": 0.08699999999999619,
+        "registry_gateway_canary_cache_responses_total": 1000.0,
+        "registry_gateway_canary_upstream_connect_seconds_sum": 0.0019999999999997797,
+        "registry_gateway_canary_internal_response_bytes_count": 0.0,
+        "registry_gateway_canary_response_body_bytes_sum": 12323000.0,
+        "registry_gateway_canary_request_bytes_sum": 200682.0,
+        "registry_gateway_canary_response_body_bytes_count": 1000.0,
+        "registry_gateway_canary_request_bytes_count": 1000.0,
+        "registry_gateway_canary_upstream_duration_seconds_count": 32.0,
+        "registry_gateway_canary_internal_response_bytes_sum": 0.0,
+        "registry_gateway_canary_internal_request_duration_seconds_count": 0.0,
+        "registry_gateway_canary_upstream_duration_seconds_sum": 0.07900000000000063,
+        "registry_gateway_canary_response_bytes_sum": 12669027.0,
+        "registry_gateway_canary_upstream_connect_seconds_count": 32.0,
+        "registry_gateway_canary_requests_total": 1000.0,
+        "registry_gateway_canary_upstream_header_seconds_sum": 0.0470000000000006,
+        "registry_gateway_canary_internal_requests_total": 0.0,
+        "registry_gateway_canary_internal_request_duration_seconds_sum": 0.0,
+        "registry_gateway_canary_request_duration_seconds_count": 1000.0,
+        "registry_gateway_canary_response_bytes_count": 1000.0,
+        "registry_gateway_canary_upstream_header_seconds_count": 32.0
+      },
+      "observed_metric_drain_seconds": 3.777585029602051
+    }
+  },
+  "log_rotation": "Multiple kubelet 10 MiB rotations observed during the matched load; client and histogram counts reconciled exactly.",
+  "grafana": {
+    "dashboard_uid": "registry-gateway-canary",
+    "provisioned": true,
+    "panels_with_query_results": 9,
+    "notification_delivery_tested": false,
+    "oauth_initiation": {
+      "status": 302,
+      "provider_host": "accounts.google.com",
+      "redirect_uri": [
+        "https://grafana.staging.registry.modelcontextprotocol.io/login/google"
+      ],
+      "secure_cookie": false,
+      "full_login_tested": false
+    },
+    "preexisting_cookie_observation": "Google OAuth temporary cookies omit Secure on both the current ingress and canary; the gateway change preserves existing behavior."
+  },
+  "production_preview": {
+    "creates": 2,
+    "updates": 2,
+    "same": 188,
+    "gateway_changes": false,
+    "applied": false,
+    "existing_housekeeping": [
+      "ingress admission hook jobs expired by TTL",
+      "Grafana empty RBAC rules normalization"
+    ]
+  },
+  "limitations": [
+    "Fixed public listing payload and synthetic cache mix, not a full production traffic replay.",
+    "One run per arm/rate; values are observations, not a confidence interval.",
+    "First two baseline global fixture-origin counters included a few concurrent functional probes; they are excluded from this report. Generated baseline request/cache counts are exact.",
+    "Component memory is the sum of sampled per-container peaks, not a simultaneous cluster peak.",
+    "CPU excludes Kubernetes/GCP system agents and the load generator; canary totals include three collectors, one idle during matched tests.",
+    "Observed metric drain includes Kubernetes API polling time; it is not an event-lag percentile.",
+    "Counters reset on collector restart; the quiescent checkpoint test does not establish exactly-once crash delivery."
+  ],
+  "remaining_cutover_gates": [
+    "Independent Gateway ACME issuance/renewal, internal certificate lifecycle, and safe IP/DNS handoff",
+    "End-to-end browser Grafana OAuth and authenticated registry publishing",
+    "Upstream retry-list timing parity and migration of dashboard/alert queries; long/partial CRI log records",
+    "Actual alert notification delivery",
+    "Full production traffic mix/fleet capacity, node failure and rollout headroom"
+  ],
+  "autoscaling": {
+    "measurement_exit": 0,
+    "max_ready_replicas": 4,
+    "max_pool_nodes": 3,
+    "minimum_pool_nodes": 2,
+    "ending_pool_nodes": 2,
+    "result": {
+      "name": "autoscale",
+      "arm": "ngf",
+      "rate": 1000,
+      "seconds": 240,
+      "miss_percent": 0,
+      "offered": 240000,
+      "statuses": {
+        "200": 240000
+      },
+      "errors": {},
+      "generator_dropped": 0,
+      "successful_rps": 999.9908029179204,
+      "p50_ms": 4.048554,
+      "p95_ms": 54.934749,
+      "p99_ms": 167.342605,
+      "p999_ms": 594.3514130000001,
+      "max_ms": 1694.61447,
+      "workers": 256,
+      "cache": {
+        "HIT": 238936,
+        "MISS": 128,
+        "STALE": 701,
+        "UPDATING": 235
+      },
+      "encoding": {
+        "gzip": 240000
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": null,
+      "sum_container_peak_working_set_mib": null,
+      "metric_delta": {
+        "registry_gateway_canary_upstream_header_seconds_sum": 29.926000000000002,
+        "registry_gateway_canary_requests_total": 240000.0,
+        "registry_gateway_canary_upstream_header_seconds_count": 128.0,
+        "registry_gateway_canary_internal_requests_total": 701.0,
+        "registry_gateway_canary_upstream_duration_seconds_sum": 30.258999999999993,
+        "registry_gateway_canary_cache_responses_total": 240000.0,
+        "registry_gateway_canary_request_duration_seconds_count": 240000.0,
+        "registry_gateway_canary_upstream_connect_seconds_sum": 24.319000000000003,
+        "registry_gateway_canary_upstream_connect_seconds_count": 128.0,
+        "registry_gateway_canary_internal_request_duration_seconds_count": 701.0,
+        "registry_gateway_canary_response_body_bytes_sum": 2957520000.0,
+        "registry_gateway_canary_internal_response_bytes_count": 701.0,
+        "registry_gateway_canary_upstream_duration_seconds_count": 128.0,
+        "registry_gateway_canary_request_bytes_count": 240000.0,
+        "registry_gateway_canary_request_duration_seconds_sum": 323.956999999999,
+        "registry_gateway_canary_internal_response_bytes_sum": 8883072.0,
+        "registry_gateway_canary_request_bytes_sum": 45045000.0,
+        "registry_gateway_canary_response_bytes_sum": 3040799500.0,
+        "registry_gateway_canary_response_body_bytes_count": 240000.0,
+        "registry_gateway_canary_internal_request_duration_seconds_sum": 29.932000000000016,
+        "registry_gateway_canary_response_bytes_count": 240000.0
+      },
+      "observed_metric_drain_seconds": 2.951716899871826
+    }
+  },
+  "initial_autoscaling_attempt": {
+    "measurement_exit": 1,
+    "result": {
+      "name": "autoscale-initial",
+      "arm": "ngf",
+      "rate": 1000,
+      "seconds": 240,
+      "miss_percent": 0,
+      "offered": 240000,
+      "statuses": {
+        "200": 239828
+      },
+      "errors": {},
+      "generator_dropped": 172,
+      "successful_rps": 999.2433973593752,
+      "p50_ms": 3.895448,
+      "p95_ms": 45.525426,
+      "p99_ms": 85.404696,
+      "p999_ms": null,
+      "max_ms": null,
+      "workers": 128,
+      "cache": {
+        "HIT": 238894,
+        "MISS": 128,
+        "STALE": 768,
+        "UPDATING": 38
+      },
+      "encoding": {
+        "gzip": 239828
+      },
+      "wire_first_body_sha256": "53a4b13185a5af27f9094b4943474e072dcdaff62394ec00ff790c9b7b3fb814",
+      "component_cpu_cores": null,
+      "sum_container_peak_working_set_mib": null,
+      "metric_delta": {
+        "registry_gateway_canary_upstream_header_seconds_sum": 3.3730000000000064,
+        "registry_gateway_canary_request_bytes_sum": 45012717.0,
+        "registry_gateway_canary_upstream_duration_seconds_count": 128.0,
+        "registry_gateway_canary_internal_requests_total": 768.0,
+        "registry_gateway_canary_internal_request_duration_seconds_count": 768.0,
+        "registry_gateway_canary_upstream_header_seconds_count": 128.0,
+        "registry_gateway_canary_request_duration_seconds_count": 239828.0,
+        "registry_gateway_canary_request_bytes_count": 239828.0,
+        "registry_gateway_canary_internal_request_duration_seconds_sum": 10.17499999999998,
+        "registry_gateway_canary_upstream_connect_seconds_sum": 1.1960000000000015,
+        "registry_gateway_canary_cache_responses_total": 239828.0,
+        "registry_gateway_canary_response_body_bytes_count": 239828.0,
+        "registry_gateway_canary_response_body_bytes_sum": 2955400444.0,
+        "registry_gateway_canary_internal_response_bytes_count": 768.0,
+        "registry_gateway_canary_upstream_duration_seconds_sum": 3.563000000000004,
+        "registry_gateway_canary_response_bytes_sum": 3038520051.0,
+        "registry_gateway_canary_request_duration_seconds_sum": 36.396000000000114,
+        "registry_gateway_canary_upstream_connect_seconds_count": 128.0,
+        "registry_gateway_canary_response_bytes_count": 239828.0,
+        "registry_gateway_canary_internal_response_bytes_sum": 9731808.0,
+        "registry_gateway_canary_requests_total": 239828.0
+      },
+      "observed_metric_drain_seconds": 4.070444107055664
+    },
+    "note": "Queue-limited with 128 workers: 172/240000 scheduled requests dropped; all sent requests succeeded. Rerun with 256 workers is reported separately."
+  },
+  "retained_local_state": {
+    "nodes": 4,
+    "canary_nodes": 2,
+    "proxy_replicas": 2,
+    "vector_collectors": 2,
+    "hpa_min": 2,
+    "hpa_max": 4,
+    "test_resources_removed": true,
+    "gateway_programmed": true,
+    "listeners": [
+      "http",
+      "registry",
+      "grafana"
+    ],
+    "routes": [
+      "bulk",
+      "grafana",
+      "redirect",
+      "registry"
+    ],
+    "app_image": "ghcr.io/modelcontextprotocol/registry@sha256:ca8f7656555f4081f9bcd0969c894dfa90dd166d663a495c11681ccd8926b6cc",
+    "app_available": 1
+  }
+}

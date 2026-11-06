@@ -7,6 +7,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s"
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers/gcp"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers/local"
@@ -38,6 +39,10 @@ func main() {
 
 		// Reject incomplete experimental capacity profiles before any resources.
 		if err := k8s.ValidateCapacityConfig(ctx); err != nil {
+			return err
+		}
+
+		if err := gatewaycanary.Validate(ctx); err != nil {
 			return err
 		}
 

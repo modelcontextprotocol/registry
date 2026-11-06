@@ -1,0 +1,246 @@
+{
+  "uid": "registry-gateway-canary",
+  "title": "Registry Gateway Canary",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "gateway-canary"
+  ],
+  "timezone": "utc",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Requests / second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (route) (rate(registry_gateway_canary_requests_total{traffic=\"$traffic\"}[5m]))",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "p95 client latency",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (le,route)(rate(registry_gateway_canary_request_duration_seconds_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Cache hit fraction",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(registry_gateway_canary_cache_responses_total{traffic=\"$traffic\",cache=\"HIT\"}[5m])) / sum(rate(registry_gateway_canary_cache_responses_total{traffic=\"$traffic\"}[5m]))",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "HTTP 5xx / second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(registry_gateway_canary_requests_total{traffic=\"$traffic\",status=~\"5..\"}[5m]))",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "p95 response bytes including headers",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_response_bytes_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Internal cache refreshes / second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(registry_gateway_canary_internal_requests_total{traffic=\"$traffic\"}[5m]))",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Upstream p95 latency (single attempt)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_upstream_duration_seconds_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Parse errors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(registry_gateway_canary_parse_errors_total) or vector(0)",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Scrape health",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=~\"gateway-canary-.*\"}",
+          "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "traffic",
+        "type": "custom",
+        "query": "registry,fixture,grafana",
+        "current": {
+          "text": "registry",
+          "value": "registry"
+        },
+        "options": [
+          {
+            "text": "registry",
+            "value": "registry",
+            "selected": true
+          },
+          {
+            "text": "fixture",
+            "value": "fixture",
+            "selected": false
+          },
+          {
+            "text": "grafana",
+            "value": "grafana",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  }
+}

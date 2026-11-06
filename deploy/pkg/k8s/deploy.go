@@ -4,6 +4,7 @@ import (
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
@@ -45,5 +46,8 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStora
 		return nil, err
 	}
 
+	if err := gatewaycanary.Deploy(ctx, cluster.Provider, cluster.CanaryAddress); err != nil {
+		return nil, err
+	}
 	return service, nil
 }

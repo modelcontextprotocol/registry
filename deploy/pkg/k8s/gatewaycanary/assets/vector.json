@@ -1,0 +1,373 @@
+{
+  "data_dir": "/data",
+  "sources": {
+    "access": {
+      "type": "file",
+      "include": [
+        "/var/log/pods/registry-gateway-canary_*/nginx/*.log"
+      ],
+      "read_from": "beginning",
+      "glob_minimum_cooldown_ms": 250,
+      "max_line_bytes": 65536,
+      "max_read_bytes": 262144
+    },
+    "internal": {
+      "type": "internal_metrics",
+      "scrape_interval_secs": 5
+    }
+  },
+  "transforms": {
+    "internal_health": {
+      "type": "filter",
+      "inputs": [
+        "internal"
+      ],
+      "condition": "includes([\"component_received_events_total\", \"component_sent_events_total\", \"component_errors_total\", \"component_discarded_events_total\", \"buffer_events\", \"buffer_byte_size\", \"buffer_discarded_events_total\"], .name)"
+    },
+    "access_only": {
+      "type": "filter",
+      "inputs": [
+        "access"
+      ],
+      "condition": "contains(to_string(.message) ?? \"\", \"registry_access\")"
+    },
+    "parse": {
+      "type": "remap",
+      "inputs": [
+        "access_only"
+      ],
+      "source": "# NGF emits explicit JSON fields; retain the same normalized metric contract.\nraw = string!(.message)\nif !starts_with(raw, \"{\") {\n  envelope = parse_regex!(raw, r'^\\S+ (?:stdout|stderr) F (?P<json>\\{.*\\})$')\n  raw = string!(envelope.json)\n}\np = object!(parse_json!(raw))\nassert!(p.kind == \"registry_access\", \"wrong access record\")\npath = string!(split(string!(p.uri), \"?\")[0])\nroute = \"other\"\nif path == \"/v0/servers\" { route = \"list_v0\" }\nif path == \"/v0.1/servers\" { route = \"list_v01\" }\nif starts_with(path, \"/v0/servers/\") { route = \"detail_v0\" }\nif starts_with(path, \"/v0.1/servers/\") { route = \"detail_v01\" }\nif starts_with(path, \"/v0/auth/\") || starts_with(path, \"/v0.1/auth/\") { route = \"auth\" }\nif p.host == \"grafana.staging.registry.modelcontextprotocol.io\" { route = \"grafana\" }\ntraffic = if p.host == \"fixture.gateway-canary.invalid\" { \"fixture\" } else if route == \"grafana\" { \"grafana\" } else { \"registry\" }\nmethod = if includes([\"GET\", \"HEAD\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\", \"OPTIONS\"], p.method) { p.method } else { \"OTHER\" }\ncache = if includes([\"HIT\", \"MISS\", \"STALE\", \"UPDATING\", \"BYPASS\", \"EXPIRED\", \"REVALIDATED\"], p.cache) { p.cache } else { \"NONE\" }\nstatus = to_int!(p.status)\nassert!(status >= 100 && status <= 599, \"invalid HTTP status\")\nelapsed = to_float!(p.duration)\nassert!(elapsed >= 0, \"invalid duration\")\n. = {\"traffic\": traffic, \"one\": 1, \"route\": route, \"proxy_pod\": p.proxy_pod, \"method\": method,\n     \"status\": p.status, \"cache\": cache, \"duration_seconds\": elapsed,\n     \"body_bytes\": to_int!(p.body_bytes), \"request_bytes\": to_int!(p.request_bytes)}\n# Missing timings and retry lists are not zero-duration upstream observations.\n# This matches the single-numeric observation subset; retry parity remains a gate.\nupstream = to_float(p.upstream_time) ?? -1.0\nconnect = to_float(p.connect) ?? -1.0\nheader = to_float(p.header) ?? -1.0\nif upstream >= 0 { .upstream_seconds = upstream }\nif connect >= 0 { .connect_seconds = connect }\nif header >= 0 { .header_seconds = header }\n\n# Backward-compatible parsing never substitutes body size for bytes including headers.\nif !is_null(p.response_bytes) { .response_bytes = to_int!(p.response_bytes) }\n",
+      "drop_on_error": true,
+      "drop_on_abort": true,
+      "reroute_dropped": true
+    },
+    "clients": {
+      "type": "filter",
+      "inputs": [
+        "parse"
+      ],
+      "condition": "(to_int(.request_bytes) ?? -1) > 0"
+    },
+    "background": {
+      "type": "filter",
+      "inputs": [
+        "parse"
+      ],
+      "condition": ".request_bytes == 0"
+    },
+    "background_metrics": {
+      "type": "log_to_metric",
+      "inputs": [
+        "background"
+      ],
+      "metrics": [
+        {
+          "type": "counter",
+          "field": "one",
+          "name": "registry_gateway_canary_internal_requests_total",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "method": "{{ method }}",
+            "status": "{{ status }}",
+            "cache": "{{ cache }}",
+            "traffic": "{{ traffic }}"
+          }
+        },
+        {
+          "type": "histogram",
+          "field": "duration_seconds",
+          "name": "registry_gateway_canary_internal_request_duration_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "traffic": {
+      "type": "log_to_metric",
+      "inputs": [
+        "clients"
+      ],
+      "metrics": [
+        {
+          "type": "counter",
+          "field": "one",
+          "name": "registry_gateway_canary_requests_total",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "method": "{{ method }}",
+            "status": "{{ status }}",
+            "traffic": "{{ traffic }}"
+          }
+        },
+        {
+          "type": "counter",
+          "field": "one",
+          "name": "registry_gateway_canary_cache_responses_total",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "cache": "{{ cache }}",
+            "traffic": "{{ traffic }}"
+          }
+        },
+        {
+          "type": "histogram",
+          "field": "duration_seconds",
+          "name": "registry_gateway_canary_request_duration_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "sizes": {
+      "type": "log_to_metric",
+      "inputs": [
+        "clients"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "body_bytes",
+          "name": "registry_gateway_canary_response_body_bytes",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        },
+        {
+          "type": "histogram",
+          "field": "request_bytes",
+          "name": "registry_gateway_canary_request_bytes",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "sized_clients": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.response_bytes)"
+    },
+    "sized_background": {
+      "type": "filter",
+      "inputs": [
+        "background"
+      ],
+      "condition": "exists(.response_bytes)"
+    },
+    "response_sizes": {
+      "type": "log_to_metric",
+      "inputs": [
+        "sized_clients"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "response_bytes",
+          "name": "registry_gateway_canary_response_bytes",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "internal_sizes": {
+      "type": "log_to_metric",
+      "inputs": [
+        "sized_background"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "response_bytes",
+          "name": "registry_gateway_canary_internal_response_bytes",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "missing_sizes": {
+      "type": "filter",
+      "inputs": [
+        "parse"
+      ],
+      "condition": "!exists(.response_bytes)"
+    },
+    "missing_size_metrics": {
+      "type": "log_to_metric",
+      "inputs": [
+        "missing_sizes"
+      ],
+      "metrics": [
+        {
+          "type": "counter",
+          "field": "one",
+          "name": "registry_gateway_canary_response_bytes_missing_total",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "rejected": {
+      "type": "log_to_metric",
+      "inputs": [
+        "parse.dropped"
+      ],
+      "metrics": [
+        {
+          "type": "counter",
+          "field": "message",
+          "name": "registry_gateway_canary_parse_errors_total"
+        }
+      ]
+    },
+    "upstream_seconds": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.upstream_seconds)"
+    },
+    "upstream_seconds_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "upstream_seconds"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "upstream_seconds",
+          "name": "registry_gateway_canary_upstream_duration_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "connect_seconds": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.connect_seconds)"
+    },
+    "connect_seconds_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "connect_seconds"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "connect_seconds",
+          "name": "registry_gateway_canary_upstream_connect_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "header_seconds": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.header_seconds)"
+    },
+    "header_seconds_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "header_seconds"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "header_seconds",
+          "name": "registry_gateway_canary_upstream_header_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    }
+  },
+  "sinks": {
+    "traffic_metrics": {
+      "type": "prometheus_exporter",
+      "inputs": [
+        "traffic",
+        "background_metrics",
+        "missing_size_metrics",
+        "rejected",
+        "internal_health",
+        "upstream_seconds_metric",
+        "connect_seconds_metric",
+        "header_seconds_metric"
+      ],
+      "address": "0.0.0.0:9598",
+      "buckets": [
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1,
+        2.5,
+        5,
+        10
+      ],
+      "flush_period_secs": 3600,
+      "suppress_timestamp": true
+    },
+    "size_metrics": {
+      "type": "prometheus_exporter",
+      "inputs": [
+        "sizes",
+        "response_sizes",
+        "internal_sizes"
+      ],
+      "address": "0.0.0.0:9599",
+      "buckets": [
+        10,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000,
+        10000000
+      ],
+      "flush_period_secs": 3600,
+      "suppress_timestamp": true
+    }
+  }
+}

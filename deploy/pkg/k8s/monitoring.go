@@ -10,6 +10,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"gopkg.in/yaml.v2"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
@@ -550,6 +551,20 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		return err
 	}
 
+	dashboardMounts := pulumi.Array{
+		pulumi.Map{
+			"name":      pulumi.String("grafana-datasources"),
+			"mountPath": pulumi.String("/etc/grafana/provisioning/datasources"),
+			"configMap": grafanaDataSourcesConfigMap.Metadata.Name(),
+			"readOnly":  pulumi.Bool(true),
+		},
+	}
+	canaryMounts, err := gatewaycanary.GrafanaMounts(ctx, cluster.Provider, ns)
+	if err != nil {
+		return err
+	}
+	dashboardMounts = append(dashboardMounts, canaryMounts...)
+
 	// Deploy Grafana
 	grafanaHost := "grafana." + environment + ".registry.modelcontextprotocol.io"
 	_, err = helm.NewChart(ctx, "grafana", helm.ChartArgs{
@@ -571,14 +586,7 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 			"plugins": pulumi.Array{
 				pulumi.String("victoriametrics-logs-datasource"),
 			},
-			"extraConfigmapMounts": pulumi.Array{
-				pulumi.Map{
-					"name":      pulumi.String("grafana-datasources"),
-					"mountPath": pulumi.String("/etc/grafana/provisioning/datasources"),
-					"configMap": grafanaDataSourcesConfigMap.Metadata.Name(),
-					"readOnly":  pulumi.Bool(true),
-				},
-			},
+			"extraConfigmapMounts": dashboardMounts,
 			"grafana.ini": pulumi.Map{
 				"server": pulumi.Map{
 					"root_url": pulumi.String("https://" + grafanaHost),

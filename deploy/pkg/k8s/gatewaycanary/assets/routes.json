@@ -1,0 +1,689 @@
+[
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1beta1",
+    "kind": "ReferenceGrant",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "default"
+    },
+    "spec": {
+      "from": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "namespace": "registry-gateway-canary"
+        },
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "Gateway",
+          "namespace": "registry-gateway-canary"
+        }
+      ],
+      "to": [
+        {
+          "group": "",
+          "kind": "Service",
+          "name": "mcp-registry"
+        },
+        {
+          "group": "",
+          "kind": "Secret",
+          "name": "mcp-registry-staging-tls"
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1beta1",
+    "kind": "ReferenceGrant",
+    "metadata": {
+      "name": "registry-gateway-canary",
+      "namespace": "monitoring"
+    },
+    "spec": {
+      "from": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "namespace": "registry-gateway-canary"
+        },
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "Gateway",
+          "namespace": "registry-gateway-canary"
+        }
+      ],
+      "to": [
+        {
+          "group": "",
+          "kind": "Service",
+          "name": "grafana"
+        },
+        {
+          "group": "",
+          "kind": "Secret",
+          "name": "grafana-tls"
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "Gateway",
+    "metadata": {
+      "name": "registry-canary",
+      "namespace": "registry-gateway-canary",
+      "annotations": {
+        "pulumi.com/skipAwait": "true"
+      }
+    },
+    "spec": {
+      "gatewayClassName": "registry-gateway-canary",
+      "listeners": [
+        {
+          "name": "http",
+          "port": 80,
+          "protocol": "HTTP",
+          "allowedRoutes": {
+            "namespaces": {
+              "from": "Same"
+            }
+          }
+        },
+        {
+          "name": "registry",
+          "hostname": "staging.registry.modelcontextprotocol.io",
+          "port": 443,
+          "protocol": "HTTPS",
+          "tls": {
+            "mode": "Terminate",
+            "certificateRefs": [
+              {
+                "name": "mcp-registry-staging-tls",
+                "namespace": "default"
+              }
+            ]
+          },
+          "allowedRoutes": {
+            "namespaces": {
+              "from": "Same"
+            }
+          }
+        },
+        {
+          "name": "grafana",
+          "hostname": "grafana.staging.registry.modelcontextprotocol.io",
+          "port": 443,
+          "protocol": "HTTPS",
+          "tls": {
+            "mode": "Terminate",
+            "certificateRefs": [
+              {
+                "name": "grafana-tls",
+                "namespace": "monitoring"
+              }
+            ]
+          },
+          "allowedRoutes": {
+            "namespaces": {
+              "from": "Same"
+            }
+          }
+        },
+        {
+          "name": "fixture",
+          "hostname": "fixture.gateway-canary.invalid",
+          "port": 443,
+          "protocol": "HTTPS",
+          "tls": {
+            "mode": "Terminate",
+            "certificateRefs": [
+              {
+                "name": "fixture-tls"
+              }
+            ]
+          },
+          "allowedRoutes": {
+            "namespaces": {
+              "from": "Same"
+            }
+          }
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "HTTPRoute",
+    "metadata": {
+      "name": "redirect",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "parentRefs": [
+        {
+          "name": "registry-canary",
+          "sectionName": "http"
+        }
+      ],
+      "hostnames": [
+        "staging.registry.modelcontextprotocol.io",
+        "grafana.staging.registry.modelcontextprotocol.io"
+      ],
+      "rules": [
+        {
+          "filters": [
+            {
+              "type": "RequestRedirect",
+              "requestRedirect": {
+                "scheme": "https",
+                "statusCode": 308
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "HTTPRoute",
+    "metadata": {
+      "name": "bulk",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "parentRefs": [
+        {
+          "name": "registry-canary",
+          "sectionName": "registry"
+        }
+      ],
+      "hostnames": [
+        "staging.registry.modelcontextprotocol.io"
+      ],
+      "rules": [
+        {
+          "matches": [
+            {
+              "path": {
+                "type": "Exact",
+                "value": "/v0/servers"
+              }
+            },
+            {
+              "path": {
+                "type": "Exact",
+                "value": "/v0.1/servers"
+              }
+            }
+          ],
+          "backendRefs": [
+            {
+              "name": "mcp-registry",
+              "namespace": "default",
+              "port": 80
+            }
+          ],
+          "filters": [
+            {
+              "type": "ExtensionRef",
+              "extensionRef": {
+                "group": "gateway.nginx.org",
+                "kind": "SnippetsFilter",
+                "name": "public-read"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "HTTPRoute",
+    "metadata": {
+      "name": "registry",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "parentRefs": [
+        {
+          "name": "registry-canary",
+          "sectionName": "registry"
+        }
+      ],
+      "hostnames": [
+        "staging.registry.modelcontextprotocol.io"
+      ],
+      "rules": [
+        {
+          "matches": [
+            {
+              "path": {
+                "type": "PathPrefix",
+                "value": "/"
+              }
+            }
+          ],
+          "backendRefs": [
+            {
+              "name": "mcp-registry",
+              "namespace": "default",
+              "port": 80
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "HTTPRoute",
+    "metadata": {
+      "name": "grafana",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "parentRefs": [
+        {
+          "name": "registry-canary",
+          "sectionName": "grafana"
+        }
+      ],
+      "hostnames": [
+        "grafana.staging.registry.modelcontextprotocol.io"
+      ],
+      "rules": [
+        {
+          "backendRefs": [
+            {
+              "name": "grafana",
+              "namespace": "monitoring",
+              "port": 80
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "SnippetsPolicy",
+    "metadata": {
+      "name": "shared",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "Gateway",
+          "name": "registry-canary"
+        }
+      ],
+      "snippets": [
+        {
+          "context": "http",
+          "value": "proxy_cache_path /var/cache/nginx/registry-read levels=1:2 keys_zone=registry_read_cache:20m max_size=1g inactive=5m use_temp_path=off;\nmap \"$request_method:$uri\" $registry_read_cache_zone { default off; ~^GET:/v0(?:\\.1)?/servers$ registry_read_cache; }\nlog_subrequest on;\nmap $http_x_request_id $registry_request_id { default $http_x_request_id; \"\" $request_id; }\n\n# Public listing responses contain no user-specific data. Leave credentials/cookies uncompressed.\nmap \"$request_method:$host:$uri:$http_authorization:$http_cookie\" $registry_public_json_gzip {\n    default 0;\n    ~^(GET|HEAD):(registry\\.modelcontextprotocol\\.io|prod\\.registry\\.modelcontextprotocol\\.io|staging\\.registry\\.modelcontextprotocol\\.io|fixture\\.gateway-canary\\.invalid):/v0(?:\\.1)?/servers::$ 1;\n}\n\n# Store only successful origin responses, even if errors advertise freshness.\nmap $upstream_status $registry_skip_cache_status { default 1; 200 0; }\n"
+        },
+        {
+          "context": "http.server",
+          "value": "add_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;"
+        },
+        {
+          "context": "http.server.location",
+          "value": "proxy_set_header X-Forwarded-For $remote_addr;\nproxy_set_header X-Request-ID $registry_request_id;\nadd_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;"
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "SnippetsFilter",
+    "metadata": {
+      "name": "public-read",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "snippets": [
+        {
+          "context": "http.server.location",
+          "value": "proxy_cache $registry_read_cache_zone;\nproxy_cache_key \"$scheme$request_method$host$request_uri\";\nproxy_cache_valid 200 30s;\nproxy_no_cache $registry_skip_cache_status;\nproxy_cache_lock on;\nproxy_cache_lock_timeout 5s;\nproxy_cache_background_update on;\nproxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;\nadd_header X-Registry-Cache $upstream_cache_status always;\n\n# Compress the public JSON representation after cache lookup; preserve identity fallback.\ngzip off;\ngzip_types application/json;\ngzip_min_length 1024;\ngzip_comp_level 1;\ngzip_proxied any;\ngzip_vary off;\nadd_header Vary \"Accept-Encoding\" always;\nif ($registry_public_json_gzip) {\n    gzip on;\n}\n"
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "RateLimitPolicy",
+    "metadata": {
+      "name": "bulk",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "name": "bulk"
+        }
+      ],
+      "rateLimit": {
+        "rejectCode": 429,
+        "local": {
+          "rules": [
+            {
+              "key": "$binary_remote_addr",
+              "rate": "600r/m",
+              "burst": 1800,
+              "noDelay": true,
+              "zoneSize": "5m"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "ProxySettingsPolicy",
+    "metadata": {
+      "name": "bulk",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "name": "bulk"
+        }
+      ],
+      "buffering": {
+        "disable": false,
+        "bufferSize": "4k",
+        "buffers": {
+          "number": 4,
+          "size": "4k"
+        }
+      },
+      "timeout": {
+        "connect": "5s",
+        "read": "60s",
+        "send": "60s"
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "RateLimitPolicy",
+    "metadata": {
+      "name": "registry",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "name": "registry"
+        }
+      ],
+      "rateLimit": {
+        "rejectCode": 429,
+        "local": {
+          "rules": [
+            {
+              "key": "$binary_remote_addr",
+              "rate": "180r/m",
+              "burst": 540,
+              "noDelay": true,
+              "zoneSize": "5m"
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "ProxySettingsPolicy",
+    "metadata": {
+      "name": "registry",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "name": "registry"
+        }
+      ],
+      "buffering": {
+        "disable": true,
+        "bufferSize": "4k",
+        "buffers": {
+          "number": 4,
+          "size": "4k"
+        }
+      },
+      "timeout": {
+        "connect": "5s",
+        "read": "60s",
+        "send": "60s"
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "ClientSettingsPolicy",
+    "metadata": {
+      "name": "clients",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRef": {
+        "group": "gateway.networking.k8s.io",
+        "kind": "Gateway",
+        "name": "registry-canary"
+      },
+      "body": {
+        "maxSize": "1m",
+        "timeout": "60s"
+      },
+      "keepAlive": {
+        "time": "60s"
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "HTTPRoute",
+    "metadata": {
+      "name": "fixture-bulk",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "parentRefs": [
+        {
+          "name": "registry-canary",
+          "sectionName": "fixture"
+        }
+      ],
+      "hostnames": [
+        "fixture.gateway-canary.invalid"
+      ],
+      "rules": [
+        {
+          "matches": [
+            {
+              "path": {
+                "type": "Exact",
+                "value": "/v0/servers"
+              }
+            },
+            {
+              "path": {
+                "type": "Exact",
+                "value": "/v0.1/servers"
+              }
+            }
+          ],
+          "backendRefs": [
+            {
+              "name": "fixture",
+              "port": 80
+            }
+          ],
+          "filters": [
+            {
+              "type": "ExtensionRef",
+              "extensionRef": {
+                "group": "gateway.nginx.org",
+                "kind": "SnippetsFilter",
+                "name": "public-read"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "ProxySettingsPolicy",
+    "metadata": {
+      "name": "fixture-bulk",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "name": "fixture-bulk"
+        }
+      ],
+      "buffering": {
+        "disable": false,
+        "bufferSize": "4k",
+        "buffers": {
+          "number": 4,
+          "size": "4k"
+        }
+      },
+      "timeout": {
+        "connect": "5s",
+        "read": "60s",
+        "send": "60s"
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.networking.k8s.io/v1",
+    "kind": "HTTPRoute",
+    "metadata": {
+      "name": "fixture-other",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "parentRefs": [
+        {
+          "name": "registry-canary",
+          "sectionName": "fixture"
+        }
+      ],
+      "hostnames": [
+        "fixture.gateway-canary.invalid"
+      ],
+      "rules": [
+        {
+          "matches": [
+            {
+              "path": {
+                "type": "PathPrefix",
+                "value": "/"
+              }
+            }
+          ],
+          "backendRefs": [
+            {
+              "name": "fixture",
+              "port": 80
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "ProxySettingsPolicy",
+    "metadata": {
+      "name": "fixture-other",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "name": "fixture-other"
+        }
+      ],
+      "buffering": {
+        "disable": true,
+        "bufferSize": "4k",
+        "buffers": {
+          "number": 4,
+          "size": "4k"
+        }
+      },
+      "timeout": {
+        "connect": "5s",
+        "read": "60s",
+        "send": "60s"
+      }
+    }
+  },
+  {
+    "apiVersion": "cert-manager.io/v1",
+    "kind": "Issuer",
+    "metadata": {
+      "name": "fixture-selfsigned",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "selfSigned": {}
+    }
+  },
+  {
+    "apiVersion": "cert-manager.io/v1",
+    "kind": "Certificate",
+    "metadata": {
+      "name": "fixture-tls",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "secretName": "fixture-tls",
+      "dnsNames": [
+        "fixture.gateway-canary.invalid"
+      ],
+      "issuerRef": {
+        "name": "fixture-selfsigned",
+        "kind": "Issuer"
+      },
+      "privateKey": {
+        "rotationPolicy": "Always"
+      },
+      "commonName": "fixture.gateway-canary.invalid",
+      "subject": {
+        "organizations": [
+          "Registry staging canary"
+        ]
+      }
+    }
+  }
+]

@@ -1,0 +1,725 @@
+[
+  {
+    "apiVersion": "policy/v1",
+    "kind": "PodDisruptionBudget",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline-controller",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "selector": {
+        "matchLabels": {
+          "app.kubernetes.io/name": "ingress-nginx",
+          "app.kubernetes.io/instance": "registry-canary-baseline",
+          "app.kubernetes.io/component": "controller"
+        }
+      },
+      "minAvailable": 1
+    }
+  },
+  {
+    "apiVersion": "v1",
+    "kind": "ServiceAccount",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline",
+      "namespace": "registry-gateway-canary"
+    },
+    "automountServiceAccountToken": true
+  },
+  {
+    "apiVersion": "v1",
+    "kind": "ConfigMap",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline-controller",
+      "namespace": "registry-gateway-canary"
+    },
+    "data": {
+      "http-snippet": "\nproxy_cache_path /tmp/registry-read-cache levels=1:2 keys_zone=registry_read_cache:20m max_size=1g inactive=5m use_temp_path=off;\nmap \"$request_method:$uri\" $registry_read_cache_zone {\n    default off;\n    ~^GET:/v0(?:\\.1)?/servers$ registry_read_cache;\n}\nkeepalive_time 60s;\n\n# Public listing responses contain no user-specific data. Leave credentials/cookies uncompressed.\nmap \"$request_method:$host:$uri:$http_authorization:$http_cookie\" $registry_public_json_gzip {\n    default 0;\n    ~^(GET|HEAD):(registry\\.modelcontextprotocol\\.io|prod\\.registry\\.modelcontextprotocol\\.io|staging\\.registry\\.modelcontextprotocol\\.io|fixture\\.gateway-canary\\.invalid):/v0(?:\\.1)?/servers::$ 1;\n}\n",
+      "limit-req-status-code": "429",
+      "location-snippet": "\nproxy_cache $registry_read_cache_zone;\nproxy_cache_key \"$scheme$request_method$host$request_uri\";\nproxy_cache_valid 200 30s;\nproxy_cache_lock on;\nproxy_cache_lock_timeout 5s;\nproxy_cache_background_update on;\nproxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;\nadd_header X-Registry-Cache $upstream_cache_status always;\n\n# Compress the public JSON representation after cache lookup; preserve identity fallback.\ngzip off;\ngzip_types application/json;\ngzip_min_length 1024;\ngzip_comp_level 1;\ngzip_proxied any;\ngzip_vary on;\nif ($registry_public_json_gzip) {\n    gzip on;\n}\n",
+      "log-format-upstream": "$remote_addr - $remote_user [$time_local] \"$request\" $status $body_bytes_sent \"$http_referer\" \"$http_user_agent\" $request_length $request_time [$proxy_upstream_name] [$proxy_alternative_upstream_name] $upstream_addr $upstream_response_length $upstream_response_time $upstream_status $req_id cache_status=\"$upstream_cache_status\" scheme=\"$scheme\" host=\"$host\" ingress_pod=\"$hostname\" upstream_connect_time=\"$upstream_connect_time\" upstream_header_time=\"$upstream_header_time\" completed_at=\"$msec\"",
+      "strict-validate-path-type": "false",
+      "use-forwarded-headers": "false"
+    }
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "ClusterRole",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm"
+      },
+      "name": "registry-canary-baseline"
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "configmaps",
+          "endpoints",
+          "nodes",
+          "pods",
+          "secrets",
+          "namespaces"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "coordination.k8s.io"
+        ],
+        "resources": [
+          "leases"
+        ],
+        "verbs": [
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "nodes"
+        ],
+        "verbs": [
+          "get"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "services"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "networking.k8s.io"
+        ],
+        "resources": [
+          "ingresses"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "events"
+        ],
+        "verbs": [
+          "create",
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "networking.k8s.io"
+        ],
+        "resources": [
+          "ingresses/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "networking.k8s.io"
+        ],
+        "resources": [
+          "ingressclasses"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "discovery.k8s.io"
+        ],
+        "resources": [
+          "endpointslices"
+        ],
+        "verbs": [
+          "list",
+          "watch",
+          "get"
+        ]
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "ClusterRoleBinding",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm"
+      },
+      "name": "registry-canary-baseline"
+    },
+    "roleRef": {
+      "apiGroup": "rbac.authorization.k8s.io",
+      "kind": "ClusterRole",
+      "name": "registry-canary-baseline"
+    },
+    "subjects": [
+      {
+        "kind": "ServiceAccount",
+        "name": "registry-canary-baseline",
+        "namespace": "registry-gateway-canary"
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "Role",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline",
+      "namespace": "registry-gateway-canary"
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "namespaces"
+        ],
+        "verbs": [
+          "get"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "configmaps",
+          "pods",
+          "secrets",
+          "endpoints"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "services"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "networking.k8s.io"
+        ],
+        "resources": [
+          "ingresses"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "networking.k8s.io"
+        ],
+        "resources": [
+          "ingresses/status"
+        ],
+        "verbs": [
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "networking.k8s.io"
+        ],
+        "resources": [
+          "ingressclasses"
+        ],
+        "verbs": [
+          "get",
+          "list",
+          "watch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "coordination.k8s.io"
+        ],
+        "resources": [
+          "leases"
+        ],
+        "resourceNames": [
+          "registry-canary-baseline"
+        ],
+        "verbs": [
+          "get",
+          "update"
+        ]
+      },
+      {
+        "apiGroups": [
+          "coordination.k8s.io"
+        ],
+        "resources": [
+          "leases"
+        ],
+        "verbs": [
+          "create"
+        ]
+      },
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "events"
+        ],
+        "verbs": [
+          "create",
+          "patch"
+        ]
+      },
+      {
+        "apiGroups": [
+          "discovery.k8s.io"
+        ],
+        "resources": [
+          "endpointslices"
+        ],
+        "verbs": [
+          "list",
+          "watch",
+          "get"
+        ]
+      }
+    ]
+  },
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1",
+    "kind": "RoleBinding",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline",
+      "namespace": "registry-gateway-canary"
+    },
+    "roleRef": {
+      "apiGroup": "rbac.authorization.k8s.io",
+      "kind": "Role",
+      "name": "registry-canary-baseline"
+    },
+    "subjects": [
+      {
+        "kind": "ServiceAccount",
+        "name": "registry-canary-baseline",
+        "namespace": "registry-gateway-canary"
+      }
+    ]
+  },
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline-controller-metrics",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "type": "ClusterIP",
+      "ports": [
+        {
+          "name": "metrics",
+          "port": 10254,
+          "protocol": "TCP",
+          "targetPort": "metrics"
+        }
+      ],
+      "selector": {
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/component": "controller"
+      }
+    }
+  },
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "annotations": null,
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline-controller",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "type": "ClusterIP",
+      "ipFamilyPolicy": "SingleStack",
+      "ipFamilies": [
+        "IPv4"
+      ],
+      "ports": [
+        {
+          "name": "http",
+          "port": 80,
+          "protocol": "TCP",
+          "targetPort": "http",
+          "appProtocol": "http"
+        },
+        {
+          "name": "https",
+          "port": 443,
+          "protocol": "TCP",
+          "targetPort": "https",
+          "appProtocol": "https"
+        }
+      ],
+      "selector": {
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/component": "controller"
+      }
+    }
+  },
+  {
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline-controller",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "selector": {
+        "matchLabels": {
+          "app.kubernetes.io/name": "ingress-nginx",
+          "app.kubernetes.io/instance": "registry-canary-baseline",
+          "app.kubernetes.io/component": "controller"
+        }
+      },
+      "replicas": 2,
+      "revisionHistoryLimit": 10,
+      "minReadySeconds": 0,
+      "template": {
+        "metadata": {
+          "labels": {
+            "helm.sh/chart": "ingress-nginx-4.15.1",
+            "app.kubernetes.io/name": "ingress-nginx",
+            "app.kubernetes.io/instance": "registry-canary-baseline",
+            "app.kubernetes.io/version": "1.15.1",
+            "app.kubernetes.io/part-of": "ingress-nginx",
+            "app.kubernetes.io/managed-by": "Helm",
+            "app.kubernetes.io/component": "controller"
+          }
+        },
+        "spec": {
+          "dnsPolicy": "ClusterFirst",
+          "containers": [
+            {
+              "name": "controller",
+              "image": "registry.k8s.io/ingress-nginx/controller:v1.15.1@sha256:594ceea76b01c592858f803f9ff4d2cb40542cae2060410b2c95f75907d659e1",
+              "imagePullPolicy": "IfNotPresent",
+              "lifecycle": {
+                "preStop": {
+                  "exec": {
+                    "command": [
+                      "/wait-shutdown"
+                    ]
+                  }
+                }
+              },
+              "args": [
+                "/nginx-ingress-controller",
+                "--publish-service=$(POD_NAMESPACE)/registry-canary-baseline-controller",
+                "--election-id=registry-canary-baseline",
+                "--controller-class=k8s.io/registry-canary-baseline",
+                "--ingress-class=registry-canary-baseline",
+                "--configmap=$(POD_NAMESPACE)/registry-canary-baseline-controller",
+                "--enable-metrics=true"
+              ],
+              "securityContext": {
+                "runAsNonRoot": true,
+                "runAsUser": 101,
+                "runAsGroup": 82,
+                "allowPrivilegeEscalation": false,
+                "seccompProfile": {
+                  "type": "RuntimeDefault"
+                },
+                "capabilities": {
+                  "drop": [
+                    "ALL"
+                  ],
+                  "add": [
+                    "NET_BIND_SERVICE"
+                  ]
+                },
+                "readOnlyRootFilesystem": false
+              },
+              "env": [
+                {
+                  "name": "POD_NAME",
+                  "valueFrom": {
+                    "fieldRef": {
+                      "fieldPath": "metadata.name"
+                    }
+                  }
+                },
+                {
+                  "name": "POD_NAMESPACE",
+                  "valueFrom": {
+                    "fieldRef": {
+                      "fieldPath": "metadata.namespace"
+                    }
+                  }
+                },
+                {
+                  "name": "LD_PRELOAD",
+                  "value": "/usr/local/lib/libmimalloc.so"
+                }
+              ],
+              "livenessProbe": {
+                "failureThreshold": 5,
+                "httpGet": {
+                  "path": "/healthz",
+                  "port": 10254,
+                  "scheme": "HTTP"
+                },
+                "initialDelaySeconds": 10,
+                "periodSeconds": 10,
+                "successThreshold": 1,
+                "timeoutSeconds": 1
+              },
+              "readinessProbe": {
+                "failureThreshold": 3,
+                "httpGet": {
+                  "path": "/healthz",
+                  "port": 10254,
+                  "scheme": "HTTP"
+                },
+                "initialDelaySeconds": 10,
+                "periodSeconds": 10,
+                "successThreshold": 1,
+                "timeoutSeconds": 1
+              },
+              "ports": [
+                {
+                  "name": "http",
+                  "containerPort": 80,
+                  "protocol": "TCP"
+                },
+                {
+                  "name": "https",
+                  "containerPort": 443,
+                  "protocol": "TCP"
+                },
+                {
+                  "name": "metrics",
+                  "containerPort": 10254,
+                  "protocol": "TCP"
+                }
+              ],
+              "resources": {
+                "limits": {
+                  "ephemeral-storage": "4Gi",
+                  "memory": "1Gi"
+                },
+                "requests": {
+                  "cpu": "500m",
+                  "ephemeral-storage": "2Gi",
+                  "memory": "256Mi"
+                }
+              }
+            }
+          ],
+          "nodeSelector": {
+            "kubernetes.io/os": "linux",
+            "registry-role": "gateway-canary"
+          },
+          "tolerations": [
+            {
+              "effect": "NoSchedule",
+              "key": "registry-role",
+              "operator": "Equal",
+              "value": "gateway-canary"
+            }
+          ],
+          "serviceAccountName": "registry-canary-baseline",
+          "automountServiceAccountToken": true,
+          "terminationGracePeriodSeconds": 300
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "networking.k8s.io/v1",
+    "kind": "IngressClass",
+    "metadata": {
+      "labels": {
+        "helm.sh/chart": "ingress-nginx-4.15.1",
+        "app.kubernetes.io/name": "ingress-nginx",
+        "app.kubernetes.io/instance": "registry-canary-baseline",
+        "app.kubernetes.io/version": "1.15.1",
+        "app.kubernetes.io/part-of": "ingress-nginx",
+        "app.kubernetes.io/managed-by": "Helm",
+        "app.kubernetes.io/component": "controller"
+      },
+      "name": "registry-canary-baseline"
+    },
+    "spec": {
+      "controller": "k8s.io/registry-canary-baseline"
+    }
+  },
+  {
+    "apiVersion": "networking.k8s.io/v1",
+    "kind": "Ingress",
+    "metadata": {
+      "name": "fixture-baseline",
+      "namespace": "registry-gateway-canary",
+      "annotations": {
+        "nginx.ingress.kubernetes.io/proxy-buffering": "on"
+      }
+    },
+    "spec": {
+      "ingressClassName": "registry-canary-baseline",
+      "tls": [
+        {
+          "hosts": [
+            "fixture.gateway-canary.invalid"
+          ],
+          "secretName": "fixture-tls"
+        }
+      ],
+      "rules": [
+        {
+          "host": "fixture.gateway-canary.invalid",
+          "http": {
+            "paths": [
+              {
+                "path": "/",
+                "pathType": "Prefix",
+                "backend": {
+                  "service": {
+                    "name": "fixture",
+                    "port": {
+                      "number": 80
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+]
