@@ -18,7 +18,7 @@ make dev-compose  # Start local registry
 ```
 
 `publish` takes the registry URL from the token saved by `login`, so it accepts no `--registry`
-flag — passing one would be read as the `server.json` path.
+flag — passing one is an unknown-flag error.
 
 ## Architecture
 
