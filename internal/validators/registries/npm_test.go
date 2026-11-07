@@ -182,6 +182,29 @@ func TestValidateNPM_PositivePathMock(t *testing.T) {
 	assert.NoError(t, err, "a version response with the matching mcpName should validate")
 }
 
+func TestValidateNPM_OwnershipMismatchNamesVersion(t *testing.T) {
+	ctx := context.Background()
+	mock := newNPMMock(http.StatusOK, `{"mcpName":"io.github.acme/widget"}`, http.StatusOK)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypeNPM, RegistryBaseURL: mock.URL, Identifier: "demo-pkg", Version: "1.2.3"}
+	err := registries.ValidateNPMPackage(ctx, pkg, "io.github.Acme/widget")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "NPM package 'demo-pkg' version '1.2.3' ownership validation failed")
+	assert.Contains(t, err.Error(), "Expected mcpName 'io.github.Acme/widget', got 'io.github.acme/widget'")
+}
+
+func TestValidateNPM_MissingMCPNameNamesVersion(t *testing.T) {
+	ctx := context.Background()
+	mock := newNPMMock(http.StatusOK, `{"name":"demo-pkg","version":"1.2.3"}`, http.StatusOK)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypeNPM, RegistryBaseURL: mock.URL, Identifier: "demo-pkg", Version: "1.2.3"}
+	err := registries.ValidateNPMPackage(ctx, pkg, "io.github.test/demo")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "NPM package 'demo-pkg' version '1.2.3' is missing required 'mcpName' field")
+}
+
 func TestValidateNPM_RealPackages(t *testing.T) {
 	ctx := context.Background()
 
