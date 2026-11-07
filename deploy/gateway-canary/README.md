@@ -103,7 +103,8 @@ resumes normal image selection.
 ## Monitoring follow-up
 
 See [monitoring.md](monitoring.md) for CRI reconstruction, retry timing semantics,
-query mappings and the local/staging validation commands.
+query mappings and the local/staging validation commands. The completed follow-up
+results are in [monitoring-validation.md](monitoring-validation.md).
 
 ## Qualification status
 

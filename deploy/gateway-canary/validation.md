@@ -93,6 +93,12 @@ minimum of two and maximum of three e2-standard-2 nodes.
 
 ## Remaining cutover gates
 
+This is the original qualification snapshot. The later
+[monitoring follow-up](monitoring-validation.md) closes the parser/timing and
+internal notification-path checks in item 3, inventories actual dashboard/alert
+dependencies, and caps the canary pool at two nodes. Real recipient delivery
+remains pending.
+
 1. Independently qualify Gateway ACME issuance/renewal and a safe IP/DNS handoff.
    Existing certificates currently renew through the retained ingress solver.
    Also adopt cert-manager for internal control/data-plane certificate rotation

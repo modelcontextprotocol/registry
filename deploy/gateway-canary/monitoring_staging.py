@@ -6,6 +6,7 @@ Uses fixture-labelled records and removes each emitter, including on failure.
 """
 import argparse
 import json
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -92,9 +93,14 @@ def main():
         finally:
             run('-n', NS, 'delete', 'pod', name, '--wait=true', '--timeout=60s')
     deadline = time.monotonic() + 60
+    # Deleted exporters may retain their last up=1 sample during lookback.
+    # Raw totals must select live Pod IPs explicitly, not historical series.
+    collectors = get('-n', NS, 'get', 'pods', '-l', 'app=gateway-canary-vector')['items']
+    instances = '|'.join(re.escape(p['status']['podIP'] + ':9598') for p in collectors
+                         if not p['metadata'].get('deletionTimestamp'))
     while True:
-        observed = query('sum(registry_gateway_canary_requests_total{proxy_pod="monitoring-contract"} '
-                         'and on(instance) (up{job="gateway-canary-vector-metrics"} == 1))')
+        observed = query('sum(registry_gateway_canary_requests_total{proxy_pod="monitoring-contract",instance=~'
+                         + json.dumps(instances) + '})')
         if observed and float(observed[0]['value'][1]) == current['registry_gateway_canary_requests_total']:
             break
         assert time.monotonic() < deadline, 'VictoriaMetrics did not reconcile with collectors'
