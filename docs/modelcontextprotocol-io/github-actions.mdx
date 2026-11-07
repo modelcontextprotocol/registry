@@ -92,6 +92,8 @@ jobs:
       #     jq --arg v "$VERSION" '.version = $v' server.json > server.tmp && mv server.tmp server.json
 
       - name: Publish server to MCP Registry
+        # If npm has not shown the new version yet, use `publish --wait 4m` to retry.
+        # Tokens last 5 minutes from login, so keep the login step right before this one.
         run: ./mcp-publisher publish
 ```
 
@@ -172,6 +174,8 @@ jobs:
       #     jq --arg v "$VERSION" '.version = $v' server.json > server.tmp && mv server.tmp server.json
 
       - name: Publish server to MCP Registry
+        # If npm has not shown the new version yet, use `publish --wait 4m` to retry.
+        # Tokens last 5 minutes from login, so keep the login step right before this one.
         run: ./mcp-publisher publish
 ```
 
@@ -251,6 +255,8 @@ jobs:
       #     jq --arg v "$VERSION" '.version = $v' server.json > server.tmp && mv server.tmp server.json
 
       - name: Publish server to MCP Registry
+        # If npm has not shown the new version yet, use `publish --wait 4m` to retry.
+        # Tokens last 5 minutes from login, so keep the login step right before this one.
         run: ./mcp-publisher publish
 ```
 

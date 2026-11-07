@@ -18,8 +18,8 @@ All commands support:
 - `--help`, `-h` - Show command help
 
 `--registry` is a flag on `login` only (default: `https://registry.modelcontextprotocol.io`). The
-other commands read the registry URL from the stored login token, so passing `--registry` to
-`publish` would be interpreted as the `server.json` path.
+other commands read the registry URL from the stored login token, and `publish` rejects
+`--registry` as an unknown flag.
 
 ## Commands
 
@@ -279,11 +279,14 @@ For detailed guidance on the publishing process, see the [publishing guide](../.
 
 **Usage:**
 ```bash
-mcp-publisher publish [PATH]
+mcp-publisher publish [--wait DURATION] [PATH]
 ```
 
 **Options:**
+- `--wait DURATION` - Retry for up to this long (e.g. `4m`) while the package is not visible yet, such as right after `npm publish`. Ownership and configuration errors still fail on the first attempt. Flags must come before `PATH`.
 - `PATH` - Path to server.json (default: `./server.json`)
+
+Registry tokens last 5 minutes and the publisher reads the token once, so the time since `login` counts against `--wait`: log in right before publishing and keep the two under 5 minutes together. If the token expires during the wait, `publish` stops with an error that includes the last validation failure.
 
 **Process:**
 1. Validates `server.json` against schema
@@ -299,6 +302,9 @@ mcp-publisher publish
 
 # Custom file location  
 mcp-publisher publish ./config/server.json
+
+# Wait for a fresh npm release to become visible
+mcp-publisher publish --wait 4m
 ```
 
 ### `mcp-publisher status`
