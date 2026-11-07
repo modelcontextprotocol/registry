@@ -1,0 +1,271 @@
+{
+  "observed_at_utc": "2026-11-07T23:15:52.762376+00:00",
+  "local_contract": {
+    "passed": true,
+    "expected": {
+      "requests_total": 5,
+      "internal_requests_total": 1,
+      "request_duration_seconds_count": 5,
+      "response_bytes_count": 5,
+      "request_bytes_count": 5,
+      "response_body_bytes_count": 5,
+      "upstream_duration_seconds_count": 2,
+      "upstream_duration_seconds_sum": 0.25,
+      "upstream_all_attempts_seconds_count": 3,
+      "upstream_all_attempts_seconds_sum": 0.85,
+      "connect_all_attempts_seconds_count": 3,
+      "connect_all_attempts_seconds_sum": 0.04,
+      "header_all_attempts_seconds_count": 3,
+      "header_all_attempts_seconds_sum": 0.14,
+      "multi_upstream_requests_total": 1,
+      "upstream_timing_errors_total": 1,
+      "parse_errors_total": 1,
+      "cri_errors_total": 2
+    },
+    "cases": [
+      "CRI split marker",
+      "300KB record",
+      "interleaved file/stream",
+      "retry groups and missing timings",
+      "invalid timings",
+      "cache hit",
+      "background refresh",
+      "malformed JSON",
+      "partial timeout",
+      "partial fragment bound"
+    ]
+  },
+  "staging_contract": {
+    "passed": true,
+    "started": 1794093091.7772212,
+    "finished": 1794093127.132628,
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "canary_nodes": [
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "delta": {
+      "registry_gateway_canary_upstream_timing_errors_total": 2.0,
+      "registry_gateway_canary_response_bytes_sum": 2500.0,
+      "registry_gateway_canary_upstream_duration_seconds_sum": 0.5,
+      "registry_gateway_canary_requests_total": 10.0,
+      "registry_gateway_canary_internal_request_duration_seconds_sum": 1.0,
+      "registry_gateway_canary_request_bytes_sum": 1000.0,
+      "registry_gateway_canary_internal_request_duration_seconds_count": 2.0,
+      "registry_gateway_canary_response_body_bytes_count": 10.0,
+      "registry_gateway_canary_internal_response_bytes_sum": 500.0,
+      "registry_gateway_canary_connect_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_request_bytes_count": 10.0,
+      "registry_gateway_canary_request_duration_seconds_count": 10.0,
+      "registry_gateway_canary_internal_requests_total": 2.0,
+      "registry_gateway_canary_response_bytes_count": 10.0,
+      "registry_gateway_canary_cache_responses_total": 10.0,
+      "registry_gateway_canary_upstream_header_seconds_sum": 0.1,
+      "registry_gateway_canary_response_body_bytes_sum": 2000.0,
+      "registry_gateway_canary_upstream_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_header_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_internal_response_bytes_count": 2.0,
+      "registry_gateway_canary_upstream_header_seconds_count": 4.0,
+      "registry_gateway_canary_upstream_connect_seconds_count": 4.0,
+      "registry_gateway_canary_request_duration_seconds_sum": 5.0,
+      "registry_gateway_canary_header_all_attempts_seconds_sum": 0.2800000000000001,
+      "registry_gateway_canary_multi_upstream_requests_total": 2.0,
+      "registry_gateway_canary_connect_all_attempts_seconds_sum": 0.07999999999999999,
+      "registry_gateway_canary_upstream_duration_seconds_count": 4.0,
+      "registry_gateway_canary_upstream_connect_seconds_sum": 0.02,
+      "registry_gateway_canary_upstream_all_attempts_seconds_sum": 1.7000000000000002
+    },
+    "vm_requests": [
+      {
+        "metric": {},
+        "value": [
+          1794093125.744,
+          "20"
+        ]
+      }
+    ],
+    "real_cri_partial_records": true,
+    "emitters_removed": true
+  },
+  "runtime_framing": {
+    "observed_payload_fragment_limit_bytes": 262144,
+    "observed_largest_cri_line_bytes": 262184,
+    "configured_line_limit_bytes": 262400,
+    "configured_max_fragments": 4,
+    "configured_incomplete_timeout_ms": 5000
+  },
+  "notification_proof": {
+    "passed": true,
+    "probe": "monitoring-proof-1794092594",
+    "firing": [
+      {
+        "status": "firing",
+        "alerts": [
+          {
+            "status": "firing",
+            "alertname": "Gateway monitoring delivery proof"
+          }
+        ]
+      }
+    ],
+    "resolved": [
+      {
+        "status": "firing",
+        "alerts": [
+          {
+            "status": "firing",
+            "alertname": "Gateway monitoring delivery proof"
+          }
+        ]
+      },
+      {
+        "status": "resolved",
+        "alerts": [
+          {
+            "status": "resolved",
+            "alertname": "Gateway monitoring delivery proof"
+          }
+        ]
+      }
+    ],
+    "external_notification_sent": false,
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "cleanup_complete": true
+  },
+  "collector_log_rate": {
+    "passed": true,
+    "kind": "Synthetic access-log ingestion, sequentially on each collector; not an HTTP gateway benchmark",
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "runs": [
+      {
+        "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "rate_per_second": 500,
+        "seconds": 60,
+        "expected": 30000,
+        "observed": 30000.0,
+        "vector_average_cores": 0.13939966217686076,
+        "vector_peak_working_set_bytes": 47513600
+      },
+      {
+        "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn",
+        "rate_per_second": 500,
+        "seconds": 60,
+        "expected": 30000,
+        "observed": 30000.0,
+        "vector_average_cores": 0.09211388489341032,
+        "vector_peak_working_set_bytes": 48218112
+      }
+    ]
+  },
+  "victoria_metrics_final_fixture_count": "60020",
+  "dashboards": {
+    "live_panels_match_repository": true,
+    "panels": 16,
+    "queries_successful": 60,
+    "empty_series_queries": 13,
+    "nan_values": 0,
+    "note": "Queries with no matching errors/traffic can be empty or NaN. This is query/data validation, not a browser screenshot."
+  },
+  "production_inventory": {
+    "dashboards": [
+      "Registry Application Dashboard",
+      "Registry Deployment/Critical Issues"
+    ],
+    "alerts": [
+      "Availability dropped below 95%",
+      "Publish Endpoint Latency",
+      "Registry Service Down",
+      "P95 on servers endpoint is above 2s"
+    ],
+    "uses_ingress_nginx_metrics": false,
+    "query_check": [
+      {
+        "title": "Availability dropped below 95%",
+        "status": "success",
+        "series": 1,
+        "values": [
+          "100"
+        ]
+      },
+      {
+        "title": "Publish Endpoint Latency",
+        "status": "success",
+        "series": 1,
+        "values": [
+          "0"
+        ]
+      },
+      {
+        "title": "Registry Service Down",
+        "status": "success",
+        "series": 1,
+        "values": [
+          "1"
+        ]
+      },
+      {
+        "title": "P95 on servers endpoint is above 2s",
+        "status": "success",
+        "series": 6,
+        "values": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    ],
+    "mutated": false
+  },
+  "production_preview": {
+    "create": 2,
+    "update": 2,
+    "same": 188,
+    "gateway_changes": false,
+    "applied": false,
+    "housekeeping": [
+      "Expired ingress admission Jobs",
+      "Grafana empty RBAC rules normalization"
+    ]
+  },
+  "final_state": {
+    "cluster_nodes": 4,
+    "canary_nodes": 2,
+    "canary_autoscaling_min": 2,
+    "canary_autoscaling_max": 2,
+    "healthy_canary_scrape_targets": 7,
+    "parse_errors": 0,
+    "cri_errors": 0,
+    "temporary_resources_removed": true,
+    "vector_requests": {
+      "cpu": "500m",
+      "memory": "128Mi"
+    },
+    "vector_memory_limit": "512Mi",
+    "vector_threads": 1
+  },
+  "limitations": [
+    "Synthetic access records validate retry-list parsing; this is not an upstream-failure routing test.",
+    "The log-rate run is sequential per collector, not a simultaneous HTTP gateway benchmark or full production traffic replay.",
+    "The webhook receipt proves the internal notification path; no external Discord/email delivery was tested.",
+    "Staging had no persistent Grafana alerts before the test and returns to that state.",
+    "No exactly-once delivery guarantee across collector crashes/node loss; local checkpoints and bounded partial buffers retain their documented limits."
+  ]
+}
