@@ -177,15 +177,15 @@ Then add the TXT record using your DNS provider's control panel. It may take sev
 ```bash Ed25519
 MY_DOMAIN="example.com"
 
-PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')"
-mcp-publisher login dns --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
+MCP_PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')" \
+  mcp-publisher login dns --domain "${MY_DOMAIN}"
 ```
 
 ```bash ECDSA P-384
 MY_DOMAIN="example.com"
 
-PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')"
-mcp-publisher login dns --algorithm ecdsap384 --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
+MCP_PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')" \
+  mcp-publisher login dns --algorithm ecdsap384 --domain "${MY_DOMAIN}"
 ```
 
 ```bash Google KMS
@@ -206,6 +206,10 @@ mcp-publisher login dns azure-key-vault --domain="${MY_DOMAIN}" --vault "${MY_KE
 ```
 
 </CodeGroup>
+
+<Note>
+  The examples above pass the hex key through the `MCP_PRIVATE_KEY` environment variable, which keeps it off the command line where other processes on the machine can see it. You can also write the hex key to a file and pass `--private-key-file key.hex` (the file holds the hex key, not the PEM file), or pass it directly with `--private-key`. `--private-key` and `--private-key-file` are mutually exclusive; either one overrides `MCP_PRIVATE_KEY`.
+</Note>
 
 ## HTTP Authentication
 
@@ -302,14 +306,14 @@ Then host the `mcp-registry-auth` file at `/.well-known/mcp-registry-auth` on yo
 
 ```bash Ed25519
 MY_DOMAIN="example.com"
-PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')"
-mcp-publisher login http --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
+MCP_PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')" \
+  mcp-publisher login http --domain "${MY_DOMAIN}"
 ```
 
 ```bash ECDSA P-384
 MY_DOMAIN="example.com"
-PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')"
-mcp-publisher login http --algorithm ecdsap384 --domain "${MY_DOMAIN}" --private-key "${PRIVATE_KEY}"
+MCP_PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')" \
+  mcp-publisher login http --algorithm ecdsap384 --domain "${MY_DOMAIN}"
 ```
 
 ```bash Google KMS
@@ -330,6 +334,10 @@ mcp-publisher login http azure-key-vault --domain="${MY_DOMAIN}" --vault "${MY_K
 ```
 
 </CodeGroup>
+
+<Note>
+  As with DNS authentication, the examples above pass the key through `MCP_PRIVATE_KEY`; `--private-key-file key.hex` works too.
+</Note>
 
 ### Troubleshooting failed HTTP verification
 
