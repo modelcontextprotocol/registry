@@ -376,12 +376,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (component_id)(rate(component_errors_total{job=\"gateway-canary-vector-metrics\"}[5m]))",
+          "expr": "sum by (component_id)(rate(vector_component_errors_total{job=\"gateway-canary-vector-metrics\"}[5m]))",
           "legendFormat": "component_errors_total {{component_id}}"
         },
         {
           "refId": "B",
-          "expr": "sum by (component_id)(rate(component_discarded_events_total{job=\"gateway-canary-vector-metrics\"}[5m]))",
+          "expr": "sum by (component_id)(rate(vector_component_discarded_events_total{job=\"gateway-canary-vector-metrics\",intentional=\"false\"}[5m]))",
           "legendFormat": "component_discarded_events_total {{component_id}}"
         }
       ]

@@ -50,7 +50,7 @@ def metrics(addresses):
     for address in addresses:
         with urllib.request.urlopen(address, timeout=2) as response:
             for line in response.read().decode().splitlines():
-                if line.startswith('registry_gateway_canary_'):
+                if line.startswith(('registry_gateway_canary_', 'vector_component_')):
                     name = line.split('{', 1)[0].split(' ')[0]
                     result[name] = result.get(name, 0.0) + float(line.rsplit(' ', 1)[1])
     return result
@@ -121,6 +121,7 @@ def main():
                     values = metrics(addresses)
                     try:
                         check(values, expected)
+                        assert values.get('vector_component_errors_total', 0) > 0, 'Internal parser error metric missing'
                         break
                     except AssertionError:
                         if time.monotonic() >= deadline:
