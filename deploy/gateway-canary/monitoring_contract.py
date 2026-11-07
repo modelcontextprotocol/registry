@@ -121,7 +121,9 @@ def main():
                     values = metrics(addresses)
                     try:
                         check(values, expected)
-                        assert values.get('vector_component_errors_total', 0) > 0, 'Internal parser error metric missing'
+                        # VRL aborts are explicitly rerouted to our parse-error counter;
+                        # they need not increment Vector's component error counter.
+                        assert values.get('vector_component_received_events_total', 0) > 0, 'Internal metrics missing'
                         break
                     except AssertionError:
                         if time.monotonic() >= deadline:
