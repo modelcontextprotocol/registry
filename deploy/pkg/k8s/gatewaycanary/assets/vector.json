@@ -8,7 +8,7 @@
       ],
       "read_from": "beginning",
       "glob_minimum_cooldown_ms": 250,
-      "max_line_bytes": 65536,
+      "max_line_bytes": 262400,
       "max_read_bytes": 262144
     },
     "internal": {
@@ -340,7 +340,7 @@
       "ends_when": ".flag == \"F\"",
       "expire_after_ms": 5000,
       "flush_period_ms": 250,
-      "max_events": 16,
+      "max_events": 4,
       "merge_strategies": {
         "message": "concat_raw",
         "flag": "retain",

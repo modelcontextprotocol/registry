@@ -9,7 +9,7 @@
     "dashboard.json": "aaea111be44ac35400aa7344760ac5be5a0b2ea08c4b67960c38c1b51ea7883f",
     "fixture.json": "465ba9db8d3f6ff5f5013566538c122f01f19f4c6ac5cfccf6101c0608674028",
     "routes.json": "8e08ea9e72925e13a1b1bad2ab5fbdb22022f2dfd4971a74e7f71245b17895bc",
-    "vector.json": "5ea5a6a1824e7c641d03dfa78aecda77e7d4eabc5fb4a5657263bbeb2805cbd5"
+    "vector.json": "5629979cbf0e0e782ec915566e4026d45eaa4b68ec05aa70cecfef50fa6b32b7"
   },
   "fixture_payload_sha256": "62ec9f4018816e49f5ed83776951b5d053b1d6d2675b37699fc8d2ed6cbff43f",
   "baseline_chart": "ingress-nginx/ingress-nginx:4.15.1",

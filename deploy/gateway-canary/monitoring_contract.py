@@ -31,7 +31,7 @@ def corpus():
     return [record(), record(upstream_time='0.1, 0.2 : 0.3', connect='0.01, - : 0.02', header='-, 0.04 : 0.05'),
             record(upstream_time='-', connect='-', header='-', cache='HIT'),
             record(upstream_time='garbage', connect='-1', header='bad'),
-            record(uri='/v0.1/servers?long=' + 'x' * 48000),
+            record(uri='/v0.1/servers?long=' + 'x' * 300000),
             record(request_bytes='0')]
 
 
@@ -97,16 +97,16 @@ def main():
                     b.write(cri(rows[1])); b.flush()
                     a.write(cri('unrelated stderr message', stream='stderr'))
                     a.write(cri(rows[0][12:])); a.write(cri(rows[2])); a.write(cri(rows[3]))
-                    for offset in range(0, len(rows[4]), 16000):
-                        part = rows[4][offset:offset+16000]
-                        a.write(cri(part, 'F' if offset+16000 >= len(rows[4]) else 'P'))
+                    for offset in range(0, len(rows[4]), 131072):
+                        part = rows[4][offset:offset+131072]
+                        a.write(cri(part, 'F' if offset+131072 >= len(rows[4]) else 'P'))
                     a.write(cri(rows[5])); a.write(cri('{"kind":"registry_access",broken}'))
                     a.flush()
                 # A never-finished record must expire visibly, not count as a request.
                 (root / 'orphan.log').write_text(cri(rows[0][:30], 'P'))
                 # A runaway fragment sequence must flush at the configured bound.
                 (root / 'bounded.log').write_text(cri('{"kind":"registry_access",', 'P')
-                                                  + cri('x' * 16000, 'P') * 15)
+                                                  + cri('x' * 60000, 'P') * 3)
                 expected = {'requests_total': 5, 'internal_requests_total': 1,
                             'request_duration_seconds_count': 5, 'response_bytes_count': 5,
                             'request_bytes_count': 5, 'response_body_bytes_count': 5,
@@ -130,7 +130,7 @@ def main():
                             raise
                         time.sleep(0.25)
                 result = {'passed': True, 'expected': expected,
-                          'cases': ['CRI split marker', '48KB record', 'interleaved file/stream',
+                          'cases': ['CRI split marker', '300KB record', 'interleaved file/stream',
                                     'retry groups and missing timings', 'invalid timings',
                                     'cache hit', 'background refresh', 'malformed JSON',
                                     'partial timeout', 'partial fragment bound']}

@@ -50,7 +50,7 @@ def main():
     for index, node in enumerate(canary):
         name = f'monitoring-contract-{index}'
         manifest = {'apiVersion': 'v1', 'kind': 'Pod', 'metadata': {'name': name, 'namespace': NS}, 'spec': {
-            'nodeName': node, 'restartPolicy': 'Never', 'automountServiceAccountToken': False,
+            'nodeName': node, 'restartPolicy': 'Never', 'automountServiceAccountToken': False, 'terminationGracePeriodSeconds': 1,
             'tolerations': [{'key': 'registry-role', 'operator': 'Equal', 'value': 'gateway-canary', 'effect': 'NoSchedule'}],
             'containers': [{'name': 'nginx', 'image': IMAGE, 'command': ['python3', '-u', '-c', 'import time; time.sleep(600)'],
                             'resources': {'requests': {'cpu': '10m', 'memory': '24Mi'}, 'limits': {'cpu': '100m', 'memory': '64Mi'}},
@@ -67,9 +67,10 @@ def main():
                              if p['spec']['nodeName'] == node and not p['metadata'].get('deletionTimestamp'))
             uid = get('-n', NS, 'get', 'pod', name)['metadata']['uid']
             log_path = f'/var/log/pods/{NS}_{name}_{uid}/nginx/0.log'
+            time.sleep(2)
             framing = run('-n', NS, 'exec', collector, '--', 'sh', '-c',
                           'awk \'{print $3}\' "$1"', 'sh', log_path).stdout.splitlines()
-            assert 'P' in framing, 'Expected actual CRI partial records for the long message'
+            assert 'P' in framing, ('Expected actual CRI partial records for the long message', framing)
             deadline = time.monotonic() + 30
             while True:
                 current = totals()

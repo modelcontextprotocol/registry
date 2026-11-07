@@ -10,9 +10,10 @@ two nodes. Managed GKE upgrades retain their existing temporary surge policy.
 Vector reconstructs CRI `P`/`F` fragments **before** looking for the access-record
 marker. Groups are separated by file and stream; concatenation adds no bytes.
 Complete records flush immediately. Incomplete groups expire after five seconds
-or 16 fragments and increment `registry_gateway_canary_cri_errors_total`.
-The file source retains its 64 KiB per-fragment limit: buffered messages are
-bounded to at most 1 MiB per active file/stream group. This is not an unbounded
+or four fragments and increment `registry_gateway_canary_cri_errors_total`.
+GKE emits fragments up to 256 KiB plus their CRI envelope. The file source
+allows 262,400 bytes per fragment (payload plus envelope), bounding buffered
+messages to 1,049,600 bytes per active file/stream group. This is not an unbounded
 log buffer. A missing tail cannot be recovered; it is reported instead of counted
 as an HTTP request. Vector's internal error/discard counters must also be monitored.
 
@@ -90,7 +91,37 @@ synthetic timings to exercise error telemetry; coordinate this with any active
 error notifications. It does not simulate an actual failing upstream or claim
 notification delivery just because a PromQL expression returns a result.
 
-Before merging, inventory the live dashboards and alert rules, validate their
-mapped queries, and exercise firing/resolution through Grafana's evaluator and
-notification path. Real recipient delivery requires an explicitly approved test;
-an internal webhook receipt alone does not prove delivery to a person's inbox.
+For an isolated notification-path test, run:
+
+```sh
+python3 gateway-canary/notification_staging.py --output /tmp/notification-staging.json
+```
+
+This creates a temporary internal webhook receiver on an existing canary node,
+then file-provisions a test Grafana rule and contact point. Synthetic access
+records drive both firing and resolution through the real collectors,
+VictoriaMetrics, Grafana evaluator and webhook sender. Three Grafana rolling
+restarts install the proof, provision explicit deletion of the rule/contact,
+and remove the temporary mount. Guarded patches refuse to overwrite a concurrent
+deployment. If cleanup fails, use the output's `.journal.json` to inspect the
+original and proof templates; do not blindly overwrite a newer deployment.
+No notification policy is rewritten and no external recipient is contacted.
+
+The live inventory taken for this follow-up found:
+
+| Environment | Dashboards | Grafana alerts | Routing |
+| --- | --- | --- | --- |
+| Staging | Provisioned Gateway Canary dashboard | None before the proof | Default email contact; SMTP unconfigured |
+| Production (read-only inventory) | Registry Application Dashboard; Registry Deployment/Critical Issues | Availability below 95%; publish latency; service down; server-list p95 above 2s | Existing Registry Dev Discord contact |
+
+All four production rules use `mcp_registry_*` application metrics. The two
+production dashboards use application metrics, Kubernetes events and resource
+metrics. None references `nginx_ingress_controller_*`, so there is no existing
+ingress-metric query to rewrite. The application metrics and production
+notification configuration remain authoritative. Edge metrics supplement them
+with cache-hit visibility and gateway/collector health; they do not replace them.
+
+An internal webhook receipt does not prove delivery to Discord or a person's
+inbox. External recipient testing remains a separate cutover check. Staging's
+absence of persistent Grafana alerts is pre-existing; deleting the temporary
+proof restores that state rather than claiming to establish on-call coverage.
