@@ -27,7 +27,7 @@
     "access_only": {
       "type": "filter",
       "inputs": [
-        "access"
+        "cri_complete"
       ],
       "condition": "contains(to_string(.message) ?? \"\", \"registry_access\")"
     },
@@ -36,7 +36,7 @@
       "inputs": [
         "access_only"
       ],
-      "source": "# NGF emits explicit JSON fields; retain the same normalized metric contract.\nraw = string!(.message)\nif !starts_with(raw, \"{\") {\n  envelope = parse_regex!(raw, r'^\\S+ (?:stdout|stderr) F (?P<json>\\{.*\\})$')\n  raw = string!(envelope.json)\n}\np = object!(parse_json!(raw))\nassert!(p.kind == \"registry_access\", \"wrong access record\")\npath = string!(split(string!(p.uri), \"?\")[0])\nroute = \"other\"\nif path == \"/v0/servers\" { route = \"list_v0\" }\nif path == \"/v0.1/servers\" { route = \"list_v01\" }\nif starts_with(path, \"/v0/servers/\") { route = \"detail_v0\" }\nif starts_with(path, \"/v0.1/servers/\") { route = \"detail_v01\" }\nif starts_with(path, \"/v0/auth/\") || starts_with(path, \"/v0.1/auth/\") { route = \"auth\" }\nif p.host == \"grafana.staging.registry.modelcontextprotocol.io\" { route = \"grafana\" }\ntraffic = if p.host == \"fixture.gateway-canary.invalid\" { \"fixture\" } else if route == \"grafana\" { \"grafana\" } else { \"registry\" }\nmethod = if includes([\"GET\", \"HEAD\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\", \"OPTIONS\"], p.method) { p.method } else { \"OTHER\" }\ncache = if includes([\"HIT\", \"MISS\", \"STALE\", \"UPDATING\", \"BYPASS\", \"EXPIRED\", \"REVALIDATED\"], p.cache) { p.cache } else { \"NONE\" }\nstatus = to_int!(p.status)\nassert!(status >= 100 && status <= 599, \"invalid HTTP status\")\nelapsed = to_float!(p.duration)\nassert!(elapsed >= 0, \"invalid duration\")\n. = {\"traffic\": traffic, \"one\": 1, \"route\": route, \"proxy_pod\": p.proxy_pod, \"method\": method,\n     \"status\": p.status, \"cache\": cache, \"duration_seconds\": elapsed,\n     \"body_bytes\": to_int!(p.body_bytes), \"request_bytes\": to_int!(p.request_bytes)}\n# Missing timings and retry lists are not zero-duration upstream observations.\n# This matches the single-numeric observation subset; retry parity remains a gate.\nupstream = to_float(p.upstream_time) ?? -1.0\nconnect = to_float(p.connect) ?? -1.0\nheader = to_float(p.header) ?? -1.0\nif upstream >= 0 { .upstream_seconds = upstream }\nif connect >= 0 { .connect_seconds = connect }\nif header >= 0 { .header_seconds = header }\n\n# Backward-compatible parsing never substitutes body size for bytes including headers.\nif !is_null(p.response_bytes) { .response_bytes = to_int!(p.response_bytes) }\n",
+      "source": "# NGF emits explicit JSON fields; retain the same normalized metric contract.\nraw = string!(.message)\np = object!(parse_json!(raw))\nassert!(p.kind == \"registry_access\", \"wrong access record\")\npath = string!(split(string!(p.uri), \"?\")[0])\nroute = \"other\"\nif path == \"/v0/servers\" { route = \"list_v0\" }\nif path == \"/v0.1/servers\" { route = \"list_v01\" }\nif starts_with(path, \"/v0/servers/\") { route = \"detail_v0\" }\nif starts_with(path, \"/v0.1/servers/\") { route = \"detail_v01\" }\nif starts_with(path, \"/v0/auth/\") || starts_with(path, \"/v0.1/auth/\") { route = \"auth\" }\nif p.host == \"grafana.staging.registry.modelcontextprotocol.io\" { route = \"grafana\" }\ntraffic = if p.host == \"fixture.gateway-canary.invalid\" { \"fixture\" } else if route == \"grafana\" { \"grafana\" } else { \"registry\" }\nmethod = if includes([\"GET\", \"HEAD\", \"POST\", \"PUT\", \"PATCH\", \"DELETE\", \"OPTIONS\"], p.method) { p.method } else { \"OTHER\" }\ncache = if includes([\"HIT\", \"MISS\", \"STALE\", \"UPDATING\", \"BYPASS\", \"EXPIRED\", \"REVALIDATED\"], p.cache) { p.cache } else { \"NONE\" }\nstatus = to_int!(p.status)\nassert!(status >= 100 && status <= 599, \"invalid HTTP status\")\nelapsed = to_float!(p.duration)\nassert!(elapsed >= 0, \"invalid duration\")\n. = {\"traffic\": traffic, \"one\": 1, \"route\": route, \"proxy_pod\": p.proxy_pod, \"method\": method,\n     \"status\": p.status, \"cache\": cache, \"duration_seconds\": elapsed,\n     \"body_bytes\": to_int!(p.body_bytes), \"request_bytes\": to_int!(p.request_bytes)}\n# Preserve ingress-nginx single-numeric timing semantics.\n# Retry-aware totals below are separate, so historical histograms keep their meaning.\nupstream = to_float(p.upstream_time) ?? -1.0\nconnect = to_float(p.connect) ?? -1.0\nheader = to_float(p.header) ?? -1.0\nif upstream >= 0 { .upstream_seconds = upstream }\nif connect >= 0 { .connect_seconds = connect }\nif header >= 0 { .header_seconds = header }\n\n# Backward-compatible parsing never substitutes body size for bytes including headers.\nif !is_null(p.response_bytes) { .response_bytes = to_int!(p.response_bytes) }\n\n# NGINX separates attempts with commas, and upstream groups with colons.\n# Sum measured attempts per request; missing values are never invented as zero.\nvalues = split(replace(to_string(p.upstream_time) ?? \"-\", \":\", \",\"), \",\")\ntotal = 0.0\nmeasured = 0\ninvalid = false\nfor_each(values) -> |_index, value| {\n  token = strip_whitespace(value)\n  if token != \"-\" {\n    number, err = to_float(token)\n    if err != null || number < 0 { invalid = true } else { total = total + number; measured = measured + 1 }\n  }\n}\nif invalid { .timing_error = 1 } else if measured > 0 { .upstream_all_seconds = total }\nif !invalid && length(values) > 1 { .retried = 1 }\nvalues = split(replace(to_string(p.connect) ?? \"-\", \":\", \",\"), \",\")\ntotal = 0.0\nmeasured = 0\ninvalid = false\nfor_each(values) -> |_index, value| {\n  token = strip_whitespace(value)\n  if token != \"-\" {\n    number, err = to_float(token)\n    if err != null || number < 0 { invalid = true } else { total = total + number; measured = measured + 1 }\n  }\n}\nif invalid { .timing_error = 1 } else if measured > 0 { .connect_all_seconds = total }\nvalues = split(replace(to_string(p.header) ?? \"-\", \":\", \",\"), \",\")\ntotal = 0.0\nmeasured = 0\ninvalid = false\nfor_each(values) -> |_index, value| {\n  token = strip_whitespace(value)\n  if token != \"-\" {\n    number, err = to_float(token)\n    if err != null || number < 0 { invalid = true } else { total = total + number; measured = measured + 1 }\n  }\n}\nif invalid { .timing_error = 1 } else if measured > 0 { .header_all_seconds = total }\n",
       "drop_on_error": true,
       "drop_on_abort": true,
       "reroute_dropped": true
@@ -317,6 +317,184 @@
           }
         }
       ]
+    },
+    "cri": {
+      "type": "remap",
+      "inputs": [
+        "access"
+      ],
+      "drop_on_error": true,
+      "drop_on_abort": true,
+      "reroute_dropped": true,
+      "source": "# Reassemble before inspecting JSON: the marker itself may span CRI records.\nraw = string!(.message)\n.stream = \"stdout\"\n.flag = \"F\"\nif !starts_with(raw, \"{\") {\n  envelope = parse_regex!(raw, r'^\\S+ (?P<stream>stdout|stderr) (?P<flag>[PF]) (?P<body>.*)$')\n  .message = envelope.body\n  .stream = envelope.stream\n  .flag = envelope.flag\n}\n.fragments = 1\n"
+    },
+    "cri_join": {
+      "type": "reduce",
+      "inputs": [
+        "cri"
+      ],
+      "group_by": [
+        "file",
+        "stream"
+      ],
+      "ends_when": ".flag == \"F\"",
+      "expire_after_ms": 5000,
+      "flush_period_ms": 250,
+      "max_events": 16,
+      "merge_strategies": {
+        "message": "concat_raw",
+        "flag": "retain",
+        "fragments": "sum"
+      }
+    },
+    "cri_complete": {
+      "type": "filter",
+      "inputs": [
+        "cri_join"
+      ],
+      "condition": ".flag == \"F\""
+    },
+    "cri_incomplete": {
+      "type": "filter",
+      "inputs": [
+        "cri_join"
+      ],
+      "condition": ".flag != \"F\""
+    },
+    "cri_errors": {
+      "type": "log_to_metric",
+      "inputs": [
+        "cri.dropped",
+        "cri_incomplete"
+      ],
+      "metrics": [
+        {
+          "type": "counter",
+          "field": "message",
+          "name": "registry_gateway_canary_cri_errors_total"
+        }
+      ]
+    },
+    "upstream_all": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.upstream_all_seconds)"
+    },
+    "upstream_all_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "upstream_all"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "upstream_all_seconds",
+          "name": "registry_gateway_canary_upstream_all_attempts_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "connect_all": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.connect_all_seconds)"
+    },
+    "connect_all_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "connect_all"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "connect_all_seconds",
+          "name": "registry_gateway_canary_connect_all_attempts_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "header_all": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.header_all_seconds)"
+    },
+    "header_all_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "header_all"
+      ],
+      "metrics": [
+        {
+          "type": "histogram",
+          "field": "header_all_seconds",
+          "name": "registry_gateway_canary_header_all_attempts_seconds",
+          "tags": {
+            "proxy_pod": "{{ proxy_pod }}",
+            "route": "{{ route }}",
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "retried": {
+      "type": "filter",
+      "inputs": [
+        "clients"
+      ],
+      "condition": "exists(.retried)"
+    },
+    "retried_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "retried"
+      ],
+      "metrics": [
+        {
+          "type": "counter",
+          "field": "retried",
+          "name": "registry_gateway_canary_multi_upstream_requests_total",
+          "tags": {
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
+    },
+    "timing_errors": {
+      "type": "filter",
+      "inputs": [
+        "parse"
+      ],
+      "condition": "exists(.timing_error)"
+    },
+    "timing_errors_metric": {
+      "type": "log_to_metric",
+      "inputs": [
+        "timing_errors"
+      ],
+      "metrics": [
+        {
+          "type": "counter",
+          "field": "timing_error",
+          "name": "registry_gateway_canary_upstream_timing_errors_total",
+          "tags": {
+            "traffic": "{{ traffic }}"
+          }
+        }
+      ]
     }
   },
   "sinks": {
@@ -330,7 +508,13 @@
         "internal_health",
         "upstream_seconds_metric",
         "connect_seconds_metric",
-        "header_seconds_metric"
+        "header_seconds_metric",
+        "upstream_all_metric",
+        "connect_all_metric",
+        "header_all_metric",
+        "retried_metric",
+        "timing_errors_metric",
+        "cri_errors"
       ],
       "address": "0.0.0.0:9598",
       "buckets": [

@@ -170,7 +170,7 @@
     },
     {
       "id": 8,
-      "title": "Parse errors",
+      "title": "Parse / CRI / timing errors per second",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
@@ -185,8 +185,23 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(registry_gateway_canary_parse_errors_total) or vector(0)",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "expr": "sum(rate(registry_gateway_canary_parse_errors_total[5m])) or vector(0)",
+          "legendFormat": "parse_errors"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(registry_gateway_canary_cri_errors_total[5m])) or vector(0)",
+          "legendFormat": "cri_errors"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate(registry_gateway_canary_upstream_timing_errors_total[5m])) or vector(0)",
+          "legendFormat": "upstream_timing_errors"
+        },
+        {
+          "refId": "D",
+          "expr": "sum(rate(registry_gateway_canary_response_bytes_missing_total[5m])) or vector(0)",
+          "legendFormat": "response_bytes_missing"
         }
       ]
     },
@@ -209,6 +224,165 @@
           "refId": "A",
           "expr": "up{job=~\"gateway-canary-.*\"}",
           "legendFormat": "{{route}} {{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "p95 upstream time summed across measured attempts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_upstream_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "{{route}} {{status}} {{component_id}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Requests with multiple upstream attempts / groups per second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(registry_gateway_canary_multi_upstream_requests_total{traffic=\"$traffic\"}[5m])) or vector(0)",
+          "legendFormat": "{{route}} {{status}} {{component_id}}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "p95 connection time summed across measured attempts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_connect_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "{{route}} {{status}} {{component_id}}"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "p95 header time summed across measured attempts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 48,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_header_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "{{route}} {{status}} {{component_id}}"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "p95 request bytes",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 48,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_request_bytes_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "{{route}} {{status}} {{component_id}}"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "HTTP status / second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status)(rate(registry_gateway_canary_requests_total{traffic=\"$traffic\"}[5m]))",
+          "legendFormat": "{{route}} {{status}} {{component_id}}"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "Collector errors / discarded events per second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 56,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (component_id)(rate(component_errors_total{job=\"gateway-canary-vector-metrics\"}[5m]))",
+          "legendFormat": "component_errors_total {{component_id}}"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (component_id)(rate(component_discarded_events_total{job=\"gateway-canary-vector-metrics\"}[5m]))",
+          "legendFormat": "component_discarded_events_total {{component_id}}"
         }
       ]
     }
