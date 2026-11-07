@@ -21,7 +21,7 @@ func createGatewayCanary(ctx *pulumi.Context, cluster *container.Cluster, projec
 	pool, err := container.NewNodePool(ctx, "registry-gateway-canary-nodepool", &container.NodePoolArgs{
 		Name: pulumi.String("registry-gateway-canary"), Cluster: cluster.Name, Project: pulumi.String(project), Location: pulumi.String(zone), NodeCount: pulumi.Int(2),
 		NodeConfig:  &container.NodePoolNodeConfigArgs{MachineType: pulumi.String("e2-standard-2"), DiskSizeGb: pulumi.Int(50), DiskType: pulumi.String("pd-balanced"), Labels: pulumi.StringMap{"registry-role": pulumi.String("gateway-canary")}, Taints: container.NodePoolNodeConfigTaintArray{&container.NodePoolNodeConfigTaintArgs{Key: pulumi.String("registry-role"), Value: pulumi.String("gateway-canary"), Effect: pulumi.String("NO_SCHEDULE")}}},
-		Autoscaling: &container.NodePoolAutoscalingArgs{MinNodeCount: pulumi.Int(2), MaxNodeCount: pulumi.Int(3)}, Management: &container.NodePoolManagementArgs{AutoRepair: pulumi.Bool(true), AutoUpgrade: pulumi.Bool(true)}, UpgradeSettings: &container.NodePoolUpgradeSettingsArgs{Strategy: pulumi.String("SURGE"), MaxSurge: pulumi.Int(1), MaxUnavailable: pulumi.Int(0)},
+		Autoscaling: &container.NodePoolAutoscalingArgs{MinNodeCount: pulumi.Int(2), MaxNodeCount: pulumi.Int(2)}, Management: &container.NodePoolManagementArgs{AutoRepair: pulumi.Bool(true), AutoUpgrade: pulumi.Bool(true)}, UpgradeSettings: &container.NodePoolUpgradeSettingsArgs{Strategy: pulumi.String("SURGE"), MaxSurge: pulumi.Int(1), MaxUnavailable: pulumi.Int(0)},
 	}, append(opts, pulumi.IgnoreChanges([]string{"nodeCount"}))...)
 	if err != nil {
 		return nil, nil, err

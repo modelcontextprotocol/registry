@@ -17,7 +17,7 @@ extraction.
 ## Isolation and cost
 
 A separate tainted pool starts with two e2-standard-2 workers, autoscaling at most
-three (node upgrades can temporarily surge). Two NGINX replicas can scale to
+two (node upgrades can temporarily surge). Two NGINX replicas can scale to
 four. Each eligible node runs one single-threaded Vector collector requesting
 500m CPU; proxy replicas request 500m. The controller requests 100m; the temporary fixture requests 100m when enabled. These are canary starting budgets, not approved production
 sizing. The original staging worker/database pool, ingress, IP and storage stay
@@ -99,6 +99,11 @@ No image pin, release-wrapper or workflow dispatch mode is introduced. For local
 qualification only, `REGISTRY_STAGING_IMAGE` can select the already built release
 digest without persisting a staging configuration pin. A later normal main push
 resumes normal image selection.
+
+## Monitoring follow-up
+
+See [monitoring.md](monitoring.md) for CRI reconstruction, retry timing semantics,
+query mappings and the local/staging validation commands.
 
 ## Qualification status
 
