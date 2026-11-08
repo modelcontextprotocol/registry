@@ -29,8 +29,8 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 		"ingressShim": pulumi.Map{"defaultIssuerName": pulumi.String("letsencrypt-prod"), "defaultIssuerKind": pulumi.String("ClusterIssuer")},
 	}
 	if gatewaycanary.NativeCertificates(ctx) {
-		// cert-manager 1.18 uses enableGatewayAPI (renamed in newer releases).
-		values["config"] = pulumi.Map{"apiVersion": pulumi.String("controller.config.cert-manager.io/v1alpha1"), "kind": pulumi.String("ControllerConfiguration"), "enableGatewayAPI": pulumi.Bool(true)}
+		// Use the supported flag without introducing a Helm ConfigMap output reference.
+		values["extraArgs"] = pulumi.StringArray{pulumi.String("--enable-gateway-api")}
 	}
 	// Install cert-manager for TLS certificates
 	certManager, err := helm.NewChart(ctx, "cert-manager", helm.ChartArgs{
