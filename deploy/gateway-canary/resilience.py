@@ -45,6 +45,7 @@ def wait_measurement(load, timeout, grace=10):
         try:
             os.killpg(load.pid, signal.SIGTERM)
         except ProcessLookupError:
+            # The process group may already have exited before this signal.
             pass
         # Keep the leader unreaped until descendants have been killed: its PID
         # cannot be reused as an unrelated process-group ID in this interval.
@@ -52,6 +53,7 @@ def wait_measurement(load, timeout, grace=10):
         try:
             os.killpg(load.pid, signal.SIGKILL)
         except ProcessLookupError:
+            # The process group may already have exited before this signal.
             pass
         return load.wait(timeout=grace), True
 
@@ -216,6 +218,8 @@ def main():
             report['measurement_exit'], timed_out = wait_measurement(load, args.seconds + 100)
             if timed_out:
                 failure = failure or 'Measurement timed out; local process group terminated'
+            if timed_out or report['measurement_exit'] != 0:
+                # An early driver/exec failure can leave its remote generator alive.
                 stop_remote_load(epoch)
                 report['remote_load_stopped'] = True
         except Exception as error:
