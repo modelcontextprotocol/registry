@@ -24,6 +24,13 @@ func Enabled(ctx *pulumi.Context) bool {
 
 func Validate(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
+	mode := PublicCertificates(ctx)
+	if mode != "" && (mode != "adopt" && mode != "managed" || !NativeCertificates(ctx)) {
+		return fmt.Errorf("public Gateway certificates require native renewal and adopt/managed mode")
+	}
+	if ManagedMTLS(ctx) && !NativeCertificates(ctx) {
+		return fmt.Errorf("managed Gateway mTLS requires native staging certificates")
+	}
 	if err := validateHandoff(ctx); err != nil {
 		return err
 	}
@@ -48,7 +55,7 @@ func objects(file string) ([]map[string]any, error) {
 
 // The upstream Helm render is registered as individual resources: all fixed
 // identities and inputs are visible in saved plans, without Helm output-ID holes.
-func register(ctx *pulumi.Context, provider *kubernetes.Provider, o map[string]any, dependencies []pulumi.Resource) (*apiextensions.CustomResource, error) {
+func register(ctx *pulumi.Context, provider *kubernetes.Provider, o map[string]any, dependencies []pulumi.Resource, extra ...pulumi.ResourceOption) (*apiextensions.CustomResource, error) {
 	meta := o["metadata"].(map[string]any)
 	name := meta["name"].(string)
 	ns, _ := meta["namespace"].(string)
@@ -62,7 +69,7 @@ func register(ctx *pulumi.Context, provider *kubernetes.Provider, o map[string]a
 	}
 	resourceName := "gateway-canary-" + strings.ToLower(o["kind"].(string)) + "-" + ns + "-" + name
 	var result apiextensions.CustomResource
-	err := ctx.RegisterResource("kubernetes:"+api+":"+o["kind"].(string), resourceName, args, &result, pulumi.Provider(provider), pulumi.DependsOn(dependencies))
+	err := ctx.RegisterResource("kubernetes:"+api+":"+o["kind"].(string), resourceName, args, &result, append([]pulumi.ResourceOption{pulumi.Provider(provider), pulumi.DependsOn(dependencies)}, extra...)...)
 	return &result, err
 }
 
@@ -91,6 +98,12 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 		return err
 	}
 	deps = append(deps, ns)
+	if ManagedMTLS(ctx) {
+		deps, err = deployInternalCertificates(ctx, provider, deps)
+		if err != nil {
+			return err
+		}
+	}
 	control, err := objects("controller.json")
 	if err != nil {
 		return err
@@ -101,18 +114,32 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 			return err
 		}
 		control = append(control, rbac...)
-		deps = append(deps, ingress)
+		if ingress != nil {
+			deps = append(deps, ingress)
+		}
 	}
 	// RBAC precedes the certificate generator, which precedes the controller.
 	for _, kinds := range [][]string{{"ServiceAccount", "ClusterRole", "ClusterRoleBinding", "Role", "RoleBinding", "Service"}, {"Job"}, {"GatewayClass", "NginxGateway", "NginxProxy"}, {"Deployment"}} {
 		prior := append([]pulumi.Resource{}, deps...)
 		for _, o := range control {
+			if ManagedMTLS(ctx) {
+				meta := o["metadata"].(map[string]any)
+				if strings.Contains(meta["name"].(string), "cert-generator") {
+					continue
+				}
+				if o["kind"] == "Deployment" {
+					managedControllerTLS(o)
+				}
+			}
 			if !contains(kinds, o["kind"].(string)) {
 				continue
 			}
 			if o["kind"] == "NginxProxy" {
 				o["spec"].(map[string]any)["kubernetes"].(map[string]any)["service"].(map[string]any)["loadBalancerIP"] = address
-				if config.New(ctx, "mcp-registry").GetBool("gatewayCanaryComparison") || HandoffEnabled(ctx) {
+				if Standalone(ctx) {
+					o["spec"].(map[string]any)["kubernetes"].(map[string]any)["service"] = map[string]any{"type": "ClusterIP"}
+				}
+				if config.New(ctx, "mcp-registry").GetBool("gatewayCanaryComparison") || (HandoffEnabled(ctx) && !Standalone(ctx)) {
 					o["spec"].(map[string]any)["kubernetes"].(map[string]any)["deployment"].(map[string]any)["autoscaling"].(map[string]any)["maxReplicas"] = 2
 				}
 			}
@@ -152,6 +179,9 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 	if err != nil {
 		return err
 	}
+	if Standalone(ctx) {
+		routes = nil
+	}
 	// Install policy/filter/reference grants before exposing the routes.
 	for _, group := range [][]string{{"Issuer"}, {"Certificate"}, {"ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, deps...)
@@ -184,14 +214,16 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 		}
 	}
 	if HandoffEnabled(ctx) {
-		if err := deployHandoff(ctx, provider, append(deps, ingress)); err != nil {
+		if err := deployHandoff(ctx, provider, deps); err != nil {
 			return err
 		}
 	}
 	if err := vector(ctx, provider, ns); err != nil {
 		return err
 	}
-	ctx.Export("gatewayCanaryIP", address)
+	if !Standalone(ctx) {
+		ctx.Export("gatewayCanaryIP", address)
+	}
 	ctx.Export("gatewayCanaryHost", pulumi.String("staging.registry.modelcontextprotocol.io"))
 	return nil
 }

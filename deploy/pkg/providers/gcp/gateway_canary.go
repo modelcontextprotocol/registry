@@ -27,9 +27,12 @@ func createGatewayCanary(ctx *pulumi.Context, cluster *container.Cluster, projec
 	if err != nil {
 		return nil, nil, err
 	}
-	address, err := compute.NewAddress(ctx, "registry-gateway-canary-ip", &compute.AddressArgs{Project: pulumi.String(project), Region: pulumi.String(region), AddressType: pulumi.String("EXTERNAL")}, opts...)
-	if err != nil {
-		return nil, nil, err
+	var address *compute.Address
+	if !config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone") {
+		address, err = compute.NewAddress(ctx, "registry-gateway-canary-ip", &compute.AddressArgs{Project: pulumi.String(project), Region: pulumi.String(region), AddressType: pulumi.String("EXTERNAL")}, opts...)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	_, err = logging.NewProjectExclusion(ctx, "registry-gateway-canary-fast-read-sampling", &logging.ProjectExclusionArgs{Project: pulumi.String(project), Name: pulumi.String("registry-gateway-canary-fast-read-sampling"), Description: pulumi.String("Keep 10% of fast successful canary listing logs; metrics use unsampled local logs."), Filter: pulumi.String(`resource.type="k8s_container"
 resource.labels.namespace_name=("registry-gateway-canary" OR "ingress-nginx")

@@ -170,3 +170,38 @@ func TestNativeCertificatesRemoveLegacyChallengeDependency(t *testing.T) {
 		t.Fatal("missing HTTP solver listener")
 	}
 }
+
+func TestManagedInternalCertificates(t *testing.T) {
+	objects := internalCertificates()
+	if len(objects) != 5 {
+		t.Fatal("missing CA or leaf lifecycle")
+	}
+	for _, o := range objects {
+		meta := o["metadata"].(map[string]any)
+		if meta["namespace"] != Namespace || meta["annotations"].(map[string]any)["pulumi.com/waitFor"] != "condition=Ready" {
+			t.Fatal("certificate dependency is not awaited")
+		}
+		if o["kind"] == "Certificate" && meta["name"] != "gateway-internal-ca" {
+			spec := o["spec"].(map[string]any)
+			if spec["duration"] != "720h" || spec["renewBefore"] != "240h" || spec["privateKey"].(map[string]any)["rotationPolicy"] != "Always" {
+				t.Fatal("leaf renewal policy")
+			}
+		}
+	}
+	control, _ := objectsForControllerTest()
+	managedControllerTLS(control)
+	data, _ := json.Marshal(control)
+	if !strings.Contains(string(data), "--agent-tls-secret=gateway-agent-tls") || !strings.Contains(string(data), `"secretName":"gateway-server-tls"`) {
+		t.Fatal("controller did not switch both credentials")
+	}
+}
+
+func objectsForControllerTest() (map[string]any, error) {
+	control, err := objects("controller.json")
+	for _, o := range control {
+		if o["kind"] == "Deployment" {
+			return o, err
+		}
+	}
+	return nil, err
+}

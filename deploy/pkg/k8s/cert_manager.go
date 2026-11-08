@@ -77,5 +77,12 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 		return err
 	}
 
-	return nil
+	return gatewaycanary.DeployPublicCertificates(ctx, cluster.Provider)
+}
+
+func certificateIngressAnnotations(ctx *pulumi.Context, annotations pulumi.StringMap) pulumi.StringMap {
+	if gatewaycanary.PublicCertificates(ctx) != "managed" {
+		annotations["cert-manager.io/cluster-issuer"] = pulumi.String("letsencrypt-prod")
+	}
+	return annotations
 }

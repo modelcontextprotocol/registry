@@ -38,6 +38,9 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		return nil, err
 	}
 
+	if gatewaycanary.Standalone(ctx) {
+		return nil, setupPublicGatewayService(ctx, cluster, ingressNginxNamespace)
+	}
 	// Usually we should expose the ingress to a LoadBalancer
 	// This works in GCP and most local setups e.g. minikube (with minikube tunnel)
 	// Kind unfortunately does not support LoadBalancer type, and hangs indefinitely. This is a workaround for that.

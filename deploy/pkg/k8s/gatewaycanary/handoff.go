@@ -3,6 +3,7 @@ package gatewaycanary
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml"
@@ -21,6 +22,10 @@ func HandoffEnabled(ctx *pulumi.Context) bool {
 }
 
 // NativeCertificates enables the Gateway HTTP01 solver before legacy retirement.
+func Standalone(ctx *pulumi.Context) bool {
+	return config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone")
+}
+
 func NativeCertificates(ctx *pulumi.Context) bool {
 	return config.New(ctx, "mcp-registry").GetBool("gatewayNativeCertificates")
 }
@@ -32,6 +37,9 @@ func ACMEParent() map[string]any {
 func validateHandoff(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
 	mode, ip := c.Get("gatewayStagingHandoff"), c.Get("gatewayStagingPublicIP")
+	if Standalone(ctx) && (!NativeCertificates(ctx) || !ManagedMTLS(ctx) || PublicCertificates(ctx) != "managed") {
+		return fmt.Errorf("standalone Gateway requires managed public/internal certificates")
+	}
 	if NativeCertificates(ctx) && mode != "gateway" {
 		return fmt.Errorf("native Gateway certificates require gateway-only staging traffic")
 	}
@@ -47,7 +55,7 @@ func validateHandoff(ctx *pulumi.Context) error {
 	if address := net.ParseIP(ip); address == nil || address.To4() == nil {
 		return fmt.Errorf("gatewayStagingPublicIP must be the current public IPv4 address")
 	}
-	if c.GetBool("gatewayCanaryComparison") || c.GetBool("gatewayCanaryFixtures") {
+	if c.GetBool("gatewayCanaryComparison") || (c.GetBool("gatewayCanaryFixtures") && !Standalone(ctx)) {
 		return fmt.Errorf("disable gateway test fixtures before public handoff")
 	}
 	return nil
@@ -98,10 +106,14 @@ func ProtectPublicService(args *pulumi.ResourceTransformationArgs) *pulumi.Resou
 // Derive the public Gateway from the policies qualified on the canary. A Service
 // selects pods in its own namespace, so its new data plane must live beside it.
 func handoffObjects() ([]map[string]any, error) {
-	return handoffObjectsWithCertificates(false)
+	return handoffObjectsWithOptions(false, false, false)
 }
 
 func handoffObjectsWithCertificates(native bool) ([]map[string]any, error) {
+	return handoffObjectsWithOptions(native, false, false)
+}
+
+func handoffObjectsWithOptions(native, standalone, fixtures bool) ([]map[string]any, error) {
 	control, err := objects("controller.json")
 	if err != nil {
 		return nil, err
@@ -117,6 +129,9 @@ func handoffObjectsWithCertificates(native bool) ([]map[string]any, error) {
 		kube["service"] = map[string]any{"type": "ClusterIP", "loadBalancerIP": ""}
 		deployment := kube["deployment"].(map[string]any)
 		deployment["autoscaling"].(map[string]any)["maxReplicas"] = 2
+		if standalone {
+			deployment["autoscaling"].(map[string]any)["maxReplicas"] = 4
+		}
 		for _, raw := range deployment["patches"].([]any) {
 			template := raw.(map[string]any)["value"].(map[string]any)["spec"].(map[string]any)["template"].(map[string]any)
 			template["metadata"] = map[string]any{"labels": map[string]any{EdgeLabel: "true"}}
@@ -126,7 +141,7 @@ func handoffObjectsWithCertificates(native bool) ([]map[string]any, error) {
 		}
 		result = append(result, o)
 	}
-	routes, err := routeObjects(false)
+	routes, err := routeObjects(fixtures)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +181,17 @@ func handoffObjectsWithCertificates(native bool) ([]map[string]any, error) {
 				}
 			}
 		}
+		if fixtures && o["kind"] == "HTTPRoute" && strings.HasPrefix(meta["name"].(string), "fixture-") {
+			for _, raw := range spec["rules"].([]any) {
+				for _, backend := range raw.(map[string]any)["backendRefs"].([]any) {
+					backend.(map[string]any)["namespace"] = Namespace
+				}
+			}
+		}
 		result = append(result, o)
+	}
+	if fixtures {
+		result = append(result, map[string]any{"apiVersion": "gateway.networking.k8s.io/v1beta1", "kind": "ReferenceGrant", "metadata": map[string]any{"name": "public-gateway-fixture", "namespace": Namespace}, "spec": map[string]any{"from": []any{map[string]any{"group": "gateway.networking.k8s.io", "kind": "HTTPRoute", "namespace": EdgeNamespace}}, "to": []any{map[string]any{"group": "", "kind": "Service", "name": "fixture"}}}})
 	}
 	if native {
 		return result, nil
@@ -178,11 +203,11 @@ func handoffObjectsWithCertificates(native bool) ([]map[string]any, error) {
 }
 
 func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependencies []pulumi.Resource) error {
-	objects, err := handoffObjectsWithCertificates(NativeCertificates(ctx))
+	objects, err := handoffObjectsWithOptions(NativeCertificates(ctx), Standalone(ctx), Standalone(ctx) && config.New(ctx, "mcp-registry").GetBool("gatewayCanaryFixtures"))
 	if err != nil {
 		return err
 	}
-	for _, kinds := range [][]string{{"NginxProxy", "Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
+	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"NginxProxy", "Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, dependencies...)
 		for _, o := range objects {
 			if !contains(kinds, o["kind"].(string)) {

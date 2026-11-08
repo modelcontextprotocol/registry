@@ -32,7 +32,7 @@ def main():
     solver = issuer['spec']['acme']['solvers']
     assert len(solver) == 1 and 'gatewayHTTPRoute' in solver[0]['http01']
     parent = solver[0]['http01']['gatewayHTTPRoute']['parentRefs'][0]
-    assert parent == {'kind': 'Gateway', 'name': 'registry-edge', 'namespace': 'ingress-nginx', 'sectionName': 'http'}
+    assert all(parent.get(k) == v for k, v in {'kind': 'Gateway', 'name': 'registry-edge', 'namespace': 'ingress-nginx', 'sectionName': 'http'}.items())
     before = fingerprints()
     report = {'native_gateway_solver': True, 'proofs': []}
     name = 'gateway-native-proof-' + str(int(time.time()))

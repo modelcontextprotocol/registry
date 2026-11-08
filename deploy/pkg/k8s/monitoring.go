@@ -671,15 +671,19 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		return err
 	}
 
+	if gatewaycanary.Standalone(ctx) {
+		ctx.Export("grafanaUrl", pulumi.Sprintf("https://%s", grafanaHost))
+		return nil
+	}
 	// Create ingress for external access
 	_, err = networkingv1.NewIngress(ctx, "grafana-ingress", &networkingv1.IngressArgs{
 		Metadata: &metav1.ObjectMetaArgs{
 			Name:      pulumi.String("grafana-ingress"),
 			Namespace: ns.Metadata.Name(),
-			Annotations: pulumi.StringMap{
-				"cert-manager.io/cluster-issuer": pulumi.String("letsencrypt-prod"),
-				"kubernetes.io/ingress.class":    pulumi.String("nginx"),
-			},
+			Annotations: certificateIngressAnnotations(ctx, pulumi.StringMap{
+
+				"kubernetes.io/ingress.class": pulumi.String("nginx"),
+			}),
 		},
 		Spec: &networkingv1.IngressSpecArgs{
 			Tls: networkingv1.IngressTLSArray{
