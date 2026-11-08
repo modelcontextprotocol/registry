@@ -69,11 +69,15 @@ def main():
     # Concurrent runs share one generator Pod and metric counters, invalidating
     # each other's results. Fail before collecting or launching any traffic.
     lock_path = Path(tempfile.gettempdir()) / ('registry-staging-gateway-load-' + str(os.getuid()) + '.lock')
-    load_lock = os.fdopen(os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600), 'r+')
-    try:
-        fcntl.flock(load_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
-        raise RuntimeError('Another local staging Gateway measurement is running') from None
+    with os.fdopen(os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600), 'r+') as load_lock:
+        try:
+            fcntl.flock(load_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise RuntimeError('Another local staging Gateway measurement is running') from None
+        run_measurement()
+
+
+def run_measurement():
     p = argparse.ArgumentParser()
     p.add_argument('--arm', choices=['baseline', 'ngf'], required=True)
     p.add_argument('--rate', type=int, required=True)
