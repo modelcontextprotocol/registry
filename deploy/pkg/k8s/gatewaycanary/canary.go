@@ -73,7 +73,7 @@ func register(ctx *pulumi.Context, provider *kubernetes.Provider, o map[string]a
 	return &result, err
 }
 
-func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.StringOutput, ingress pulumi.Resource, prerequisites ...pulumi.Resource) error {
+func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.StringOutput, prerequisites ...pulumi.Resource) error {
 	if !Enabled(ctx) {
 		return nil
 	}
@@ -112,9 +112,6 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 			if o["kind"] == "NginxProxy" {
 				control = append(control, o)
 			}
-		}
-		if ingress != nil {
-			deps = append(deps, ingress)
 		}
 	}
 	// RBAC precedes the certificate generator, which precedes the controller.

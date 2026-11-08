@@ -2,7 +2,10 @@ package gatewaycanary
 
 import (
 	"encoding/json"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -237,5 +240,47 @@ func TestStandaloneGatewayUsesFinalTopologyForLoadTests(t *testing.T) {
 	}
 	if fixtureRoutes != 2 {
 		t.Fatal("missing fixture routes")
+	}
+}
+
+type standaloneMocks struct {
+	mocks
+	t        *testing.T
+	gateways atomic.Int32
+}
+
+func (m *standaloneMocks) NewResource(a pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
+	if a.TypeToken == "kubernetes:gateway.networking.k8s.io/v1:Gateway" {
+		m.gateways.Add(1)
+		meta := a.Inputs["metadata"].ObjectValue()
+		if meta["name"].StringValue() != EdgeGateway || meta["namespace"].StringValue() != EdgeNamespace {
+			m.t.Error("duplicate canary Gateway retained")
+		}
+	}
+	if strings.Contains(a.Name, "cert-generator") || strings.Contains(a.Name, "legacy-acme") {
+		m.t.Error("legacy resource retained", a.Name)
+	}
+	return m.mocks.NewResource(a)
+}
+func TestStandaloneRegistersWithoutLegacyIngress(t *testing.T) {
+	mock := &standaloneMocks{t: t}
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		provider, err := kubernetes.NewProvider(ctx, "staging-provider", &kubernetes.ProviderArgs{})
+		if err != nil {
+			return err
+		}
+		crds, err := DeployCRDs(ctx, provider)
+		if err != nil {
+			return err
+		}
+		return Deploy(ctx, provider, pulumi.String("").ToStringOutput(), crds...)
+	}, pulumi.WithMocks("test", "staging", mock), func(info *pulumi.RunInfo) {
+		info.Config = map[string]string{"mcp-registry:gatewayStagingStandalone": "true", "mcp-registry:environment": "staging", "mcp-registry:provider": "gcp", "gcp:project": "mcp-registry-staging", "mcp-registry:gatewayStagingPublicIP": "35.222.36.75"}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mock.gateways.Load() != 1 {
+		t.Fatal("expected exactly one public Gateway")
 	}
 }

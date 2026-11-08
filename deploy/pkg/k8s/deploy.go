@@ -50,7 +50,12 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStora
 		return nil, err
 	}
 
-	if err := gatewaycanary.Deploy(ctx, cluster.Provider, cluster.CanaryAddress, ingressNginx, append(gatewayCRDs, certManager)...); err != nil {
+	gatewayDependencies := append(gatewayCRDs, certManager)
+	// Do not box a nil *helm.Chart into a non-nil pulumi.Resource interface.
+	if ingressNginx != nil {
+		gatewayDependencies = append(gatewayDependencies, ingressNginx)
+	}
+	if err := gatewaycanary.Deploy(ctx, cluster.Provider, cluster.CanaryAddress, gatewayDependencies...); err != nil {
 		return nil, err
 	}
 	return service, nil
