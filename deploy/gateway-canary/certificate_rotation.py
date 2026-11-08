@@ -5,6 +5,7 @@ import base64
 import hashlib
 import json
 import subprocess
+import ssl
 import time
 from pathlib import Path
 from measure import K, NS, get
@@ -17,7 +18,8 @@ def run(*args):
 
 def fingerprint(namespace, name):
     public = run('-n', namespace, 'get', 'secret', name, '-o', 'jsonpath={.data.tls\\.crt}').stdout
-    return hashlib.sha256(base64.b64decode(public)).hexdigest()
+    pem = base64.b64decode(public).decode().split('-----END CERTIFICATE-----')[0] + '-----END CERTIFICATE-----'
+    return hashlib.sha256(ssl.PEM_cert_to_DER_cert(pem)).hexdigest()
 
 
 def main():
@@ -49,20 +51,35 @@ def main():
         print(name + ' renewed', flush=True)
     # The controller duplicates the agent Secret into each Gateway namespace.
     deadline = time.monotonic() + 180
-    while fingerprint('ingress-nginx', 'gateway-agent-tls') != fingerprint(NS, 'gateway-agent-tls'):
+    deployment = get('-n', 'ingress-nginx', 'get', 'deployment', 'registry-edge-registry-gateway-canary')
+    copied_secret = next(v['secret']['secretName'] for v in deployment['spec']['template']['spec']['volumes'] if v['name'] == 'nginx-agent-tls')
+    assert copied_secret.endswith('-gateway-agent-tls')
+    while fingerprint('ingress-nginx', copied_secret) != fingerprint(NS, 'gateway-agent-tls'):
         assert time.monotonic() < deadline, 'Agent Secret did not propagate'
         time.sleep(3)
     assert get('-n', NS, 'get', 'deployment', 'registry-gateway-canary')['metadata']['generation'] == generation
     # A fresh mTLS handshake verifies the running server loaded the renewed leaf
     # and accepts the renewed client certificate. Credentials stay mounted in-cluster.
     probe = 'gateway-certificate-rotation-proof'
-    script = ('import ssl,socket,hashlib,json; '
-              'c=ssl.create_default_context(cafile="/tls/ca.crt"); '
-              'c.minimum_version=ssl.TLSVersion.TLSv1_3; '
-              'c.load_cert_chain("/tls/tls.crt","/tls/tls.key"); '
-              's=c.wrap_socket(socket.create_connection(("registry-gateway-canary",8443),timeout=15),'
-              'server_hostname="registry-gateway-canary.registry-gateway-canary.svc"); '
-              'print(json.dumps({"server_certificate_sha256":hashlib.sha256(s.getpeercert(binary_form=True)).hexdigest(),"protocol":s.version()})); s.close()')
+    expected = fingerprint(NS, 'gateway-server-tls')
+    service = get('-n', NS, 'get', 'service', 'registry-gateway-canary')
+    port = next(p['port'] for p in service['spec']['ports'] if p['name'] == 'agent-grpc')
+    script = f"""import ssl,socket,hashlib,json,time
+c=ssl.create_default_context(cafile="/tls/ca.crt")
+c.minimum_version=ssl.TLSVersion.TLSv1_3
+c.load_cert_chain("/tls/tls.crt","/tls/tls.key")
+c.set_alpn_protocols(["h2"])
+for attempt in range(60):
+ with c.wrap_socket(socket.create_connection(("registry-gateway-canary",{port}),timeout=15),server_hostname="registry-gateway-canary.registry-gateway-canary.svc") as s:
+  s.sendall(bytes([80,82,73,32,42,32,72,84,84,80,47,50,46,48,13,10,13,10,83,77,13,10,13,10,0,0,0,4,0,0,0,0,0]))
+  frame=s.recv(9)
+  assert len(frame)==9 and frame[3]==4, "No authenticated HTTP/2 settings frame"
+  result={{"authenticated_http2":True,"server_certificate_sha256":hashlib.sha256(s.getpeercert(binary_form=True)).hexdigest(),"protocol":s.version()}}
+ if result["server_certificate_sha256"]=="{expected}":
+  print(json.dumps(result));break
+ time.sleep(3)
+else: raise RuntimeError("Renewed server certificate did not reach the running controller")
+"""
     pod = {'apiVersion':'v1','kind':'Pod','metadata':{'name':probe,'namespace':NS},'spec':{
         'restartPolicy':'Never','automountServiceAccountToken':False,
         'containers':[{'name':'probe','image':IMAGE,'command':['python3','-c',script],
@@ -72,7 +89,15 @@ def main():
         'volumes':[{'name':'tls','secret':{'secretName':'gateway-agent-tls'}}]}}
     subprocess.run(K+['create','-f','-'],input=json.dumps(pod),capture_output=True,text=True,check=True,timeout=30)
     try:
-        subprocess.run(K+['-n',NS,'wait','--for=jsonpath={.status.phase}=Succeeded','pod/'+probe,'--timeout=120s'],capture_output=True,check=True,timeout=130)
+        deadline = time.monotonic() + 240
+        while True:
+            phase = get('-n', NS, 'get', 'pod', probe)['status']['phase']
+            if phase == 'Succeeded':
+                break
+            if phase == 'Failed':
+                raise RuntimeError(run('-n', NS, 'logs', probe).stdout[-1500:])
+            assert time.monotonic() < deadline, 'mTLS probe timeout'
+            time.sleep(3)
         handshake=json.loads(run('-n',NS,'logs',probe).stdout)
         assert handshake['server_certificate_sha256']==fingerprint(NS,'gateway-server-tls')
         report['fresh_mtls_handshake']=handshake

@@ -18,7 +18,7 @@ const (
 )
 
 func HandoffEnabled(ctx *pulumi.Context) bool {
-	return config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff") != ""
+	return Standalone(ctx) || config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff") != ""
 }
 
 // NativeCertificates enables the Gateway HTTP01 solver before legacy retirement.
@@ -27,7 +27,7 @@ func Standalone(ctx *pulumi.Context) bool {
 }
 
 func NativeCertificates(ctx *pulumi.Context) bool {
-	return config.New(ctx, "mcp-registry").GetBool("gatewayNativeCertificates")
+	return Standalone(ctx) || config.New(ctx, "mcp-registry").GetBool("gatewayNativeCertificates")
 }
 
 func ACMEParent() map[string]any {
@@ -37,6 +37,9 @@ func ACMEParent() map[string]any {
 func validateHandoff(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
 	mode, ip := c.Get("gatewayStagingHandoff"), c.Get("gatewayStagingPublicIP")
+	if Standalone(ctx) && mode == "" {
+		mode = "gateway"
+	}
 	if Standalone(ctx) && (!NativeCertificates(ctx) || !ManagedMTLS(ctx) || PublicCertificates(ctx) != "managed") {
 		return fmt.Errorf("standalone Gateway requires managed public/internal certificates")
 	}
@@ -223,7 +226,12 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 			dependencies = append(dependencies, r)
 		}
 	}
-	ctx.Export("gatewayStagingHandoff", pulumi.String(config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff")))
+	if !Standalone(ctx) {
+		ctx.Export("gatewayStagingHandoff", pulumi.String(config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff")))
+	}
+	if Standalone(ctx) {
+		ctx.Export("stagingGatewayMode", pulumi.String("standalone"))
+	}
 	return nil
 }
 

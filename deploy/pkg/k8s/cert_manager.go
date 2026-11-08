@@ -13,7 +13,7 @@ import (
 )
 
 // SetupCertManager sets up cert-manager for TLS certificates
-func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) error {
+func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo, gatewayCRDs []pulumi.Resource) (*helm.Chart, error) {
 	// Create namespace for cert-manager
 	certManagerNamespace, err := v1.NewNamespace(ctx, "cert-manager", &v1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -21,7 +21,7 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	values := pulumi.Map{
@@ -41,9 +41,9 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 		},
 		Namespace: certManagerNamespace.Metadata.Name().Elem(),
 		Values:    values,
-	}, pulumi.Provider(cluster.Provider))
+	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn(gatewayCRDs))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	http01 := pulumi.Map{"ingress": pulumi.Map{"ingressClassName": pulumi.String("nginx")}}
@@ -74,10 +74,13 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 		},
 	}, pulumi.Provider(cluster.Provider), pulumi.DependsOnInputs(certManager.Ready))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return gatewaycanary.DeployPublicCertificates(ctx, cluster.Provider)
+	if err := gatewaycanary.DeployPublicCertificates(ctx, cluster.Provider, certManager); err != nil {
+		return nil, err
+	}
+	return certManager, nil
 }
 
 func certificateIngressAnnotations(ctx *pulumi.Context, annotations pulumi.StringMap) pulumi.StringMap {

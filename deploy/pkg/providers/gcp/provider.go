@@ -332,7 +332,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	}
 
 	canaryAddress := pulumi.String("").ToStringOutput()
-	if config.New(ctx, "mcp-registry").GetBool("gatewayCanary") {
+	if config.New(ctx, "mcp-registry").GetBool("gatewayCanary") || config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone") {
 		pool, address, err := createGatewayCanary(ctx, cluster, projectID, region, zone, gcpProvider)
 		if err != nil {
 			return nil, err

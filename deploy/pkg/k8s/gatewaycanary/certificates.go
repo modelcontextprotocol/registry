@@ -7,7 +7,7 @@ import (
 )
 
 func ManagedMTLS(ctx *pulumi.Context) bool {
-	return config.New(ctx, "mcp-registry").GetBool("gatewayManagedMTLS")
+	return Standalone(ctx) || config.New(ctx, "mcp-registry").GetBool("gatewayManagedMTLS")
 }
 
 func internalCertificates() []map[string]any {
@@ -59,12 +59,15 @@ func managedControllerTLS(o map[string]any) {
 }
 
 func PublicCertificates(ctx *pulumi.Context) string {
+	if Standalone(ctx) {
+		return "managed"
+	}
 	return config.New(ctx, "mcp-registry").Get("gatewayPublicCertificates")
 }
 
 // Import existing shim-created Certificates first; detach their Ingress ownership
 // in a later full-stack update before the Ingress objects can be removed.
-func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider) error {
+func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider, dependencies ...pulumi.Resource) error {
 	mode := PublicCertificates(ctx)
 	if mode == "" {
 		return nil
@@ -81,7 +84,7 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 			meta["ownerReferences"] = []any{}
 		}
 		o := map[string]any{"apiVersion": "cert-manager.io/v1", "kind": "Certificate", "metadata": meta, "spec": map[string]any{"secretName": item.name, "dnsNames": []any{item.host}, "issuerRef": map[string]any{"name": "letsencrypt-prod", "kind": "ClusterIssuer", "group": "cert-manager.io"}, "usages": []any{"digital signature", "key encipherment"}}}
-		if _, err := register(ctx, provider, o, nil, opts...); err != nil {
+		if _, err := register(ctx, provider, o, dependencies, opts...); err != nil {
 			return err
 		}
 	}

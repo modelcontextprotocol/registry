@@ -19,7 +19,7 @@ const Namespace = "registry-gateway-canary"
 var assets embed.FS
 
 func Enabled(ctx *pulumi.Context) bool {
-	return config.New(ctx, "mcp-registry").GetBool("gatewayCanary")
+	return Standalone(ctx) || config.New(ctx, "mcp-registry").GetBool("gatewayCanary")
 }
 
 func Validate(ctx *pulumi.Context) error {
@@ -73,25 +73,15 @@ func register(ctx *pulumi.Context, provider *kubernetes.Provider, o map[string]a
 	return &result, err
 }
 
-func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.StringOutput, ingress pulumi.Resource) error {
+func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.StringOutput, ingress pulumi.Resource, prerequisites ...pulumi.Resource) error {
 	if !Enabled(ctx) {
 		return nil
 	}
 	if err := Validate(ctx); err != nil {
 		return err
 	}
-	crds, err := objects("crds.json")
-	if err != nil {
-		return err
-	}
-	deps := []pulumi.Resource{}
-	for _, o := range crds {
-		r, e := register(ctx, provider, o, nil)
-		if e != nil {
-			return e
-		}
-		deps = append(deps, r)
-	}
+	deps := append([]pulumi.Resource{}, prerequisites...)
+
 	namespace := map[string]any{"apiVersion": "v1", "kind": "Namespace", "metadata": map[string]any{"name": Namespace}}
 	ns, err := register(ctx, provider, namespace, nil)
 	if err != nil {
@@ -180,6 +170,11 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 	for _, o := range fixture {
 		if !fixturesEnabled {
 			continue
+		}
+		if Standalone(ctx) && o["kind"] == "Deployment" {
+			spec := o["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)
+			spec["nodeSelector"] = map[string]any{"registry-role": "worker"}
+			spec["tolerations"] = []any{}
 		}
 		r, e := register(ctx, provider, o, deps)
 		if e != nil {
@@ -276,4 +271,24 @@ func contains(values []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// Install API definitions before enabling cert-manager's Gateway controllers.
+func DeployCRDs(ctx *pulumi.Context, provider *kubernetes.Provider) ([]pulumi.Resource, error) {
+	if !Enabled(ctx) {
+		return nil, nil
+	}
+	crds, err := objects("crds.json")
+	if err != nil {
+		return nil, err
+	}
+	deps := []pulumi.Resource{}
+	for _, o := range crds {
+		r, err := register(ctx, provider, o, nil)
+		if err != nil {
+			return nil, err
+		}
+		deps = append(deps, r)
+	}
+	return deps, nil
 }
