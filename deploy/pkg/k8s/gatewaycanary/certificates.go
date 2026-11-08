@@ -69,7 +69,10 @@ func PublicCertificates(ctx *pulumi.Context) string {
 }
 
 func detachedCertificate(meta *metav1.ObjectMeta) (bool, error) {
-	if meta == nil || len(meta.OwnerReferences) != 0 {
+	if meta == nil {
+		return false, fmt.Errorf("public Certificate metadata unavailable; retry the full preview before retirement")
+	}
+	if len(meta.OwnerReferences) != 0 {
 		return false, fmt.Errorf("public Certificate still has an owner: run gateway-canary/detach_certificates.py before standalone retirement")
 	}
 	return true, nil
@@ -88,6 +91,7 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 		{"default", "mcp-registry-staging-tls", "staging.registry.modelcontextprotocol.io"},
 		{"monitoring", "grafana-tls", "grafana.staging.registry.modelcontextprotocol.io"},
 	} {
+		certificateDependencies := append([]pulumi.Resource{}, dependencies...)
 		if Standalone(ctx) {
 			existing, err := apiextensions.GetCustomResource(ctx, "gateway-public-certificate-ownership-"+item.namespace,
 				pulumi.ID(item.namespace+"/"+item.name), &apiextensions.CustomResourceState{
@@ -99,6 +103,8 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 			// Exporting the checked output makes a failed check fail the full
 			// saved-plan preview before any legacy resources can be deleted.
 			ctx.Export("gatewayPublicCertificateDetached-"+item.namespace, existing.Metadata.ApplyT(detachedCertificate))
+			// Do not read and update the same Kubernetes object concurrently.
+			certificateDependencies = append(certificateDependencies, existing)
 		}
 		meta := map[string]any{"name": item.name, "namespace": item.namespace}
 		opts := []pulumi.ResourceOption{pulumi.Protect(true)}
@@ -108,7 +114,7 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 			meta["ownerReferences"] = []any{}
 		}
 		o := map[string]any{"apiVersion": "cert-manager.io/v1", "kind": "Certificate", "metadata": meta, "spec": map[string]any{"secretName": item.name, "dnsNames": []any{item.host}, "issuerRef": map[string]any{"name": "letsencrypt-prod", "kind": "ClusterIssuer", "group": "cert-manager.io"}, "usages": []any{"digital signature", "key encipherment"}}}
-		if _, err := register(ctx, provider, o, dependencies, opts...); err != nil {
+		if _, err := register(ctx, provider, o, certificateDependencies, opts...); err != nil {
 			return err
 		}
 	}

@@ -7,6 +7,7 @@ import json
 import subprocess
 import ssl
 import time
+import uuid
 from pathlib import Path
 from measure import K, NS, get
 from monitoring_staging import IMAGE
@@ -42,12 +43,14 @@ def main():
     parser.add_argument('--cmctl', required=True)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
+    report = {'passed': False, 'stage': 'preflight', 'started': time.time(), 'renewals': []}
+    args.output.write_text(json.dumps(report, indent=2) + '\n')
     controller = get('-n', NS, 'get', 'deployment', 'registry-gateway-canary')
     generation = controller['metadata']['generation']
     processes_before = controller_processes(controller)
-    started = time.time()
-    report = {'started': started, 'renewals': []}
     for name in ['gateway-server-tls', 'gateway-agent-tls']:
+        report['stage'] = 'renew ' + name
+        args.output.write_text(json.dumps(report, indent=2) + '\n')
         cert = get('-n', NS, 'get', 'certificate', name)
         previous_revision = cert['status']['revision']
         before = fingerprint(NS, name)
@@ -64,6 +67,7 @@ def main():
         after = fingerprint(NS, name)
         assert before != after
         report['renewals'].append({'name': name, 'revision': cert['status']['revision'], 'certificate_changed': True})
+        args.output.write_text(json.dumps(report, indent=2) + '\n')
         print(name + ' renewed', flush=True)
     # The controller duplicates the agent Secret into each Gateway namespace.
     deadline = time.monotonic() + 180
@@ -76,7 +80,9 @@ def main():
     assert get('-n', NS, 'get', 'deployment', 'registry-gateway-canary')['metadata']['generation'] == generation
     # A fresh mTLS handshake verifies the running server loaded the renewed leaf
     # and accepts the renewed client certificate. Credentials stay mounted in-cluster.
-    probe = 'gateway-certificate-rotation-proof'
+    report['stage'] = 'fresh mTLS handshake'
+    args.output.write_text(json.dumps(report, indent=2) + '\n')
+    probe = 'gateway-certificate-rotation-proof-' + uuid.uuid4().hex[:20]
     expected = fingerprint(NS, 'gateway-server-tls')
     service = get('-n', NS, 'get', 'service', 'registry-gateway-canary')
     port = next(p['port'] for p in service['spec']['ports'] if p['name'] == 'agent-grpc')
@@ -130,6 +136,8 @@ else: raise RuntimeError("Renewed server certificate did not reach the running c
     report['controller_deployment_unchanged'] = True
     report['agent_secret_propagated'] = True
     report['finished'] = time.time()
+    report['passed'] = True
+    report['stage'] = 'complete'
     args.output.write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
 

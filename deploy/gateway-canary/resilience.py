@@ -47,6 +47,7 @@ def main():
     assert os.environ.get('REGISTRY_GATEWAY_TARGET') == 'public'
     assert 0 < args.rate <= 1500 and 150 <= args.seconds <= 600
     args.output.mkdir(parents=True, exist_ok=True)
+    (args.output / 'operation.json').write_text(json.dumps({'passed': False, 'scenario': args.scenario, 'stage': 'preflight'}) + '\n')
     edge_ns, edge_name = gateway_target()
     assert get('get', 'ingress', '-A')['items'] == [], 'Retire legacy Ingress objects before qualification'
     assert len(get('get', 'gateways', '-A')['items']) == 1, 'Remove the duplicate canary first'

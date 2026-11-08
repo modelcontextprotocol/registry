@@ -5,6 +5,7 @@ import hashlib
 import json
 import subprocess
 import time
+import uuid
 from pathlib import Path
 
 K = ['kubectl', '--context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging', '--request-timeout=30s']
@@ -28,17 +29,21 @@ def main():
     parser.add_argument('--cmctl', required=True)
     parser.add_argument('--output', required=True)
     args = parser.parse_args()
+    report = {'passed': False, 'native_gateway_solver': False, 'proofs': []}
+    output = Path(args.output)
+    output.write_text(json.dumps(report, indent=2) + '\n')
     issuer = get('get', 'clusterissuer', 'letsencrypt-prod')
     solver = issuer['spec']['acme']['solvers']
     assert len(solver) == 1 and 'gatewayHTTPRoute' in solver[0]['http01']
     parent = solver[0]['http01']['gatewayHTTPRoute']['parentRefs'][0]
     assert all(parent.get(k) == v for k, v in {'kind': 'Gateway', 'name': 'registry-edge', 'namespace': 'ingress-nginx', 'sectionName': 'http'}.items())
     before = fingerprints()
-    report = {'native_gateway_solver': True, 'proofs': []}
-    name = 'gateway-native-proof-' + str(int(time.time()))
+    report['native_gateway_solver'] = True
+    name = 'gateway-native-proof-' + uuid.uuid4().hex
     for ns, host in [('default', 'staging.registry.modelcontextprotocol.io'), ('monitoring', 'grafana.staging.registry.modelcontextprotocol.io')]:
         created = []
-        proof = {'namespace': ns, 'host': host, 'observed_http_routes': []}
+        proof = {'namespace': ns, 'host': host, 'observed_http_routes': [], 'completed': False, 'cleanup_errors': []}
+        report['proofs'].append(proof)
         try:
             for kind, spec in [
                 ('Issuer', {'acme': {'server': 'https://acme-staging-v02.api.letsencrypt.org/directory', 'privateKeySecretRef': {'name': name + '-account'}, 'solvers': solver}}),
@@ -70,14 +75,28 @@ def main():
                 else:
                     raise RuntimeError('Native certificate issuance timed out in ' + ns)
             assert proof['observed_http_routes'], 'No native solver route observed'
+            proof['completed'] = True
         finally:
-            for kind in reversed(created):
-                run('-n', ns, 'delete', kind, name, '--ignore-not-found', '--wait=true')
-            run('-n', ns, 'delete', 'secret', name + '-tls', name + '-account', '--ignore-not-found')
-            report['proofs'].append(proof)
-            report['public_certificates_unchanged'] = fingerprints() == before
-            Path(args.output).write_text(json.dumps(report, indent=2) + '\n')
+            # Only clean up credentials belonging to resources this run created.
+            # UUID names also prevent simultaneous runs sharing an ACME account.
+            cleanup = [(kind, name) for kind in reversed(created)]
+            if 'Certificate' in created:
+                cleanup.append(('secret', name + '-tls'))
+            if 'Issuer' in created:
+                cleanup.append(('secret', name + '-account'))
+            for kind, resource_name in cleanup:
+                try:
+                    run('-n', ns, 'delete', kind, resource_name, '--ignore-not-found', '--wait=true')
+                except Exception as error:
+                    proof['cleanup_errors'].append(kind + ': ' + type(error).__name__)
+            try:
+                report['public_certificates_unchanged'] = fingerprints() == before
+            finally:
+                output.write_text(json.dumps(report, indent=2) + '\n')
+            assert not proof['cleanup_errors'], 'Native certificate proof cleanup failed; inspect report'
     assert report['public_certificates_unchanged']
+    report['passed'] = True
+    output.write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
 
 
