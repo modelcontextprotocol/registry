@@ -13,7 +13,7 @@ import (
 )
 
 // SetupCertManager sets up cert-manager for TLS certificates
-func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo, gatewayCRDs []pulumi.Resource) (*helm.Chart, error) {
+func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo, gatewayCRDs []pulumi.Resource) (*apiextensions.CustomResource, error) {
 	// Create namespace for cert-manager
 	certManagerNamespace, err := v1.NewNamespace(ctx, "cert-manager", &v1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -50,7 +50,7 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo, gate
 	if gatewaycanary.NativeCertificates(ctx) {
 		http01 = pulumi.Map{"gatewayHTTPRoute": pulumi.Map{"parentRefs": pulumi.Array{pulumi.Any(gatewaycanary.ACMEParent())}}}
 	}
-	_, err = apiextensions.NewCustomResource(ctx, "letsencrypt-prod", &apiextensions.CustomResourceArgs{
+	issuer, err := apiextensions.NewCustomResource(ctx, "letsencrypt-prod", &apiextensions.CustomResourceArgs{
 		ApiVersion: pulumi.String("cert-manager.io/v1"),
 		Kind:       pulumi.String("ClusterIssuer"),
 		Metadata: &metav1.ObjectMetaArgs{
@@ -77,10 +77,13 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo, gate
 		return nil, err
 	}
 
-	if err := gatewaycanary.DeployPublicCertificates(ctx, cluster.Provider, certManager); err != nil {
+	if err := gatewaycanary.DeployPublicCertificates(ctx, cluster.Provider, issuer); err != nil {
 		return nil, err
 	}
-	return certManager, nil
+	// Depend on a concrete resource whose own dependencies await chart.Ready.
+	// Depending on the asynchronous Chart component can expand to different
+	// child sets between preview and apply, violating saved-plan constraints.
+	return issuer, nil
 }
 
 func certificateIngressAnnotations(ctx *pulumi.Context, annotations pulumi.StringMap) pulumi.StringMap {

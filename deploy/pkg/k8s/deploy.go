@@ -15,7 +15,7 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStora
 		return nil, err
 	}
 	// Setup cert-manager after the Gateway API definitions exist.
-	certManager, err := SetupCertManager(ctx, cluster, gatewayCRDs)
+	certificateIssuer, err := SetupCertManager(ctx, cluster, gatewayCRDs)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStora
 		return nil, err
 	}
 
-	gatewayDependencies := append(gatewayCRDs, certManager)
+	gatewayDependencies := append(gatewayCRDs, certificateIssuer)
 	// Do not box a nil *helm.Chart into a non-nil pulumi.Resource interface.
 	if ingressNginx != nil {
 		gatewayDependencies = append(gatewayDependencies, ingressNginx)
