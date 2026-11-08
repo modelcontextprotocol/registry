@@ -20,9 +20,21 @@ func HandoffEnabled(ctx *pulumi.Context) bool {
 	return config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff") != ""
 }
 
+// NativeCertificates enables the Gateway HTTP01 solver before legacy retirement.
+func NativeCertificates(ctx *pulumi.Context) bool {
+	return config.New(ctx, "mcp-registry").GetBool("gatewayNativeCertificates")
+}
+
+func ACMEParent() map[string]any {
+	return map[string]any{"name": EdgeGateway, "namespace": EdgeNamespace, "kind": "Gateway", "sectionName": "http"}
+}
+
 func validateHandoff(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
 	mode, ip := c.Get("gatewayStagingHandoff"), c.Get("gatewayStagingPublicIP")
+	if NativeCertificates(ctx) && mode != "gateway" {
+		return fmt.Errorf("native Gateway certificates require gateway-only staging traffic")
+	}
 	if mode == "" && ip == "" {
 		return nil
 	}
@@ -86,6 +98,10 @@ func ProtectPublicService(args *pulumi.ResourceTransformationArgs) *pulumi.Resou
 // Derive the public Gateway from the policies qualified on the canary. A Service
 // selects pods in its own namespace, so its new data plane must live beside it.
 func handoffObjects() ([]map[string]any, error) {
+	return handoffObjectsWithCertificates(false)
+}
+
+func handoffObjectsWithCertificates(native bool) ([]map[string]any, error) {
 	control, err := objects("controller.json")
 	if err != nil {
 		return nil, err
@@ -127,6 +143,14 @@ func handoffObjects() ([]map[string]any, error) {
 		}
 		if o["kind"] == "Gateway" {
 			meta["name"] = EdgeGateway
+			if native {
+				for _, raw := range spec["listeners"].([]any) {
+					listener := raw.(map[string]any)
+					if listener["name"] == "http" {
+						listener["allowedRoutes"] = map[string]any{"namespaces": map[string]any{"from": "Selector", "selector": map[string]any{"matchExpressions": []any{map[string]any{"key": "kubernetes.io/metadata.name", "operator": "In", "values": []any{EdgeNamespace, "default", "monitoring"}}}}}}
+					}
+				}
+			}
 			spec["infrastructure"] = map[string]any{"parametersRef": map[string]any{"group": "gateway.nginx.org", "kind": "NginxProxy", "name": EdgeGateway}}
 		}
 		if ref, ok := spec["targetRef"].(map[string]any); ok && ref["name"] == "registry-canary" {
@@ -144,6 +168,9 @@ func handoffObjects() ([]map[string]any, error) {
 		}
 		result = append(result, o)
 	}
+	if native {
+		return result, nil
+	}
 	// Never route challenges to the public Service: that would loop after handoff.
 	result = append(result, map[string]any{"apiVersion": "v1", "kind": "Service", "metadata": map[string]any{"name": "legacy-acme", "namespace": EdgeNamespace}, "spec": map[string]any{"type": "ClusterIP", "selector": legacySelector(), "ports": []any{map[string]any{"name": "http", "port": 80, "targetPort": 80}}}})
 	result = append(result, map[string]any{"apiVersion": "gateway.networking.k8s.io/v1", "kind": "HTTPRoute", "metadata": map[string]any{"name": "acme", "namespace": EdgeNamespace}, "spec": map[string]any{"parentRefs": []any{map[string]any{"name": EdgeGateway, "sectionName": "http"}}, "hostnames": []any{"staging.registry.modelcontextprotocol.io", "grafana.staging.registry.modelcontextprotocol.io"}, "rules": []any{map[string]any{"matches": []any{map[string]any{"path": map[string]any{"type": "PathPrefix", "value": "/.well-known/acme-challenge/"}}}, "backendRefs": []any{map[string]any{"name": "legacy-acme", "port": 80}}}}}})
@@ -151,7 +178,7 @@ func handoffObjects() ([]map[string]any, error) {
 }
 
 func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependencies []pulumi.Resource) error {
-	objects, err := handoffObjects()
+	objects, err := handoffObjectsWithCertificates(NativeCertificates(ctx))
 	if err != nil {
 		return err
 	}

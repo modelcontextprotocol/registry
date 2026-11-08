@@ -133,3 +133,40 @@ func TestHandoffControllerCanWatchItsNewNamespace(t *testing.T) {
 		}
 	}
 }
+
+func TestNativeCertificatesRemoveLegacyChallengeDependency(t *testing.T) {
+	objects, err := handoffObjectsWithCertificates(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, o := range objects {
+		data, _ := json.Marshal(o)
+		if strings.Contains(string(data), "legacy-acme") {
+			t.Fatal("native renewal still depends on ingress")
+		}
+		if o["kind"] == "Gateway" {
+			for _, raw := range o["spec"].(map[string]any)["listeners"].([]any) {
+				listener := raw.(map[string]any)
+				namespaces := listener["allowedRoutes"].(map[string]any)["namespaces"].(map[string]any)
+				if listener["name"] == "http" {
+					found = true
+					if namespaces["from"] != "Selector" {
+						t.Fatal("solver namespaces must be restricted")
+					}
+					encoded, _ := json.Marshal(namespaces)
+					for _, ns := range []string{EdgeNamespace, "default", "monitoring"} {
+						if !strings.Contains(string(encoded), ns) {
+							t.Fatal("missing solver namespace", ns)
+						}
+					}
+				} else if namespaces["from"] != "Same" {
+					t.Fatal("HTTPS route attachment was broadened")
+				}
+			}
+		}
+	}
+	if !found {
+		t.Fatal("missing HTTP solver listener")
+	}
+}

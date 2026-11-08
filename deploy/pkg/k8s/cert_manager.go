@@ -8,6 +8,7 @@ import (
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
@@ -23,6 +24,14 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 		return err
 	}
 
+	values := pulumi.Map{
+		"installCRDs": pulumi.Bool(true),
+		"ingressShim": pulumi.Map{"defaultIssuerName": pulumi.String("letsencrypt-prod"), "defaultIssuerKind": pulumi.String("ClusterIssuer")},
+	}
+	if gatewaycanary.NativeCertificates(ctx) {
+		// cert-manager 1.18 uses enableGatewayAPI (renamed in newer releases).
+		values["config"] = pulumi.Map{"apiVersion": pulumi.String("controller.config.cert-manager.io/v1alpha1"), "kind": pulumi.String("ControllerConfiguration"), "enableGatewayAPI": pulumi.Bool(true)}
+	}
 	// Install cert-manager for TLS certificates
 	certManager, err := helm.NewChart(ctx, "cert-manager", helm.ChartArgs{
 		Chart:   pulumi.String("cert-manager"),
@@ -31,18 +40,16 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 			Repo: pulumi.String("https://charts.jetstack.io"),
 		},
 		Namespace: certManagerNamespace.Metadata.Name().Elem(),
-		Values: pulumi.Map{
-			"installCRDs": pulumi.Bool(true),
-			"ingressShim": pulumi.Map{
-				"defaultIssuerName": pulumi.String("letsencrypt-prod"),
-				"defaultIssuerKind": pulumi.String("ClusterIssuer"),
-			},
-		},
+		Values:    values,
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
 		return err
 	}
 
+	http01 := pulumi.Map{"ingress": pulumi.Map{"ingressClassName": pulumi.String("nginx")}}
+	if gatewaycanary.NativeCertificates(ctx) {
+		http01 = pulumi.Map{"gatewayHTTPRoute": pulumi.Map{"parentRefs": pulumi.Array{pulumi.Any(gatewaycanary.ACMEParent())}}}
+	}
 	_, err = apiextensions.NewCustomResource(ctx, "letsencrypt-prod", &apiextensions.CustomResourceArgs{
 		ApiVersion: pulumi.String("cert-manager.io/v1"),
 		Kind:       pulumi.String("ClusterIssuer"),
@@ -59,11 +66,7 @@ func SetupCertManager(ctx *pulumi.Context, cluster *providers.ProviderInfo) erro
 					},
 					"solvers": pulumi.Array{
 						pulumi.Map{
-							"http01": pulumi.Map{
-								"ingress": pulumi.Map{
-									"ingressClassName": pulumi.String("nginx"),
-								},
-							},
+							"http01": http01,
 						},
 					},
 				},
