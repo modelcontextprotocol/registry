@@ -7,6 +7,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from datetime import datetime
 from measure import K, NS, get, gateway_target
 from public_probe import PublicProbe
 
@@ -31,9 +32,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--scenario', required=True, choices=['proxy', 'controller', 'rollout', 'node'])
     parser.add_argument('--rate', type=int, default=500)
-    parser.add_argument('--seconds', type=int, default=180)
+    parser.add_argument('--seconds', type=int, help='Defaults: rollout 600, node 300, other scenarios 180')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if args.seconds is None:
+        args.seconds = {'rollout': 600, 'node': 300}.get(args.scenario, 180)
     assert os.environ.get('REGISTRY_GATEWAY_TARGET') == 'public'
     assert 0 < args.rate <= 1500 and 150 <= args.seconds <= 600
     args.output.mkdir(parents=True, exist_ok=True)
@@ -120,6 +123,7 @@ def main():
     finally:
         cleanup_errors = []
         if cordoned:
+            report['one_node_ended'] = time.time()
             try:
                 run('uncordon', cordoned)
                 wait_rollout(edge_ns, edge_name)
@@ -146,6 +150,7 @@ def main():
                 wait_rollout(edge_ns, edge_name)
             except Exception as error:
                 cleanup_errors.append('restore policy: ' + repr(error))
+        report['cleanup_finished'] = time.time()
         report['cleanup_errors'] = cleanup_errors
         try:
             report['measurement_exit'] = load.wait(timeout=args.seconds + 100)
@@ -154,6 +159,23 @@ def main():
             report['public'] = public.finish(120 if args.scenario == 'node' else 0)
     report['nodes_after'] = sorted(n['metadata']['name'] for n in get('get', 'nodes')['items'])
     report['finished'] = time.time()
+    # The measurement driver remains alive while scraping/draining metrics.
+    # Qualify disruption overlap using the generator's own scheduling interval.
+    measurement = json.loads((args.output / 'load' / 'result.json').read_text())
+    client = measurement['client']
+    active_start = datetime.fromisoformat(client['started_at'].replace('Z', '+00:00')).timestamp()
+    active_end = min(active_start + client['seconds'], datetime.fromisoformat(client['finished_at'].replace('Z', '+00:00')).timestamp())
+    report['generator_active_interval'] = [active_start, active_end]
+    report['action_covered_by_load'] = active_start <= report.get('action_started', 0) < report.get('action_ready', float('inf')) <= active_end
+    if not report['action_covered_by_load']:
+        failure = failure or 'Generator traffic did not cover the disruption and recovery'
+    if args.scenario == 'node':
+        overlap = max(0, min(active_end, report.get('one_node_ended', 0)) - max(active_start, report.get('drained_at', float('inf'))))
+        report['one_node_active_load_seconds'] = overlap
+        if overlap < 60:
+            failure = failure or 'Less than 60 seconds of actual one-node traffic'
+    if args.scenario == 'rollout' and report['cleanup_finished'] > active_end:
+        failure = failure or 'Generator traffic ended before the restoration rollout completed'
     report['failure'] = failure
     report['passed'] = failure is None and report['public']['passed'] and not report['cleanup_errors'] and report['measurement_exit'] == 0 and report['nodes_before'] == report['nodes_after']
     (args.output / 'operation.json').write_text(json.dumps(report, indent=2) + '\n')

@@ -122,9 +122,11 @@ plane with a controlled fixture, not a production traffic replay or internet
 capacity benchmark. Public HTTPS probes run separately during every scenario.
 
 `limits.py` verifies real source-IP limiting; run it with two proxy replicas.
-`resilience.py` also supports controller, rollout and node scenarios. For the
-node scenario use `--seconds 300`; it drains one Gateway node, measures at least
-a minute of one-node operation and always attempts to uncordon it. The rollout
+`resilience.py` also supports controller, rollout and node scenarios. Rollout
+tests default to ten minutes to cover both the update and restoration with
+graceful draining. The node scenario defaults to five minutes; it drains one
+Gateway node, verifies at least a minute of overlap with the generator’s actual
+traffic interval, and always attempts to uncordon it. The rollout
 scenario patches the managed NginxProxy temporarily, then restores it.
 
 `collector_restart.py` checks a quiescent same-node restart, followed by a new
