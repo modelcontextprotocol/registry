@@ -14,6 +14,14 @@ from unittest.mock import patch
 
 
 class ValidationHelpersTest(unittest.TestCase):
+    def test_shared_probe_tls_context_requires_modern_verified_tls(self):
+        import ssl
+        from check import tls_context
+        context = tls_context()
+        self.assertGreaterEqual(context.minimum_version, ssl.TLSVersion.TLSv1_2)
+        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)
+        self.assertTrue(context.check_hostname)
+
     def test_preflight_failure_replaces_old_success(self):
         for name in ['native_acme', 'certificate_rotation', 'resilience']:
             with self.subTest(helper=name), tempfile.TemporaryDirectory() as temp:

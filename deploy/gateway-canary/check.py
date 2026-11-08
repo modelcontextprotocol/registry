@@ -7,6 +7,7 @@ FIXTURE = 'fixture.gateway-canary.invalid'
 
 def tls_context(cafile=None):
     context = ssl.create_default_context(cafile=cafile)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
     if cafile:
         # Explicitly trust the fixture certificate without requiring it to be
         # a CA. Certificate and hostname verification remain enabled.
@@ -23,7 +24,6 @@ class Client:
 
             def connect(self):
                 context = tls_context(fixture_ca)
-                context.minimum_version = ssl.TLSVersion.TLSv1_2
                 self.sock = context.wrap_socket(socket.create_connection((ip, 443), timeout=20), server_hostname=host)
         self.conn = Connection(host, timeout=20)
         self.host = host
