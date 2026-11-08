@@ -134,6 +134,10 @@ func handoffObjectsWithOptions(native, standalone, fixtures bool) ([]map[string]
 		deployment := kube["deployment"].(map[string]any)
 		deployment["autoscaling"].(map[string]any)["maxReplicas"] = 2
 		if standalone {
+			// ReplicaSet scale-down does not preserve topology spread. Keeping
+			// four replicas on the fixed two-node pool avoids a two-Pod state
+			// concentrated on one node, without adding VM capacity.
+			deployment["autoscaling"].(map[string]any)["minReplicas"] = 4
 			deployment["autoscaling"].(map[string]any)["maxReplicas"] = 4
 		}
 		for _, raw := range deployment["patches"].([]any) {

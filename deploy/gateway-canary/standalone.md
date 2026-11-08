@@ -47,6 +47,16 @@ per replica when two proxies share a node. Each worker retains the configured
 fleet-size recommendation. All caching, compression and log metrics remain
 enabled.
 
+The standalone HPA has minimum and maximum four replicas on the same two nodes.
+A cooldown test demonstrated that a 4-to-2 scale-down could leave both survivors
+on one node and interrupt public TLS during load-balancer convergence. Kubernetes
+[documents this topology-spread limitation](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/#known-limitations).
+Keeping four replicas avoids that transition and leaves three available during
+rollouts. It reserves another 1 CPU / 512 MiB compared with two proxies, but adds
+no nodes. Per-replica rate limits remain unchanged; their aggregate budget now
+starts at the existing four-replica maximum. Production replica counts and
+scaling policy require separate sizing.
+
 Proxy rollouts use zero surge and replace one replica at a time. A 30-second
 pre-stop delay covers endpoint propagation and the current GCP health check's
 three 8-second failure intervals. The hook then gracefully quits NGINX and waits
@@ -73,7 +83,7 @@ Certificate, backend and generator must be removed after qualification.
 | Normal release | Main push builds/deploys its exact image digest; authenticated publishing/read/delete and Grafana access work. |
 | Steady load | 500 and 1,000 requests/s, zero generator drops or unexpected statuses/errors, p95 under 100ms and p99 under 250ms for the controlled fixture. |
 | Mixed traffic | 250 requests/s with 20% unique misses; same error/latency gates, origin work measured. |
-| Burst and scaling | Bounded 1,500 requests/s burst measured separately; HPA reaches four ready replicas at peak and returns to two after cooldown; no added nodes. Do not report generator-limited load as gateway capacity. |
+| Burst and capacity | Bounded 1,500 requests/s burst measured separately; Four ready replicas remain distributed across the two existing Gateway nodes; no added nodes. Do not report generator-limited load as gateway capacity. |
 | Proxy/controller replacement | Replace a proxy and restart the controller under load; measure client errors, recovery and public health. |
 | One-node operation | Cordon/drain one Gateway node, test 500 requests/s on the remaining node, keep public probes running, and uncordon in a finally block. Public recovery within two minutes; record convergence errors. This is node evacuation/unavailability, not a powered-off VM experiment. |
 | Collector recovery | Same-node restart restores checkpoints without historical replay, followed by successful load/metric reconciliation. No exactly-once crash guarantee is claimed. |

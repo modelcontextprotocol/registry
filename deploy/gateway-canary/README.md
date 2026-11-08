@@ -121,7 +121,9 @@ Service IP and retains hostname/TLS verification. This measures the active data
 plane with a controlled fixture, not a production traffic replay or internet
 capacity benchmark. Public HTTPS probes run separately during every scenario.
 
-`limits.py` verifies real source-IP limiting; run it with two proxy replicas.
+`limits.py` verifies real source-IP limiting; use `--replicas 4` for standalone staging.
+`autoscale.py` measures fixed four-replica capacity in standalone mode; the
+historical canary mode still exercises the two-to-four HPA transition.
 `resilience.py` also supports controller, rollout and node scenarios. Rollout
 tests default to ten minutes to cover both the update and restoration with
 graceful draining. The node scenario defaults to five minutes; it drains one

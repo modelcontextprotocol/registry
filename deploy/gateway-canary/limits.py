@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Bounded staging source-IP and request-limit probes (1920 health GETs)."""
+"""Bounded staging source-IP and request-limit probes (960 health GETs per configured replica)."""
 import argparse, json, concurrent.futures, collections, time, http.client
 from check import Client, FIXTURE, STAGING
 p = argparse.ArgumentParser()
 p.add_argument('--ip', required=True)
 p.add_argument('--fixture-ca', required=True)
 p.add_argument('--output', required=True)
+p.add_argument('--replicas', type=int, choices=[2,4], default=2, help='Configured proxy replicas; bounds the per-source limit test')
 a = p.parse_args()
 IP = a.ip
 CA = a.fixture_ca
@@ -39,9 +40,9 @@ def probe(worker):
         c.close()
     return counts
 start = time.time()
-with concurrent.futures.ThreadPoolExecutor(max_workers=16) as p:
-    counts = sum(p.map(probe, range(16)), collections.Counter())
-assert counts[429] > 0 and counts[200] > 0 and (sum(counts.values()) == 1920), counts
+with concurrent.futures.ThreadPoolExecutor(max_workers=8 * a.replicas) as p:
+    counts = sum(p.map(probe, range(8 * a.replicas)), collections.Counter())
+assert counts[429] > 0 and counts[200] > 0 and (sum(counts.values()) == 960 * a.replicas), counts
 assert set(counts) <= set([200, 429]), counts
 report['source_ip_limit_ignores_spoofed_xff'] = {'statuses': dict(counts), 'seconds': time.time() - start}
 with open(a.output, 'w') as output:

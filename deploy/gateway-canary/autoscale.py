@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise the staging canary HPA from two to four replicas under fixture load."""
+"""Qualify fixed standalone capacity, or historical canary HPA scaling, under load."""
 import argparse, json, subprocess, time
 from pathlib import Path
 from measure import gateway_target
@@ -16,9 +16,11 @@ h = get('-n', NS, 'get', 'hpa', NAME)
 node_names = sorted(n['metadata']['name'] for n in get('get', 'nodes')['items'])
 assert len(node_names) == 4, 'Qualification requires the original four-node cluster'
 assert h['spec']['maxReplicas'] == 4
+fixed_capacity = h['spec'].get('minReplicas') == 4
+baseline_replicas = 4 if fixed_capacity else 2
 baseline_started = time.monotonic()
-while h['status'].get('currentReplicas') != 2:
-    assert time.monotonic() - baseline_started < 360, 'HPA did not return to two replicas after cooldown'
+while h['status'].get('currentReplicas') != baseline_replicas:
+    assert time.monotonic() - baseline_started < 360, 'HPA did not reach the configured baseline'
     print('Waiting for the normal HPA cooldown before qualification', flush=True)
     time.sleep(10)
     h = get('-n', NS, 'get', 'hpa', NAME)
@@ -37,7 +39,10 @@ with open(args.output / 'load.log', 'w') as log:
         rows.append(row)
         print(json.dumps({'current': h['status'].get('currentReplicas'), 'desired': h['status'].get('desiredReplicas'), 'ready': d['status'].get('readyReplicas'), 'nodes': len(nodes)}), flush=True)
         time.sleep(10)
-    (args.output / 'operation.json').write_text(json.dumps({'exit': p.returncode, 'baseline_wait_seconds': baseline_wait_seconds, 'samples': rows}, indent=2) + '\n')
+    (args.output / 'operation.json').write_text(json.dumps({'exit': p.returncode, 'mode': 'fixed_four_replicas' if fixed_capacity else 'autoscaling_two_to_four', 'baseline_wait_seconds': baseline_wait_seconds, 'samples': rows}, indent=2) + '\n')
     assert all(r['cluster_nodes'] == node_names for r in rows), 'Cluster nodes changed during scaling qualification'
     assert p.returncode == 0, p.returncode
     assert max((r['deployment'].get('readyReplicas', 0) for r in rows)) >= 4, 'did not reach four ready replicas'
+
+    if fixed_capacity:
+        assert all(r['hpa'].get('currentReplicas') == 4 and r['deployment'].get('readyReplicas') == 4 for r in rows), 'Fixed capacity changed during load'
