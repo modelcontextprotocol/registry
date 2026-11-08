@@ -74,6 +74,16 @@ def nodes():
     return sorted(n['metadata']['uid'] for n in items)
 
 
+def upstream_attempts(row):
+    return len(re.findall(r'\d+(?:\.\d+)?', row['upstream_time']))
+
+
+def check_write_non_replay(rows):
+    posts = [r for r in rows if r['method'] == 'POST']
+    assert posts, 'No POST evidence'
+    assert all(upstream_attempts(r) == 1 for r in posts), 'A POST used multiple upstream attempts'
+
+
 def origin_failover(ip, ca):
     namespace = 'registry-gateway-canary'
     deployment = json.loads(kubectl(['-n', namespace, 'get', 'deployment', 'fixture', '-o', 'json']))
@@ -113,10 +123,9 @@ def origin_failover(ip, ca):
                 except ValueError: continue
                 if row.get('request_id', '').startswith(marker): rows.append(row)
         assert len(rows) == 40
-        attempts = lambda row: len(re.findall(r'\d+(?:\.\d+)?', row['upstream_time']))
-        assert any(r['method'] == 'GET' and attempts(r) == 2 for r in rows)
-        assert all(attempts(r) <= 3 for r in rows)
-        assert all(attempts(r) == 1 for r in rows if r['method'] == 'POST' and r['status'] == '502')
+        assert any(r['method'] == 'GET' and upstream_attempts(r) == 2 for r in rows)
+        assert all(upstream_attempts(r) <= 3 for r in rows)
+        check_write_non_replay(rows)
         c = Client(ip, FIXTURE, ca)
         try:
             for i in range(6):
@@ -136,7 +145,7 @@ def origin_failover(ip, ca):
                 except ValueError: continue
                 if 'retry-cache=' + marker in row.get('uri', ''): retry_cache_rows.append(row)
         assert len(retry_cache_rows) == 12
-        assert any(r['cache'] == 'MISS' and attempts(r) == 2 for r in retry_cache_rows)
+        assert any(r['cache'] == 'MISS' and upstream_attempts(r) == 2 for r in retry_cache_rows)
         return {'responses': {k: dict(v) for k, v in counts.items()}, 'get_failover_observed': True,
                 'sent_post_not_replayed': True, 'attempts_at_most_three': True,
                 'successful_retry_responses_cacheable': True}

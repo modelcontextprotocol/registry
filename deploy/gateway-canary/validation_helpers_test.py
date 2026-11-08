@@ -14,6 +14,16 @@ from unittest.mock import patch
 
 
 class ValidationHelpersTest(unittest.TestCase):
+    def test_write_non_replay_includes_successful_posts(self):
+        from production_parity import check_write_non_replay
+        success = {'method': 'POST', 'status': '200', 'upstream_time': '0.001'}
+        failure = {'method': 'POST', 'status': '502', 'upstream_time': '0.002'}
+        check_write_non_replay([success, failure])
+        with self.assertRaises(AssertionError):
+            check_write_non_replay([dict(success, upstream_time='0.001, 0.002'), failure])
+        with self.assertRaises(AssertionError):
+            check_write_non_replay([])
+
     def test_shared_probe_tls_context_requires_modern_verified_tls(self):
         import ssl
         from check import tls_context

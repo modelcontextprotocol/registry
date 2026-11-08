@@ -128,7 +128,11 @@ non-standalone handoff modes. A full `Deploy` mock reproduced failures for `lega
 `overlap` and `gateway`; the fix registers those shared policies once. The same test
 now passes in all three modes and `standalone`. CodeQL findings in the probe helper
 were fixed by enforcing TLS 1.2 in every context, with certificate/hostname checks
-retained and a verified public TLS 1.3 handshake afterward.
+retained and a verified public TLS 1.3 handshake afterward. A follow-up review
+strengthened non-replay validation to include successful POSTs too. Rechecking
+the actual request logs from both completed fault runs confirmed all 40 POSTs
+used exactly one upstream attempt (20 successful, 20 intentionally failed).
+A regression test rejects a successful POST with two attempts.
 
 ## Reproducing the bounded staging checks
 

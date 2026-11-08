@@ -136,5 +136,30 @@
     ],
     "gateway_scrapes_up": 4,
     "generated_fixture_secret_removed": true
+  },
+  "all_post_attempts_rechecked": {
+    "passed": true,
+    "runs": [
+      {
+        "posts": 20,
+        "statuses": {
+          "502": 10,
+          "200": 10
+        },
+        "attempts": {
+          "1": 20
+        }
+      },
+      {
+        "posts": 20,
+        "statuses": {
+          "502": 10,
+          "200": 10
+        },
+        "attempts": {
+          "1": 20
+        }
+      }
+    ]
   }
 }
