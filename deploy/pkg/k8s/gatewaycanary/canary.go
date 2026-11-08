@@ -24,6 +24,9 @@ func Enabled(ctx *pulumi.Context) bool {
 
 func Validate(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
+	if Compact(ctx) && (!Standalone(ctx) || !c.GetBool("stagingIdleCapacity") || c.Get("stagingSmallCapacity") != "enabled" || c.Get("nodeMinCount") != "2" || c.Get("nodeMaxCount") != "2") {
+		return fmt.Errorf("gatewayStagingCompact requires standalone small idle staging with exactly two total nodes")
+	}
 	mode := PublicCertificates(ctx)
 	if mode != "" && (mode != "adopt" && mode != "managed" || !NativeCertificates(ctx)) {
 		return fmt.Errorf("public Gateway certificates require native renewal and adopt/managed mode")
@@ -150,6 +153,9 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 						args[i] = arg.(string) + "," + EdgeNamespace
 					}
 				}
+			}
+			if Compact(ctx) {
+				compactObject(o)
 			}
 			r, e := register(ctx, provider, o, prior)
 			if e != nil {

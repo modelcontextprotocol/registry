@@ -4,12 +4,17 @@ import (
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/container"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
 
 func createDatabaseNodePool(ctx *pulumi.Context, cluster *container.Cluster, project, zone, machineType string, provider *gcp.Provider) (*container.NodePool, error) {
 	opts := []pulumi.ResourceOption{pulumi.Protect(true)}
 	if provider != nil {
 		opts = append(opts, pulumi.Provider(provider))
+	}
+	surge, unavailable := 1, 0
+	if config.New(ctx, "mcp-registry").GetBool("gatewayStagingCompact") {
+		surge, unavailable = 0, 1
 	}
 	return container.NewNodePool(ctx, "registry-database-nodepool", &container.NodePoolArgs{
 		Name: pulumi.String(project + "-database"), Cluster: cluster.Name, Location: pulumi.String(zone), Project: pulumi.String(project), NodeCount: pulumi.Int(1),
@@ -19,6 +24,6 @@ func createDatabaseNodePool(ctx *pulumi.Context, cluster *container.Cluster, pro
 			Taints: container.NodePoolNodeConfigTaintArray{&container.NodePoolNodeConfigTaintArgs{Key: pulumi.String("registry-role"), Value: pulumi.String("database"), Effect: pulumi.String("NO_SCHEDULE")}},
 		},
 		Management:      &container.NodePoolManagementArgs{AutoRepair: pulumi.Bool(true), AutoUpgrade: pulumi.Bool(true)},
-		UpgradeSettings: &container.NodePoolUpgradeSettingsArgs{Strategy: pulumi.String("SURGE"), MaxSurge: pulumi.Int(1), MaxUnavailable: pulumi.Int(0)},
+		UpgradeSettings: &container.NodePoolUpgradeSettingsArgs{Strategy: pulumi.String("SURGE"), MaxSurge: pulumi.Int(surge), MaxUnavailable: pulumi.Int(unavailable)},
 	}, opts...)
 }
