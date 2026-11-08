@@ -3,8 +3,11 @@ package gatewaycanary
 import (
 	"encoding/json"
 	"strings"
+	"sync/atomic"
 	"testing"
 
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
@@ -131,5 +134,156 @@ func TestHandoffControllerCanWatchItsNewNamespace(t *testing.T) {
 				t.Fatal("handoff role must match the qualified controller permissions")
 			}
 		}
+	}
+}
+
+func TestNativeCertificatesRemoveLegacyChallengeDependency(t *testing.T) {
+	objects, err := handoffObjectsWithCertificates(true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, o := range objects {
+		data, _ := json.Marshal(o)
+		if strings.Contains(string(data), "legacy-acme") {
+			t.Fatal("native renewal still depends on ingress")
+		}
+		if o["kind"] == "Gateway" {
+			for _, raw := range o["spec"].(map[string]any)["listeners"].([]any) {
+				listener := raw.(map[string]any)
+				namespaces := listener["allowedRoutes"].(map[string]any)["namespaces"].(map[string]any)
+				if listener["name"] == "http" {
+					found = true
+					if namespaces["from"] != "Selector" {
+						t.Fatal("solver namespaces must be restricted")
+					}
+					encoded, _ := json.Marshal(namespaces)
+					for _, ns := range []string{EdgeNamespace, "default", "monitoring"} {
+						if !strings.Contains(string(encoded), ns) {
+							t.Fatal("missing solver namespace", ns)
+						}
+					}
+				} else if namespaces["from"] != "Same" {
+					t.Fatal("HTTPS route attachment was broadened")
+				}
+			}
+		}
+	}
+	if !found {
+		t.Fatal("missing HTTP solver listener")
+	}
+}
+
+func TestManagedInternalCertificates(t *testing.T) {
+	objects := internalCertificates()
+	if len(objects) != 5 {
+		t.Fatal("missing CA or leaf lifecycle")
+	}
+	for _, o := range objects {
+		meta := o["metadata"].(map[string]any)
+		if meta["namespace"] != Namespace || meta["annotations"].(map[string]any)["pulumi.com/waitFor"] != "condition=Ready" {
+			t.Fatal("certificate dependency is not awaited")
+		}
+		if o["kind"] == "Certificate" && meta["name"] != "gateway-internal-ca" {
+			spec := o["spec"].(map[string]any)
+			if spec["duration"] != "720h" || spec["renewBefore"] != "240h" || spec["privateKey"].(map[string]any)["rotationPolicy"] != "Always" {
+				t.Fatal("leaf renewal policy")
+			}
+		}
+	}
+	control, _ := objectsForControllerTest()
+	managedControllerTLS(control)
+	data, _ := json.Marshal(control)
+	if !strings.Contains(string(data), "--agent-tls-secret=gateway-agent-tls") || !strings.Contains(string(data), `"secretName":"gateway-server-tls"`) {
+		t.Fatal("controller did not switch both credentials")
+	}
+}
+
+func objectsForControllerTest() (map[string]any, error) {
+	control, err := objects("controller.json")
+	for _, o := range control {
+		if o["kind"] == "Deployment" {
+			return o, err
+		}
+	}
+	return nil, err
+}
+
+func TestStandaloneGatewayUsesFinalTopologyForLoadTests(t *testing.T) {
+	manifests, err := handoffObjectsWithOptions(true, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixtureRoutes := 0
+	for _, o := range manifests {
+		spec := o["spec"].(map[string]any)
+		name := o["metadata"].(map[string]any)["name"].(string)
+		if name == "legacy-acme" || (o["kind"] == "HTTPRoute" && name == "acme") {
+			t.Fatal("legacy solver retained")
+		}
+		if o["kind"] == "NginxProxy" && (spec["kubernetes"].(map[string]any)["deployment"].(map[string]any)["autoscaling"].(map[string]any)["maxReplicas"] != 4 || spec["kubernetes"].(map[string]any)["deployment"].(map[string]any)["autoscaling"].(map[string]any)["minReplicas"] != 4) {
+			t.Fatal("standalone replica count is not fixed at four")
+		}
+		if o["kind"] == "NginxProxy" && spec["workerProcesses"] != 1 {
+			t.Fatal("staging workers must match the shared node CPU budget")
+		}
+		if o["kind"] == "HTTPRoute" && strings.HasPrefix(name, "fixture-") {
+			fixtureRoutes++
+			if spec["parentRefs"].([]any)[0].(map[string]any)["name"] != EdgeGateway {
+				t.Fatal("load test bypasses public Gateway")
+			}
+			for _, rule := range spec["rules"].([]any) {
+				for _, b := range rule.(map[string]any)["backendRefs"].([]any) {
+					if b.(map[string]any)["namespace"] != Namespace {
+						t.Fatal("wrong isolated fixture backend")
+					}
+				}
+			}
+		}
+	}
+	if fixtureRoutes != 2 {
+		t.Fatal("missing fixture routes")
+	}
+}
+
+type standaloneMocks struct {
+	mocks
+	t        *testing.T
+	gateways atomic.Int32
+}
+
+func (m *standaloneMocks) NewResource(a pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
+	if a.TypeToken == "kubernetes:gateway.networking.k8s.io/v1:Gateway" {
+		m.gateways.Add(1)
+		meta := a.Inputs["metadata"].ObjectValue()
+		if meta["name"].StringValue() != EdgeGateway || meta["namespace"].StringValue() != EdgeNamespace {
+			m.t.Error("duplicate canary Gateway retained")
+		}
+	}
+	if strings.Contains(a.Name, "cert-generator") || strings.Contains(a.Name, "legacy-acme") {
+		m.t.Error("legacy resource retained", a.Name)
+	}
+	return m.mocks.NewResource(a)
+}
+func TestStandaloneRegistersWithoutLegacyIngress(t *testing.T) {
+	mock := &standaloneMocks{t: t}
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		provider, err := kubernetes.NewProvider(ctx, "staging-provider", &kubernetes.ProviderArgs{})
+		if err != nil {
+			return err
+		}
+		crds, err := DeployCRDs(ctx, provider)
+		if err != nil {
+			return err
+		}
+		return Deploy(ctx, provider, pulumi.String("").ToStringOutput(), crds...)
+	}, pulumi.WithMocks("test", "staging", mock), func(info *pulumi.RunInfo) {
+		info.Config = map[string]string{"mcp-registry:gatewayStagingStandalone": "true", "mcp-registry:environment": "staging", "mcp-registry:provider": "gcp", "gcp:project": "mcp-registry-staging", "mcp-registry:gatewayStagingPublicIP": "35.222.36.75"}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mock.gateways.Load() != 1 {
+		t.Fatal("expected exactly one public Gateway")
 	}
 }

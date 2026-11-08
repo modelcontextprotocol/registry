@@ -1,7 +1,6 @@
 config:
-  mcp-registry:gatewayStagingHandoff: gateway
+  mcp-registry:gatewayStagingStandalone: "true"
   mcp-registry:gatewayStagingPublicIP: 35.222.36.75
-  mcp-registry:gatewayCanary: "true"
   mcp-registry:securityPatch202611: "true"
   mcp-registry:publicReadCompression: "true"
   mcp-registry:publicReadLogSampling: "true"

@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""Prove native HTTP01 issuance/renewal without replacing public certificates."""
+import argparse
+import hashlib
+import json
+import subprocess
+import time
+import uuid
+from pathlib import Path
+
+K = ['kubectl', '--context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging', '--request-timeout=30s']
+
+
+def run(*args, **kw):
+    return subprocess.run(K + list(args), capture_output=True, text=True, check=True, timeout=60, **kw)
+
+
+def get(*args):
+    return json.loads(run(*args, '-o', 'json').stdout)
+
+
+def fingerprints():
+    return {ns: hashlib.sha256(run('-n', ns, 'get', 'secret', name, '-o', 'jsonpath={.data.tls\\.crt}').stdout.encode()).hexdigest()
+            for ns, name in [('default', 'mcp-registry-staging-tls'), ('monitoring', 'grafana-tls')]}
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cmctl', required=True)
+    parser.add_argument('--output', required=True)
+    args = parser.parse_args()
+    report = {'passed': False, 'native_gateway_solver': False, 'proofs': []}
+    output = Path(args.output)
+    output.write_text(json.dumps(report, indent=2) + '\n')
+    issuer = get('get', 'clusterissuer', 'letsencrypt-prod')
+    solver = issuer['spec']['acme']['solvers']
+    assert len(solver) == 1 and 'gatewayHTTPRoute' in solver[0]['http01']
+    parent = solver[0]['http01']['gatewayHTTPRoute']['parentRefs'][0]
+    assert all(parent.get(k) == v for k, v in {'kind': 'Gateway', 'name': 'registry-edge', 'namespace': 'ingress-nginx', 'sectionName': 'http'}.items())
+    before = fingerprints()
+    report['native_gateway_solver'] = True
+    name = 'gateway-native-proof-' + uuid.uuid4().hex
+    for ns, host in [('default', 'staging.registry.modelcontextprotocol.io'), ('monitoring', 'grafana.staging.registry.modelcontextprotocol.io')]:
+        created = []
+        proof = {'namespace': ns, 'host': host, 'observed_http_routes': [], 'completed': False, 'cleanup_errors': []}
+        report['proofs'].append(proof)
+        try:
+            for kind, spec in [
+                ('Issuer', {'acme': {'server': 'https://acme-staging-v02.api.letsencrypt.org/directory', 'privateKeySecretRef': {'name': name + '-account'}, 'solvers': solver}}),
+                ('Certificate', {'secretName': name + '-tls', 'dnsNames': [host], 'issuerRef': {'name': name, 'kind': 'Issuer'}, 'privateKey': {'rotationPolicy': 'Always'}}),
+            ]:
+                run('create', '-f', '-', input=json.dumps({'apiVersion': 'cert-manager.io/v1', 'kind': kind, 'metadata': {'name': name, 'namespace': ns}, 'spec': spec}))
+                created.append(kind)
+            for revision in [1, 2]:
+                if revision == 2:
+                    subprocess.run([args.cmctl, 'renew', name, '-n', ns, '--context', K[1].split('=', 1)[1]], capture_output=True, check=True, timeout=30)
+                deadline = time.monotonic() + 360
+                while time.monotonic() < deadline:
+                    for route in get('-n', ns, 'get', 'httproutes')['items']:
+                        if not route['metadata']['name'].startswith('cm-acme-http-solver-'):
+                            continue
+                        if host not in route['spec'].get('hostnames', []):
+                            continue
+                        assert route['spec']['parentRefs'][0]['name'] == parent['name']
+                        route_name = route['metadata']['name']
+                        if route_name not in proof['observed_http_routes']:
+                            proof['observed_http_routes'].append(route_name)
+                    status = get('-n', ns, 'get', 'certificate', name).get('status', {})
+                    conditions = {c['type']: c['status'] for c in status.get('conditions', [])}
+                    if status.get('revision', 0) >= revision and conditions.get('Ready') == 'True' and conditions.get('Issuing') != 'True':
+                        proof['revision_' + str(revision)] = {k: status[k] for k in ['revision', 'notBefore', 'notAfter', 'renewalTime']}
+                        print(f'{ns}: native ACME revision {revision} ready', flush=True)
+                        break
+                    time.sleep(2)
+                else:
+                    raise RuntimeError('Native certificate issuance timed out in ' + ns)
+            assert proof['observed_http_routes'], 'No native solver route observed'
+            proof['completed'] = True
+        finally:
+            # Only clean up credentials belonging to resources this run created.
+            # UUID names also prevent simultaneous runs sharing an ACME account.
+            cleanup = [(kind, name) for kind in reversed(created)]
+            if 'Certificate' in created:
+                cleanup.append(('secret', name + '-tls'))
+            if 'Issuer' in created:
+                cleanup.append(('secret', name + '-account'))
+            for kind, resource_name in cleanup:
+                try:
+                    run('-n', ns, 'delete', kind, resource_name, '--ignore-not-found', '--wait=true')
+                except Exception as error:
+                    proof['cleanup_errors'].append(kind + ': ' + type(error).__name__)
+            try:
+                report['public_certificates_unchanged'] = fingerprints() == before
+            finally:
+                output.write_text(json.dumps(report, indent=2) + '\n')
+            assert not proof['cleanup_errors'], 'Native certificate proof cleanup failed; inspect report'
+    assert report['public_certificates_unchanged']
+    report['passed'] = True
+    output.write_text(json.dumps(report, indent=2) + '\n')
+    print(json.dumps(report, indent=2))
+
+
+if __name__ == '__main__':
+    main()

@@ -16,6 +16,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
@@ -392,6 +393,10 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		return nil, err
 	}
 
+	if gatewaycanary.Standalone(ctx) {
+		ctx.Export("ingressHosts", pulumi.StringArray{pulumi.String("staging.registry.modelcontextprotocol.io")})
+		return service, nil
+	}
 	// Create Ingress
 	hosts := []string{
 		environment + ".registry.modelcontextprotocol.io",
@@ -410,16 +415,16 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 				"app":         pulumi.String("mcp-registry"),
 				"environment": pulumi.String(environment),
 			},
-			Annotations: pulumi.StringMap{
-				"cert-manager.io/cluster-issuer": pulumi.String("letsencrypt-prod"),
-				"kubernetes.io/ingress.class":    pulumi.String("nginx"),
+			Annotations: certificateIngressAnnotations(ctx, pulumi.StringMap{
+
+				"kubernetes.io/ingress.class": pulumi.String("nginx"),
 				// Rate limiting to protect against abuse. The exact bulk-list paths get a
 				// separate, higher budget below; all other routes retain this limit.
 				// Allows 180 requests/minute (3 req/sec avg), with bursts up to 540 requests.
 				// Status code 429 is set globally via NGINX ConfigMap (per-Ingress annotation doesn't work).
 				"nginx.ingress.kubernetes.io/limit-rpm":              pulumi.String("180"),
 				"nginx.ingress.kubernetes.io/limit-burst-multiplier": pulumi.String("3"),
-			},
+			}),
 		},
 		Spec: &networkingv1.IngressSpecArgs{
 			Tls: networkingv1.IngressTLSArray{

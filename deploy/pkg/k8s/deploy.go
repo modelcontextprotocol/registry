@@ -10,8 +10,12 @@ import (
 
 // DeployAll orchestrates the complete deployment of the MCP Registry to Kubernetes
 func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStorage *providers.BackupStorageInfo, environment string) (service *corev1.Service, err error) {
-	// Setup cert-manager
-	err = SetupCertManager(ctx, cluster)
+	gatewayCRDs, err := gatewaycanary.DeployCRDs(ctx, cluster.Provider)
+	if err != nil {
+		return nil, err
+	}
+	// Setup cert-manager after the Gateway API definitions exist.
+	certificateIssuer, err := SetupCertManager(ctx, cluster, gatewayCRDs)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +50,12 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStora
 		return nil, err
 	}
 
-	if err := gatewaycanary.Deploy(ctx, cluster.Provider, cluster.CanaryAddress, ingressNginx); err != nil {
+	gatewayDependencies := append(gatewayCRDs, certificateIssuer)
+	// Do not box a nil *helm.Chart into a non-nil pulumi.Resource interface.
+	if ingressNginx != nil {
+		gatewayDependencies = append(gatewayDependencies, ingressNginx)
+	}
+	if err := gatewaycanary.Deploy(ctx, cluster.Provider, cluster.CanaryAddress, gatewayDependencies...); err != nil {
 		return nil, err
 	}
 	return service, nil

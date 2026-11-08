@@ -1,5 +1,9 @@
 # Staging public-IP handoff
 
+> Historical transition procedure. Staging now uses [standalone mode](standalone.md);
+> the retained legacy controller and duplicate canary described below are gone.
+> Recovery requires a reviewed redeployment from Git history.
+
 The staging handoff is opt-in and restricted to `mcp-registry-staging`. Production
 and the image/release workflows are unchanged. `gatewayStagingHandoff: legacy`
 prepares the new data plane but leaves public traffic on ingress-nginx. The

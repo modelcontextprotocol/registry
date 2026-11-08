@@ -76,8 +76,10 @@ def main():
             while True:
                 current = totals()
                 delta = {k: current.get(k, 0) - baseline.get(k, 0) for k in set(current) | set(baseline)}
-                expected = {'requests_total': 5 * (index + 1), 'internal_requests_total': index + 1,
+                expected = {'requests_total': 6 * (index + 1), 'internal_requests_total': index + 1,
                             'upstream_duration_seconds_count': 2 * (index + 1),
+                            'upstream_connect_seconds_count': 2 * (index + 1),
+                            'upstream_header_seconds_count': 2 * (index + 1),
                             'upstream_all_attempts_seconds_count': 3 * (index + 1),
                             'upstream_all_attempts_seconds_sum': 0.85 * (index + 1),
                             'connect_all_attempts_seconds_sum': 0.04 * (index + 1),

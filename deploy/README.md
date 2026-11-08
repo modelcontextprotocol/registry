@@ -1143,30 +1143,20 @@ The patched releases address [CloudNativePG GHSA-x8c2-3p4r-v9r6](https://github.
 [ingress-nginx CVE-2026-4342](https://discuss.kubernetes.io/t/security-advisory-cve-2026-4342-ingress-nginx-comment-based-nginx-configuration-injection/34349),
 and [Grafana CVE-2026-27880](https://grafana.com/security/security-advisories/cve-2026-27880/).
 
-#### ingress-nginx replacement plan
+#### ingress-nginx replacement
 
-1. Evaluate a maintained Gateway API implementation in staging (start with Envoy
-   Gateway), on a separate load balancer and test hostname. Keep existing traffic
-   on ingress-nginx during qualification. Select the release against the cluster's
-   Kubernetes version and documented support policy.
-2. Map all existing ingress behavior: ACME/cert-manager certificates, HTTPS
-   redirects, real client IP and rate limits, OAuth callbacks, health checks,
-   body/time limits, metrics, HPA and node placement. NGINX snippets are not portable:
-   explicitly implement public listing cache keys/TTL, public versus authenticated route isolation, invalidation behavior, gzip negotiation and `Vary` handling (including credential/cookie compression bypass); confirm that
-   publishing and other authenticated routes are never cached.
-3. Run the existing traffic tests against both controllers, including publishing
-   in staging, cache isolation, burst/rollout capacity and certificate renewal.
-   Compare error rates, tail latency, cache hits, CPU and memory under equivalent load.
-4. After parity is demonstrated, use a separate reviewed production rollout with
-   a low DNS TTL and a reversible traffic cutover. Retain the old load balancer
-   during observation; only then remove its controller, admission webhook and RBAC.
+Staging uses OSS NGINX Gateway Fabric with Gateway API, Vector, cert-manager,
+VictoriaMetrics and Grafana. Its public Service/IP and trusted certificates are
+preserved; ingress-nginx and the duplicate canary are retired. The existing
+Gateway nodes are reused and the normal release flow is unchanged.
 
+See [standalone staging qualification](gateway-canary/standalone.md) for feature,
+load, recovery, certificate and monitoring gates. There is no running legacy
+fallback in staging; recovery uses a reviewed Git revision and full-stack saved
+plan. The historical [canary comparison](gateway-canary/validation.md) and
+[handoff](gateway-canary/handoff-validation.md) remain as evidence of earlier phases.
+
+Production still uses the patched ingress-nginx release. Its migration requires
+a separate reviewed plan after final staging qualification and observation,
+including production capacity, real alert delivery and an explicit recovery path.
 The interim patch does not restore upstream maintenance for the retired project.
-The controller migration remains a separate rollout, not part of this version bump.
-
-### Parallel Gateway Fabric canary
-
-The staging-only [Gateway Fabric canary](gateway-canary/README.md) runs alongside
-ingress-nginx using an explicit test IP. It preserves the normal release flow
-and does not change production or public DNS. See its qualification record
-before considering a traffic cutover.

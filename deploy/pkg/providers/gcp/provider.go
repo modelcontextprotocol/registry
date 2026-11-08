@@ -205,7 +205,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
-	if config.New(ctx, "mcp-registry").Get("publicReadLogSampling") != "" {
+	if config.New(ctx, "mcp-registry").Get("publicReadLogSampling") != "" && !config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone") {
 		policy := traffic.ReadPolicy()
 		opts := []pulumi.ResourceOption{}
 		if gcpProvider != nil {
@@ -331,14 +331,16 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		clusterDependencies = append(clusterDependencies, dbPool)
 	}
 
-	var canaryAddress pulumi.StringOutput
-	if config.New(ctx, "mcp-registry").GetBool("gatewayCanary") {
+	canaryAddress := pulumi.String("").ToStringOutput()
+	if config.New(ctx, "mcp-registry").GetBool("gatewayCanary") || config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone") {
 		pool, address, err := createGatewayCanary(ctx, cluster, projectID, region, zone, gcpProvider)
 		if err != nil {
 			return nil, err
 		}
 		clusterDependencies = append(clusterDependencies, pool)
-		canaryAddress = address.Address
+		if address != nil {
+			canaryAddress = address.Address
+		}
 	}
 
 	stagingIngressAddress, err := reserveStagingIngressAddress(ctx, projectID, region, gcpProvider)

@@ -32,7 +32,8 @@ def corpus():
             record(upstream_time='-', connect='-', header='-', cache='HIT'),
             record(upstream_time='garbage', connect='-1', header='bad'),
             record(uri='/v0.1/servers?long=' + 'x' * 300000),
-            record(request_bytes='0')]
+            record(request_bytes='0'),
+            record(upstream_time='', connect='', header='', cache='HIT')]
 
 
 def cri(text, flag='F', stream='stdout'):
@@ -100,17 +101,17 @@ def main():
                     for offset in range(0, len(rows[4]), 131072):
                         part = rows[4][offset:offset+131072]
                         a.write(cri(part, 'F' if offset+131072 >= len(rows[4]) else 'P'))
-                    a.write(cri(rows[5])); a.write(cri('{"kind":"registry_access",broken}'))
+                    a.write(cri(rows[5])); a.write(cri(rows[6])); a.write(cri('{"kind":"registry_access",broken}'))
                     a.flush()
                 # A never-finished record must expire visibly, not count as a request.
                 (root / 'orphan.log').write_text(cri(rows[0][:30], 'P'))
                 # A runaway fragment sequence must flush at the configured bound.
                 (root / 'bounded.log').write_text(cri('{"kind":"registry_access",', 'P')
                                                   + cri('x' * 60000, 'P') * 3)
-                expected = {'requests_total': 5, 'internal_requests_total': 1,
-                            'request_duration_seconds_count': 5, 'response_bytes_count': 5,
-                            'request_bytes_count': 5, 'response_body_bytes_count': 5,
-                            'upstream_duration_seconds_count': 2, 'upstream_duration_seconds_sum': 0.25,
+                expected = {'requests_total': 6, 'internal_requests_total': 1,
+                            'request_duration_seconds_count': 6, 'response_bytes_count': 6,
+                            'request_bytes_count': 6, 'response_body_bytes_count': 6,
+                            'upstream_duration_seconds_count': 2, 'upstream_connect_seconds_count': 2, 'upstream_header_seconds_count': 2, 'upstream_duration_seconds_sum': 0.25,
                             'upstream_all_attempts_seconds_count': 3, 'upstream_all_attempts_seconds_sum': 0.85,
                             'connect_all_attempts_seconds_count': 3, 'connect_all_attempts_seconds_sum': 0.04,
                             'header_all_attempts_seconds_count': 3, 'header_all_attempts_seconds_sum': 0.14,
@@ -132,7 +133,7 @@ def main():
                 result = {'passed': True, 'expected': expected,
                           'cases': ['CRI split marker', '300KB record', 'interleaved file/stream',
                                     'retry groups and missing timings', 'invalid timings',
-                                    'cache hit', 'background refresh', 'malformed JSON',
+                                    'cache hit with empty and dash timings', 'background refresh', 'malformed JSON',
                                     'partial timeout', 'partial fragment bound']}
                 if args.output:
                     args.output.write_text(json.dumps(result, indent=2) + '\n')

@@ -1,11 +1,18 @@
-# Staging Gateway Fabric canary
+# Staging Gateway Fabric
 
-This opt-in Pulumi deployment runs alongside ingress-nginx. `gatewayCanary` is
-rejected outside GCP staging, and the cloud resources also require project
-`mcp-registry-staging`. Neither release workflow nor production configuration is
-changed. Normal staging pushes continue to deploy the current main image.
+Staging now selects `gatewayStagingStandalone: "true"`. Its public hostnames use
+OSS Gateway Fabric, with no running ingress-nginx or duplicate canary. See
+[standalone.md](standalone.md) for the final topology, qualification gates and
+Git-based recovery procedure. Production retains its existing ingress. Normal
+staging pushes continue to deploy the current main image. The completed
+[standalone validation](standalone-validation.md) records both passing checks
+and capacity limits; it does not approve production migration.
 
-The canary uses OSS NGF 2.8.1 / Gateway API 1.6.3 / Vector 0.61.0. Controller,
+The `gateway-canary` paths, metric prefixes and node-pool names are retained to
+preserve monitoring history and infrastructure identity. Earlier comparison and
+handoff reports below describe historical configurations, not the current one.
+
+The Gateway uses OSS NGF 2.8.1 / Gateway API 1.6.3 / Vector 0.61.0. Controller,
 data-plane, Vector and fixture images are pinned by digest. NGINX Plus and product
 telemetry are disabled. Metrics go to the existing vmagent, VictoriaMetrics and
 Grafana, under separate `gateway-canary-vector-*` jobs and
@@ -14,39 +21,25 @@ current data sources while mappings are qualified. The full event stream is
 processed locally; GCP retains 10% of fast successful listing logs after metric
 extraction.
 
-## Isolation and cost
+## Capacity and temporary fixtures
 
-A separate tainted pool starts with two e2-standard-2 workers, autoscaling at most
-two (node upgrades can temporarily surge). Two NGINX replicas can scale to
-four. Each eligible node runs one single-threaded Vector collector requesting
-500m CPU; proxy replicas request 500m. The controller requests 100m; the temporary fixture requests 100m when enabled. These are canary starting budgets, not approved production
-sizing. The original staging worker/database pool, ingress, IP and storage stay
-in place. The canary adds node/disks, one regional external IP and one L4 load
-balancer while enabled. Account for this overlap when interpreting cost.
+The existing two e2-standard-2 Gateway nodes remain capped at two; no additional
+nodes are required by this migration. Standalone staging keeps four proxy
+replicas (two per node) to avoid the observed scale-down placement failure.
+Each Gateway node runs one single-threaded Vector collector requesting 500m CPU;
+each proxy requests 500m and the controller requests 100m. The worker and database
+pools remain unchanged. Removing the duplicate canary releases its separate IP
+and L4 load balancer. Node upgrades may temporarily surge under the pool's existing
+upgrade policy; that is separate from workload autoscaling.
 
-## No DNS changes
+The original public IP and Service are preserved. Public certificates are managed
+by Pulumi/cert-manager with native Gateway HTTP01 renewal. Internal server/client
+TLS certificates are also managed by cert-manager; the old bootstrap Job is gone.
 
-DNS access is unavailable for this experiment. Use the exported `gatewayCanaryIP`
-with the existing hostnames. For example:
-
-```sh
-curl --resolve staging.registry.modelcontextprotocol.io:443:CANARY_IP \
-  https://staging.registry.modelcontextprotocol.io/v0.1/health
-python3.13 gateway-canary/check.py --ip CANARY_IP --fixture-ca /tmp/fixture.crt \
-  --output /tmp/canary-contract.json
-```
-
-TLS references the existing staging and Grafana Secrets through narrowly named
-ReferenceGrants. The original cert-manager Ingress solver continues renewing
-these certificates. This canary **does not validate independent Gateway HTTP01
-renewal or an end-to-end browser OAuth callback through the new IP**. Those remain
-cutover gates; do not retire ingress-nginx or its solver based on these results.
-
-`gatewayCanaryFixtures: "true"` temporarily enables a fixture and load generator.
-`gatewayCanaryComparison: "true"` additionally enables a private ingress-nginx
-baseline and caps the gateway at two replicas for a matched comparison. Neither
-flag is enabled in the retained canary. Turning them off removes the unthrottled
-fixture listener, workload, test certificate, generator and comparison resources.
+`gatewayCanaryFixtures: "true"` temporarily enables an isolated backend and load
+generator on the existing worker, with a test listener on the public Gateway.
+Remove this flag after qualification. `gatewayCanaryComparison` is rejected in
+standalone mode; historical ingress comparisons are recorded in the reports.
 
 `fixture.gateway-canary.invalid` is a reserved test hostname, without DNS. The
 fixture has its own cert-manager self-signed test certificate. Supply its public
@@ -60,14 +53,10 @@ the unthrottled fixture route as the application route.
 ## Resource ownership
 
 `pkg/k8s/gatewaycanary/assets/controller.json` is the reviewed upstream Helm
-render using `ngf-values.json`, including the certificate-generation hook.
-Pulumi owns individual resources so saved plans contain concrete identities;
-there is no custom NGINX template or controller fork. The certificate job stays
-in state after completion rather than generating perpetual TTL replacements.
-This is the upstream bootstrap path for inter-plane TLS. Before production,
-manage these internal certificates through the existing cert-manager installation,
-as recommended by the [upstream certificate guide](https://docs.nginx.com/nginx-gateway-fabric/install/secure-certificates/).
-That is separate from public listener certificate renewal.
+render using `ngf-values.json`. Standalone deployment replaces its bootstrap
+certificate hook with cert-manager resources. Pulumi owns concrete resources;
+there is no custom NGINX template or controller fork. Public Certificates are
+protected, have no legacy Ingress owner, and retain their existing trusted Secrets.
 
 `crds.json` contains Gateway API's standard installation plus the pinned NGF
 chart CRDs. `routes.json` is the canary's native Gateway/NGF policy configuration.
@@ -85,20 +74,13 @@ NGF and Gateway API are Apache-2.0; NGINX OSS is BSD-2-Clause and Vector is MPL-
 These core licenses do not constitute a complete transitive image/SBOM audit.
 `assets-provenance.json` records the chart digest and vendored asset hashes.
 
-## Rollback and release flow
+## Recovery and release flow
 
-The normal staging hostname continues to reach ingress-nginx throughout. To stop
-using the canary, stop the explicit-IP probes; no DNS rollback is needed. To remove
-its infrastructure, set `gatewayCanary: "false"`, preview and apply through the
-normal staging workflow. Review deletion of canary CRDs carefully if anything
-else begins using Gateway API; they are cluster-scoped. Do not remove shared CRDs
-while another controller relies on them. Original application, ingress, databases
-and volumes must remain in the removal preview.
-
-No image pin, release-wrapper or workflow dispatch mode is introduced. For local
-qualification only, `REGISTRY_STAGING_IMAGE` can select the already built release
-digest without persisting a staging configuration pin. A later normal main push
-resumes normal image selection.
+There is no live legacy fallback. Use the reviewed Git recovery procedure in
+[standalone.md](standalone.md), preserving the protected public IP and certificates.
+No image pin or workflow dispatch mode is introduced. A normal main push builds
+and deploys its exact image digest. Temporary local qualification may use
+`REGISTRY_STAGING_IMAGE` without persisting a staging pin.
 
 ## Monitoring follow-up
 
@@ -118,46 +100,56 @@ must each have separate evidence or be marked pending.
 
 ## Repeating qualification
 
-Use only the staging context. Enable `gatewayCanaryComparison` for matched tests,
-preview/apply, and wait for both two-replica controllers to become ready. Build
-`load.go` for Linux amd64 and copy it to `/work/loadgen` in `load-generator`.
-Export **only** `fixture-tls`'s `tls.crt` field to a local file, and place that
-public certificate at `/work/fixture.crt` in the generator. Do not export its key.
-The generator validates this certificate and the fixture hostname.
+Use only the staging context. Temporarily enable `gatewayCanaryFixtures`, build
+`deploy/infra`, preview the full stack and apply its saved plan. Build `load.go`
+for Linux amd64 and copy it to `/work/loadgen` in the `registry-gateway-canary`
+namespace's `load-generator` Pod. Export **only** `ingress-nginx/fixture-tls`'s
+`tls.crt` to a local file and `/work/fixture.crt` in the generator.
 
-From `deploy/`, run each arm sequentially with identical arguments:
+From `deploy/`, run scenarios sequentially:
 
 ```sh
-python3 gateway-canary/measure.py --arm baseline --rate 1000 --seconds 120 \
-  --epoch matched-run --output /tmp/baseline-result
+export REGISTRY_GATEWAY_TARGET=public
+kubectl --context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging \
+  -n ingress-nginx rollout status deployment/registry-edge-registry-gateway-canary --timeout=360s
+python3.13 gateway-canary/check.py --ip 35.222.36.75 --fixture-ca /tmp/fixture.crt \
+  --output /tmp/gateway-contract.json
 python3 gateway-canary/measure.py --arm ngf --rate 1000 --seconds 120 \
-  --epoch matched-run --output /tmp/gateway-result
+  --epoch qualification --output /tmp/gateway-load
+python3 gateway-canary/autoscale.py --output /tmp/gateway-autoscale
+python3 gateway-canary/resilience.py --scenario proxy --output /tmp/gateway-proxy
 ```
 
-Use `--miss-percent 20 --rate 250` for the mixed test. Do not run other fixture
-probes during measurement. The driver discovers the internal Service addresses;
-GKE's Service range is outside RFC1918, so it explicitly permits those discovered
-addresses while retaining TLS verification. Results include offered/achieved
-load, errors, cache outcomes, CPU/memory samples and metric reconciliation.
-This fixed payload is a controlled comparison, not a production traffic replay.
+Use `--miss-percent 20 --rate 250` for mixed traffic. Do not run other fixture
+probes during measurement. The driver discovers the public Gateway's internal
+Service IP and retains hostname/TLS verification. This measures the active data
+plane with a controlled fixture, not a production traffic replay or internet
+capacity benchmark. Public HTTPS probes run separately during every scenario.
 
-`limits.py` runs 1,920 bounded real-canary health requests to verify source-IP
-limiting; give it `--ip`, `--fixture-ca` and `--output`. `rollout.py --output DIR`
-replaces one canary proxy during a fixture load. `collector_restart.py --output
-FILE` checks a **quiescent** same-node collector restart, then rerun a short
-`measure.py` check. Collector counters reset on restart; persisted file positions
-prevent historical replay but do not guarantee exactly-once delivery across a
-crash. Raw counter totals from deleted exporter instances must not be added to
-current exporter totals; use rates/increases for time-series dashboards.
+`limits.py` verifies real source-IP limiting; use `--replicas 4` for standalone staging.
+`autoscale.py` measures fixed four-replica capacity in standalone mode; the
+historical canary mode still exercises the two-to-four HPA transition.
+`resilience.py` also supports controller, rollout and node scenarios. Rollout
+tests default to ten minutes to cover both the update and restoration with
+graceful draining. The node scenario defaults to five minutes; it drains one
+Gateway node, verifies at least a minute of overlap with the generator’s actual
+traffic interval, and always attempts to uncordon it. The rollout
+scenario patches the managed NginxProxy temporarily, then restores it.
 
-For autoscaling, disable `gatewayCanaryComparison` and enable only
-`gatewayCanaryFixtures`; this removes the temporary baseline and restores the
-2–4 replica HPA while retaining the fixture. Wait for the cooldown to return to
-two replicas, then run `python3 gateway-canary/autoscale.py --output DIR`. This
-uses 256 load workers, 1,000 requests/second and a four-minute window, recording
-HPA, readiness, node-count and metric evidence. Afterwards remove both test flags,
-preview/apply, and delete the orphaned self-signed `fixture-tls` Secret if
-cert-manager's certificate owner-reference option is disabled. The live staging
-and Grafana certificate Secrets must remain untouched.
+`collector_restart.py` checks a quiescent same-node restart, followed by a new
+load measurement. Checkpoints prevent historical replay, but there is no
+exactly-once crash guarantee. Deleted exporter counters must not be added to
+live exporter totals; dashboards use rates/increases.
 
-Public staging handoff and rollback: [handoff.md](handoff.md).
+Remove the fixture flag, preview/apply, then remove the orphaned test TLS Secret
+only after confirming its Certificate and test listener are gone. Preserve both
+public trusted certificates. Validate the final full-stack preview and normal
+GitOps deployment before beginning the final observation period.
+
+Historical reports: [comparison](validation.md), [monitoring](monitoring-validation.md),
+[public handoff](handoff.md).
+
+The load driver uses `GOMAXPROCS=1` within its existing one-CPU container limit,
+while retaining 256 concurrent request workers. This avoids the Go scheduler
+oversubscribing that quota. Generator drops and scheduling delays remain visible
+in every result; zero-drop and latency gates are unchanged.

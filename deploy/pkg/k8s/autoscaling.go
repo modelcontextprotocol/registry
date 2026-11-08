@@ -85,7 +85,7 @@ func burstResourceTransform(args *pulumi.ResourceTransformationArgs) *pulumi.Res
 }
 
 func withIngressScrape(ctx *pulumi.Context, configs pulumi.Array) pulumi.Array {
-	if config.New(ctx, "mcp-registry").GetBool("burstAutoscaling") {
+	if config.New(ctx, "mcp-registry").GetBool("burstAutoscaling") && !gatewaycanary.Standalone(ctx) {
 		configs = append(configs, ingressScrapeConfig())
 	}
 	if gatewaycanary.Enabled(ctx) {
