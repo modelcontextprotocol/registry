@@ -180,10 +180,22 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 		if !fixturesEnabled {
 			continue
 		}
+		// Compact staging uses bounded external functional probes. The heavy
+		// load-generator Pod targets the retired dedicated Gateway pool.
+		if Compact(ctx) && o["kind"] == "Pod" {
+			continue
+		}
 		if Standalone(ctx) && o["kind"] == "Deployment" {
 			spec := o["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)
 			spec["nodeSelector"] = map[string]any{"registry-role": "worker"}
 			spec["tolerations"] = []any{}
+			if Compact(ctx) {
+				// Two disposable origins must fit beside normal staging workloads.
+				o["spec"].(map[string]any)["strategy"] = map[string]any{"type": "RollingUpdate", "rollingUpdate": map[string]any{"maxSurge": 0, "maxUnavailable": 1}}
+				for _, raw := range spec["containers"].([]any) {
+					raw.(map[string]any)["resources"].(map[string]any)["requests"].(map[string]any)["cpu"] = "25m"
+				}
+			}
 		}
 		r, e := register(ctx, provider, o, deps)
 		if e != nil {
@@ -199,7 +211,7 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 		routes = nil
 	}
 	// Install policy/filter/reference grants before exposing the routes.
-	for _, group := range [][]string{{"Issuer"}, {"Certificate"}, {"ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
+	for _, group := range [][]string{{"Issuer"}, {"Certificate"}, {"ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy", "UpstreamSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, deps...)
 		for _, o := range routes {
 			if contains(group, o["kind"].(string)) {
@@ -264,7 +276,7 @@ func routeObjects(comparison bool) ([]map[string]any, error) {
 			spec := o["spec"].(map[string]any)
 			listeners := []any{}
 			for _, raw := range spec["listeners"].([]any) {
-				if raw.(map[string]any)["hostname"] != "fixture.gateway-canary.invalid" {
+				if raw.(map[string]any)["name"] != "fixture" {
 					listeners = append(listeners, raw)
 				}
 			}

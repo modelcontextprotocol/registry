@@ -81,14 +81,15 @@ func TestProductionConnectivityAndPolicyContract(t *testing.T) {
 				l := raw.(map[string]any)
 				if l["protocol"] == "HTTPS" {
 					ref := l["tls"].(map[string]any)["certificateRefs"].([]any)[0].(map[string]any)
-					listeners[l["hostname"].(string)] = ref["name"].(string)
+					host, _ := l["hostname"].(string)
+					listeners[host] = ref["name"].(string)
 				}
 			}
 		}
 		if kind == "HTTPRoute" {
 			routes[name] = true
 			if name == "bulk" || name == "registry" {
-				if len(spec["hostnames"].([]any)) != 2 || len(spec["parentRefs"].([]any)) != 2 {
+				if len(spec["hostnames"].([]any)) != 2 || len(spec["parentRefs"].([]any)) != 1 {
 					t.Fatal("registry alias missing")
 				}
 				backend := spec["rules"].([]any)[0].(map[string]any)["backendRefs"].([]any)[0].(map[string]any)
@@ -105,7 +106,7 @@ func TestProductionConnectivityAndPolicyContract(t *testing.T) {
 			}
 		}
 	}
-	if len(listeners) != 3 || listeners["registry.modelcontextprotocol.io"] != "mcp-registry-prod-tls" || listeners["prod.registry.modelcontextprotocol.io"] != "mcp-registry-prod-tls" || listeners["grafana.prod.registry.modelcontextprotocol.io"] != "grafana-tls" || !grantedSecret {
+	if len(listeners) != 2 || listeners[""] != "mcp-registry-prod-tls" || listeners["grafana.prod.registry.modelcontextprotocol.io"] != "grafana-tls" || !grantedSecret {
 		t.Fatal("TLS routing/grants incomplete")
 	}
 	if len(routes) != 4 || !routes["redirect"] || !routes["bulk"] || !routes["registry"] || !routes["grafana"] {

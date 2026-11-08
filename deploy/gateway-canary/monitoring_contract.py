@@ -28,7 +28,7 @@ def record(**overrides):
 
 
 def corpus():
-    return [record(), record(upstream_time='0.1, 0.2 : 0.3', connect='0.01, - : 0.02', header='-, 0.04 : 0.05'),
+    return [record(), record(host='alias.gateway-canary.invalid', upstream_time='0.1, 0.2 : 0.3', connect='0.01, - : 0.02', header='-, 0.04 : 0.05'),
             record(upstream_time='-', connect='-', header='-', cache='HIT'),
             record(upstream_time='garbage', connect='-1', header='bad'),
             record(uri='/v0.1/servers?long=' + 'x' * 300000),

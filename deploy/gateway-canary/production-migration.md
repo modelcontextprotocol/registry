@@ -1,8 +1,12 @@
 # Production Gateway migration
 
 This implementation is opt-in. With `gatewayProductionPhase` absent, production
-keeps its current ingress. Staging and the normal application release flow are
-unchanged. This document is a migration procedure, not a completed cutover record.
+keeps its current ingress. Shared Gateway behavior corrections are validated in
+staging; the normal application release flow remains unchanged. This document is a migration procedure, not a completed cutover record.
+
+The [production parity review](production-parity.md) is the behavioral baseline,
+including corrections and explicit differences. Staging validates those settings;
+its reduced capacity is not a production sizing recommendation.
 
 ## Connectivity and features
 
@@ -15,21 +19,22 @@ unchanged. This document is a migration procedure, not a completed cutover recor
 | Grafana | `grafana.prod.registry.modelcontextprotocol.io` → `monitoring/grafana:80` |
 | TLS | Adopt existing public Certificates/Secrets; both registry names remain on `mcp-registry-prod-tls`; Grafana keeps `grafana-tls` |
 | Renewal | Native Gateway HTTP-01 solver after retirement; HTTP listener accepts challenge routes from `default` and `monitoring` |
-| Policies | Reuse staging's cache, stale serving, lock, bypass, compression, source-IP rate limiting, body-size and timeout policies |
+| Policies | Preserve production's contract using the shared policies validated in staging; review the explicit cache/Vary and implementation differences |
 | Monitoring | Vector, VictoriaMetrics and Grafana; production Grafana hostname classified separately; existing alert configuration retained |
 
 No DNS change or second public load balancer is required. Historical namespace,
 Service and metric names remain to preserve identities and dashboards. The final
 topology contains no ingress-nginx controller, chart, Ingress or legacy ACME proxy.
 
-Tests check both aliases, listener/Secret references, unchanged policy content,
+Tests check both aliases, listener/Secret references, shared policy content,
 production placement and port preservation. These establish the intended
 configuration; public connectivity and feature behavior must also be checked on
 the deployed Gateway.
 
 ## Preparation checks
 
-The implementation was checked without applying production changes:
+Initial preparation was checked without applying production changes. The later
+staging parity work and behavioral corrections are recorded separately above:
 
 - Go tests and vet for the Kubernetes/GCP packages passed; deployment build passed.
 - All 78 deployment-script tests passed, including fail-closed identity checks

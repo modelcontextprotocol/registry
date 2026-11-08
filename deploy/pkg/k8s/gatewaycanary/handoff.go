@@ -167,7 +167,7 @@ func handoffObjectsWithOptions(native, standalone, fixtures bool) ([]map[string]
 			for _, raw := range spec["from"].([]any) {
 				raw.(map[string]any)["namespace"] = EdgeNamespace
 			}
-		} else {
+		} else if o["kind"] != "UpstreamSettingsPolicy" {
 			meta["namespace"] = EdgeNamespace
 		}
 		if o["kind"] == "Gateway" {
@@ -230,7 +230,7 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 			return fmt.Errorf("production gzip host contract missing")
 		}
 	}
-	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
+	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy", "UpstreamSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, dependencies...)
 		for _, o := range objects {
 			if !contains(kinds, o["kind"].(string)) {

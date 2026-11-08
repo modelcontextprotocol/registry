@@ -80,15 +80,11 @@ func productionRoutes(objects []map[string]any) {
 			for _, raw := range spec["listeners"].([]any) {
 				l := raw.(map[string]any)
 				if l["name"] == "registry" {
-					l["hostname"] = "prod.registry.modelcontextprotocol.io"
+					// Both SANs share one listener, allowing HTTP/2 connection
+					// coalescing without disabling SNI/Host validation globally.
+					// The attached HTTPRoutes still allow only the two names.
+					delete(l, "hostname")
 					l["tls"].(map[string]any)["certificateRefs"].([]any)[0].(map[string]any)["name"] = "mcp-registry-prod-tls"
-					alias := map[string]any{}
-					for k, v := range l {
-						alias[k] = v
-					}
-					alias["name"] = "registry-alias"
-					alias["hostname"] = "registry.modelcontextprotocol.io"
-					listeners = append(listeners, alias)
 				}
 				if l["name"] == "grafana" {
 					l["hostname"] = "grafana.prod.registry.modelcontextprotocol.io"
@@ -109,18 +105,6 @@ func productionRoutes(objects []map[string]any) {
 				}
 			}
 			spec["hostnames"] = hosts
-			refs := spec["parentRefs"].([]any)
-			for _, r := range refs {
-				ref := r.(map[string]any)
-				if ref["sectionName"] == "registry" {
-					alias := map[string]any{}
-					for k, v := range ref {
-						alias[k] = v
-					}
-					alias["sectionName"] = "registry-alias"
-					spec["parentRefs"] = append(refs, alias)
-				}
-			}
 		case "ReferenceGrant":
 			for _, r := range spec["to"].([]any) {
 				ref := r.(map[string]any)
