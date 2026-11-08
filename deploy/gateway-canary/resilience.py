@@ -95,15 +95,25 @@ def main():
             time.sleep(60)
             assert load.poll() is None, 'Load did not cover a minute of one-node operation'
             report['one_node_load_seconds'] = time.time() - report['drained_at']
+        assert load.poll() is None, 'Load ended before the disruption recovered'
         report['action_ready'] = time.time()
-    except BaseException as error:
+    except Exception as error:
         failure = repr(error)
     finally:
         cleanup_errors = []
         if cordoned:
             try:
                 run('uncordon', cordoned)
-            except BaseException as error:
+                wait_rollout(edge_ns, edge_name)
+                ready = [p for p in get('-n', edge_ns, 'get', 'pods', '-l', selector)['items'] if not p['metadata'].get('deletionTimestamp')]
+                if len({p['spec']['nodeName'] for p in ready}) != 2:
+                    # Kubernetes does not rebalance existing replicas after uncordon.
+                    # Replace one gracefully so the normal spread rule can place it.
+                    run('-n', edge_ns, 'delete', 'pod', ready[0]['metadata']['name'], '--wait=true', '--timeout=90s')
+                    wait_rollout(edge_ns, edge_name)
+                restored = get('-n', edge_ns, 'get', 'pods', '-l', selector)['items']
+                assert len({p['spec']['nodeName'] for p in restored if not p['metadata'].get('deletionTimestamp')}) == 2, 'Gateway placement not restored'
+            except Exception as error:
                 cleanup_errors.append('uncordon: ' + repr(error))
         if modified_patches is not None:
             patch = [{'op': 'test', 'path': '/metadata/uid', 'value': policy_uid},
@@ -116,7 +126,7 @@ def main():
                     assert time.monotonic() < deadline, 'Controller did not restore rollout policy'
                     time.sleep(2)
                 wait_rollout(edge_ns, edge_name)
-            except BaseException as error:
+            except Exception as error:
                 cleanup_errors.append('restore policy: ' + repr(error))
         report['cleanup_errors'] = cleanup_errors
         report['measurement_exit'] = load.wait(timeout=args.seconds + 100)

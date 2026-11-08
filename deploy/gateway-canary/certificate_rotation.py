@@ -22,6 +22,21 @@ def fingerprint(namespace, name):
     return hashlib.sha256(ssl.PEM_cert_to_DER_cert(pem)).hexdigest()
 
 
+def controller_processes(controller):
+    selector = ','.join(k + '=' + v for k, v in controller['spec']['selector']['matchLabels'].items())
+    pods = get('-n', NS, 'get', 'pods', '-l', selector)['items']
+    assert len(pods) == controller['spec']['replicas'], 'Controller is rolling; wait before renewal'
+    result = {}
+    for pod in pods:
+        assert not pod['metadata'].get('deletionTimestamp'), 'Controller is terminating'
+        statuses = pod['status'].get('containerStatuses', [])
+        assert statuses and all(c.get('ready') for c in statuses), 'Controller is not ready'
+        result[pod['metadata']['uid']] = {
+            c['name']: {'restart_count': c['restartCount'], 'container_id': c['containerID']}
+            for c in statuses}
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cmctl', required=True)
@@ -29,6 +44,7 @@ def main():
     args = parser.parse_args()
     controller = get('-n', NS, 'get', 'deployment', 'registry-gateway-canary')
     generation = controller['metadata']['generation']
+    processes_before = controller_processes(controller)
     started = time.time()
     report = {'started': started, 'renewals': []}
     for name in ['gateway-server-tls', 'gateway-agent-tls']:
@@ -103,6 +119,10 @@ else: raise RuntimeError("Renewed server certificate did not reach the running c
         report['fresh_mtls_handshake']=handshake
     finally:
         run('-n',NS,'delete','pod',probe,'--wait=false')
+    current = get('-n', NS, 'get', 'deployment', 'registry-gateway-canary')
+    assert current['metadata']['generation'] == generation, 'Controller deployment changed during renewal'
+    assert controller_processes(current) == processes_before, 'Controller Pod or container restarted during renewal'
+    report['controller_processes_unchanged'] = True
     report['controller_deployment_unchanged'] = True
     report['agent_secret_propagated'] = True
     report['finished'] = time.time()

@@ -21,11 +21,12 @@ func HandoffEnabled(ctx *pulumi.Context) bool {
 	return Standalone(ctx) || config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff") != ""
 }
 
-// NativeCertificates enables the Gateway HTTP01 solver before legacy retirement.
+// Standalone selects the final staging topology without legacy ingress or duplicate canary.
 func Standalone(ctx *pulumi.Context) bool {
 	return config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone")
 }
 
+// NativeCertificates enables the Gateway HTTP01 solver before legacy retirement.
 func NativeCertificates(ctx *pulumi.Context) bool {
 	return Standalone(ctx) || config.New(ctx, "mcp-registry").GetBool("gatewayNativeCertificates")
 }

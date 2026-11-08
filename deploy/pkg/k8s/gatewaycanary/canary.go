@@ -1,4 +1,4 @@
-// Package gatewaycanary manages the staging-only, parallel OSS gateway.
+// Package gatewaycanary manages the staging-only OSS Gateway and qualification modes.
 package gatewaycanary
 
 import (

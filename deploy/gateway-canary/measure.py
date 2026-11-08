@@ -140,6 +140,8 @@ def main():
     (a.output / 'samples.json').write_text(json.dumps(samples))
     (a.output / 'result.json').write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
+    assert client['p95_ms'] < 100, 'p95 latency exceeds the qualification gate'
+    assert client['p99_ms'] < 250, 'p99 latency exceeds the qualification gate'
     assert client['generator_dropped'] == 0, 'generator could not sustain offered rate'
     assert not client['errors'], client['errors']
     assert client['statuses'] == {'200': client['offered']}, client['statuses']

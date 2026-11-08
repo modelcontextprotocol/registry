@@ -2,12 +2,12 @@ package gatewaycanary
 
 import (
 	"encoding/json"
-	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
-	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"strings"
 	"sync/atomic"
 	"testing"
 
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
