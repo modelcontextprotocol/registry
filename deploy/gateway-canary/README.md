@@ -141,3 +141,8 @@ GitOps deployment before beginning the final observation period.
 
 Historical reports: [comparison](validation.md), [monitoring](monitoring-validation.md),
 [public handoff](handoff.md).
+
+The load driver uses `GOMAXPROCS=1` within its existing one-CPU container limit,
+while retaining 256 concurrent request workers. This avoids the Go scheduler
+oversubscribing that quota. Generator drops and scheduling delays remain visible
+in every result; zero-drop and latency gates are unchanged.

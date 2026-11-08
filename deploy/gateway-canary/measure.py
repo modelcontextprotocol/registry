@@ -96,7 +96,7 @@ def main():
     thread = threading.Thread(target=collect)
     thread.start()
     start = time.time()
-    cmd = K + ['-n', NS, 'exec', 'load-generator', '--', '/work/loadgen', '-target', 'https://' + ip + ':443', '-allow-non-rfc1918-target', '-ca', '/work/fixture.crt', '-workers', str(a.workers), '-rate', str(a.rate), '-seconds', str(a.seconds), '-miss-percent', str(a.miss_percent), '-epoch', a.epoch, '-out', '/work/result.json']
+    cmd = K + ['-n', NS, 'exec', 'load-generator', '--', 'env', 'GOMAXPROCS=1', '/work/loadgen', '-target', 'https://' + ip + ':443', '-allow-non-rfc1918-target', '-ca', '/work/fixture.crt', '-workers', str(a.workers), '-rate', str(a.rate), '-seconds', str(a.seconds), '-miss-percent', str(a.miss_percent), '-epoch', a.epoch, '-out', '/work/result.json']
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=a.seconds + 60)
         assert r.returncode == 0, r.stderr[-2000:]
@@ -136,7 +136,7 @@ def main():
         if len(pairs) > 1:
             (first, last) = (pairs[0], pairs[-1])
             resources[name] = {'cpu_cores': (last[1]['cpu']['usageCoreNanoSeconds'] - first[1]['cpu']['usageCoreNanoSeconds']) / 1000000000.0 / (last[0] - first[0]), 'peak_working_set_bytes': max((x['memory'].get('workingSetBytes', 0) for x in points.values())), 'sample_seconds': last[0] - first[0]}
-    report = {'gateway_namespace': gateway_namespace, 'gateway_service': service, 'arm': a.arm, 'rate': a.rate, 'seconds': a.seconds, 'miss_percent': a.miss_percent, 'started_at': start, 'finished_at': end, 'client': client, 'metric_delta': delta, 'collection_observed_drain_seconds': drain, 'vm_client_count': vm, 'origin_reads': sum(o1.values()) - sum(o0.values()), 'resources': resources, 'placement': [{'pod': x['metadata']['name'], 'node': x['spec'].get('nodeName')} for x in inventory]}
+    report = {'generator_gomaxprocs': 1, 'gateway_namespace': gateway_namespace, 'gateway_service': service, 'arm': a.arm, 'rate': a.rate, 'seconds': a.seconds, 'miss_percent': a.miss_percent, 'started_at': start, 'finished_at': end, 'client': client, 'metric_delta': delta, 'collection_observed_drain_seconds': drain, 'vm_client_count': vm, 'origin_reads': sum(o1.values()) - sum(o0.values()), 'resources': resources, 'placement': [{'pod': x['metadata']['name'], 'node': x['spec'].get('nodeName')} for x in inventory]}
     (a.output / 'samples.json').write_text(json.dumps(samples))
     (a.output / 'result.json').write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
