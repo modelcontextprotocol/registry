@@ -266,11 +266,11 @@ func boundedGatewayRollout(proxy map[string]any) {
 		// Keep serving while endpoints converge, then drain in-flight requests
 		// before the image entrypoint receives its fast-stop TERM signal.
 		pod["terminationGracePeriodSeconds"] = 90
-		for _, rawContainer := range pod["containers"].([]any) {
-			container := rawContainer.(map[string]any)
-			if container["name"] == "nginx" {
-				container["lifecycle"] = map[string]any{"preStop": map[string]any{"exec": map[string]any{"command": []any{"/bin/sh", "-c", "sleep 30; nginx -s quit; while killall -0 nginx 2>/dev/null; do sleep 1; done"}}}}
-			}
-		}
+		// Strategic merge joins this entry with the generated nginx container by
+		// name, retaining its image, ports, probes and resource reservations.
+		pod["containers"] = []any{map[string]any{
+			"name":      "nginx",
+			"lifecycle": map[string]any{"preStop": map[string]any{"exec": map[string]any{"command": []any{"/bin/sh", "-c", "sleep 30; nginx -s quit; while killall -0 nginx 2>/dev/null; do sleep 1; done"}}}},
+		}}
 	}
 }
