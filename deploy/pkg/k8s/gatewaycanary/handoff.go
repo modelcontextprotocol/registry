@@ -261,5 +261,16 @@ func boundedGatewayRollout(proxy map[string]any) {
 	for _, raw := range deployment["patches"].([]any) {
 		spec := raw.(map[string]any)["value"].(map[string]any)["spec"].(map[string]any)
 		spec["strategy"] = map[string]any{"type": "RollingUpdate", "rollingUpdate": map[string]any{"maxSurge": 0, "maxUnavailable": 1}}
+		pod := spec["template"].(map[string]any)["spec"].(map[string]any)
+		// The public GCP health check takes up to 3 * 8s to remove a node.
+		// Keep serving while endpoints converge, then drain in-flight requests
+		// before the image entrypoint receives its fast-stop TERM signal.
+		pod["terminationGracePeriodSeconds"] = 90
+		for _, rawContainer := range pod["containers"].([]any) {
+			container := rawContainer.(map[string]any)
+			if container["name"] == "nginx" {
+				container["lifecycle"] = map[string]any{"preStop": map[string]any{"exec": map[string]any{"command": []any{"/bin/sh", "-c", "sleep 30; nginx -s quit; while killall -0 nginx 2>/dev/null; do sleep 1; done"}}}}
+			}
+		}
 	}
 }

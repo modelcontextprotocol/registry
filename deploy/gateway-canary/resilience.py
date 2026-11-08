@@ -15,7 +15,7 @@ def run(*args, timeout=240):
 
 
 def wait_rollout(namespace, name):
-    run('-n', namespace, 'rollout', 'status', 'deployment/' + name, '--timeout=180s', timeout=190)
+    run('-n', namespace, 'rollout', 'status', 'deployment/' + name, '--timeout=360s', timeout=370)
 
 
 def main():
@@ -81,7 +81,7 @@ def main():
             cordoned = gateway_nodes[0]['metadata']['name']
             report['drained_node'] = cordoned
             run('cordon', cordoned)
-            run('drain', cordoned, '--ignore-daemonsets', '--delete-emptydir-data', '--timeout=180s', timeout=190)
+            run('drain', cordoned, '--ignore-daemonsets', '--delete-emptydir-data', '--timeout=360s', timeout=370)
             report['drained_at'] = time.time()
             deadline = time.monotonic() + 90
             while True:

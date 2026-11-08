@@ -28,6 +28,16 @@ TLS Secrets. Inspect Service adoption, certificate ownership and obsolete
 resource recreation before applying a reverse migration. Do not promise an
 instant selector rollback after removing the old controller.
 
+Proxy rollouts use zero surge and replace one replica at a time. A 30-second
+pre-stop delay covers endpoint propagation and the current GCP health check's
+three 8-second failure intervals. The hook then gracefully quits NGINX and waits
+for its workers before the image receives TERM; the total termination budget is
+90 seconds. This follows Kubernetes' [NGINX lifecycle example](https://kubernetes.io/docs/tasks/configure-pod-container/attach-handler-lifecycle-event/)
+and [NGINX signal semantics](https://nginx.org/en/docs/control.html). Recheck the
+drain budget if the load-balancer health-check configuration changes. Terminating
+pods can temporarily coexist with their replacement; the fixed node pool may
+keep that replacement pending until the departing pod releases its reservation.
+
 ## Qualification matrix
 
 Record actual results and any failed attempts; a healthy Pod is not a test result.
