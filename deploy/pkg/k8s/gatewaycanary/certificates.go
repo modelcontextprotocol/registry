@@ -70,7 +70,7 @@ func PublicCertificates(ctx *pulumi.Context) string {
 
 func detachedCertificate(meta *metav1.ObjectMeta) (bool, error) {
 	if meta == nil {
-		return false, fmt.Errorf("public Certificate metadata unavailable; retry the full preview before retirement")
+		return false, fmt.Errorf("public Certificate metadata unavailable; verify the live Certificate before retirement")
 	}
 	if len(meta.OwnerReferences) != 0 {
 		return false, fmt.Errorf("public Certificate still has an owner: run gateway-canary/detach_certificates.py before standalone retirement")
@@ -93,9 +93,12 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 	} {
 		certificateDependencies := append([]pulumi.Resource{}, dependencies...)
 		if Standalone(ctx) {
+			// With a GVK in the read state, the provider does not infer the
+			// namespace from the ID. Supply it explicitly for non-default reads.
 			existing, err := apiextensions.GetCustomResource(ctx, "gateway-public-certificate-ownership-"+item.namespace,
 				pulumi.ID(item.namespace+"/"+item.name), &apiextensions.CustomResourceState{
 					ApiVersion: pulumi.StringPtr("cert-manager.io/v1"), Kind: pulumi.StringPtr("Certificate"),
+					Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String(item.name), Namespace: pulumi.String(item.namespace)},
 				}, pulumi.Provider(provider))
 			if err != nil {
 				return err
