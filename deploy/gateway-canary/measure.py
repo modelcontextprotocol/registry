@@ -77,7 +77,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--arm', choices=['baseline', 'ngf'], required=True)
     p.add_argument('--rate', type=int, required=True)
-    p.add_argument('--workers', type=int, default=128)
+    p.add_argument('--workers', type=int, default=256)
     p.add_argument('--seconds', type=int, default=120)
     p.add_argument('--miss-percent', type=int, default=0)
     p.add_argument('--epoch', required=True)

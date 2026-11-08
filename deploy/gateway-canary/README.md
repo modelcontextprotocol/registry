@@ -107,6 +107,8 @@ From `deploy/`, run scenarios sequentially:
 
 ```sh
 export REGISTRY_GATEWAY_TARGET=public
+kubectl --context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging \
+  -n ingress-nginx rollout status deployment/registry-edge-registry-gateway-canary --timeout=360s
 python3.13 gateway-canary/check.py --ip 35.222.36.75 --fixture-ca /tmp/fixture.crt \
   --output /tmp/gateway-contract.json
 python3 gateway-canary/measure.py --arm ngf --rate 1000 --seconds 120 \
