@@ -32,6 +32,12 @@ is **not** a proof of Gateway-native ACME or permission to retire ingress-nginx.
 
 ## Staged operation
 
+Brief downtime is acceptable for the staging transition. Prefer a direct
+`legacy` → `gateway` switch once the prepared Gateway is healthy. Record the
+interruption while GCP health checks converge; do not add draining machinery or
+nodes solely to avoid a brief staging interruption. This allowance applies only
+to staging and does not change production availability requirements.
+
 Use the normal full-stack saved-plan workflow, not targeted Pulumi updates.
 Always build the `deploy/infra` binary before previews. Inspect previews and
 abort on any public Service replacement, unexpected address change, node-pool
@@ -41,14 +47,17 @@ expansion, application image pin, or production Gateway change.
    Verify the existing Service UID/IP/ports, both ready Gateway replicas,
    accepted/programmed Gateway and routes, existing TLS chain, cache HIT,
    redirects, client-IP handling, metrics and unchanged node inventory.
-2. **overlap:** the public Service selects the shared staging-edge label on both
-   implementations. Wait for the GCP target pool to report the new serving nodes
-   healthy, and verify both implementations appear in request logs.
+2. **overlap (optional):** the public Service selects the shared staging-edge
+   label on both implementations. If used, wait for the GCP target pool to report
+   the new serving nodes healthy. This warm-up is not required for staging.
 3. **gateway:** the public Service selects only `registry-edge`. Keep continuous
    public registry/Grafana probes running. GCP health checks converge separately
    from EndpointSlices; overlap warms new nodes but does not prove zero dropped
    connections when old nodes lose local endpoints. Measure this explicitly and
    qualify draining before claiming an interruption-free production procedure.
+   Allow up to two minutes for staging health-check convergence after endpoints
+   switch. If public probes still fail, restore the legacy selector and investigate
+   before retrying; this is a rollback trigger, not a recovery-time guarantee.
 4. While gateway-only, use a temporary Let's Encrypt **staging** Issuer and
    Certificate for the existing public hostnames. Confirm issuance and reissuance
    through the challenge route. Never attach the untrusted test certificate to
@@ -58,8 +67,9 @@ expansion, application image pin, or production Gateway change.
    Exchange a real GitHub token, publish a uniquely named staging fixture, read
    it, then mark that exact version deleted using the authenticated status API.
    Keep fixture files outside this repository and never log tokens.
-6. Rehearse rollback through **overlap** (wait for legacy nodes to be healthy),
-   then **legacy**. Confirm the same IP, UID, TLS and functioning public endpoints.
+6. Rehearse a direct rollback to **legacy**, accepting the same brief convergence
+   interruption. Optional **overlap** can warm the legacy nodes first. Confirm the
+   same IP, UID, TLS and functioning public endpoints.
    A persistent switch is a separate deliberate phase after these checks pass.
 
 The passphrase file can be supplied without exposing its value:
