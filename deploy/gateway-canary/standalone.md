@@ -41,6 +41,12 @@ TLS Secrets. Inspect Service adoption, certificate ownership and obsolete
 resource recreation before applying a reverse migration. Do not promise an
 instant selector rollback after removing the old controller.
 
+Staging uses one NGINX worker per proxy, rather than inheriting both node CPUs
+per replica when two proxies share a node. Each worker retains the configured
+16,384-connection limit; this is a staging CPU-sizing choice, not a production
+fleet-size recommendation. All caching, compression and log metrics remain
+enabled.
+
 Proxy rollouts use zero surge and replace one replica at a time. A 30-second
 pre-stop delay covers endpoint propagation and the current GCP health check's
 three 8-second failure intervals. The hook then gracefully quits NGINX and waits

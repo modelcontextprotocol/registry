@@ -257,6 +257,9 @@ func handoffRBAC() ([]map[string]any, error) {
 // A full four-replica deployment cannot surge a fifth 500m proxy on the fixed
 // two-node pool. Replace at most one replica while preserving at least one.
 func boundedGatewayRollout(proxy map[string]any) {
+	// Each proxy reserves 500m CPU and two proxies can share a two-vCPU node.
+	// Avoid auto spawning a worker for every node CPU in each replica.
+	proxy["spec"].(map[string]any)["workerProcesses"] = 1
 	deployment := proxy["spec"].(map[string]any)["kubernetes"].(map[string]any)["deployment"].(map[string]any)
 	for _, raw := range deployment["patches"].([]any) {
 		spec := raw.(map[string]any)["value"].(map[string]any)["spec"].(map[string]any)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Bounded matched fixture load. K8s reads plus exec in the dedicated generator."""
-import argparse, concurrent.futures, json, os, re, subprocess, threading, time, urllib.parse
+import argparse, concurrent.futures, fcntl, json, os, re, subprocess, tempfile, threading, time, urllib.parse
 from pathlib import Path
 K = ['kubectl', '--context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging', '--request-timeout=30s']
 NS = 'registry-gateway-canary'
@@ -66,6 +66,14 @@ def current_client_query():
     return 'sum(registry_gateway_canary_requests_total{traffic="fixture",instance=~' + json.dumps('|'.join(instances)) + '})'
 
 def main():
+    # Concurrent runs share one generator Pod and metric counters, invalidating
+    # each other's results. Fail before collecting or launching any traffic.
+    lock_path = Path(tempfile.gettempdir()) / ('registry-staging-gateway-load-' + str(os.getuid()) + '.lock')
+    load_lock = os.fdopen(os.open(lock_path, os.O_CREAT | os.O_RDWR, 0o600), 'r+')
+    try:
+        fcntl.flock(load_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        raise RuntimeError('Another local staging Gateway measurement is running') from None
     p = argparse.ArgumentParser()
     p.add_argument('--arm', choices=['baseline', 'ngf'], required=True)
     p.add_argument('--rate', type=int, required=True)

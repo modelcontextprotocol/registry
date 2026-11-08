@@ -224,6 +224,9 @@ func TestStandaloneGatewayUsesFinalTopologyForLoadTests(t *testing.T) {
 		if o["kind"] == "NginxProxy" && spec["kubernetes"].(map[string]any)["deployment"].(map[string]any)["autoscaling"].(map[string]any)["maxReplicas"] != 4 {
 			t.Fatal("final autoscaling not restored")
 		}
+		if o["kind"] == "NginxProxy" && spec["workerProcesses"] != 1 {
+			t.Fatal("staging workers must match the shared node CPU budget")
+		}
 		if o["kind"] == "HTTPRoute" && strings.HasPrefix(name, "fixture-") {
 			fixtureRoutes++
 			if spec["parentRefs"].([]any)[0].(map[string]any)["name"] != EdgeGateway {
