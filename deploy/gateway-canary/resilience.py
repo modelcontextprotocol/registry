@@ -5,6 +5,8 @@ import copy
 import json
 import os
 import re
+import signal
+import uuid
 import subprocess
 import time
 from pathlib import Path
@@ -33,6 +35,52 @@ def generator_timestamp(value):
     # Python 3.9 accepts microseconds, while Go emits RFC3339 nanoseconds.
     value = re.sub(r'(\.\d{6})\d+', r'\1', value)
     return datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp()
+
+
+def wait_measurement(load, timeout, grace=10):
+    """Terminate the isolated process group on timeout, then reap its leader."""
+    try:
+        return load.wait(timeout=timeout), False
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(load.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        # Keep the leader unreaped until descendants have been killed: its PID
+        # cannot be reused as an unrelated process-group ID in this interval.
+        time.sleep(grace)
+        try:
+            os.killpg(load.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        return load.wait(timeout=grace), True
+
+
+def stop_remote_load(epoch):
+    # Disconnecting kubectl exec alone does not prove the remote command exited.
+    # Match both the exact binary and this run's random epoch before signalling.
+    script = r"""import os,sys,signal,time
+from pathlib import Path
+def owned(pid):
+ try:
+  args=(Path('/proc')/str(pid)/'cmdline').read_bytes().split(b'\0')
+  return args[0]==b'/work/loadgen' and any(args[i]==b'-epoch' and args[i+1]==sys.argv[1].encode() for i in range(len(args)-1))
+ except (FileNotFoundError, ProcessLookupError): return False
+pids=[int(p.name) for p in Path('/proc').iterdir() if p.name.isdigit() and owned(int(p.name))]
+for pid in pids:
+ try: os.kill(pid,signal.SIGTERM)
+ except ProcessLookupError: pass
+if pids: time.sleep(1)
+for pid in pids:
+ if owned(pid):
+  try: os.kill(pid,signal.SIGKILL)
+  except ProcessLookupError: pass
+deadline=time.monotonic()+3
+while any(owned(pid) for pid in pids):
+ if time.monotonic()>=deadline: raise RuntimeError('Remote load did not exit')
+ time.sleep(.05)
+"""
+    run('-n', NS, 'exec', 'load-generator', '--', 'python3', '-c', script, epoch, timeout=30)
 
 
 def main():
@@ -70,10 +118,11 @@ def main():
     failure = None
     public = PublicProbe(args.output / 'public-probes.json')
     public.start()
+    epoch = 'public-' + args.scenario + '-' + uuid.uuid4().hex
     load_log = (args.output / 'load.log').open('w')
     load = subprocess.Popen(['python3', 'gateway-canary/measure.py', '--arm', 'ngf', '--rate', str(args.rate),
-                             '--seconds', str(args.seconds), '--workers', '256', '--epoch', 'public-' + args.scenario + '-' + str(int(time.time())),
-                             '--output', str(args.output / 'load')], stdout=load_log, stderr=subprocess.STDOUT)
+                             '--seconds', str(args.seconds), '--workers', '256', '--epoch', epoch,
+                             '--output', str(args.output / 'load')], stdout=load_log, stderr=subprocess.STDOUT, start_new_session=True)
     try:
         time.sleep(30)
         assert load.poll() is None, 'Load finished before disruption'
@@ -160,10 +209,22 @@ def main():
                 cleanup_errors.append('restore policy: ' + repr(error))
         report['cleanup_finished'] = time.time()
         report['cleanup_errors'] = cleanup_errors
+        report['passed'] = False
+        report['failure'] = failure or 'Waiting for measurement completion'
+        (args.output / 'operation.json').write_text(json.dumps(report, indent=2) + '\n')
         try:
-            report['measurement_exit'] = load.wait(timeout=args.seconds + 100)
+            report['measurement_exit'], timed_out = wait_measurement(load, args.seconds + 100)
+            if timed_out:
+                failure = failure or 'Measurement timed out; local process group terminated'
+                stop_remote_load(epoch)
+                report['remote_load_stopped'] = True
+        except Exception as error:
+            failure = failure or 'Measurement cleanup failed'
+            cleanup_errors.append('measurement: ' + repr(error))
         finally:
             load_log.close()
+            report['failure'] = failure
+            (args.output / 'operation.json').write_text(json.dumps(report, indent=2) + '\n')
             report['public'] = public.finish(120 if args.scenario == 'node' else 0)
     report['nodes_after'] = sorted(n['metadata']['name'] for n in get('get', 'nodes')['items'])
     report['finished'] = time.time()
@@ -188,7 +249,7 @@ def main():
     if args.scenario == 'rollout' and report['cleanup_finished'] > active_end:
         failure = failure or 'Generator traffic ended before the restoration rollout completed'
     report['failure'] = failure
-    report['passed'] = failure is None and report['public']['passed'] and not report['cleanup_errors'] and report['measurement_exit'] == 0 and report['nodes_before'] == report['nodes_after']
+    report['passed'] = failure is None and report['public']['passed'] and not report['cleanup_errors'] and report.get('measurement_exit') == 0 and report['nodes_before'] == report['nodes_after']
     (args.output / 'operation.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
     assert report['passed'], 'Recovery qualification failed; inspect operation.json and load/result.json'
