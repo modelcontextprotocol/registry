@@ -1,7 +1,10 @@
 package gatewaycanary
 
 import (
+	"fmt"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/apiextensions"
+	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
@@ -65,8 +68,17 @@ func PublicCertificates(ctx *pulumi.Context) string {
 	return config.New(ctx, "mcp-registry").Get("gatewayPublicCertificates")
 }
 
-// Import existing shim-created Certificates first; detach their Ingress ownership
-// in a later full-stack update before the Ingress objects can be removed.
+func detachedCertificate(meta *metav1.ObjectMeta) (bool, error) {
+	if meta == nil || len(meta.OwnerReferences) != 0 {
+		return false, fmt.Errorf("public Certificate still has an owner: run gateway-canary/detach_certificates.py before standalone retirement")
+	}
+	return true, nil
+}
+
+// Import existing shim-created Certificates first, remove the shim annotations,
+// then explicitly detach ownership using detach_certificates.py. An empty SSA
+// ownerReferences list cannot remove references owned by the ingress shim.
+// Standalone previews fail closed if a live Certificate still has an owner.
 func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider, dependencies ...pulumi.Resource) error {
 	mode := PublicCertificates(ctx)
 	if mode == "" {
@@ -76,6 +88,18 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 		{"default", "mcp-registry-staging-tls", "staging.registry.modelcontextprotocol.io"},
 		{"monitoring", "grafana-tls", "grafana.staging.registry.modelcontextprotocol.io"},
 	} {
+		if Standalone(ctx) {
+			existing, err := apiextensions.GetCustomResource(ctx, "gateway-public-certificate-ownership-"+item.namespace,
+				pulumi.ID(item.namespace+"/"+item.name), &apiextensions.CustomResourceState{
+					ApiVersion: pulumi.StringPtr("cert-manager.io/v1"), Kind: pulumi.StringPtr("Certificate"),
+				}, pulumi.Provider(provider))
+			if err != nil {
+				return err
+			}
+			// Exporting the checked output makes a failed check fail the full
+			// saved-plan preview before any legacy resources can be deleted.
+			ctx.Export("gatewayPublicCertificateDetached-"+item.namespace, existing.Metadata.ApplyT(detachedCertificate))
+		}
 		meta := map[string]any{"name": item.name, "namespace": item.namespace}
 		opts := []pulumi.ResourceOption{pulumi.Protect(true)}
 		if mode == "adopt" {

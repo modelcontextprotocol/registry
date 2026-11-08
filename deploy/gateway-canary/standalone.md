@@ -21,6 +21,19 @@ GCP forwarding infrastructure. They are shared network resources adopted out of
 the old chart, not an ingress-nginx runtime dependency. Stable metric names and
 node-pool names are retained to preserve monitoring history and existing nodes.
 
+Before first enabling standalone mode, use full-stack applies to import the
+public Certificates with `gatewayPublicCertificates: adopt`, then switch to
+`managed` while retaining the legacy Ingress objects. That second apply removes
+the cert-manager shim annotations. Run `detach_certificates.py --output <path>`
+from `deploy/` with the staging Pulumi passphrase environment configured; it
+checks Pulumi protection, verifies the old owner and shim annotations, removes
+the owner with a UID-guarded JSON patch, and verifies unchanged Certificates/TLS.
+Only then enable standalone and review its full saved plan. The standalone
+preview reads both live Certificates and fails if either still has an owner.
+An empty server-side-apply owner list alone is insufficient, and Pulumi protection
+does not prevent Kubernetes garbage collection. These explicit detachment checks
+were completed before the staging retirement recorded in the validation report.
+
 There is no running legacy fallback. Recover from a reviewed Git revision using
 the normal full-stack preview/saved-plan workflow. Git restores configuration,
 not resource identity or deleted data: retain the protected public IP and active

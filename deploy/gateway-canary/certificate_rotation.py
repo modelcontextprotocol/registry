@@ -88,8 +88,12 @@ c.set_alpn_protocols(["h2"])
 for attempt in range(60):
  with c.wrap_socket(socket.create_connection(("registry-gateway-canary",{port}),timeout=15),server_hostname="registry-gateway-canary.registry-gateway-canary.svc") as s:
   s.sendall(bytes([80,82,73,32,42,32,72,84,84,80,47,50,46,48,13,10,13,10,83,77,13,10,13,10,0,0,0,4,0,0,0,0,0]))
-  frame=s.recv(9)
-  assert len(frame)==9 and frame[3]==4, "No authenticated HTTP/2 settings frame"
+  frame=b""
+  while len(frame)<9:
+   chunk=s.recv(9-len(frame))
+   if not chunk: raise RuntimeError("EOF before HTTP/2 frame header")
+   frame+=chunk
+  assert frame[3]==4, "No authenticated HTTP/2 settings frame"
   result={{"authenticated_http2":True,"server_certificate_sha256":hashlib.sha256(s.getpeercert(binary_form=True)).hexdigest(),"protocol":s.version()}}
  if result["server_certificate_sha256"]=="{expected}":
   print(json.dumps(result));break
