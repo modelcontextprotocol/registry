@@ -31,6 +31,10 @@ func readNodeScaling(ctx *pulumi.Context) (nodeScalingConfig, error) {
 		return result, fmt.Errorf("node count bounds require nodeAutoscaling or burstAutoscaling")
 	}
 	idle := c.GetBool("stagingIdleCapacity")
+	compact := c.GetBool("gatewayStagingCompact")
+	if compact && (c.Get("environment") != "staging" || c.Get("provider") != "gcp" || config.New(ctx, "gcp").Get("project") != "mcp-registry-staging" || !c.GetBool("gatewayStagingStandalone") || !idle || c.Get("stagingSmallCapacity") != "enabled" || !c.GetBool("isolatedDatabase")) {
+		return result, fmt.Errorf("gatewayStagingCompact requires standalone small isolated idle GCP staging")
+	}
 	ingressScaling := c.GetBool("productionIngressScaling")
 	if c.GetBool("productionBurstHeadroom") && !ingressScaling {
 		return result, fmt.Errorf("productionBurstHeadroom requires productionIngressScaling")
@@ -46,6 +50,9 @@ func readNodeScaling(ctx *pulumi.Context) (nodeScalingConfig, error) {
 		minimum, maximum := 3, 4
 		if idle {
 			minimum = 2
+		}
+		if compact {
+			maximum = 2
 		}
 		phase := c.Get("productionAppScaling")
 		if productionInfra && (phase == "prepare" || phase == "enabled") {

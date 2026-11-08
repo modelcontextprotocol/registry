@@ -2,6 +2,7 @@ package k8s //nolint:testpackage // Verify guarded experimental profile and rend
 
 import (
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
@@ -9,6 +10,51 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
+
+type hpaCapMonitor struct {
+	t       *testing.T
+	maximum float64
+	seen    atomic.Bool
+}
+
+func (m *hpaCapMonitor) Call(a pulumi.MockCallArgs) (resource.PropertyMap, error) { return a.Args, nil }
+func (m *hpaCapMonitor) NewResource(a pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
+	if a.TypeToken == "kubernetes:autoscaling/v2:HorizontalPodAutoscaler" {
+		m.seen.Store(true)
+		spec := a.Inputs["spec"].ObjectValue()
+		if spec["minReplicas"].NumberValue() != 1 || spec["maxReplicas"].NumberValue() != m.maximum {
+			m.t.Error("wrong registry HPA budget")
+		}
+		if spec["scaleTargetRef"].ObjectValue()["name"].StringValue() != "mcp-registry" {
+			m.t.Error("wrong HPA target")
+		}
+	}
+	return a.Name, a.Inputs, nil
+}
+
+func TestCompactRegistryHPA(t *testing.T) {
+	for _, compact := range []bool{false, true} {
+		m := &hpaCapMonitor{t: t, maximum: 4}
+		cfg := map[string]string{"mcp-registry:stagingIdleCapacity": "true"}
+		if compact {
+			m.maximum = 1
+			cfg["mcp-registry:gatewayStagingCompact"] = "true"
+		}
+		err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+			p, err := kubernetes.NewProvider(ctx, "test-provider", &kubernetes.ProviderArgs{})
+			if err != nil {
+				return err
+			}
+			return deployRegistryAutoscaler(ctx, p)
+		}, pulumi.WithMocks("test", "staging", m), func(i *pulumi.RunInfo) { i.Config = cfg })
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !m.seen.Load() {
+			t.Fatal("registry HPA not registered")
+		}
+	}
+}
 
 type capacityMonitor struct {
 	t       *testing.T

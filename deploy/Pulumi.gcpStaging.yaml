@@ -1,5 +1,6 @@
 config:
   mcp-registry:gatewayStagingStandalone: "true"
+  mcp-registry:gatewayStagingCompact: "true"
   mcp-registry:gatewayStagingPublicIP: 35.222.36.75
   mcp-registry:securityPatch202611: "true"
   mcp-registry:publicReadCompression: "true"
@@ -12,7 +13,7 @@ config:
   mcp-registry:nodeMinCount: "2"
   mcp-registry:stagingIdleCapacity: "true"
   mcp-registry:stagingSmallCapacity: enabled
-  mcp-registry:nodeMaxCount: "4"
+  mcp-registry:nodeMaxCount: "2"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"
   gcp:project: mcp-registry-staging

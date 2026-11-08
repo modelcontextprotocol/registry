@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/mod/semver"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	autoscalingv2 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/autoscaling/v2"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -99,6 +100,12 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 			nodeMax = "8"
 		}
 	}
+	if gatewaycanary.Compact(ctx) {
+		if err := gatewaycanary.Validate(ctx); err != nil {
+			return err
+		}
+		nodeMax = "2"
+	}
 	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": nodeMin, "nodeMaxCount": nodeMax} {
 		if c.Get(key) != expected {
 			return fmt.Errorf("coordinatedCapacity requires %s=%s", key, expected)
@@ -137,9 +144,13 @@ func deployRegistryAutoscaler(ctx *pulumi.Context, provider pulumi.ProviderResou
 	if config.New(ctx, "mcp-registry").Get("productionAppScaling") == "enabled" {
 		minimum = 2
 	}
+	spec := registryAutoscalerSpec(minimum)
+	if gatewaycanary.Compact(ctx) {
+		spec.MaxReplicas = pulumi.Int(1)
+	}
 	_, err := autoscalingv2.NewHorizontalPodAutoscaler(ctx, "mcp-registry-capacity", &autoscalingv2.HorizontalPodAutoscalerArgs{
 		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String("mcp-registry"), Namespace: pulumi.String("default"), Annotations: stagingAutoscalerAnnotations(ctx)},
-		Spec:     registryAutoscalerSpec(minimum),
+		Spec:     spec,
 	}, pulumi.Provider(provider))
 	return err
 }

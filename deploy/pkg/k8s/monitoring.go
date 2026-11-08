@@ -27,6 +27,10 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 			"search.maxMemoryPerQuery":     pulumi.String("128MiB"),
 		}
 	}
+	if gatewaycanary.Compact(ctx) {
+		// Preserve memory, retention and query limits; spare CPU remains available.
+		vmCPURequest = "100m"
+	}
 	// Create namespace
 	ns, err := corev1.NewNamespace(ctx, "monitoring", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{

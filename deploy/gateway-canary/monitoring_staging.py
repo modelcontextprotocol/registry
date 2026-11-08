@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise real CRI splitting and retry metrics on both existing staging nodes.
+"""Exercise real CRI splitting and retry metrics on the current staging collectors.
 
 Creates one node-pinned log-emitter Pod at a time, with no Service or public route.
 Uses fixture-labelled records and removes each emitter, including on failure.
@@ -38,14 +38,31 @@ def run(*args, **kwargs):
     return subprocess.run(K + list(args), check=True, capture_output=True, text=True, **kwargs)
 
 
+def collection_nodes(nodes):
+    """Accept only the dedicated two-node or compact two-node-cluster profile."""
+    ds = get('-n', NS, 'get', 'daemonset', 'vector')
+    role = ds['spec']['template']['spec']['nodeSelector']['registry-role']
+    selected = sorted(n['metadata']['name'] for n in nodes
+                      if n['metadata']['labels'].get('registry-role') == role)
+    if role == 'worker':
+        assert len(nodes) == 2 and len(selected) == 1, 'Compact monitoring proof requires one worker and one database node'
+        assert sum(n['metadata']['labels'].get('registry-role') == 'database' for n in nodes) == 1
+    else:
+        assert role == 'gateway-canary' and len(selected) == 2, 'Expected the two dedicated Gateway nodes'
+    collectors = get('-n', NS, 'get', 'pods', '-l', 'app=gateway-canary-vector')['items']
+    live = [p for p in collectors if not p['metadata'].get('deletionTimestamp')]
+    assert sorted(p['spec']['nodeName'] for p in live) == selected, 'Collector coverage is incomplete'
+    assert all(any(c['type'] == 'Ready' and c['status'] == 'True' for c in p['status'].get('conditions', [])) for p in live)
+    return selected
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     nodes = get('get', 'nodes')['items']
     node_names = sorted(n['metadata']['name'] for n in nodes)
-    canary = [n['metadata']['name'] for n in nodes if n['metadata']['labels'].get('registry-role') == 'gateway-canary']
-    assert len(canary) == 2, 'Requires exactly the existing two canary nodes'
+    canary = collection_nodes(nodes)
     baseline = totals()
     started = time.time()
     for index, node in enumerate(canary):

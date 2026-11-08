@@ -303,6 +303,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		},
 	}
 
+	if config.New(ctx, "mcp-registry").GetBool("gatewayStagingCompact") {
+		nodePoolArgs.UpgradeSettings = &container.NodePoolUpgradeSettingsArgs{Strategy: pulumi.String("SURGE"), MaxSurge: pulumi.Int(0), MaxUnavailable: pulumi.Int(1)}
+	}
+
 	// Add provider if we have explicit credentials
 	nodePoolOpts := []pulumi.ResourceOption{}
 	if nodeScaling.enabled {
@@ -337,7 +341,9 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		if err != nil {
 			return nil, err
 		}
-		clusterDependencies = append(clusterDependencies, pool)
+		if pool != nil {
+			clusterDependencies = append(clusterDependencies, pool)
+		}
 		if address != nil {
 			canaryAddress = address.Address
 		}

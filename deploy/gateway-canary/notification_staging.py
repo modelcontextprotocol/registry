@@ -16,7 +16,7 @@ from pathlib import Path
 
 from measure import K, NS, get, raw
 from monitoring_contract import record
-from monitoring_staging import IMAGE, run
+from monitoring_staging import IMAGE, run, collection_nodes
 
 NAME = 'gateway-monitoring-proof'
 RULE = 'gateway-monitoring-proof'
@@ -96,8 +96,7 @@ def main():
     args = parser.parse_args()
     nodes = get('get', 'nodes')['items']
     node_names = sorted(n['metadata']['name'] for n in nodes)
-    canary = [n['metadata']['name'] for n in nodes if n['metadata']['labels'].get('registry-role') == 'gateway-canary']
-    assert len(canary) == 2
+    canary = collection_nodes(nodes)
     assert sql(f"SELECT count(*) FROM alert_rule WHERE uid='{RULE}';") == '0', 'Proof rule already exists'
     contact_query = ("SELECT jsonb_path_exists(alertmanager_configuration::jsonb, "
                      "'$.alertmanager_config.receivers[*].grafana_managed_receiver_configs[*] ? (@.uid == \""

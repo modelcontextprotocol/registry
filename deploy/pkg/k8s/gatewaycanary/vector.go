@@ -43,6 +43,9 @@ func vector(ctx *pulumi.Context, provider *kubernetes.Provider, namespace pulumi
 					"readinessProbe":  map[string]any{"httpGet": map[string]any{"path": "/metrics", "port": "metrics"}, "periodSeconds": 5},
 					"volumeMounts":    []any{map[string]any{"name": "config", "mountPath": "/etc/vector", "readOnly": true}, map[string]any{"name": "logs", "mountPath": "/var/log/pods", "readOnly": true}, map[string]any{"name": "state", "mountPath": "/data"}}}},
 				"volumes": []any{map[string]any{"name": "config", "configMap": map[string]any{"name": "vector"}}, map[string]any{"name": "logs", "hostPath": map[string]any{"path": "/var/log/pods", "type": "Directory"}}, map[string]any{"name": "state", "hostPath": map[string]any{"path": "/var/lib/registry-gateway-canary-vector", "type": "DirectoryOrCreate"}}}}}}}
+	if Compact(ctx) {
+		compactObject(ds)
+	}
 	_, err = register(ctx, provider, ds, []pulumi.Resource{cm})
 	return err
 }

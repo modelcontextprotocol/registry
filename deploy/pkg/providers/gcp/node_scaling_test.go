@@ -23,6 +23,7 @@ func TestNodeScalingConfiguration(t *testing.T) {
 		invalid  bool
 	}{
 		{name: "legacy", min: 2, max: 4},
+		{name: "compact production rejected", values: map[string]string{"gatewayStagingCompact": "true", "environment": "prod"}, invalid: true},
 		{name: "legacy burst", values: map[string]string{"burstAutoscaling": "true"}, enabled: true, min: 2, max: 4},
 		{name: "three ready nodes independently", values: map[string]string{"nodeAutoscaling": "true", "nodeMinCount": "3", "nodeMaxCount": "4"}, enabled: true, min: 3, max: 4},
 		{name: "cheaper later", values: map[string]string{"nodeAutoscaling": "true", "nodeMinCount": "2", "nodeMaxCount": "3"}, enabled: true, min: 2, max: 3},
@@ -61,5 +62,27 @@ func TestNodeScalingConfiguration(t *testing.T) {
 				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func TestCompactNodeBudget(t *testing.T) {
+	for _, maximum := range []string{"2", "4"} {
+		cfg := map[string]string{"gcp:project": "mcp-registry-staging"}
+		for k, v := range map[string]string{"gatewayStagingCompact": "true", "gatewayStagingStandalone": "true", "stagingSmallCapacity": "enabled", "stagingIdleCapacity": "true", "nodeAutoscaling": "true", "isolatedDatabase": "true", "coordinatedCapacity": "true", "environment": "staging", "provider": "gcp", "nodeMinCount": "2", "nodeMaxCount": maximum} {
+			cfg["mcp-registry:"+k] = v
+		}
+		err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+			budget, err := readNodeScaling(ctx)
+			if err != nil {
+				return err
+			}
+			if budget.minimum != 1 || budget.maximum != 1 {
+				t.Fatal("compact profile must reserve exactly one worker plus the isolated database")
+			}
+			return nil
+		}, pulumi.WithMocks("test", "staging", configMocks{}), func(i *pulumi.RunInfo) { i.Config = cfg })
+		if (err == nil) != (maximum == "2") {
+			t.Fatalf("max=%s: %v", maximum, err)
+		}
 	}
 }
