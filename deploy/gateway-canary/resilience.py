@@ -8,10 +8,11 @@ import subprocess
 import time
 from pathlib import Path
 from measure import K, NS, get, gateway_target
+from public_probe import PublicProbe
 
 
-def run(*args, timeout=240):
-    return subprocess.run(K + list(args), capture_output=True, text=True, check=True, timeout=timeout)
+def run(*args, timeout=240, input=None):
+    return subprocess.run(K + list(args), input=input, capture_output=True, text=True, check=True, timeout=timeout)
 
 
 def wait_rollout(namespace, name):
@@ -44,7 +45,11 @@ def main():
     original_patches = None
     modified_patches = None
     policy_uid = None
+    policy_before = None
+    policy_manager = None
     failure = None
+    public = PublicProbe(args.output / 'public-probes.json')
+    public.start()
     load_log = (args.output / 'load.log').open('w')
     load = subprocess.Popen(['python3', 'gateway-canary/measure.py', '--arm', 'ngf', '--rate', str(args.rate),
                              '--seconds', str(args.seconds), '--workers', '256', '--epoch', 'public-' + args.scenario + '-' + str(int(time.time())),
@@ -62,7 +67,12 @@ def main():
             run('-n', namespace, 'delete', 'pod', pod['metadata']['name'], '--wait=true', '--timeout=90s')
             wait_rollout(namespace, name)
         elif args.scenario == 'rollout':
-            policy = get('-n', edge_ns, 'get', 'nginxproxy', 'registry-edge')
+            policy = get('-n', edge_ns, 'get', 'nginxproxy', 'registry-edge', '--show-managed-fields=true')
+            policy_before = copy.deepcopy(policy)
+            managers = {m['manager'] for m in policy['metadata']['managedFields'] if m['manager'].startswith('pulumi-kubernetes-') and m['operation'] == 'Apply' and 'f:spec' in m.get('fieldsV1', {})}
+            assert len(managers) == 1, 'Expected one Pulumi owner of the Gateway policy'
+            policy_manager = managers.pop()
+            (args.output / 'policy-before.json').write_text(json.dumps(policy_before, indent=2) + '\n')
             policy_uid = policy['metadata']['uid']
             original_patches = policy['spec']['kubernetes']['deployment']['patches']
             modified_patches = copy.deepcopy(original_patches)
@@ -121,6 +131,15 @@ def main():
                      {'op': 'replace', 'path': '/spec/kubernetes/deployment/patches', 'value': original_patches}]
             try:
                 run('-n', edge_ns, 'patch', 'nginxproxy', 'registry-edge', '--type=json', '-p', json.dumps(patch))
+                # JSON patch restores values but takes SSA ownership. Return the
+                # exact original spec to its original Pulumi field manager, so
+                # the next saved-plan deployment does not encounter a conflict.
+                current = get('-n', edge_ns, 'get', 'nginxproxy', 'registry-edge')
+                assert current['metadata']['uid'] == policy_uid and current['spec'] == policy_before['spec'], 'Concurrent Gateway policy change; refuse ownership restoration'
+                metadata = {k: current['metadata'][k] for k in ['name', 'namespace', 'resourceVersion', 'labels', 'annotations', 'ownerReferences'] if k in current['metadata']}
+                manifest = {'apiVersion': current['apiVersion'], 'kind': current['kind'], 'metadata': metadata, 'spec': current['spec']}
+                run('apply', '--server-side', '--force-conflicts', '--field-manager=' + policy_manager, '-f', '-', input=json.dumps(manifest))
+                report['pulumi_policy_ownership_restored'] = True
                 deadline = time.monotonic() + 60
                 while 'registry.modelcontextprotocol.io/qualification' in get('-n', edge_ns, 'get', 'deployment', edge_name)['spec']['template']['metadata'].get('annotations', {}):
                     assert time.monotonic() < deadline, 'Controller did not restore rollout policy'
@@ -129,12 +148,15 @@ def main():
             except Exception as error:
                 cleanup_errors.append('restore policy: ' + repr(error))
         report['cleanup_errors'] = cleanup_errors
-        report['measurement_exit'] = load.wait(timeout=args.seconds + 100)
-        load_log.close()
+        try:
+            report['measurement_exit'] = load.wait(timeout=args.seconds + 100)
+        finally:
+            load_log.close()
+            report['public'] = public.finish(120 if args.scenario == 'node' else 0)
     report['nodes_after'] = sorted(n['metadata']['name'] for n in get('get', 'nodes')['items'])
     report['finished'] = time.time()
     report['failure'] = failure
-    report['passed'] = failure is None and not report['cleanup_errors'] and report['measurement_exit'] == 0 and report['nodes_before'] == report['nodes_after']
+    report['passed'] = failure is None and report['public']['passed'] and not report['cleanup_errors'] and report['measurement_exit'] == 0 and report['nodes_before'] == report['nodes_after']
     (args.output / 'operation.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report, indent=2))
     assert report['passed'], 'Recovery qualification failed; inspect operation.json and load/result.json'
