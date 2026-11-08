@@ -2,7 +2,8 @@
 
 The staging handoff is opt-in and restricted to `mcp-registry-staging`. Production
 and the image/release workflows are unchanged. `gatewayStagingHandoff: legacy`
-prepares the new data plane but leaves public traffic on ingress-nginx.
+prepares the new data plane but leaves public traffic on ingress-nginx. The
+validated staging configuration now uses `gateway` for public traffic.
 
 ## Architecture
 
@@ -38,7 +39,11 @@ interruption while GCP health checks converge; do not add draining machinery or
 nodes solely to avoid a brief staging interruption. This allowance applies only
 to staging and does not change production availability requirements.
 
-Use the normal full-stack saved-plan workflow, not targeted Pulumi updates.
+Use the normal full-stack saved-plan workflow for planned deployments, not
+targeted Pulumi updates. A temporary emergency rollback drill may patch only the
+public Service selector with JSON Patch tests for the expected UID and current
+selector. Restore the desired selector afterward and verify a full-stack preview
+before merging; keep the normal GitOps workflow unchanged.
 Always build the `deploy/infra` binary before previews. Inspect previews and
 abort on any public Service replacement, unexpected address change, node-pool
 expansion, application image pin, or production Gateway change.
@@ -70,7 +75,7 @@ expansion, application image pin, or production Gateway change.
 6. Rehearse a direct rollback to **legacy**, accepting the same brief convergence
    interruption. Optional **overlap** can warm the legacy nodes first. Confirm the
    same IP, UID, TLS and functioning public endpoints.
-   A persistent switch is a separate deliberate phase after these checks pass.
+   Persist `gateway` only after these checks pass and the desired state is reviewed.
 
 The passphrase file can be supplied without exposing its value:
 
@@ -87,6 +92,8 @@ Do not merge a phase change until reading all PR reviews and inline comments,
 including Copilot. Let normal staging GitOps apply the reviewed desired state.
 
 ## Evidence
+
+The completed staging results are in [handoff-validation.md](handoff-validation.md).
 
 Local deployment tests cover environment/project guards, fixed Service identity
 and compatible ports, both TLS references, policy target rewriting, fixture

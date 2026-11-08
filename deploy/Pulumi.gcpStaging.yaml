@@ -1,5 +1,5 @@
 config:
-  mcp-registry:gatewayStagingHandoff: legacy
+  mcp-registry:gatewayStagingHandoff: gateway
   mcp-registry:gatewayStagingPublicIP: 35.222.36.75
   mcp-registry:gatewayCanary: "true"
   mcp-registry:securityPatch202611: "true"
