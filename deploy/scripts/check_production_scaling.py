@@ -6,6 +6,8 @@ import re
 import subprocess
 import sys
 
+from production_gateway import check as check_gateway
+
 
 CONTEXT = "gke_mcp-registry-prod_us-central1-b_mcp-registry-prod"
 POOL_MAX = "MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"
@@ -72,6 +74,7 @@ def main():
     pods = read_json(command + ["pods", "-l", "app=mcp-registry", "-o", "json"])["items"]
     hpas = read_json(command + ["hpa", "-o", "json"])["items"]
     check_transition(phase, deployment, pods, hpas)
+    check_gateway(config)
     print("Production scaling transition preflight passed")
 
 

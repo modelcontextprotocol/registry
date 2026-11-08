@@ -1,4 +1,4 @@
-// Package gatewaycanary manages the staging-only OSS Gateway and qualification modes.
+// Package gatewaycanary manages the OSS Gateway and staging qualification modes.
 package gatewaycanary
 
 import (
@@ -24,11 +24,14 @@ func Enabled(ctx *pulumi.Context) bool {
 
 func Validate(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
+	if err := validateProduction(ctx); err != nil {
+		return err
+	}
 	if Compact(ctx) && (!Standalone(ctx) || !c.GetBool("stagingIdleCapacity") || c.Get("stagingSmallCapacity") != "enabled" || c.Get("nodeMinCount") != "2" || c.Get("nodeMaxCount") != "2") {
 		return fmt.Errorf("gatewayStagingCompact requires standalone small idle staging with exactly two total nodes")
 	}
 	mode := PublicCertificates(ctx)
-	if mode != "" && (mode != "adopt" && mode != "managed" || !NativeCertificates(ctx)) {
+	if mode != "" && (mode != "adopt" && mode != "managed" || (!NativeCertificates(ctx) && !Production(ctx))) {
 		return fmt.Errorf("public Gateway certificates require native renewal and adopt/managed mode")
 	}
 	if ManagedMTLS(ctx) && !NativeCertificates(ctx) {
@@ -40,7 +43,7 @@ func Validate(ctx *pulumi.Context) error {
 	if (c.GetBool("gatewayCanaryComparison") || c.GetBool("gatewayCanaryFixtures")) && !Enabled(ctx) {
 		return fmt.Errorf("gateway canary test modes require gatewayCanary")
 	}
-	if Enabled(ctx) && (c.Get("environment") != "staging" || c.Get("provider") != "gcp") {
+	if Enabled(ctx) && !ProductionStandalone(ctx) && (c.Get("environment") != "staging" || c.Get("provider") != "gcp") {
 		return fmt.Errorf("gatewayCanary is restricted to GCP staging")
 	}
 	return nil
@@ -157,6 +160,9 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 			if Compact(ctx) {
 				compactObject(o)
 			}
+			if ProductionStandalone(ctx) {
+				productionObject(o)
+			}
 			r, e := register(ctx, provider, o, prior)
 			if e != nil {
 				return e
@@ -234,7 +240,9 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 	if !Standalone(ctx) {
 		ctx.Export("gatewayCanaryIP", address)
 	}
-	ctx.Export("gatewayCanaryHost", pulumi.String("staging.registry.modelcontextprotocol.io"))
+	if !ProductionStandalone(ctx) {
+		ctx.Export("gatewayCanaryHost", pulumi.String("staging.registry.modelcontextprotocol.io"))
+	}
 	return nil
 }
 

@@ -207,6 +207,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 
 	if config.New(ctx, "mcp-registry").Get("publicReadLogSampling") != "" && !config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone") {
 		policy := traffic.ReadPolicy()
+		if config.New(ctx, "mcp-registry").Get("gatewayProductionPhase") == "standalone" {
+			policy.ExclusionFilter = gatewayAccessLogExclusionFilter
+			policy.ExclusionDescription = "Keep 10% of fast successful Gateway listing logs; Vector metrics use unsampled local logs."
+		}
 		opts := []pulumi.ResourceOption{}
 		if gcpProvider != nil {
 			opts = append(opts, pulumi.Provider(gcpProvider))
@@ -350,6 +354,9 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	}
 
 	stagingIngressAddress, err := reserveStagingIngressAddress(ctx, projectID, region, gcpProvider)
+	if err == nil && config.New(ctx, "mcp-registry").Get("gatewayProductionPhase") != "" {
+		stagingIngressAddress, err = reserveProductionIngressAddress(ctx, projectID, region, gcpProvider)
+	}
 	if err != nil {
 		return nil, err
 	}

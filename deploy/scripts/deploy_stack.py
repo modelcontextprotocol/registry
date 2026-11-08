@@ -14,6 +14,7 @@ import tempfile
 
 from production_apply import Blocked, require, quiet, parse_preview_events, decode_plan
 from staging_image import resolve, validate
+from production_gateway import check as check_gateway, read_json as gateway_read_json
 
 
 def commands(stack, plan):
@@ -76,6 +77,9 @@ def main(environment, mode):
     env.setdefault('PULUMI_CONFIG_PASSPHRASE_FILE', str(Path(f'passphrase.{environment}.txt').resolve()))
     if environment == 'staging':
         env['REGISTRY_STAGING_IMAGE'] = validate(env['REGISTRY_STAGING_IMAGE']) if env.get('REGISTRY_STAGING_IMAGE') else resolve()
+    if environment == 'prod':
+        # Direct script invocation gets the same read-only endpoint guard as make.
+        check_gateway(gateway_read_json(['pulumi', 'config', '--json', '--stack', stack], env=env))
     with tempfile.TemporaryDirectory(prefix='registry-private-deployment-') as temp:
         directory = Path(temp)
         preview, apply = commands(stack, directory/'plan.json')

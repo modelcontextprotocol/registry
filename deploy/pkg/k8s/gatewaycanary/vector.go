@@ -4,27 +4,40 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func vector(ctx *pulumi.Context, provider *kubernetes.Provider, namespace pulumi.Resource) error {
+func vectorConfiguration(handoff, production bool) ([]byte, error) {
 	data, err := assets.ReadFile("assets/vector.json")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if HandoffEnabled(ctx) {
+	if handoff {
 		var cfg map[string]any
 		if err := json.Unmarshal(data, &cfg); err != nil {
-			return err
+			return nil, err
 		}
 		source := cfg["sources"].(map[string]any)["access"].(map[string]any)
 		source["include"] = append(source["include"].([]any), "/var/log/pods/ingress-nginx_registry-edge-*/nginx/*.log")
+		if production {
+			parse := cfg["transforms"].(map[string]any)["parse"].(map[string]any)
+			parse["source"] = strings.ReplaceAll(parse["source"].(string), "grafana.staging.registry.modelcontextprotocol.io", "grafana.prod.registry.modelcontextprotocol.io")
+		}
 		data, err = json.Marshal(cfg)
 		if err != nil {
-			return err
+			return nil, err
 		}
+	}
+	return data, nil
+}
+
+func vector(ctx *pulumi.Context, provider *kubernetes.Provider, namespace pulumi.Resource) error {
+	data, err := vectorConfiguration(HandoffEnabled(ctx), ProductionStandalone(ctx))
+	if err != nil {
+		return err
 	}
 	cm, err := register(ctx, provider, map[string]any{"apiVersion": "v1", "kind": "ConfigMap", "metadata": map[string]any{"name": "vector", "namespace": Namespace}, "data": map[string]any{"vector.json": string(data)}}, []pulumi.Resource{namespace})
 	if err != nil {
@@ -45,6 +58,9 @@ func vector(ctx *pulumi.Context, provider *kubernetes.Provider, namespace pulumi
 				"volumes": []any{map[string]any{"name": "config", "configMap": map[string]any{"name": "vector"}}, map[string]any{"name": "logs", "hostPath": map[string]any{"path": "/var/log/pods", "type": "Directory"}}, map[string]any{"name": "state", "hostPath": map[string]any{"path": "/var/lib/registry-gateway-canary-vector", "type": "DirectoryOrCreate"}}}}}}}
 	if Compact(ctx) {
 		compactObject(ds)
+	}
+	if ProductionStandalone(ctx) {
+		productionObject(ds)
 	}
 	_, err = register(ctx, provider, ds, []pulumi.Resource{cm})
 	return err

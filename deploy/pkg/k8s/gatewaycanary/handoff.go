@@ -21,9 +21,9 @@ func HandoffEnabled(ctx *pulumi.Context) bool {
 	return Standalone(ctx) || config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff") != ""
 }
 
-// Standalone selects the final staging topology without legacy ingress or duplicate canary.
+// Standalone selects the final topology without legacy ingress or duplicate canary.
 func Standalone(ctx *pulumi.Context) bool {
-	return config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone")
+	return ProductionStandalone(ctx) || config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone")
 }
 
 // NativeCertificates enables the Gateway HTTP01 solver before legacy retirement.
@@ -36,6 +36,9 @@ func ACMEParent() map[string]any {
 }
 
 func validateHandoff(ctx *pulumi.Context) error {
+	if Production(ctx) {
+		return validateProduction(ctx)
+	}
 	c := config.New(ctx, "mcp-registry")
 	mode, ip := c.Get("gatewayStagingHandoff"), c.Get("gatewayStagingPublicIP")
 	if Standalone(ctx) && mode == "" {
@@ -218,6 +221,15 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 	if err != nil {
 		return err
 	}
+	if ProductionStandalone(ctx) {
+		productionRoutes(objects)
+		for _, o := range objects {
+			productionObject(o)
+		}
+		if !productionHostPolicyPresent(objects) {
+			return fmt.Errorf("production gzip host contract missing")
+		}
+	}
 	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, dependencies...)
 		for _, o := range objects {
@@ -235,7 +247,11 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 		ctx.Export("gatewayStagingHandoff", pulumi.String(config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff")))
 	}
 	if Standalone(ctx) {
-		ctx.Export("stagingGatewayMode", pulumi.String("standalone"))
+		if ProductionStandalone(ctx) {
+			ctx.Export("productionGatewayMode", pulumi.String("standalone"))
+		} else {
+			ctx.Export("stagingGatewayMode", pulumi.String("standalone"))
+		}
 	}
 	return nil
 }
