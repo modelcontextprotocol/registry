@@ -46,7 +46,7 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStora
 		return nil, err
 	}
 
-	if err := gatewaycanary.Deploy(ctx, cluster.Provider, cluster.CanaryAddress); err != nil {
+	if err := gatewaycanary.Deploy(ctx, cluster.Provider, cluster.CanaryAddress, ingressNginx); err != nil {
 		return nil, err
 	}
 	return service, nil

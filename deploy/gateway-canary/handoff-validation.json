@@ -1,0 +1,189 @@
+{
+  "validated_at_epoch": 1794140168.424974,
+  "environment": "mcp-registry-staging",
+  "desired_mode": "gateway",
+  "public_ip": "35.222.36.75",
+  "public_service_uid": "21bf955a-aece-4c17-ae4f-326a68b20c3f",
+  "health_check_node_port": 30780,
+  "node_count": 4,
+  "nodes": [
+    "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+    "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+    "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+    "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+  ],
+  "prepared": {
+    "gateway_programmed": true,
+    "accepted_routes": [
+      "acme",
+      "bulk",
+      "grafana",
+      "redirect",
+      "registry"
+    ],
+    "staging.registry.modelcontextprotocol.io/v0/health": 200,
+    "staging.registry.modelcontextprotocol.io/v0.1/version": 200,
+    "grafana.staging.registry.modelcontextprotocol.io/api/health": 200,
+    "grafana.staging.registry.modelcontextprotocol.io/login": 200,
+    "cache_miss_then_hit_and_gzip": true,
+    "hsts": "max-age=31536000; includeSubDomains",
+    "http_redirect": 308,
+    "public_service_preserved": true,
+    "ready_gateway_pods": [
+      "registry-edge-registry-gateway-canary-85786b7fd7-962j6",
+      "registry-edge-registry-gateway-canary-85786b7fd7-c9zfx"
+    ],
+    "gateway_nodes": [
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "node_count": 4
+  },
+  "cutover": {
+    "stable_within_guard": true,
+    "first_of_three_successful_rounds_seconds": 40.6,
+    "confirmation_seconds": 47.5,
+    "failed_probe_rounds": 5
+  },
+  "rollback": {
+    "stable_within_guard": true,
+    "first_of_three_successful_rounds_seconds": 40.7,
+    "confirmation_seconds": 47.6,
+    "failed_probe_rounds": 5
+  },
+  "return_to_gateway": {
+    "stable_within_guard": true,
+    "first_of_three_successful_rounds_seconds": 40.1,
+    "confirmation_seconds": 47.0,
+    "failed_probe_rounds": 4
+  },
+  "acme": {
+    "hosts": [
+      "staging.registry.modelcontextprotocol.io",
+      "grafana.staging.registry.modelcontextprotocol.io"
+    ],
+    "ca": "Lets Encrypt staging",
+    "public_tls_secrets_unchanged": true,
+    "initial": {
+      "revision": 1,
+      "notBefore": "2026-11-08T11:10:46Z",
+      "notAfter": "2027-01-11T11:10:45Z",
+      "renewalTime": "2026-12-21T03:10:45Z"
+    },
+    "renewed": {
+      "revision": 2,
+      "notBefore": "2026-11-08T11:10:56Z",
+      "notAfter": "2027-01-11T11:10:55Z",
+      "renewalTime": "2026-12-21T03:10:55Z"
+    },
+    "requests": [
+      {
+        "name": "proof-2",
+        "ready": true
+      }
+    ],
+    "test_namespace_removed": true
+  },
+  "publish": {
+    "registry": "https://staging.registry.modelcontextprotocol.io",
+    "name": "io.github.rdimitrov/gateway-handoff-proof",
+    "version": "0.0.1794139721",
+    "checks": [
+      {
+        "operation": "github-token-exchange",
+        "status": 200
+      },
+      {
+        "operation": "publish",
+        "status": 200,
+        "cache": null
+      },
+      {
+        "operation": "read-published-version",
+        "status": 200
+      },
+      {
+        "operation": "delete-exact-test-version",
+        "status": 200
+      }
+    ]
+  },
+  "oauth": {
+    "verified_at": 1794139855.306772,
+    "public_service": "Gateway Fabric",
+    "provider": "Google",
+    "existing_login_used": true,
+    "callback_succeeded": true,
+    "authenticated_dashboard": "Registry Gateway Canary",
+    "visible_panels": [
+      "Requests / second",
+      "p95 client latency",
+      "Cache hit fraction",
+      "p95 response bytes including headers",
+      "Internal cache refreshes / second",
+      "Upstream p95 latency (single attempt)",
+      "Parse / CRI / timing errors per second"
+    ]
+  },
+  "gateway_access_log_evidence": [
+    {
+      "request": "acme_challenge",
+      "host": "grafana.staging.registry.modelcontextprotocol.io",
+      "status": "200",
+      "count": 12
+    },
+    {
+      "request": "acme_challenge",
+      "host": "grafana.staging.registry.modelcontextprotocol.io",
+      "status": "302",
+      "count": 2
+    },
+    {
+      "request": "acme_challenge",
+      "host": "grafana.staging.registry.modelcontextprotocol.io",
+      "status": "308",
+      "count": 2
+    },
+    {
+      "request": "acme_challenge",
+      "host": "staging.registry.modelcontextprotocol.io",
+      "status": "200",
+      "count": 12
+    },
+    {
+      "request": "acme_challenge",
+      "host": "staging.registry.modelcontextprotocol.io",
+      "status": "308",
+      "count": 2
+    },
+    {
+      "request": "acme_challenge",
+      "host": "staging.registry.modelcontextprotocol.io",
+      "status": "404",
+      "count": 2
+    },
+    {
+      "request": "github_exchange",
+      "host": "staging.registry.modelcontextprotocol.io",
+      "status": "200",
+      "count": 1
+    },
+    {
+      "request": "grafana_oauth",
+      "host": "grafana.staging.registry.modelcontextprotocol.io",
+      "status": "302",
+      "count": 2
+    },
+    {
+      "request": "publish",
+      "host": "staging.registry.modelcontextprotocol.io",
+      "status": "200",
+      "count": 1
+    }
+  ],
+  "monitoring": {
+    "healthy_scrape_targets": 9,
+    "new_gateway_request_series_present": true
+  },
+  "production": "Preview only; two existing admission Jobs and two empty Grafana RBAC housekeeping updates; no Gateway or application changes."
+}

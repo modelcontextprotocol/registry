@@ -89,7 +89,7 @@ func withIngressScrape(ctx *pulumi.Context, configs pulumi.Array) pulumi.Array {
 		configs = append(configs, ingressScrapeConfig())
 	}
 	if gatewaycanary.Enabled(ctx) {
-		configs = append(configs, gatewaycanary.Scrapes()...)
+		configs = append(configs, gatewaycanary.Scrapes(ctx)...)
 	}
 	return configs
 }

@@ -4,9 +4,11 @@ import (
 	v1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/traffic"
 )
@@ -115,6 +117,14 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{burstResourceTransform}))
 	}
 
+	podLabels := pulumi.StringMap{}
+	serviceValues := pulumi.Map{"type": serviceType, "externalTrafficPolicy": pulumi.String("Local"), "annotations": pulumi.Map{}}
+	if gatewaycanary.HandoffEnabled(ctx) {
+		podLabels[gatewaycanary.EdgeLabel] = pulumi.String("true")
+		serviceValues["loadBalancerIP"] = cluster.StagingIngressAddress
+		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{gatewaycanary.ProtectPublicService}))
+	}
+
 	compressionHTTP, compressionLocation := "", ""
 	if conf.GetBool("publicReadCompression") {
 		policy := traffic.ReadPolicy()
@@ -123,8 +133,9 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 
 	// Install NGINX Ingress Controller
 	ingressNginx, err := helm.NewChart(ctx, "ingress-nginx", helm.ChartArgs{
-		Chart:   pulumi.String("ingress-nginx"),
-		Version: securityPatchVersion(ctx, "4.13.0", "4.15.1"),
+		Chart:           pulumi.String("ingress-nginx"),
+		Transformations: []yaml.Transformation{gatewaycanary.ServiceTransform(ctx)},
+		Version:         securityPatchVersion(ctx, "4.13.0", "4.15.1"),
 		FetchArgs: helm.FetchArgs{
 			Repo: pulumi.String("https://kubernetes.github.io/ingress-nginx"),
 		},
@@ -132,6 +143,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 		Values: pulumi.Map{
 			"controller": pulumi.Map{
 				"replicaCount": pulumi.Int(replicaCount),
+				"podLabels":    podLabels,
 				"nodeSelector": workerNodeSelector(ctx),
 				"autoscaling":  autoscaling,
 				"metrics":      pulumi.Map{"enabled": pulumi.Bool(burstAutoscaling)},
@@ -154,11 +166,7 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 				// Helm retains the other probe defaults (10s period, 3/5 failures).
 				"readinessProbe": pulumi.Map{"timeoutSeconds": pulumi.Int(3)},
 				"livenessProbe":  pulumi.Map{"timeoutSeconds": pulumi.Int(5)},
-				"service": pulumi.Map{
-					"type":                  serviceType,
-					"externalTrafficPolicy": pulumi.String("Local"),
-					"annotations":           pulumi.Map{},
-				},
+				"service":        serviceValues,
 				"config": pulumi.Map{
 					"log-format-upstream": pulumi.String(registryIngressLogFormat),
 					// Cache the public list endpoints at the ingress. Registry consumers

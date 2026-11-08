@@ -341,6 +341,11 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		canaryAddress = address.Address
 	}
 
+	stagingIngressAddress, err := reserveStagingIngressAddress(ctx, projectID, region, gcpProvider)
+	if err != nil {
+		return nil, err
+	}
+
 	// Grant the default compute service account the standard GKE node roles so the
 	// fluentbit-gke and managed Prometheus collectors can ship logs and metrics.
 	// Without these, every pod log line and time series fails with IAM_PERMISSION_DENIED.
@@ -401,9 +406,10 @@ users:
 	}
 
 	return &providers.ProviderInfo{
-		CanaryAddress: canaryAddress,
-		Name:          nodePool.Cluster,
-		Provider:      k8sProvider,
+		CanaryAddress:         canaryAddress,
+		StagingIngressAddress: stagingIngressAddress,
+		Name:                  nodePool.Cluster,
+		Provider:              k8sProvider,
 	}, nil
 }
 

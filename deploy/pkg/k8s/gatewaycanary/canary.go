@@ -24,6 +24,9 @@ func Enabled(ctx *pulumi.Context) bool {
 
 func Validate(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
+	if err := validateHandoff(ctx); err != nil {
+		return err
+	}
 	if (c.GetBool("gatewayCanaryComparison") || c.GetBool("gatewayCanaryFixtures")) && !Enabled(ctx) {
 		return fmt.Errorf("gateway canary test modes require gatewayCanary")
 	}
@@ -63,7 +66,7 @@ func register(ctx *pulumi.Context, provider *kubernetes.Provider, o map[string]a
 	return &result, err
 }
 
-func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.StringOutput) error {
+func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.StringOutput, ingress pulumi.Resource) error {
 	if !Enabled(ctx) {
 		return nil
 	}
@@ -92,6 +95,14 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 	if err != nil {
 		return err
 	}
+	if HandoffEnabled(ctx) {
+		rbac, err := handoffRBAC()
+		if err != nil {
+			return err
+		}
+		control = append(control, rbac...)
+		deps = append(deps, ingress)
+	}
 	// RBAC precedes the certificate generator, which precedes the controller.
 	for _, kinds := range [][]string{{"ServiceAccount", "ClusterRole", "ClusterRoleBinding", "Role", "RoleBinding", "Service"}, {"Job"}, {"GatewayClass", "NginxGateway", "NginxProxy"}, {"Deployment"}} {
 		prior := append([]pulumi.Resource{}, deps...)
@@ -101,8 +112,17 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 			}
 			if o["kind"] == "NginxProxy" {
 				o["spec"].(map[string]any)["kubernetes"].(map[string]any)["service"].(map[string]any)["loadBalancerIP"] = address
-				if config.New(ctx, "mcp-registry").GetBool("gatewayCanaryComparison") {
+				if config.New(ctx, "mcp-registry").GetBool("gatewayCanaryComparison") || HandoffEnabled(ctx) {
 					o["spec"].(map[string]any)["kubernetes"].(map[string]any)["deployment"].(map[string]any)["autoscaling"].(map[string]any)["maxReplicas"] = 2
+				}
+			}
+			if HandoffEnabled(ctx) && o["kind"] == "Deployment" {
+				containers := o["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["containers"].([]any)
+				args := containers[0].(map[string]any)["args"].([]any)
+				for i, arg := range args {
+					if strings.HasPrefix(arg.(string), "--watch-namespaces=") {
+						args[i] = arg.(string) + "," + EdgeNamespace
+					}
 				}
 			}
 			r, e := register(ctx, provider, o, prior)
@@ -161,6 +181,11 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 					deps = append(deps, r)
 				}
 			}
+		}
+	}
+	if HandoffEnabled(ctx) {
+		if err := deployHandoff(ctx, provider, append(deps, ingress)); err != nil {
+			return err
 		}
 	}
 	if err := vector(ctx, provider, ns); err != nil {

@@ -2,6 +2,7 @@ package gatewaycanary
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
@@ -12,6 +13,18 @@ func vector(ctx *pulumi.Context, provider *kubernetes.Provider, namespace pulumi
 	data, err := assets.ReadFile("assets/vector.json")
 	if err != nil {
 		return err
+	}
+	if HandoffEnabled(ctx) {
+		var cfg map[string]any
+		if err := json.Unmarshal(data, &cfg); err != nil {
+			return err
+		}
+		source := cfg["sources"].(map[string]any)["access"].(map[string]any)
+		source["include"] = append(source["include"].([]any), "/var/log/pods/ingress-nginx_registry-edge-*/nginx/*.log")
+		data, err = json.Marshal(cfg)
+		if err != nil {
+			return err
+		}
 	}
 	cm, err := register(ctx, provider, map[string]any{"apiVersion": "v1", "kind": "ConfigMap", "metadata": map[string]any{"name": "vector", "namespace": Namespace}, "data": map[string]any{"vector.json": string(data)}}, []pulumi.Resource{namespace})
 	if err != nil {
@@ -35,7 +48,7 @@ func vector(ctx *pulumi.Context, provider *kubernetes.Provider, namespace pulumi
 }
 
 // Scrape each collector; never sample access events before metric extraction.
-func Scrapes() pulumi.Array {
+func Scrapes(ctx *pulumi.Context) pulumi.Array {
 	result := pulumi.Array{}
 	for _, port := range []string{"metrics", "sizes"} {
 		result = append(result, pulumi.Map{
@@ -47,11 +60,16 @@ func Scrapes() pulumi.Array {
 				pulumi.Map{"source_labels": pulumi.StringArray{pulumi.String("__meta_kubernetes_pod_node_name")}, "target_label": pulumi.String("node")},
 			}})
 	}
+	nativeNamespaces := pulumi.StringArray{pulumi.String(Namespace)}
+	if HandoffEnabled(ctx) {
+		nativeNamespaces = append(nativeNamespaces, pulumi.String(EdgeNamespace))
+	}
 	for _, container := range []string{"nginx", "nginx-gateway", "controller"} {
 		result = append(result, pulumi.Map{
 			"job_name": pulumi.String("gateway-canary-native-" + container), "scrape_interval": pulumi.String("30s"),
-			"kubernetes_sd_configs": pulumi.Array{pulumi.Map{"role": pulumi.String("pod"), "namespaces": pulumi.Map{"names": pulumi.StringArray{pulumi.String(Namespace)}}}},
+			"kubernetes_sd_configs": pulumi.Array{pulumi.Map{"role": pulumi.String("pod"), "namespaces": pulumi.Map{"names": nativeNamespaces}}},
 			"relabel_configs": pulumi.Array{
+				pulumi.Map{"source_labels": pulumi.StringArray{pulumi.String("__meta_kubernetes_pod_label_app_kubernetes_io_name")}, "regex": pulumi.String("ingress-nginx"), "action": pulumi.String("drop")},
 				pulumi.Map{"source_labels": pulumi.StringArray{pulumi.String("__meta_kubernetes_pod_container_name")}, "regex": pulumi.String(container), "action": pulumi.String("keep")},
 				pulumi.Map{"source_labels": pulumi.StringArray{pulumi.String("__meta_kubernetes_pod_container_port_name")}, "regex": pulumi.String("metrics"), "action": pulumi.String("keep")},
 				pulumi.Map{"source_labels": pulumi.StringArray{pulumi.String("__meta_kubernetes_pod_name")}, "target_label": pulumi.String("pod")},
