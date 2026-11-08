@@ -1,0 +1,3513 @@
+{
+  "generated_at": "2026-11-08T18:00:55.455181+00:00",
+  "source_commit": "52a34e6c8739b301cc0a996e44725445d15268a6",
+  "load_suite_source_commit": "14a7be1613a8026bbba64e95b39726369db320ea",
+  "scope": "staging only; production preview only",
+  "retirement": {
+    "at": 1794146323.556879,
+    "gateways": 1,
+    "legacy_ingresses": 0,
+    "public_service_uid": "21bf955a-aece-4c17-ae4f-326a68b20c3f",
+    "public_ip": "35.222.36.75",
+    "obsolete_secrets_removed": [
+      "ingress-nginx/ingress-nginx-admission",
+      "ingress-nginx/registry-edge-registry-gateway-canary-agent-tls",
+      "registry-gateway-canary/agent-tls",
+      "registry-gateway-canary/server-tls",
+      "registry-gateway-canary/registry-canary-registry-gateway-canary-agent-tls",
+      "registry-gateway-canary/registry-canary-registry-gateway-canary-gateway-agent-tls"
+    ],
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ]
+  },
+  "native_acme": {
+    "passed": true,
+    "native_gateway_solver": true,
+    "proofs": [
+      {
+        "namespace": "default",
+        "host": "staging.registry.modelcontextprotocol.io",
+        "observed_http_routes": [
+          "cm-acme-http-solver-shvz6"
+        ],
+        "completed": true,
+        "cleanup_errors": [],
+        "revision_1": {
+          "revision": 1,
+          "notBefore": "2026-11-08T16:59:48Z",
+          "notAfter": "2027-01-11T16:59:47Z",
+          "renewalTime": "2026-12-21T08:59:47Z"
+        },
+        "revision_2": {
+          "revision": 2,
+          "notBefore": "2026-11-08T16:59:55Z",
+          "notAfter": "2027-01-11T16:59:54Z",
+          "renewalTime": "2026-12-21T08:59:54Z"
+        }
+      },
+      {
+        "namespace": "monitoring",
+        "host": "grafana.staging.registry.modelcontextprotocol.io",
+        "observed_http_routes": [
+          "cm-acme-http-solver-hbplr"
+        ],
+        "completed": true,
+        "cleanup_errors": [],
+        "revision_1": {
+          "revision": 1,
+          "notBefore": "2026-11-08T17:00:30Z",
+          "notAfter": "2027-01-11T17:00:29Z",
+          "renewalTime": "2026-12-21T09:00:29Z"
+        },
+        "revision_2": {
+          "revision": 2,
+          "notBefore": "2026-11-08T17:00:36Z",
+          "notAfter": "2027-01-11T17:00:35Z",
+          "renewalTime": "2026-12-21T09:00:35Z"
+        }
+      }
+    ],
+    "public_certificates_unchanged": true
+  },
+  "internal_mtls": {
+    "passed": true,
+    "stage": "complete",
+    "started": 1794160756.873805,
+    "renewals": [
+      {
+        "name": "gateway-server-tls",
+        "revision": 8,
+        "certificate_changed": true
+      },
+      {
+        "name": "gateway-agent-tls",
+        "revision": 8,
+        "certificate_changed": true
+      }
+    ],
+    "fresh_mtls_handshake": {
+      "authenticated_http2": true,
+      "server_certificate_sha256": "d291d1dda5dfd5c210692624d954c237108892f752c502fbf32fbfb1d08224f7",
+      "protocol": "TLSv1.3"
+    },
+    "controller_processes_unchanged": true,
+    "controller_deployment_unchanged": true,
+    "agent_secret_propagated": true,
+    "finished": 1794160793.551444
+  },
+  "contract": {
+    "/v0.1/health": 200,
+    "/v0.1/version": 200,
+    "/v0.1/servers?limit=1": 200,
+    "/v0/servers?limit=1": 200,
+    "cache_miss_hit_origin_offload": true,
+    "conditional_gzip_identity_and_vary": true,
+    "head": true,
+    "private_cookie_errors_not_cached": true,
+    "original_query_key_preserved": true,
+    "forwarded_headers_and_request_id": true,
+    "cache_lock_at_most_one_origin_read_per_configured_replica": true,
+    "expiry_background_refresh": true,
+    "last_good_cache_survives_origin_503": true
+  },
+  "limits": {
+    "http_redirect_preserves_query": true,
+    "body_limit_1MiB": true,
+    "invalid_publish_rejected": 422,
+    "source_ip_limit_ignores_spoofed_xff": {
+      "statuses": {
+        "200": 2353,
+        "429": 1487
+      },
+      "seconds": 17.046090841293335
+    }
+  },
+  "grafana_browser": {
+    "at": 1794145688.9196951,
+    "authenticated_session": true,
+    "gateway_dashboard_loaded": true,
+    "panels": [
+      "requests",
+      "client latency",
+      "cache hit fraction",
+      "HTTP 5xx",
+      "response bytes",
+      "cache refreshes",
+      "upstream latency",
+      "parse/CRI/timing errors"
+    ],
+    "fresh_oauth_exchange_repeated": false
+  },
+  "progress": [
+    {
+      "name": "contract",
+      "started": 1794146887.581776,
+      "finished": 1794146927.731816,
+      "exit": 0
+    },
+    {
+      "name": "rate-limits",
+      "started": 1794146927.732793,
+      "finished": 1794146946.930599,
+      "exit": 0
+    },
+    {
+      "name": "autoscale",
+      "started": 1794146946.931328,
+      "finished": 1794147221.609953,
+      "exit": 0
+    },
+    {
+      "name": "steady-1000",
+      "started": 1794147221.611176,
+      "finished": 1794147371.7906518,
+      "exit": 0
+    },
+    {
+      "name": "rollout",
+      "started": 1794147371.791136,
+      "finished": 1794147647.18188,
+      "exit": 1
+    },
+    {
+      "name": "autoscale",
+      "started": 1794148672.095988,
+      "finished": 1794148946.2624798,
+      "exit": 0
+    },
+    {
+      "name": "steady-1000",
+      "started": 1794148946.2631922,
+      "finished": 1794149096.319294,
+      "exit": 0
+    },
+    {
+      "name": "rollout",
+      "started": 1794149096.319944,
+      "finished": 1794149098.371385,
+      "exit": 1
+    },
+    {
+      "name": "autoscale",
+      "started": 1794153629.582925,
+      "finished": 1794153912.6473842,
+      "exit": 1
+    },
+    {
+      "name": "steady-1000",
+      "started": 1794154281.023069,
+      "finished": 1794154430.903454,
+      "exit": 1
+    },
+    {
+      "name": "rollout",
+      "started": 1794154517.868063,
+      "finished": 1794155151.992737,
+      "exit": 1
+    },
+    {
+      "name": "burst-1500",
+      "started": 1794155233.863631,
+      "finished": 1794155324.731628,
+      "exit": 1
+    },
+    {
+      "name": "mixed-250",
+      "started": 1794155324.732338,
+      "finished": 1794155475.3256152,
+      "exit": 0
+    },
+    {
+      "name": "contract",
+      "started": 1794156135.768351,
+      "finished": 1794156142.860888,
+      "exit": 1
+    },
+    {
+      "name": "contract",
+      "started": 1794156476.369237,
+      "finished": 1794156483.8638132,
+      "exit": 1
+    },
+    {
+      "name": "contract",
+      "started": 1794156746.118155,
+      "finished": 1794156786.1828291,
+      "exit": 0
+    },
+    {
+      "name": "rate-limits",
+      "started": 1794156786.183926,
+      "finished": 1794156805.558028,
+      "exit": 0
+    },
+    {
+      "name": "autoscale",
+      "started": 1794156805.558621,
+      "finished": 1794157089.386726,
+      "exit": 0
+    },
+    {
+      "name": "steady-1000",
+      "started": 1794157089.3872352,
+      "finished": 1794157240.634866,
+      "exit": 1
+    },
+    {
+      "name": "rollout",
+      "started": 1794157240.635701,
+      "finished": 1794157876.040174,
+      "exit": 1
+    },
+    {
+      "name": "burst-1500",
+      "started": 1794157876.0410519,
+      "finished": 1794157968.2558742,
+      "exit": 1
+    },
+    {
+      "name": "mixed-250",
+      "started": 1794157968.256792,
+      "finished": 1794158119.781822,
+      "exit": 0
+    },
+    {
+      "name": "steady-500",
+      "started": 1794158119.782933,
+      "finished": 1794158271.245714,
+      "exit": 0
+    },
+    {
+      "name": "proxy",
+      "started": 1794158271.2466471,
+      "finished": 1794158486.597512,
+      "exit": 0
+    },
+    {
+      "name": "controller",
+      "started": 1794158486.598285,
+      "finished": 1794158701.910912,
+      "exit": 0
+    },
+    {
+      "name": "node",
+      "started": 1794158701.9116101,
+      "finished": 1794159037.27196,
+      "exit": 0
+    },
+    {
+      "name": "collector",
+      "started": 1794159037.272762,
+      "finished": 1794159051.04897,
+      "exit": 0
+    },
+    {
+      "name": "collector-load",
+      "started": 1794159051.050165,
+      "finished": 1794159142.31692,
+      "exit": 0
+    },
+    {
+      "name": "monitoring",
+      "started": 1794159142.317798,
+      "finished": 1794159192.00796,
+      "exit": 0
+    },
+    {
+      "name": "certificate-rotation",
+      "started": 1794159192.008862,
+      "finished": 1794159221.741846,
+      "exit": 0
+    },
+    {
+      "name": "release-generator",
+      "started": 1794159221.742372,
+      "finished": 1794159253.529738,
+      "exit": 0
+    },
+    {
+      "name": "notification",
+      "started": 1794159253.531772,
+      "finished": 1794159474.365,
+      "exit": 0
+    }
+  ],
+  "loads": {
+    "autoscale/load": {
+      "rate": 1000,
+      "seconds": 240,
+      "miss_percent": 0,
+      "client": {
+        "offered": 240000,
+        "statuses": {
+          "200": 240000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 41.328032,
+        "p99_ms": 155.93641,
+        "successful_rps": 999.8931628862217,
+        "cache": {
+          "HIT": 238937,
+          "MISS": 128,
+          "STALE": 896,
+          "UPDATING": 39
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 239872.0,
+      "request_metric_delta": 240000.0,
+      "origin_reads": 1024,
+      "metric_drain_seconds": 4.002970218658447,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.845,
+          "sum_individual_peak_working_set_mib": 85.7
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.622,
+          "sum_individual_peak_working_set_mib": 182.6
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.008,
+          "sum_individual_peak_working_set_mib": 52.6
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "steady-1000": {
+      "rate": 1000,
+      "seconds": 120,
+      "miss_percent": 0,
+      "client": {
+        "offered": 120000,
+        "statuses": {
+          "200": 120000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 107.78843,
+        "p99_ms": 199.668444,
+        "successful_rps": 999.9578717165336,
+        "cache": {
+          "HIT": 119456,
+          "MISS": 128,
+          "STALE": 323,
+          "UPDATING": 93
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 119872.0,
+      "request_metric_delta": 120000.0,
+      "origin_reads": 451,
+      "metric_drain_seconds": 3.894821882247925,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.832,
+          "sum_individual_peak_working_set_mib": 86.0
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.665,
+          "sum_individual_peak_working_set_mib": 190.5
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.008,
+          "sum_individual_peak_working_set_mib": 52.8
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "rollout/load": {
+      "rate": 1000,
+      "seconds": 600,
+      "miss_percent": 0,
+      "client": {
+        "offered": 600000,
+        "statuses": {
+          "200": 599998
+        },
+        "errors": {
+          "transport": 2
+        },
+        "generator_dropped": 0,
+        "p95_ms": 148.96763700000002,
+        "p99_ms": 246.847408,
+        "successful_rps": 999.9939634563182,
+        "cache": {
+          "HIT": 597264,
+          "MISS": 352,
+          "STALE": 1791,
+          "UPDATING": 591
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 599646.0,
+      "request_metric_delta": 599998.0,
+      "origin_reads": 2143,
+      "metric_drain_seconds": 4.060113191604614,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.815,
+          "sum_individual_peak_working_set_mib": 89.4
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 4.638,
+          "sum_individual_peak_working_set_mib": 515.0
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.009,
+          "sum_individual_peak_working_set_mib": 57.0
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "burst-1500": {
+      "rate": 1500,
+      "seconds": 60,
+      "miss_percent": 0,
+      "client": {
+        "offered": 90000,
+        "statuses": {
+          "200": 76866
+        },
+        "errors": {},
+        "generator_dropped": 13134,
+        "p95_ms": 310.109354,
+        "p99_ms": 406.126718,
+        "successful_rps": 1267.1462904549621,
+        "cache": {
+          "HIT": 76104,
+          "MISS": 128,
+          "STALE": 128,
+          "UPDATING": 506
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 76738.0,
+      "request_metric_delta": 76866.0,
+      "origin_reads": 256,
+      "metric_drain_seconds": 4.029529809951782,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.841,
+          "sum_individual_peak_working_set_mib": 89.8
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 2.222,
+          "sum_individual_peak_working_set_mib": 173.9
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.007,
+          "sum_individual_peak_working_set_mib": 55.7
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "mixed-250": {
+      "rate": 250,
+      "seconds": 120,
+      "miss_percent": 20,
+      "client": {
+        "offered": 30000,
+        "statuses": {
+          "200": 30000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 10.569028,
+        "p99_ms": 38.898230999999996,
+        "successful_rps": 250.0019803156865,
+        "cache": {
+          "HIT": 23508,
+          "MISS": 6128,
+          "STALE": 364
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 23872.0,
+      "request_metric_delta": 30000.0,
+      "origin_reads": 6492,
+      "metric_drain_seconds": 4.014463901519775,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.358,
+          "sum_individual_peak_working_set_mib": 91.6
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 0.563,
+          "sum_individual_peak_working_set_mib": 213.7
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.009,
+          "sum_individual_peak_working_set_mib": 53.1
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "steady-500": {
+      "rate": 500,
+      "seconds": 120,
+      "miss_percent": 0,
+      "client": {
+        "offered": 60000,
+        "statuses": {
+          "200": 60000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 7.976807000000001,
+        "p99_ms": 18.620039000000002,
+        "successful_rps": 499.9973246393152,
+        "cache": {
+          "HIT": 59488,
+          "MISS": 128,
+          "STALE": 384
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 59872.0,
+      "request_metric_delta": 60000.0,
+      "origin_reads": 512,
+      "metric_drain_seconds": 3.989622116088867,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.589,
+          "sum_individual_peak_working_set_mib": 92.7
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 0.904,
+          "sum_individual_peak_working_set_mib": 231.1
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.009,
+          "sum_individual_peak_working_set_mib": 51.4
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "proxy/load": {
+      "rate": 500,
+      "seconds": 180,
+      "miss_percent": 0,
+      "client": {
+        "offered": 90000,
+        "statuses": {
+          "200": 90000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 4.437296,
+        "p99_ms": 13.293279,
+        "successful_rps": 499.9973900830679,
+        "cache": {
+          "HIT": 89328,
+          "MISS": 160,
+          "STALE": 512
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 89840.0,
+      "request_metric_delta": 90000.0,
+      "origin_reads": 672,
+      "metric_drain_seconds": 4.00365686416626,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.538,
+          "sum_individual_peak_working_set_mib": 94.2
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 0.865,
+          "sum_individual_peak_working_set_mib": 258.2
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.009,
+          "sum_individual_peak_working_set_mib": 52.2
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "controller/load": {
+      "rate": 500,
+      "seconds": 180,
+      "miss_percent": 0,
+      "client": {
+        "offered": 90000,
+        "statuses": {
+          "200": 90000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 4.410586,
+        "p99_ms": 10.035482,
+        "successful_rps": 499.99849127955247,
+        "cache": {
+          "HIT": 89257,
+          "MISS": 128,
+          "STALE": 614,
+          "UPDATING": 1
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 89872.0,
+      "request_metric_delta": 90000.0,
+      "origin_reads": 742,
+      "metric_drain_seconds": 4.003922939300537,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.548,
+          "sum_individual_peak_working_set_mib": 93.4
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 0.819,
+          "sum_individual_peak_working_set_mib": 185.4
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": -12.615,
+          "sum_individual_peak_working_set_mib": 96.7
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "node/load": {
+      "rate": 500,
+      "seconds": 300,
+      "miss_percent": 0,
+      "client": {
+        "offered": 150000,
+        "statuses": {
+          "200": 150000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 20.664028000000002,
+        "p99_ms": 65.68247600000001,
+        "successful_rps": 499.99938448242443,
+        "cache": {
+          "HIT": 149037,
+          "MISS": 192,
+          "STALE": 771
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 149808.0,
+      "request_metric_delta": 150000.0,
+      "origin_reads": 963,
+      "metric_drain_seconds": 4.016583204269409,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.496,
+          "sum_individual_peak_working_set_mib": 93.6
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.172,
+          "sum_individual_peak_working_set_mib": 267.3
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.017,
+          "sum_individual_peak_working_set_mib": 88.1
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "collector-load": {
+      "rate": 500,
+      "seconds": 60,
+      "miss_percent": 0,
+      "client": {
+        "offered": 30000,
+        "statuses": {
+          "200": 30000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 5.371468,
+        "p99_ms": 13.825578,
+        "successful_rps": 499.9944773609997,
+        "cache": {
+          "HIT": 29744,
+          "MISS": 128,
+          "STALE": 128
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 29872.0,
+      "request_metric_delta": 30000.0,
+      "origin_reads": 256,
+      "metric_drain_seconds": 3.861607313156128,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.524,
+          "sum_individual_peak_working_set_mib": 87.0
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 0.821,
+          "sum_individual_peak_working_set_mib": 170.1
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.008,
+          "sum_individual_peak_working_set_mib": 41.4
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    }
+  },
+  "recovery": {
+    "rollout": {
+      "scenario": "rollout",
+      "nodes_before": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "started": 1794157243.4944482,
+      "action_started": 1794157273.507655,
+      "action_ready": 1794157528.0848792,
+      "pulumi_policy_ownership_preserved": true,
+      "cleanup_finished": 1794157780.135982,
+      "cleanup_errors": [],
+      "measurement_exit": 1,
+      "public": {
+        "probe_rounds": 307,
+        "failed_checks": 0,
+        "maximum_recovery_seconds": 0,
+        "recovered": true,
+        "allowed_recovery_seconds": 0,
+        "passed": true
+      },
+      "nodes_after": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "finished": 1794157876.031452,
+      "passed": false,
+      "failure": null,
+      "generator_active_interval": [
+        1794157251.564582,
+        1794157851.564582
+      ],
+      "action_covered_by_load": true
+    },
+    "proxy": {
+      "scenario": "proxy",
+      "nodes_before": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "started": 1794158274.100941,
+      "action_started": 1794158304.112993,
+      "deleted_pod": "registry-edge-registry-gateway-canary-84d5f578df-58l7c",
+      "action_ready": 1794158377.102397,
+      "cleanup_finished": 1794158377.1024032,
+      "cleanup_errors": [],
+      "measurement_exit": 0,
+      "public": {
+        "probe_rounds": 106,
+        "failed_checks": 0,
+        "maximum_recovery_seconds": 0,
+        "recovered": true,
+        "allowed_recovery_seconds": 0,
+        "passed": true
+      },
+      "nodes_after": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "finished": 1794158486.58952,
+      "passed": true,
+      "failure": null,
+      "generator_active_interval": [
+        1794158282.304202,
+        1794158462.304202
+      ],
+      "action_covered_by_load": true
+    },
+    "controller": {
+      "scenario": "controller",
+      "nodes_before": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "started": 1794158489.45663,
+      "action_started": 1794158519.467962,
+      "deleted_pod": "registry-gateway-canary-76778ddcdb-fz5kr",
+      "action_ready": 1794158533.7166238,
+      "cleanup_finished": 1794158533.716627,
+      "cleanup_errors": [],
+      "measurement_exit": 0,
+      "public": {
+        "probe_rounds": 106,
+        "failed_checks": 0,
+        "maximum_recovery_seconds": 0,
+        "recovered": true,
+        "allowed_recovery_seconds": 0,
+        "passed": true
+      },
+      "nodes_after": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "finished": 1794158701.9033878,
+      "passed": true,
+      "failure": null,
+      "generator_active_interval": [
+        1794158497.681642,
+        1794158677.681642
+      ],
+      "action_covered_by_load": true
+    },
+    "node": {
+      "scenario": "node",
+      "nodes_before": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "started": 1794158704.760621,
+      "action_started": 1794158734.7687669,
+      "drained_node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "drained_at": 1794158771.5146902,
+      "one_node_load_seconds": 60.790026903152466,
+      "action_ready": 1794158832.304738,
+      "one_node_ended": 1794158832.304747,
+      "cleanup_finished": 1794158864.655803,
+      "cleanup_errors": [],
+      "measurement_exit": 0,
+      "public": {
+        "probe_rounds": 159,
+        "failed_checks": 4,
+        "maximum_recovery_seconds": 16.044282913208008,
+        "recovered": true,
+        "allowed_recovery_seconds": 120,
+        "passed": true
+      },
+      "nodes_after": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "finished": 1794159037.2635221,
+      "passed": true,
+      "failure": null,
+      "generator_active_interval": [
+        1794158713.016011,
+        1794159013.016011
+      ],
+      "action_covered_by_load": true,
+      "one_node_active_load_seconds": 60.79005694389343
+    }
+  },
+  "monitoring": {
+    "passed": true,
+    "started": 1794159146.091182,
+    "finished": 1794159191.9988139,
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "canary_nodes": [
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "delta": {
+      "registry_gateway_canary_upstream_connect_seconds_bucket": 48.0,
+      "registry_gateway_canary_upstream_all_attempts_seconds_bucket": 38.0,
+      "registry_gateway_canary_header_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_request_duration_seconds_count": 10.0,
+      "registry_gateway_canary_upstream_header_seconds_count": 4.0,
+      "registry_gateway_canary_request_bytes_sum": 1000.0,
+      "registry_gateway_canary_response_bytes_bucket": 60.0,
+      "registry_gateway_canary_upstream_header_seconds_sum": 0.1,
+      "registry_gateway_canary_upstream_header_seconds_bucket": 40.0,
+      "registry_gateway_canary_request_bytes_count": 10.0,
+      "registry_gateway_canary_response_body_bytes_count": 10.0,
+      "registry_gateway_canary_response_body_bytes_bucket": 60.0,
+      "registry_gateway_canary_connect_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_upstream_connect_seconds_sum": 0.02,
+      "registry_gateway_canary_internal_request_duration_seconds_bucket": 12.0,
+      "registry_gateway_canary_connect_all_attempts_seconds_sum": 0.07999999999999999,
+      "registry_gateway_canary_response_body_bytes_sum": 2000.0,
+      "registry_gateway_canary_response_bytes_count": 10.0,
+      "registry_gateway_canary_request_duration_seconds_bucket": 60.0,
+      "registry_gateway_canary_upstream_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_internal_response_bytes_count": 2.0,
+      "registry_gateway_canary_upstream_duration_seconds_count": 4.0,
+      "registry_gateway_canary_upstream_connect_seconds_count": 4.0,
+      "registry_gateway_canary_header_all_attempts_seconds_bucket": 56.0,
+      "registry_gateway_canary_header_all_attempts_seconds_sum": 0.27999999999999997,
+      "registry_gateway_canary_connect_all_attempts_seconds_bucket": 66.0,
+      "registry_gateway_canary_response_bytes_sum": 2500.0,
+      "registry_gateway_canary_internal_request_duration_seconds_sum": 1.0,
+      "registry_gateway_canary_internal_response_bytes_sum": 500.0,
+      "registry_gateway_canary_request_bytes_bucket": 70.0,
+      "registry_gateway_canary_internal_response_bytes_bucket": 12.0,
+      "registry_gateway_canary_cache_responses_total": 10.0,
+      "registry_gateway_canary_multi_upstream_requests_total": 2.0,
+      "registry_gateway_canary_internal_request_duration_seconds_count": 2.0,
+      "registry_gateway_canary_requests_total": 10.0,
+      "registry_gateway_canary_upstream_duration_seconds_sum": 0.5,
+      "registry_gateway_canary_upstream_timing_errors_total": 2.0,
+      "registry_gateway_canary_request_duration_seconds_sum": 5.0,
+      "registry_gateway_canary_upstream_all_attempts_seconds_sum": 1.7000000000000002,
+      "registry_gateway_canary_upstream_duration_seconds_bucket": 28.0,
+      "registry_gateway_canary_internal_requests_total": 2.0
+    },
+    "vm_requests": [
+      {
+        "metric": {},
+        "value": [
+          1794159190.587,
+          "10"
+        ]
+      }
+    ],
+    "real_cri_partial_records": true,
+    "emitters_removed": true
+  },
+  "notification": {
+    "passed": true,
+    "probe": "monitoring-proof-1794159259",
+    "firing": [
+      {
+        "status": "firing",
+        "alerts": [
+          {
+            "status": "firing",
+            "alertname": "Gateway monitoring delivery proof"
+          }
+        ]
+      }
+    ],
+    "resolved": [
+      {
+        "status": "firing",
+        "alerts": [
+          {
+            "status": "firing",
+            "alertname": "Gateway monitoring delivery proof"
+          }
+        ]
+      },
+      {
+        "status": "resolved",
+        "alerts": [
+          {
+            "status": "resolved",
+            "alertname": "Gateway monitoring delivery proof"
+          }
+        ]
+      }
+    ],
+    "external_notification_sent": false,
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "cleanup_complete": true
+  },
+  "collector": {
+    "old": "vector-sbhj5",
+    "new": "vector-mn5d5",
+    "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn",
+    "ready_seconds": 12.198891162872314,
+    "replayed_fixture_requests": 0
+  },
+  "publish": {
+    "registry": "https://staging.registry.modelcontextprotocol.io",
+    "name": "io.github.rdimitrov/gateway-qualification-proof",
+    "version": "0.0.1794149073",
+    "checks": [
+      {
+        "operation": "github-token-exchange",
+        "status": 200
+      },
+      {
+        "operation": "publish",
+        "status": 200,
+        "cache": null
+      },
+      {
+        "operation": "read-published-version",
+        "status": 200
+      },
+      {
+        "operation": "delete-exact-test-version",
+        "status": 200
+      }
+    ]
+  },
+  "final_soak": {
+    "status": "Post-merge observation pending; pre-merge public probes recorded below."
+  },
+  "failed_rollout_before_drain": {
+    "load": {
+      "rate": 1000,
+      "seconds": 240,
+      "miss_percent": 0,
+      "client": {
+        "offered": 240000,
+        "statuses": {
+          "200": 239955
+        },
+        "errors": {
+          "transport": 45
+        },
+        "generator_dropped": 0,
+        "p95_ms": 135.110095,
+        "p99_ms": 222.951239,
+        "successful_rps": 999.486348747428,
+        "cache": {
+          "HIT": 238635,
+          "MISS": 320,
+          "STALE": 512,
+          "UPDATING": 488
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 239635.0,
+      "request_metric_delta": 239955.0,
+      "origin_reads": 832,
+      "metric_drain_seconds": 3.873281955718994,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.777,
+          "sum_individual_peak_working_set_mib": 80.8
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 3.254,
+          "sum_individual_peak_working_set_mib": 491.8
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.01,
+          "sum_individual_peak_working_set_mib": 58.4
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "operation": {
+      "scenario": "rollout",
+      "nodes_before": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "started": 1794147374.654366,
+      "action_started": 1794147404.6664052,
+      "action_ready": 1794147526.12939,
+      "cleanup_errors": [],
+      "measurement_exit": 1,
+      "nodes_after": [
+        "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+        "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+      ],
+      "finished": 1794147647.174392,
+      "failure": null,
+      "passed": false
+    },
+    "remediation": "30-second endpoint/LB drain followed by graceful NGINX quit, with a 90-second termination budget; repeat rollout evidence recorded separately."
+  },
+  "earlier_load_attempts": {
+    "autoscale-before-drain/load": {
+      "rate": 1000,
+      "seconds": 240,
+      "miss_percent": 0,
+      "client": {
+        "offered": 240000,
+        "statuses": {
+          "200": 240000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 48.153184,
+        "p99_ms": 201.84659399999998,
+        "successful_rps": 999.5317397870161,
+        "cache": {
+          "HIT": 239083,
+          "MISS": 128,
+          "STALE": 766,
+          "UPDATING": 23
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 239872.0,
+      "request_metric_delta": 240000.0,
+      "origin_reads": 894,
+      "metric_drain_seconds": 3.808027744293213,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.811,
+          "sum_individual_peak_working_set_mib": 76.6
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.665,
+          "sum_individual_peak_working_set_mib": 210.5
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.008,
+          "sum_individual_peak_working_set_mib": 57.0
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "autoscale-extra-idle-worker/load": {
+      "rate": 1000,
+      "seconds": 240,
+      "miss_percent": 0,
+      "client": {
+        "offered": 240000,
+        "statuses": {
+          "200": 240000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 39.443993,
+        "p99_ms": 148.809911,
+        "successful_rps": 999.9921280328016,
+        "cache": {
+          "HIT": 238934,
+          "MISS": 128,
+          "STALE": 768,
+          "UPDATING": 170
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 239872.0,
+      "request_metric_delta": 240000.0,
+      "origin_reads": 896,
+      "metric_drain_seconds": 3.899754047393799,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.793,
+          "sum_individual_peak_working_set_mib": 85.4
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.62,
+          "sum_individual_peak_working_set_mib": 190.6
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.008,
+          "sum_individual_peak_working_set_mib": 55.4
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "steady-1000-extra-idle-worker": {
+      "rate": 1000,
+      "seconds": 120,
+      "miss_percent": 0,
+      "client": {
+        "offered": 120000,
+        "statuses": {
+          "200": 120000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 62.462823,
+        "p99_ms": 112.18699699999999,
+        "successful_rps": 999.9284191075243,
+        "cache": {
+          "HIT": 119431,
+          "MISS": 128,
+          "STALE": 384,
+          "UPDATING": 57
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 119872.0,
+      "request_metric_delta": 120000.0,
+      "origin_reads": 512,
+      "metric_drain_seconds": 3.96978497505188,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.747,
+          "sum_individual_peak_working_set_mib": 83.9
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.528,
+          "sum_individual_peak_working_set_mib": 199.9
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.007,
+          "sum_individual_peak_working_set_mib": 52.4
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "autoscale-generator-default/load": {
+      "rate": 1000,
+      "seconds": 240,
+      "miss_percent": 0,
+      "client": {
+        "offered": 240000,
+        "statuses": {
+          "200": 239688
+        },
+        "errors": {},
+        "generator_dropped": 312,
+        "p95_ms": 203.493944,
+        "p99_ms": 394.971656,
+        "successful_rps": 998.2608792810595,
+        "cache": {
+          "HIT": 237811,
+          "MISS": 128,
+          "STALE": 768,
+          "UPDATING": 981
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 239560.0,
+      "request_metric_delta": 239688.0,
+      "origin_reads": 896,
+      "metric_drain_seconds": 3.6541218757629395,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.802,
+          "sum_individual_peak_working_set_mib": 82.6
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.84,
+          "sum_individual_peak_working_set_mib": 201.0
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.008,
+          "sum_individual_peak_working_set_mib": 54.0
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "capacity-diagnostic": {
+      "rate": 1000,
+      "seconds": 60,
+      "miss_percent": 0,
+      "client": {
+        "offered": 60000,
+        "statuses": {
+          "200": 59867
+        },
+        "errors": {},
+        "generator_dropped": 133,
+        "p95_ms": 22.090822,
+        "p99_ms": 123.468692,
+        "successful_rps": 997.6780166460758,
+        "cache": {
+          "HIT": 59607,
+          "MISS": 128,
+          "STALE": 128,
+          "UPDATING": 4
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": false,
+        "response_body_bytes_count": false,
+        "request_bytes_count": false
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 59739.0,
+      "request_metric_delta": 59867.0,
+      "origin_reads": 256,
+      "metric_drain_seconds": 3.4880402088165283,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.863,
+          "sum_individual_peak_working_set_mib": 82.3
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.568,
+          "sum_individual_peak_working_set_mib": 202.9
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.007,
+          "sum_individual_peak_working_set_mib": 50.0
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "generator-single-cpu": {
+      "rate": 1000,
+      "seconds": 60,
+      "miss_percent": 0,
+      "client": {
+        "offered": 60000,
+        "statuses": {
+          "200": 60000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 44.740179,
+        "p99_ms": 168.920782,
+        "successful_rps": 999.8153196131452,
+        "cache": {
+          "HIT": 59741,
+          "MISS": 128,
+          "STALE": 128,
+          "UPDATING": 3
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 59872.0,
+      "request_metric_delta": 60000.0,
+      "origin_reads": 256,
+      "metric_drain_seconds": 3.4872891902923584,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.835,
+          "sum_individual_peak_working_set_mib": 83.2
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.589,
+          "sum_individual_peak_working_set_mib": 215.4
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.007,
+          "sum_individual_peak_working_set_mib": 50.0
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "steady-1000.auto-workers": {
+      "rate": 1000,
+      "seconds": 120,
+      "miss_percent": 0,
+      "client": {
+        "offered": 120000,
+        "statuses": {
+          "200": 119980
+        },
+        "errors": {},
+        "generator_dropped": 20,
+        "p95_ms": 164.189782,
+        "p99_ms": 305.41351,
+        "successful_rps": 999.4429261568492,
+        "cache": {
+          "HIT": 119172,
+          "MISS": 128,
+          "STALE": 384,
+          "UPDATING": 296
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 119852.0,
+      "request_metric_delta": 119980.0,
+      "origin_reads": 512,
+      "metric_drain_seconds": 3.6356050968170166,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.799,
+          "sum_individual_peak_working_set_mib": 82.4
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.811,
+          "sum_individual_peak_working_set_mib": 216.5
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.007,
+          "sum_individual_peak_working_set_mib": 50.0
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "rollout.auto-workers/load": {
+      "rate": 1000,
+      "seconds": 600,
+      "miss_percent": 0,
+      "client": {
+        "offered": 600000,
+        "statuses": {
+          "200": 599959
+        },
+        "errors": {},
+        "generator_dropped": 41,
+        "p95_ms": 214.820957,
+        "p99_ms": 333.014998,
+        "successful_rps": 999.9271367367562,
+        "cache": {
+          "HIT": 596912,
+          "MISS": 352,
+          "STALE": 1760,
+          "UPDATING": 935
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 599607.0,
+      "request_metric_delta": 599959.0,
+      "origin_reads": 2112,
+      "metric_drain_seconds": 3.790440797805786,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.814,
+          "sum_individual_peak_working_set_mib": 83.7
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 4.768,
+          "sum_individual_peak_working_set_mib": 586.2
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.009,
+          "sum_individual_peak_working_set_mib": 56.2
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "burst-1500.auto-workers": {
+      "rate": 1500,
+      "seconds": 60,
+      "miss_percent": 0,
+      "client": {
+        "offered": 90000,
+        "statuses": {
+          "200": 76903
+        },
+        "errors": {},
+        "generator_dropped": 13097,
+        "p95_ms": 328.772158,
+        "p99_ms": 386.72589899999997,
+        "successful_rps": 1266.1574253473054,
+        "cache": {
+          "HIT": 76389,
+          "MISS": 128,
+          "STALE": 128,
+          "UPDATING": 258
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 76775.0,
+      "request_metric_delta": 76903.0,
+      "origin_reads": 256,
+      "metric_drain_seconds": 3.8099446296691895,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.878,
+          "sum_individual_peak_working_set_mib": 83.6
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 2.211,
+          "sum_individual_peak_working_set_mib": 203.5
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.007,
+          "sum_individual_peak_working_set_mib": 53.7
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "mixed-250.auto-workers": {
+      "rate": 250,
+      "seconds": 120,
+      "miss_percent": 20,
+      "client": {
+        "offered": 30000,
+        "statuses": {
+          "200": 30000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 5.181146,
+        "p99_ms": 8.396849,
+        "successful_rps": 250.001622914702,
+        "cache": {
+          "HIT": 23584,
+          "MISS": 6128,
+          "STALE": 288
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 23872.0,
+      "request_metric_delta": 30000.0,
+      "origin_reads": 6416,
+      "metric_drain_seconds": 3.8158018589019775,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.301,
+          "sum_individual_peak_working_set_mib": 84.6
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 0.489,
+          "sum_individual_peak_working_set_mib": 239.6
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.01,
+          "sum_individual_peak_working_set_mib": 53.0
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "worker-one-1000": {
+      "rate": 1000,
+      "seconds": 120,
+      "miss_percent": 0,
+      "client": {
+        "offered": 120000,
+        "statuses": {
+          "200": 120000
+        },
+        "errors": {},
+        "generator_dropped": 0,
+        "p95_ms": 79.60285400000001,
+        "p99_ms": 141.23858,
+        "successful_rps": 999.4962129459888,
+        "cache": {
+          "HIT": 119417,
+          "STALE": 490,
+          "UPDATING": 93
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 120000.0,
+      "request_metric_delta": 120000.0,
+      "origin_reads": 490,
+      "metric_drain_seconds": 3.811964988708496,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.885,
+          "sum_individual_peak_working_set_mib": 84.3
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 1.65,
+          "sum_individual_peak_working_set_mib": 233.7
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.008,
+          "sum_individual_peak_working_set_mib": 53.1
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    },
+    "worker-one-1500": {
+      "rate": 1500,
+      "seconds": 60,
+      "miss_percent": 0,
+      "client": {
+        "offered": 90000,
+        "statuses": {
+          "200": 81352
+        },
+        "errors": {},
+        "generator_dropped": 8648,
+        "p95_ms": 314.442483,
+        "p99_ms": 392.79174700000004,
+        "successful_rps": 1341.2797805663351,
+        "cache": {
+          "HIT": 80808,
+          "MISS": 128,
+          "STALE": 128,
+          "UPDATING": 288
+        }
+      },
+      "metric_gates": {
+        "requests_total": true,
+        "request_duration_seconds_count": true,
+        "response_bytes_count": true,
+        "response_body_bytes_count": true,
+        "request_bytes_count": true
+      },
+      "parse_errors": 0,
+      "missing_size_errors": 0,
+      "upstream_timing_errors_before_parser_fix": 81224.0,
+      "request_metric_delta": 81352.0,
+      "origin_reads": 256,
+      "metric_drain_seconds": 3.79836106300354,
+      "resources": {
+        "vector": {
+          "sampled_cpu_cores_sum": 0.831,
+          "sum_individual_peak_working_set_mib": 85.3
+        },
+        "proxy": {
+          "sampled_cpu_cores_sum": 2.284,
+          "sum_individual_peak_working_set_mib": 214.0
+        },
+        "controller": {
+          "sampled_cpu_cores_sum": 0.007,
+          "sum_individual_peak_working_set_mib": 53.1
+        }
+      },
+      "resource_note": "CPU sums are capacity estimates only for steady Pod lifetimes; replacement runs sum different lifetimes and are not simultaneous CPU usage."
+    }
+  },
+  "temporary_worker_scaleup": {
+    "events": [
+      {
+        "time": "2026-11-08T14:36:05Z",
+        "reason": "FailedScheduling",
+        "object": "mcp-registry-7dc6fd799b-2j2wm",
+        "message": "0/4 nodes are available: 1 Insufficient cpu, 3 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/4 nodes are available: 1 No preemption victims found for incoming pod, 3 Preemption is not helpful for scheduling."
+      },
+      {
+        "time": "2026-11-08T14:36:05Z",
+        "reason": "ScaledUpGroup",
+        "object": "cluster-autoscaler-status",
+        "message": "Scale-up: setting group https://www.googleapis.com/compute/v1/projects/mcp-registry-staging/zones/us-central1-b/instanceGroups/gke-mcp-registry-sta-mcp-registry-sta-5d130b39-grp size to 2 instead of 1 (max: 3)"
+      },
+      {
+        "time": "2026-11-08T14:36:06Z",
+        "reason": "ScaledUpGroup",
+        "object": "cluster-autoscaler-status",
+        "message": "Scale-up: group https://www.googleapis.com/compute/v1/projects/mcp-registry-staging/zones/us-central1-b/instanceGroups/gke-mcp-registry-sta-mcp-registry-sta-5d130b39-grp size set to 2 instead of 1 (max: 3)"
+      },
+      {
+        "time": "2026-11-08T14:36:06Z",
+        "reason": "TriggeredScaleUp",
+        "object": "mcp-registry-7dc6fd799b-2j2wm",
+        "message": "Pod triggered scale-up: [{https://www.googleapis.com/compute/v1/projects/mcp-registry-staging/zones/us-central1-b/instanceGroups/gke-mcp-registry-sta-mcp-registry-sta-5d130b39-grp 1->2 (max: 3)}]"
+      }
+    ],
+    "cause": "Temporary fixture reservations plus overlap of terminating and replacement registry application pods during full-stack apply triggered the general worker autoscaler. The additional node hosted only DaemonSets; Gateway and fixture traffic stayed on the original nodes. Qualification guard stopped before disruptions.",
+    "remediation": "Wait for automatic removal of idle worker, repeat qualification on four nodes; remove generator before Grafana test and both fixture workloads before final app apply."
+  },
+  "fixed_capacity_setting": {
+    "minReplicas": 4,
+    "maxReplicas": 4,
+    "workerProcesses": 1,
+    "node_count": 4,
+    "full_pulumi_apply": "completed using saved full-stack plan"
+  },
+  "downscale_placement_failure": {
+    "reason": "Four-to-two ReplicaSet scale-down left both surviving proxies on the same Gateway node; public TLS reset and a Grafana health timeout were observed.",
+    "public_failures": [
+      {
+        "time": 1794156150.795872,
+        "phase": "contract",
+        "checks": [
+          {
+            "url": "https://staging.registry.modelcontextprotocol.io/v0/health",
+            "exit": 0,
+            "result": "200 0.421974 35.222.36.75 0",
+            "error": ""
+          },
+          {
+            "url": "https://staging.registry.modelcontextprotocol.io/v0.1/servers?limit=1",
+            "exit": 0,
+            "result": "200 0.421484 35.222.36.75 0",
+            "error": ""
+          },
+          {
+            "url": "https://grafana.staging.registry.modelcontextprotocol.io/api/health",
+            "exit": 28,
+            "result": "000 8.011390  0",
+            "error": "curl: (28) Connection timed out after 8011 milliseconds\n"
+          }
+        ]
+      }
+    ],
+    "remediation": "Standalone HPA minimum and maximum four; same two Gateway nodes, one NGINX worker per proxy. No Descheduler or additional nodes."
+  },
+  "worker_processes_tuning": {
+    "setting": "workerProcesses=1",
+    "runs": [
+      {
+        "name": "worker-one-1000",
+        "exit": 0
+      },
+      {
+        "name": "worker-one-1500",
+        "exit": 1
+      }
+    ],
+    "restored": true
+  },
+  "retained_worker_setting": {
+    "workerProcesses": 1,
+    "source": "Supported NginxProxy field; staging Pulumi source updated to match",
+    "full_pulumi_apply": "completed using saved full-stack plan",
+    "nodes": 4
+  },
+  "discarded_overlapping_runs": {
+    "accepted_as_evidence": false,
+    "reason": "The sequential runner advanced to steady-500 just before it was paused. The tuning diagnostic briefly overlapped it. Both controlled generators were stopped, the policy was restored and both runs discarded. An exclusive local measurement lock was added before repeating."
+  },
+  "log_rotation": {
+    "at": 1794147493.9343512,
+    "observed_on_both_gateway_nodes": true,
+    "rotated_log_files_per_node": [
+      4,
+      4
+    ],
+    "contents_read": false
+  },
+  "policy_ownership_cleanup": {
+    "at": 1794148347.605054,
+    "sole_pulumi_policy_owner": true,
+    "policy_configuration_restored": true,
+    "deployment_template_unchanged": true
+  },
+  "autoscale": {
+    "exit": 0,
+    "mode": "fixed_four_replicas",
+    "baseline_wait_seconds": 0.9035798749999999,
+    "samples": [
+      {
+        "at": 1794156811.488996,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156824.194114,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156836.9268491,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156849.663521,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156862.416398,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156875.1676002,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156887.946721,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156900.693442,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156913.461173,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156926.240183,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156939.0850701,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156951.832172,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156964.562908,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156977.3117719,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794156990.0671492,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794157002.828543,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794157015.5802171,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794157028.336555,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794157041.092046,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794157053.861341,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794157066.643101,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      },
+      {
+        "at": 1794157079.371287,
+        "current": 4,
+        "desired": 4,
+        "ready": 4,
+        "gateway_nodes": 2,
+        "original_cluster_inventory": true
+      }
+    ],
+    "cluster_nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ]
+  },
+  "final_cleanup": {
+    "passed": true,
+    "at": 1794160811.5423281,
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "public_service_uid": "21bf955a-aece-4c17-ae4f-326a68b20c3f",
+    "public_ip": "35.222.36.75",
+    "load_balancers": 1,
+    "gateways": 1,
+    "proxy_replicas": 4,
+    "worker_processes": 1,
+    "placement": {
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn": 2,
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg": 2
+    },
+    "legacy_ingresses": 0,
+    "temporary_resources": 0,
+    "public_certificates": [
+      {
+        "namespace": "default",
+        "certificate": "mcp-registry-staging-tls",
+        "uid_preserved": true,
+        "ready": true,
+        "owners": []
+      },
+      {
+        "namespace": "monitoring",
+        "certificate": "grafana-tls",
+        "uid_preserved": true,
+        "ready": true,
+        "owners": []
+      }
+    ]
+  },
+  "gitops": null,
+  "premerge_health": {
+    "at": 1794160817.725436,
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "cordoned": [],
+    "scrapes": [
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.0.38:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-7mtjt"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.0.39:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-m4jqz"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.5.54:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-nwtfc"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.5.55:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-nx4jg"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.0.40:9113",
+          "job": "gateway-canary-native-nginx-gateway",
+          "pod": "registry-gateway-canary-76778ddcdb-2nb7b"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.0.43:9598",
+          "job": "gateway-canary-vector-metrics",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.5.58:9598",
+          "job": "gateway-canary-vector-metrics",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.0.43:9599",
+          "job": "gateway-canary-vector-sizes",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "10.108.5.58:9599",
+          "job": "gateway-canary-vector-sizes",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg"
+        },
+        "value": [
+          1794160815.362,
+          "1"
+        ]
+      }
+    ],
+    "scrape_age_seconds": [
+      {
+        "metric": {
+          "instance": "10.108.0.38:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-7mtjt"
+        },
+        "value": [
+          1794160815.908,
+          "12.894999980926514"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.0.39:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-m4jqz"
+        },
+        "value": [
+          1794160815.908,
+          "7.665999889373779"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.5.54:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-nwtfc"
+        },
+        "value": [
+          1794160815.908,
+          "9.562999963760376"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.5.55:9113",
+          "job": "gateway-canary-native-nginx",
+          "pod": "registry-edge-registry-gateway-canary-84d5f578df-nx4jg"
+        },
+        "value": [
+          1794160815.908,
+          "9.140000104904175"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.0.40:9113",
+          "job": "gateway-canary-native-nginx-gateway",
+          "pod": "registry-gateway-canary-76778ddcdb-2nb7b"
+        },
+        "value": [
+          1794160815.908,
+          "7.474999904632568"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.0.43:9598",
+          "job": "gateway-canary-vector-metrics",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+        },
+        "value": [
+          1794160815.908,
+          "0.7549998760223389"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.5.58:9598",
+          "job": "gateway-canary-vector-metrics",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg"
+        },
+        "value": [
+          1794160815.908,
+          "17.266000032424927"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.0.43:9599",
+          "job": "gateway-canary-vector-sizes",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+        },
+        "value": [
+          1794160815.908,
+          "7.604000091552734"
+        ]
+      },
+      {
+        "metric": {
+          "instance": "10.108.5.58:9599",
+          "job": "gateway-canary-vector-sizes",
+          "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg"
+        },
+        "value": [
+          1794160815.908,
+          "3.197000026702881"
+        ]
+      }
+    ],
+    "health": [
+      {
+        "host": "staging.registry.modelcontextprotocol.io",
+        "path": "/v0/health",
+        "status": 200,
+        "http_version": 2,
+        "tls_verified": true
+      },
+      {
+        "host": "staging.registry.modelcontextprotocol.io",
+        "path": "/v0.1/servers?limit=1",
+        "status": 200,
+        "http_version": 2,
+        "tls_verified": true
+      },
+      {
+        "host": "grafana.staging.registry.modelcontextprotocol.io",
+        "path": "/api/health",
+        "status": 200,
+        "http_version": 2,
+        "tls_verified": true
+      }
+    ],
+    "pods": [
+      {
+        "namespace": "ingress-nginx",
+        "name": "registry-edge-registry-gateway-canary-84d5f578df-7mtjt",
+        "uid": "f08d8d5b-9c7f-4b22-a513-f0ceb1d49bd6",
+        "containers": [
+          {
+            "name": "nginx",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:b07dfed05804b3b6796b9a92fe4fb55f1df6924d2480d113168fb8e8369b957b",
+            "image_id": "ghcr.io/nginx/nginx-gateway-fabric/nginx@sha256:20682e5ea9263d914ffd032bea14bf83a5c284f23f079647b269205297bbc3e6"
+          }
+        ]
+      },
+      {
+        "namespace": "ingress-nginx",
+        "name": "registry-edge-registry-gateway-canary-84d5f578df-m4jqz",
+        "uid": "ca223f7d-4f92-47ed-ab3a-1b1937ed18f1",
+        "containers": [
+          {
+            "name": "nginx",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:b07dfed05804b3b6796b9a92fe4fb55f1df6924d2480d113168fb8e8369b957b",
+            "image_id": "ghcr.io/nginx/nginx-gateway-fabric/nginx@sha256:20682e5ea9263d914ffd032bea14bf83a5c284f23f079647b269205297bbc3e6"
+          }
+        ]
+      },
+      {
+        "namespace": "ingress-nginx",
+        "name": "registry-edge-registry-gateway-canary-84d5f578df-nwtfc",
+        "uid": "c2f72464-2cc4-4af2-af3f-10859506a53a",
+        "containers": [
+          {
+            "name": "nginx",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:b07dfed05804b3b6796b9a92fe4fb55f1df6924d2480d113168fb8e8369b957b",
+            "image_id": "ghcr.io/nginx/nginx-gateway-fabric/nginx@sha256:20682e5ea9263d914ffd032bea14bf83a5c284f23f079647b269205297bbc3e6"
+          }
+        ]
+      },
+      {
+        "namespace": "ingress-nginx",
+        "name": "registry-edge-registry-gateway-canary-84d5f578df-nx4jg",
+        "uid": "e84da9e3-bead-42a4-a375-f6bdc84d9e3e",
+        "containers": [
+          {
+            "name": "nginx",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:b07dfed05804b3b6796b9a92fe4fb55f1df6924d2480d113168fb8e8369b957b",
+            "image_id": "ghcr.io/nginx/nginx-gateway-fabric/nginx@sha256:20682e5ea9263d914ffd032bea14bf83a5c284f23f079647b269205297bbc3e6"
+          }
+        ]
+      },
+      {
+        "namespace": "registry-gateway-canary",
+        "name": "registry-gateway-canary-76778ddcdb-2nb7b",
+        "uid": "a78c4b55-ac1e-47dd-8028-79e3ec0fbbfe",
+        "containers": [
+          {
+            "name": "nginx-gateway",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:f2d1969dce1f3ac5119eb6cffc2e211ef4dd5daffee44824d4834451b4fe9fe9",
+            "image_id": "ghcr.io/nginx/nginx-gateway-fabric@sha256:f0aa8a3b301dc594f300e566060cdb7e75b6425c076e2fc62e4ce96f6e78b766"
+          }
+        ]
+      },
+      {
+        "namespace": "registry-gateway-canary",
+        "name": "vector-b652p",
+        "uid": "e4436a6c-bf33-445e-aee4-fc05ce538785",
+        "containers": [
+          {
+            "name": "vector",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:cf00e50e17e41ce9c71b4e3ebd6f3d51ab9456b58beff4d5c445c1afe52e5cfa",
+            "image_id": "docker.io/timberio/vector@sha256:f6c23b5a7e16fb2838d33619ef7acf4bad2289a7cf22bc90efc2371f520c4ea2"
+          }
+        ]
+      },
+      {
+        "namespace": "registry-gateway-canary",
+        "name": "vector-klzbx",
+        "uid": "23804a1f-2390-447f-a613-c0c9547b7de6",
+        "containers": [
+          {
+            "name": "vector",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:cf00e50e17e41ce9c71b4e3ebd6f3d51ab9456b58beff4d5c445c1afe52e5cfa",
+            "image_id": "docker.io/timberio/vector@sha256:f6c23b5a7e16fb2838d33619ef7acf4bad2289a7cf22bc90efc2371f520c4ea2"
+          }
+        ]
+      },
+      {
+        "namespace": "default",
+        "name": "k8up-86967d97c5-94mmb",
+        "uid": "bd5728bf-9545-4f65-a891-dddf181db649",
+        "containers": [
+          {
+            "name": "k8up-operator",
+            "ready": true,
+            "restarts": 0,
+            "image": "ghcr.io/k8up-io/k8up:v2.12.0",
+            "image_id": "ghcr.io/k8up-io/k8up@sha256:782370b4c981563e4cb5f49e2ccc4a55b40e6f94c37b2faa03a2b88666d54769"
+          }
+        ]
+      },
+      {
+        "namespace": "default",
+        "name": "mcp-registry-54546d9768-qknh4",
+        "uid": "ba956b03-b125-420c-a287-dbe02d24bac8",
+        "containers": [
+          {
+            "name": "mcp-registry",
+            "ready": true,
+            "restarts": 0,
+            "image": "sha256:ec5805e237cd66af3a8af5970445857682d020d83b9a243bc9a3d0b41ff99fff",
+            "image_id": "ghcr.io/modelcontextprotocol/registry@sha256:9eff8bc2fe975a694688263c33e4aa737873442004704f7a205bd0bdf874d2f6"
+          }
+        ]
+      },
+      {
+        "namespace": "default",
+        "name": "registry-pg-1",
+        "uid": "fb17dd49-56de-4778-adc7-b366d0b5f02f",
+        "containers": [
+          {
+            "name": "postgres",
+            "ready": true,
+            "restarts": 0,
+            "image": "ghcr.io/cloudnative-pg/postgresql:17.5",
+            "image_id": "ghcr.io/cloudnative-pg/postgresql@sha256:b1deeed2aa998b2f381e39c5cadb9ec06127708c8bd62965743af19abf21628f"
+          }
+        ]
+      },
+      {
+        "namespace": "monitoring",
+        "name": "grafana-6978f499b9-q5j58",
+        "uid": "37260d4f-fdd9-4a5c-a43f-1828dfeca64c",
+        "containers": [
+          {
+            "name": "grafana",
+            "ready": true,
+            "restarts": 0,
+            "image": "docker.io/grafana/grafana:12.4.14",
+            "image_id": "docker.io/grafana/grafana@sha256:ae509d9ae8c1021ca32ec370a9ca975d40165eda9fccd1e1102d317ff8787cd7"
+          }
+        ]
+      },
+      {
+        "namespace": "monitoring",
+        "name": "grafana-pg-1",
+        "uid": "55f5c5f4-2156-4f53-ba5d-4178630ebc47",
+        "containers": [
+          {
+            "name": "postgres",
+            "ready": true,
+            "restarts": 0,
+            "image": "ghcr.io/cloudnative-pg/postgresql:17.5",
+            "image_id": "ghcr.io/cloudnative-pg/postgresql@sha256:b1deeed2aa998b2f381e39c5cadb9ec06127708c8bd62965743af19abf21628f"
+          }
+        ]
+      },
+      {
+        "namespace": "monitoring",
+        "name": "opentelemetry-collector-agent-cqbnr",
+        "uid": "18938799-fc0c-462f-8f5e-631445fb1b38",
+        "containers": [
+          {
+            "name": "opentelemetry-collector",
+            "ready": true,
+            "restarts": 0,
+            "image": "docker.io/otel/opentelemetry-collector-contrib:0.133.0",
+            "image_id": "docker.io/otel/opentelemetry-collector-contrib@sha256:98274b756324abdb2473fa0c898247a246091e861e61d1548f9be483198eecea"
+          }
+        ]
+      },
+      {
+        "namespace": "monitoring",
+        "name": "victoria-logs-victoria-logs-single-server-0",
+        "uid": "66af902c-1e05-4c18-b54c-aa47939ee992",
+        "containers": [
+          {
+            "name": "vlogs",
+            "ready": true,
+            "restarts": 0,
+            "image": "docker.io/victoriametrics/victoria-logs:v1.33.0",
+            "image_id": "docker.io/victoriametrics/victoria-logs@sha256:23d5987d3e14817bfa40a9b80b4fd44d93531360333b7136dfbdc23f556fb8f9"
+          }
+        ]
+      },
+      {
+        "namespace": "monitoring",
+        "name": "victoria-metrics-agent-79b86dc579-rdc74",
+        "uid": "b2c719fd-1408-43b6-9ed8-59e3b9ccbbee",
+        "containers": [
+          {
+            "name": "vmagent",
+            "ready": true,
+            "restarts": 0,
+            "image": "docker.io/victoriametrics/vmagent:v1.125.0",
+            "image_id": "docker.io/victoriametrics/vmagent@sha256:64400f25a8d96941a8f3a664d2db7a10a7c2691b41cb9543db7ca861bcec9282"
+          }
+        ]
+      },
+      {
+        "namespace": "monitoring",
+        "name": "victoria-metrics-victoria-metrics-single-server-0",
+        "uid": "33f2dc81-62d2-44a9-95fb-347f153743bf",
+        "containers": [
+          {
+            "name": "vmsingle",
+            "ready": true,
+            "restarts": 0,
+            "image": "docker.io/victoriametrics/victoria-metrics:v1.125.0",
+            "image_id": "docker.io/victoriametrics/victoria-metrics@sha256:5b1e1f0153d18e15b0dc5d2e57f589317b0a985fc936a7cea9372028aee9860d"
+          }
+        ]
+      }
+    ],
+    "metrics": {
+      "parse_errors_total": [],
+      "cri_errors_total": [],
+      "response_bytes_missing_total": [],
+      "upstream_timing_errors_total": [
+        {
+          "metric": {},
+          "value": [
+            1794160819.223,
+            "2"
+          ]
+        }
+      ]
+    },
+    "gateway_resources": [
+      {
+        "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+        "cpu": {
+          "time": "2026-11-08T18:00:10Z",
+          "usageNanoCores": 125693814,
+          "usageCoreNanoSeconds": 25890302139000,
+          "psi": {
+            "full": {
+              "total": 0,
+              "avg10": 0,
+              "avg60": 0,
+              "avg300": 0
+            },
+            "some": {
+              "total": 6187440450,
+              "avg10": 1.71,
+              "avg60": 2.17,
+              "avg300": 2.45
+            }
+          }
+        },
+        "memory": {
+          "time": "2026-11-08T18:00:10Z",
+          "availableBytes": 6771195904,
+          "usageBytes": 2236702720,
+          "workingSetBytes": 1559384064,
+          "rssBytes": 585113600,
+          "pageFaults": 298116156,
+          "majorPageFaults": 9066,
+          "psi": {
+            "full": {
+              "total": 557329,
+              "avg10": 0,
+              "avg60": 0,
+              "avg300": 0
+            },
+            "some": {
+              "total": 662931,
+              "avg10": 0,
+              "avg60": 0,
+              "avg300": 0
+            }
+          }
+        },
+        "pods": [
+          {
+            "name": "registry-edge-registry-gateway-canary-84d5f578df-nx4jg",
+            "containers": [
+              {
+                "name": "nginx",
+                "cpu": {
+                  "time": "2026-11-08T18:00:11Z",
+                  "usageNanoCores": 17586421,
+                  "usageCoreNanoSeconds": 69984313000,
+                  "psi": {
+                    "full": {
+                      "total": 7945032,
+                      "avg10": 0.03,
+                      "avg60": 0.06,
+                      "avg300": 0.03
+                    },
+                    "some": {
+                      "total": 13859523,
+                      "avg10": 0.07,
+                      "avg60": 0.16,
+                      "avg300": 0.08
+                    }
+                  }
+                },
+                "memory": {
+                  "time": "2026-11-08T18:00:11Z",
+                  "availableBytes": 1038589952,
+                  "usageBytes": 35176448,
+                  "workingSetBytes": 35151872,
+                  "rssBytes": 33050624,
+                  "pageFaults": 2844070,
+                  "majorPageFaults": 1,
+                  "psi": {
+                    "full": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "registry-edge-registry-gateway-canary-84d5f578df-nwtfc",
+            "containers": [
+              {
+                "name": "nginx",
+                "cpu": {
+                  "time": "2026-11-08T18:00:10Z",
+                  "usageNanoCores": 19001522,
+                  "usageCoreNanoSeconds": 58940695000,
+                  "psi": {
+                    "full": {
+                      "total": 7249262,
+                      "avg10": 0,
+                      "avg60": 0.03,
+                      "avg300": 0.01
+                    },
+                    "some": {
+                      "total": 13840503,
+                      "avg10": 0,
+                      "avg60": 0.11,
+                      "avg300": 0.06
+                    }
+                  }
+                },
+                "memory": {
+                  "time": "2026-11-08T18:00:10Z",
+                  "availableBytes": 1036636160,
+                  "usageBytes": 37130240,
+                  "workingSetBytes": 37105664,
+                  "rssBytes": 35033088,
+                  "pageFaults": 2399413,
+                  "majorPageFaults": 0,
+                  "psi": {
+                    "full": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "vector-b652p",
+            "containers": [
+              {
+                "name": "vector",
+                "cpu": {
+                  "time": "2026-11-08T18:00:13Z",
+                  "usageNanoCores": 11082067,
+                  "usageCoreNanoSeconds": 11711356000,
+                  "psi": {
+                    "full": {
+                      "total": 1107166,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 1254720,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                },
+                "memory": {
+                  "time": "2026-11-08T18:00:13Z",
+                  "availableBytes": 498974720,
+                  "usageBytes": 43089920,
+                  "workingSetBytes": 37896192,
+                  "rssBytes": 36941824,
+                  "pageFaults": 75767,
+                  "majorPageFaults": 10,
+                  "psi": {
+                    "full": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "node": "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn",
+        "cpu": {
+          "time": "2026-11-08T18:00:20Z",
+          "usageNanoCores": 98304069,
+          "usageCoreNanoSeconds": 25386954707000,
+          "psi": {
+            "full": {
+              "total": 0,
+              "avg10": 0,
+              "avg60": 0,
+              "avg300": 0
+            },
+            "some": {
+              "total": 5837426375,
+              "avg10": 1.16,
+              "avg60": 1.7,
+              "avg300": 2
+            }
+          }
+        },
+        "memory": {
+          "time": "2026-11-08T18:00:20Z",
+          "availableBytes": 6789189632,
+          "usageBytes": 2349330432,
+          "workingSetBytes": 1541390336,
+          "rssBytes": 633331712,
+          "pageFaults": 311263586,
+          "majorPageFaults": 8699,
+          "psi": {
+            "full": {
+              "total": 228048,
+              "avg10": 0,
+              "avg60": 0,
+              "avg300": 0
+            },
+            "some": {
+              "total": 262661,
+              "avg10": 0,
+              "avg60": 0,
+              "avg300": 0
+            }
+          }
+        },
+        "pods": [
+          {
+            "name": "vector-klzbx",
+            "containers": [
+              {
+                "name": "vector",
+                "cpu": {
+                  "time": "2026-11-08T18:00:15Z",
+                  "usageNanoCores": 6930267,
+                  "usageCoreNanoSeconds": 8850248000,
+                  "psi": {
+                    "full": {
+                      "total": 667658,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 752448,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                },
+                "memory": {
+                  "time": "2026-11-08T18:00:15Z",
+                  "availableBytes": 499613696,
+                  "usageBytes": 37265408,
+                  "workingSetBytes": 37257216,
+                  "rssBytes": 36360192,
+                  "pageFaults": 67314,
+                  "majorPageFaults": 0,
+                  "psi": {
+                    "full": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "registry-edge-registry-gateway-canary-84d5f578df-7mtjt",
+            "containers": [
+              {
+                "name": "nginx",
+                "cpu": {
+                  "time": "2026-11-08T18:00:17Z",
+                  "usageNanoCores": 12163306,
+                  "usageCoreNanoSeconds": 381803631000,
+                  "psi": {
+                    "full": {
+                      "total": 101931510,
+                      "avg10": 0,
+                      "avg60": 0.01,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 109123037,
+                      "avg10": 0,
+                      "avg60": 0.08,
+                      "avg300": 0.05
+                    }
+                  }
+                },
+                "memory": {
+                  "time": "2026-11-08T18:00:17Z",
+                  "availableBytes": 1033031680,
+                  "usageBytes": 40734720,
+                  "workingSetBytes": 40710144,
+                  "rssBytes": 34189312,
+                  "pageFaults": 17634191,
+                  "majorPageFaults": 0,
+                  "psi": {
+                    "full": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "registry-gateway-canary-76778ddcdb-2nb7b",
+            "containers": [
+              {
+                "name": "nginx-gateway",
+                "cpu": {
+                  "time": "2026-11-08T18:00:11Z",
+                  "usageNanoCores": 13599414,
+                  "usageCoreNanoSeconds": 22881940000,
+                  "psi": {
+                    "full": {
+                      "total": 10214784,
+                      "avg10": 0,
+                      "avg60": 0.06,
+                      "avg300": 0.04
+                    },
+                    "some": {
+                      "total": 11546801,
+                      "avg10": 0,
+                      "avg60": 0.1,
+                      "avg300": 0.06
+                    }
+                  }
+                },
+                "memory": {
+                  "time": "2026-11-08T18:00:11Z",
+                  "availableBytes": 484114432,
+                  "usageBytes": 52760576,
+                  "workingSetBytes": 52756480,
+                  "rssBytes": 52006912,
+                  "pageFaults": 18685,
+                  "majorPageFaults": 0,
+                  "psi": {
+                    "full": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "registry-edge-registry-gateway-canary-84d5f578df-m4jqz",
+            "containers": [
+              {
+                "name": "nginx",
+                "cpu": {
+                  "time": "2026-11-08T18:00:18Z",
+                  "usageNanoCores": 14056279,
+                  "usageCoreNanoSeconds": 359248356000,
+                  "psi": {
+                    "full": {
+                      "total": 81379887,
+                      "avg10": 0,
+                      "avg60": 0.01,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 87836565,
+                      "avg10": 0,
+                      "avg60": 0.07,
+                      "avg300": 0.05
+                    }
+                  }
+                },
+                "memory": {
+                  "time": "2026-11-08T18:00:18Z",
+                  "availableBytes": 1028984832,
+                  "usageBytes": 44781568,
+                  "workingSetBytes": 44756992,
+                  "rssBytes": 36270080,
+                  "pageFaults": 16670489,
+                  "majorPageFaults": 0,
+                  "psi": {
+                    "full": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    },
+                    "some": {
+                      "total": 0,
+                      "avg10": 0,
+                      "avg60": 0,
+                      "avg300": 0
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "production_preview": {
+    "changes": {
+      "create": 2,
+      "same": 188,
+      "update": 2
+    },
+    "resources": [
+      {
+        "operation": "create",
+        "urn": "urn:pulumi:gcpProd::mcp-registry-infra::kubernetes:helm.sh/v3:Chart$kubernetes:batch/v1:Job::ingress-nginx/ingress-nginx-admission-patch"
+      },
+      {
+        "operation": "create",
+        "urn": "urn:pulumi:gcpProd::mcp-registry-infra::kubernetes:helm.sh/v3:Chart$kubernetes:batch/v1:Job::ingress-nginx/ingress-nginx-admission-create"
+      },
+      {
+        "operation": "update",
+        "urn": "urn:pulumi:gcpProd::mcp-registry-infra::kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::grafana-clusterrole"
+      },
+      {
+        "operation": "update",
+        "urn": "urn:pulumi:gcpProd::mcp-registry-infra::kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:Role::monitoring/grafana"
+      }
+    ],
+    "environment": "prod",
+    "mode": "preview",
+    "applied": false,
+    "source_commit": "52a34e6c8739b301cc0a996e44725445d15268a6"
+  },
+  "staging_apply": {
+    "changes": {
+      "delete": 9,
+      "read": 1,
+      "same": 231,
+      "update": 5
+    },
+    "resources": [
+      {
+        "operation": "update",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:cert-manager.io/v1:Certificate::gateway-canary-certificate-default-mcp-registry-staging-tls"
+      },
+      {
+        "operation": "update",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:cert-manager.io/v1:Certificate::gateway-canary-certificate-monitoring-grafana-tls"
+      },
+      {
+        "operation": "update",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:apps/v1:Deployment::mcp-registry"
+      },
+      {
+        "operation": "update",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:ClusterRole::grafana-clusterrole"
+      },
+      {
+        "operation": "update",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:helm.sh/v3:Chart$kubernetes:rbac.authorization.k8s.io/v1:Role::monitoring/grafana"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:gateway.networking.k8s.io/v1:HTTPRoute::gateway-canary-httproute-ingress-nginx-fixture-other"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:gateway.networking.k8s.io/v1:HTTPRoute::gateway-canary-httproute-ingress-nginx-fixture-bulk"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:gateway.networking.k8s.io/v1beta1:ReferenceGrant::gateway-canary-referencegrant-registry-gateway-canary-public-gateway-fixture"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:gateway.nginx.org/v1alpha1:ProxySettingsPolicy::gateway-canary-proxysettingspolicy-ingress-nginx-fixture-other"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:gateway.nginx.org/v1alpha1:ProxySettingsPolicy::gateway-canary-proxysettingspolicy-ingress-nginx-fixture-bulk"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:cert-manager.io/v1:Certificate::gateway-canary-certificate-ingress-nginx-fixture-tls"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:cert-manager.io/v1:Issuer::gateway-canary-issuer-ingress-nginx-fixture-selfsigned"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:core/v1:Service::gateway-canary-service-registry-gateway-canary-fixture"
+      },
+      {
+        "operation": "delete",
+        "urn": "urn:pulumi:gcpStaging::mcp-registry-infra::kubernetes:core/v1:ConfigMap::gateway-canary-configmap-registry-gateway-canary-fixture"
+      }
+    ],
+    "passed": true,
+    "source_commit": "52a34e6c8739b301cc0a996e44725445d15268a6",
+    "saved_plan_applied": true,
+    "at": 1794160671.846623
+  },
+  "empty_timing_local": {
+    "passed": true,
+    "expected": {
+      "requests_total": 6,
+      "internal_requests_total": 1,
+      "request_duration_seconds_count": 6,
+      "response_bytes_count": 6,
+      "request_bytes_count": 6,
+      "response_body_bytes_count": 6,
+      "upstream_duration_seconds_count": 2,
+      "upstream_connect_seconds_count": 2,
+      "upstream_header_seconds_count": 2,
+      "upstream_duration_seconds_sum": 0.25,
+      "upstream_all_attempts_seconds_count": 3,
+      "upstream_all_attempts_seconds_sum": 0.85,
+      "connect_all_attempts_seconds_count": 3,
+      "connect_all_attempts_seconds_sum": 0.04,
+      "header_all_attempts_seconds_count": 3,
+      "header_all_attempts_seconds_sum": 0.14,
+      "multi_upstream_requests_total": 1,
+      "upstream_timing_errors_total": 1,
+      "parse_errors_total": 1,
+      "cri_errors_total": 2
+    },
+    "cases": [
+      "CRI split marker",
+      "300KB record",
+      "interleaved file/stream",
+      "retry groups and missing timings",
+      "invalid timings",
+      "cache hit with empty and dash timings",
+      "background refresh",
+      "malformed JSON",
+      "partial timeout",
+      "partial fragment bound"
+    ]
+  },
+  "final_monitoring": {
+    "passed": true,
+    "started": 1794160323.2953112,
+    "finished": 1794160358.249119,
+    "nodes": [
+      "gke-mcp-registry-sta-mcp-registry-sta-5d130b39-cdbx",
+      "gke-mcp-registry-sta-mcp-registry-sta-b7f45e37-t3mg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "canary_nodes": [
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-20cg",
+      "gke-mcp-registry-sta-registry-gateway-a19b5d98-pqvn"
+    ],
+    "delta": {
+      "registry_gateway_canary_request_duration_seconds_sum": 6.0,
+      "registry_gateway_canary_internal_response_bytes_sum": 500.0,
+      "registry_gateway_canary_cache_responses_total": 12.0,
+      "registry_gateway_canary_upstream_all_attempts_seconds_bucket": 38.0,
+      "registry_gateway_canary_header_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_upstream_duration_seconds_sum": 0.5,
+      "registry_gateway_canary_upstream_header_seconds_bucket": 40.0,
+      "registry_gateway_canary_upstream_timing_errors_total": 2.0,
+      "registry_gateway_canary_request_bytes_bucket": 84.0,
+      "registry_gateway_canary_response_bytes_bucket": 72.0,
+      "registry_gateway_canary_upstream_connect_seconds_bucket": 48.0,
+      "registry_gateway_canary_internal_request_duration_seconds_bucket": 12.0,
+      "registry_gateway_canary_response_body_bytes_bucket": 72.0,
+      "registry_gateway_canary_connect_all_attempts_seconds_sum": 0.07999999999999999,
+      "registry_gateway_canary_response_bytes_sum": 3000.0,
+      "registry_gateway_canary_upstream_connect_seconds_sum": 0.02,
+      "registry_gateway_canary_request_bytes_count": 12.0,
+      "registry_gateway_canary_internal_requests_total": 2.0,
+      "registry_gateway_canary_requests_total": 12.0,
+      "registry_gateway_canary_upstream_connect_seconds_count": 4.0,
+      "registry_gateway_canary_header_all_attempts_seconds_bucket": 56.0,
+      "registry_gateway_canary_request_bytes_sum": 1200.0,
+      "registry_gateway_canary_response_body_bytes_sum": 2400.0,
+      "registry_gateway_canary_upstream_header_seconds_sum": 0.1,
+      "registry_gateway_canary_connect_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_internal_request_duration_seconds_sum": 1.0,
+      "registry_gateway_canary_upstream_all_attempts_seconds_sum": 1.7000000000000002,
+      "registry_gateway_canary_header_all_attempts_seconds_sum": 0.27999999999999997,
+      "registry_gateway_canary_upstream_all_attempts_seconds_count": 6.0,
+      "registry_gateway_canary_internal_response_bytes_count": 2.0,
+      "registry_gateway_canary_upstream_duration_seconds_bucket": 28.0,
+      "registry_gateway_canary_multi_upstream_requests_total": 2.0,
+      "registry_gateway_canary_connect_all_attempts_seconds_bucket": 66.0,
+      "registry_gateway_canary_internal_response_bytes_bucket": 12.0,
+      "registry_gateway_canary_internal_request_duration_seconds_count": 2.0,
+      "registry_gateway_canary_upstream_duration_seconds_count": 4.0,
+      "registry_gateway_canary_response_bytes_count": 12.0,
+      "registry_gateway_canary_upstream_header_seconds_count": 4.0,
+      "registry_gateway_canary_request_duration_seconds_count": 12.0,
+      "registry_gateway_canary_response_body_bytes_count": 12.0,
+      "registry_gateway_canary_request_duration_seconds_bucket": 72.0
+    },
+    "vm_requests": [
+      {
+        "metric": {},
+        "value": [
+          1794160356.743,
+          "12"
+        ]
+      }
+    ],
+    "real_cri_partial_records": true,
+    "emitters_removed": true
+  },
+  "public_cache_monitoring": {
+    "passed": true,
+    "started": 1794160438.462888,
+    "finished": 1794160473.351556,
+    "requests": 100,
+    "offered_rate": 10,
+    "statuses": {
+      "200": 100
+    },
+    "cache": {
+      "HIT": 99,
+      "STALE": 1
+    },
+    "registry_timing_error_delta": 0
+  },
+  "certificate_read_retry": {
+    "at": 1794159948.842123,
+    "failure": "Pulumi read returned empty metadata for monitoring/grafana-tls during apply; both live Certificates retained original UIDs and no owners",
+    "changes": "Explicit name/namespace in read state, specific missing-metadata error, managed update ordered after read",
+    "retry": "Full saved-plan deployment succeeded with explicit namespace/name",
+    "failed_applies": 2,
+    "root_cause": "CustomResource read state supplied GVK without metadata.namespace; provider used default namespace for Grafana Certificate",
+    "source": "https://github.com/pulumi/pulumi-kubernetes/blob/v4.34.2/provider/pkg/provider/provider.go"
+  },
+  "certificate_ownership": [
+    {
+      "namespace": "default",
+      "certificate": "mcp-registry-staging-tls",
+      "pulumi_protected": true,
+      "owner_detached": true,
+      "certificate_unchanged": true
+    },
+    {
+      "namespace": "monitoring",
+      "certificate": "grafana-tls",
+      "pulumi_protected": true,
+      "owner_detached": true,
+      "certificate_unchanged": true
+    }
+  ],
+  "public_probe_phases": {
+    "native-certificates": {
+      "probe_rounds": 1170,
+      "failed_checks": {
+        "/v0/health:504": 1,
+        "/v0/health:503": 8,
+        "/v0/health:502": 1,
+        "/v0/health:000": 2,
+        "/v0.1/servers?limit=1:000": 2,
+        "/api/health:000": 3
+      },
+      "started": 1794142895.482699,
+      "last": 1794145274.465857
+    },
+    "legacy-retirement": {
+      "probe_rounds": 537,
+      "failed_checks": {
+        "/v0/health:503": 3
+      },
+      "started": 1794145276.4681711,
+      "last": 1794146351.9486349
+    },
+    "standalone-certificates": {
+      "probe_rounds": 267,
+      "failed_checks": {},
+      "started": 1794146353.955009,
+      "last": 1794146887.4218051
+    },
+    "contract": {
+      "probe_rounds": 341,
+      "failed_checks": {
+        "/api/health:000": 1
+      },
+      "started": 1794146889.425505,
+      "last": 1794156785.327324
+    },
+    "rate-limits": {
+      "probe_rounds": 19,
+      "failed_checks": {
+        "/v0/health:429": 3
+      },
+      "started": 1794146929.509655,
+      "last": 1794156805.391961
+    },
+    "autoscale": {
+      "probe_rounds": 738,
+      "failed_checks": {},
+      "started": 1794146947.5518389,
+      "last": 1794157089.113132
+    },
+    "steady-1000": {
+      "probe_rounds": 343,
+      "failed_checks": {},
+      "started": 1794147222.5704331,
+      "last": 1794157239.9248378
+    },
+    "rollout": {
+      "probe_rounds": 1000,
+      "failed_checks": {
+        "/api/health:000": 3,
+        "/v0.1/servers?limit=1:000": 2
+      },
+      "started": 1794147373.055326,
+      "last": 1794157874.601847
+    },
+    "drain-fix-deployment": {
+      "probe_rounds": 386,
+      "failed_checks": {
+        "/v0/health:503": 3,
+        "/v0.1/servers?limit=1:000": 3,
+        "/api/health:000": 3,
+        "/v0/health:000": 2
+      },
+      "started": 1794147871.357427,
+      "last": 1794148671.7580428
+    },
+    "capacity-baseline-recovery": {
+      "probe_rounds": 116,
+      "failed_checks": {},
+      "started": 1794149296.1305542,
+      "last": 1794153628.4392052
+    },
+    "burst-1500": {
+      "probe_rounds": 91,
+      "failed_checks": {},
+      "started": 1794155234.7430341,
+      "last": 1794157967.197759
+    },
+    "mixed-250": {
+      "probe_rounds": 151,
+      "failed_checks": {},
+      "started": 1794155325.119411,
+      "last": 1794158119.779264
+    },
+    "steady-500": {
+      "probe_rounds": 78,
+      "failed_checks": {},
+      "started": 1794155475.6944902,
+      "last": 1794158270.348901
+    },
+    "worker-processes-diagnostic": {
+      "probe_rounds": 321,
+      "failed_checks": {
+        "/v0/health:000": 1,
+        "/v0.1/servers?limit=1:000": 1,
+        "/api/health:000": 1
+      },
+      "started": 1794155481.719438,
+      "last": 1794156134.7533
+    },
+    "proxy": {
+      "probe_rounds": 107,
+      "failed_checks": {},
+      "started": 1794158272.35499,
+      "last": 1794158485.18391
+    },
+    "controller": {
+      "probe_rounds": 107,
+      "failed_checks": {},
+      "started": 1794158487.1940632,
+      "last": 1794158699.9630132
+    },
+    "node": {
+      "probe_rounds": 164,
+      "failed_checks": {
+        "/v0/health:000": 1,
+        "/api/health:000": 1
+      },
+      "started": 1794158701.963271,
+      "last": 1794159036.170351
+    },
+    "collector": {
+      "probe_rounds": 7,
+      "failed_checks": {},
+      "started": 1794159038.180583,
+      "last": 1794159050.224266
+    },
+    "collector-load": {
+      "probe_rounds": 45,
+      "failed_checks": {},
+      "started": 1794159052.228155,
+      "last": 1794159140.603332
+    },
+    "monitoring": {
+      "probe_rounds": 25,
+      "failed_checks": {},
+      "started": 1794159142.613163,
+      "last": 1794159190.7993321
+    },
+    "certificate-rotation": {
+      "probe_rounds": 15,
+      "failed_checks": {},
+      "started": 1794159192.801652,
+      "last": 1794159220.89386
+    },
+    "release-generator": {
+      "probe_rounds": 16,
+      "failed_checks": {},
+      "started": 1794159222.904017,
+      "last": 1794159253.0317838
+    },
+    "notification": {
+      "probe_rounds": 130,
+      "failed_checks": {
+        "/api/health:000": 1
+      },
+      "started": 1794159255.040427,
+      "last": 1794159520.086567
+    },
+    "final-pulumi-apply": {
+      "probe_rounds": 573,
+      "failed_checks": {
+        "/v0/health:503": 9
+      },
+      "started": 1794159522.088929,
+      "last": 1794160670.322243
+    },
+    "final-certificate-validation": {
+      "probe_rounds": 92,
+      "failed_checks": {},
+      "started": 1794160672.324335,
+      "last": 1794160854.97951
+    }
+  }
+}

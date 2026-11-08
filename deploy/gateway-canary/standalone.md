@@ -94,3 +94,8 @@ No production apply is part of this work. Staging notification delivery is teste
 through the previously approved temporary internal webhook; delivery to a real
 person is a separate production gate. The earlier accepted staging interruption
 budget does not establish a production availability target.
+
+See [the measured staging results](standalone-validation.md) and
+[the sanitized evidence](standalone-validation.json), including failed attempts.
+Failure-path helper regression checks run without cluster access:
+`python3 -m unittest discover -s gateway-canary -p "*_test.py"` from `deploy/`.

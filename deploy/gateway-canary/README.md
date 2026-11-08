@@ -4,13 +4,15 @@ Staging now selects `gatewayStagingStandalone: "true"`. Its public hostnames use
 OSS Gateway Fabric, with no running ingress-nginx or duplicate canary. See
 [standalone.md](standalone.md) for the final topology, qualification gates and
 Git-based recovery procedure. Production retains its existing ingress. Normal
-staging pushes continue to deploy the current main image.
+staging pushes continue to deploy the current main image. The completed
+[standalone validation](standalone-validation.md) records both passing checks
+and capacity limits; it does not approve production migration.
 
 The `gateway-canary` paths, metric prefixes and node-pool names are retained to
 preserve monitoring history and infrastructure identity. Earlier comparison and
 handoff reports below describe historical configurations, not the current one.
 
-The canary uses OSS NGF 2.8.1 / Gateway API 1.6.3 / Vector 0.61.0. Controller,
+The Gateway uses OSS NGF 2.8.1 / Gateway API 1.6.3 / Vector 0.61.0. Controller,
 data-plane, Vector and fixture images are pinned by digest. NGINX Plus and product
 telemetry are disabled. Metrics go to the existing vmagent, VictoriaMetrics and
 Grafana, under separate `gateway-canary-vector-*` jobs and
@@ -22,7 +24,8 @@ extraction.
 ## Capacity and temporary fixtures
 
 The existing two e2-standard-2 Gateway nodes remain capped at two; no additional
-nodes are required by this migration. Two proxy replicas can scale to four.
+nodes are required by this migration. Standalone staging keeps four proxy
+replicas (two per node) to avoid the observed scale-down placement failure.
 Each Gateway node runs one single-threaded Vector collector requesting 500m CPU;
 each proxy requests 500m and the controller requests 100m. The worker and database
 pools remain unchanged. Removing the duplicate canary releases its separate IP
