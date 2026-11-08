@@ -2,10 +2,60 @@ package gatewaycanary
 
 import (
 	"encoding/json"
+	"sync/atomic"
 	"testing"
 
+	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
+
+type compactMocks struct {
+	mocks
+	t         *testing.T
+	workloads atomic.Int32
+}
+
+func (m *compactMocks) NewResource(a pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
+	if a.TypeToken == "kubernetes:apps/v1:Deployment" || a.TypeToken == "kubernetes:apps/v1:DaemonSet" {
+		m.workloads.Add(1)
+		pod := a.Inputs["spec"].ObjectValue()["template"].ObjectValue()["spec"].ObjectValue()
+		if pod["nodeSelector"].ObjectValue()["registry-role"].StringValue() != "worker" || len(pod["tolerations"].ArrayValue()) != 0 {
+			m.t.Error("controller/Vector still requires the removed Gateway pool")
+		}
+		cpu := "50m"
+		if a.TypeToken == "kubernetes:apps/v1:DaemonSet" {
+			cpu = "100m"
+		}
+		resources := pod["containers"].ArrayValue()[0].ObjectValue()["resources"].ObjectValue()
+		if resources["requests"].ObjectValue()["cpu"].StringValue() != cpu || resources["requests"].ObjectValue()["memory"].StringValue() != "128Mi" || resources["limits"].ObjectValue()["memory"].StringValue() != "512Mi" {
+			m.t.Error("wrong compact CPU or changed memory budget")
+		}
+	}
+	return m.mocks.NewResource(a)
+}
+
+func TestCompactRegistersControllerAndVectorOnWorker(t *testing.T) {
+	m := &compactMocks{t: t}
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		p, err := kubernetes.NewProvider(ctx, "staging-provider", &kubernetes.ProviderArgs{})
+		if err != nil {
+			return err
+		}
+		return Deploy(ctx, p, pulumi.String("").ToStringOutput())
+	}, pulumi.WithMocks("test", "staging", m), func(i *pulumi.RunInfo) {
+		i.Config = map[string]string{"gcp:project": "mcp-registry-staging"}
+		for k, v := range map[string]string{"gatewayStagingCompact": "true", "gatewayStagingStandalone": "true", "gatewayStagingPublicIP": "35.222.36.75", "environment": "staging", "provider": "gcp", "stagingIdleCapacity": "true", "stagingSmallCapacity": "enabled", "nodeMinCount": "2", "nodeMaxCount": "2"} {
+			i.Config["mcp-registry:"+k] = v
+		}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if m.workloads.Load() != 2 {
+		t.Fatal("expected registered controller and Vector workloads")
+	}
+}
 
 func TestCompactPreservesProxyFeatures(t *testing.T) {
 	objects, err := handoffObjectsWithOptions(true, true, false)
