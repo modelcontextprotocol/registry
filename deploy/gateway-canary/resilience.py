@@ -19,6 +19,14 @@ def wait_rollout(namespace, name):
     run('-n', namespace, 'rollout', 'status', 'deployment/' + name, '--timeout=360s', timeout=370)
 
 
+def apply_policy(current, spec, manager):
+    # Preserve the existing SSA owner and use resourceVersion as an optimistic
+    # concurrency guard. No force override is allowed in qualification runs.
+    metadata = {k: current['metadata'][k] for k in ['name', 'namespace', 'resourceVersion', 'labels', 'annotations', 'ownerReferences'] if k in current['metadata']}
+    manifest = {'apiVersion': current['apiVersion'], 'kind': current['kind'], 'metadata': metadata, 'spec': spec}
+    run('apply', '--server-side', '--field-manager=' + manager, '-f', '-', input=json.dumps(manifest))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--scenario', required=True, choices=['proxy', 'controller', 'rollout', 'node'])
@@ -47,6 +55,7 @@ def main():
     policy_uid = None
     policy_before = None
     policy_manager = None
+    modified_spec = None
     failure = None
     public = PublicProbe(args.output / 'public-probes.json')
     public.start()
@@ -78,10 +87,9 @@ def main():
             modified_patches = copy.deepcopy(original_patches)
             value = str(int(time.time()))
             modified_patches[0]['value']['spec']['template'].setdefault('metadata', {}).setdefault('annotations', {})['registry.modelcontextprotocol.io/qualification'] = value
-            patch = [{'op': 'test', 'path': '/metadata/uid', 'value': policy_uid},
-                     {'op': 'test', 'path': '/spec/kubernetes/deployment/patches', 'value': original_patches},
-                     {'op': 'replace', 'path': '/spec/kubernetes/deployment/patches', 'value': modified_patches}]
-            run('-n', edge_ns, 'patch', 'nginxproxy', 'registry-edge', '--type=json', '-p', json.dumps(patch))
+            modified_spec = copy.deepcopy(policy['spec'])
+            modified_spec['kubernetes']['deployment']['patches'] = modified_patches
+            apply_policy(policy, modified_spec, policy_manager)
             deadline = time.monotonic() + 60
             while get('-n', edge_ns, 'get', 'deployment', edge_name)['spec']['template']['metadata'].get('annotations', {}).get('registry.modelcontextprotocol.io/qualification') != value:
                 assert time.monotonic() < deadline, 'Controller did not apply rollout policy'
@@ -126,20 +134,11 @@ def main():
             except Exception as error:
                 cleanup_errors.append('uncordon: ' + repr(error))
         if modified_patches is not None:
-            patch = [{'op': 'test', 'path': '/metadata/uid', 'value': policy_uid},
-                     {'op': 'test', 'path': '/spec/kubernetes/deployment/patches', 'value': modified_patches},
-                     {'op': 'replace', 'path': '/spec/kubernetes/deployment/patches', 'value': original_patches}]
             try:
-                run('-n', edge_ns, 'patch', 'nginxproxy', 'registry-edge', '--type=json', '-p', json.dumps(patch))
-                # JSON patch restores values but takes SSA ownership. Return the
-                # exact original spec to its original Pulumi field manager, so
-                # the next saved-plan deployment does not encounter a conflict.
                 current = get('-n', edge_ns, 'get', 'nginxproxy', 'registry-edge')
-                assert current['metadata']['uid'] == policy_uid and current['spec'] == policy_before['spec'], 'Concurrent Gateway policy change; refuse ownership restoration'
-                metadata = {k: current['metadata'][k] for k in ['name', 'namespace', 'resourceVersion', 'labels', 'annotations', 'ownerReferences'] if k in current['metadata']}
-                manifest = {'apiVersion': current['apiVersion'], 'kind': current['kind'], 'metadata': metadata, 'spec': current['spec']}
-                run('apply', '--server-side', '--force-conflicts', '--field-manager=' + policy_manager, '-f', '-', input=json.dumps(manifest))
-                report['pulumi_policy_ownership_restored'] = True
+                assert current['metadata']['uid'] == policy_uid and current['spec'] == modified_spec, 'Concurrent Gateway policy change; refuse restoration'
+                apply_policy(current, policy_before['spec'], policy_manager)
+                report['pulumi_policy_ownership_preserved'] = True
                 deadline = time.monotonic() + 60
                 while 'registry.modelcontextprotocol.io/qualification' in get('-n', edge_ns, 'get', 'deployment', edge_name)['spec']['template']['metadata'].get('annotations', {}):
                     assert time.monotonic() < deadline, 'Controller did not restore rollout policy'
