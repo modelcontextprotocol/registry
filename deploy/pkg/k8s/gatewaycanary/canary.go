@@ -95,6 +95,14 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 	if err != nil {
 		return err
 	}
+	if HandoffEnabled(ctx) {
+		rbac, err := handoffRBAC()
+		if err != nil {
+			return err
+		}
+		control = append(control, rbac...)
+		deps = append(deps, ingress)
+	}
 	// RBAC precedes the certificate generator, which precedes the controller.
 	for _, kinds := range [][]string{{"ServiceAccount", "ClusterRole", "ClusterRoleBinding", "Role", "RoleBinding", "Service"}, {"Job"}, {"GatewayClass", "NginxGateway", "NginxProxy"}, {"Deployment"}} {
 		prior := append([]pulumi.Resource{}, deps...)

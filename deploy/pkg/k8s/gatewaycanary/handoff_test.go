@@ -102,3 +102,34 @@ func TestHandoffRejectsWrongProjectAndModes(t *testing.T) {
 		}
 	}
 }
+
+func TestHandoffControllerCanWatchItsNewNamespace(t *testing.T) {
+	rbac, err := handoffRBAC()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rbac) != 2 {
+		t.Fatalf("expected namespace role and binding, got %d", len(rbac))
+	}
+	for _, o := range rbac {
+		if o["metadata"].(map[string]any)["namespace"] != EdgeNamespace {
+			t.Fatal("wrong RBAC namespace")
+		}
+		if o["kind"] == "RoleBinding" {
+			subject := o["subjects"].([]any)[0].(map[string]any)
+			if subject["namespace"] != Namespace || subject["name"] != "registry-gateway-canary" {
+				t.Fatal("wrong controller identity")
+			}
+		}
+	}
+	control, _ := objects("controller.json")
+	for _, o := range control {
+		if o["kind"] == "Role" && o["metadata"].(map[string]any)["namespace"] == "default" {
+			want, _ := json.Marshal(o["rules"])
+			got, _ := json.Marshal(rbac[0]["rules"])
+			if string(want) != string(got) {
+				t.Fatal("handoff role must match the qualified controller permissions")
+			}
+		}
+	}
+}

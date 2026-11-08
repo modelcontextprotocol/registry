@@ -171,3 +171,21 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 	ctx.Export("gatewayStagingHandoff", pulumi.String(config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff")))
 	return nil
 }
+
+// The rendered controller uses namespace-scoped roles. Watching an additional
+// namespace requires the same role and binding there before its rollout.
+func handoffRBAC() ([]map[string]any, error) {
+	control, err := objects("controller.json")
+	if err != nil {
+		return nil, err
+	}
+	result := []map[string]any{}
+	for _, o := range control {
+		meta := o["metadata"].(map[string]any)
+		if (o["kind"] == "Role" || o["kind"] == "RoleBinding") && meta["namespace"] == "default" {
+			meta["namespace"] = EdgeNamespace
+			result = append(result, o)
+		}
+	}
+	return result, nil
+}
