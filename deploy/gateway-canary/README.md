@@ -159,3 +159,5 @@ HPA, readiness, node-count and metric evidence. Afterwards remove both test flag
 preview/apply, and delete the orphaned self-signed `fixture-tls` Secret if
 cert-manager's certificate owner-reference option is disabled. The live staging
 and Grafana certificate Secrets must remain untouched.
+
+Public staging handoff and rollback: [handoff.md](handoff.md).
