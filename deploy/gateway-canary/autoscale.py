@@ -16,7 +16,14 @@ h = get('-n', NS, 'get', 'hpa', NAME)
 node_names = sorted(n['metadata']['name'] for n in get('get', 'nodes')['items'])
 assert len(node_names) == 4, 'Qualification requires the original four-node cluster'
 assert h['spec']['maxReplicas'] == 4
-assert h['status'].get('currentReplicas') == 2, 'wait for the cooldown to return to two replicas'
+baseline_started = time.monotonic()
+while h['status'].get('currentReplicas') != 2:
+    assert time.monotonic() - baseline_started < 360, 'HPA did not return to two replicas after cooldown'
+    print('Waiting for the normal HPA cooldown before qualification', flush=True)
+    time.sleep(10)
+    h = get('-n', NS, 'get', 'hpa', NAME)
+assert sorted(n['metadata']['name'] for n in get('get', 'nodes')['items']) == node_names
+baseline_wait_seconds = time.monotonic() - baseline_started
 assert not any((p['metadata']['name'].startswith('registry-canary-baseline-') for p in get('-n', NS, 'get', 'pods')['items']))
 with open(args.output / 'load.log', 'w') as log:
     p = subprocess.Popen(['python3', 'gateway-canary/measure.py', '--arm', 'ngf', '--workers', '256', '--rate', '1000', '--seconds', '240', '--epoch', 'canary-autoscale', '--output', str(args.output / 'load')], stdout=log, stderr=subprocess.STDOUT)
@@ -30,7 +37,7 @@ with open(args.output / 'load.log', 'w') as log:
         rows.append(row)
         print(json.dumps({'current': h['status'].get('currentReplicas'), 'desired': h['status'].get('desiredReplicas'), 'ready': d['status'].get('readyReplicas'), 'nodes': len(nodes)}), flush=True)
         time.sleep(10)
-    (args.output / 'operation.json').write_text(json.dumps({'exit': p.returncode, 'samples': rows}, indent=2) + '\n')
+    (args.output / 'operation.json').write_text(json.dumps({'exit': p.returncode, 'baseline_wait_seconds': baseline_wait_seconds, 'samples': rows}, indent=2) + '\n')
     assert all(r['cluster_nodes'] == node_names for r in rows), 'Cluster nodes changed during scaling qualification'
     assert p.returncode == 0, p.returncode
     assert max((r['deployment'].get('readyReplicas', 0) for r in rows)) >= 4, 'did not reach four ready replicas'

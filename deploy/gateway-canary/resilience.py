@@ -4,6 +4,7 @@ import argparse
 import copy
 import json
 import os
+import re
 import subprocess
 import time
 from pathlib import Path
@@ -26,6 +27,12 @@ def apply_policy(current, spec, manager):
     metadata = {k: current['metadata'][k] for k in ['name', 'namespace', 'resourceVersion', 'labels', 'annotations', 'ownerReferences'] if k in current['metadata']}
     manifest = {'apiVersion': current['apiVersion'], 'kind': current['kind'], 'metadata': metadata, 'spec': spec}
     run('apply', '--server-side', '--field-manager=' + manager, '-f', '-', input=json.dumps(manifest))
+
+
+def generator_timestamp(value):
+    # Python 3.9 accepts microseconds, while Go emits RFC3339 nanoseconds.
+    value = re.sub(r'(\.\d{6})\d+', r'\1', value)
+    return datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp()
 
 
 def main():
@@ -159,12 +166,15 @@ def main():
             report['public'] = public.finish(120 if args.scenario == 'node' else 0)
     report['nodes_after'] = sorted(n['metadata']['name'] for n in get('get', 'nodes')['items'])
     report['finished'] = time.time()
+    report['passed'] = False
+    report['failure'] = failure or 'Qualification checks not completed'
+    (args.output / 'operation.json').write_text(json.dumps(report, indent=2) + '\n')
     # The measurement driver remains alive while scraping/draining metrics.
     # Qualify disruption overlap using the generator's own scheduling interval.
     measurement = json.loads((args.output / 'load' / 'result.json').read_text())
     client = measurement['client']
-    active_start = datetime.fromisoformat(client['started_at'].replace('Z', '+00:00')).timestamp()
-    active_end = min(active_start + client['seconds'], datetime.fromisoformat(client['finished_at'].replace('Z', '+00:00')).timestamp())
+    active_start = generator_timestamp(client['started_at'])
+    active_end = min(active_start + client['seconds'], generator_timestamp(client['finished_at']))
     report['generator_active_interval'] = [active_start, active_end]
     report['action_covered_by_load'] = active_start <= report.get('action_started', 0) < report.get('action_ready', float('inf')) <= active_end
     if not report['action_covered_by_load']:
