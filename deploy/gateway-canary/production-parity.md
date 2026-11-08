@@ -123,6 +123,13 @@ peak capacity, human alert delivery, authenticated Grafana OAuth or a real publi
 transaction. Those limits and the previously tested renewal/restart scenarios remain
 in the [migration runbook](production-migration.md).
 
+Copilot also identified duplicate shared upstream-policy registrations in the older
+non-standalone handoff modes. A full `Deploy` mock reproduced failures for `legacy`,
+`overlap` and `gateway`; the fix registers those shared policies once. The same test
+now passes in all three modes and `standalone`. CodeQL findings in the probe helper
+were fixed by enforcing TLS 1.2 in every context, with certificate/hostname checks
+retained and a verified public TLS 1.3 handshake afterward.
+
 ## Reproducing the bounded staging checks
 
 Use exactly the two-node compact staging profile. Temporarily enable

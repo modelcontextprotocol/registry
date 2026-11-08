@@ -236,6 +236,12 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 			if !contains(kinds, o["kind"].(string)) {
 				continue
 			}
+			// These policies live beside the backend Services and are shared by
+			// both Gateways. Deploy already registers them with the canary routes
+			// unless standalone mode omits that entire route graph.
+			if o["kind"] == "UpstreamSettingsPolicy" && !Standalone(ctx) {
+				continue
+			}
 			r, err := register(ctx, provider, o, prior)
 			if err != nil {
 				return err
