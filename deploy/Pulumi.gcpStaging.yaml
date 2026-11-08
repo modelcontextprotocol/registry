@@ -1,6 +1,6 @@
 config:
   mcp-registry:gatewayManagedMTLS: "true"
-  mcp-registry:gatewayPublicCertificates: adopt
+  mcp-registry:gatewayPublicCertificates: managed
   mcp-registry:gatewayNativeCertificates: "true"
   mcp-registry:gatewayStagingHandoff: gateway
   mcp-registry:gatewayStagingPublicIP: 35.222.36.75

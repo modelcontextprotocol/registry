@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 """Bounded matched fixture load. K8s reads plus exec in the dedicated generator."""
-import argparse, concurrent.futures, json, re, subprocess, threading, time, urllib.parse
+import argparse, concurrent.futures, json, os, re, subprocess, threading, time, urllib.parse
 from pathlib import Path
 K = ['kubectl', '--context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging', '--request-timeout=30s']
 NS = 'registry-gateway-canary'
+
+
+def gateway_target():
+    target = os.environ.get('REGISTRY_GATEWAY_TARGET', 'canary')
+    if target == 'public':
+        return 'ingress-nginx', 'registry-edge-registry-gateway-canary'
+    if target == 'canary':
+        return NS, 'registry-canary-registry-gateway-canary'
+    raise ValueError('REGISTRY_GATEWAY_TARGET must be public or canary')
+
 
 def get(*a):
     return json.loads(subprocess.check_output(K + list(a) + ['-o', 'json']))
@@ -12,7 +22,7 @@ def raw(path):
     return subprocess.check_output(K + ['get', '--raw', path], text=True)
 
 def pods():
-    return get('-n', NS, 'get', 'pods')['items']
+    return [p for ns in sorted({NS, gateway_target()[0]}) for p in get('-n', ns, 'get', 'pods')['items']]
 
 def vector():
     out = {}
@@ -34,7 +44,7 @@ def vector():
 
 def sample(node):
     d = json.loads(raw('/api/v1/nodes/' + node + '/proxy/stats/summary'))
-    return {'node': node, 'cpu': d['node']['cpu'], 'memory': d['node']['memory'], 'pods': [{'name': p['podRef']['name'], 'containers': [{k: c[k] for k in ['name', 'cpu', 'memory']} for c in p['containers']]} for p in d['pods'] if p['podRef']['namespace'] == NS]}
+    return {'node': node, 'cpu': d['node']['cpu'], 'memory': d['node']['memory'], 'pods': [{'name': p['podRef']['name'], 'containers': [{k: c[k] for k in ['name', 'cpu', 'memory']} for c in p['containers']]} for p in d['pods'] if p['podRef']['namespace'] in {NS, gateway_target()[0]}]}
 
 def stamp(t):
     from datetime import datetime
@@ -66,8 +76,8 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     a = p.parse_args()
     a.output.mkdir(parents=True, exist_ok=True)
-    service = 'registry-canary-baseline-controller' if a.arm == 'baseline' else 'registry-canary-registry-gateway-canary'
-    ip = get('-n', NS, 'get', 'svc', service)['spec']['clusterIP']
+    gateway_namespace, service = (NS, 'registry-canary-baseline-controller') if a.arm == 'baseline' else gateway_target()
+    ip = get('-n', gateway_namespace, 'get', 'svc', service)['spec']['clusterIP']
     inventory = pods()
     nodes = sorted({x['spec']['nodeName'] for x in inventory if x.get('spec', {}).get('nodeName')})
     before = vector()
@@ -126,7 +136,7 @@ def main():
         if len(pairs) > 1:
             (first, last) = (pairs[0], pairs[-1])
             resources[name] = {'cpu_cores': (last[1]['cpu']['usageCoreNanoSeconds'] - first[1]['cpu']['usageCoreNanoSeconds']) / 1000000000.0 / (last[0] - first[0]), 'peak_working_set_bytes': max((x['memory'].get('workingSetBytes', 0) for x in points.values())), 'sample_seconds': last[0] - first[0]}
-    report = {'arm': a.arm, 'rate': a.rate, 'seconds': a.seconds, 'miss_percent': a.miss_percent, 'started_at': start, 'finished_at': end, 'client': client, 'metric_delta': delta, 'collection_observed_drain_seconds': drain, 'vm_client_count': vm, 'origin_reads': sum(o1.values()) - sum(o0.values()), 'resources': resources, 'placement': [{'pod': x['metadata']['name'], 'node': x['spec'].get('nodeName')} for x in inventory]}
+    report = {'gateway_namespace': gateway_namespace, 'gateway_service': service, 'arm': a.arm, 'rate': a.rate, 'seconds': a.seconds, 'miss_percent': a.miss_percent, 'started_at': start, 'finished_at': end, 'client': client, 'metric_delta': delta, 'collection_observed_drain_seconds': drain, 'vm_client_count': vm, 'origin_reads': sum(o1.values()) - sum(o0.values()), 'resources': resources, 'placement': [{'pod': x['metadata']['name'], 'node': x['spec'].get('nodeName')} for x in inventory]}
     (a.output / 'samples.json').write_text(json.dumps(samples))
     (a.output / 'result.json').write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))

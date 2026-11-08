@@ -205,3 +205,37 @@ func objectsForControllerTest() (map[string]any, error) {
 	}
 	return nil, err
 }
+
+func TestStandaloneGatewayUsesFinalTopologyForLoadTests(t *testing.T) {
+	manifests, err := handoffObjectsWithOptions(true, true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fixtureRoutes := 0
+	for _, o := range manifests {
+		spec := o["spec"].(map[string]any)
+		name := o["metadata"].(map[string]any)["name"].(string)
+		if name == "legacy-acme" || (o["kind"] == "HTTPRoute" && name == "acme") {
+			t.Fatal("legacy solver retained")
+		}
+		if o["kind"] == "NginxProxy" && spec["kubernetes"].(map[string]any)["deployment"].(map[string]any)["autoscaling"].(map[string]any)["maxReplicas"] != 4 {
+			t.Fatal("final autoscaling not restored")
+		}
+		if o["kind"] == "HTTPRoute" && strings.HasPrefix(name, "fixture-") {
+			fixtureRoutes++
+			if spec["parentRefs"].([]any)[0].(map[string]any)["name"] != EdgeGateway {
+				t.Fatal("load test bypasses public Gateway")
+			}
+			for _, rule := range spec["rules"].([]any) {
+				for _, b := range rule.(map[string]any)["backendRefs"].([]any) {
+					if b.(map[string]any)["namespace"] != Namespace {
+						t.Fatal("wrong isolated fixture backend")
+					}
+				}
+			}
+		}
+	}
+	if fixtureRoutes != 2 {
+		t.Fatal("missing fixture routes")
+	}
+}

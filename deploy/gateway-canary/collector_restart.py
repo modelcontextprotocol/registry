@@ -7,7 +7,7 @@ a = argparse.ArgumentParser()
 a.add_argument('--output', type=Path, required=True)
 args = a.parse_args()
 ps = measure.pods()
-proxy_nodes = {p['spec'].get('nodeName') for p in ps if p['metadata']['name'].startswith('registry-canary-registry-gateway-canary-')}
+proxy_nodes = {p['spec'].get('nodeName') for p in ps if p['metadata']['name'].startswith(measure.gateway_target()[1] + '-')}
 old = next((p for p in ps if p['metadata']['name'].startswith('vector-') and p['spec'].get('nodeName') in proxy_nodes))
 node = old['spec']['nodeName']
 started = time.time()

@@ -114,6 +114,15 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 			return err
 		}
 		control = append(control, rbac...)
+		public, err := handoffObjectsWithOptions(NativeCertificates(ctx), Standalone(ctx), false)
+		if err != nil {
+			return err
+		}
+		for _, o := range public {
+			if o["kind"] == "NginxProxy" {
+				control = append(control, o)
+			}
+		}
 		if ingress != nil {
 			deps = append(deps, ingress)
 		}
@@ -134,7 +143,7 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 			if !contains(kinds, o["kind"].(string)) {
 				continue
 			}
-			if o["kind"] == "NginxProxy" {
+			if o["kind"] == "NginxProxy" && o["metadata"].(map[string]any)["namespace"] == Namespace {
 				o["spec"].(map[string]any)["kubernetes"].(map[string]any)["service"].(map[string]any)["loadBalancerIP"] = address
 				if Standalone(ctx) {
 					o["spec"].(map[string]any)["kubernetes"].(map[string]any)["service"] = map[string]any{"type": "ClusterIP"}
@@ -142,6 +151,9 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 				if config.New(ctx, "mcp-registry").GetBool("gatewayCanaryComparison") || (HandoffEnabled(ctx) && !Standalone(ctx)) {
 					o["spec"].(map[string]any)["kubernetes"].(map[string]any)["deployment"].(map[string]any)["autoscaling"].(map[string]any)["maxReplicas"] = 2
 				}
+			}
+			if o["kind"] == "NginxProxy" && NativeCertificates(ctx) {
+				boundedGatewayRollout(o)
 			}
 			if HandoffEnabled(ctx) && o["kind"] == "Deployment" {
 				containers := o["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)["containers"].([]any)

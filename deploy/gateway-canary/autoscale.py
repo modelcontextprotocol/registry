@@ -2,13 +2,13 @@
 """Exercise the staging canary HPA from two to four replicas under fixture load."""
 import argparse, json, subprocess, time
 from pathlib import Path
+from measure import gateway_target
 a = argparse.ArgumentParser()
 a.add_argument('--output', type=Path, required=True)
 args = a.parse_args()
 args.output.mkdir(parents=True, exist_ok=True)
 K = ['kubectl', '--context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging']
-NS = 'registry-gateway-canary'
-NAME = 'registry-canary-registry-gateway-canary'
+NS, NAME = gateway_target()
 
 def get(*args):
     return json.loads(subprocess.check_output(K + list(args) + ['-o', 'json']))

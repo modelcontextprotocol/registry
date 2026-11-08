@@ -139,6 +139,9 @@ func handoffObjectsWithOptions(native, standalone, fixtures bool) ([]map[string]
 				constraint.(map[string]any)["labelSelector"].(map[string]any)["matchLabels"].(map[string]any)["gateway.networking.k8s.io/gateway-name"] = EdgeGateway
 			}
 		}
+		if native {
+			boundedGatewayRollout(o)
+		}
 		result = append(result, o)
 	}
 	routes, err := routeObjects(fixtures)
@@ -207,7 +210,7 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 	if err != nil {
 		return err
 	}
-	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"NginxProxy", "Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
+	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, dependencies...)
 		for _, o := range objects {
 			if !contains(kinds, o["kind"].(string)) {
@@ -240,4 +243,14 @@ func handoffRBAC() ([]map[string]any, error) {
 		}
 	}
 	return result, nil
+}
+
+// A full four-replica deployment cannot surge a fifth 500m proxy on the fixed
+// two-node pool. Replace at most one replica while preserving at least one.
+func boundedGatewayRollout(proxy map[string]any) {
+	deployment := proxy["spec"].(map[string]any)["kubernetes"].(map[string]any)["deployment"].(map[string]any)
+	for _, raw := range deployment["patches"].([]any) {
+		spec := raw.(map[string]any)["value"].(map[string]any)["spec"].(map[string]any)
+		spec["strategy"] = map[string]any{"type": "RollingUpdate", "rollingUpdate": map[string]any{"maxSurge": 0, "maxUnavailable": 1}}
+	}
 }
