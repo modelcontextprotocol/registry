@@ -1,12 +1,14 @@
 # Standalone staging qualification — 2026-11-08
 
+This is a historical four-node qualification record. Everyday staging now uses the [two-node compact profile](compact-staging.md); the capacity measurements below do not describe that smaller layout.
+
 Staging uses OSS NGINX Gateway Fabric, Vector, cert-manager, VictoriaMetrics and Grafana. The legacy ingress and separate canary have been retired. Production has not been migrated. **This is a staging validation record, not approval for a production cutover.**
 
 [Sanitized JSON evidence](standalone-validation.json) includes earlier failed attempts.
 
 ## Configuration and cost
 
-Four proxy replicas, each with one NGINX worker, run on the same two existing Gateway nodes. The cluster retains its original four nodes. Staging fixes the HPA minimum and maximum at four: a measured 4-to-2 cooldown left both surviving proxies on one node and interrupted public TLS. Keeping four avoids that scale-down transition without adding a scheduler component or more VMs. Compared with two proxies it reserves another 1 CPU and 512 MiB, within the existing nodes. Per-replica limits are unchanged; the aggregate rate-limit budget now starts at the prior four-replica maximum.
+The qualification used four proxy replicas, each with one NGINX worker, on two dedicated Gateway nodes. Those two VMs were added for the earlier canary work, bringing staging from two nodes to four before these tests. The tested HPA minimum and maximum were four: a measured 4-to-2 cooldown left both surviving proxies on one node and interrupted public TLS. Keeping four proxies avoided that scale-down transition without adding a scheduler component or further VMs. Compared with two proxies it reserved another 1 CPU and 512 MiB, within those nodes. Per-replica limits were unchanged; the aggregate rate-limit budget started at the prior four-replica maximum.
 
 ## Controlled load results
 
