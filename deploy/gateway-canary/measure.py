@@ -164,5 +164,6 @@ def run_measurement():
             assert delta.get('registry_gateway_canary_' + name) == expected, name
         assert delta.get('registry_gateway_canary_parse_errors_total', 0) == 0
         assert delta.get('registry_gateway_canary_response_bytes_missing_total', 0) == 0
+        assert delta.get('registry_gateway_canary_upstream_timing_errors_total', 0) == 0
 if __name__ == '__main__':
     main()

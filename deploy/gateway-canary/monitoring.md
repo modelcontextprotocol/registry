@@ -33,7 +33,7 @@ lists do not produce observations. See the pinned
 New `upstream_all_attempts_seconds`, `connect_all_attempts_seconds` and
 `header_all_attempts_seconds` histograms record one observation per client request
 with at least one measured timing. Each observation sums numeric timings across
-comma-separated attempts and colon-separated upstream groups. Missing `-` values
+comma-separated attempts and colon-separated upstream groups. Missing `-` and empty-string values (including cache hits)
 are omitted, never replaced with zero. All-missing timings produce no observation;
 an invalid or negative token suppresses that field's aggregate and increments one
 `upstream_timing_errors_total` per affected record. Background refresh requests
