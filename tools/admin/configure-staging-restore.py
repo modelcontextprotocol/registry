@@ -7,6 +7,7 @@ No production Kubernetes writes or repository changes. Uses existing gcloud auth
 import argparse
 import base64
 import json
+import math
 import subprocess
 import urllib.error
 import urllib.parse
@@ -16,6 +17,14 @@ PROJECT = 'mcp-registry-staging'
 READER = 'registry-restore-reader@' + PROJECT + '.iam.gserviceaccount.com'
 METRIC = 'registry_staging_restore_success'
 MANAGED = 'registry-staging-restore'
+HEARTBEATS = 'sum(sum_over_time({__name__="logging.googleapis.com/user/registry_staging_restore_watchdog",monitored_resource="k8s_container"}[1h]))'
+
+
+def require_watchdog_heartbeat(response):
+    rows = response.get('data', {}).get('result', [])
+    if response.get('status') != 'success' or len(rows) != 1 or not math.isfinite(float(rows[0]['value'][1])) or float(rows[0]['value'][1]) < 1:
+        raise RuntimeError('Watchdog heartbeat is not visible through PromQL yet; keep freshness disabled and retry after ingestion')
+
 
 
 def main():
@@ -97,7 +106,13 @@ def main():
                 raise
             request(logs, 'POST', metric)
         else:
-            request(logs + '/' + name, 'PUT', metric)
+            # Updating an unchanged metric is unnecessary during alert bootstrap.
+            current = request(logs + '/' + name)
+            if current.get('filter') != metric['filter']:
+                request(logs + '/' + name, 'PUT', metric)
+    if args.enable_freshness:
+        query_url = 'https://monitoring.googleapis.com/v1/projects/' + PROJECT + '/location/global/prometheus/api/v1/query?'
+        require_watchdog_heartbeat(request(query_url + urllib.parse.urlencode({'query': HEARTBEATS})))
     doc = {'mimeType': 'text/markdown', 'content': 'Staging refresh failed or missed its weekly success. Staging may still be stopped. Inspect registry-staging-restore Jobs, init-container logs and registry-staging-restore-state ConfigMap in default. Never restore into production. See deploy/README.md. Logs: https://console.cloud.google.com/logs/query?project=mcp-registry-staging'}
     alerts = [
         {'displayName': 'Staging database restore failed', 'enabled': True, 'userLabels': {'managed_by': MANAGED, 'restore_alert': 'failure'},
@@ -105,11 +120,13 @@ def main():
          'alertStrategy': {'notificationRateLimit': {'period': '3600s'}, 'autoClose': '86400s'}},
         {'displayName': 'Staging restore watchdog missing for 1 hour', 'enabled': args.enable_freshness, 'userLabels': {'managed_by': MANAGED, 'restore_alert': 'freshness'},
          'conditions': [{'displayName': 'No successful restore watchdog check for 1 hour', 'conditionPrometheusQueryLanguage': {
-             'query': '(sum(sum_over_time({__name__="logging.googleapis.com/user/registry_staging_restore_watchdog",monitored_resource="k8s_container"}[1h])) or vector(0)) < 1',
-             'duration': '0s', 'evaluationInterval': '300s'}}], 'alertStrategy': {'autoClose': '86400s'}}]
+             'query': '(' + HEARTBEATS + ' or vector(0)) < 1',
+             'duration': '600s', 'evaluationInterval': '300s'}}], 'alertStrategy': {'autoClose': '86400s'}}]
     existing = listing(base + '/alertPolicies', 'alertPolicies')
     for alert in alerts:
         alert.update(combiner='OR', notificationChannels=[channel['name']], documentation=doc, severity='ERROR')
+        if alert['userLabels']['restore_alert'] == 'freshness':
+            alert['documentation'] = {'mimeType': 'text/markdown', 'content': 'No successful staging restore watchdog heartbeat was observed in the preceding hour, confirmed for ten minutes. This indicates a monitoring gap, not necessarily a failed restore or staging outage. Check the watchdog CronJob, its latest Job/logs and metric ingestion, then inspect staging app readiness and registry-staging-restore-state. Logs: https://console.cloud.google.com/logs/query?project=mcp-registry-staging'}
         previous = next((p for p in existing if p.get('userLabels') == alert['userLabels']), None)
         if previous:
             alert['name'] = previous['name']
