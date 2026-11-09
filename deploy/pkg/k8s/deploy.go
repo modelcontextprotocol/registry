@@ -32,8 +32,8 @@ func DeployAll(ctx *pulumi.Context, cluster *providers.ProviderInfo, backupStora
 		return nil, err
 	}
 
-	// Deploy k8up backup operator
-	err = DeployK8up(ctx, cluster, environment, backupStorage)
+	// Preserve backup credentials and deploy the production archive CronJob
+	err = DeployBackups(ctx, cluster, environment, backupStorage)
 	if err != nil {
 		return nil, err
 	}

@@ -2,61 +2,20 @@ package k8s
 
 import (
 	"fmt"
-	"maps"
-	"slices"
 
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/core/v1"
-	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
-	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
-// DeployK8up retains legacy backup resources and installs the production archive backup job.
-func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo) error {
+// DeployBackups preserves the existing repository credentials and production archive job.
+// K8up is retired; the CronJob invokes pg_dump and restic directly.
+func DeployBackups(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo) error {
 	if storage == nil {
-		ctx.Log.Info("No backup storage configured, skipping k8up deployment", nil)
+		ctx.Log.Info("No backup storage configured, skipping backup deployment", nil)
 		return nil
-	}
-
-	// Install the k8up CRDs before the helm chart
-	// Related: https://github.com/k8up-io/k8up/issues/1050
-	k8upCRDs, err := yaml.NewConfigFile(ctx, "k8up-crds", &yaml.ConfigFileArgs{
-		File: "https://github.com/k8up-io/k8up/releases/download/k8up-4.8.4/k8up-crd.yaml",
-	}, pulumi.Provider(cluster.Provider))
-	if err != nil {
-		return fmt.Errorf("failed to install k8up CRDs: %w", err)
-	}
-
-	// Install k8up operator
-	k8upValues := pulumi.Map{
-		"k8up": pulumi.Map{
-			// Disable implicit PVC copies while retaining the legacy operator.
-			"skipWithoutAnnotation": pulumi.Bool(true),
-			"timezone":              pulumi.String("UTC"),
-		},
-	}
-
-	// Depend on the parsed CRDs directly. Component children register
-	// asynchronously, so expanding the ConfigFile component can capture an
-	// incomplete dependency set while constructing a saved plan.
-	crdDependencies := make([]pulumi.Resource, 0, len(k8upCRDs.Resources))
-	for _, name := range slices.Sorted(maps.Keys(k8upCRDs.Resources)) {
-		crdDependencies = append(crdDependencies, k8upCRDs.Resources[name])
-	}
-
-	_, err = helm.NewChart(ctx, "k8up", helm.ChartArgs{
-		Chart:   pulumi.String("k8up"),
-		Version: pulumi.String("4.8.4"),
-		FetchArgs: helm.FetchArgs{
-			Repo: pulumi.String("https://k8up-io.github.io/k8up"),
-		},
-		Values: k8upValues,
-	}, pulumi.Provider(cluster.Provider), pulumi.DependsOn(crdDependencies))
-	if err != nil {
-		return fmt.Errorf("failed to install k8up: %w", err)
 	}
 
 	// Create restic repository password secret
@@ -79,8 +38,5 @@ func DeployK8up(ctx *pulumi.Context, cluster *providers.ProviderInfo, environmen
 		return fmt.Errorf("failed to create repository password secret: %w", err)
 	}
 
-	// Remove the retired Schedule from managed resources. Clearing its spec can
-	// leave defaulted backup/prune entries without schedules, which panic K8up.
-	// The operator, credentials and stored repositories remain available.
 	return deployPostgresBackupJob(ctx, cluster, environment, storage, repoPassword)
 }
