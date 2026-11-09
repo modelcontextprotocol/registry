@@ -1,5 +1,9 @@
 # Production capacity and database buffers are promoted independently.
 config:
+  mcp-registry:gatewayProductionPublicIP: 34.61.200.254
+  mcp-registry:gatewayProductionServiceUID: e9471fb4-c8a5-4951-9eb0-8e440b30c5d8
+  mcp-registry:gatewayProductionAddressName: ae9471fb4c8a549519eb08e440b30c5d
+  mcp-registry:gatewayProductionPhase: adopt
   mcp-registry:securityPatch202611: "true"
   mcp-registry:publicReadCompression: "true"
   mcp-registry:publicReadLogSampling: "true"
