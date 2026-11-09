@@ -9,10 +9,21 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('restore', ROOT / 'pkg/k8s/stagingrestore/run.py')
 restore = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(restore)
+alert_spec = importlib.util.spec_from_file_location('restore_alerts', ROOT.parent / 'tools/admin/configure-staging-restore.py')
+restore_alerts = importlib.util.module_from_spec(alert_spec)
+alert_spec.loader.exec_module(restore_alerts)
 NOW = dt.datetime(2026, 11, 10, tzinfo=dt.timezone.utc)
 
 
 class StagingRestoreTests(unittest.TestCase):
+    def test_freshness_enable_requires_visible_heartbeat(self):
+        for response in ({'status': 'success', 'data': {'result': []}},
+                         {'status': 'success', 'data': {'result': [{'value': [0, '0']}]}},
+                         {'status': 'error'}):
+            with self.assertRaises(RuntimeError):
+                restore_alerts.require_watchdog_heartbeat(response)
+        restore_alerts.require_watchdog_heartbeat({'status': 'success', 'data': {'result': [{'value': [0, '1']}]}})
+
     def snapshot(self):
         return {'id': 'a' * 64, 'hostname': 'registry-postgres', 'tags': ['postgres-custom'], 'time': NOW.isoformat()}
 
