@@ -14,7 +14,7 @@ Before applying, inspect both environment previews, the worker's CPU/memory/ephe
 
 A short observation is not an overnight soak. An unattended load run must have an explicit end time, cleanup, and measured results; do not leave a background generator running indefinitely.
 
-## Separate production qualification
+## Production capacity qualification (separate from completed migration)
 
 1. Read production traffic/resource telemetry without changing production. Record observation windows, sample resolution and gaps. Establish representative route/method/status mix, response sizes and cache behavior. Current ingress metrics do not directly expose cache hit/miss counts, so do not infer cache ratios from route names or CPU alone.
 2. Reproduce the earlier unexplained rollout transport errors with per-request error type, timestamp, connection reuse and TLS details. Include connection establishment and long-lived clients.
@@ -23,4 +23,4 @@ A short observation is not an overnight soak. An unattended load run must have a
 5. Define pass criteria before the run: traffic target based on measured demand plus agreed headroom; no unexplained transport/status errors; latency target; resource headroom; complete metric reconciliation; and an agreed failure-recovery budget. The earlier strict fixture gates remain recorded as failures rather than being relabeled.
 6. Verify alert firing and resolution at a real destination and perform longer observation before a production migration decision. Restore the two-node staging profile and verify billing resources are removed after temporary qualification.
 
-Production remains unchanged until a separate migration is authorized and qualified.
+Production migration and functional checks are now complete; see the [completion record](production-completion.md). The capacity scenarios above remain separate future qualification, not pending migration steps. Real Discord delivery was confirmed after cutover.

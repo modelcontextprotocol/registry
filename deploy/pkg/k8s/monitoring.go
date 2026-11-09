@@ -6,6 +6,7 @@ import (
 	"github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/meta/v1"
 	networkingv1 "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/networking/v1"
+	k8syaml "github.com/pulumi/pulumi-kubernetes/sdk/v4/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 	"gopkg.in/yaml.v2"
@@ -572,8 +573,9 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 	// Deploy Grafana
 	grafanaHost := "grafana." + environment + ".registry.modelcontextprotocol.io"
 	_, err = helm.NewChart(ctx, "grafana", helm.ChartArgs{
-		Chart:   pulumi.String("grafana"),
-		Version: pulumi.String("9.4.4"),
+		Transformations: []k8syaml.Transformation{omitEmptyGrafanaRules},
+		Chart:           pulumi.String("grafana"),
+		Version:         pulumi.String("9.4.4"),
 		FetchArgs: &helm.FetchArgs{
 			Repo: pulumi.String("https://grafana.github.io/helm-charts"),
 		},

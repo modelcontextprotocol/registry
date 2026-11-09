@@ -1,12 +1,12 @@
-# Staging Gateway Fabric
+# Gateway Fabric operations
 
-Staging now selects `gatewayStagingStandalone: "true"`. Its public hostnames use
-OSS Gateway Fabric, with no running ingress-nginx or duplicate canary. See
-[standalone.md](standalone.md) for the final topology, qualification gates and
-Git-based recovery procedure. Production retains its existing ingress. Normal
-staging pushes continue to deploy the current main image. The completed
-[standalone validation](standalone-validation.md) records both passing checks
-and capacity limits; it does not approve production migration.
+Staging and production use OSS Gateway Fabric with no running ingress-nginx or
+duplicate canary. See [production completion](production-completion.md) for final
+checks, [compact staging](compact-staging.md) for the everyday two-node topology,
+and [production recovery](production-migration.md#rollback) for Git-based recovery.
+Normal staging pushes deploy their build digest; production retains explicit
+release tags. Historical qualification reports below are preserved with their
+original failures and capacity limits.
 
 The `gateway-canary` paths, metric prefixes and node-pool names are retained to
 preserve monitoring history and infrastructure identity. Earlier comparison and
@@ -17,20 +17,21 @@ data-plane, Vector and fixture images are pinned by digest. NGINX Plus and produ
 telemetry are disabled. Metrics go to the existing vmagent, VictoriaMetrics and
 Grafana, under separate `gateway-canary-vector-*` jobs and
 `registry_gateway_canary_*` series. Existing dashboards and alerts keep their
-current data sources while mappings are qualified. The full event stream is
+current data sources; metric mappings and real Discord delivery are validated. The full event stream is
 processed locally; GCP retains 10% of fast successful listing logs after metric
 extraction.
 
 ## Capacity and temporary fixtures
 
-The existing two e2-standard-2 Gateway nodes remain capped at two; no additional
-nodes are required by this migration. Standalone staging keeps four proxy
-replicas (two per node) to avoid the observed scale-down placement failure.
-Each Gateway node runs one single-threaded Vector collector requesting 500m CPU;
-each proxy requests 500m and the controller requests 100m. The worker and database
-pools remain unchanged. Removing the duplicate canary releases its separate IP
-and L4 load balancer. Node upgrades may temporarily surge under the pool's existing
-upgrade policy; that is separate from workload autoscaling.
+Everyday staging has two e2-standard-2 VMs: one isolated database node and one
+shared worker, with one proxy and one Vector collector. There is no dedicated
+Gateway pool. See [compact staging](compact-staging.md) for requests, limits,
+zero-surge upgrades and singleton failure tradeoffs. Earlier four-proxy/two-Gateway-node
+reports describe a retired validation topology.
+
+Production keeps its existing 2–7 e2-standard-4 workers and isolated database node.
+Gateway proxies scale from 3 to 16; Vector runs on each worker. Preserve these
+production limits and the active resource names when updating either environment.
 
 The original public IP and Service are preserved. Public certificates are managed
 by Pulumi/cert-manager with native Gateway HTTP01 renewal. Internal server/client
@@ -90,8 +91,9 @@ results are in [monitoring-validation.md](monitoring-validation.md).
 
 ## Qualification status
 
-See [validation.md](validation.md) and [validation.json](validation.json) for the
-observed results and remaining cutover gates. Source rendering, mocks, a successful apply or one healthy HTTP request
+See [production completion](production-completion.md) for the final functional
+checks. [validation.md](validation.md) and [validation.json](validation.json) retain
+the earlier comparison results and gates as historical evidence. Source rendering, mocks, a successful apply or one healthy HTTP request
 are not proof of feature or capacity parity. Production-shaped load, real IP
 limits, log rotation/restarts, collector freshness, HPA/rollout/failure behavior,
 TLS renewal, Grafana OAuth, dashboard/alert mappings and notification delivery
@@ -99,6 +101,10 @@ must each have separate evidence or be marked pending.
 
 
 ## Repeating qualification
+
+The commands below originated in the expanded staging tests. Review their
+capacity assumptions against [compact staging](compact-staging.md) before running.
+Do not expand the two-node profile without an explicitly reviewed plan.
 
 Use only the staging context. Temporarily enable `gatewayCanaryFixtures`, build
 `deploy/infra`, preview the full stack and apply its saved plan. Build `load.go`
@@ -126,9 +132,11 @@ Service IP and retains hostname/TLS verification. This measures the active data
 plane with a controlled fixture, not a production traffic replay or internet
 capacity benchmark. Public HTTPS probes run separately during every scenario.
 
-`limits.py` verifies real source-IP limiting; use `--replicas 4` for standalone staging.
-`autoscale.py` measures fixed four-replica capacity in standalone mode; the
-historical canary mode still exercises the two-to-four HPA transition.
+`limits.py` accepts only the historical two- or four-replica profiles; it is not
+a qualified singleton-staging check and must not be run against everyday compact
+staging. The four-replica `autoscale.py` qualification likewise applies only to
+the historical expanded profile. Neither tool justifies expanding current capacity
+implicitly; a new singleton rate-limit check requires separate qualification.
 `resilience.py` also supports controller, rollout and node scenarios. Rollout
 tests default to ten minutes to cover both the update and restoration with
 graceful draining. The node scenario defaults to five minutes; it drains one
