@@ -161,3 +161,21 @@ The load driver uses `GOMAXPROCS=1` within its existing one-CPU container limit,
 while retaining 256 concurrent request workers. This avoids the Go scheduler
 oversubscribing that quota. Generator drops and scheduling delays remain visible
 in every result; zero-drop and latency gates are unchanged.
+
+### Public gateway termination
+
+Gateway pods keep accepting connections for 90 seconds after eviction, then send
+NGINX `QUIT` and wait for its workers to exit before the entrypoint receives
+`TERM`. The 180-second pod grace period includes both the serving delay and up to
+90 seconds for in-flight requests and teardown. This fixes the observed race
+where a production node still received new connections after the former
+30-second serving delay. Three failed eight-second health checks do not bound
+load-balancer propagation time.
+
+This applies to staging and production without changing proxy reservations,
+worker autoscaling, placement, or the zero-surge rollout strategy. Planned
+termination can take longer; abrupt node failures and requests exceeding the
+remaining grace period are not covered by this drain window. When validating,
+probe public connectivity as well as HTTP errors: connection refusals never
+reach the gateway's HTTP metrics. Staging's single worker can verify shutdown
+ordering but cannot reproduce production's last-proxy-on-a-node withdrawal.

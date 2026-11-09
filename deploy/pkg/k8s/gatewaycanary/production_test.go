@@ -134,6 +134,15 @@ func TestProductionPlacementAndBoundedRollout(t *testing.T) {
 		}
 		for _, r := range d["patches"].([]any) {
 			s := r.(map[string]any)["value"].(map[string]any)["spec"].(map[string]any)
+			pod := s["template"].(map[string]any)["spec"].(map[string]any)
+			if pod["terminationGracePeriodSeconds"] != 180 {
+				t.Fatal("gateway termination budget must include LB propagation and request draining")
+			}
+			container := pod["containers"].([]any)[0].(map[string]any)
+			command := container["lifecycle"].(map[string]any)["preStop"].(map[string]any)["exec"].(map[string]any)["command"].([]any)
+			if container["name"] != "nginx" || command[0] != "/bin/sh" || command[1] != "-c" || command[2] != "sleep 90; nginx -s quit; while killall -0 nginx 2>/dev/null; do sleep 1; done" {
+				t.Fatal("must serve during LB withdrawal, then gracefully drain before entrypoint TERM")
+			}
 			rolling := s["strategy"].(map[string]any)["rollingUpdate"].(map[string]any)
 			if rolling["maxSurge"] != 0 || rolling["maxUnavailable"] != 1 {
 				t.Fatal("rollout requires extra peak capacity")
