@@ -84,26 +84,28 @@ def main():
     if not channel.get('enabled', True):
         raise RuntimeError('Staging email channel is disabled')
     scope = 'resource.type="k8s_container" AND resource.labels.cluster_name="mcp-registry-staging" AND resource.labels.namespace_name="default" AND resource.labels.pod_name=~"^registry-staging-restore-"'
-    metric = {'name': METRIC, 'description': 'Successful staging database refresh and application health validation',
-              'filter': scope + ' AND textPayload:"REGISTRY_STAGING_RESTORE_SUCCESS"',
-              'metricDescriptor': {'metricKind': 'DELTA', 'valueType': 'INT64', 'unit': '1'}}
     logs = 'https://logging.googleapis.com/v2/projects/' + PROJECT + '/metrics'
-    try:
-        request(logs + '/' + METRIC)
-    except urllib.error.HTTPError as exc:
-        if exc.code != 404:
-            raise
-        request(logs, 'POST', metric)
-    else:
-        request(logs + '/' + METRIC, 'PUT', metric)
+    for name, marker in ((METRIC, 'REGISTRY_STAGING_RESTORE_SUCCESS'),
+                         ('registry_staging_restore_watchdog', 'REGISTRY_STAGING_RESTORE_WATCHDOG_OK')):
+        metric = {'name': name, 'description': 'Staging restore success or watchdog heartbeat',
+                  'filter': scope + ' AND textPayload:"' + marker + '"',
+                  'metricDescriptor': {'metricKind': 'DELTA', 'valueType': 'INT64', 'unit': '1'}}
+        try:
+            request(logs + '/' + name)
+        except urllib.error.HTTPError as exc:
+            if exc.code != 404:
+                raise
+            request(logs, 'POST', metric)
+        else:
+            request(logs + '/' + name, 'PUT', metric)
     doc = {'mimeType': 'text/markdown', 'content': 'Staging refresh failed or missed its weekly success. Staging may still be stopped. Inspect registry-staging-restore Jobs, init-container logs and registry-staging-restore-state ConfigMap in default. Never restore into production. See deploy/README.md. Logs: https://console.cloud.google.com/logs/query?project=mcp-registry-staging'}
     alerts = [
         {'displayName': 'Staging database restore failed', 'enabled': True, 'userLabels': {'managed_by': MANAGED, 'restore_alert': 'failure'},
          'conditions': [{'displayName': 'Restore or watchdog failure', 'conditionMatchedLog': {'filter': scope + ' AND textPayload:"REGISTRY_STAGING_RESTORE_FAILED"'}}],
          'alertStrategy': {'notificationRateLimit': {'period': '3600s'}, 'autoClose': '86400s'}},
-        {'displayName': 'Staging database refresh missing for 8 days', 'enabled': args.enable_freshness, 'userLabels': {'managed_by': MANAGED, 'restore_alert': 'freshness'},
-         'conditions': [{'displayName': 'No successful weekly refresh in 8 days', 'conditionPrometheusQueryLanguage': {
-             'query': '(sum(sum_over_time({__name__="logging.googleapis.com/user/' + METRIC + '",monitored_resource="k8s_container"}[8d])) or vector(0)) < 1',
+        {'displayName': 'Staging restore watchdog missing for 1 hour', 'enabled': args.enable_freshness, 'userLabels': {'managed_by': MANAGED, 'restore_alert': 'freshness'},
+         'conditions': [{'displayName': 'No successful restore watchdog check for 1 hour', 'conditionPrometheusQueryLanguage': {
+             'query': '(sum(sum_over_time({__name__="logging.googleapis.com/user/registry_staging_restore_watchdog",monitored_resource="k8s_container"}[1h])) or vector(0)) < 1',
              'duration': '0s', 'evaluationInterval': '300s'}}], 'alertStrategy': {'autoClose': '86400s'}}]
     existing = listing(base + '/alertPolicies', 'alertPolicies')
     for alert in alerts:

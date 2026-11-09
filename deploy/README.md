@@ -634,8 +634,9 @@ python3 tools/admin/configure-staging-restore.py --enable-freshness
 
 Failure logs trigger an email; the watchdog also reports failed Jobs and a
 maintenance lock older than 40 minutes, covering killed containers and timeout
-failures that cannot log for themselves. A separate alert fires after eight days
-without a successful refresh, including complete absence of the success metric.
+failures that cannot log for themselves. The watchdog also reports eight days without a successful refresh using the
+persisted success timestamp. A separate alert detects a missing watchdog heartbeat
+for one hour, including complete absence of its metric.
 Routine successes do not send email. Test the failure notification with a separate
 watchdog-derived Job using controller phase `alert-test`; this emits an explicit
 test failure and performs no database operations. Keep alert logs free of data.
