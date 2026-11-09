@@ -125,6 +125,8 @@ def start():
 def failed_reason(jobs, state, current):
     if state.get('active_id') and (current - parse_time(state['started'])).total_seconds() > 2400:
         return 'maintenance exceeded 40 minutes; staging may still be stopped'
+    if state.get('last_success') and (current - parse_time(state['last_success'])).total_seconds() > 8 * 86400:
+        return 'no successful staging refresh in 8 days'
     if not jobs:
         return None
     job = max(jobs, key=lambda j: j['metadata']['creationTimestamp'])
@@ -138,6 +140,7 @@ def watch():
     reason = failed_reason(jobs, api(STATE)['data'], now())
     if reason:
         raise RuntimeError(reason)
+    print('REGISTRY_STAGING_RESTORE_WATCHDOG_OK', flush=True)
 
 
 def main():

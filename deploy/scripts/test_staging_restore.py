@@ -37,6 +37,7 @@ class StagingRestoreTests(unittest.TestCase):
         self.assertIn('40 minutes', restore.failed_reason([], {'active_id': 'old', 'started': (NOW - dt.timedelta(minutes=41)).isoformat()}, NOW))
         job['status'] = {'conditions': [{'type': 'Complete', 'status': 'True'}]}
         self.assertIsNone(restore.failed_reason([job], {}, NOW))
+        self.assertIn('8 days', restore.failed_reason([], {'last_success': (NOW - dt.timedelta(days=9)).isoformat()}, NOW))
 
     def test_active_restore_lock_prevents_scale(self):
         dep = {'spec': {'replicas': 1}, 'metadata': {'generation': 1}, 'status': {'observedGeneration': 1, 'updatedReplicas': 1, 'availableReplicas': 1}}

@@ -594,8 +594,22 @@ retired staging backup credentials are used. Do not print, commit or upload keys
 passwords, dump contents or restore logs containing data. Rotate the reader key
 through Pulumi and update the password Secret if the Restic key/password changes.
 
-After deploying the suspended job and its reader account, an authorized operator
-bootstraps source IAM/password and email alerts:
+Before the first deployment, an authorized operator creates the dedicated reader
+account. Pulumi adopts that exact account; the staging deployment identity needs
+key-management permission only on this account, not project-wide account creation:
+
+```bash
+gcloud iam service-accounts create registry-restore-reader \
+  --project=mcp-registry-staging --display-name='Staging production-backup reader'
+gcloud iam service-accounts add-iam-policy-binding \
+  registry-restore-reader@mcp-registry-staging.iam.gserviceaccount.com \
+  --project=mcp-registry-staging \
+  --member=serviceAccount:pulumi-svc@mcp-registry-staging.iam.gserviceaccount.com \
+  --role=roles/iam.serviceAccountKeyAdmin
+```
+
+After deploying the suspended job, the operator bootstraps source IAM/password
+and email alerts:
 
 ```bash
 python3 tools/admin/configure-staging-restore.py
@@ -620,8 +634,9 @@ python3 tools/admin/configure-staging-restore.py --enable-freshness
 
 Failure logs trigger an email; the watchdog also reports failed Jobs and a
 maintenance lock older than 40 minutes, covering killed containers and timeout
-failures that cannot log for themselves. A separate alert fires after eight days
-without a successful refresh, including complete absence of the success metric.
+failures that cannot log for themselves. The watchdog also reports eight days without a successful refresh using the
+persisted success timestamp. A separate alert detects a missing watchdog heartbeat
+for one hour, including complete absence of its metric.
 Routine successes do not send email. Test the failure notification with a separate
 watchdog-derived Job using controller phase `alert-test`; this emits an explicit
 test failure and performs no database operations. Keep alert logs free of data.
