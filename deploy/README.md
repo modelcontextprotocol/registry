@@ -534,7 +534,8 @@ their schedules are retired, they do not continually accumulate new versions.
 
 The legacy K8up Schedule is removed. Clearing its spec can leave defaulted
 backup/prune entries without cron expressions and crash the K8up operator.
-The operator and credentials remain available. Existing objects
+The idle operator and its CRDs have been retired; the existing credentials remain
+required by the archive CronJob. Existing objects
 at the bucket root and in `postgres-logical-v1` are preserved for investigation;
 they are not a verified recovery source and are never pruned by the new job.
 The old physical-data production-to-staging sync workflow is guarded against
@@ -557,13 +558,59 @@ an existing or damaged repository. The password comes from
 `default/k8up-backup-credentials`. Preserve that password/key association;
 changing a Secret alone does not rotate Restic keys. Do not print credentials.
 
+### Retiring the idle K8up operator
+
+The production archive CronJob calls `pg_dump` and Restic directly. Removing the
+idle K8up Helm chart and CRDs does not remove that CronJob, its database Service,
+`k8up-repo-password`, `k8up-backup-credentials`, the HMAC key, or either backup
+bucket. Keep their existing Pulumi identities and password/key association.
+No dump PVC, GCE snapshot, archive, or bucket retention policy is deleted or
+changed by this cleanup. The disabled physical-data sync workflow remains guarded.
+
+Before applying this retirement, run the read-only inventory for **both** stacks,
+using a new owner-only directory for each invocation:
+
+```bash
+python3 scripts/retire_k8up.py staging --output /private/path/k8up-staging-before
+python3 scripts/retire_k8up.py prod --output /private/path/k8up-prod-before
+```
+
+Keep these metadata archives private. The preflight rejects schedules, unfinished
+operations, finalizers, active historical Jobs/Pods, and ownership paths to retained
+PVCs. It includes the old K8up `Snapshot` API records, which are metadata for the
+retained Restic repositories, not GCE snapshots or stored backup data.
+
+Review both normal full-stack previews. They should delete only the K8up chart,
+its operator/RBAC/Service resources, and its CRDs; staging also updates its normal
+application deployment annotation/image. The production backup CronJob, credentials,
+buckets, volumes, gateway, and capacity settings must remain unchanged. Removing
+CRDs also removes the historical custom resources, which are not listed separately
+in Pulumi's preview because they were created by the old operator.
+
+After the normal deployment succeeds, clean any remaining historical Jobs/Pods
+using their identities in the original inventory:
+
+```bash
+python3 scripts/retire_k8up.py staging --cleanup-historical \
+  --prior-inventory /private/path/k8up-staging-before/inventory.json \
+  --output /private/path/k8up-staging-after
+python3 scripts/retire_k8up.py prod --cleanup-historical \
+  --prior-inventory /private/path/k8up-prod-before/inventory.json \
+  --output /private/path/k8up-prod-after
+```
+
+The helper requires the retired APIs/operator to be absent, rejects replaced or
+active Jobs, and uses UID/resource-version preconditions with orphan propagation.
+It never deletes PVCs, Secrets, CronJobs, or cloud storage. Existing archive-backup
+Job history and unrelated certificate verification Jobs are kept.
+
 ### Adopting the production repair into Pulumi
 
 The October 2026 repair created `default/registry-pg-backup` and
 `default/registry-database-backup` directly in production. They must be imported
 before the first production `pulumi up` using this code; a normal refresh does
-not adopt unmanaged resources. The existing bucket, operator, and credentials
-are already in the production state and must not be re-imported. The retired
+not adopt unmanaged resources. The existing bucket and credentials are already in the production state and must
+not be re-imported. The legacy operator has since been removed. The retired
 K8up Schedule is deliberately deleted during deployment.
 The GCP alert script manages its own policies separately from Pulumi.
 
@@ -698,8 +745,8 @@ kubectl logs -l app=postgres
 
 ### Check Backup Status
 ```bash
-kubectl describe schedule.k8up.io 
-kubectl get backup
+kubectl describe cronjob registry-database-backup -n default
+kubectl get jobs -n default
 ```
 
 ### Current hosted capacity
