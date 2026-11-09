@@ -1,8 +1,12 @@
 # Production Gateway migration
 
-This implementation is opt-in. With `gatewayProductionPhase` absent, production
-keeps its current ingress. Shared Gateway behavior corrections are validated in
-staging; the normal application release flow remains unchanged. This document is a migration procedure, not a completed cutover record.
+**Completed on 2026-11-09.** Production now has `gatewayProductionPhase: standalone`.
+See [the completion record](production-completion.md) for actual interruption,
+feature checks, authenticated publishing, OAuth and Discord notification delivery.
+The preparation/cutover sections below document the historical sequence, not
+pending work. Keep the current phase and endpoint identity configuration; clearing
+the phase does not roll back safely. The [rollback procedure](#rollback) remains
+available for a separately reviewed recovery.
 
 The [production parity review](production-parity.md) is the behavioral baseline,
 including corrections and explicit differences. Staging validates those settings;
@@ -78,7 +82,8 @@ Existing [staging qualification](standalone-validation.md) includes failures and
 scope limits. The later production-scale rehearsal did not reach the Gateway
 phase because its baseline saturated the test environment. Consequently this
 implementation is not a passed production-peak capacity qualification. Real
-alert delivery to a person also remains separate from the internal webhook proof.
+Discord firing and resolved delivery was subsequently confirmed in the
+[completion record](production-completion.md); production-peak capacity remains unqualified.
 
 ## Preparation and cutover
 

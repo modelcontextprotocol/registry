@@ -119,9 +119,11 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 		opts := []pulumi.ResourceOption{pulumi.Protect(true)}
 		if mode == "adopt" {
 			opts = append(opts, pulumi.Import(pulumi.ID(item.namespace+"/"+item.name)), pulumi.IgnoreChanges([]string{"metadata.ownerReferences"}))
-		} else {
+		} else if !Standalone(ctx) {
 			meta["ownerReferences"] = []any{}
 		}
+		// Standalone checks live ownership above. Kubernetes omits an empty
+		// owner list, so omit it here too rather than planning it on every run.
 		o := map[string]any{"apiVersion": "cert-manager.io/v1", "kind": "Certificate", "metadata": meta, "spec": map[string]any{"secretName": item.name, "dnsNames": item.hosts, "issuerRef": map[string]any{"name": "letsencrypt-prod", "kind": "ClusterIssuer", "group": "cert-manager.io"}, "usages": []any{"digital signature", "key encipherment"}}}
 		if _, err := register(ctx, provider, o, certificateDependencies, opts...); err != nil {
 			return err

@@ -29,10 +29,11 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
 
 ### Production Deployment (GCP)
 
-The opt-in [production Gateway migration](gateway-canary/production-migration.md)
-documents endpoint/certificate adoption, connectivity checks and full ingress
-retirement. It leaves the release flow below intact and is disabled until an
-explicit production phase is committed.
+Staging and production use OSS NGINX Gateway Fabric with Gateway API, Vector,
+cert-manager, VictoriaMetrics and Grafana. The [completed production migration](gateway-canary/production-completion.md)
+records the cutover, final checks and recovery constraints. The active public
+Service, IP, certificate and metric names retain their historical names for stability.
+Local development still uses ingress-nginx.
 
 **Note:** Deployments are automatically handled by GitHub Actions with separate workflows for staging and production:
 
@@ -67,15 +68,13 @@ plan. Preview refresh is read-only, so the apply refresh is necessary to recogni
 resources removed by Kubernetes TTL cleanup rather than replacing stale checkpoint
 entries. The plan still rejects changes outside what was previewed. GitHub
 applies remain restricted to `main` and the existing environment-scoped
-credentials/protections. Helm v3 serializes the two fixed-name ingress admission
-Job references as empty IDs during preview after their TTL cleanup. The runner
-fills those exact namespace/name IDs in the saved plan; it changes no resource
-inputs or operations. Recreating those jobs is normal chart housekeeping. Empty
-Grafana RBAC rules can also reconcile from null to an empty list without granting
-permissions. The temporary capacity, compression and security-upgrade
-wrappers remain available for their original operations, but no longer intercept
-ordinary releases. `securityPatch202611: true` still selects the patched CNPG,
-ingress-nginx and Grafana versions; keep it enabled.
+credentials/protections. Empty Grafana RBAC rules and detached public Certificate
+owner lists are omitted to match Kubernetes' stored representation. The deployment
+runner retains the fixed-name Helm admission Job reference handling for a reviewed
+legacy recovery; these Jobs are absent from the current hosted stacks.
+The one-off capacity adoption, resize, compression and security-upgrade wrappers
+have been retired. Use the normal full-stack commands below for future changes.
+`securityPatch202611: true` still selects the patched component versions; keep it enabled.
 
 `REGISTRY_STAGING_IMAGE` supplies the current build digest to staging without
 editing committed stack configuration. An optional `stagingImage` configuration
@@ -686,7 +685,7 @@ gcloud container clusters get-credentials mcp-registry-staging --zone us-central
 kubectl get pods
 kubectl get deployment
 kubectl get svc
-kubectl get ingress
+kubectl get gateway,httproute -n ingress-nginx
 kubectl get svc -n ingress-nginx
 ```
 
@@ -703,162 +702,30 @@ kubectl describe schedule.k8up.io
 kubectl get backup
 ```
 
-### Node capacity
+### Current hosted capacity
 
-`mcp-registry:nodeAutoscaling` enables GKE node scaling independently of the
-experimental ingress/app profile. `nodeMinCount` and `nodeMaxCount` specify total
-node bounds. Staging proposes **3–4 e2-standard-4 nodes**; production configuration
-is unchanged until acceptance and a separate promotion. Changing its stack file
-triggers the production workflow, so keep that change out of staging-only PRs. Always
-refresh Pulumi state before applying, since the autoscaler owns `nodeCount`.
-Both singleton database pods retain voluntary-eviction protection with either
-node autoscaling or the legacy burst profile enabled.
+Staging uses **two e2-standard-2 nodes**: one isolated registry database node and
+one shared worker. `gatewayStagingCompact: true` fixes the application and Gateway
+at one replica. The worker pool has minimum=maximum=1; node upgrades use zero surge.
+This cost-limited environment allows interruption and is not highly available.
+See [compact staging](gateway-canary/compact-staging.md) for the resource budget.
 
-The coordinated candidate keeps three app and three ingress replicas ready,
-with maxima of four and six respectively. Reserving three nodes alone does not
-prewarm caches or redistribute existing pods. Verify Ready replicas, placement,
-load-balancer health and actual node consolidation during the acceptance test.
-Keep staging's image, CPU/memory budget, pools and scaling settings aligned with
-the intended production configuration until that test passes. Existing live
-production remains the comparison baseline until promotion.
+Production retains **2–7 e2-standard-4 workers plus one isolated database node**.
+Gateway proxies have an HPA of 3–16 replicas and Vector runs on the workers.
+The application retains its 2–4 replica HPA. Do not copy staging's node cap or
+compact requests into production. The instantaneous production node count can
+change within these bounds; the migration did not reduce the capacity limits.
 
-Staging's node bounds can be reduced independently later. Disable or revise the
-coordinated profile first: its guard deliberately requires the tested 3–4 node
-budget. Recheck pod fit and database protection before reducing capacity, and
-restore production parity for future capacity acceptance tests. Scale-down can
-be delayed by placement and disruption budgets; a minimum is not a guarantee.
+Staging follows the current main build digest, with no committed `stagingImage`
+or `registryRolloutCommit` override. Production follows the explicit `imageTag`
+release configuration. The existing production rollout annotation does not block
+new images and is retained to avoid an unrelated rollout.
 
-### Idle staging capacity
-
-`stagingIdleCapacity: true` is restricted to isolated staging. With total node
-bounds 2–4, it retains the protected database node and lets workers scale 1–3.
-App and ingress autoscalers start at one replica; their existing ceilings remain.
-Database settings, images, connection pools, storage and networking are unchanged.
-This saves idle worker cost at the expense of redundant app/ingress availability.
-The app permits singleton eviction; the chart omits the singleton ingress PDB.
-Worker consolidation can therefore briefly interrupt staging. Database eviction
-protection remains enabled.
-Before capacity acceptance testing, disable this setting and restore the total
-node minimum to three. Review a refreshed preview before either transition.
-
-### Burst capacity (staging validation)
-
-The `coordinatedCapacity` and `isolatedDatabase` opt-ins are enabled in the
-staging candidate. The latter creates one fixed, tainted database node and
-subtracts it from the total node bounds, leaving two–three autoscaled workers.
-PostgreSQL requests its full 3-CPU limit on the reserved node. App and ingress
-pods require worker nodes and retain their per-revision hostname spread;
-three idle replicas can therefore occupy two workers as 2+1. System agents
-still share the database node. This remains a single PostgreSQL instance,
-not database high availability. Node-upgrade surge can temporarily exceed the
-four-node steady-state ceiling.
-
-The isolated profile requires a digest-pinned `stagingImage` containing the
-prepared-listing app changes. The override is staging-only; production retains
-its release image. Import any manually created database pool and app HPA into
-the staging Pulumi stack before applying this configuration, then refresh and
-review a full preview. Do not create a second pool or replace the existing one.
-The staging GitHub Actions job runs `scripts/adopt_staging_capacity.py` before
-the normal apply, using its existing staging passphrase secret. The script
-imports only missing resources with the exact expected staging identities and
-providers, rejects conflicting ownership, and skips completed imports on retry.
-The following apply refreshes state before planning. Keep this transition step
-until the first successful adoption is recorded; it can then be removed.
-See the [candidate and test gates](../tools/ingressbench/COORDINATED_CAPACITY.md)
-for its 3–4 app HPA, 30/5 pools and required CPU settings. It is rejected outside
-staging until the full validation passes. The configuration below describes the
-earlier ingress-only profile.
-
-This is an experimental configuration, not an approved production fix. In the
-2026-10-27 staging comparison, CPU reservation protected database readiness, but
-ingress/node scaling alone left long application pool queues and publish
-timeouts. Adding a 60-second client connection lifetime did not resolve those
-failures. The ingress HPA could remain below its average CPU target while the
-database node was saturated and the app on that node queued requests. Do not
-enable this in production without a successful end-to-end burst validation.
-See `tools/ingressbench/VALIDATION.md` for the measured comparison and limitations.
-The follow-up [ready-capacity comparison](../tools/ingressbench/WARM_CAPACITY_VALIDATION.md)
-also failed with four nodes and six ingress replicas ready before the burst.
-Keep the rollout gate on complete offered load and recovery, not only successful
-HTTP attempts or quiet current metrics.
-
-`mcp-registry:registryCPURequest` can override the application CPU reservation
-for controlled staging comparisons. The default remains 250m per hosted app
-replica (100m locally), with no CPU limit. Raising the reservation changes both
-CPU sharing under contention and pod placement; it can prevent consolidation
-onto two nodes even when the autoscaler's configured minimum remains two.
-Measure node count and placement through recovery, not just request latency.
-The replica count and each pool's 60 maximum / 10 minimum remain unchanged.
-
-`mcp-registry:burstAutoscaling` opts a hosted stack into ingress and GKE node
-scaling (legacy default 2–4 nodes; explicit node bounds take precedence). It is enabled in staging for validation; production keeps its existing
-configuration until a separate promotion. Application replicas and their
-connection pools stay fixed at two replicas, each with a maximum of 60 connections.
-
-| Setting | Fixed baseline | With burst capacity |
-| --- | --- | --- |
-| GKE nodes | 2 | Configured bounds; hosted stack proposal is 3–4 |
-| Ingress controllers | 2 | 2–6 |
-| Ingress CPU request | 300m | 800m, no CPU limit |
-| Ingress memory request | 90 MiB | 512 MiB |
-| Registry DB CPU request | 200m | Configurable separately with `postgresCPURequest` |
-| Registry DB CPU limit | 3 | Unchanged |
-
-The HPA targets 88% of the 800m ingress request (704m), including work serving
-cache hits. The request leaves room for the 2-CPU database and existing system
-workloads on a baseline node; a 1-CPU ingress request did not fit that placement.
-A rolling-update surge can still require a temporary extra node. Scale-up allows
-two additional controllers per minute. Scale-down waits
-for a ten-minute stabilization window, then removes at most one controller every
-two minutes. These are bounds, not a guarantee of immediate capacity: metric
-collection, pending-pod detection, node provisioning, readiness and load-balancer
-health checks all add delay. The cluster autoscaler adds nodes for unschedulable
-pods; high node CPU alone does not trigger it. It can remove spare nodes later,
-subject to pod placement, disruption budgets and its own delays.
-
-Both singleton PostgreSQL clusters inherit `safe-to-evict=false` on their pods
-and enable CloudNativePG disruption budgets. This protects them from voluntary
-autoscaler eviction, not node failure, operator restarts or manual deletion.
-It can also block node maintenance; plan explicit database interruption when
-upgrading nodes. Two protected database placements can constrain the minimum
-node count. Verify actual scale-down rather than assuming the cluster reaches two.
-
-`postgresCPURequest` reserves scheduling capacity and increases relative CPU
-shares under contention. It is not a dedicated-core guarantee. Raising the
-request can restart the singleton database, and the request must fit beneath
-its CPU limit and alongside other workloads. Validate a request of 2 CPUs in
-staging before promoting it. The initial staging rollout interrupted application
-readiness while the singleton database restarted and moved to a new node. Plan
-that interruption explicitly; ensure spare schedulable capacity is ready before
-changing the database request. Memory, buffers, connection limits and readiness
-thresholds are unchanged.
-
-Each ingress has an independent cache. New replicas start cold and can increase
-origin traffic before warming. Existing client connections may stay on older
-replicas. With burst capacity enabled, client connections have a 60-second
-active lifetime (`keepalive_time`); NGINX finishes the current request before
-closing so clients can reconnect to newly added capacity. This differs from the
-idle keep-alive timeout and does not abort a long-running request at 60 seconds.
-It adds connection/TLS setup work, so validate both HTTP/1.1 and HTTP/2.
-Rate limits are also per controller, so the aggregate allowance for a
-client can rise as replicas are added; this does not introduce a global limiter.
-Ingress metrics are scraped per pod every 30 seconds when burst capacity is on,
-so cache-serving demand is visible separately from application arrivals. Cache
-outcomes still require response headers or the existing ingress logs.
-
-Before an update, refresh Pulumi state and inspect the full preview. The node
-pool must update in place. Pulumi ignores `nodeCount` and ingress `spec.replicas`
-while autoscaling is enabled, so subsequent deploys do not reset controller-owned
-counts. Verify this again with a preview while scaled out. A configuration-map
-replacement for the metrics scrape config is expected.
-
-Validate the same sustained workload before and after: per-replica demand,
-cache misses, listing and publish latency, errors, pool queues, PostgreSQL CPU
-pressure/throttling, readiness, pending pods and node allocation. Require both
-scale-up under load and recovery/scale-down after it stops. Do not promote based
-on a quiet run or a synthetic workload that fails to reproduce the failure.
-To disable autoscaling, remove the opt-in and preview the transition back to
-fixed counts; scale-in and a database request rollback may interrupt service.
+The prior idle/burst experiments and one-off capacity adoption are complete.
+Their procedures are available in [the pre-cleanup deployment guide](https://github.com/modelcontextprotocol/registry/blob/d6d6b5ea1664c6b2b449ef9a518d9c92a825547d/deploy/README.md#node-capacity).
+Historical comparison and failed load gates remain in `tools/ingressbench/` and
+`gateway-canary/`; they are evidence, not the current desired topology.
+Use full-stack previews and the normal release flow for subsequent changes.
 
 ### Production infrastructure-only isolation
 
@@ -1028,25 +895,11 @@ traffic. App scaling beyond four requires a separate database budget review.
 
 ### Always-on functional staging
 
-`stagingSmallCapacity: prepare` requires isolated idle staging and lowers CPU
-requests to 100m for the app and ingress and 250m for PostgreSQL. Memory,
-images, pools, persistent storage, database isolation and HPA bounds remain
-unchanged. First deploy and verify these reservations on the existing nodes.
-Then set `stagingSmallCapacity: enabled` and `nodeMachineType: e2-standard-2`
-to resize both pools in place, retaining one worker and one protected DB node.
-
-The private deployment wrapper validates the full preview and applies only a
-saved plan within the phase's exact scope. Node resize requires all live
-workloads to have the smaller requests. Take private database backups before
-resizing. During pool updates the wrapper temporarily enables the two staging
-databases' maintenance windows with PVC reuse and restores the prior settings
-in a finally block. The singleton databases can be briefly unavailable while
-their existing volumes move; this is not a highly available staging profile.
-It checks PVC identities before and after; verify health, actual pool shapes,
-maintenance restoration, functional reads/writes and rollout completion too.
-On interrupted CI, check and restore maintenance windows before retrying.
-This profile is for functional checks, not production capacity benchmarks.
-
+The small staging profile is already enabled. Its capacity and failure tradeoffs
+are described in [current hosted capacity](#current-hosted-capacity) and
+[compact staging](gateway-canary/compact-staging.md). The one-off resize helper is
+retired. Any future node resize needs a new reviewed plan, database backups,
+PVC identity checks and a maintenance window; ordinary releases do not resize nodes.
 
 ### Public listing bandwidth and access logs
 
@@ -1080,88 +933,44 @@ latency; use retained logs for examples and investigation. Do not extrapolate a
 mixed retained log population by a single multiplier. Check log-based alert and
 metric dependencies before changing the filter.
 
-Enable in staging, validate gzip/identity decoded-body equivalence through cold
-and warm caches, Vary, credential/cookie bypass, CPU, latency and log selection,
-then enable production. `scripts/public_read_apply.py ENV preview|apply` validates
-full scope and applies a saved plan targeting only the ingress ConfigMap and the
-named exclusion. This entry point enables Pulumi ConfigMap mutation so the existing
-controller configuration is updated in place, not replaced. Diagnostic plans stay private. Set either flag to `"false"` and
-use the same workflow to roll it back independently; keep the sampling key so the
-exclusion is disabled rather than deleted. Previously excluded log records cannot
-be recovered. The deployment reloads NGINX configuration without changing pod
-resource requests or rolling application/database pods.
+Both hosted environments have compression and log sampling enabled. Gateway
+policies preserve the public listing cache and gzip/Vary behavior; the former
+ingress ConfigMap-only apply wrapper is retired. Use the normal full-stack
+preview/apply workflow for changes, and recheck gzip/identity equivalence,
+cache behavior, credential/cookie handling and metric/log selection in staging.
+Keep the sampling configuration key when disabling sampling so the exclusion is
+disabled rather than removed. Previously excluded log records cannot be recovered.
 
 ### November 2026 component security upgrade
 
-`mcp-registry:securityPatch202611: "true"` opts a stack into CloudNativePG
-1.30.1 (chart 0.29.1), ingress-nginx 1.15.1 (chart 4.15.1), and Grafana
-12.4.14 (the existing chart 9.4.4 with an explicit image tag). Qualify staging
-before enabling the identical profile in production. PostgreSQL remains explicitly
-pinned to the existing 17.5 image; database engine patching needs its own rollout.
+`mcp-registry:securityPatch202611: "true"` remains enabled in both hosted stacks.
+It selects CloudNativePG 1.30.1 (chart 0.29.1) and Grafana 12.4.14 (chart 9.4.4).
+Its ingress-nginx 1.15.1/chart 4.15.1 selection remains available for the legacy
+code path, but neither hosted environment runs that controller. PostgreSQL stays
+pinned to 17.5; an engine upgrade requires its own qualification.
 
-The dedicated upgrade command uses `scripts/security_patch_apply.py` to validate a refreshed, saved
-full preview against `scripts/security_patch_202611.json`, then saves and validates
-a targeted apply plan. Completed, TTL-expired ingress admission setup jobs are
-excluded: the existing certificate remains valid, and recreating these ephemeral
-jobs can violate saved-plan output constraints. Untargeted dependency metadata is
-reconciled only when two full previews agree; all input and operation constraints
-remain intact. For the newly created, cluster-scoped DatabaseRole CRD, the chart
-serializes its preview reference ID as an empty string; the wrapper constrains
-that single output reference to its reviewed, fixed Kubernetes name instead.
-It allows only the reviewed
-field transitions: chart labels, controller/container versions and probes,
-CloudNativePG monitoring queries, upstream CRD schemas/RBAC, and the existing
-PostgreSQL image pin. It rejects unrelated changes, deletions, and replacements.
-The manifest hashes canonical JSON, with sorted keys and compact separators;
-missing fields are distinct from null. CRD schema hashes were checked against the
-upstream chart archive. The release archive SHA-256 values from the official Helm
-indexes are:
-
-- CloudNativePG 0.29.1: `b53d3991fe84bcf38767e7702cae78666265427a127a26fff168ab4207d2b1df`
-- ingress-nginx 4.15.1: `3eff0bd18151d6e6b1c441463410571443dda1ac78292cb189346628de784f0c`
-
-For future upgrades, review the upstream manifests and actual preview before
-updating the allowlist; do not regenerate it blindly from a failed deployment.
-The historical security-upgrade wrapper is deliberately bounded and rejects
-unrelated changes. Normal release workflows no longer select that wrapper; they
-use the full-stack saved-plan deployment path described above. Ordinary application PR checks
-and main-only environment protections are unchanged.
-
-Before an apply, the wrapper takes consistent custom-format dumps of **both**
-`default/registry-pg` and `monitoring/grafana-pg`, checks their complete archive streams, and
-uploads and reads them back from the existing private backup bucket under
-`security-upgrades/202611/<unique-run>/`. Keep these backups until the upgrade has
-been accepted; they are separate from the registry-only daily Restic backups.
-Raw state, plans, diagnostics, and dumps never become Actions artifacts.
-
-CloudNativePG automatically restarts both singleton databases to update their
-instance managers. Expect a brief interruption and client reconnection. After
-staging, check both instance-manager images, database readiness, unchanged PVC
-UIDs/volumes, registry health/listing/compression/cache behavior, and Grafana's
-health, OAuth redirect, data sources and dashboards. Repeat after production.
-A Grafana rollback may require restoring its pre-upgrade database: do not simply
-change the image after schema migrations. Do not downgrade CNPG CRDs or disable
-the profile as an unreviewed rollback. For failures, preserve the database volumes,
-inspect private diagnostics, and prepare a narrowly reviewed recovery plan.
-
-The patched releases address [CloudNativePG GHSA-x8c2-3p4r-v9r6](https://github.com/cloudnative-pg/cloudnative-pg/security/advisories/GHSA-x8c2-3p4r-v9r6),
-[ingress-nginx CVE-2026-4342](https://discuss.kubernetes.io/t/security-advisory-cve-2026-4342-ingress-nginx-comment-based-nginx-configuration-injection/34349),
-and [Grafana CVE-2026-27880](https://grafana.com/security/security-advisories/cve-2026-27880/).
+The one-off security upgrade wrapper and its exact-transition allowlist are
+retired. Future component upgrades use reviewed configuration changes, staging
+qualification and the normal saved-plan release path. Do not disable the security
+profile or downgrade CNPG CRDs as an unreviewed rollback. Grafana schema changes
+may require restoring a compatible database backup rather than changing its image.
+The original upgrade's private backups are retained under
+`security-upgrades/202611/<unique-run>/`; this cleanup does not alter backup retention.
+Historical procedures and archive hashes remain in
+[the pre-cleanup guide](https://github.com/modelcontextprotocol/registry/blob/d6d6b5ea1664c6b2b449ef9a518d9c92a825547d/deploy/README.md#november-2026-component-security-upgrade).
 
 #### ingress-nginx replacement
 
-Staging uses OSS NGINX Gateway Fabric with Gateway API, Vector, cert-manager,
-VictoriaMetrics and Grafana. Its public Service/IP and trusted certificates are
-preserved; ingress-nginx and the duplicate canary are retired. The existing
-Gateway nodes are reused and the normal release flow is unchanged.
+Both staging and production now use OSS Gateway Fabric. The old controller,
+Ingress/IngressClass objects, admission resources, duplicate canary and legacy
+ACME proxy are retired. Historical `ingress-nginx` Service/namespace and
+`gateway-canary` metric/resource names identify active infrastructure and must
+not be removed or renamed as cleanup.
 
-See [standalone staging qualification](gateway-canary/standalone.md) for feature,
-load, recovery, certificate and monitoring gates. There is no running legacy
-fallback in staging; recovery uses a reviewed Git revision and full-stack saved
-plan. The historical [canary comparison](gateway-canary/validation.md) and
-[handoff](gateway-canary/handoff-validation.md) remain as evidence of earlier phases.
-
-Production still uses the patched ingress-nginx release. Its migration requires
-a separate reviewed plan after final staging qualification and observation,
-including production capacity, real alert delivery and an explicit recovery path.
-The interim patch does not restore upstream maintenance for the retired project.
+See [production completion](gateway-canary/production-completion.md) for final
+validation and [production recovery](gateway-canary/production-migration.md#rollback)
+for Git-based recovery. There is no running legacy fallback. The migration-phase
+code and its recovery tests remain to preserve that reviewed path and local
+support. Historical [staging qualification](gateway-canary/standalone-validation.md)
+and [handoff](gateway-canary/handoff-validation.md) reports retain their original
+failures and scope limits; functional production validation is not a maximum-capacity benchmark.
