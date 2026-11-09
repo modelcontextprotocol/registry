@@ -39,6 +39,17 @@ class StagingRestoreTests(unittest.TestCase):
         self.assertIsNone(restore.failed_reason([job], {}, NOW))
         self.assertIn('8 days', restore.failed_reason([], {'last_success': (NOW - dt.timedelta(days=9)).isoformat()}, NOW))
 
+    def test_restart_from_omitted_zero_replica_field(self):
+        with patch.object(restore, 'api', return_value={'metadata': {'resourceVersion': '7'}, 'spec': {}}) as api:
+            restore.scale(0, 1)
+            self.assertEqual(api.call_args.args[2], [
+                {'op': 'test', 'path': '/metadata/resourceVersion', 'value': '7'},
+                {'op': 'add', 'path': '/spec/replicas', 'value': 1}])
+        with patch.object(restore, 'api', return_value={'metadata': {'resourceVersion': '8'}, 'spec': {'replicas': 2}}) as api:
+            with self.assertRaises(RuntimeError):
+                restore.scale(0, 1)
+            self.assertEqual(api.call_count, 1)
+
     def test_active_restore_lock_prevents_scale(self):
         dep = {'spec': {'replicas': 1}, 'metadata': {'generation': 1}, 'status': {'observedGeneration': 1, 'updatedReplicas': 1, 'availableReplicas': 1}}
         with patch.object(restore, 'identity', return_value=dep), patch.object(restore, 'api', return_value={'data': {'active_id': 'other'}}) as api:
