@@ -594,8 +594,22 @@ retired staging backup credentials are used. Do not print, commit or upload keys
 passwords, dump contents or restore logs containing data. Rotate the reader key
 through Pulumi and update the password Secret if the Restic key/password changes.
 
-After deploying the suspended job and its reader account, an authorized operator
-bootstraps source IAM/password and email alerts:
+Before the first deployment, an authorized operator creates the dedicated reader
+account. Pulumi adopts that exact account; the staging deployment identity needs
+key-management permission only on this account, not project-wide account creation:
+
+```bash
+gcloud iam service-accounts create registry-restore-reader \
+  --project=mcp-registry-staging --display-name='Staging production-backup reader'
+gcloud iam service-accounts add-iam-policy-binding \
+  registry-restore-reader@mcp-registry-staging.iam.gserviceaccount.com \
+  --project=mcp-registry-staging \
+  --member=serviceAccount:pulumi-svc@mcp-registry-staging.iam.gserviceaccount.com \
+  --role=roles/iam.serviceAccountKeyAdmin
+```
+
+After deploying the suspended job, the operator bootstraps source IAM/password
+and email alerts:
 
 ```bash
 python3 tools/admin/configure-staging-restore.py

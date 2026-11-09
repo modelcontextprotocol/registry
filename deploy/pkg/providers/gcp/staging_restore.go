@@ -19,9 +19,11 @@ func stagingRestoreReader(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 	if config.New(ctx, "gcp").Get("project") != "mcp-registry-staging" {
 		return fmt.Errorf("restore reader requires staging project")
 	}
+	// The operator pre-creates this account: CI cannot create arbitrary accounts.
+	accountOpts := append(append([]pulumi.ResourceOption{}, opts...), pulumi.Import(pulumi.ID("projects/mcp-registry-staging/serviceAccounts/registry-restore-reader@mcp-registry-staging.iam.gserviceaccount.com")))
 	account, err := serviceaccount.NewAccount(ctx, "staging-restore-reader", &serviceaccount.AccountArgs{
 		AccountId: pulumi.String("registry-restore-reader"), Project: pulumi.String("mcp-registry-staging"), DisplayName: pulumi.String("Staging production-backup reader"),
-	}, opts...)
+	}, accountOpts...)
 	if err != nil {
 		return err
 	}
