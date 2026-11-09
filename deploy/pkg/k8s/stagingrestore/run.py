@@ -71,6 +71,16 @@ def identity():
     return dep
 
 
+def scale(expected, desired):
+    # The Scale API omits spec.replicas at zero. Test its resourceVersion and
+    # use add (which also replaces) rather than testing a possibly absent field.
+    current = api(DEPLOY + '/scale')
+    require(current.get('spec', {}).get('replicas', 0) == expected, 'Staging replica count changed')
+    api(DEPLOY + '/scale', 'PATCH', [
+        {'op': 'test', 'path': '/metadata/resourceVersion', 'value': current['metadata']['resourceVersion']},
+        {'op': 'add', 'path': '/spec/replicas', 'value': desired}])
+
+
 def stop():
     dep = identity()
     require(dep['spec']['replicas'] > 0, 'Staging already stopped: inspect previous restore before retrying')
@@ -82,9 +92,7 @@ def stop():
     state_update(state, {'active_id': os.environ['POD_UID'], 'started': now().isoformat(),
                         'replicas': str(dep['spec']['replicas']), 'deployment_uid': dep['metadata']['uid'],
                         'snapshot': (WORK / 'snapshot-id').read_text(), 'phase': 'stopping'})
-    api(DEPLOY + '/scale', 'PATCH', [
-        {'op': 'test', 'path': '/spec/replicas', 'value': dep['spec']['replicas']},
-        {'op': 'replace', 'path': '/spec/replicas', 'value': 0}])
+    scale(dep['spec']['replicas'], 0)
     for _ in range(60):
         pods = api('/api/v1/namespaces/default/pods?labelSelector=app%3Dmcp-registry')['items']
         if not pods:
@@ -102,9 +110,7 @@ def start():
             'Staging deployment changed during restore')
     replicas = int(state['data']['replicas'])
     require(1 <= replicas <= 4, 'Invalid saved replica count')
-    api(DEPLOY + '/scale', 'PATCH', [
-        {'op': 'test', 'path': '/spec/replicas', 'value': 0},
-        {'op': 'replace', 'path': '/spec/replicas', 'value': replicas}])
+    scale(0, replicas)
     state_update(api(STATE), {'phase': 'validating-app'})
     for _ in range(90):
         dep = api(DEPLOY)
