@@ -44,13 +44,19 @@ func vector(ctx *pulumi.Context, provider *kubernetes.Provider, namespace pulumi
 		return err
 	}
 	labels := map[string]any{"app": "gateway-canary-vector"}
+	cpuRequest := "500m"
+	if ProductionStandalone(ctx) {
+		// Reserve steady-state collector CPU without preventing worker consolidation.
+		// CPU remains uncapped so ingestion can use spare capacity during bursts.
+		cpuRequest = "250m"
+	}
 	ds := map[string]any{"apiVersion": "apps/v1", "kind": "DaemonSet", "metadata": map[string]any{"name": "vector", "namespace": Namespace}, "spec": map[string]any{
 		"selector": map[string]any{"matchLabels": labels}, "template": map[string]any{
 			"metadata": map[string]any{"labels": labels, "annotations": map[string]any{"checksum/config": fmt.Sprintf("%x", sha256.Sum256(data))}},
 			"spec": map[string]any{"automountServiceAccountToken": false, "nodeSelector": map[string]any{"registry-role": "gateway-canary"},
 				"tolerations": []any{map[string]any{"key": "registry-role", "operator": "Equal", "value": "gateway-canary", "effect": "NoSchedule"}},
 				"containers": []any{map[string]any{"name": "vector", "image": "timberio/vector:0.61.0-debian@sha256:f6c23b5a7e16fb2838d33619ef7acf4bad2289a7cf22bc90efc2371f520c4ea2", "args": []string{"--config", "/etc/vector/vector.json", "--threads", "1"},
-					"resources":       map[string]any{"requests": map[string]any{"cpu": "500m", "memory": "128Mi"}, "limits": map[string]any{"memory": "512Mi"}},
+					"resources":       map[string]any{"requests": map[string]any{"cpu": cpuRequest, "memory": "128Mi"}, "limits": map[string]any{"memory": "512Mi"}},
 					"securityContext": map[string]any{"runAsUser": 0, "readOnlyRootFilesystem": true, "allowPrivilegeEscalation": false, "capabilities": map[string]any{"drop": []string{"ALL"}}, "seccompProfile": map[string]any{"type": "RuntimeDefault"}},
 					"ports":           []any{map[string]any{"name": "metrics", "containerPort": 9598}, map[string]any{"name": "sizes", "containerPort": 9599}},
 					"readinessProbe":  map[string]any{"httpGet": map[string]any{"path": "/metrics", "port": "metrics"}, "periodSeconds": 5},

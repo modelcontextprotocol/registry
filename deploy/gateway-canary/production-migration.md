@@ -67,7 +67,11 @@ Raw preview events and plans remain private; they are not committed.
 Keep the existing production pool configuration: 2–7 `e2-standard-4` workers and
 the isolated database node. Do not copy staging's compact profile or two-node cap.
 Gateway proxies request 800m CPU/512Mi memory each, with an HPA of 3–16 replicas
-at 70% CPU. Vector runs on workers. These settings preserve the production node
+at 70% CPU. Vector runs on workers with 250m CPU / 128Mi memory requests,
+no CPU limit, and a 512Mi memory limit. Its full log-to-metrics pipeline is unchanged.
+The reduced CPU reservation leaves more space for worker consolidation without
+capping burst processing; verify placement, ingestion freshness and autoscaler decisions after
+deployment. These settings preserve the production node
 limits, not its instantaneous node count or spending: the autoscaler may add
 workers within those existing limits.
 
