@@ -13,6 +13,10 @@ import (
 // DeployBackups preserves the existing repository credentials and production archive job.
 // K8up is retired; the CronJob invokes pg_dump and restic directly.
 func DeployBackups(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo) error {
+	// Staging has no scheduled backups or retained legacy repository to unlock.
+	if environment == "staging" {
+		return nil
+	}
 	if storage == nil {
 		ctx.Log.Info("No backup storage configured, skipping backup deployment", nil)
 		return nil

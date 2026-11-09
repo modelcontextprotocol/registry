@@ -494,6 +494,12 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 		return nil, fmt.Errorf("failed to grant bucket access: %w", err)
 	}
 
+	// Keep the staging bucket managed, but retire its unused S3 credentials.
+	// Production still needs this key for the daily archive backup job.
+	if environment == "staging" {
+		return nil, nil
+	}
+
 	// Create HMAC key for S3-compatible access
 	hmacKey, err := storage.NewHmacKey(ctx, "backup-hmac-key", &storage.HmacKeyArgs{
 		ServiceAccountEmail: pulumi.String(serviceAccountEmail),

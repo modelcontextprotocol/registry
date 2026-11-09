@@ -55,7 +55,11 @@ func TestBackupRetirementPreservesProductionArchiveJob(t *testing.T) {
 				t.Fatal(err)
 			}
 			password, ok := m.resources["kubernetes:core/v1:Secret::k8up-repo-password"]
-			if !ok || password["metadata"].ObjectValue()["name"].StringValue() != "k8up-repo-password" {
+			if env == "staging" {
+				if ok {
+					t.Fatal("retired staging repository password recreated")
+				}
+			} else if !ok || password["metadata"].ObjectValue()["name"].StringValue() != "k8up-repo-password" {
 				t.Fatal("existing repository secret identity was lost")
 			}
 			jobs := 0

@@ -507,8 +507,10 @@ credentials when provisioning a replacement cluster.
 Production runs daily at **04:46 UTC**, with a 30-minute job deadline and
 no overlapping runs. Staging and local development do not create the backup
 CronJob or its private Service and require no repository initialization.
-Their legacy operator, credentials and stored objects are retained; the old
-K8up Schedule is removed. No automatic staging backup smoke test is run.
+The hosted K8up operators and schedules are retired. Staging's legacy backup
+credentials and historical recovery assets are retired too; its empty backup
+bucket remains managed by Pulumi. Local development retains its existing storage
+configuration. No automatic staging backup smoke test is run.
 Validate infrastructure changes with builds and Pulumi previews, and periodically
 test recovery from a production archive in an isolated database using the
 procedure below. This is a daily logical backup, not point-in-time recovery;
@@ -529,8 +531,8 @@ retained. A separate lifecycle rule deletes only noncurrent versions under
 `isLive: false` and `daysSinceNoncurrentTime: 30`. It never matches live keys,
 config, packs, or snapshots, regardless of their age. GCS soft-delete retention
 can delay final removal further (currently seven additional days in production).
-Legacy prefixes are excluded so their recovery evidence is preserved; since
-their schedules are retired, they do not continually accumulate new versions.
+Legacy repositories and one-off upgrade archives are retired separately from
+this active repository. Do not extend lifecycle deletion to live Restic objects.
 
 The legacy K8up Schedule is removed. Clearing its spec can leave defaulted
 backup/prune entries without cron expressions and crash the K8up operator.
@@ -1009,8 +1011,8 @@ retired. Future component upgrades use reviewed configuration changes, staging
 qualification and the normal saved-plan release path. Do not disable the security
 profile or downgrade CNPG CRDs as an unreviewed rollback. Grafana schema changes
 may require restoring a compatible database backup rather than changing its image.
-The original upgrade's private backups are retained under
-`security-upgrades/202611/<unique-run>/`; this cleanup does not alter backup retention.
+The original upgrade's one-off private backup archives are retired after the
+rollback window. Future rollback work must use an appropriate current backup.
 Historical procedures and archive hashes remain in
 [the pre-cleanup guide](https://github.com/modelcontextprotocol/registry/blob/d6d6b5ea1664c6b2b449ef9a518d9c92a825547d/deploy/README.md#november-2026-component-security-upgrade).
 
