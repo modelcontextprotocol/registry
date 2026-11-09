@@ -5,6 +5,17 @@ from pathlib import Path
 STAGING = 'staging.registry.modelcontextprotocol.io'
 FIXTURE = 'fixture.gateway-canary.invalid'
 
+def tls_context(cafile=None):
+    context = ssl.create_default_context(cafile=cafile)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    if cafile:
+        # Explicitly trust the fixture certificate without requiring it to be
+        # a CA. Certificate and hostname verification remain enabled.
+        if not hasattr(ssl, 'VERIFY_X509_PARTIAL_CHAIN'):
+            raise RuntimeError('Fixture verification requires Python 3.10+ with OpenSSL; validated with Python 3.13')
+        context.verify_flags |= ssl.VERIFY_X509_PARTIAL_CHAIN
+    return context
+
 class Client:
 
     def __init__(self, ip, host=STAGING, fixture_ca=None):
@@ -12,8 +23,7 @@ class Client:
         class Connection(http.client.HTTPSConnection):
 
             def connect(self):
-                context = ssl.create_default_context(cafile=fixture_ca if host == FIXTURE else None)
-                context.minimum_version = ssl.TLSVersion.TLSv1_2
+                context = tls_context(fixture_ca)
                 self.sock = context.wrap_socket(socket.create_connection((ip, 443), timeout=20), server_hostname=host)
         self.conn = Connection(host, timeout=20)
         self.host = host

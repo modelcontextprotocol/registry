@@ -132,7 +132,6 @@
         },
         {
           "name": "fixture",
-          "hostname": "fixture.gateway-canary.invalid",
           "port": 443,
           "protocol": "HTTPS",
           "tls": {
@@ -178,6 +177,14 @@
               "requestRedirect": {
                 "scheme": "https",
                 "statusCode": 308
+              }
+            },
+            {
+              "type": "ExtensionRef",
+              "extensionRef": {
+                "group": "gateway.nginx.org",
+                "kind": "SnippetsFilter",
+                "name": "canonical-redirect"
               }
             }
           ]
@@ -325,7 +332,7 @@
       "snippets": [
         {
           "context": "http",
-          "value": "proxy_cache_path /var/cache/nginx/registry-read levels=1:2 keys_zone=registry_read_cache:20m max_size=1g inactive=5m use_temp_path=off;\nmap \"$request_method:$uri\" $registry_read_cache_zone { default off; ~^GET:/v0(?:\\.1)?/servers$ registry_read_cache; }\nlog_subrequest on;\nmap $http_x_request_id $registry_request_id { default $http_x_request_id; \"\" $request_id; }\n\n# Public listing responses contain no user-specific data. Leave credentials/cookies uncompressed.\nmap \"$request_method:$host:$uri:$http_authorization:$http_cookie\" $registry_public_json_gzip {\n    default 0;\n    ~^(GET|HEAD):(registry\\.modelcontextprotocol\\.io|prod\\.registry\\.modelcontextprotocol\\.io|staging\\.registry\\.modelcontextprotocol\\.io|fixture\\.gateway-canary\\.invalid):/v0(?:\\.1)?/servers::$ 1;\n}\n\n# Store only successful origin responses, even if errors advertise freshness.\nmap $upstream_status $registry_skip_cache_status { default 1; 200 0; }\n"
+          "value": "proxy_cache_path /var/cache/nginx/registry-read levels=1:2 keys_zone=registry_read_cache:20m max_size=1g inactive=5m use_temp_path=off;\nmap \"$request_method:$uri\" $registry_read_cache_zone { default off; ~^GET:/v0(?:\\.1)?/servers$ registry_read_cache; }\nlog_subrequest on;\nmap $http_x_request_id $registry_request_id { default $http_x_request_id; \"\" $request_id; }\n\n# Public listing responses contain no user-specific data. Leave credentials/cookies uncompressed.\nmap \"$request_method:$host:$uri:$http_authorization:$http_cookie\" $registry_public_json_gzip {\n    default 0;\n    ~^(GET|HEAD):(registry\\.modelcontextprotocol\\.io|prod\\.registry\\.modelcontextprotocol\\.io|staging\\.registry\\.modelcontextprotocol\\.io|fixture\\.gateway-canary\\.invalid|alias\\.gateway-canary\\.invalid):/v0(?:\\.1)?/servers::$ 1;\n}\n\n# Store only successful origin responses, even if errors advertise freshness.\nmap $upstream_status $registry_skip_cache_status { default 1; 200 0; \"~[, :]+200$\" 0; }\n\n# Preserve the live production TLS/session and client header contract.\nssl_protocols TLSv1.2 TLSv1.3;\nssl_session_cache shared:SSL:10m;\nssl_session_timeout 10m;\nssl_session_tickets off;\nssl_buffer_size 4k;\nssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;\nssl_prefer_server_ciphers on;\nclient_header_buffer_size 1k;\nlarge_client_header_buffers 4 8k;\nclient_header_timeout 60s;\nclient_body_buffer_size 8k;\n\n# Match ingress-nginx HTTP redirect canonicalization without changing HTTPS paths.\nmap $request_uri $registry_redirect_uri {\n    default \"\";\n    ~^(.*)/$ https://$host$1;\n}\n"
         },
         {
           "context": "http.server",
@@ -333,7 +340,7 @@
         },
         {
           "context": "http.server.location",
-          "value": "proxy_set_header X-Forwarded-For $remote_addr;\nproxy_set_header X-Request-ID $registry_request_id;\nadd_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;"
+          "value": "proxy_set_header X-Forwarded-For $remote_addr;\nproxy_set_header X-Request-ID $registry_request_id;\nadd_header Strict-Transport-Security \"max-age=31536000; includeSubDomains\" always;\n# Preserve production retry bounds and upstream header handling.\nproxy_next_upstream error timeout;\nproxy_next_upstream_timeout 0;\nproxy_next_upstream_tries 3;\nproxy_http_version 1.1;\nproxy_request_buffering on;\nproxy_redirect off;\nproxy_set_header Proxy \"\";\nproxy_set_header X-Forwarded-Scheme $scheme;\nproxy_set_header X-Scheme $scheme;\nproxy_set_header X-Original-Forwarded-For $http_x_forwarded_for;\nproxy_set_header X-Original-Forwarded-Host $http_x_forwarded_host;\n"
         }
       ]
     }
@@ -494,7 +501,11 @@
         "timeout": "60s"
       },
       "keepAlive": {
-        "time": "60s"
+        "time": "60s",
+        "requests": 1000,
+        "timeout": {
+          "server": "75s"
+        }
       }
     }
   },
@@ -513,7 +524,8 @@
         }
       ],
       "hostnames": [
-        "fixture.gateway-canary.invalid"
+        "fixture.gateway-canary.invalid",
+        "alias.gateway-canary.invalid"
       ],
       "rules": [
         {
@@ -596,7 +608,8 @@
         }
       ],
       "hostnames": [
-        "fixture.gateway-canary.invalid"
+        "fixture.gateway-canary.invalid",
+        "alias.gateway-canary.invalid"
       ],
       "rules": [
         {
@@ -669,7 +682,8 @@
     "spec": {
       "secretName": "fixture-tls",
       "dnsNames": [
-        "fixture.gateway-canary.invalid"
+        "fixture.gateway-canary.invalid",
+        "alias.gateway-canary.invalid"
       ],
       "issuerRef": {
         "name": "fixture-selfsigned",
@@ -684,6 +698,139 @@
           "Registry staging canary"
         ]
       }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "ProxySettingsPolicy",
+    "metadata": {
+      "name": "grafana",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "gateway.networking.k8s.io",
+          "kind": "HTTPRoute",
+          "name": "grafana"
+        }
+      ],
+      "buffering": {
+        "disable": true,
+        "bufferSize": "4k",
+        "buffers": {
+          "number": 4,
+          "size": "4k"
+        }
+      },
+      "timeout": {
+        "connect": "5s",
+        "read": "60s",
+        "send": "60s"
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "UpstreamSettingsPolicy",
+    "metadata": {
+      "name": "registry-upstream",
+      "namespace": "default"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "",
+          "kind": "Service",
+          "name": "mcp-registry"
+        }
+      ],
+      "loadBalancingMethod": "round_robin",
+      "keepAlive": {
+        "connections": 320,
+        "requests": 10000,
+        "time": "1h",
+        "timeout": "60s"
+      },
+      "healthCheck": {
+        "passive": {
+          "maxFails": 0
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "UpstreamSettingsPolicy",
+    "metadata": {
+      "name": "grafana-upstream",
+      "namespace": "monitoring"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "",
+          "kind": "Service",
+          "name": "grafana"
+        }
+      ],
+      "loadBalancingMethod": "round_robin",
+      "keepAlive": {
+        "connections": 320,
+        "requests": 10000,
+        "time": "1h",
+        "timeout": "60s"
+      },
+      "healthCheck": {
+        "passive": {
+          "maxFails": 0
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "UpstreamSettingsPolicy",
+    "metadata": {
+      "name": "fixture-upstream",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "targetRefs": [
+        {
+          "group": "",
+          "kind": "Service",
+          "name": "fixture"
+        }
+      ],
+      "loadBalancingMethod": "round_robin",
+      "keepAlive": {
+        "connections": 320,
+        "requests": 10000,
+        "time": "1h",
+        "timeout": "60s"
+      },
+      "healthCheck": {
+        "passive": {
+          "maxFails": 0
+        }
+      }
+    }
+  },
+  {
+    "apiVersion": "gateway.nginx.org/v1alpha1",
+    "kind": "SnippetsFilter",
+    "metadata": {
+      "name": "canonical-redirect",
+      "namespace": "registry-gateway-canary"
+    },
+    "spec": {
+      "snippets": [
+        {
+          "context": "http.server.location",
+          "value": "if ($registry_redirect_uri) {\n    return 308 $registry_redirect_uri;\n}\n"
+        }
+      ]
     }
   }
 ]

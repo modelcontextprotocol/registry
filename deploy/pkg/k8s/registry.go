@@ -394,7 +394,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	}
 
 	if gatewaycanary.Standalone(ctx) {
-		ctx.Export("ingressHosts", pulumi.StringArray{pulumi.String("staging.registry.modelcontextprotocol.io")})
+		ctx.Export("ingressHosts", pulumi.ToStringArray(gatewaycanary.RegistryHosts(ctx)))
 		return service, nil
 	}
 	// Create Ingress

@@ -21,9 +21,9 @@ func HandoffEnabled(ctx *pulumi.Context) bool {
 	return Standalone(ctx) || config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff") != ""
 }
 
-// Standalone selects the final staging topology without legacy ingress or duplicate canary.
+// Standalone selects the final topology without legacy ingress or duplicate canary.
 func Standalone(ctx *pulumi.Context) bool {
-	return config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone")
+	return ProductionStandalone(ctx) || config.New(ctx, "mcp-registry").GetBool("gatewayStagingStandalone")
 }
 
 // NativeCertificates enables the Gateway HTTP01 solver before legacy retirement.
@@ -36,6 +36,9 @@ func ACMEParent() map[string]any {
 }
 
 func validateHandoff(ctx *pulumi.Context) error {
+	if Production(ctx) {
+		return validateProduction(ctx)
+	}
 	c := config.New(ctx, "mcp-registry")
 	mode, ip := c.Get("gatewayStagingHandoff"), c.Get("gatewayStagingPublicIP")
 	if Standalone(ctx) && mode == "" {
@@ -164,7 +167,7 @@ func handoffObjectsWithOptions(native, standalone, fixtures bool) ([]map[string]
 			for _, raw := range spec["from"].([]any) {
 				raw.(map[string]any)["namespace"] = EdgeNamespace
 			}
-		} else {
+		} else if o["kind"] != "UpstreamSettingsPolicy" {
 			meta["namespace"] = EdgeNamespace
 		}
 		if o["kind"] == "Gateway" {
@@ -218,10 +221,25 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 	if err != nil {
 		return err
 	}
-	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
+	if ProductionStandalone(ctx) {
+		productionRoutes(objects)
+		for _, o := range objects {
+			productionObject(o)
+		}
+		if !productionHostPolicyPresent(objects) {
+			return fmt.Errorf("production gzip host contract missing")
+		}
+	}
+	for _, kinds := range [][]string{{"Issuer"}, {"Certificate"}, {"Service", "ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy", "UpstreamSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, dependencies...)
 		for _, o := range objects {
 			if !contains(kinds, o["kind"].(string)) {
+				continue
+			}
+			// These policies live beside the backend Services and are shared by
+			// both Gateways. Deploy already registers them with the canary routes
+			// unless standalone mode omits that entire route graph.
+			if o["kind"] == "UpstreamSettingsPolicy" && !Standalone(ctx) {
 				continue
 			}
 			r, err := register(ctx, provider, o, prior)
@@ -235,7 +253,11 @@ func deployHandoff(ctx *pulumi.Context, provider *kubernetes.Provider, dependenc
 		ctx.Export("gatewayStagingHandoff", pulumi.String(config.New(ctx, "mcp-registry").Get("gatewayStagingHandoff")))
 	}
 	if Standalone(ctx) {
-		ctx.Export("stagingGatewayMode", pulumi.String("standalone"))
+		if ProductionStandalone(ctx) {
+			ctx.Export("productionGatewayMode", pulumi.String("standalone"))
+		} else {
+			ctx.Export("stagingGatewayMode", pulumi.String("standalone"))
+		}
 	}
 	return nil
 }

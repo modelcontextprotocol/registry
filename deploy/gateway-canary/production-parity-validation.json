@@ -1,0 +1,165 @@
+{
+  "environment": "two-node compact staging",
+  "date_utc": "2026-11-08",
+  "production_applied": false,
+  "cache": {
+    "/v0.1/health": 200,
+    "/v0.1/version": 200,
+    "/v0.1/servers?limit=1": 200,
+    "/v0/servers?limit=1": 200,
+    "cache_miss_hit_origin_offload": true,
+    "conditional_gzip_identity_and_vary": true,
+    "head": true,
+    "private_cookie_errors_not_cached": true,
+    "original_query_key_preserved": true,
+    "forwarded_headers_and_request_id": true,
+    "cache_lock_at_most_one_origin_read_per_configured_replica": true,
+    "expiry_background_refresh": true,
+    "last_good_cache_survives_origin_503": true
+  },
+  "parity": {
+    "production_raw_uri_redirect_semantics": [
+      "/",
+      "/docs/",
+      "/docs//",
+      "/v0.1/servers/",
+      "/docs/?x=1",
+      "/docs?x=1/",
+      "/docs/?a=%2F"
+    ],
+    "two_sans_share_connection_but_not_cache_entries": true,
+    "unlisted_host_not_routed": true,
+    "forwarded_headers_request_id_httpoxy": true,
+    "origin_connection_reused": true,
+    "http2_cross_alias_connection_coalescing": {
+      "tls_connections": 1,
+      "authorities": [
+        "fixture.gateway-canary.invalid",
+        "alias.gateway-canary.invalid",
+        "fixture.gateway-canary.invalid"
+      ],
+      "statuses": [
+        "200",
+        "200",
+        "200"
+      ]
+    },
+    "websocket_upgrade_and_bidirectional_payload": true,
+    "body_limit_1MiB": true,
+    "bulk_bucket_shared_across_aliases_and_versions_spoof_resistant": {
+      "responses": {
+        "200": 1993,
+        "429": 207
+      },
+      "seconds": 19.88
+    },
+    "bulk_and_general_buckets_independent": true,
+    "general_bucket_shared_across_aliases_spoof_resistant": {
+      "responses": {
+        "200": 566,
+        "429": 284
+      },
+      "seconds": 9.1
+    },
+    "origin_failover_and_write_non_replay": {
+      "responses": {
+        "GET": {
+          "200": 20
+        },
+        "POST": {
+          "502": 10,
+          "200": 10
+        }
+      },
+      "get_failover_observed": true,
+      "sent_post_not_replayed": true,
+      "attempts_at_most_three": true,
+      "successful_retry_responses_cacheable": true
+    }
+  },
+  "parity_passed": true,
+  "same_two_node_uids": true,
+  "temporary_rate_policies_removed": true,
+  "monitoring": {
+    "passed": true,
+    "real_cri_partial_records": true,
+    "emitters_removed": true,
+    "client_requests": 6.0,
+    "internal_requests": 1.0,
+    "vm_requests": 6.0,
+    "all_attempts_seconds": 0.8500000000000001,
+    "alias_retry_classified_as_fixture": true
+  },
+  "production_connectivity_checks": {
+    "passed": 11,
+    "total": 11
+  },
+  "cleanup_verified": true,
+  "scope": "Functional behavior only; not production-peak capacity or authenticated end-to-end qualification.",
+  "cleanup": {
+    "passed": true,
+    "same_two_nodes": true,
+    "public_endpoint_preserved": true,
+    "image_preserved": true,
+    "fixtures_removed": true,
+    "public_probes": [
+      {
+        "host": "staging.registry.modelcontextprotocol.io",
+        "path": "/v0/health",
+        "status": 200
+      },
+      {
+        "host": "staging.registry.modelcontextprotocol.io",
+        "path": "/v0.1/health",
+        "status": 200
+      },
+      {
+        "host": "staging.registry.modelcontextprotocol.io",
+        "path": "/v0/servers?limit=1",
+        "status": 200
+      },
+      {
+        "host": "staging.registry.modelcontextprotocol.io",
+        "path": "/v0.1/servers?limit=1",
+        "status": 200
+      },
+      {
+        "host": "grafana.staging.registry.modelcontextprotocol.io",
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "host": "grafana.staging.registry.modelcontextprotocol.io",
+        "path": "/login",
+        "status": 200
+      }
+    ],
+    "gateway_scrapes_up": 4,
+    "generated_fixture_secret_removed": true
+  },
+  "all_post_attempts_rechecked": {
+    "passed": true,
+    "runs": [
+      {
+        "posts": 20,
+        "statuses": {
+          "502": 10,
+          "200": 10
+        },
+        "attempts": {
+          "1": 20
+        }
+      },
+      {
+        "posts": 20,
+        "statuses": {
+          "502": 10,
+          "200": 10
+        },
+        "attempts": {
+          "1": 20
+        }
+      }
+    ]
+  }
+}

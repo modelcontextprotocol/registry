@@ -1,4 +1,4 @@
-// Package gatewaycanary manages the staging-only OSS Gateway and qualification modes.
+// Package gatewaycanary manages the OSS Gateway and staging qualification modes.
 package gatewaycanary
 
 import (
@@ -24,11 +24,14 @@ func Enabled(ctx *pulumi.Context) bool {
 
 func Validate(ctx *pulumi.Context) error {
 	c := config.New(ctx, "mcp-registry")
+	if err := validateProduction(ctx); err != nil {
+		return err
+	}
 	if Compact(ctx) && (!Standalone(ctx) || !c.GetBool("stagingIdleCapacity") || c.Get("stagingSmallCapacity") != "enabled" || c.Get("nodeMinCount") != "2" || c.Get("nodeMaxCount") != "2") {
 		return fmt.Errorf("gatewayStagingCompact requires standalone small idle staging with exactly two total nodes")
 	}
 	mode := PublicCertificates(ctx)
-	if mode != "" && (mode != "adopt" && mode != "managed" || !NativeCertificates(ctx)) {
+	if mode != "" && (mode != "adopt" && mode != "managed" || (!NativeCertificates(ctx) && !Production(ctx))) {
 		return fmt.Errorf("public Gateway certificates require native renewal and adopt/managed mode")
 	}
 	if ManagedMTLS(ctx) && !NativeCertificates(ctx) {
@@ -40,7 +43,7 @@ func Validate(ctx *pulumi.Context) error {
 	if (c.GetBool("gatewayCanaryComparison") || c.GetBool("gatewayCanaryFixtures")) && !Enabled(ctx) {
 		return fmt.Errorf("gateway canary test modes require gatewayCanary")
 	}
-	if Enabled(ctx) && (c.Get("environment") != "staging" || c.Get("provider") != "gcp") {
+	if Enabled(ctx) && !ProductionStandalone(ctx) && (c.Get("environment") != "staging" || c.Get("provider") != "gcp") {
 		return fmt.Errorf("gatewayCanary is restricted to GCP staging")
 	}
 	return nil
@@ -157,6 +160,9 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 			if Compact(ctx) {
 				compactObject(o)
 			}
+			if ProductionStandalone(ctx) {
+				productionObject(o)
+			}
 			r, e := register(ctx, provider, o, prior)
 			if e != nil {
 				return e
@@ -174,10 +180,22 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 		if !fixturesEnabled {
 			continue
 		}
+		// Compact staging uses bounded external functional probes. The heavy
+		// load-generator Pod targets the retired dedicated Gateway pool.
+		if Compact(ctx) && o["kind"] == "Pod" {
+			continue
+		}
 		if Standalone(ctx) && o["kind"] == "Deployment" {
 			spec := o["spec"].(map[string]any)["template"].(map[string]any)["spec"].(map[string]any)
 			spec["nodeSelector"] = map[string]any{"registry-role": "worker"}
 			spec["tolerations"] = []any{}
+			if Compact(ctx) {
+				// Two disposable origins must fit beside normal staging workloads.
+				o["spec"].(map[string]any)["strategy"] = map[string]any{"type": "RollingUpdate", "rollingUpdate": map[string]any{"maxSurge": 0, "maxUnavailable": 1}}
+				for _, raw := range spec["containers"].([]any) {
+					raw.(map[string]any)["resources"].(map[string]any)["requests"].(map[string]any)["cpu"] = "25m"
+				}
+			}
 		}
 		r, e := register(ctx, provider, o, deps)
 		if e != nil {
@@ -193,7 +211,7 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 		routes = nil
 	}
 	// Install policy/filter/reference grants before exposing the routes.
-	for _, group := range [][]string{{"Issuer"}, {"Certificate"}, {"ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
+	for _, group := range [][]string{{"Issuer"}, {"Certificate"}, {"ReferenceGrant", "SnippetsPolicy", "SnippetsFilter", "RateLimitPolicy", "ProxySettingsPolicy", "ClientSettingsPolicy", "UpstreamSettingsPolicy"}, {"Gateway"}, {"HTTPRoute"}} {
 		prior := append([]pulumi.Resource{}, deps...)
 		for _, o := range routes {
 			if contains(group, o["kind"].(string)) {
@@ -234,7 +252,9 @@ func Deploy(ctx *pulumi.Context, provider *kubernetes.Provider, address pulumi.S
 	if !Standalone(ctx) {
 		ctx.Export("gatewayCanaryIP", address)
 	}
-	ctx.Export("gatewayCanaryHost", pulumi.String("staging.registry.modelcontextprotocol.io"))
+	if !ProductionStandalone(ctx) {
+		ctx.Export("gatewayCanaryHost", pulumi.String("staging.registry.modelcontextprotocol.io"))
+	}
 	return nil
 }
 
@@ -256,7 +276,7 @@ func routeObjects(comparison bool) ([]map[string]any, error) {
 			spec := o["spec"].(map[string]any)
 			listeners := []any{}
 			for _, raw := range spec["listeners"].([]any) {
-				if raw.(map[string]any)["hostname"] != "fixture.gateway-canary.invalid" {
+				if raw.(map[string]any)["name"] != "fixture" {
 					listeners = append(listeners, raw)
 				}
 			}

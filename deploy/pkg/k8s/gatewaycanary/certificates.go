@@ -34,6 +34,9 @@ func internalCertificates() []map[string]any {
 
 func deployInternalCertificates(ctx *pulumi.Context, provider *kubernetes.Provider, deps []pulumi.Resource) ([]pulumi.Resource, error) {
 	for _, o := range internalCertificates() {
+		if ProductionStandalone(ctx) && o["kind"] == "Certificate" && o["metadata"].(map[string]any)["name"] == "gateway-internal-ca" {
+			o["spec"].(map[string]any)["commonName"] = "registry-production-gateway"
+		}
 		r, err := register(ctx, provider, o, deps)
 		if err != nil {
 			return nil, err
@@ -62,6 +65,12 @@ func managedControllerTLS(o map[string]any) {
 }
 
 func PublicCertificates(ctx *pulumi.Context) string {
+	if Production(ctx) {
+		if ProductionPhase(ctx) == "adopt" {
+			return "adopt"
+		}
+		return "managed"
+	}
 	if Standalone(ctx) {
 		return "managed"
 	}
@@ -73,7 +82,7 @@ func detachedCertificate(meta *metav1.ObjectMeta) (bool, error) {
 		return false, fmt.Errorf("public Certificate metadata unavailable; verify the live Certificate before retirement")
 	}
 	if len(meta.OwnerReferences) != 0 {
-		return false, fmt.Errorf("public Certificate still has an owner: run gateway-canary/detach_certificates.py before standalone retirement")
+		return false, fmt.Errorf("public Certificate still has an owner: complete the environment's certificate adoption and detachment before standalone retirement")
 	}
 	return true, nil
 }
@@ -87,10 +96,7 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 	if mode == "" {
 		return nil
 	}
-	for _, item := range []struct{ namespace, name, host string }{
-		{"default", "mcp-registry-staging-tls", "staging.registry.modelcontextprotocol.io"},
-		{"monitoring", "grafana-tls", "grafana.staging.registry.modelcontextprotocol.io"},
-	} {
+	for _, item := range publicCertificates(ctx) {
 		certificateDependencies := append([]pulumi.Resource{}, dependencies...)
 		if Standalone(ctx) {
 			// With a GVK in the read state, the provider does not infer the
@@ -116,7 +122,7 @@ func DeployPublicCertificates(ctx *pulumi.Context, provider *kubernetes.Provider
 		} else {
 			meta["ownerReferences"] = []any{}
 		}
-		o := map[string]any{"apiVersion": "cert-manager.io/v1", "kind": "Certificate", "metadata": meta, "spec": map[string]any{"secretName": item.name, "dnsNames": []any{item.host}, "issuerRef": map[string]any{"name": "letsencrypt-prod", "kind": "ClusterIssuer", "group": "cert-manager.io"}, "usages": []any{"digital signature", "key encipherment"}}}
+		o := map[string]any{"apiVersion": "cert-manager.io/v1", "kind": "Certificate", "metadata": meta, "spec": map[string]any{"secretName": item.name, "dnsNames": item.hosts, "issuerRef": map[string]any{"name": "letsencrypt-prod", "kind": "ClusterIssuer", "group": "cert-manager.io"}, "usages": []any{"digital signature", "key encipherment"}}}
 		if _, err := register(ctx, provider, o, certificateDependencies, opts...); err != nil {
 			return err
 		}

@@ -29,6 +29,11 @@ PULUMI_CONFIG_PASSPHRASE="" pulumi config set mcp-registry:githubClientSecret --
 
 ### Production Deployment (GCP)
 
+The opt-in [production Gateway migration](gateway-canary/production-migration.md)
+documents endpoint/certificate adoption, connectivity checks and full ingress
+retirement. It leaves the release flow below intact and is disabled until an
+explicit production phase is committed.
+
 **Note:** Deployments are automatically handled by GitHub Actions with separate workflows for staging and production:
 
 - **Staging:** All merges to the `main` branch automatically build and deploy the latest code to the `staging` environment via [deploy-staging.yml](../.github/workflows/deploy-staging.yml). The deployment uses the digest returned by that build; it does not remain pinned to an old experiment image. Manual runs resolve the current published `:main` image to a digest once.

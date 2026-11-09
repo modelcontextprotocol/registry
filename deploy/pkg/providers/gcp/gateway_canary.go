@@ -38,18 +38,7 @@ func createGatewayCanary(ctx *pulumi.Context, cluster *container.Cluster, projec
 			return nil, nil, err
 		}
 	}
-	_, err = logging.NewProjectExclusion(ctx, "registry-gateway-canary-fast-read-sampling", &logging.ProjectExclusionArgs{Project: pulumi.String(project), Name: pulumi.String("registry-gateway-canary-fast-read-sampling"), Description: pulumi.String("Keep 10% of fast successful canary listing logs; metrics use unsampled local logs."), Filter: pulumi.String(`resource.type="k8s_container"
-resource.labels.namespace_name=("registry-gateway-canary" OR "ingress-nginx")
-resource.labels.container_name="nginx"
-log_id("stdout")
-severity < WARNING
-jsonPayload.kind="registry_access"
-jsonPayload.method=("GET" OR "HEAD")
-jsonPayload.status=("200" OR "304")
-jsonPayload.uri =~ "^/v0(\\.1)?/servers(\\?|$)"
-jsonPayload.duration =~ "^0\\."
-insertId:*
-sample(insertId, 0.9)`)}, opts...)
+	_, err = logging.NewProjectExclusion(ctx, "registry-gateway-canary-fast-read-sampling", &logging.ProjectExclusionArgs{Project: pulumi.String(project), Name: pulumi.String("registry-gateway-canary-fast-read-sampling"), Description: pulumi.String("Keep 10% of fast successful canary listing logs; metrics use unsampled local logs."), Filter: pulumi.String(gatewayAccessLogExclusionFilter)}, opts...)
 	return pool, address, err
 }
 
@@ -68,6 +57,57 @@ func reserveStagingIngressAddress(ctx *pulumi.Context, project, region string, p
 		opts = append(opts, pulumi.Provider(provider))
 	}
 	address, err := compute.NewAddress(ctx, "registry-staging-ingress-ip", &compute.AddressArgs{Project: pulumi.String(project), Region: pulumi.String(region), Address: pulumi.String(value), AddressType: pulumi.String("EXTERNAL")}, opts...)
+	if err != nil {
+		return pulumi.StringOutput{}, err
+	}
+	return address.Address, nil
+}
+
+const gatewayAccessLogExclusionFilter = `resource.type="k8s_container"
+resource.labels.namespace_name=("registry-gateway-canary" OR "ingress-nginx")
+resource.labels.container_name="nginx"
+log_id("stdout")
+severity < WARNING
+jsonPayload.kind="registry_access"
+jsonPayload.method=("GET" OR "HEAD")
+jsonPayload.status=("200" OR "304")
+jsonPayload.uri =~ "^/v0(\\.1)?/servers(\\?|$)"
+jsonPayload.duration =~ "^0\\."
+insertId:*
+sample(insertId, 0.9)`
+
+// Adopt the existing production reservation without replacing its forwarding rule.
+func reserveProductionIngressAddress(ctx *pulumi.Context, project, region string, provider *gcp.Provider) (pulumi.StringOutput, error) {
+	c := config.New(ctx, "mcp-registry")
+	value := c.Require("gatewayProductionPublicIP")
+	name := c.Require("gatewayProductionAddressName")
+	if project != "mcp-registry-prod" {
+		return pulumi.StringOutput{}, fmt.Errorf("production ingress reservation requires production GCP")
+	}
+	opts := []pulumi.ResourceOption{pulumi.Protect(true)}
+	if c.Get("gatewayProductionPhase") == "adopt" {
+		opts = append(opts, pulumi.Import(pulumi.ID("projects/"+project+"/regions/"+region+"/addresses/"+name)))
+	}
+	if provider != nil {
+		opts = append(opts, pulumi.Provider(provider))
+	}
+
+	readOpts := []pulumi.ResourceOption{}
+	if provider != nil {
+		readOpts = append(readOpts, pulumi.Provider(provider))
+	}
+	existing, err := compute.GetAddress(ctx, "production-public-address-identity", pulumi.ID("projects/"+project+"/regions/"+region+"/addresses/"+name), nil, readOpts...)
+	if err != nil {
+		return pulumi.StringOutput{}, err
+	}
+	verified := existing.Address.ApplyT(func(live string) (string, error) {
+		if live != value {
+			return "", fmt.Errorf("production address reservation does not match the public IP")
+		}
+		return live, nil
+	}).(pulumi.StringOutput)
+	address, err := compute.NewAddress(ctx, "registry-production-ingress-ip", &compute.AddressArgs{Name: pulumi.String(name), Project: pulumi.String(project), Region: pulumi.String(region), Address: verified, AddressType: pulumi.String("EXTERNAL"), Description: existing.Description, NetworkTier: existing.NetworkTier}, opts...)
+
 	if err != nil {
 		return pulumi.StringOutput{}, err
 	}

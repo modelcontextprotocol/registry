@@ -122,6 +122,10 @@ func SetupIngressController(ctx *pulumi.Context, cluster *providers.ProviderInfo
 
 	podLabels := pulumi.StringMap{}
 	serviceValues := pulumi.Map{"type": serviceType, "externalTrafficPolicy": pulumi.String("Local"), "annotations": pulumi.Map{}}
+	if gatewaycanary.Production(ctx) {
+		serviceValues["loadBalancerIP"] = cluster.StagingIngressAddress
+		chartOptions = append(chartOptions, pulumi.Transformations([]pulumi.ResourceTransformation{productionLegacyServiceTransform(ctx)}))
+	}
 	if gatewaycanary.HandoffEnabled(ctx) {
 		podLabels[gatewaycanary.EdgeLabel] = pulumi.String("true")
 		serviceValues["loadBalancerIP"] = cluster.StagingIngressAddress
