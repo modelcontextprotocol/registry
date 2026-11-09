@@ -80,7 +80,8 @@ def main():
     available = subprocess.check_output(k + ['api-resources', '--api-group=k8up.io', '-o', 'name'], text=True).splitlines()
     require(set(available) <= {x + '.k8up.io' for x in KINDS}, 'unknown K8up API kind')
     inventory = {kind: get(kind + '.k8up.io') if kind + '.k8up.io' in available else [] for kind in KINDS}
-    inventory.update({kind: get(kind) for kind in ('jobs', 'pods', 'pvcs')})
+    inventory.update({kind: get(api_kind) for kind, api_kind in
+                      [('jobs', 'jobs'), ('pods', 'pods'), ('pvcs', 'persistentvolumeclaims')]})
     (args.output / 'inventory.json').write_text(json.dumps(inventory, indent=2) + '\n')
     if args.cleanup_historical:
         require(args.prior_inventory is not None, 'original inventory required')
