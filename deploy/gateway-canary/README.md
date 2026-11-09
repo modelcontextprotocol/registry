@@ -132,9 +132,11 @@ Service IP and retains hostname/TLS verification. This measures the active data
 plane with a controlled fixture, not a production traffic replay or internet
 capacity benchmark. Public HTTPS probes run separately during every scenario.
 
-`limits.py` verifies real source-IP limiting; use `--replicas 1` for current compact staging.
-The four-replica `autoscale.py` qualification applies only to the historical expanded
-profile; do not run it against everyday compact staging or expand capacity implicitly.
+`limits.py` accepts only the historical two- or four-replica profiles; it is not
+a qualified singleton-staging check and must not be run against everyday compact
+staging. The four-replica `autoscale.py` qualification likewise applies only to
+the historical expanded profile. Neither tool justifies expanding current capacity
+implicitly; a new singleton rate-limit check requires separate qualification.
 `resilience.py` also supports controller, rollout and node scenarios. Rollout
 tests default to ten minutes to cover both the update and restoration with
 graceful draining. The node scenario defaults to five minutes; it drains one
