@@ -536,12 +536,11 @@ this active repository. Do not extend lifecycle deletion to live Restic objects.
 
 The legacy K8up Schedule is removed. Clearing its spec can leave defaulted
 backup/prune entries without cron expressions and crash the K8up operator.
-The idle operator and its CRDs have been retired; the existing credentials remain
-required by the archive CronJob. Existing objects
-at the bucket root and in `postgres-logical-v1` are preserved for investigation;
-they are not a verified recovery source and are never pruned by the new job.
-The old physical-data production-to-staging sync workflow is guarded against
-execution because it is incompatible with the current archive format.
+The idle operator and its CRDs have been retired. Production credentials remain
+required by the archive CronJob. Legacy objects at the bucket root and in
+`postgres-logical-v1` have been retired. The obsolete physical-data
+production-to-staging sync workflow has been removed; it was incompatible with
+the current logical archive format.
 
 On a **new production deployment**, initialize only the new repository before
 starting the CronJob. With the existing S3 credentials and repository password securely
@@ -560,14 +559,100 @@ an existing or damaged repository. The password comes from
 `default/k8up-backup-credentials`. Preserve that password/key association;
 changing a Secret alone does not rotate Restic keys. Do not print credentials.
 
+### Weekly staging database refresh
+
+Staging's `registry-staging-restore` CronJob refreshes its registry database from
+`gs://mcp-registry-prod-backups/postgres-custom-v1` every Sunday at **06:00 UTC**.
+This replaces staging-only registry data. Staging downtime is intentional and
+acceptable; production and Grafana databases are never restore targets.
+
+`mcp-registry:stagingRestore` provisions the job, controller, namespace-scoped RBAC,
+reader account/key, and watchdog. `stagingRestoreScheduleEnabled` controls the
+CronJob's suspended state. Bootstrap it suspended and complete a manual restore
+before enabling the weekly schedule. The watchdog runs every ten minutes.
+
+The workflow selects the latest complete Restic snapshot from host
+`registry-postgres`, tag `postgres-custom`, and rejects snapshots older than 36
+hours. It downloads with `--no-lock`, checks the checksum and archive readability,
+and checks staging identity before stopping the app. It saves the replica count
+and a maintenance lock in `registry-staging-restore-state`, waits for app pods to
+exit, and restores with the existing staging app role in a single transaction.
+Staging extensions, role passwords and permissions are preserved. The app's
+registry tables are replaced; unrelated database objects are not deliberately
+removed. A failed SQL restore rolls back that transaction, but staging stays
+stopped for operator inspection. No parallel database or automatic rollback copy
+is created. Successful completion requires restored rows, completed migrations
+on app startup, available app replicas and a successful listing request.
+
+The source reader has only object get/list access to the active repository;
+it cannot write or delete production backups. Staging currently has no Workload
+Identity configuration, so the reader key is managed by Pulumi in a dedicated
+Kubernetes Secret. It has no production Kubernetes access or project-level IAM
+role. `registry-staging-restore-password` is a separate bootstrap Secret containing
+the existing repository password. Neither production HMAC credentials nor the
+retired staging backup credentials are used. Do not print, commit or upload keys,
+passwords, dump contents or restore logs containing data. Rotate the reader key
+through Pulumi and update the password Secret if the Restic key/password changes.
+
+After deploying the suspended job and its reader account, an authorized operator
+bootstraps source IAM/password and email alerts:
+
+```bash
+python3 tools/admin/configure-staging-restore.py
+kubectl --context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging -n default create job \
+  --from=cronjob/registry-staging-restore registry-staging-restore-initial
+```
+
+The bootstrap helper preserves unrelated bucket IAM bindings and uses its etag.
+It grants read access only to the active prefix (bucket-level listing is required
+by Restic). It copies the repository password in memory and reuses the enabled
+production backup email recipient in the staging project. Production backup
+Secrets and repository contents are never changed.
+
+Inspect every init container and wait for `REGISTRY_STAGING_RESTORE_SUCCESS` in
+the final container, then verify the staging gateway and a real listing. After
+that first success, enable freshness alerting and set
+`stagingRestoreScheduleEnabled: "true"` through the normal staging deployment:
+
+```bash
+python3 tools/admin/configure-staging-restore.py --enable-freshness
+```
+
+Failure logs trigger an email; the watchdog also reports failed Jobs and a
+maintenance lock older than 40 minutes, covering killed containers and timeout
+failures that cannot log for themselves. A separate alert fires after eight days
+without a successful refresh, including complete absence of the success metric.
+Routine successes do not send email. Test the failure notification with a separate
+watchdog-derived Job using controller phase `alert-test`; this emits an explicit
+test failure and performs no database operations. Keep alert logs free of data.
+
+Do not run a staging deployment concurrently with a refresh. `Forbid` prevents
+scheduled overlap and the maintenance lock prevents concurrent manual restores.
+The job never kills database sessions. The existing HPA remains configured;
+manually setting app replicas to zero suspends it until a positive count returns.
+The 35-minute Job deadline bounds a stuck restore; automatic retries are disabled
+so a failed job cannot silently replace data again.
+
+On failure, inspect Job/init-container logs and `registry-staging-restore-state`.
+If failure preceded the database commit, the single transaction preserves the
+prior tables; if restoration succeeded but app startup failed, inspect migration
+and application errors. Resolve the problem before restoring the saved replica
+count or retrying. After confirming the failed job has stopped, clear only its
+`active_id` lock and restore the saved replica count before starting a new manual
+Job. The controller refuses to overwrite another run's lock or start against an
+already-stopped application. Any independent staging writes after the refresh
+will be replaced by the next scheduled refresh.
+
 ### Retiring the idle K8up operator
 
 The production archive CronJob calls `pg_dump` and Restic directly. Removing the
 idle K8up Helm chart and CRDs does not remove that CronJob, its database Service,
 `k8up-repo-password`, `k8up-backup-credentials`, the HMAC key, or either backup
 bucket. Keep their existing Pulumi identities and password/key association.
-No dump PVC, GCE snapshot, archive, or bucket retention policy is deleted or
-changed by this cleanup. The disabled physical-data sync workflow remains guarded.
+The operator-retirement step below does not delete storage or credentials. A
+subsequent retirement removed the unused dump PVC, staging pre-resize snapshot,
+legacy archives, staging-only credentials, and obsolete sync workflow. The
+active production repository and both production backup Secrets remain managed.
 
 Before applying this retirement, run the read-only inventory for **both** stacks,
 using a new owner-only directory for each invocation:

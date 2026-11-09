@@ -497,7 +497,7 @@ func (p *Provider) CreateBackupStorage(ctx *pulumi.Context, cluster *providers.P
 	// Keep the staging bucket managed, but retire its unused S3 credentials.
 	// Production still needs this key for the daily archive backup job.
 	if environment == "staging" {
-		return nil, nil
+		return nil, stagingRestoreReader(ctx, cluster, resourceOpts)
 	}
 
 	// Create HMAC key for S3-compatible access

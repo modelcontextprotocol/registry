@@ -1,0 +1,874 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "registry-staging-restore",
+        "namespace": "default",
+        "labels": {
+          "environment": "staging"
+        }
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "registry-staging-restore",
+        "namespace": "default",
+        "labels": {
+          "environment": "staging"
+        }
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "apps"
+          ],
+          "resources": [
+            "deployments"
+          ],
+          "resourceNames": [
+            "mcp-registry"
+          ],
+          "verbs": [
+            "get"
+          ]
+        },
+        {
+          "apiGroups": [
+            "apps"
+          ],
+          "resources": [
+            "deployments/scale"
+          ],
+          "resourceNames": [
+            "mcp-registry"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "configmaps"
+          ],
+          "resourceNames": [
+            "registry-staging-restore-state"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs"
+          ],
+          "verbs": [
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "postgresql.cnpg.io"
+          ],
+          "resources": [
+            "clusters"
+          ],
+          "resourceNames": [
+            "registry-pg"
+          ],
+          "verbs": [
+            "get"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "registry-staging-restore",
+        "namespace": "default",
+        "labels": {
+          "environment": "staging"
+        }
+      },
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "registry-staging-restore"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "registry-staging-restore",
+          "namespace": "default"
+        }
+      ]
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "registry-staging-restore",
+        "namespace": "default",
+        "labels": {
+          "environment": "staging"
+        }
+      },
+      "data": {
+        "run.py": "__CONTROLLER__"
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "CronJob",
+      "metadata": {
+        "name": "registry-staging-restore",
+        "namespace": "default",
+        "labels": {
+          "environment": "staging"
+        }
+      },
+      "spec": {
+        "schedule": "0 6 * * 0",
+        "timeZone": "UTC",
+        "suspend": "__SUSPEND__",
+        "concurrencyPolicy": "Forbid",
+        "startingDeadlineSeconds": 3600,
+        "successfulJobsHistoryLimit": 2,
+        "failedJobsHistoryLimit": 3,
+        "jobTemplate": {
+          "metadata": {
+            "labels": {
+              "app": "registry-staging-restore"
+            }
+          },
+          "spec": {
+            "backoffLimit": 0,
+            "activeDeadlineSeconds": 2100,
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app": "registry-staging-restore",
+                  "environment": "staging"
+                }
+              },
+              "spec": {
+                "serviceAccountName": "registry-staging-restore",
+                "automountServiceAccountToken": false,
+                "restartPolicy": "Never",
+                "securityContext": {
+                  "runAsNonRoot": true,
+                  "runAsUser": 65532,
+                  "runAsGroup": 65532,
+                  "fsGroup": 65532
+                },
+                "nodeSelector": {
+                  "registry-role": "worker"
+                },
+                "initContainers": [
+                  {
+                    "name": "list-backup",
+                    "image": "ghcr.io/k8up-io/k8up:v2.12.0",
+                    "command": [
+                      "/bin/sh",
+                      "-ec"
+                    ],
+                    "args": [
+                      "set -eu\numask 077\ntrap 'rc=$?; if [ $rc -ne 0 ]; then echo REGISTRY_STAGING_RESTORE_FAILED phase=list-backup >&2; fi' EXIT\nrestic --no-lock --no-cache snapshots --host registry-postgres --tag postgres-custom --latest 1 --json > /work/snapshots.json"
+                    ],
+                    "env": [
+                      {
+                        "name": "RESTIC_REPOSITORY",
+                        "value": "gs:mcp-registry-prod-backups:/postgres-custom-v1"
+                      },
+                      {
+                        "name": "RESTIC_PASSWORD",
+                        "valueFrom": {
+                          "secretKeyRef": {
+                            "name": "registry-staging-restore-password",
+                            "key": "password"
+                          }
+                        }
+                      },
+                      {
+                        "name": "GOOGLE_PROJECT_ID",
+                        "value": "mcp-registry-prod"
+                      },
+                      {
+                        "name": "GOOGLE_APPLICATION_CREDENTIALS",
+                        "value": "/gcs/gcs.json"
+                      },
+                      {
+                        "name": "HOME",
+                        "value": "/tmp"
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      },
+                      {
+                        "name": "gcs",
+                        "mountPath": "/gcs",
+                        "readOnly": true
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi",
+                        "ephemeral-storage": "1Gi"
+                      },
+                      "limits": {
+                        "cpu": "500m",
+                        "memory": "512Mi",
+                        "ephemeral-storage": "3Gi"
+                      }
+                    }
+                  },
+                  {
+                    "name": "select",
+                    "image": "python:3.12-slim-bookworm",
+                    "command": [
+                      "python3",
+                      "/scripts/run.py",
+                      "select"
+                    ],
+                    "env": [
+                      {
+                        "name": "RESTORE_ENVIRONMENT",
+                        "value": "staging"
+                      },
+                      {
+                        "name": "POD_UID",
+                        "valueFrom": {
+                          "fieldRef": {
+                            "fieldPath": "metadata.uid"
+                          }
+                        }
+                      },
+                      {
+                        "name": "PYTHONDONTWRITEBYTECODE",
+                        "value": "1"
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      },
+                      {
+                        "name": "scripts",
+                        "mountPath": "/scripts",
+                        "readOnly": true
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "50m",
+                        "memory": "64Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "128Mi"
+                      }
+                    }
+                  },
+                  {
+                    "name": "fetch-backup",
+                    "image": "ghcr.io/k8up-io/k8up:v2.12.0",
+                    "command": [
+                      "/bin/sh",
+                      "-ec"
+                    ],
+                    "args": [
+                      "set -eu\numask 077\ntrap 'rc=$?; if [ $rc -ne 0 ]; then echo REGISTRY_STAGING_RESTORE_FAILED phase=fetch-backup >&2; fi' EXIT\nrestic --no-lock --no-cache restore \"$(cat /work/snapshot-id)\" --target /work\ncd /work/backup\nsha256sum -c registry.dump.sha256"
+                    ],
+                    "env": [
+                      {
+                        "name": "RESTIC_REPOSITORY",
+                        "value": "gs:mcp-registry-prod-backups:/postgres-custom-v1"
+                      },
+                      {
+                        "name": "RESTIC_PASSWORD",
+                        "valueFrom": {
+                          "secretKeyRef": {
+                            "name": "registry-staging-restore-password",
+                            "key": "password"
+                          }
+                        }
+                      },
+                      {
+                        "name": "GOOGLE_PROJECT_ID",
+                        "value": "mcp-registry-prod"
+                      },
+                      {
+                        "name": "GOOGLE_APPLICATION_CREDENTIALS",
+                        "value": "/gcs/gcs.json"
+                      },
+                      {
+                        "name": "HOME",
+                        "value": "/tmp"
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      },
+                      {
+                        "name": "gcs",
+                        "mountPath": "/gcs",
+                        "readOnly": true
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi",
+                        "ephemeral-storage": "1Gi"
+                      },
+                      "limits": {
+                        "cpu": "500m",
+                        "memory": "512Mi",
+                        "ephemeral-storage": "3Gi"
+                      }
+                    }
+                  },
+                  {
+                    "name": "verify-archive",
+                    "image": "postgres:17",
+                    "command": [
+                      "/bin/sh",
+                      "-ec"
+                    ],
+                    "args": [
+                      "set -eu\numask 077\ntrap 'rc=$?; if [ $rc -ne 0 ]; then echo REGISTRY_STAGING_RESTORE_FAILED phase=verify-archive >&2; fi' EXIT\npg_restore --file=/dev/null /work/backup/registry.dump\npg_restore --list /work/backup/registry.dump > /work/full-toc\n# Keep staging-owned extensions; no role/password or grant copying.\nsed '/ EXTENSION /d' /work/full-toc > /work/restore-toc\ntest \"$(psql -X -At -v ON_ERROR_STOP=1 -c 'SHOW server_version_num')\" -ge 170000\ntest \"$(psql -X -At -v ON_ERROR_STOP=1 -c 'SHOW server_version_num')\" -lt 180000\ntest \"$(psql -X -At -v ON_ERROR_STOP=1 -c \"SELECT count(*) FROM pg_extension WHERE extname IN ('uuid-ossp','pg_trgm');\")\" = 2"
+                    ],
+                    "env": [
+                      {
+                        "name": "PGHOST",
+                        "value": "registry-pg-rw"
+                      },
+                      {
+                        "name": "PGPORT",
+                        "value": "5432"
+                      },
+                      {
+                        "name": "PGDATABASE",
+                        "value": "app"
+                      },
+                      {
+                        "name": "PGSSLMODE",
+                        "value": "require"
+                      },
+                      {
+                        "name": "PGCONNECT_TIMEOUT",
+                        "value": "20"
+                      },
+                      {
+                        "name": "PGOPTIONS",
+                        "value": "-c lock_timeout=30s -c statement_timeout=1200000"
+                      },
+                      {
+                        "name": "PGUSER",
+                        "valueFrom": {
+                          "secretKeyRef": {
+                            "name": "registry-pg-app",
+                            "key": "username"
+                          }
+                        }
+                      },
+                      {
+                        "name": "PGPASSWORD",
+                        "valueFrom": {
+                          "secretKeyRef": {
+                            "name": "registry-pg-app",
+                            "key": "password"
+                          }
+                        }
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi",
+                        "ephemeral-storage": "1Gi"
+                      },
+                      "limits": {
+                        "cpu": "500m",
+                        "memory": "512Mi",
+                        "ephemeral-storage": "3Gi"
+                      }
+                    }
+                  },
+                  {
+                    "name": "stop",
+                    "image": "python:3.12-slim-bookworm",
+                    "command": [
+                      "python3",
+                      "/scripts/run.py",
+                      "stop"
+                    ],
+                    "env": [
+                      {
+                        "name": "RESTORE_ENVIRONMENT",
+                        "value": "staging"
+                      },
+                      {
+                        "name": "POD_UID",
+                        "valueFrom": {
+                          "fieldRef": {
+                            "fieldPath": "metadata.uid"
+                          }
+                        }
+                      },
+                      {
+                        "name": "PYTHONDONTWRITEBYTECODE",
+                        "value": "1"
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      },
+                      {
+                        "name": "scripts",
+                        "mountPath": "/scripts",
+                        "readOnly": true
+                      },
+                      {
+                        "name": "api-token",
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "readOnly": true
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "50m",
+                        "memory": "64Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "128Mi"
+                      }
+                    }
+                  },
+                  {
+                    "name": "restore",
+                    "image": "postgres:17",
+                    "command": [
+                      "/bin/sh",
+                      "-ec"
+                    ],
+                    "args": [
+                      "set -eu\numask 077\ntrap 'rc=$?; if [ $rc -ne 0 ]; then echo REGISTRY_STAGING_RESTORE_FAILED phase=restore >&2; fi' EXIT\ncd /work/backup\nsha256sum -c registry.dump.sha256\npg_restore --exit-on-error --single-transaction --clean --if-exists --no-owner --no-privileges --use-list=/work/restore-toc --dbname=app registry.dump\npsql -X -v ON_ERROR_STOP=1 -c 'ANALYZE;'\ntest \"$(psql -X -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public.servers')\" -gt 0\ntest \"$(psql -X -At -v ON_ERROR_STOP=1 -c 'SELECT count(*) FROM public.schema_migrations')\" -gt 0\necho REGISTRY_STAGING_RESTORE_DATABASE_VALIDATED"
+                    ],
+                    "env": [
+                      {
+                        "name": "PGHOST",
+                        "value": "registry-pg-rw"
+                      },
+                      {
+                        "name": "PGPORT",
+                        "value": "5432"
+                      },
+                      {
+                        "name": "PGDATABASE",
+                        "value": "app"
+                      },
+                      {
+                        "name": "PGSSLMODE",
+                        "value": "require"
+                      },
+                      {
+                        "name": "PGCONNECT_TIMEOUT",
+                        "value": "20"
+                      },
+                      {
+                        "name": "PGOPTIONS",
+                        "value": "-c lock_timeout=30s -c statement_timeout=1200000"
+                      },
+                      {
+                        "name": "PGUSER",
+                        "valueFrom": {
+                          "secretKeyRef": {
+                            "name": "registry-pg-app",
+                            "key": "username"
+                          }
+                        }
+                      },
+                      {
+                        "name": "PGPASSWORD",
+                        "valueFrom": {
+                          "secretKeyRef": {
+                            "name": "registry-pg-app",
+                            "key": "password"
+                          }
+                        }
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi",
+                        "ephemeral-storage": "1Gi"
+                      },
+                      "limits": {
+                        "cpu": "500m",
+                        "memory": "512Mi",
+                        "ephemeral-storage": "3Gi"
+                      }
+                    }
+                  }
+                ],
+                "containers": [
+                  {
+                    "name": "start",
+                    "image": "python:3.12-slim-bookworm",
+                    "command": [
+                      "python3",
+                      "/scripts/run.py",
+                      "start"
+                    ],
+                    "env": [
+                      {
+                        "name": "RESTORE_ENVIRONMENT",
+                        "value": "staging"
+                      },
+                      {
+                        "name": "POD_UID",
+                        "valueFrom": {
+                          "fieldRef": {
+                            "fieldPath": "metadata.uid"
+                          }
+                        }
+                      },
+                      {
+                        "name": "PYTHONDONTWRITEBYTECODE",
+                        "value": "1"
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      },
+                      {
+                        "name": "scripts",
+                        "mountPath": "/scripts",
+                        "readOnly": true
+                      },
+                      {
+                        "name": "api-token",
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "readOnly": true
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "50m",
+                        "memory": "64Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "128Mi"
+                      }
+                    }
+                  }
+                ],
+                "volumes": [
+                  {
+                    "name": "work",
+                    "emptyDir": {
+                      "sizeLimit": "2Gi"
+                    }
+                  },
+                  {
+                    "name": "scripts",
+                    "configMap": {
+                      "name": "registry-staging-restore"
+                    }
+                  },
+                  {
+                    "name": "gcs",
+                    "secret": {
+                      "secretName": "registry-staging-restore-gcs"
+                    }
+                  },
+                  {
+                    "name": "api-token",
+                    "projected": {
+                      "sources": [
+                        {
+                          "serviceAccountToken": {
+                            "path": "token",
+                            "expirationSeconds": 3600
+                          }
+                        },
+                        {
+                          "configMap": {
+                            "name": "kube-root-ca.crt",
+                            "items": [
+                              {
+                                "key": "ca.crt",
+                                "path": "ca.crt"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "CronJob",
+      "metadata": {
+        "name": "registry-staging-restore-watchdog",
+        "namespace": "default",
+        "labels": {
+          "environment": "staging"
+        }
+      },
+      "spec": {
+        "schedule": "*/10 * * * *",
+        "timeZone": "UTC",
+        "concurrencyPolicy": "Forbid",
+        "successfulJobsHistoryLimit": 1,
+        "failedJobsHistoryLimit": 1,
+        "jobTemplate": {
+          "spec": {
+            "backoffLimit": 0,
+            "activeDeadlineSeconds": 120,
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app": "registry-staging-restore-watchdog",
+                  "environment": "staging"
+                }
+              },
+              "spec": {
+                "serviceAccountName": "registry-staging-restore",
+                "automountServiceAccountToken": false,
+                "restartPolicy": "Never",
+                "securityContext": {
+                  "runAsNonRoot": true,
+                  "runAsUser": 65532,
+                  "runAsGroup": 65532,
+                  "fsGroup": 65532
+                },
+                "nodeSelector": {
+                  "registry-role": "worker"
+                },
+                "initContainers": [],
+                "containers": [
+                  {
+                    "name": "watch",
+                    "image": "python:3.12-slim-bookworm",
+                    "command": [
+                      "python3",
+                      "/scripts/run.py",
+                      "watch"
+                    ],
+                    "env": [
+                      {
+                        "name": "RESTORE_ENVIRONMENT",
+                        "value": "staging"
+                      },
+                      {
+                        "name": "POD_UID",
+                        "valueFrom": {
+                          "fieldRef": {
+                            "fieldPath": "metadata.uid"
+                          }
+                        }
+                      },
+                      {
+                        "name": "PYTHONDONTWRITEBYTECODE",
+                        "value": "1"
+                      }
+                    ],
+                    "volumeMounts": [
+                      {
+                        "name": "work",
+                        "mountPath": "/work"
+                      },
+                      {
+                        "name": "scripts",
+                        "mountPath": "/scripts",
+                        "readOnly": true
+                      },
+                      {
+                        "name": "api-token",
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "readOnly": true
+                      }
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "50m",
+                        "memory": "64Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "128Mi"
+                      }
+                    }
+                  }
+                ],
+                "volumes": [
+                  {
+                    "name": "work",
+                    "emptyDir": {
+                      "sizeLimit": "2Gi"
+                    }
+                  },
+                  {
+                    "name": "scripts",
+                    "configMap": {
+                      "name": "registry-staging-restore"
+                    }
+                  },
+                  {
+                    "name": "api-token",
+                    "projected": {
+                      "sources": [
+                        {
+                          "serviceAccountToken": {
+                            "path": "token",
+                            "expirationSeconds": 3600
+                          }
+                        },
+                        {
+                          "configMap": {
+                            "name": "kube-root-ca.crt",
+                            "items": [
+                              {
+                                "key": "ca.crt",
+                                "path": "ca.crt"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

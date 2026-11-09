@@ -15,7 +15,7 @@ import (
 func DeployBackups(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, storage *providers.BackupStorageInfo) error {
 	// Staging has no scheduled backups or retained legacy repository to unlock.
 	if environment == "staging" {
-		return nil
+		return deployStagingRestore(ctx, cluster)
 	}
 	if storage == nil {
 		ctx.Log.Info("No backup storage configured, skipping backup deployment", nil)
