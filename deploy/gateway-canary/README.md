@@ -91,8 +91,9 @@ results are in [monitoring-validation.md](monitoring-validation.md).
 
 ## Qualification status
 
-See [validation.md](validation.md) and [validation.json](validation.json) for the
-observed results and remaining cutover gates. Source rendering, mocks, a successful apply or one healthy HTTP request
+See [production completion](production-completion.md) for the final functional
+checks. [validation.md](validation.md) and [validation.json](validation.json) retain
+the earlier comparison results and gates as historical evidence. Source rendering, mocks, a successful apply or one healthy HTTP request
 are not proof of feature or capacity parity. Production-shaped load, real IP
 limits, log rotation/restarts, collector freshness, HPA/rollout/failure behavior,
 TLS renewal, Grafana OAuth, dashboard/alert mappings and notification delivery

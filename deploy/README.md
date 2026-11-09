@@ -727,6 +727,14 @@ Historical comparison and failed load gates remain in `tools/ingressbench/` and
 `gateway-canary/`; they are evidence, not the current desired topology.
 Use full-stack previews and the normal release flow for subsequent changes.
 
+## Historical scaling rollout procedures
+
+The following isolation/scaling procedures describe earlier promotions and remain
+for recovery context. They are not required for ordinary releases or the completed
+Gateway migration. Use [current hosted capacity](#current-hosted-capacity) and the
+normal full-stack deployment commands for the active configuration. Legacy ingress
+scaling sections apply only to the retained recovery code path.
+
 ### Production infrastructure-only isolation
 
 `productionInfrastructureOnly: true` explicitly enables the isolated capacity
