@@ -44,21 +44,23 @@ def validate(inventory):
     # Follow the owner graph through Pods too; CRD GC must not reach a PVC.
     uids.update(j['metadata']['uid'] for j in jobs)
     pods = [p for p in inventory['pods'] if any(o['uid'] in uids for o in p['metadata'].get('ownerReferences', []))]
-    require(all(p['status']['phase'] in ('Succeeded', 'Failed') for p in pods), 'historical Pod still running')
+    require(all(p['status']['phase'] in ('Succeeded', 'Failed') and not p['metadata'].get('finalizers') for p in pods), 'historical Pod still active or has finalizers')
     uids.update(p['metadata']['uid'] for p in pods)
     require(not any(o['uid'] in uids for p in inventory['pvcs'] for o in p['metadata'].get('ownerReferences', [])), 'retained PVC owned by retired object')
     return jobs, pods
 
 
 def cleanup_targets(prior, current):
-    old_jobs, _ = validate(prior)
+    old_jobs, old_pods = validate(prior)
+    pod_uids = {p['metadata']['uid'] for p in old_pods}
     known = {(j['metadata']['namespace'], j['metadata']['name']): j['metadata']['uid'] for j in old_jobs}
     jobs = [j for j in current['jobs'] if (j['metadata']['namespace'], j['metadata']['name']) in known]
     for job in jobs:
         meta = job['metadata']
         require(meta['uid'] == known[(meta['namespace'], meta['name'])], 'historical Job was replaced')
         require(completed_job(job) and not meta.get('finalizers'), 'historical Job changed or has finalizers')
-    pods = [p for p in current['pods'] if any(o['uid'] in known.values() for o in p['metadata'].get('ownerReferences', []))]
+    pods = [p for p in current['pods'] if p['metadata']['uid'] in pod_uids or
+            any(o['uid'] in known.values() for o in p['metadata'].get('ownerReferences', []))]
     require(all(p['status']['phase'] in ('Succeeded', 'Failed') and not p['metadata'].get('finalizers') for p in pods), 'historical Pod still active or has finalizers')
     return jobs, pods
 
@@ -96,7 +98,8 @@ def main():
         require(not any(d['metadata']['name'] == 'k8up' and d['metadata']['namespace'] == 'default' for d in get('deployments')), 'operator still present')
         # Orphan propagation prevents deleting any storage-dependent objects.
         # UID/resourceVersion preconditions reject replacement or changed Jobs.
-        for obj in jobs + pods:
+        # Delete Pods first: orphaning Jobs can change dependent Pod resourceVersions.
+        for obj in pods + jobs:
             meta = obj['metadata']
             resource = 'jobs' if obj['kind'] == 'Job' else 'pods'
             prefix = '/apis/batch/v1' if resource == 'jobs' else '/api/v1'

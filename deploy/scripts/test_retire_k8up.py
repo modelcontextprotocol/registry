@@ -27,6 +27,7 @@ class RetirementChecks(unittest.TestCase):
         for target, key, value in [('backups', 'status', {'finished': False}),
                                    ('jobs', 'status', {'active': 1}),
                                    ('pods', 'status', {'phase': 'Running'}),
+                                   ('pods', 'metadata', {'uid': 'pod', 'ownerReferences': [{'uid': 'job'}], 'finalizers': ['external-cleanup']}),
                                    ('pvcs', 'metadata', {'ownerReferences': [{'uid': 'pod'}]}),
                                    ('backups', 'metadata', {'uid': 'backup', 'finalizers': ['external-cleanup']})]:
             with self.subTest(target=target, key=key):
@@ -53,6 +54,18 @@ class RetirementChecks(unittest.TestCase):
         jobs, pods = cleanup_targets(prior, current)
         self.assertEqual(jobs, [])
         self.assertEqual(len(pods), 1)
+
+    def test_post_apply_cleanup_finds_directly_owned_pods_after_orphaning(self):
+        prior = self.fixture()
+        prior['pods'][0]['metadata']['ownerReferences'] = [{'uid': 'backup'}]
+        current = copy.deepcopy(prior)
+        current['backups'] = []
+        current['pods'][0]['metadata'].pop('ownerReferences')
+        _, pods = cleanup_targets(prior, current)
+        self.assertEqual([p['metadata']['uid'] for p in pods], ['pod'])
+        current['pods'][0]['metadata']['uid'] = 'replacement'
+        _, pods = cleanup_targets(prior, current)
+        self.assertEqual(pods, [])
 
 
 if __name__ == '__main__':
