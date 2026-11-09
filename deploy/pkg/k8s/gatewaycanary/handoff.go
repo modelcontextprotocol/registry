@@ -280,10 +280,9 @@ func handoffRBAC() ([]map[string]any, error) {
 	return result, nil
 }
 
-// A full four-replica deployment cannot surge a fifth 500m proxy on the fixed
-// two-node pool. Replace at most one replica while preserving at least one.
+// Avoid reserving an extra proxy during rollout on the compact worker pool.
+// Replace at most one replica at a time; production retains two ready proxies.
 func boundedGatewayRollout(proxy map[string]any) {
-	// Each proxy reserves 500m CPU and two proxies can share a two-vCPU node.
 	// Avoid auto spawning a worker for every node CPU in each replica.
 	proxy["spec"].(map[string]any)["workerProcesses"] = 1
 	deployment := proxy["spec"].(map[string]any)["kubernetes"].(map[string]any)["deployment"].(map[string]any)
@@ -291,15 +290,16 @@ func boundedGatewayRollout(proxy map[string]any) {
 		spec := raw.(map[string]any)["value"].(map[string]any)["spec"].(map[string]any)
 		spec["strategy"] = map[string]any{"type": "RollingUpdate", "rollingUpdate": map[string]any{"maxSurge": 0, "maxUnavailable": 1}}
 		pod := spec["template"].(map[string]any)["spec"].(map[string]any)
-		// The public GCP health check takes up to 3 * 8s to remove a node.
-		// Keep serving while endpoints converge, then drain in-flight requests
-		// before the image entrypoint receives its fast-stop TERM signal.
-		pod["terminationGracePeriodSeconds"] = 90
+		// Health-check failure detection (3 * 8s) is not an upper bound on
+		// load-balancer propagation. A production node drain still received
+		// connections after the previous 30s wait. Serve for 90s before QUIT,
+		// then allow another 90s for in-flight requests and container teardown.
+		pod["terminationGracePeriodSeconds"] = 180
 		// Strategic merge joins this entry with the generated nginx container by
 		// name, retaining its image, ports, probes and resource reservations.
 		pod["containers"] = []any{map[string]any{
 			"name":      "nginx",
-			"lifecycle": map[string]any{"preStop": map[string]any{"exec": map[string]any{"command": []any{"/bin/sh", "-c", "sleep 30; nginx -s quit; while killall -0 nginx 2>/dev/null; do sleep 1; done"}}}},
+			"lifecycle": map[string]any{"preStop": map[string]any{"exec": map[string]any{"command": []any{"/bin/sh", "-c", "sleep 90; nginx -s quit; while killall -0 nginx 2>/dev/null; do sleep 1; done"}}}},
 		}}
 	}
 }
