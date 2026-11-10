@@ -14,18 +14,22 @@ POOL_MAX = "MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"
 POOL_MIN = "MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"
 
 
-def check_transition(phase, deployment, pods, hpas):
+def check_transition(phase, deployment, pods, hpas, sync_capacity=""):
+    if sync_capacity not in ("", "prepare", "enabled") or (sync_capacity and phase != "enabled"):
+        raise ValueError("Invalid incremental-sync capacity phase")
     if phase not in ("off", "prepare", "enabled"):
         raise ValueError("Unknown production scaling phase")
     spec, status = deployment["spec"], deployment.get("status", {})
     count = spec.get("replicas", 1)
-    if not 2 <= count <= 4:
+    if not 2 <= count <= (6 if sync_capacity else 4):
         raise ValueError("Unexpected live replica count")
     if status.get("observedGeneration", 0) < deployment["metadata"]["generation"]:
         raise ValueError("Wait for the current deployment to be observed")
     if any(status.get(k, 0) != count for k in ("replicas", "updatedReplicas", "readyReplicas", "availableReplicas")):
         raise ValueError("Wait for the current rollout to finish")
     targets = [h for h in hpas if h.get("spec", {}).get("scaleTargetRef", {}).get("name") == "mcp-registry"]
+    if not sync_capacity and any(h["spec"].get("maxReplicas", 4) > 4 for h in targets):
+        raise ValueError("Return sync capacity to prepare and settle at at most four apps before restoring larger pools")
     if phase == "off" and (targets or count != 2):
         raise ValueError("Return to prepare and settle at two replicas before restoring legacy pools")
     live = [p for p in pods if p.get("status", {}).get("phase") not in ("Succeeded", "Failed")]
@@ -43,13 +47,17 @@ def check_transition(phase, deployment, pods, hpas):
             raise ValueError("Unexpected app container")
         env = {e["name"]: e.get("value") for e in containers[0].get("env", [])}
         pool = (env.get(POOL_MAX, "60"), env.get(POOL_MIN, "10"))
-        if pool not in (("60", "10"), ("30", "5")):
+        if pool not in (("60", "10"), ("30", "5"), ("20", "5")):
             raise ValueError("Unexpected live connection pool settings")
         version = re.fullmatch(r"ghcr.io/modelcontextprotocol/registry:(\d+)\.(\d+)\.(\d+)", containers[0].get("image", ""))
         if bounded_required and (not version or tuple(map(int, version.groups())) < (1, 8, 7)):
             raise ValueError("All live apps must run a release with configurable pools")
-        if bounded_required and pool != ("30", "5"):
-            raise ValueError("Apply prepare first; every live app must use pools 30/5 before enabling HPA")
+        if bounded_required and pool not in (("30", "5"), ("20", "5")):
+            raise ValueError("Apply prepare first; every live app must use bounded pools before enabling HPA")
+        if (sync_capacity == "enabled" or count > 4) and pool != ("20", "5"):
+            raise ValueError("Apply sync prepare first; every live app must use pools 20/5 before allowing six apps")
+        if sync_capacity == "enabled" and tuple(map(int, version.groups())) < (1, 8, 9):
+            raise ValueError("Every live app must run the optimized sync release before enabling six apps")
 
 
 def read_json(command):
@@ -73,7 +81,7 @@ def main():
     deployment = read_json(command + ["deployment", "mcp-registry", "-o", "json"])
     pods = read_json(command + ["pods", "-l", "app=mcp-registry", "-o", "json"])["items"]
     hpas = read_json(command + ["hpa", "-o", "json"])["items"]
-    check_transition(phase, deployment, pods, hpas)
+    check_transition(phase, deployment, pods, hpas, config.get("mcp-registry:productionSyncCapacity", {}).get("value", ""))
     check_gateway(config)
     print("Production scaling transition preflight passed")
 

@@ -997,6 +997,29 @@ with no terminating pods. Only then set `productionAppScaling: off`, restore
 return to legacy pools while the HPA or extra apps remain. Preserve the
 protected database pool, existing volume, application release and networking.
 
+### Incremental-sync production capacity
+
+After migration 019 is prebuilt and release 1.8.9 is available, use two applies
+on the existing production burst-headroom profile:
+
+1. Set `productionSyncCapacity: prepare`, promote `imageTag` to 1.8.9 (or a later
+   tested stable release), and update `registryRolloutCommit`. This rolls out
+   max/min pools of 20/5 while retaining HPA 2–4 at 70% CPU.
+2. Once every app is Ready on the new release with 20/5 pools and no old pods
+   remain, set `productionSyncCapacity: enabled`. The HPA becomes 2–6 at 40%
+   CPU (480m per app), adding at most two replicas per 30 seconds. Existing
+   ten-minute scale-down stabilization and one-pod-per-two-minutes removal stay.
+
+The steady-state app connection budget remains 120. Worker bounds, database
+resources, gateway configuration and staging capacity are unchanged. The live
+preflight rejects activation with older binaries or any 30-connection app.
+
+To roll back capacity, first return to `productionSyncCapacity: prepare` and
+wait for at most four Ready apps and no terminating pods. Only then remove the
+setting if 30/5 pools are desired. The preflight rejects larger pools while the
+six-replica HPA remains. An application rollback can leave the additive index
+in place; retain 20/5 pools until the smaller HPA ceiling has settled.
+
 ### Bounded production ingress scaling
 
 With production app scaling enabled, `productionIngressScaling: true` and

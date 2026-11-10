@@ -40,6 +40,15 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	phase := c.Get("productionAppScaling")
 	ingressScaling := c.GetBool("productionIngressScaling")
 	burstHeadroom := c.GetBool("productionBurstHeadroom")
+	syncCapacity := c.Get("productionSyncCapacity")
+	if syncCapacity != "" {
+		if (syncCapacity != "prepare" && syncCapacity != "enabled") || phase != "enabled" || !burstHeadroom || !ingressScaling || !infraOnly || c.Get("environment") != "prod" {
+			return fmt.Errorf("productionSyncCapacity requires prepare or enabled on the production burst-headroom profile")
+		}
+		if syncCapacity == "enabled" && semver.Compare("v"+c.Get("imageTag"), "v1.8.9") < 0 {
+			return fmt.Errorf("productionSyncCapacity requires imageTag >= 1.8.9 with optimized incremental sync")
+		}
+	}
 	if burstHeadroom && !ingressScaling {
 		return fmt.Errorf("productionBurstHeadroom requires productionIngressScaling")
 	}
@@ -115,17 +124,21 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	return nil
 }
 
-func registryAutoscalerSpec(minReplicas int) *autoscalingv2.HorizontalPodAutoscalerSpecArgs {
+func registryAutoscalerSpec(minReplicas int, syncCapacity bool) *autoscalingv2.HorizontalPodAutoscalerSpecArgs {
+	maximum, target, scaleUpSeconds := 4, 70, 60
+	if syncCapacity {
+		maximum, target, scaleUpSeconds = 6, 40, 30
+	}
 	return &autoscalingv2.HorizontalPodAutoscalerSpecArgs{
-		MinReplicas: pulumi.Int(minReplicas), MaxReplicas: pulumi.Int(4),
+		MinReplicas: pulumi.Int(minReplicas), MaxReplicas: pulumi.Int(maximum),
 		ScaleTargetRef: &autoscalingv2.CrossVersionObjectReferenceArgs{ApiVersion: pulumi.String("apps/v1"), Kind: pulumi.String("Deployment"), Name: pulumi.String("mcp-registry")},
 		Metrics: autoscalingv2.MetricSpecArray{&autoscalingv2.MetricSpecArgs{
 			Type: pulumi.String("Resource"), Resource: &autoscalingv2.ResourceMetricSourceArgs{
-				Name: pulumi.String("cpu"), Target: &autoscalingv2.MetricTargetArgs{Type: pulumi.String("Utilization"), AverageUtilization: pulumi.Int(70)},
+				Name: pulumi.String("cpu"), Target: &autoscalingv2.MetricTargetArgs{Type: pulumi.String("Utilization"), AverageUtilization: pulumi.Int(target)},
 			},
 		}},
 		Behavior: &autoscalingv2.HorizontalPodAutoscalerBehaviorArgs{
-			ScaleUp:   &autoscalingv2.HPAScalingRulesArgs{StabilizationWindowSeconds: pulumi.Int(0), Policies: autoscalingv2.HPAScalingPolicyArray{&autoscalingv2.HPAScalingPolicyArgs{Type: pulumi.String("Pods"), Value: pulumi.Int(2), PeriodSeconds: pulumi.Int(60)}}},
+			ScaleUp:   &autoscalingv2.HPAScalingRulesArgs{StabilizationWindowSeconds: pulumi.Int(0), Policies: autoscalingv2.HPAScalingPolicyArray{&autoscalingv2.HPAScalingPolicyArgs{Type: pulumi.String("Pods"), Value: pulumi.Int(2), PeriodSeconds: pulumi.Int(scaleUpSeconds)}}},
 			ScaleDown: &autoscalingv2.HPAScalingRulesArgs{StabilizationWindowSeconds: pulumi.Int(600), Policies: autoscalingv2.HPAScalingPolicyArray{&autoscalingv2.HPAScalingPolicyArgs{Type: pulumi.String("Pods"), Value: pulumi.Int(1), PeriodSeconds: pulumi.Int(120)}}},
 		},
 	}
@@ -144,7 +157,7 @@ func deployRegistryAutoscaler(ctx *pulumi.Context, provider pulumi.ProviderResou
 	if config.New(ctx, "mcp-registry").Get("productionAppScaling") == "enabled" {
 		minimum = 2
 	}
-	spec := registryAutoscalerSpec(minimum)
+	spec := registryAutoscalerSpec(minimum, config.New(ctx, "mcp-registry").Get("productionSyncCapacity") == "enabled")
 	if gatewaycanary.Compact(ctx) {
 		spec.MaxReplicas = pulumi.Int(1)
 	}
