@@ -63,6 +63,8 @@ func reserveStagingIngressAddress(ctx *pulumi.Context, project, region string, p
 	return address.Address, nil
 }
 
+// Cloud Logging passes backslashes in a quoted regex to RE2 unchanged, so a
+// doubled backslash matches a literal one. Character classes need no escaping.
 const gatewayAccessLogExclusionFilter = `resource.type="k8s_container"
 resource.labels.namespace_name=("registry-gateway-canary" OR "ingress-nginx")
 resource.labels.container_name="nginx"
@@ -71,8 +73,8 @@ severity < WARNING
 jsonPayload.kind="registry_access"
 jsonPayload.method=("GET" OR "HEAD")
 jsonPayload.status=("200" OR "304")
-jsonPayload.uri =~ "^/v0(\\.1)?/servers(\\?|$)"
-jsonPayload.duration =~ "^0\\."
+jsonPayload.uri =~ "^/v0([.]1)?/servers([?]|$)"
+jsonPayload.duration =~ "^0[.]"
 insertId:*
 sample(insertId, 0.9)`
 
