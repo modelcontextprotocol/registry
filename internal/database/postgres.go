@@ -262,10 +262,10 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
 }
 
 func filteredQueryArgs(filter *ServerFilter, args []any) []any {
-	if filter != nil && (filter.SubstringName != nil || filter.UpdatedSince != nil) {
-		// Search and timestamp selectivity vary by orders of magnitude. Use an unnamed
+	if filter != nil && filter.SubstringName != nil {
+		// Search selectivity varies by orders of magnitude. Use an unnamed
 		// extended-protocol query so PostgreSQL plans for these parameter values
-		// instead of reusing one generic plan for every term or sync watermark.
+		// instead of reusing one generic plan for every term.
 		return append([]any{pgx.QueryExecModeExec}, args...)
 	}
 	return args

@@ -1147,8 +1147,9 @@ failures and scope limits; functional production validation is not a maximum-cap
 Migration 019 adds `idx_servers_updated_page_cover` on `(server_name, version)`
 including `updated_at`, `is_latest`, and `status`. Unlike the partial search
 index, it includes deleted versions required by incremental sync. Incremental
-queries select a page of keys before fetching payloads and use parameter-specific
-plans because recent and old watermarks have very different selectivity. The
+queries select a page of keys before fetching payloads. They retain prepared
+statement reuse and PostgreSQL automatic plan selection; forcing a fresh parse
+and plan per request regressed concurrent throughput in staging. The
 watermark comparison, cursor ordering, filters, and response format are unchanged.
 
 On a busy existing database, prebuild before deploying the application:
