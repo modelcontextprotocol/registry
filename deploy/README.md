@@ -1148,8 +1148,8 @@ Migration 019 adds `idx_servers_updated_page_cover` on `(server_name, version)`
 including `updated_at`, `is_latest`, and `status`. Unlike the partial search
 index, it includes deleted versions required by incremental sync. Incremental
 queries select a page of keys before fetching payloads. They retain prepared
-statement reuse and PostgreSQL automatic plan selection; forcing a fresh parse
-and plan per request regressed concurrent throughput in staging. The
+statement reuse, binary payload transfer, and PostgreSQL automatic plan selection.
+Forcing unnamed text-format execution regressed concurrent throughput in staging. The
 watermark comparison, cursor ordering, filters, and response format are unchanged.
 
 On a busy existing database, prebuild before deploying the application:
