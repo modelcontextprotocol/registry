@@ -184,7 +184,7 @@ func TestProductionSyncCapacityRejectsIncompleteProfiles(t *testing.T) {
 	for _, tc := range []struct{ key, value string }{
 		{"productionSyncCapacity", "true"}, {"productionBurstHeadroom", "false"},
 		{"productionIngressScaling", "false"}, {"productionAppScaling", "prepare"},
-		{"environment", "staging"}, {"imageTag", "1.8.8"},
+		{"environment", "staging"}, {"imageTag", "1.8.6"},
 	} {
 		t.Run(tc.key+"="+tc.value, func(t *testing.T) {
 			cfg := productionScalingConfig("enabled")

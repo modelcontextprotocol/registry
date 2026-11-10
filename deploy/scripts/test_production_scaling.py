@@ -55,7 +55,12 @@ class ProductionScalingTransitions(unittest.TestCase):
             spec["containers"][0]["env"][0]["value"] = "20"
             spec["containers"][0]["image"] = "ghcr.io/modelcontextprotocol/registry:1.8.9"
         check_transition("enabled", deployment, pods, hpas, "enabled")
-        for field, value in [("pool", "30"), ("image", "ghcr.io/modelcontextprotocol/registry:1.8.8")]:
+        # A known pool-capable release can be restored without increasing pools.
+        rollback = copy.deepcopy(deployment), copy.deepcopy(pods), copy.deepcopy(hpas)
+        for spec in [rollback[0]["spec"]["template"]["spec"]] + [p["spec"] for p in rollback[1]]:
+            spec["containers"][0]["image"] = "ghcr.io/modelcontextprotocol/registry:1.8.8"
+        check_transition("enabled", *rollback, "enabled")
+        for field, value in [("pool", "30"), ("image", "ghcr.io/modelcontextprotocol/registry:1.8.6")]:
             changed = copy.deepcopy(pods)
             if field == "pool":
                 changed[0]["spec"]["containers"][0]["env"][0]["value"] = value

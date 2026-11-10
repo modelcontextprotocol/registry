@@ -56,8 +56,6 @@ def check_transition(phase, deployment, pods, hpas, sync_capacity=""):
             raise ValueError("Apply prepare first; every live app must use bounded pools before enabling HPA")
         if (sync_capacity == "enabled" or count > 4) and pool != ("20", "5"):
             raise ValueError("Apply sync prepare first; every live app must use pools 20/5 before allowing six apps")
-        if sync_capacity == "enabled" and tuple(map(int, version.groups())) < (1, 8, 9):
-            raise ValueError("Every live app must run the optimized sync release before enabling six apps")
 
 
 def read_json(command):

@@ -45,9 +45,6 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 		if (syncCapacity != "prepare" && syncCapacity != "enabled") || phase != "enabled" || !burstHeadroom || !ingressScaling || !infraOnly || c.Get("environment") != "prod" {
 			return fmt.Errorf("productionSyncCapacity requires prepare or enabled on the production burst-headroom profile")
 		}
-		if syncCapacity == "enabled" && semver.Compare("v"+c.Get("imageTag"), "v1.8.9") < 0 {
-			return fmt.Errorf("productionSyncCapacity requires imageTag >= 1.8.9 with optimized incremental sync")
-		}
 	}
 	if burstHeadroom && !ingressScaling {
 		return fmt.Errorf("productionBurstHeadroom requires productionIngressScaling")

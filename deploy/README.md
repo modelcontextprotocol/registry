@@ -1012,7 +1012,9 @@ on the existing production burst-headroom profile:
 
 The steady-state app connection budget remains 120. Worker bounds, database
 resources, gateway configuration and staging capacity are unchanged. The live
-preflight rejects activation with older binaries or any 30-connection app.
+preflight rejects activation with binaries lacking configurable pools or any
+30-connection app. A pool-capable prior release can be restored independently
+while keeping the smaller pools and connection ceiling.
 
 To roll back capacity, first return to `productionSyncCapacity: prepare` and
 wait for at most four Ready apps and no terminating pods. Only then remove the
