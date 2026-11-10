@@ -41,6 +41,9 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	ingressScaling := c.GetBool("productionIngressScaling")
 	burstHeadroom := c.GetBool("productionBurstHeadroom")
 	syncCapacity := c.Get("productionSyncCapacity")
+	if c.GetBool("productionPackedPlacement") && (syncCapacity != "enabled" || !gatewaycanary.ProductionStandalone(ctx)) {
+		return fmt.Errorf("productionPackedPlacement requires enabled sync capacity and the standalone production Gateway")
+	}
 	if syncCapacity != "" {
 		if (syncCapacity != "prepare" && syncCapacity != "enabled") || phase != "enabled" || !burstHeadroom || !ingressScaling || !infraOnly || c.Get("environment") != "prod" {
 			return fmt.Errorf("productionSyncCapacity requires prepare or enabled on the production burst-headroom profile")
