@@ -22,7 +22,6 @@ config:
   mcp-registry:isolatedDatabase: "true"
   mcp-registry:productionAppScaling: enabled
   mcp-registry:productionSyncCapacity: enabled
-  mcp-registry:productionPackedPlacement: "true"
   mcp-registry:productionIngressScaling: "true"
   mcp-registry:productionBurstHeadroom: "true"
   mcp-registry:productionInfrastructureOnly: "true"
