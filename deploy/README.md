@@ -1141,3 +1141,34 @@ code and its recovery tests remain to preserve that reviewed path and local
 support. Historical [staging qualification](gateway-canary/standalone-validation.md)
 and [handoff](gateway-canary/handoff-validation.md) reports retain their original
 failures and scope limits; functional production validation is not a maximum-capacity benchmark.
+
+## Incremental-sync page index
+
+Migration 019 adds `idx_servers_updated_page_cover` on `(server_name, version)`
+including `updated_at`, `is_latest`, and `status`. Unlike the partial search
+index, it includes deleted versions required by incremental sync. Incremental
+queries select a page of keys before fetching payloads and use parameter-specific
+plans because recent and old watermarks have very different selectivity. The
+watermark comparison, cursor ordering, filters, and response format are unchanged.
+
+On a busy existing database, prebuild before deploying the application:
+
+```sql
+SET application_name = 'registry-updated-page-index-build';
+SET lock_timeout = '5s';
+SET statement_timeout = '10min';
+CREATE INDEX CONCURRENTLY idx_servers_updated_page_cover
+    ON public.servers (server_name, version) INCLUDE (updated_at, is_latest, status);
+```
+
+Run in autocommit, outside a transaction. Verify the definition and both
+`indisvalid` and `indisready` before deploying. The migration creates the index
+on fresh databases and rejects an existing invalid index. A concurrent build
+uses CPU, I/O, and disk space; monitor it and repair any incomplete build before
+retrying.
+
+Compare recent, old, and empty incremental-sync windows, deep cursors, deleted
+records, and latest/version filters. Measure SQL execution and buffer access as
+well as end-to-end latency, pool queues, CPU, and actual completed request rate.
+Rolling back the application can leave this additive index in place; removal
+is optional and should happen only after all candidate instances are gone.

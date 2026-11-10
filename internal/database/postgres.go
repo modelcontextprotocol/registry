@@ -219,9 +219,9 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 	return condition, []any{cursor}, argIndex + 1
 }
 
-// searchPageQuery retains the ordinary query for listings without a search.
-func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int, prepared ...bool) string {
-	if filter == nil || filter.SubstringName == nil {
+// filteredPageQuery fetches payloads only after selecting a filtered page's keys.
+func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int, prepared ...bool) string {
+	if filter == nil || (filter.SubstringName == nil && filter.UpdatedSince == nil) {
 		return ordinary
 	}
 	// Find the page using only its keys before fetching the JSON payloads.
@@ -235,12 +235,19 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
 	if len(prepared) > 0 && prepared[0] {
 		payload = listingPayload("s.")
 	}
+	// Incremental sync needs only the exact page. Its all-status covering index
+	// includes deleted versions, which consumers need to remove local records.
+	// Retain the larger planning boundary only for substring searches.
+	candidateLimit := fmt.Sprintf("$%d", limitArg)
+	if filter.SubstringName != nil {
+		candidateLimit = fmt.Sprintf("GREATEST($%d, 8192)", limitArg)
+	}
 	return fmt.Sprintf(`
         WITH candidates AS MATERIALIZED (
             SELECT server_name, version FROM servers
             %s
             ORDER BY server_name, version
-            LIMIT GREATEST($%d, 8192)
+            LIMIT %s
         )
         SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
                s.published_at, s.updated_at, s.is_latest, %s
@@ -251,14 +258,14 @@ func searchPageQuery(filter *ServerFilter, ordinary, whereClause string, limitAr
         ) page
         JOIN servers s USING (server_name, version)
         ORDER BY s.server_name, s.version
-    `, whereClause, limitArg, payload, limitArg)
+    `, whereClause, candidateLimit, payload, limitArg)
 }
 
-func searchQueryArgs(filter *ServerFilter, args []any) []any {
-	if filter != nil && filter.SubstringName != nil {
-		// Search selectivity varies by orders of magnitude. Use an unnamed
+func filteredQueryArgs(filter *ServerFilter, args []any) []any {
+	if filter != nil && (filter.SubstringName != nil || filter.UpdatedSince != nil) {
+		// Search and timestamp selectivity vary by orders of magnitude. Use an unnamed
 		// extended-protocol query so PostgreSQL plans for these parameter values
-		// instead of eventually reusing one generic plan for every search term.
+		// instead of reusing one generic plan for every term or sync watermark.
 		return append([]any{pgx.QueryExecModeExec}, args...)
 	}
 	return args
@@ -351,9 +358,9 @@ func (db *PostgreSQL) listServerRows(
         ORDER BY server_name, version
         LIMIT $%d
     `, payload, whereClause, argIndex)
-	query = searchPageQuery(filter, query, whereClause, argIndex, prepared)
+	query = filteredPageQuery(filter, query, whereClause, argIndex, prepared)
 	args = append(args, limit)
-	args = searchQueryArgs(filter, args)
+	args = filteredQueryArgs(filter, args)
 
 	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
