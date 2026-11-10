@@ -356,7 +356,7 @@
       "snippets": [
         {
           "context": "http.server.location",
-          "value": "proxy_cache $registry_read_cache_zone;\nproxy_cache_key \"$scheme$request_method$host$request_uri\";\nproxy_cache_valid 200 30s;\nproxy_no_cache $registry_skip_cache_status;\nproxy_cache_lock on;\nproxy_cache_lock_timeout 5s;\nproxy_cache_background_update on;\nproxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;\nadd_header X-Registry-Cache $upstream_cache_status always;\n\n# Compress the public JSON representation after cache lookup; preserve identity fallback.\ngzip off;\ngzip_types application/json;\ngzip_min_length 1024;\ngzip_comp_level 1;\ngzip_proxied any;\ngzip_vary off;\nadd_header Vary \"Accept-Encoding\" always;\nif ($registry_public_json_gzip) {\n    gzip on;\n}\n"
+          "value": "proxy_cache $registry_read_cache_zone;\nproxy_cache_key \"$scheme$request_method$host$request_uri\";\nproxy_cache_valid 200 60s;\nproxy_no_cache $registry_skip_cache_status;\nproxy_cache_lock on;\nproxy_cache_lock_timeout 5s;\nproxy_cache_background_update on;\nproxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;\nadd_header X-Registry-Cache $upstream_cache_status always;\n\n# Compress the public JSON representation after cache lookup; preserve identity fallback.\ngzip off;\ngzip_types application/json;\ngzip_min_length 1024;\ngzip_comp_level 1;\ngzip_proxied any;\ngzip_vary off;\nadd_header Vary \"Accept-Encoding\" always;\nif ($registry_public_json_gzip) {\n    gzip on;\n}\n"
         }
       ]
     }

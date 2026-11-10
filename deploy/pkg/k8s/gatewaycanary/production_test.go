@@ -135,6 +135,19 @@ func TestProductionPlacementAndBoundedRollout(t *testing.T) {
 		for _, r := range d["patches"].([]any) {
 			s := r.(map[string]any)["value"].(map[string]any)["spec"].(map[string]any)
 			pod := s["template"].(map[string]any)["spec"].(map[string]any)
+			spread := pod["topologySpreadConstraints"].([]any)[0].(map[string]any)
+			if spread["maxSkew"] != float64(1) && spread["maxSkew"] != 1 {
+				t.Fatal("gateway skew changed")
+			}
+			if spread["whenUnsatisfiable"] != "DoNotSchedule" || spread["nodeTaintsPolicy"] != "Honor" || spread["nodeAffinityPolicy"] != "Honor" || spread["matchLabelKeys"].([]any)[0] != "pod-template-hash" {
+				t.Fatal("gateway replacements must balance across eligible workers")
+			}
+			if _, exists := spread["minDomains"]; exists {
+				t.Fatal("gateway spread must allow two-worker consolidation")
+			}
+			if _, exists := pod["affinity"]; exists {
+				t.Fatal("gateway anti-affinity would prevent idle consolidation")
+			}
 			if pod["terminationGracePeriodSeconds"] != 180 {
 				t.Fatal("gateway termination budget must include LB propagation and request draining")
 			}

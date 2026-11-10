@@ -125,19 +125,37 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			}},
 		}}
 	}
+	if conf.GetBool("productionPackedPlacement") {
+		// Prefer separate workers, but allow two apps to share when consolidating.
+		// The validated 1200m request plus worker/system reservations prevents
+		// a third app on the current e2-standard-4 workers.
+		appAffinity = &corev1.AffinityArgs{PodAntiAffinity: &corev1.PodAntiAffinityArgs{
+			PreferredDuringSchedulingIgnoredDuringExecution: corev1.WeightedPodAffinityTermArray{&corev1.WeightedPodAffinityTermArgs{
+				Weight: pulumi.Int(100),
+				PodAffinityTerm: &corev1.PodAffinityTermArgs{
+					TopologyKey:   pulumi.String("kubernetes.io/hostname"),
+					LabelSelector: &metav1.LabelSelectorArgs{MatchLabels: pulumi.StringMap{"app": pulumi.String("mcp-registry")}},
+				},
+			}},
+		}}
+	}
 	poolEnv := corev1.EnvVarArray{}
 	if coordinatedCapacity {
 		maxSurge, maxUnavailable = 0, 1
 	}
 	if appAutoscaling {
 		// HPA owns the live count; keep the steady-state connection budget
-		// at most 120 across four apps. Terminating pods may overlap during rollouts.
+		// at most 120 across four legacy or six sync-profile apps. Terminating pods may overlap.
 		deploymentOptions = append(deploymentOptions, pulumi.IgnoreChanges([]string{"spec.replicas"}))
 		maxSurge, maxUnavailable = 0, 1
 	}
 	if appAutoscaling || conf.Get("productionAppScaling") == "prepare" {
+		poolMaximum := "30"
+		if conf.Get("productionSyncCapacity") != "" {
+			poolMaximum = "20"
+		}
 		poolEnv = corev1.EnvVarArray{
-			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"), Value: pulumi.String("30")},
+			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"), Value: pulumi.String(poolMaximum)},
 			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"), Value: pulumi.String("5")},
 		}
 	}

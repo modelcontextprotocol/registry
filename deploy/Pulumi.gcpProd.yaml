@@ -9,8 +9,8 @@ config:
   mcp-registry:publicReadLogSampling: "true"
   mcp-registry:environment: prod
   mcp-registry:victoriaMetricsCapacity: "true"
-  # Tested prepared-JSON release; derived-row coverage verified before activation.
-  mcp-registry:registryRolloutCommit: 741d575fc2ffe774fa51f442ec6fb2987dd03e18
+  # Incremental-sync query optimization; index prebuilt before rollout.
+  mcp-registry:registryRolloutCommit: ba94f657e1ecd4ddff11baa25ad84cda26c2b854
   mcp-registry:preparedListingJSON: "true"
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
@@ -21,6 +21,8 @@ config:
   mcp-registry:coordinatedCapacity: "true"
   mcp-registry:isolatedDatabase: "true"
   mcp-registry:productionAppScaling: enabled
+  mcp-registry:productionSyncCapacity: enabled
+  mcp-registry:productionPackedPlacement: "true"
   mcp-registry:productionIngressScaling: "true"
   mcp-registry:productionBurstHeadroom: "true"
   mcp-registry:productionInfrastructureOnly: "true"
@@ -28,7 +30,7 @@ config:
   mcp-registry:postgresCPURequest: "3"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "3"
-  mcp-registry:imageTag: 1.8.8  # Set specific image tag for production (change this to deploy different versions)
+  mcp-registry:imageTag: 1.8.9  # Set specific image tag for production (change this to deploy different versions)
   gcp:project: mcp-registry-prod
   mcp-registry:githubClientId: Iv23liUydBbI7Z2Q9bOZ
   mcp-registry:githubClientSecret:

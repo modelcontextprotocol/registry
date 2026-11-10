@@ -1,4 +1,6 @@
 config:
+  mcp-registry:stagingRestore: "true"
+  mcp-registry:stagingRestoreScheduleEnabled: "true"
   mcp-registry:gatewayStagingStandalone: "true"
   mcp-registry:gatewayStagingCompact: "true"
   mcp-registry:gatewayStagingPublicIP: 35.222.36.75

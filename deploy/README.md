@@ -507,8 +507,10 @@ credentials when provisioning a replacement cluster.
 Production runs daily at **04:46 UTC**, with a 30-minute job deadline and
 no overlapping runs. Staging and local development do not create the backup
 CronJob or its private Service and require no repository initialization.
-Their legacy operator, credentials and stored objects are retained; the old
-K8up Schedule is removed. No automatic staging backup smoke test is run.
+The hosted K8up operators and schedules are retired. Staging's legacy backup
+credentials and historical recovery assets are retired too; its empty backup
+bucket remains managed by Pulumi. Local development retains its existing storage
+configuration. No automatic staging backup smoke test is run.
 Validate infrastructure changes with builds and Pulumi previews, and periodically
 test recovery from a production archive in an isolated database using the
 procedure below. This is a daily logical backup, not point-in-time recovery;
@@ -529,17 +531,16 @@ retained. A separate lifecycle rule deletes only noncurrent versions under
 `isLive: false` and `daysSinceNoncurrentTime: 30`. It never matches live keys,
 config, packs, or snapshots, regardless of their age. GCS soft-delete retention
 can delay final removal further (currently seven additional days in production).
-Legacy prefixes are excluded so their recovery evidence is preserved; since
-their schedules are retired, they do not continually accumulate new versions.
+Legacy repositories and one-off upgrade archives are retired separately from
+this active repository. Do not extend lifecycle deletion to live Restic objects.
 
 The legacy K8up Schedule is removed. Clearing its spec can leave defaulted
 backup/prune entries without cron expressions and crash the K8up operator.
-The idle operator and its CRDs have been retired; the existing credentials remain
-required by the archive CronJob. Existing objects
-at the bucket root and in `postgres-logical-v1` are preserved for investigation;
-they are not a verified recovery source and are never pruned by the new job.
-The old physical-data production-to-staging sync workflow is guarded against
-execution because it is incompatible with the current archive format.
+The idle operator and its CRDs have been retired. Production credentials remain
+required by the archive CronJob. Legacy objects at the bucket root and in
+`postgres-logical-v1` have been retired. The obsolete physical-data
+production-to-staging sync workflow has been removed; it was incompatible with
+the current logical archive format.
 
 On a **new production deployment**, initialize only the new repository before
 starting the CronJob. With the existing S3 credentials and repository password securely
@@ -558,14 +559,118 @@ an existing or damaged repository. The password comes from
 `default/k8up-backup-credentials`. Preserve that password/key association;
 changing a Secret alone does not rotate Restic keys. Do not print credentials.
 
+### Weekly staging database refresh
+
+Staging's `registry-staging-restore` CronJob refreshes its registry database from
+`gs://mcp-registry-prod-backups/postgres-custom-v1` every Sunday at **06:00 UTC**.
+This replaces staging-only registry data. Staging downtime is intentional and
+acceptable; production and Grafana databases are never restore targets.
+
+`mcp-registry:stagingRestore` provisions the job, controller, namespace-scoped RBAC,
+reader account/key, and watchdog. `stagingRestoreScheduleEnabled` controls the
+CronJob's suspended state. Bootstrap it suspended and complete a manual restore
+before enabling the weekly schedule. The watchdog runs every ten minutes.
+
+The workflow selects the latest complete Restic snapshot from host
+`registry-postgres`, tag `postgres-custom`, and rejects snapshots older than 36
+hours. It downloads with `--no-lock`, checks the checksum and archive readability,
+and checks staging identity before stopping the app. It saves the replica count
+and a maintenance lock in `registry-staging-restore-state`, waits for app pods to
+exit, and restores with the existing staging app role in a single transaction.
+Staging extensions, role passwords and permissions are preserved. The app's
+registry tables are replaced; unrelated database objects are not deliberately
+removed. A failed SQL restore rolls back that transaction, but staging stays
+stopped for operator inspection. No parallel database or automatic rollback copy
+is created. Successful completion requires restored rows, completed migrations
+on app startup, available app replicas and a successful listing request.
+
+The source reader has only object get/list access to the active repository;
+it cannot write or delete production backups. Staging currently has no Workload
+Identity configuration, so the reader key is managed by Pulumi in a dedicated
+Kubernetes Secret. It has no production Kubernetes access or project-level IAM
+role. `registry-staging-restore-password` is a separate bootstrap Secret containing
+the existing repository password. Neither production HMAC credentials nor the
+retired staging backup credentials are used. Do not print, commit or upload keys,
+passwords, dump contents or restore logs containing data. Rotate the reader key
+through Pulumi and update the password Secret if the Restic key/password changes.
+
+Before the first deployment, an authorized operator creates the dedicated reader
+account. Pulumi adopts that exact account; the staging deployment identity needs
+key-management permission only on this account, not project-wide account creation:
+
+```bash
+gcloud iam service-accounts create registry-restore-reader \
+  --project=mcp-registry-staging --display-name='Staging production-backup reader'
+gcloud iam service-accounts add-iam-policy-binding \
+  registry-restore-reader@mcp-registry-staging.iam.gserviceaccount.com \
+  --project=mcp-registry-staging \
+  --member=serviceAccount:pulumi-svc@mcp-registry-staging.iam.gserviceaccount.com \
+  --role=roles/iam.serviceAccountKeyAdmin
+```
+
+After deploying the suspended job, the operator bootstraps source IAM/password
+and email alerts:
+
+```bash
+python3 tools/admin/configure-staging-restore.py
+kubectl --context=gke_mcp-registry-staging_us-central1-b_mcp-registry-staging -n default create job \
+  --from=cronjob/registry-staging-restore registry-staging-restore-initial
+```
+
+The bootstrap helper preserves unrelated bucket IAM bindings and uses its etag.
+It grants read access only to the active prefix (bucket-level listing is required
+by Restic). It copies the repository password in memory and reuses the enabled
+production backup email recipient in the staging project. Production backup
+Secrets and repository contents are never changed.
+
+Inspect every init container and wait for `REGISTRY_STAGING_RESTORE_SUCCESS` in
+the final container, then verify the staging gateway and a real listing. After
+that first success, enable freshness alerting and set
+`stagingRestoreScheduleEnabled: "true"` through the normal staging deployment:
+
+```bash
+python3 tools/admin/configure-staging-restore.py --enable-freshness
+```
+
+Failure logs trigger an email; the watchdog also reports failed Jobs and a
+maintenance lock older than 40 minutes, covering killed containers and timeout
+failures that cannot log for themselves. The watchdog also reports eight days without a successful refresh using the
+persisted success timestamp. A separate alert detects a missing watchdog heartbeat
+for one hour, confirmed for ten minutes, including complete absence of its metric.
+Bootstrap checks the actual PromQL heartbeat result before enabling this alert,
+allowing log-metric ingestion to catch up. A missing heartbeat indicates a monitoring
+gap and does not by itself mean staging is stopped.
+Routine successes do not send email. Test the failure notification with a separate
+watchdog-derived Job using controller phase `alert-test`; this emits an explicit
+test failure and performs no database operations. Keep alert logs free of data.
+
+Do not run a staging deployment concurrently with a refresh. `Forbid` prevents
+scheduled overlap and the maintenance lock prevents concurrent manual restores.
+The job never kills database sessions. The existing HPA remains configured;
+manually setting app replicas to zero suspends it until a positive count returns.
+The 35-minute Job deadline bounds a stuck restore; automatic retries are disabled
+so a failed job cannot silently replace data again.
+
+On failure, inspect Job/init-container logs and `registry-staging-restore-state`.
+If failure preceded the database commit, the single transaction preserves the
+prior tables; if restoration succeeded but app startup failed, inspect migration
+and application errors. Resolve the problem before restoring the saved replica
+count or retrying. After confirming the failed job has stopped, clear only its
+`active_id` lock and restore the saved replica count before starting a new manual
+Job. The controller refuses to overwrite another run's lock or start against an
+already-stopped application. Any independent staging writes after the refresh
+will be replaced by the next scheduled refresh.
+
 ### Retiring the idle K8up operator
 
 The production archive CronJob calls `pg_dump` and Restic directly. Removing the
 idle K8up Helm chart and CRDs does not remove that CronJob, its database Service,
 `k8up-repo-password`, `k8up-backup-credentials`, the HMAC key, or either backup
 bucket. Keep their existing Pulumi identities and password/key association.
-No dump PVC, GCE snapshot, archive, or bucket retention policy is deleted or
-changed by this cleanup. The disabled physical-data sync workflow remains guarded.
+The operator-retirement step below does not delete storage or credentials. A
+subsequent retirement removed the unused dump PVC, staging pre-resize snapshot,
+legacy archives, staging-only credentials, and obsolete sync workflow. The
+active production repository and both production backup Secrets remain managed.
 
 Before applying this retirement, run the read-only inventory for **both** stacks,
 using a new owner-only directory for each invocation:
@@ -872,7 +977,7 @@ and draining pods during changes; stalled termination or unreachable nodes
 require investigation before continuing. Leave capacity for database
 administration and other clients.
 
-Production app anti-affinity requires a different worker for each app,
+The legacy production app anti-affinity requires a different worker for each app,
 including across revisions. A third or fourth app therefore needs a third or
 fourth eligible worker. Zero surge lets replacements reuse a worker after its
 old app terminates. If a worker fails at the ceiling, a replacement app may
@@ -891,6 +996,31 @@ with no terminating pods. Only then set `productionAppScaling: off`, restore
 800m and total node bounds 3–4. The transition preflight blocks a direct
 return to legacy pools while the HPA or extra apps remain. Preserve the
 protected database pool, existing volume, application release and networking.
+
+### Incremental-sync production capacity
+
+After migration 019 is prebuilt and release 1.8.9 is available, use two applies
+on the existing production burst-headroom profile:
+
+1. Set `productionSyncCapacity: prepare`, promote `imageTag` to 1.8.9 (or a later
+   tested stable release), and update `registryRolloutCommit`. This rolls out
+   max/min pools of 20/5 while retaining HPA 2–4 at 70% CPU.
+2. Once every app is Ready on the new release with 20/5 pools and no old pods
+   remain, set `productionSyncCapacity: enabled`. The HPA becomes 2–6 at 40%
+   CPU (480m per app), adding at most two replicas per 30 seconds. Existing
+   ten-minute scale-down stabilization and one-pod-per-two-minutes removal stay.
+
+The steady-state app connection budget remains 120. Worker bounds, database
+resources, gateway configuration and staging capacity are unchanged. The live
+preflight rejects activation with binaries lacking configurable pools or any
+30-connection app. A pool-capable prior release can be restored independently
+while keeping the smaller pools and connection ceiling.
+
+To roll back capacity, first return to `productionSyncCapacity: prepare` and
+wait for at most four Ready apps and no terminating pods. Only then remove the
+setting if 30/5 pools are desired. The preflight rejects larger pools while the
+six-replica HPA remains. An application rollback can leave the additive index
+in place; retain 20/5 pools until the smaller HPA ceiling has settled.
 
 ### Bounded production ingress scaling
 
@@ -962,8 +1092,15 @@ PVC identity checks and a maintenance window; ordinary releases do not resize no
 cookie-free GET/HEAD requests to the public `/v0/servers` and `/v0.1/servers`
 listing paths on the registry hosts. Compression runs after cache lookup, retains
 identity responses for clients that do not accept gzip, and adds `Vary:
-Accept-Encoding`. JSON payloads, the 30-second cache lifetime, authentication,
-publishing, resource reservations and autoscaling bounds are unchanged.
+Accept-Encoding`. Compression does not change JSON payloads, authentication,
+publishing, resource reservations or autoscaling bounds.
+
+The Gateway public-read policy caches successful listing responses for 60 seconds
+in staging and production. This reduces repeated origin reads at the cost of
+allowing cached listings to remain fresh for an additional 30 seconds. Background
+refresh and serving stale responses during refresh or upstream errors remain
+enabled, so 60 seconds is not a strict maximum response age. Credential/cookie
+bypass and cache keys are unchanged.
 
 Before enabling sampling, the existing Pulumi service account needs exclusion
 management permissions. Bootstrap a project custom role with only
@@ -1009,8 +1146,8 @@ retired. Future component upgrades use reviewed configuration changes, staging
 qualification and the normal saved-plan release path. Do not disable the security
 profile or downgrade CNPG CRDs as an unreviewed rollback. Grafana schema changes
 may require restoring a compatible database backup rather than changing its image.
-The original upgrade's private backups are retained under
-`security-upgrades/202611/<unique-run>/`; this cleanup does not alter backup retention.
+The original upgrade's one-off private backup archives are retired after the
+rollback window. Future rollback work must use an appropriate current backup.
 Historical procedures and archive hashes remain in
 [the pre-cleanup guide](https://github.com/modelcontextprotocol/registry/blob/d6d6b5ea1664c6b2b449ef9a518d9c92a825547d/deploy/README.md#november-2026-component-security-upgrade).
 
@@ -1029,3 +1166,60 @@ code and its recovery tests remain to preserve that reviewed path and local
 support. Historical [staging qualification](gateway-canary/standalone-validation.md)
 and [handoff](gateway-canary/handoff-validation.md) reports retain their original
 failures and scope limits; functional production validation is not a maximum-capacity benchmark.
+
+## Incremental-sync page index
+
+Migration 019 adds `idx_servers_updated_page_cover` on `(server_name, version)`
+including `updated_at`, `is_latest`, and `status`. Unlike the partial search
+index, it includes deleted versions required by incremental sync. Incremental
+queries select a page of keys before fetching payloads. They retain prepared
+statement reuse, binary payload transfer, and PostgreSQL automatic plan selection.
+Forcing unnamed text-format execution regressed concurrent throughput in staging. The
+watermark comparison, cursor ordering, filters, and response format are unchanged.
+
+On a busy existing database, prebuild before deploying the application:
+
+```sql
+SET application_name = 'registry-updated-page-index-build';
+SET lock_timeout = '5s';
+SET statement_timeout = '10min';
+CREATE INDEX CONCURRENTLY idx_servers_updated_page_cover
+    ON public.servers (server_name, version) INCLUDE (updated_at, is_latest, status);
+```
+
+Run in autocommit, outside a transaction. Verify the definition and both
+`indisvalid` and `indisready` before deploying. The migration creates the index
+on fresh databases and rejects an existing invalid index. A concurrent build
+uses CPU, I/O, and disk space; monitor it and repair any incomplete build before
+retrying.
+
+Compare recent, old, and empty incremental-sync windows, deep cursors, deleted
+records, and latest/version filters. Measure SQL execution and buffer access as
+well as end-to-end latency, pool queues, CPU, and actual completed request rate.
+Rolling back the application can leave this additive index in place; removal
+is optional and should happen only after all candidate instances are gone.
+
+### Packed production workers
+
+`productionPackedPlacement: true` requires enabled `productionSyncCapacity` and
+standalone production Gateway. App anti-affinity becomes a preference, while
+revision-aware hostname spreading remains required. With the current
+`e2-standard-4` allocatable CPU, system/DaemonSet reservations and 1200m app
+request, at most two apps fit on a worker. This is a resource budget, not a
+portable pod-count cap; reassess it before changing worker size or reservations.
+The HPA remains 2–6 at 40% CPU and each app keeps pools 20/5 (120 maximum
+steady-state app connections, with possible terminating-pod overlap).
+
+Production gateways also spread each revision independently, so draining old
+pods cannot bias replacement placement. There is no minimum domain count or
+required gateway anti-affinity: three gateways may share two workers as 2+1.
+Topology spread guides scheduling, not ReplicaSet deletion, so later HPA
+scale-down can leave temporary skew until pods are rescheduled. Monitor actual
+placement and autoscaler decisions instead of assuming a permanent even layout.
+
+The configured total node bounds 3–8 include the protected database node;
+worker bounds remain 2–7. At idle, two apps and three gateways fit across two
+workers. Consolidation is automatic and depends on load, requested resources,
+PDBs and autoscaler eligibility; do not manually drain to force the target.
+Disabling packed placement restores one-app-per-worker behavior and may add
+workers. Keep the smaller connection pools and inspect a refreshed preview.
