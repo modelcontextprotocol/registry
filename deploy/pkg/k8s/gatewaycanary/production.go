@@ -139,6 +139,11 @@ func productionObject(o map[string]any) {
 				spread := c.(map[string]any)
 				spread["whenUnsatisfiable"] = "DoNotSchedule"
 				spread["nodeTaintsPolicy"] = "Honor"
+				spread["nodeAffinityPolicy"] = "Honor"
+				// Balance the replacement revision independently of draining pods.
+				// No minDomains or required anti-affinity: three proxies may use
+				// two workers (2+1) after the cluster autoscaler consolidates.
+				spread["matchLabelKeys"] = []any{"pod-template-hash"}
 			}
 		}
 	case "Deployment", "DaemonSet":

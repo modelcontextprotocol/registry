@@ -977,7 +977,7 @@ and draining pods during changes; stalled termination or unreachable nodes
 require investigation before continuing. Leave capacity for database
 administration and other clients.
 
-Production app anti-affinity requires a different worker for each app,
+The legacy production app anti-affinity requires a different worker for each app,
 including across revisions. A third or fourth app therefore needs a third or
 fourth eligible worker. Zero surge lets replacements reuse a worker after its
 old app terminates. If a worker fails at the ceiling, a replacement app may
@@ -1198,3 +1198,28 @@ records, and latest/version filters. Measure SQL execution and buffer access as
 well as end-to-end latency, pool queues, CPU, and actual completed request rate.
 Rolling back the application can leave this additive index in place; removal
 is optional and should happen only after all candidate instances are gone.
+
+### Packed production workers
+
+`productionPackedPlacement: true` requires enabled `productionSyncCapacity` and
+standalone production Gateway. App anti-affinity becomes a preference, while
+revision-aware hostname spreading remains required. With the current
+`e2-standard-4` allocatable CPU, system/DaemonSet reservations and 1200m app
+request, at most two apps fit on a worker. This is a resource budget, not a
+portable pod-count cap; reassess it before changing worker size or reservations.
+The HPA remains 2–6 at 40% CPU and each app keeps pools 20/5 (120 maximum
+steady-state app connections, with possible terminating-pod overlap).
+
+Production gateways also spread each revision independently, so draining old
+pods cannot bias replacement placement. There is no minimum domain count or
+required gateway anti-affinity: three gateways may share two workers as 2+1.
+Topology spread guides scheduling, not ReplicaSet deletion, so later HPA
+scale-down can leave temporary skew until pods are rescheduled. Monitor actual
+placement and autoscaler decisions instead of assuming a permanent even layout.
+
+The configured total node bounds 3–8 include the protected database node;
+worker bounds remain 2–7. At idle, two apps and three gateways fit across two
+workers. Consolidation is automatic and depends on load, requested resources,
+PDBs and autoscaler eligibility; do not manually drain to force the target.
+Disabling packed placement restores one-app-per-worker behavior and may add
+workers. Keep the smaller connection pools and inspect a refreshed preview.

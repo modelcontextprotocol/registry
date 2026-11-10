@@ -125,6 +125,20 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			}},
 		}}
 	}
+	if conf.GetBool("productionPackedPlacement") {
+		// Prefer separate workers, but allow two apps to share when consolidating.
+		// The validated 1200m request plus worker/system reservations prevents
+		// a third app on the current e2-standard-4 workers.
+		appAffinity = &corev1.AffinityArgs{PodAntiAffinity: &corev1.PodAntiAffinityArgs{
+			PreferredDuringSchedulingIgnoredDuringExecution: corev1.WeightedPodAffinityTermArray{&corev1.WeightedPodAffinityTermArgs{
+				Weight: pulumi.Int(100),
+				PodAffinityTerm: &corev1.PodAffinityTermArgs{
+					TopologyKey:   pulumi.String("kubernetes.io/hostname"),
+					LabelSelector: &metav1.LabelSelectorArgs{MatchLabels: pulumi.StringMap{"app": pulumi.String("mcp-registry")}},
+				},
+			}},
+		}}
+	}
 	poolEnv := corev1.EnvVarArray{}
 	if coordinatedCapacity {
 		maxSurge, maxUnavailable = 0, 1

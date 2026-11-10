@@ -43,6 +43,7 @@ type productionScalingMonitor struct {
 	t                       *testing.T
 	phase                   string
 	syncCapacity            string
+	packed                  bool
 	deploymentSeen, hpaSeen bool
 }
 
@@ -64,9 +65,20 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 		if spec["minReadySeconds"].NumberValue() <= pod["terminationGracePeriodSeconds"].NumberValue() {
 			m.t.Error("replacement availability must wait beyond normal termination")
 		}
-		anti := pod["affinity"].ObjectValue()["podAntiAffinity"].ObjectValue()["requiredDuringSchedulingIgnoredDuringExecution"].ArrayValue()
-		if len(anti) != 1 || anti[0].ObjectValue()["topologyKey"].StringValue() != "kubernetes.io/hostname" || anti[0].ObjectValue()["labelSelector"].ObjectValue()["matchLabels"].ObjectValue()["app"].StringValue() != "mcp-registry" {
-			m.t.Error("apps must require separate workers across revisions")
+		anti := pod["affinity"].ObjectValue()["podAntiAffinity"].ObjectValue()
+		if m.packed {
+			if anti["requiredDuringSchedulingIgnoredDuringExecution"].HasValue() || len(anti["preferredDuringSchedulingIgnoredDuringExecution"].ArrayValue()) != 1 {
+				m.t.Error("packed apps must permit consolidation")
+			}
+			spread := pod["topologySpreadConstraints"].ArrayValue()[0].ObjectValue()
+			if spread["whenUnsatisfiable"].StringValue() != "DoNotSchedule" || spread["matchLabelKeys"].ArrayValue()[0].StringValue() != "pod-template-hash" || spread["minDomains"].HasValue() {
+				m.t.Error("packed apps must spread revisions without a worker-count floor")
+			}
+		} else {
+			required := anti["requiredDuringSchedulingIgnoredDuringExecution"].ArrayValue()
+			if len(required) != 1 || required[0].ObjectValue()["topologyKey"].StringValue() != "kubernetes.io/hostname" || required[0].ObjectValue()["labelSelector"].ObjectValue()["matchLabels"].ObjectValue()["app"].StringValue() != "mcp-registry" {
+				m.t.Error("legacy apps must require separate workers across revisions")
+			}
 		}
 		container := pod["containers"].ArrayValue()[0].ObjectValue()
 		expectedImage, expectedPool := "ghcr.io/modelcontextprotocol/registry:1.8.7", "30"
@@ -117,10 +129,13 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 
 func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
 	t.Setenv("REGISTRY_STAGING_IMAGE", "must-not-affect-production")
-	for _, profile := range []struct{ phase, sync string }{{"prepare", ""}, {"enabled", ""}, {"enabled", "prepare"}, {"enabled", "enabled"}} {
+	for _, profile := range []struct {
+		phase, sync string
+		packed      bool
+	}{{"prepare", "", false}, {"enabled", "", false}, {"enabled", "prepare", false}, {"enabled", "enabled", false}, {"enabled", "enabled", true}} {
 		phase := profile.phase
 		t.Run(phase+"/sync="+profile.sync, func(t *testing.T) {
-			m := &productionScalingMonitor{t: t, phase: phase, syncCapacity: profile.sync}
+			m := &productionScalingMonitor{t: t, phase: phase, syncCapacity: profile.sync, packed: profile.packed}
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
 				if err := ValidateCapacityConfig(ctx); err != nil {
 					return err
@@ -138,6 +153,10 @@ func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
 				return err
 			}, pulumi.WithMocks("scaling-test", "prod", m), func(info *pulumi.RunInfo) {
 				info.Config = productionScalingConfig(phase)
+				if profile.packed {
+					info.Config["mcp-registry:productionPackedPlacement"] = "true"
+					info.Config["mcp-registry:gatewayProductionPhase"] = "standalone"
+				}
 				if profile.sync != "" {
 					for k, v := range map[string]string{"productionSyncCapacity": profile.sync, "productionIngressScaling": "true", "productionBurstHeadroom": "true", "nodeMaxCount": "8", "imageTag": "1.8.9"} {
 						info.Config["mcp-registry:"+k] = v
@@ -197,5 +216,17 @@ func TestProductionSyncCapacityRejectsIncompleteProfiles(t *testing.T) {
 				t.Fatal("incomplete sync capacity profile accepted")
 			}
 		})
+	}
+}
+
+func TestPackedPlacementRequiresEnabledSyncAndProductionGateway(t *testing.T) {
+	for _, phase := range []string{"", "prepare", "enabled"} {
+		cfg := productionScalingConfig("enabled")
+		cfg["mcp-registry:productionPackedPlacement"] = "true"
+		cfg["mcp-registry:productionSyncCapacity"] = phase
+		err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("scaling-test", "prod", &capacityMonitor{t: t}), func(info *pulumi.RunInfo) { info.Config = cfg })
+		if err == nil {
+			t.Fatal("packed placement accepted incomplete production profile")
+		}
 	}
 }
