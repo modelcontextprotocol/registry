@@ -8,7 +8,7 @@
     "crds.json": "a6cb76bbdb1f6b4b9baa979926c46fe7f5ba7541f1551668ab383b2ca10f179c",
     "dashboard.json": "aaea111be44ac35400aa7344760ac5be5a0b2ea08c4b67960c38c1b51ea7883f",
     "fixture.json": "866a31f10fa74623f194fbd9747a4b1d05cada783379031bb6599ac12bf1e86b",
-    "routes.json": "da7c759de3488e9dbb4ad83cfe5c9ed7408f0e7a195c939d8021be69c6eae44a",
+    "routes.json": "ee780ec1a27f02f439b584f8def6bd123cfe94cb842513986325268521744993",
     "vector.json": "2c496bc02f184ec1b8df4d68472a4a2413100d83b8faf976b564a6cacb164f2a"
   },
   "fixture_payload_sha256": "62ec9f4018816e49f5ed83776951b5d053b1d6d2675b37699fc8d2ed6cbff43f",
@@ -18,6 +18,7 @@
     "Digest-pinned OSS images; staging scheduling and resource budgets",
     "Certificate hook retained after completion instead of TTL deletion",
     "Hand-authored native policies/routes, fixture, dashboard and Vector configuration",
-    "Production parity: explicit upstream/client/TLS/header/retry settings and shared-SAN fixture listener"
+    "Production parity: explicit upstream/client/TLS/header/retry settings and shared-SAN fixture listener",
+    "Public successful listing responses use a 60-second cache lifetime"
   ]
 }
