@@ -42,6 +42,7 @@ func TestProductionScalingRejectsIncompleteProfiles(t *testing.T) {
 type productionScalingMonitor struct {
 	t                       *testing.T
 	phase                   string
+	syncCapacity            string
 	deploymentSeen, hpaSeen bool
 }
 
@@ -68,7 +69,11 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 			m.t.Error("apps must require separate workers across revisions")
 		}
 		container := pod["containers"].ArrayValue()[0].ObjectValue()
-		if container["image"].StringValue() != "ghcr.io/modelcontextprotocol/registry:1.8.7" {
+		expectedImage, expectedPool := "ghcr.io/modelcontextprotocol/registry:1.8.7", "30"
+		if m.syncCapacity != "" {
+			expectedImage, expectedPool = "ghcr.io/modelcontextprotocol/registry:1.8.9", "20"
+		}
+		if container["image"].StringValue() != expectedImage {
 			m.t.Error("production must retain its explicit release image")
 		}
 		env := map[string]string{}
@@ -78,7 +83,7 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 				env[v["name"].StringValue()] = v["value"].StringValue()
 			}
 		}
-		if env["MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"] != "30" || env["MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"] != "5" || env["MCP_REGISTRY_PREPARED_LISTING_JSON"] != "true" {
+		if env["MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"] != expectedPool || env["MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"] != "5" || env["MCP_REGISTRY_PREPARED_LISTING_JSON"] != "true" {
 			m.t.Error("missing bounded pools or changed prepared reads")
 		}
 		if container["resources"].ObjectValue()["requests"].ObjectValue()["cpu"].StringValue() != "1200m" {
@@ -92,12 +97,19 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 	if a.TypeToken == "kubernetes:autoscaling/v2:HorizontalPodAutoscaler" {
 		m.hpaSeen = true
 		spec := a.Inputs["spec"].ObjectValue()
-		if spec["minReplicas"].NumberValue() != 2 || spec["maxReplicas"].NumberValue() != 4 {
+		maximum, target, period := float64(4), float64(70), float64(60)
+		if m.syncCapacity == "enabled" {
+			maximum, target, period = 6, 40, 30
+		}
+		if spec["minReplicas"].NumberValue() != 2 || spec["maxReplicas"].NumberValue() != maximum {
 			m.t.Error("incorrect production HPA bounds")
 		}
 		metric := spec["metrics"].ArrayValue()[0].ObjectValue()["resource"].ObjectValue()
-		if metric["target"].ObjectValue()["averageUtilization"].NumberValue() != 70 {
+		if metric["target"].ObjectValue()["averageUtilization"].NumberValue() != target {
 			m.t.Error("unexpected CPU target")
+		}
+		if spec["behavior"].ObjectValue()["scaleUp"].ObjectValue()["policies"].ArrayValue()[0].ObjectValue()["periodSeconds"].NumberValue() != period {
+			m.t.Error("unexpected scale-up rate")
 		}
 	}
 	return a.Name + "-id", a.Inputs, nil
@@ -105,9 +117,10 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 
 func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
 	t.Setenv("REGISTRY_STAGING_IMAGE", "must-not-affect-production")
-	for _, phase := range []string{"prepare", "enabled"} {
-		t.Run(phase, func(t *testing.T) {
-			m := &productionScalingMonitor{t: t, phase: phase}
+	for _, profile := range []struct{ phase, sync string }{{"prepare", ""}, {"enabled", ""}, {"enabled", "prepare"}, {"enabled", "enabled"}} {
+		phase := profile.phase
+		t.Run(phase+"/sync="+profile.sync, func(t *testing.T) {
+			m := &productionScalingMonitor{t: t, phase: phase, syncCapacity: profile.sync}
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
 				if err := ValidateCapacityConfig(ctx); err != nil {
 					return err
@@ -123,7 +136,14 @@ func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
 				chart := &helm.Chart{Ready: pulumi.ResourceArray{}.ToResourceArrayOutput()}
 				_, err = DeployMCPRegistry(ctx, &providers.ProviderInfo{Provider: provider}, "prod", chart, db)
 				return err
-			}, pulumi.WithMocks("scaling-test", "prod", m), func(info *pulumi.RunInfo) { info.Config = productionScalingConfig(phase) })
+			}, pulumi.WithMocks("scaling-test", "prod", m), func(info *pulumi.RunInfo) {
+				info.Config = productionScalingConfig(phase)
+				if profile.sync != "" {
+					for k, v := range map[string]string{"productionSyncCapacity": profile.sync, "productionIngressScaling": "true", "productionBurstHeadroom": "true", "nodeMaxCount": "8", "imageTag": "1.8.9"} {
+						info.Config["mcp-registry:"+k] = v
+					}
+				}
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -155,6 +175,26 @@ func TestProductionIngressScalingRequiresCompleteProfile(t *testing.T) {
 			err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("scaling-test", "prod", &capacityMonitor{t: t}), func(info *pulumi.RunInfo) { info.Config = cfg })
 			if (err != nil) != tc.invalid {
 				t.Fatalf("unexpected validation: %v", err)
+			}
+		})
+	}
+}
+
+func TestProductionSyncCapacityRejectsIncompleteProfiles(t *testing.T) {
+	for _, tc := range []struct{ key, value string }{
+		{"productionSyncCapacity", "true"}, {"productionBurstHeadroom", "false"},
+		{"productionIngressScaling", "false"}, {"productionAppScaling", "prepare"},
+		{"environment", "staging"}, {"imageTag", "1.8.6"},
+	} {
+		t.Run(tc.key+"="+tc.value, func(t *testing.T) {
+			cfg := productionScalingConfig("enabled")
+			for k, v := range map[string]string{"productionSyncCapacity": "enabled", "productionIngressScaling": "true", "productionBurstHeadroom": "true", "nodeMaxCount": "8", "imageTag": "1.8.9"} {
+				cfg["mcp-registry:"+k] = v
+			}
+			cfg["mcp-registry:"+tc.key] = tc.value
+			err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("scaling-test", "prod", &capacityMonitor{t: t}), func(info *pulumi.RunInfo) { info.Config = cfg })
+			if err == nil {
+				t.Fatal("incomplete sync capacity profile accepted")
 			}
 		})
 	}

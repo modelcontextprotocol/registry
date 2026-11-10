@@ -46,6 +46,44 @@ class ProductionScalingTransitions(unittest.TestCase):
                 check_transition("off", *resources(count, bounded=True, hpa=hpa))
         check_transition("off", *resources(bounded=True))
 
+    def test_sync_activation_requires_all_smaller_pools_and_release(self):
+        deployment, pods, hpas = resources(4, bounded=True, hpa=True)
+        check_transition("enabled", deployment, pods, hpas, "prepare")
+        with self.assertRaises(ValueError):
+            check_transition("enabled", deployment, pods, hpas, "enabled")
+        for spec in [deployment["spec"]["template"]["spec"]] + [p["spec"] for p in pods]:
+            spec["containers"][0]["env"][0]["value"] = "20"
+            spec["containers"][0]["image"] = "ghcr.io/modelcontextprotocol/registry:1.8.9"
+        check_transition("enabled", deployment, pods, hpas, "enabled")
+        # A known pool-capable release can be restored without increasing pools.
+        rollback = copy.deepcopy(deployment), copy.deepcopy(pods), copy.deepcopy(hpas)
+        for spec in [rollback[0]["spec"]["template"]["spec"]] + [p["spec"] for p in rollback[1]]:
+            spec["containers"][0]["image"] = "ghcr.io/modelcontextprotocol/registry:1.8.8"
+        check_transition("enabled", *rollback, "enabled")
+        for field, value in [("pool", "30"), ("image", "ghcr.io/modelcontextprotocol/registry:1.8.6")]:
+            changed = copy.deepcopy(pods)
+            if field == "pool":
+                changed[0]["spec"]["containers"][0]["env"][0]["value"] = value
+            else:
+                changed[0]["spec"]["containers"][0]["image"] = value
+            with self.assertRaises(ValueError):
+                check_transition("enabled", deployment, changed, hpas, "enabled")
+
+    def test_sync_rollback_lowers_ceiling_before_larger_pools(self):
+        deployment, pods, hpas = resources(6, bounded=True, hpa=True)
+        for spec in [deployment["spec"]["template"]["spec"]] + [p["spec"] for p in pods]:
+            spec["containers"][0]["env"][0]["value"] = "20"
+            spec["containers"][0]["image"] = "ghcr.io/modelcontextprotocol/registry:1.8.9"
+        hpas[0]["spec"]["maxReplicas"] = 6
+        check_transition("enabled", deployment, pods, hpas, "prepare")
+        with self.assertRaises(ValueError):
+            check_transition("enabled", deployment, pods, hpas)
+        deployment, pods, _ = resources(4, bounded=True, hpa=True)
+        with self.assertRaises(ValueError):
+            check_transition("enabled", deployment, pods, hpas)
+        hpas[0]["spec"]["maxReplicas"] = 4
+        check_transition("enabled", deployment, pods, hpas)
+
     def test_incomplete_or_terminating_rollout_blocks(self):
         for change in ("old_generation", "not_available", "terminating", "extra_pod", "not_ready"):
             deployment, pods, hpas = resources(bounded=True)

@@ -997,6 +997,31 @@ with no terminating pods. Only then set `productionAppScaling: off`, restore
 return to legacy pools while the HPA or extra apps remain. Preserve the
 protected database pool, existing volume, application release and networking.
 
+### Incremental-sync production capacity
+
+After migration 019 is prebuilt and release 1.8.9 is available, use two applies
+on the existing production burst-headroom profile:
+
+1. Set `productionSyncCapacity: prepare`, promote `imageTag` to 1.8.9 (or a later
+   tested stable release), and update `registryRolloutCommit`. This rolls out
+   max/min pools of 20/5 while retaining HPA 2–4 at 70% CPU.
+2. Once every app is Ready on the new release with 20/5 pools and no old pods
+   remain, set `productionSyncCapacity: enabled`. The HPA becomes 2–6 at 40%
+   CPU (480m per app), adding at most two replicas per 30 seconds. Existing
+   ten-minute scale-down stabilization and one-pod-per-two-minutes removal stay.
+
+The steady-state app connection budget remains 120. Worker bounds, database
+resources, gateway configuration and staging capacity are unchanged. The live
+preflight rejects activation with binaries lacking configurable pools or any
+30-connection app. A pool-capable prior release can be restored independently
+while keeping the smaller pools and connection ceiling.
+
+To roll back capacity, first return to `productionSyncCapacity: prepare` and
+wait for at most four Ready apps and no terminating pods. Only then remove the
+setting if 30/5 pools are desired. The preflight rejects larger pools while the
+six-replica HPA remains. An application rollback can leave the additive index
+in place; retain 20/5 pools until the smaller HPA ceiling has settled.
+
 ### Bounded production ingress scaling
 
 With production app scaling enabled, `productionIngressScaling: true` and
@@ -1141,3 +1166,35 @@ code and its recovery tests remain to preserve that reviewed path and local
 support. Historical [staging qualification](gateway-canary/standalone-validation.md)
 and [handoff](gateway-canary/handoff-validation.md) reports retain their original
 failures and scope limits; functional production validation is not a maximum-capacity benchmark.
+
+## Incremental-sync page index
+
+Migration 019 adds `idx_servers_updated_page_cover` on `(server_name, version)`
+including `updated_at`, `is_latest`, and `status`. Unlike the partial search
+index, it includes deleted versions required by incremental sync. Incremental
+queries select a page of keys before fetching payloads. They retain prepared
+statement reuse, binary payload transfer, and PostgreSQL automatic plan selection.
+Forcing unnamed text-format execution regressed concurrent throughput in staging. The
+watermark comparison, cursor ordering, filters, and response format are unchanged.
+
+On a busy existing database, prebuild before deploying the application:
+
+```sql
+SET application_name = 'registry-updated-page-index-build';
+SET lock_timeout = '5s';
+SET statement_timeout = '10min';
+CREATE INDEX CONCURRENTLY idx_servers_updated_page_cover
+    ON public.servers (server_name, version) INCLUDE (updated_at, is_latest, status);
+```
+
+Run in autocommit, outside a transaction. Verify the definition and both
+`indisvalid` and `indisready` before deploying. The migration creates the index
+on fresh databases and rejects an existing invalid index. A concurrent build
+uses CPU, I/O, and disk space; monitor it and repair any incomplete build before
+retrying.
+
+Compare recent, old, and empty incremental-sync windows, deep cursors, deleted
+records, and latest/version filters. Measure SQL execution and buffer access as
+well as end-to-end latency, pool queues, CPU, and actual completed request rate.
+Rolling back the application can leave this additive index in place; removal
+is optional and should happen only after all candidate instances are gone.

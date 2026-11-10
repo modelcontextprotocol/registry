@@ -131,13 +131,17 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 	}
 	if appAutoscaling {
 		// HPA owns the live count; keep the steady-state connection budget
-		// at most 120 across four apps. Terminating pods may overlap during rollouts.
+		// at most 120 across four legacy or six sync-profile apps. Terminating pods may overlap.
 		deploymentOptions = append(deploymentOptions, pulumi.IgnoreChanges([]string{"spec.replicas"}))
 		maxSurge, maxUnavailable = 0, 1
 	}
 	if appAutoscaling || conf.Get("productionAppScaling") == "prepare" {
+		poolMaximum := "30"
+		if conf.Get("productionSyncCapacity") != "" {
+			poolMaximum = "20"
+		}
 		poolEnv = corev1.EnvVarArray{
-			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"), Value: pulumi.String("30")},
+			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MAX_CONNECTIONS"), Value: pulumi.String(poolMaximum)},
 			&corev1.EnvVarArgs{Name: pulumi.String("MCP_REGISTRY_DATABASE_MIN_CONNECTIONS"), Value: pulumi.String("5")},
 		}
 	}
