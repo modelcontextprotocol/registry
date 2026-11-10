@@ -1,2 +1,2 @@
 # Test client only; no cluster/runtime dependency. Use Python 3.13 and OpenSSL.
-h2==4.3.0
+h2==4.4.1
