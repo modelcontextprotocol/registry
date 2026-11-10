@@ -51,14 +51,7 @@ func TestUpdatedPagePreservesWatermarkPaginationAndPayloads(t *testing.T) {
 				case "version":
 					f.Version = &version
 				}
-				var want []*apiv0.ServerResponse
-				for _, r := range fixture {
-					m := r.Meta.Official
-					if !m.UpdatedAt.After(cutoff) || ((f.IncludeDeleted == nil || !*f.IncludeDeleted) && m.Status == model.StatusDeleted) || (f.Version != nil && r.Server.Version != *f.Version) || (f.IsLatest != nil && m.IsLatest != *f.IsLatest) {
-						continue
-					}
-					want = append(want, r)
-				}
+				want := expectedUpdatedServers(fixture, f, cutoff)
 				for _, limit := range []int{1, 3, 100} {
 					var got []*apiv0.ServerResponse
 					cursor := ""
@@ -108,4 +101,25 @@ func TestUpdatedPagePreservesWatermarkPaginationAndPayloads(t *testing.T) {
 			})
 		}
 	}
+}
+
+func expectedUpdatedServers(fixture []*apiv0.ServerResponse, filter *database.ServerFilter, cutoff time.Time) []*apiv0.ServerResponse {
+	var want []*apiv0.ServerResponse
+	for _, server := range fixture {
+		meta := server.Meta.Official
+		if !meta.UpdatedAt.After(cutoff) {
+			continue
+		}
+		if (filter.IncludeDeleted == nil || !*filter.IncludeDeleted) && meta.Status == model.StatusDeleted {
+			continue
+		}
+		if filter.Version != nil && server.Server.Version != *filter.Version {
+			continue
+		}
+		if filter.IsLatest != nil && meta.IsLatest != *filter.IsLatest {
+			continue
+		}
+		want = append(want, server)
+	}
+	return want
 }
