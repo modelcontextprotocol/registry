@@ -1067,8 +1067,15 @@ PVC identity checks and a maintenance window; ordinary releases do not resize no
 cookie-free GET/HEAD requests to the public `/v0/servers` and `/v0.1/servers`
 listing paths on the registry hosts. Compression runs after cache lookup, retains
 identity responses for clients that do not accept gzip, and adds `Vary:
-Accept-Encoding`. JSON payloads, the 30-second cache lifetime, authentication,
-publishing, resource reservations and autoscaling bounds are unchanged.
+Accept-Encoding`. Compression does not change JSON payloads, authentication,
+publishing, resource reservations or autoscaling bounds.
+
+The Gateway public-read policy caches successful listing responses for 60 seconds
+in staging and production. This reduces repeated origin reads at the cost of
+allowing cached listings to remain fresh for an additional 30 seconds. Background
+refresh and serving stale responses during refresh or upstream errors remain
+enabled, so 60 seconds is not a strict maximum response age. Credential/cookie
+bypass and cache keys are unchanged.
 
 Before enabling sampling, the existing Pulumi service account needs exclusion
 management permissions. Bootstrap a project custom role with only
