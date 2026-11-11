@@ -95,7 +95,7 @@
       ],
       "logging": {
         "accessLog": {
-          "format": "{\"kind\":\"registry_access\",\"method\":\"$request_method\",\"uri\":\"$request_uri\",\"status\":\"$status\",\"body_bytes\":\"$body_bytes_sent\",\"request_bytes\":\"$request_length\",\"duration\":\"$request_time\",\"upstream\":\"$proxy_host\",\"upstream_time\":\"$upstream_response_time\",\"proxy_pod\":\"$hostname\",\"cache\":\"$upstream_cache_status\",\"connect\":\"$upstream_connect_time\",\"header\":\"$upstream_header_time\",\"response_bytes\":\"$bytes_sent\",\"request_id\":\"$registry_request_id\",\"host\":\"$host\",\"client_ip\":\"$remote_addr\"}",
+          "format": "{\"kind\":\"registry_access\",\"method\":\"$request_method\",\"uri\":\"$request_uri\",\"status\":\"$status\",\"body_bytes\":\"$body_bytes_sent\",\"request_bytes\":\"$request_length\",\"duration\":\"$request_time\",\"upstream\":\"$proxy_host\",\"upstream_time\":\"$upstream_response_time\",\"proxy_pod\":\"$hostname\",\"cache\":\"$upstream_cache_status\",\"connect\":\"$upstream_connect_time\",\"header\":\"$upstream_header_time\",\"response_bytes\":\"$bytes_sent\",\"request_id\":\"$registry_request_id\",\"host\":\"$host\",\"client_ip\":\"$remote_addr\",\"user_agent\":\"$http_user_agent\",\"content_encoding\":\"$sent_http_content_encoding\"}",
           "escape": "json"
         }
       },
