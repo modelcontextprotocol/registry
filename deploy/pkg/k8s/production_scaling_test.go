@@ -1,6 +1,8 @@
 package k8s //nolint:testpackage // Verify rendered production resources and transition guards.
 
 import (
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
@@ -44,6 +46,7 @@ type productionScalingMonitor struct {
 	phase                   string
 	syncCapacity            string
 	packed                  bool
+	cpuTarget               float64
 	deploymentSeen, hpaSeen bool
 }
 
@@ -113,6 +116,9 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 		if m.syncCapacity == "enabled" {
 			maximum, target, period = 6, 40, 30
 		}
+		if m.cpuTarget != 0 {
+			target = m.cpuTarget
+		}
 		if spec["minReplicas"].NumberValue() != 2 || spec["maxReplicas"].NumberValue() != maximum {
 			m.t.Error("incorrect production HPA bounds")
 		}
@@ -132,10 +138,11 @@ func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
 	for _, profile := range []struct {
 		phase, sync string
 		packed      bool
-	}{{"prepare", "", false}, {"enabled", "", false}, {"enabled", "prepare", false}, {"enabled", "enabled", false}, {"enabled", "enabled", true}} {
+		cpuTarget   float64
+	}{{"prepare", "", false, 0}, {"enabled", "", false, 0}, {"enabled", "prepare", false, 0}, {"enabled", "enabled", false, 0}, {"enabled", "enabled", true, 0}, {"enabled", "enabled", true, 60}} {
 		phase := profile.phase
 		t.Run(phase+"/sync="+profile.sync, func(t *testing.T) {
-			m := &productionScalingMonitor{t: t, phase: phase, syncCapacity: profile.sync, packed: profile.packed}
+			m := &productionScalingMonitor{t: t, phase: phase, syncCapacity: profile.sync, packed: profile.packed, cpuTarget: profile.cpuTarget}
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error {
 				if err := ValidateCapacityConfig(ctx); err != nil {
 					return err
@@ -156,6 +163,9 @@ func TestProductionScalingRendersPreparationAndActivation(t *testing.T) {
 				if profile.packed {
 					info.Config["mcp-registry:productionPackedPlacement"] = "true"
 					info.Config["mcp-registry:gatewayProductionPhase"] = "standalone"
+				}
+				if profile.cpuTarget != 0 {
+					info.Config["mcp-registry:productionAppCPUTarget"] = strconv.Itoa(int(profile.cpuTarget))
 				}
 				if profile.sync != "" {
 					for k, v := range map[string]string{"productionSyncCapacity": profile.sync, "productionIngressScaling": "true", "productionBurstHeadroom": "true", "nodeMaxCount": "8", "imageTag": "1.8.9"} {
@@ -214,6 +224,26 @@ func TestProductionSyncCapacityRejectsIncompleteProfiles(t *testing.T) {
 			err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("scaling-test", "prod", &capacityMonitor{t: t}), func(info *pulumi.RunInfo) { info.Config = cfg })
 			if err == nil {
 				t.Fatal("incomplete sync capacity profile accepted")
+			}
+		})
+	}
+}
+
+func TestProductionAppCPUTargetRejectsUnsafeValues(t *testing.T) {
+	for _, tc := range []struct{ sync, target string }{
+		{"enabled", "39"}, {"enabled", "71"}, {"enabled", "60%"}, {"prepare", "60"}, {"", "60"},
+	} {
+		t.Run("sync="+tc.sync+"/target="+tc.target, func(t *testing.T) {
+			cfg := productionScalingConfig("enabled")
+			for k, v := range map[string]string{"productionIngressScaling": "true", "productionBurstHeadroom": "true", "nodeMaxCount": "8", "imageTag": "1.8.9", "productionAppCPUTarget": tc.target} {
+				cfg["mcp-registry:"+k] = v
+			}
+			if tc.sync != "" {
+				cfg["mcp-registry:productionSyncCapacity"] = tc.sync
+			}
+			err := pulumi.RunErr(ValidateCapacityConfig, pulumi.WithMocks("scaling-test", "prod", &capacityMonitor{t: t}), func(info *pulumi.RunInfo) { info.Config = cfg })
+			if err == nil || !strings.Contains(err.Error(), "productionAppCPUTarget") {
+				t.Fatalf("unsafe CPU target accepted or rejected for another reason: %v", err)
 			}
 		})
 	}
