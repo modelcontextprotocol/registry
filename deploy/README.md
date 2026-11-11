@@ -1119,6 +1119,14 @@ requests, authentication, publishing, malformed/unrecognized records, other
 containers and audit logs remain retained. This also samples eligible successful
 background cache-refresh records. The rule uses `insertId` for sampling.
 
+Gateway access records also carry `user_agent` and `content_encoding`. The first
+is the request's `User-Agent` header as sent: a client claim, not a verified
+identity. The second is `gzip` when the response left compressed and empty
+otherwise. Use them to find clients that fetch listings uncompressed. Vector
+metrics and the sampling rule read neither field. A user agent with bytes that
+are not valid UTF-8 is logged unchanged, as the request URI already is; a parser
+that rejects such a record counts a parse error instead of a request.
+
 **Stored access-log counts and their latency distribution are no longer a census.**
 A fully paginated log query only proves retrieval completeness. Use unsampled
 Prometheus/Cloud Monitoring counters and histograms for traffic, error rates and
