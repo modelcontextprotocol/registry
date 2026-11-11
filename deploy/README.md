@@ -400,6 +400,29 @@ rare terms, both latest/all versions, full walks, and publisher latency under lo
 before production promotion. A larger connection pool is not a substitute for
 reducing database work under a CPU limit.
 
+### Description search index
+
+Migration 020 adds `idx_servers_description_trgm`, a GIN trigram index on
+`(value ->> 'description')`. Search matches the term against server names and
+descriptions; without this index the OR predicate on the description forces
+every search to scan the heap. The name-side indexes above remain in use.
+
+Prebuild on a busy database in an autocommit session:
+
+```sql
+SET application_name = 'registry-description-index-build';
+SET lock_timeout = '10s';
+SET statement_timeout = '10min';
+CREATE INDEX CONCURRENTLY idx_servers_description_trgm
+    ON public.servers USING gin ((value ->> 'description') gin_trgm_ops);
+```
+
+Verify `indisvalid`, `indisready`, and `pg_get_indexdef` before deployment, then
+`ANALYZE public.servers`. A failed build must be repaired explicitly; `IF NOT
+EXISTS` cannot repair it. Compare plans for name-only, description-only and
+mixed terms, and validate pagination across mixed matches before production
+promotion.
+
 ### Database CPU budget for burst traffic
 
 `mcp-registry:postgresCPULimit` controls the PostgreSQL container CPU quota and

@@ -25,7 +25,7 @@ type ServerFilter struct {
 	Name           *string    // for finding versions of same server
 	RemoteURL      *string    // exact remote URL lookup; may match multiple server names
 	UpdatedSince   *time.Time // for incremental sync filtering
-	SubstringName  *string    // for substring search on name
+	SubstringName  *string    // for substring search on name or description
 	Version        *string    // for exact version matching
 	IsLatest       *bool      // for filtering latest versions only
 	IncludeDeleted *bool      // for including deleted packages in results (default: exclude)

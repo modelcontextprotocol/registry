@@ -156,7 +156,11 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 		// `?search=%` matching everything). Order matters: backslashes must be
 		// escaped first so subsequent escape backslashes are not double-escaped.
 		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(*filter.SubstringName)
-		conditions = append(conditions, fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", argIndex))
+		// Search matches the term against server names and descriptions so
+		// servers remain discoverable by functionality, not just by name. Both
+		// ILIKE predicates share one escaped term parameter.
+		termIndex := argIndex
+		nameCondition := fmt.Sprintf("server_name ILIKE $%d ESCAPE '\\'", termIndex)
 		args = append(args, "%"+escaped+"%")
 		argIndex++
 		// check_server_name_format guarantees one namespace/path separator. A search
@@ -168,10 +172,11 @@ func buildFilterConditions(filter *ServerFilter, argIndex int) ([]string, []any,
 				reversed[i], reversed[j] = reversed[j], reversed[i]
 			}
 			prefix := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(string(reversed))
-			conditions = append(conditions, fmt.Sprintf("lower(reverse(split_part(server_name, '/', 1))) LIKE lower($%d) ESCAPE '\\'", argIndex))
 			args = append(args, prefix+"%")
+			nameCondition = fmt.Sprintf("(%s AND lower(reverse(split_part(server_name, '/', 1))) LIKE lower($%d) ESCAPE '\\')", nameCondition, argIndex)
 			argIndex++
 		}
+		conditions = append(conditions, fmt.Sprintf("(%s OR value ->> 'description' ILIKE $%d ESCAPE '\\')", nameCondition, termIndex))
 	}
 	if filter.Version != nil {
 		conditions = append(conditions, fmt.Sprintf("version = $%d", argIndex))
