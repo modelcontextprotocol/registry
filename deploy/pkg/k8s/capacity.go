@@ -3,6 +3,7 @@ package k8s
 import (
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"golang.org/x/mod/semver"
@@ -47,6 +48,13 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	if syncCapacity != "" {
 		if (syncCapacity != "prepare" && syncCapacity != "enabled") || phase != "enabled" || !burstHeadroom || !ingressScaling || !infraOnly || c.Get("environment") != "prod" {
 			return fmt.Errorf("productionSyncCapacity requires prepare or enabled on the production burst-headroom profile")
+		}
+	}
+	if raw := c.Get("productionAppCPUTarget"); raw != "" {
+		// 40 is the sync-capacity default and 70 the earlier production target.
+		target, err := strconv.Atoi(raw)
+		if err != nil || target < 40 || target > 70 || syncCapacity != "enabled" {
+			return fmt.Errorf("productionAppCPUTarget requires a whole percentage from 40 to 70 on enabled productionSyncCapacity")
 		}
 	}
 	if burstHeadroom && !ingressScaling {
@@ -124,10 +132,14 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 	return nil
 }
 
-func registryAutoscalerSpec(minReplicas int, syncCapacity bool) *autoscalingv2.HorizontalPodAutoscalerSpecArgs {
+// A nonzero cpuTarget replaces the sync-capacity profile's CPU utilization target.
+func registryAutoscalerSpec(minReplicas int, syncCapacity bool, cpuTarget int) *autoscalingv2.HorizontalPodAutoscalerSpecArgs {
 	maximum, target, scaleUpSeconds := 4, 70, 60
 	if syncCapacity {
 		maximum, target, scaleUpSeconds = 6, 40, 30
+		if cpuTarget != 0 {
+			target = cpuTarget
+		}
 	}
 	return &autoscalingv2.HorizontalPodAutoscalerSpecArgs{
 		MinReplicas: pulumi.Int(minReplicas), MaxReplicas: pulumi.Int(maximum),
@@ -154,10 +166,11 @@ func stagingAutoscalerAnnotations(ctx *pulumi.Context) pulumi.StringMap {
 
 func deployRegistryAutoscaler(ctx *pulumi.Context, provider pulumi.ProviderResource) error {
 	minimum := coordinatedMinimum(ctx)
-	if config.New(ctx, "mcp-registry").Get("productionAppScaling") == "enabled" {
+	c := config.New(ctx, "mcp-registry")
+	if c.Get("productionAppScaling") == "enabled" {
 		minimum = 2
 	}
-	spec := registryAutoscalerSpec(minimum, config.New(ctx, "mcp-registry").Get("productionSyncCapacity") == "enabled")
+	spec := registryAutoscalerSpec(minimum, c.Get("productionSyncCapacity") == "enabled", c.GetInt("productionAppCPUTarget"))
 	if gatewaycanary.Compact(ctx) {
 		spec.MaxReplicas = pulumi.Int(1)
 	}

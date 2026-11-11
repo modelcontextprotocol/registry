@@ -864,7 +864,8 @@ See [compact staging](gateway-canary/compact-staging.md) for the resource budget
 
 Production retains **2–7 e2-standard-4 workers plus one isolated database node**.
 Gateway proxies have an HPA of 3–16 replicas and Vector runs on the workers.
-The application retains its 2–4 replica HPA. Do not copy staging's node cap or
+The application HPA is 2–6 replicas with a 60% CPU target; see
+[production app CPU target](#production-app-cpu-target). Do not copy staging's node cap or
 compact requests into production. The instantaneous production node count can
 change within these bounds; the migration did not reduce the capacity limits.
 
@@ -1207,7 +1208,7 @@ revision-aware hostname spreading remains required. With the current
 `e2-standard-4` allocatable CPU, system/DaemonSet reservations and 1200m app
 request, at most two apps fit on a worker. This is a resource budget, not a
 portable pod-count cap; reassess it before changing worker size or reservations.
-The HPA remains 2–6 at 40% CPU and each app keeps pools 20/5 (120 maximum
+The HPA remains 2–6 and each app keeps pools 20/5 (120 maximum
 steady-state app connections, with possible terminating-pod overlap).
 
 Production gateways also spread each revision independently, so draining old
@@ -1223,3 +1224,21 @@ workers. Consolidation is automatic and depends on load, requested resources,
 PDBs and autoscaler eligibility; do not manually drain to force the target.
 Disabling packed placement restores one-app-per-worker behavior and may add
 workers. Keep the smaller connection pools and inspect a refreshed preview.
+
+### Production app CPU target
+
+`productionAppCPUTarget` sets the app HPA's CPU utilization target as a whole
+percentage of the app CPU request. It requires enabled `productionSyncCapacity`
+and accepts 40–70. Without it the target stays at 40%.
+
+Production uses 60%, which is 720m per app with the 1200m request. At 40% (480m),
+two idle apps ran at 30–36% of their request, so ordinary variation kept adding a
+third app, and a third app does not fit on the two baseline workers. Overnight on
+November 10–11 the cluster held four nodes 86% of the time. With the earlier 70%
+target it held three nodes 88% of the time.
+
+The replica range, scale-up and scale-down rates, connection pools and node bounds
+are unchanged. Scale-out starts later, so a sharp burst can queue while a new app
+and worker start; one such start took about a minute. After changing the value,
+compare listing latency, in-flight requests and node count through a daily peak
+and an idle period. To roll back, set 40 or remove the key.
