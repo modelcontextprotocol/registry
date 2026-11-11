@@ -41,10 +41,22 @@ func NewDefaultHTTPKeyFetcher() *DefaultHTTPKeyFetcher {
 	return &DefaultHTTPKeyFetcher{client: newHTTPKeyFetcherClient(transport)}
 }
 
-// httpKeyFetchTimeout bounds the entire well-known fetch, including DNS resolution
-// and the TLS handshake. It is part of the documented verification contract: an
-// endpoint that cannot answer within this budget fails authentication.
+// httpKeyFetchTimeout bounds a single well-known fetch attempt, including DNS
+// resolution and the TLS handshake. It is part of the documented verification
+// contract: an endpoint that cannot answer within this budget fails that
+// attempt.
 const httpKeyFetchTimeout = 10 * time.Second
+
+// httpKeyFetchAttempts is the total number of attempts FetchKey makes before
+// giving up. Transient unreachability of a verification endpoint — a dial
+// timeout, a reset connection, a CDN edge answering 5xx — used to fail the
+// whole HTTP login on a single attempt (#1625), even though the endpoint
+// answers moments later. Permanent failures (client errors, redirects,
+// oversized bodies) are never retried and still fail on the first attempt.
+const httpKeyFetchAttempts = 3
+
+// httpKeyFetchRetryBackoff is the delay between fetch attempts.
+const httpKeyFetchRetryBackoff = 500 * time.Millisecond
 
 // newHTTPKeyFetcherClient builds the HTTP client used to fetch a domain's
 // well-known verification key. The transport is a parameter so that tests can
@@ -186,13 +198,46 @@ func NewDefaultHTTPKeyFetcherWithClient(client *http.Client) *DefaultHTTPKeyFetc
 	return &DefaultHTTPKeyFetcher{client: client}
 }
 
-// FetchKey fetches the public key from the well-known HTTP endpoint
+// FetchKey fetches the public key from the well-known HTTP endpoint. Transient
+// failures are retried up to httpKeyFetchAttempts total attempts with
+// httpKeyFetchRetryBackoff between them; permanent failures (non-transient
+// status responses, oversized bodies) fail immediately. If every attempt
+// fails, the returned error reports how many attempts were made so fetch
+// problems can be distinguished from key problems (#1625).
 func (f *DefaultHTTPKeyFetcher) FetchKey(ctx context.Context, domain string) (string, error) {
+	var lastErr error
+	for attempt := 1; attempt <= httpKeyFetchAttempts; attempt++ {
+		if attempt > 1 {
+			select {
+			case <-ctx.Done():
+				// The caller is gone; surface the cancellation alongside the
+				// last fetch failure.
+				return "", fmt.Errorf("%w (retry stopped: %w)", lastErr, ctx.Err())
+			case <-time.After(httpKeyFetchRetryBackoff):
+			}
+		}
+
+		key, retryable, err := f.fetchKeyOnce(ctx, domain)
+		if err == nil {
+			return key, nil
+		}
+		lastErr = err
+		if !retryable {
+			return "", err
+		}
+	}
+	return "", fmt.Errorf("%w (after %d attempts)", lastErr, httpKeyFetchAttempts)
+}
+
+// fetchKeyOnce makes a single attempt at the well-known fetch. The retryable
+// result reports whether the failure is transient — worth another attempt —
+// or permanent.
+func (f *DefaultHTTPKeyFetcher) fetchKeyOnce(ctx context.Context, domain string) (string, bool, error) {
 	url := fmt.Sprintf("https://%s/.well-known/mcp-registry-auth", domain)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return "", false, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Accept", "text/plain")
@@ -200,12 +245,15 @@ func (f *DefaultHTTPKeyFetcher) FetchKey(ctx context.Context, domain string) (st
 
 	resp, err := f.client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch key: %w", err)
+		// Transport-level failures — dial timeouts, resets, stalled TLS
+		// handshakes — are exactly the transient unreachability reported in
+		// #1625; retry them unless the caller's context is already done.
+		return "", ctx.Err() == nil, fmt.Errorf("failed to fetch key: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("HTTP %d: failed to fetch key from %s", resp.StatusCode, url)
+		return "", isTransientHTTPStatus(resp.StatusCode), fmt.Errorf("HTTP %d: failed to fetch key from %s", resp.StatusCode, url)
 	}
 
 	// Limit response size to prevent DoS attacks.
@@ -213,13 +261,25 @@ func (f *DefaultHTTPKeyFetcher) FetchKey(ctx context.Context, domain string) (st
 	limited := io.LimitReader(resp.Body, MaxKeyResponseSize+1)
 	body, err := io.ReadAll(limited)
 	if err != nil {
-		return "", fmt.Errorf("failed to read response body: %w", err)
+		return "", ctx.Err() == nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 	if len(body) > MaxKeyResponseSize {
-		return "", fmt.Errorf("HTTP auth key response too large")
+		return "", false, fmt.Errorf("HTTP auth key response too large")
 	}
 
-	return strings.TrimSpace(string(body)), nil
+	return strings.TrimSpace(string(body)), false, nil
+}
+
+// isTransientHTTPStatus reports whether an unsuccessful response status
+// describes a momentary condition worth retrying: request timeouts, rate
+// limits, and server-side errors typically clear on their own (overloaded CDN
+// edge, deploy in progress). Other 4xx and 3xx responses describe the request
+// itself and will not change on retry — redirects are pinned to fail, see
+// newHTTPKeyFetcherClient.
+func isTransientHTTPStatus(status int) bool {
+	return status == http.StatusRequestTimeout ||
+		status == http.StatusTooManyRequests ||
+		status >= 500
 }
 
 // HTTPAuthHandler handles HTTP-based authentication
