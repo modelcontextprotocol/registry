@@ -330,12 +330,19 @@ func ParseMCPKeysFromStrings(inputs []string) []struct {
 	}
 
 	for _, record := range inputs {
-		if matches := MCPProofRecordPattern.FindStringSubmatch(record); len(matches) == 3 {
-			publicKey, err := ParsePublicKey(matches[1], matches[2])
-			publicKeys = append(publicKeys, struct {
-				*PublicKeyInfo
-				error
-			}{publicKey, err})
+		// Find every MCPv1 record in the string, not just the first: the HTTP
+		// key fetch returns the whole response body as one string, and a body
+		// carrying more than one proof record (e.g. a stale record left behind
+		// while rotating keys) must verify against all published keys — not
+		// silently drop everything after the first match (#1679).
+		for _, matches := range MCPProofRecordPattern.FindAllStringSubmatch(record, -1) {
+			if len(matches) == 3 {
+				publicKey, err := ParsePublicKey(matches[1], matches[2])
+				publicKeys = append(publicKeys, struct {
+					*PublicKeyInfo
+					error
+				}{publicKey, err})
+			}
 		}
 	}
 
