@@ -1064,7 +1064,7 @@ components:
                   example: "2023-12-01T11:00:00Z"
                 isLatest:
                   type: boolean
-                  description: Whether this is the latest version of the server
+                  description: Whether this is the latest version of the server. Deprecation does not, by itself, remove this flag; check status separately to determine whether the version is active.
                   example: true
               additionalProperties: false
           additionalProperties: true

@@ -53,6 +53,8 @@ Results are ordered by server name, then by version string, both ascending. Vers
 
 To retrieve only the latest version of each matching server, pass `version=latest`. Returned records have `_meta["io.modelcontextprotocol.registry/official"].isLatest` set to `true`. Keep the same filters when following `metadata.nextCursor` to subsequent pages.
 
+Deprecating a version does not, by itself, remove its `isLatest` flag. A deprecated version can remain the latest version of a server, so `version=latest` and the `/versions/latest` endpoint do not guarantee an active result. Clients that display only active servers must also check `_meta["io.modelcontextprotocol.registry/official"].status == "active"`. To select an older active version when the latest is deprecated, inspect the server's version history and apply your own selection policy; filtering the latest result does not select a replacement automatically.
+
 Example: `GET /v0.1/servers?search=filesystem&version=latest`
 
 When the complete server name is known, use `GET /v0.1/servers/{url-encoded-server-name}/versions/latest` (or a specific version) instead of substring search. For example: `GET /v0.1/servers/io.github.example%2Fweather/versions/latest`.

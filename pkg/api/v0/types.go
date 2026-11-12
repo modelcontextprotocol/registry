@@ -13,7 +13,7 @@ type RegistryExtensions struct {
 	StatusMessage   *string      `json:"statusMessage,omitempty" doc:"Optional message explaining status change (e.g., deprecation reason, migration guidance)"`
 	PublishedAt     time.Time    `json:"publishedAt" format:"date-time" doc:"Timestamp when the server was first published to the registry"`
 	UpdatedAt       time.Time    `json:"updatedAt,omitempty" format:"date-time" doc:"Timestamp when the server entry was last updated"`
-	IsLatest        bool         `json:"isLatest" doc:"Whether this is the latest version of the server"`
+	IsLatest        bool         `json:"isLatest" doc:"Whether this is the latest version of the server. Deprecation does not, by itself, remove this flag; check status separately to determine whether the version is active."`
 }
 
 type ResponseMeta struct {
