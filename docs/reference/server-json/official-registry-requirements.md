@@ -101,7 +101,7 @@ The `_meta` field in `server.json` is **different** from the `_meta` field retur
   - `status`: Server lifecycle status (active, deprecated, deleted)
   - `publishedAt`: When the server was first published
   - `updatedAt`: When the server was last updated
-  - `isLatest`: Whether this is the latest version
+  - `isLatest`: Whether this is the latest version. Deprecation does not, by itself, remove this flag; clients must check `status` separately to determine whether the version is active.
 
 **Example: What you publish (server.json)**
 
