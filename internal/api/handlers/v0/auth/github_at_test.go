@@ -98,6 +98,58 @@ func assertExchangeFailsClosed(t *testing.T, cfg *config.Config, server *httptes
 	assert.Nil(t, response)
 }
 
+// Preserve GitHub login capitalization in issued grants for compatibility with
+// already-published mixed-case server names. Matching is case-insensitive
+// for GitHub owner wildcard grants at the authorization boundary.
+func TestGitHubHandler_ExchangeTokenMixedCaseGrants(t *testing.T) {
+	testSeed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(testSeed)
+	require.NoError(t, err)
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(testSeed)}
+
+	tests := []struct {
+		name         string
+		userLogin    string
+		orgLogins    []string
+		wantPatterns []string
+	}{
+		{
+			name:         "mixed-case user login retains original case",
+			userLogin:    "MiXeD-User",
+			wantPatterns: []string{"io.github.MiXeD-User/*"},
+		},
+		{
+			name:         "mixed-case administered organization login retains original case",
+			userLogin:    "valid-user",
+			orgLogins:    []string{"MiXeD-Org"},
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.MiXeD-Org/*"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				switch r.URL.Path {
+				case githubUserEndpoint:
+					json.NewEncoder(w).Encode(v0auth.GitHubUserOrOrg{Login: tc.userLogin, ID: 12345}) //nolint:errcheck
+				case githubOrgsEndpoint:
+					orgs := make([]v0auth.GitHubUserOrOrg, 0, len(tc.orgLogins))
+					for i, login := range tc.orgLogins {
+						orgs = append(orgs, v0auth.GitHubUserOrOrg{Login: login, ID: i + 1})
+					}
+					json.NewEncoder(w).Encode(adminMemberships(orgs)) //nolint:errcheck
+				default:
+					http.NotFound(w, r)
+				}
+			}))
+			defer server.Close()
+
+			assert.Equal(t, tc.wantPatterns, grantedPatterns(t, cfg, server))
+		})
+	}
+}
+
 func TestGitHubHandler_ExchangeToken(t *testing.T) {
 	// Create test handler with mock config
 	testSeed := make([]byte, ed25519.SeedSize)
@@ -854,22 +906,25 @@ func TestValidGitHubNames(t *testing.T) {
 	}
 
 	validNameTests := []struct {
-		name      string
-		username  string
-		orgs      []v0auth.GitHubUserOrOrg
-		wantPerms int
+		name         string
+		username     string
+		orgs         []v0auth.GitHubUserOrOrg
+		wantPerms    int
+		wantPatterns []string
 	}{
 		{
-			name:      "valid username only",
-			username:  "valid-user",
-			orgs:      []v0auth.GitHubUserOrOrg{},
-			wantPerms: 1,
+			name:         "valid username only",
+			username:     "valid-user",
+			orgs:         []v0auth.GitHubUserOrOrg{},
+			wantPerms:    1,
+			wantPatterns: []string{"io.github.valid-user/*"},
 		},
 		{
-			name:      "valid username with numbers",
-			username:  "user123",
-			orgs:      []v0auth.GitHubUserOrOrg{},
-			wantPerms: 1,
+			name:         "valid username with numbers",
+			username:     "user123",
+			orgs:         []v0auth.GitHubUserOrOrg{},
+			wantPerms:    1,
+			wantPatterns: []string{"io.github.user123/*"},
 		},
 		{
 			name:     "valid username with org",
@@ -877,7 +932,24 @@ func TestValidGitHubNames(t *testing.T) {
 			orgs: []v0auth.GitHubUserOrOrg{
 				{Login: "valid-org", ID: 1},
 			},
-			wantPerms: 2,
+			wantPerms:    2,
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.valid-org/*"},
+		},
+		{
+			name:         "mixed-case username casing is preserved",
+			username:     "MiXeD-User",
+			orgs:         []v0auth.GitHubUserOrOrg{},
+			wantPerms:    1,
+			wantPatterns: []string{"io.github.MiXeD-User/*"},
+		},
+		{
+			name:     "mixed-case administered org casing is preserved",
+			username: "valid-user",
+			orgs: []v0auth.GitHubUserOrOrg{
+				{Login: "MiXeD-Org", ID: 1},
+			},
+			wantPerms:    2,
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.MiXeD-Org/*"},
 		},
 		{
 			name:      "invalid username with spaces",
@@ -897,7 +969,8 @@ func TestValidGitHubNames(t *testing.T) {
 			orgs: []v0auth.GitHubUserOrOrg{
 				{Login: "invalid org", ID: 1},
 			},
-			wantPerms: 1, // Personal namespace kept; the invalid org is skipped
+			wantPerms:    1, // Personal namespace kept; the invalid org is skipped
+			wantPatterns: []string{"io.github.valid-user/*"},
 		},
 		{
 			name:     "valid username with one valid and one invalid org",
@@ -906,7 +979,8 @@ func TestValidGitHubNames(t *testing.T) {
 				{Login: "valid-org", ID: 1},
 				{Login: "invalid org", ID: 2},
 			},
-			wantPerms: 2, // Personal + valid org; the invalid org is skipped
+			wantPerms:    2, // Personal + valid org; the invalid org is skipped
+			wantPatterns: []string{"io.github.valid-user/*", "io.github.valid-org/*"},
 		},
 	}
 
@@ -943,6 +1017,14 @@ func TestValidGitHubNames(t *testing.T) {
 			claims, err := jwtManager.ValidateToken(ctx, response.RegistryToken)
 			require.NoError(t, err)
 			assert.Len(t, claims.Permissions, tc.wantPerms)
+
+			if tc.wantPatterns != nil {
+				patterns := make([]string, 0, len(claims.Permissions))
+				for _, perm := range claims.Permissions {
+					patterns = append(patterns, perm.ResourcePattern)
+				}
+				assert.ElementsMatch(t, tc.wantPatterns, patterns)
+			}
 		})
 	}
 }
