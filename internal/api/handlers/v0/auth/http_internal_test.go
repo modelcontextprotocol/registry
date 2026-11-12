@@ -336,7 +336,7 @@ func TestHTTPKeyFetcher_DoesNotRetryPermanentFailures(t *testing.T) {
 // attempts and report how many were made — #1625 asks for diagnostics that
 // distinguish fetch problems from key problems.
 func TestHTTPKeyFetcher_GivesUpAfterBoundedAttempts(t *testing.T) {
-	srv, requests := newDropFirstConnServer(t, 3)
+	srv, requests := newDropFirstConnServer(t, 2)
 	defer srv.Close()
 
 	fetcher := newLocalTLSFetcher(srv)
@@ -344,10 +344,10 @@ func TestHTTPKeyFetcher_GivesUpAfterBoundedAttempts(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected an error when every attempt drops the connection")
 	}
-	if got := atomic.LoadInt32(requests); got != 3 {
-		t.Errorf("server saw %d requests, want 3 bounded attempts", got)
+	if got := atomic.LoadInt32(requests); got != 2 {
+		t.Errorf("server saw %d requests, want 2 bounded attempts", got)
 	}
-	if !strings.Contains(err.Error(), "3 attempts") {
+	if !strings.Contains(err.Error(), "2 attempts") {
 		t.Errorf("err = %v, want it to report the number of attempts", err)
 	}
 }
@@ -364,7 +364,7 @@ func TestHTTPKeyFetcher_DoesNotRetryAfterContextCancellation(t *testing.T) {
 	if _, err := fetcher.FetchKey(ctx, internalTestDomain); err == nil {
 		t.Fatal("expected an error with a cancelled context")
 	}
-	if got := atomic.LoadInt32(requests); got > 1 {
-		t.Errorf("server saw %d requests, want at most 1 (retries must stop once the context is done)", got)
+	if got := atomic.LoadInt32(requests); got != 0 {
+		t.Errorf("server saw %d requests, want 0 (a cancelled context must not start a request)", got)
 	}
 }
