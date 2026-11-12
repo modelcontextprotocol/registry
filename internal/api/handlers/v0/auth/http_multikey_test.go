@@ -16,22 +16,9 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 )
 
-// Regression tests for issue #1679: HTTP domain authentication fails signature
-// verification with matching Ed25519 keys.
-//
-// The registry is supposed to verify a login against every key published by the
-// domain, but ParseMCPKeysFromStrings only extracted the FIRST proof record
-// from each fetched string. A served /.well-known/mcp-registry-auth body that
-// carries more than one MCPv1 record — e.g. a stale record left in place while
-// rotating to a new key — therefore verified only against the stale key, and a
-// signature made with the matching published key was rejected with
-// "signature verification failed ... the published record may be stale" even
-// though the matching key was right there in the served record.
-
-// issue1679Ed25519Seed is the issue's private-key shape: exactly 64 hex
-// characters (a 32-byte Ed25519 seed) as passed to
-// `mcp-publisher login http --private-key <64 hex chars>`.
-const issue1679Ed25519Seed = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+// multiKeyEd25519Seed is a deterministic 32-byte test seed, in the same hex
+// format accepted by mcp-publisher login http --private-key.
+const multiKeyEd25519Seed = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
 
 func proofRecordFor(pub ed25519.PublicKey) string {
 	return fmt.Sprintf("v=MCPv1; k=ed25519; p=%s", base64.StdEncoding.EncodeToString(pub))
@@ -42,18 +29,17 @@ func fingerprintFor(pub ed25519.PublicKey) string {
 	return info.Fingerprint()
 }
 
-// issue1679SigningKey derives the deterministic Ed25519 key from the issue's
-// 64-hex-char private key.
-func issue1679SigningKey(t *testing.T) (ed25519.PrivateKey, ed25519.PublicKey) {
+// multiKeySigningKey derives a deterministic Ed25519 key for these tests.
+func multiKeySigningKey(t *testing.T) (ed25519.PrivateKey, ed25519.PublicKey) {
 	t.Helper()
-	seed, err := hex.DecodeString(issue1679Ed25519Seed)
+	seed, err := hex.DecodeString(multiKeyEd25519Seed)
 	require.NoError(t, err)
 	priv := ed25519.NewKeyFromSeed(seed)
 	return priv, priv.Public().(ed25519.PublicKey)
 }
 
 func TestParseMCPKeysFromStrings_ExtractsEveryRecord(t *testing.T) {
-	_, signingPub := issue1679SigningKey(t)
+	_, signingPub := multiKeySigningKey(t)
 	stalePub, _, err := ed25519.GenerateKey(nil)
 	require.NoError(t, err)
 
@@ -70,7 +56,7 @@ func TestParseMCPKeysFromStrings_ExtractsEveryRecord(t *testing.T) {
 	got := make(map[string]bool, len(parsed))
 	for _, p := range parsed {
 		require.NotNil(t, p.PublicKeyInfo, "every matched record must parse as a key")
-		got[p.PublicKeyInfo.Fingerprint()] = true
+		got[p.Fingerprint()] = true
 	}
 
 	assert.Len(t, parsed, 3,
@@ -85,9 +71,8 @@ func TestHTTPAuthHandler_ExchangeToken_MatchingKeyAmongMultiplePublishedRecords(
 	}
 	handler := auth.NewHTTPAuthHandler(cfg)
 
-	// The signing key: the issue's 64-hex-char private key, exactly as passed to
-	// `mcp-publisher login http --domain bodywise.io --private-key <64 hex>`.
-	signingKey, signingPub := issue1679SigningKey(t)
+	// Derive the signing key from the publisher's 64-hex-character seed format.
+	signingKey, signingPub := multiKeySigningKey(t)
 
 	// A stale key from before a rotation, still present in the served body.
 	stalePub, _, err := ed25519.GenerateKey(nil)
@@ -116,7 +101,7 @@ func TestHTTPAuthHandler_ExchangeToken_MatchingKeyAmongMultiplePublishedRecords(
 
 			result, err := handler.ExchangeToken(context.Background(), testDomain, timestamp, signedTimestamp)
 			require.NoError(t, err,
-				"a signature made with a key whose proof record is published must verify (issue #1679)")
+				"a signature made with a key whose proof record is published must verify")
 			require.NotNil(t, result)
 			assert.NotEmpty(t, result.RegistryToken)
 		})

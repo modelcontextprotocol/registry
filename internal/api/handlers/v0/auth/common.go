@@ -334,7 +334,7 @@ func ParseMCPKeysFromStrings(inputs []string) []struct {
 		// key fetch returns the whole response body as one string, and a body
 		// carrying more than one proof record (e.g. a stale record left behind
 		// while rotating keys) must verify against all published keys — not
-		// silently drop everything after the first match (#1679).
+		// silently drop everything after the first match.
 		for _, matches := range MCPProofRecordPattern.FindAllStringSubmatch(record, -1) {
 			if len(matches) == 3 {
 				publicKey, err := ParsePublicKey(matches[1], matches[2])

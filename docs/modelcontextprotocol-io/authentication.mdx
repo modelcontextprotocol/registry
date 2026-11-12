@@ -345,7 +345,7 @@ The fetch is a plain HTTPS request with these properties:
 | --- | --- |
 | Request | `GET https://<domain>/.well-known/mcp-registry-auth`, sent with `Accept: text/plain` and `User-Agent: mcp-registry/1.0` |
 | Status | `200 OK`. Redirects are not followed, so a `3xx` fails verification |
-| Body | the proof record, at most 4096 bytes. Surrounding whitespace is ignored |
+| Body | one or more proof records, at most 4096 bytes in total. Use one record per line; surrounding whitespace is ignored |
 | Timeout | 10 seconds for the whole request |
 | Origin | the hosted Registry runs on Google Cloud, so the request arrives from Google Cloud addresses rather than a fixed address you can allowlist per request |
 
@@ -366,9 +366,25 @@ curl -sS -o - -w '\n%{http_code}\n' \
   https://example.com/.well-known/mcp-registry-auth
 ```
 
-The response body must be the proof record printed by the login command (`v=MCPv1; k=...; p=...`). When the Registry cannot use the endpoint, the login error carries the Registry's own fetch failure, such as `dial tcp <ip>:443: i/o timeout`, `HTTP 403: failed to fetch key from ...`, or `HTTP 301: failed to fetch key from ...`. Allow plain HTTPS clients through for `/.well-known/mcp-registry-auth`, serve the path without redirects, then retry.
+The response body must contain the proof record printed by the login command (`v=MCPv1; k=...; p=...`). When the Registry cannot use the endpoint, the login error carries the Registry's own fetch failure, such as `dial tcp <ip>:443: i/o timeout`, `HTTP 403: failed to fetch key from ...`, or `HTTP 301: failed to fetch key from ...`. Allow plain HTTPS clients through for `/.well-known/mcp-registry-auth`, serve the path without redirects, then retry.
 
 Addresses that resolve to loopback, private, link-local, or carrier-grade NAT ranges are refused by design, so the endpoint must be reachable at a public address.
+
+## Rotating and retiring authentication keys
+
+The Registry accepts a valid signature from **any valid MCP key published for the requested domain**. For HTTP authentication, multiple proof records can share the `/.well-known/mcp-registry-auth` file; put each record on its own line and keep the whole response within 4096 bytes. For DNS authentication, the Registry reads all matching proof records in the TXT responses at the requested domain, including multiple proof records within one TXT record.
+
+To rotate a key without interrupting publishers:
+
+1. Publish the new key's proof record alongside the existing record.
+2. Verify that login works with the new private key, then update publishers to use it.
+3. Remove every copy of the retired key's proof record from the HTTP file or DNS TXT records. Preserve keys still in use and unrelated TXT records.
+
+<Warning>
+  Adding a new key, or changing record order, does not revoke an old key. Anyone holding a matching private key can authenticate while its public key remains published. If a key is compromised, remove its record immediately rather than keeping an overlap period.
+</Warning>
+
+Ensure all origins and CDN edges serve the updated HTTP file, or allow for DNS TTLs and caches to expire. Once the Registry fetches records without the retired key, that key can no longer obtain new tokens. Removing a proof record does not revoke Registry tokens already issued; those tokens remain valid until their expiry (currently five minutes after issuance).
 
 ## Troubleshooting DNS and HTTP authentication
 
