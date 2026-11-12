@@ -65,6 +65,18 @@ func TestValidateDomainAndTimestampRejectsGitHubPages(t *testing.T) {
 		{"github.io.evil-example.com", false},
 		{"example.com", false},
 		{"my-org.github.io.example.com", false},
+
+		// GitLab Pages domains must not mint io.gitlab.* namespaces via DNS/HTTP:
+		// <group>.gitlab.io is served from a repository ordinary Developers can
+		// write to, the same weaker bar #1506 closed for GitHub Pages.
+		{"my-group.gitlab.io", true},
+		{"my-group.GitLab.IO", true},
+		{"gitlab.io", true},
+		{"sub.my-group.gitlab.io", true},
+
+		// Lookalikes stay allowed
+		{"gitlab.io.evil-example.com", false},
+		{"my-group.gitlab.io.example.com", false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.domain, func(t *testing.T) {
