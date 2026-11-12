@@ -54,7 +54,7 @@ type CargoReadmeMetaResponse struct {
 //  1. GET https://crates.io/api/v1/crates/{name}/{version}/readme
 //     → 200 OK with JSON: {"url": "https://static.crates.io/readmes/.../...html"}
 //  2. GET <url from step 1>
-//     → 200 OK with rendered README HTML, or 403 if the crate/version is missing
+//     → 200 OK with rendered README HTML, or 403/404 if the README is unavailable
 //
 // The two-call pattern stays on the documented crates.io API surface rather than relying
 // on the CDN URL layout being stable.
@@ -147,7 +147,7 @@ func newCargoHTTPClient(baseURL string, allowedHosts map[string]struct{}) *http.
 }
 
 // cargoVersionState is the outcome of probing the crate-version metadata
-// endpoint, used to disambiguate a 403 from the README CDN.
+// endpoint, used to disambiguate a 403 or 404 from the README CDN.
 type cargoVersionState int
 
 const (
@@ -164,9 +164,9 @@ const (
 )
 
 // probeCargoVersion checks whether a specific crate version exists on crates.io.
-// static.crates.io (S3) returns 403 both for a genuinely-missing crate/version
-// AND for a crate that exists but has no rendered README, so a 403 from the CDN
-// alone cannot tell a publisher which it is; this probe disambiguates, while
+// A 403 or 404 from static.crates.io can indicate a genuinely-missing crate/version
+// or a crate that exists but has no rendered README. The CDN response alone
+// cannot tell a publisher which it is; this probe disambiguates, while
 // distinguishing a transient failure from a definitive missing/exists answer.
 func probeCargoVersion(ctx context.Context, client *http.Client, baseURL, identifier, version string) cargoVersionState {
 	versionURL := fmt.Sprintf("%s/api/v1/crates/%s/%s",
@@ -211,8 +211,8 @@ func cargoMetadataStatusError(identifier string, status int) error {
 }
 
 // cargoReadmeStatusError maps a non-200 status from the README CDN to a
-// caller-actionable error. 429/5xx are transient; 403 is disambiguated (see
-// cargoReadme403Error) because static.crates.io returns it both for a missing
+// caller-actionable error. 429/5xx are transient; 403/404 are disambiguated (see
+// cargoReadmeUnavailableError) because static.crates.io returns them both for a missing
 // crate/version and for a crate that has no rendered README.
 func cargoReadmeStatusError(ctx context.Context, client *http.Client, pkg model.Package, serverName string, status int) error {
 	switch {
@@ -220,34 +220,34 @@ func cargoReadmeStatusError(ctx context.Context, client *http.Client, pkg model.
 		return fmt.Errorf("crates.io rate-limited the README fetch for cargo package '%s' version '%s' (status: 429) — likely transient, retry later", pkg.Identifier, pkg.Version)
 	case status >= 500 && status < 600:
 		return fmt.Errorf("crates.io upstream error fetching README for cargo package '%s' version '%s' (status: %d) — likely transient, retry later", pkg.Identifier, pkg.Version, status)
-	case status == http.StatusForbidden:
-		return cargoReadme403Error(ctx, client, pkg, serverName)
+	case status == http.StatusForbidden, status == http.StatusNotFound:
+		return cargoReadmeUnavailableError(ctx, client, pkg, serverName, status)
 	default:
 		return fmt.Errorf("cargo package '%s' version '%s' README fetch failed (status: %d)", pkg.Identifier, pkg.Version, status)
 	}
 }
 
-// cargoReadme403Error disambiguates a 403 from static.crates.io (S3's default
-// for a missing key): a genuinely-missing crate/version versus a crate that
+// cargoReadmeUnavailableError disambiguates a 403 or 404 from static.crates.io:
+// a genuinely-missing crate/version versus a crate that
 // exists but has no rendered README. It probes the crate-version metadata
 // endpoint so the publisher gets an actionable message rather than a blanket
 // "not found".
-func cargoReadme403Error(ctx context.Context, client *http.Client, pkg model.Package, serverName string) error {
+func cargoReadmeUnavailableError(ctx context.Context, client *http.Client, pkg model.Package, serverName string, status int) error {
 	switch probeCargoVersion(ctx, client, pkg.RegistryBaseURL, pkg.Identifier, pkg.Version) {
 	case cargoVersionExists:
-		// The crate/version exists but the README CDN returned 403. The likely
-		// cause is a missing README, but a 403 is not definitive proof (e.g. a
+		// The crate/version exists but the README CDN returned 403/404. The likely
+		// cause is a missing README, but this is not definitive proof (e.g. a
 		// transient CDN/WAF block), so don't flatly assert "no README".
-		return fmt.Errorf("cargo package '%s' version '%s' exists on crates.io, but its rendered README could not be retrieved (status: 403). If it has no README, add one containing 'mcp-name: %s' and publish a new version", pkg.Identifier, pkg.Version, serverName)
+		return fmt.Errorf("cargo package '%s' version '%s' exists on crates.io, but its rendered README could not be retrieved (status: %d). If it has no README, add one containing 'mcp-name: %s' and publish a new version", pkg.Identifier, pkg.Version, status, serverName)
 	case cargoVersionMissing:
 		return fmt.Errorf("cargo package '%s' version '%s' not found on crates.io", pkg.Identifier, pkg.Version)
 	case cargoVersionTransient:
-		return fmt.Errorf("crates.io could not confirm cargo package '%s' version '%s' (README status: 403, version check inconclusive) — likely transient, retry later", pkg.Identifier, pkg.Version)
+		return fmt.Errorf("crates.io could not confirm cargo package '%s' version '%s' (README status: %d, version check inconclusive) — likely transient, retry later", pkg.Identifier, pkg.Version, status)
 	case cargoVersionUnknown:
 		// Probe returned an unclassifiable status — fall through to the
 		// best-effort message below.
 	}
-	return fmt.Errorf("cargo package '%s' version '%s' not found on crates.io (status: 403)", pkg.Identifier, pkg.Version)
+	return fmt.Errorf("cargo package '%s' version '%s' not found on crates.io (status: %d)", pkg.Identifier, pkg.Version, status)
 }
 
 // validateCargoREADME performs the two-call README fetch and the mcp-name token
