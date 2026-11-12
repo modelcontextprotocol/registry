@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -58,6 +60,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n\n", os.Args[1])
 		printUsage()
 		os.Exit(1)
+	}
+
+	if errors.Is(err, flag.ErrHelp) && printCommandHelp(os.Args[1]) {
+		return
 	}
 
 	if err != nil {
@@ -129,10 +135,15 @@ func printCommandHelp(command string) bool {
 		_, _ = fmt.Fprintln(os.Stdout, "Publish server.json to the registry")
 		_, _ = fmt.Fprintln(os.Stdout)
 		_, _ = fmt.Fprintln(os.Stdout, "Usage:")
-		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher publish [server.json]")
+		_, _ = fmt.Fprintln(os.Stdout, "  mcp-publisher publish [flags] [server.json]")
 		_, _ = fmt.Fprintln(os.Stdout)
 		_, _ = fmt.Fprintln(os.Stdout, "Arguments:")
 		_, _ = fmt.Fprintln(os.Stdout, "  server.json   Path to the server.json file (default: ./server.json)")
+		_, _ = fmt.Fprintln(os.Stdout)
+		_, _ = fmt.Fprintln(os.Stdout, "Flags (must come before positional arguments):")
+		_, _ = fmt.Fprintln(os.Stdout, "  --wait <duration>  Retry while the package is not visible yet, for up to this long (e.g. 4m).")
+		_, _ = fmt.Fprintln(os.Stdout, "                     Useful right after 'npm publish'. Registry tokens last 5 minutes from login,")
+		_, _ = fmt.Fprintln(os.Stdout, "                     so the time since login counts against it.")
 		_, _ = fmt.Fprintln(os.Stdout)
 		_, _ = fmt.Fprintln(os.Stdout, "You must be logged in before publishing. Run 'mcp-publisher login' first.")
 
