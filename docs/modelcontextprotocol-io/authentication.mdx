@@ -177,14 +177,14 @@ Then add the TXT record using your DNS provider's control panel. It may take sev
 ```bash Ed25519
 MY_DOMAIN="example.com"
 
-MCP_PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')" \
+MCP_PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n')" \
   mcp-publisher login dns --domain "${MY_DOMAIN}"
 ```
 
 ```bash ECDSA P-384
 MY_DOMAIN="example.com"
 
-MCP_PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')" \
+MCP_PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n')" \
   mcp-publisher login dns --algorithm ecdsap384 --domain "${MY_DOMAIN}"
 ```
 
@@ -306,13 +306,13 @@ Then host the `mcp-registry-auth` file at `/.well-known/mcp-registry-auth` on yo
 
 ```bash Ed25519
 MY_DOMAIN="example.com"
-MCP_PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n')" \
+MCP_PRIVATE_KEY="$(openssl pkey -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n')" \
   mcp-publisher login http --domain "${MY_DOMAIN}"
 ```
 
 ```bash ECDSA P-384
 MY_DOMAIN="example.com"
-MCP_PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n')" \
+MCP_PRIVATE_KEY="$(openssl ec -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n')" \
   mcp-publisher login http --algorithm ecdsap384 --domain "${MY_DOMAIN}"
 ```
 

@@ -116,7 +116,7 @@ openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64
 # example.com. IN TXT "v=MCPv1; k=ed25519; p=PUBLIC_KEY"
 
 # Extract private key for login (umask 077 keeps key.hex at 0600)
-(umask 077; openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n' > key.hex)
+(umask 077; openssl pkey -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n' > key.hex)
 ```
 
 **Setup:** (for ECDSA P-384)
@@ -130,11 +130,11 @@ openssl ec -in key.pem -text -noout -conv_form compressed | grep -A4 "pub:" | ta
 # Add DNS TXT record:
 # example.com. IN TXT "v=MCPv1; k=ecdsap384; p=PUBLIC_KEY"
 
-# Extract private key for login
-openssl ec -in <pem path> -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n'
+# Extract the private key as hex into a protected file
+(umask 077; openssl ec -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n' > key.hex)
 
 # Log in, selecting the ECDSA P-384 algorithm explicitly
-MCP_PRIVATE_KEY="$(cat key.hex)" mcp-publisher login dns --algorithm ecdsap384 --domain=example.com
+mcp-publisher login dns --algorithm ecdsap384 --domain=example.com --private-key-file key.hex
 ```
 
 **Setup:** (for Google KMS signing)
@@ -225,8 +225,11 @@ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
 # https://example.com/.well-known/mcp-registry-auth
 # Content: v=MCPv1; k=ecdsap384; p=PUBLIC_KEY
 
+# Extract the private key as hex into a protected file
+(umask 077; openssl ec -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n' > key.hex)
+
 # Log in, selecting the ECDSA P-384 algorithm explicitly
-MCP_PRIVATE_KEY="$(cat key.hex)" mcp-publisher login http --algorithm ecdsap384 --domain=example.com
+mcp-publisher login http --algorithm ecdsap384 --domain=example.com --private-key-file key.hex
 ```
 
 Cloud signing is also supported for HTTP authentication, similar to the DNS examples above. Just swap out the `dns` positional argument for `http`.
