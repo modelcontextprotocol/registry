@@ -339,7 +339,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 		metaStatus      int
 		readmeStatus    int
 		readmeBody      string
-		versionExists   bool // response for the /api/v1/crates/{n}/{v} existence probe (403 disambiguation)
+		versionExists   bool // response for the /api/v1/crates/{n}/{v} existence probe (403/404 disambiguation)
 		versionProbe    int  // if non-zero, the existence probe returns this status (overrides versionExists)
 		wantErr         bool
 		wantContains    []string
@@ -356,7 +356,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 		{
 			// Defensive branch: crates.io's metadata endpoint returns 200 (with a
 			// CDN url) even for missing crates, so it does NOT 404 in practice for a
-			// missing crate — the real missing-crate path is readme_403_missing below.
+			// missing crate — the CDN can return 403 or 404 instead.
 			// This case only covers what we'd report if the API ever did 404.
 			name:         "metadata_404_defensive",
 			crateName:    "combined-meta404",
@@ -402,6 +402,38 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 			versionProbe:    http.StatusTooManyRequests,
 			wantErr:         true,
 			wantContains:    []string{"transient"},
+			wantNotContains: []string{"not found"},
+		},
+		{
+			name:            "readme_404_missing",
+			crateName:       "combined-readme404-missing",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusNotFound,
+			wantErr:         true,
+			wantContains:    []string{"not found"},
+			wantNotContains: []string{"exists on crates.io"},
+		},
+		{
+			name:            "readme_404_no_readme",
+			crateName:       "combined-readme404-noreadme",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusNotFound,
+			versionExists:   true,
+			wantErr:         true,
+			wantContains:    []string{"exists on crates.io", "could not be retrieved", "status: 404", serverName},
+			wantNotContains: []string{"not found"},
+		},
+		{
+			name:            "readme_404_probe_transient",
+			crateName:       "combined-readme404-probe429",
+			version:         "0.1.0",
+			metaStatus:      http.StatusOK,
+			readmeStatus:    http.StatusNotFound,
+			versionProbe:    http.StatusTooManyRequests,
+			wantErr:         true,
+			wantContains:    []string{"transient", "README status: 404"},
 			wantNotContains: []string{"not found"},
 		},
 		{
@@ -475,7 +507,7 @@ func TestValidateCargoCombinedFixture(t *testing.T) {
 				_ = json.NewEncoder(w).Encode(map[string]string{"url": srv.URL + staticPath})
 				return
 			}
-			// Existence probe used to disambiguate a README 403.
+			// Existence probe used to disambiguate a README 403 or 404.
 			if r.URL.Path == versionPath {
 				switch {
 				case tt.versionProbe != 0:
