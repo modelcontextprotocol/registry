@@ -8,17 +8,19 @@ const (
 	RegistryTypeNuGet = "nuget"
 	RegistryTypeMCPB  = "mcpb"
 	RegistryTypeCargo = "cargo"
+	RegistryTypeGo    = "go"
 )
 
 // Registry Base URLs - supported package registry base URLs
 const (
-	RegistryURLCrates = "https://crates.io"
-	RegistryURLGitHub = "https://github.com"
-	RegistryURLGitLab = "https://gitlab.com"
-	RegistryURLNPM    = "https://registry.npmjs.org"
-	RegistryURLNuGet  = "https://api.nuget.org/v3/index.json"
-	RegistryURLPyPI   = "https://pypi.org"
-	RegistryURLQuay   = "https://quay.io"
+	RegistryURLGitHub  = "https://github.com"
+	RegistryURLGitLab  = "https://gitlab.com"
+	RegistryURLNPM     = "https://registry.npmjs.org"
+	RegistryURLNuGet   = "https://api.nuget.org/v3/index.json"
+	RegistryURLPyPI    = "https://pypi.org"
+	RegistryURLQuay    = "https://quay.io"
+	RegistryURLCrates  = "https://crates.io"
+	RegistryURLGoProxy = "https://proxy.golang.org"
 )
 
 // Transport Types - supported remote transport protocols
