@@ -133,6 +133,9 @@ func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 	}
 	err := loginFlags.Parse(args[flags.ArgOffset:])
 	if err == nil {
+		if err := validatePrivateKeyFlags(loginFlags, flags); err != nil {
+			return flags, err
+		}
 		flags.RegistryURL = strings.TrimRight(flags.RegistryURL, "/")
 	}
 
@@ -142,6 +145,23 @@ func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 	}
 
 	return flags, err
+}
+
+// Check presence separately from value so an explicitly empty flag cannot
+// select an ambient key or bypass the mutually exclusive flag check.
+func validatePrivateKeyFlags(parsed *flag.FlagSet, flags LoginFlags) error {
+	provided := make(map[string]bool)
+	parsed.Visit(func(f *flag.Flag) { provided[f.Name] = true })
+	if provided["private-key"] && provided["private-key-file"] {
+		return errors.New("use --private-key or --private-key-file, not both")
+	}
+	if provided["private-key"] && strings.TrimSpace(flags.PrivateKey) == "" {
+		return errors.New("--private-key must not be empty")
+	}
+	if provided["private-key-file"] && strings.TrimSpace(flags.PrivateKeyFile) == "" {
+		return errors.New("--private-key-file must not be empty")
+	}
+	return nil
 }
 
 // resolvePrivateKey returns the hex private key for in-process signing.

@@ -9,19 +9,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"slices"
-
-	"github.com/modelcontextprotocol/registry/cmd/publisher/commands"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
 
+	"github.com/modelcontextprotocol/registry/cmd/publisher/commands"
 	"github.com/stretchr/testify/require"
 )
 
@@ -138,4 +137,49 @@ func TestLoginCommandPrivateKeyHelperProcess(t *testing.T) {
 		os.Exit(1)
 	}
 	os.Exit(0)
+}
+
+func TestLoginCommand_EmptyPrivateKeyFlagsDoNotFallBack(t *testing.T) {
+	binary, err := os.Executable()
+	require.NoError(t, err)
+	key := strings.Repeat("01", ed25519.SeedSize)
+	keyFile := filepath.Join(t.TempDir(), "key.hex")
+	require.NoError(t, os.WriteFile(keyFile, []byte(key), 0600))
+
+	for _, method := range []string{"dns", "http"} {
+		for _, tc := range []struct {
+			name      string
+			flags     []string
+			wantError string
+		}{
+			{"empty-key-equals", []string{"--private-key="}, "--private-key must not be empty"},
+			{"empty-key-separate", []string{"--private-key", ""}, "--private-key must not be empty"},
+			{"whitespace-key", []string{"--private-key", " \t"}, "--private-key must not be empty"},
+			{"empty-path-equals", []string{"--private-key-file="}, "--private-key-file must not be empty"},
+			{"empty-path-separate", []string{"--private-key-file", ""}, "--private-key-file must not be empty"},
+			{"whitespace-path", []string{"--private-key-file", " \t"}, "--private-key-file must not be empty"},
+			{"both-empty", []string{"--private-key=", "--private-key-file="}, "not both"},
+			{"empty-key-with-file", []string{"--private-key=", "--private-key-file", keyFile}, "not both"},
+			{"key-with-empty-path", []string{"--private-key", key, "--private-key-file="}, "not both"},
+			{"repeated-key-ends-empty", []string{"--private-key", key, "--private-key="}, "--private-key must not be empty"},
+		} {
+			t.Run(method+"/"+tc.name, func(t *testing.T) {
+				var requests atomic.Int32
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					requests.Add(1)
+					w.WriteHeader(http.StatusUnauthorized)
+				}))
+				defer server.Close()
+				args := []string{"-test.run=^TestLoginCommandPrivateKeyHelperProcess$", "--", method, "--domain", "example.com", "--registry", server.URL}
+				args = append(args, tc.flags...)
+				cmd := exec.Command(binary, args...)
+				cmd.Env = append(os.Environ(), "MCP_PRIVATE_KEY="+key, "MCP_PUBLISHER_TEST_LOGIN=1")
+				output, err := cmd.CombinedOutput()
+				require.Error(t, err)
+				require.Contains(t, string(output), tc.wantError)
+				require.NotContains(t, string(output), key)
+				require.Zero(t, requests.Load(), "invalid explicit flags must fail before any authentication request")
+			})
+		}
+	}
 }

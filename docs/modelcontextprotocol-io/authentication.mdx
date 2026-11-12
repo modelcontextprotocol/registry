@@ -208,7 +208,7 @@ mcp-publisher login dns azure-key-vault --domain="${MY_DOMAIN}" --vault "${MY_KE
 </CodeGroup>
 
 <Note>
-  The examples above pass the hex key through the `MCP_PRIVATE_KEY` environment variable, which keeps it off the command line where other processes on the machine can see it. You can also write the hex key to a file and pass `--private-key-file key.hex` (the file holds the hex key, not the PEM file), or pass it directly with `--private-key`. `--private-key` and `--private-key-file` are mutually exclusive; either one overrides `MCP_PRIVATE_KEY`.
+  The examples above pass the hex key through the `MCP_PRIVATE_KEY` environment variable, which keeps it off the command line where other processes on the machine can see it. You can also write the hex key to a file and pass `--private-key-file key.hex` (the file holds the hex key, not the PEM file), or pass it directly with `--private-key`. `--private-key` and `--private-key-file` are mutually exclusive; either one overrides `MCP_PRIVATE_KEY`. An explicitly empty flag is rejected instead of falling back to the environment.
 </Note>
 
 ## HTTP Authentication
