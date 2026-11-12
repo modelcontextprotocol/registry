@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -296,6 +297,57 @@ func TestDefaultHTTPKeyFetcher_FetchKey(t *testing.T) {
 	// (This will fail with network error, which is expected)
 	_, err := fetcher.FetchKey(context.Background(), "nonexistent-test-domain-12345.com")
 	assert.Error(t, err)
+}
+
+// Regression test for #1625 ("HTTP authentication verification fails due to
+// unreachable verification endpoint"): the reported endpoint was reachable,
+// but a single transient fetch failure (`dial tcp <ip>:443: i/o timeout`)
+// failed the entire mcp-publisher login with 401. The token exchange must
+// recover from one transient verification-endpoint failure.
+func TestHTTPAuthHandler_ExchangeToken_RecoversFromTransientFetchFailure(t *testing.T) {
+	cfg := &config.Config{
+		JWTPrivateKey: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+	}
+	handler := auth.NewHTTPAuthHandler(cfg)
+
+	publicKey, privateKey, err := ed25519.GenerateKey(nil)
+	require.NoError(t, err)
+	proofRecord := fmt.Sprintf("v=MCPv1; k=ed25519; p=%s", base64.StdEncoding.EncodeToString(publicKey))
+
+	// The first request is answered by severing the connection before any
+	// response bytes — the deterministic equivalent of the issue's dial
+	// timeout; the endpoint is fully functional afterwards.
+	var requests int32
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if atomic.AddInt32(&requests, 1) == 1 {
+			hj, ok := w.(http.Hijacker)
+			if !ok {
+				t.Error("ResponseWriter does not support hijacking")
+				return
+			}
+			conn, _, hijackErr := hj.Hijack()
+			if hijackErr != nil {
+				t.Errorf("Hijack failed: %v", hijackErr)
+				return
+			}
+			_ = conn.Close() // simulate transient unreachability
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(proofRecord))
+	}))
+	defer srv.Close()
+
+	handler.SetFetcher(auth.NewDefaultHTTPKeyFetcherWithClient(newClientForTLSServer(t, srv)))
+
+	timestamp := time.Now().UTC().Format(time.RFC3339)
+	signedTimestamp := hex.EncodeToString(ed25519.Sign(privateKey, []byte(timestamp)))
+
+	result, err := handler.ExchangeToken(context.Background(), testDomain, timestamp, signedTimestamp)
+	require.NoError(t, err, "one transient verification-endpoint failure must not fail the whole login")
+	require.NotNil(t, result)
+	assert.NotEmpty(t, result.RegistryToken)
+	assert.Equal(t, int32(2), atomic.LoadInt32(&requests))
 }
 
 func TestDefaultHTTPKeyFetcher(t *testing.T) {

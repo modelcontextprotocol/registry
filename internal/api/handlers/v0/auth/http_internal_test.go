@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -204,9 +206,165 @@ func TestHTTPKeyFetcher_RejectsResponseAboveDocumentedLimit(t *testing.T) {
 	defer srv.Close()
 
 	fetcher := newLocalTLSFetcher(srv)
-
 	_, err := fetcher.FetchKey(context.Background(), internalTestDomain)
 	if err == nil || !strings.Contains(err.Error(), "too large") {
 		t.Fatalf("got err=%v, want a response-too-large error", err)
+	}
+}
+
+// newDropFirstConnServer returns a TLS server that severs the connection
+// before writing any response bytes for the first dropFirst requests and
+// serves the proof record afterwards. Dropping the connection is a
+// deterministic stand-in for the transient unreachability reported in issue
+// #1625 (`dial tcp <ip>:443: i/o timeout`): the endpoint is in fact reachable
+// moments later, but the verification fetch used to be a single attempt that
+// failed the whole HTTP login. The returned counter counts every request the
+// server sees.
+func newDropFirstConnServer(t *testing.T, dropFirst int32) (*httptest.Server, *int32) {
+	t.Helper()
+	var requests int32
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if atomic.AddInt32(&requests, 1) <= dropFirst {
+			hj, ok := w.(http.Hijacker)
+			if !ok {
+				t.Error("ResponseWriter does not support hijacking")
+				return
+			}
+			conn, _, err := hj.Hijack()
+			if err != nil {
+				t.Errorf("Hijack failed: %v", err)
+				return
+			}
+			_ = conn.Close() // drop the connection without responding
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("v=MCPv1; k=ed25519; p=RECOVERED_KEY"))
+	}))
+	return srv, &requests
+}
+
+// Regression test for #1625: the well-known verification fetch must recover
+// from a transient connection failure instead of failing authentication for
+// an endpoint that is actually reachable.
+func TestHTTPKeyFetcher_RetriesTransientConnectionFailure(t *testing.T) {
+	srv, requests := newDropFirstConnServer(t, 1)
+	defer srv.Close()
+
+	fetcher := newLocalTLSFetcher(srv)
+	key, err := fetcher.FetchKey(context.Background(), internalTestDomain)
+	if err != nil {
+		t.Fatalf("expected the fetch to recover from one dropped connection, got err=%v", err)
+	}
+	if want := "v=MCPv1; k=ed25519; p=RECOVERED_KEY"; key != want {
+		t.Errorf("key = %q, want %q", key, want)
+	}
+	if got := atomic.LoadInt32(requests); got != 2 {
+		t.Errorf("server saw %d requests, want 2 (1 dropped + 1 successful retry)", got)
+	}
+}
+
+// Transient HTTP statuses (timeouts, rate limits, server errors) describe a
+// momentary condition and must be retried like connection failures (#1625).
+func TestHTTPKeyFetcher_RetriesTransientStatuses(t *testing.T) {
+	for _, status := range []int{
+		http.StatusRequestTimeout,
+		http.StatusTooManyRequests,
+		http.StatusInternalServerError,
+		http.StatusBadGateway,
+		http.StatusServiceUnavailable,
+	} {
+		t.Run(fmt.Sprintf("status-%d", status), func(t *testing.T) {
+			var requests int32
+			srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				if atomic.AddInt32(&requests, 1) == 1 {
+					w.WriteHeader(status)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte("v=MCPv1; k=ed25519; p=RECOVERED_KEY"))
+			}))
+			defer srv.Close()
+
+			fetcher := newLocalTLSFetcher(srv)
+			key, err := fetcher.FetchKey(context.Background(), internalTestDomain)
+			if err != nil {
+				t.Fatalf("expected the fetch to retry past HTTP %d, got err=%v", status, err)
+			}
+			if want := "v=MCPv1; k=ed25519; p=RECOVERED_KEY"; key != want {
+				t.Errorf("key = %q, want %q", key, want)
+			}
+			if got := atomic.LoadInt32(&requests); got != 2 {
+				t.Errorf("server saw %d requests, want 2", got)
+			}
+		})
+	}
+}
+
+// Permanent failures (client errors, redirects) describe the request itself
+// and must fail fast without retries, keeping the documented status errors.
+func TestHTTPKeyFetcher_DoesNotRetryPermanentFailures(t *testing.T) {
+	for _, status := range []int{
+		http.StatusForbidden,
+		http.StatusNotFound,
+		http.StatusMovedPermanently,
+	} {
+		t.Run(fmt.Sprintf("status-%d", status), func(t *testing.T) {
+			var requests int32
+			srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				atomic.AddInt32(&requests, 1)
+				w.WriteHeader(status)
+			}))
+			defer srv.Close()
+
+			fetcher := newLocalTLSFetcher(srv)
+			_, err := fetcher.FetchKey(context.Background(), internalTestDomain)
+			if err == nil {
+				t.Fatal("expected an error")
+			}
+			if want := fmt.Sprintf("HTTP %d", status); !strings.Contains(err.Error(), want) {
+				t.Errorf("err = %v, want it to contain %q", err, want)
+			}
+			if got := atomic.LoadInt32(&requests); got != 1 {
+				t.Errorf("server saw %d requests, want 1 (permanent failures must not be retried)", got)
+			}
+		})
+	}
+}
+
+// When every attempt fails, the fetch must give up after a bounded number of
+// attempts and report how many were made — #1625 asks for diagnostics that
+// distinguish fetch problems from key problems.
+func TestHTTPKeyFetcher_GivesUpAfterBoundedAttempts(t *testing.T) {
+	srv, requests := newDropFirstConnServer(t, 2)
+	defer srv.Close()
+
+	fetcher := newLocalTLSFetcher(srv)
+	_, err := fetcher.FetchKey(context.Background(), internalTestDomain)
+	if err == nil {
+		t.Fatal("expected an error when every attempt drops the connection")
+	}
+	if got := atomic.LoadInt32(requests); got != 2 {
+		t.Errorf("server saw %d requests, want 2 bounded attempts", got)
+	}
+	if !strings.Contains(err.Error(), "2 attempts") {
+		t.Errorf("err = %v, want it to report the number of attempts", err)
+	}
+}
+
+// Once the caller's context is done, no further attempts may be made.
+func TestHTTPKeyFetcher_DoesNotRetryAfterContextCancellation(t *testing.T) {
+	srv, requests := newDropFirstConnServer(t, 1)
+	defer srv.Close()
+
+	fetcher := newLocalTLSFetcher(srv)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if _, err := fetcher.FetchKey(ctx, internalTestDomain); err == nil {
+		t.Fatal("expected an error with a cancelled context")
+	}
+	if got := atomic.LoadInt32(requests); got != 0 {
+		t.Errorf("server saw %d requests, want 0 (a cancelled context must not start a request)", got)
 	}
 }
