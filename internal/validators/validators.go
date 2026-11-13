@@ -384,7 +384,7 @@ func validateVersion(ctx *ValidationContext, version string) *ValidationResult {
 	return result
 }
 
-// looksLikeVersionRange detects common semver range syntaxes and wildcard patterns.
+// looksLikeVersionRange detects common semver range syntaxes and wildcard patterns
 // that indicate the value is not a single, specific version.
 // Examples that should return true:
 // - "^1.2.3",
@@ -394,6 +394,9 @@ func validateVersion(ctx *ValidationContext, version string) *ValidationResult {
 // - "1.2.*",
 // - "1 - 2",
 // - "1.2 || 1.3"
+// Examples that should return false (an x inside a prerelease tag is not a wildcard):
+// - "1.0.0-next.1",
+// - "1.2.3-linux-x64"
 func looksLikeVersionRange(version string) bool {
 	trimmed := strings.TrimSpace(version)
 	if trimmed == "" {
@@ -410,8 +413,10 @@ func looksLikeVersionRange(version string) bool {
 		return true
 	}
 	if dottedVersionLikeRe.MatchString(trimmed) {
-		// wildcard in a dotted version (x/X/*) implies range-like intent
-		return strings.Contains(trimmed, "x") || strings.Contains(trimmed, "X") || strings.Contains(trimmed, "*")
+		// A wildcard (x/X/*) in the numeric part implies range-like intent.
+		// The prerelease tag after the first "-" is not checked: "1.0.0-next.1" is a valid version.
+		core, _, _ := strings.Cut(trimmed, "-")
+		return strings.ContainsAny(core, "xX*")
 	}
 	return false
 }
