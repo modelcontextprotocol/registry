@@ -49,6 +49,23 @@ type Package struct {
 	PackageArguments []Argument `json:"packageArguments,omitempty" doc:"A list of arguments to be passed to the package's binary."`
 	// EnvironmentVariables are set when running the package
 	EnvironmentVariables []KeyValueInput `json:"environmentVariables,omitempty" doc:"A mapping of environment variables to be set when running the package."`
+	// PostInstallInstructions are informational steps clients can surface after download
+	PostInstallInstructions []PostInstallInstruction `json:"postInstallInstructions,omitempty" doc:"Structured post-install steps that clients can display as a checklist after downloading the package. Intended for servers that require additional manual setup beyond installation (for example, registering a companion system service). Instructions are informational only - clients display text and never execute commands automatically."`
+}
+
+// PostInstallInstruction is a single informational post-install step that clients
+// can display after downloading a package. It is purely descriptive: clients show
+// the text and never execute the command automatically, so it carries no supply
+// chain risk.
+type PostInstallInstruction struct {
+	// Description is the human-readable instruction text (required).
+	Description string `json:"description" minLength:"1" doc:"Human-readable instruction text describing the post-install step." example:"Install as a system service for the web UI"`
+	// Command is an optional shell command the user can run; clients must not execute it automatically.
+	Command string `json:"command,omitempty" doc:"Optional shell command the user can run to complete the step. Displayed for the user to copy; clients must not execute it automatically." example:"mind-map service install --addr 127.0.0.1:4242"`
+	// Documentation is an optional link to docs or a setup page describing the step.
+	Documentation string `json:"documentation,omitempty" format:"uri" doc:"Optional link to documentation or a setup page describing the step in more detail." example:"https://github.com/aniongithub/mind-map#service-management"`
+	// Optional indicates whether the step is optional; when true the server works without it.
+	Optional bool `json:"optional,omitempty" doc:"Whether the step is optional. When true, the MCP server functions without completing this step."`
 }
 
 type Repository struct {
