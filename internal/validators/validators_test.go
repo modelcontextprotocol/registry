@@ -188,6 +188,76 @@ func TestValidate(t *testing.T) {
 			expectedError: "",
 		},
 		{
+			name: "Version allows x inside prerelease tag 1.0.0-next.1",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.0.0-next.1",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Version allows x inside prerelease tag 2.0.0-experimental",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "2.0.0-experimental",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Version allows x inside prerelease tag 1.2.3-linux-x64",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.2.3-linux-x64",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Version rejects x-range with prerelease tag",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.x-beta",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
+			name: "Version rejects wildcard * with prerelease tag",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version: "1.2.*-rc.1",
+			},
+			expectedError: validators.ErrVersionLooksLikeRange.Error(),
+		},
+		{
 			name: "Version rejects hyphen range of two versions",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,
