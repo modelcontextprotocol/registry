@@ -62,6 +62,7 @@ type SignerType string
 type LoginFlags struct {
 	Domain          string
 	PrivateKey      string
+	PrivateKeyFile  string
 	RegistryURL     string
 	KvVault         string
 	KvKeyName       string
@@ -126,11 +127,15 @@ func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 		if flags.SignerType == NoSignerType {
 			flags.SignerType = InProcessSignerType
 			loginFlags.StringVar(&flags.PrivateKey, "private-key", "", "Private key (hex)")
+			loginFlags.StringVar(&flags.PrivateKeyFile, "private-key-file", "", "Path to a file containing the private key (hex)")
 			loginFlags.Var(&flags.CryptoAlgorithm, "algorithm", "Cryptographic algorithm (ed25519, ecdsap384)")
 		}
 	}
 	err := loginFlags.Parse(args[flags.ArgOffset:])
 	if err == nil {
+		if err := validatePrivateKeyFlags(loginFlags, flags); err != nil {
+			return flags, err
+		}
 		flags.RegistryURL = strings.TrimRight(flags.RegistryURL, "/")
 	}
 
@@ -142,6 +147,51 @@ func parseLoginFlags(method string, args []string) (LoginFlags, error) {
 	return flags, err
 }
 
+// Check presence separately from value so an explicitly empty flag cannot
+// select an ambient key or bypass the mutually exclusive flag check.
+func validatePrivateKeyFlags(parsed *flag.FlagSet, flags LoginFlags) error {
+	provided := make(map[string]bool)
+	parsed.Visit(func(f *flag.Flag) { provided[f.Name] = true })
+	if provided["private-key"] && provided["private-key-file"] {
+		return errors.New("use --private-key or --private-key-file, not both")
+	}
+	if provided["private-key"] && strings.TrimSpace(flags.PrivateKey) == "" {
+		return errors.New("--private-key must not be empty")
+	}
+	if provided["private-key-file"] && strings.TrimSpace(flags.PrivateKeyFile) == "" {
+		return errors.New("--private-key-file must not be empty")
+	}
+	return nil
+}
+
+// resolvePrivateKey returns the hex private key for in-process signing.
+// --private-key and --private-key-file are mutually exclusive; either one
+// overrides the MCP_PRIVATE_KEY env var. An empty result is left for
+// NewInProcessSigner to reject.
+func resolvePrivateKey(flagValue, filePath string, getenv func(string) string) (string, error) {
+	if flagValue != "" && filePath != "" {
+		return "", errors.New("use --private-key or --private-key-file, not both")
+	}
+	if flagValue != "" {
+		return flagValue, nil
+	}
+	if filePath != "" {
+		data, err := os.ReadFile(filePath)
+		if err != nil {
+			return "", fmt.Errorf("failed to read private key file %s: %w", filePath, err)
+		}
+		key := strings.TrimSpace(string(data))
+		if strings.HasPrefix(key, "-----BEGIN") {
+			return "", fmt.Errorf("private key file %s is PEM; PEM is not supported, pass the hex private key", filePath)
+		}
+		if key == "" {
+			return "", fmt.Errorf("private key file %s is empty", filePath)
+		}
+		return key, nil
+	}
+	return strings.TrimSpace(getenv("MCP_PRIVATE_KEY")), nil
+}
+
 func createSigner(flags LoginFlags) (auth.Signer, error) {
 	switch flags.SignerType {
 	case AzureKeyVaultSignerType:
@@ -149,7 +199,11 @@ func createSigner(flags LoginFlags) (auth.Signer, error) {
 	case GoogleKMSSignerType:
 		return googlekms.GetSignatureProvider(flags.KmsResource)
 	case InProcessSignerType:
-		return auth.NewInProcessSigner(flags.PrivateKey, auth.CryptoAlgorithm(flags.CryptoAlgorithm))
+		privateKey, err := resolvePrivateKey(flags.PrivateKey, flags.PrivateKeyFile, os.Getenv)
+		if err != nil {
+			return nil, err
+		}
+		return auth.NewInProcessSigner(privateKey, auth.CryptoAlgorithm(flags.CryptoAlgorithm))
 	case NoSignerType:
 		return nil, errors.New("no signing provider specified")
 	default:
@@ -197,9 +251,12 @@ Signing providers:
   azure-key-vault   Sign using Azure Key Vault
   google-kms        Sign using Google Cloud KMS
 
-The dns and http methods require a --private-key for in-process signing. For
-out-of-process signing, use one of the supported signing providers. Signing is
-needed for an authentication challenge with the registry.
+The dns and http methods need a private key for in-process signing, given as
+--private-key <hex>, --private-key-file <path> or the MCP_PRIVATE_KEY env var.
+--private-key and --private-key-file are mutually exclusive; either one
+overrides MCP_PRIVATE_KEY. For out-of-process
+signing, use one of the supported signing providers. Signing is needed for an
+authentication challenge with the registry.
 
 The github and github-oidc methods do not support signing providers and
 authenticate using the GitHub as an identity provider.
@@ -214,6 +271,10 @@ Examples:
 
   # Sign in using a specific ECDSA P-384 private key for DNS authentication
   mcp-publisher login dns -algorithm ecdsap384 -domain example.com -private-key <96 hex chars>
+
+  # Keep the key out of the command line: read it from a file or the environment
+  mcp-publisher login dns -domain example.com -private-key-file key.hex
+  MCP_PRIVATE_KEY=<64 hex chars> mcp-publisher login dns -domain example.com
   
   # Sign in with gcloud CLI, use Google Cloud KMS for signing in DNS authentication
   gcloud auth application-default login

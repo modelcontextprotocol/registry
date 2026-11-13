@@ -94,12 +94,17 @@ Also see [the guide to publishing from GitHub Actions](../../modelcontextprotoco
 #### DNS Verification
 ```bash
 mcp-publisher login dns --domain=example.com --private-key=HEX_KEY [--algorithm=ed25519|ecdsap384] [--registry=URL]
+mcp-publisher login dns --domain=example.com --private-key-file=PATH [--algorithm=ed25519|ecdsap384] [--registry=URL]
+MCP_PRIVATE_KEY=HEX_KEY mcp-publisher login dns --domain=example.com [--algorithm=ed25519|ecdsap384] [--registry=URL]
 ```
 - Verifies domain ownership via DNS TXT record
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
   - `--algorithm` defaults to `ed25519`. **For an ECDSA P-384 key you must pass `--algorithm ecdsap384`**, otherwise the key is rejected with `invalid seed length: expected 32 bytes, got 48`.
+  - Pass the key with `--private-key`, from a file with `--private-key-file` (the file holds the hex key, not PEM), or through the `MCP_PRIVATE_KEY` environment variable. `--private-key` and `--private-key-file` are mutually exclusive; either one overrides `MCP_PRIVATE_KEY`. Explicitly empty flags are errors, even when the environment variable is set.
   - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault. Cloud providers derive the algorithm from the key itself, so `--algorithm` does not apply to them.
+
+The hex-key extraction steps below create a new `mcp-key.*` file each time and leave existing hex-key files untouched. Keep the generated file private and remove it when it is no longer needed.
 
 **Setup:** (for Ed25519, recommended)
 ```bash
@@ -112,8 +117,9 @@ openssl pkey -in key.pem -pubout -outform DER | tail -c 32 | base64
 # Add DNS TXT record:
 # example.com. IN TXT "v=MCPv1; k=ed25519; p=PUBLIC_KEY"
 
-# Extract private key for login
-openssl pkey -in key.pem -noout -text | grep -A3 "priv:" | tail -n +2 | tr -d ' :\n'
+# Create a fresh private-key file (mktemp creates it with mode 0600)
+KEY_FILE="$(mktemp ./mcp-key.XXXXXX)"
+(umask 077; openssl pkey -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n' > "${KEY_FILE}")
 ```
 
 **Setup:** (for ECDSA P-384)
@@ -127,11 +133,12 @@ openssl ec -in key.pem -text -noout -conv_form compressed | grep -A4 "pub:" | ta
 # Add DNS TXT record:
 # example.com. IN TXT "v=MCPv1; k=ecdsap384; p=PUBLIC_KEY"
 
-# Extract private key for login
-openssl ec -in <pem path> -noout -text | grep -A4 "priv:" | tail -n +2 | tr -d ' :\n'
+# Create a fresh private-key file (mktemp creates it with mode 0600)
+KEY_FILE="$(mktemp ./mcp-key.XXXXXX)"
+(umask 077; openssl ec -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n' > "${KEY_FILE}")
 
 # Log in, selecting the ECDSA P-384 algorithm explicitly
-mcp-publisher login dns --algorithm ecdsap384 --domain=example.com --private-key=HEX_KEY
+mcp-publisher login dns --algorithm ecdsap384 --domain=example.com --private-key-file "${KEY_FILE}"
 ```
 
 **Setup:** (for Google KMS signing)
@@ -193,11 +200,14 @@ mcp-publisher login dns azure-key-vault --domain=example.com --vault MyKeyVault 
 #### HTTP Verification
 ```bash
 mcp-publisher login http --domain=example.com --private-key=HEX_KEY [--algorithm=ed25519|ecdsap384] [--registry=URL]
+mcp-publisher login http --domain=example.com --private-key-file=PATH [--algorithm=ed25519|ecdsap384] [--registry=URL]
+MCP_PRIVATE_KEY=HEX_KEY mcp-publisher login http --domain=example.com [--algorithm=ed25519|ecdsap384] [--registry=URL]
 ```
 - Verifies domain ownership via HTTPS endpoint  
 - Grants access to `com.example.*` namespaces
 - Requires Ed25519 private key (64-character hex) or ECDSA P-384 private key (96-character hex)
   - `--algorithm` defaults to `ed25519`. **For an ECDSA P-384 key you must pass `--algorithm ecdsap384`**.
+  - The key can come from `--private-key`, `--private-key-file` or `MCP_PRIVATE_KEY`, as for DNS verification.
   - The private key can be stored in a cloud signing provider like Google KMS or Azure Key Vault. Cloud providers derive the algorithm from the key itself, so `--algorithm` does not apply to them.
 
 **Setup:** (for Ed25519, recommended)
@@ -219,8 +229,12 @@ openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp384r1 -out key.pem
 # https://example.com/.well-known/mcp-registry-auth
 # Content: v=MCPv1; k=ecdsap384; p=PUBLIC_KEY
 
+# Create a fresh private-key file (mktemp creates it with mode 0600)
+KEY_FILE="$(mktemp ./mcp-key.XXXXXX)"
+(umask 077; openssl ec -in key.pem -noout -text | sed -n '/priv:/,/pub:/p' | sed '1d;$d' | tr -d ' :\n' > "${KEY_FILE}")
+
 # Log in, selecting the ECDSA P-384 algorithm explicitly
-mcp-publisher login http --algorithm ecdsap384 --domain=example.com --private-key=HEX_KEY
+mcp-publisher login http --algorithm ecdsap384 --domain=example.com --private-key-file "${KEY_FILE}"
 ```
 
 Cloud signing is also supported for HTTP authentication, similar to the DNS examples above. Just swap out the `dns` positional argument for `http`.
