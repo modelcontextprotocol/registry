@@ -431,7 +431,7 @@ mcp-publisher validate
 mcp-publisher publish
 ```
 
-`validate` checks the `server.json` schema and fetches the image annotation, so run it after the image is pushed and public.
+`validate` checks the `server.json` schema. Run it before `publish`; the registry reads the image annotation during ownership verification.
 
 Verify the listing through the registry API:
 
