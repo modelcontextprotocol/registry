@@ -401,6 +401,36 @@ The same `registryType` / `identifier` pattern works for other supported OCI hos
 }
 ```
 
+### RubyGems (Ruby) Package Example
+
+RubyGems 3.4.8+ (bundled with Ruby 3.2.2+) provides `gem exec` as the single-shot runner. MCP clients invoke the server as `gem exec --silent --conservative --gem <identifier> -v <version> <command> [args]`; `--silent` keeps install progress off stdout (required for the stdio transport) and `--conservative` runs fully offline when a matching version is already installed.
+
+```json
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.example/widget-mcp",
+  "description": "Ruby-native MCP server",
+  "title": "Widget",
+  "repository": {
+    "url": "https://github.com/example/widget-mcp",
+    "source": "github"
+  },
+  "version": "1.2.3",
+  "packages": [
+    {
+      "registryType": "rubygems",
+      "registryBaseUrl": "https://rubygems.org",
+      "identifier": "widget-mcp",
+      "version": "1.2.3",
+      "runtimeHint": "gem",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
+```
+
 ### NuGet (.NET) Package Example
 
 The `dnx` tool ships with the .NET 10 SDK, starting with Preview 6.

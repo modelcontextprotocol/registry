@@ -2,23 +2,25 @@ package model
 
 // Registry Types - supported package registry types
 const (
-	RegistryTypeNPM   = "npm"
-	RegistryTypePyPI  = "pypi"
-	RegistryTypeOCI   = "oci"
-	RegistryTypeNuGet = "nuget"
-	RegistryTypeMCPB  = "mcpb"
-	RegistryTypeCargo = "cargo"
+	RegistryTypeNPM      = "npm"
+	RegistryTypePyPI     = "pypi"
+	RegistryTypeOCI      = "oci"
+	RegistryTypeNuGet    = "nuget"
+	RegistryTypeMCPB     = "mcpb"
+	RegistryTypeCargo    = "cargo"
+	RegistryTypeRubyGems = "rubygems"
 )
 
 // Registry Base URLs - supported package registry base URLs
 const (
-	RegistryURLCrates = "https://crates.io"
-	RegistryURLGitHub = "https://github.com"
-	RegistryURLGitLab = "https://gitlab.com"
-	RegistryURLNPM    = "https://registry.npmjs.org"
-	RegistryURLNuGet  = "https://api.nuget.org/v3/index.json"
-	RegistryURLPyPI   = "https://pypi.org"
-	RegistryURLQuay   = "https://quay.io"
+	RegistryURLCrates   = "https://crates.io"
+	RegistryURLGitHub   = "https://github.com"
+	RegistryURLGitLab   = "https://gitlab.com"
+	RegistryURLNPM      = "https://registry.npmjs.org"
+	RegistryURLNuGet    = "https://api.nuget.org/v3/index.json"
+	RegistryURLPyPI     = "https://pypi.org"
+	RegistryURLQuay     = "https://quay.io"
+	RegistryURLRubyGems = "https://rubygems.org"
 )
 
 // Transport Types - supported remote transport protocols
@@ -34,6 +36,7 @@ const (
 	RuntimeHintUVX    = "uvx"
 	RuntimeHintDocker = "docker"
 	RuntimeHintDNX    = "dnx"
+	RuntimeHintGem    = "gem"
 )
 
 // Schema versions
