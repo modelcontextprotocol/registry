@@ -6,6 +6,26 @@ Changes to the server.json schema and format.
 
 This section tracks changes that are in development and not yet released. The draft schema is available at [`server.schema.json`](./draft/server.schema.json) in this repository.
 
+### Added
+
+#### Optional `serverCard` URL
+
+`server.json` can now point at the server's MCP Server Card (SEP-2127) explicitly:
+
+```json
+{
+  "name": "com.example/weather",
+  "remotes": [{ "type": "streamable-http", "url": "https://api.example.com/mcp" }],
+  "serverCard": "https://api.example.com/mcp/server-card"
+}
+```
+
+Today a client that wants to check whether an endpoint identifies as the server it
+claims must guess `<remote-url>/server-card`. That guess is ambiguous in two ways:
+a card may be published elsewhere, and on shared hosting `<endpoint>/server-card`
+can be the platform's card rather than the tenant's. An explicit URL resolves both.
+The field is optional and no existing entry changes meaning.
+
 ### Changed
 
 #### Transport URL Pattern Now Accepts Template Variables

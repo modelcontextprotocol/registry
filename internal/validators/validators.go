@@ -92,6 +92,10 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *V
 	websiteResult := validateWebsiteURL(ctx.Field("websiteUrl"), serverJSON.WebsiteURL)
 	result.Merge(websiteResult)
 
+	// Validate server card URL if provided
+	serverCardResult := validateServerCardURL(ctx.Field("serverCard"), serverJSON.ServerCard)
+	result.Merge(serverCardResult)
+
 	// Validate title if provided
 	titleResult := validateTitle(ctx.Field("title"), serverJSON.Title)
 	result.Merge(titleResult)
@@ -231,6 +235,53 @@ func validateWebsiteURL(ctx *ValidationContext, websiteURL string) *ValidationRe
 			"website-url-invalid-characters",
 		)
 		result.AddIssue(issue)
+	}
+
+	return result
+}
+
+// validateServerCardURL checks an optional MCP Server Card URL (SEP-2127).
+// A card is only meaningful as a verification target if it is fetched over
+// HTTPS, so unlike generic remote URLs this field rejects http.
+func validateServerCardURL(ctx *ValidationContext, raw string) *ValidationResult {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
+	// Skip validation if not provided (optional field)
+	if raw == "" {
+		return result
+	}
+
+	if !IsValidURL(raw) {
+		result.AddIssue(NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Sprintf("invalid serverCard URL: %s", raw),
+			ValidationIssueSeverityError,
+			"invalid-server-card-url",
+		))
+		return result
+	}
+
+	parsedURL, err := url.Parse(raw)
+	if err != nil || parsedURL.Scheme != SchemeHTTPS {
+		result.AddIssue(NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Sprintf("serverCard must use https scheme: %s", raw),
+			ValidationIssueSeverityError,
+			"server-card-invalid-scheme",
+		))
+		return result
+	}
+
+	if i := strings.IndexAny(raw, "\"'<> \t\n\r"); i >= 0 {
+		result.AddIssue(NewValidationIssue(
+			ValidationIssueTypeSemantic,
+			ctx.String(),
+			fmt.Sprintf("serverCard contains an invalid character %q at position %d: %s", raw[i], i, raw),
+			ValidationIssueSeverityError,
+			"server-card-invalid-characters",
+		))
 	}
 
 	return result
