@@ -1189,9 +1189,12 @@ matching keys in timestamp order. With at most 128 matches it sorts that complet
 set into name/version order; otherwise it fetches the requested page in name
 order. Both branches use the full predicate and one statement snapshot, with
 payloads fetched only for the selected page. Timestamp order never becomes the
-public pagination order. Incremental queries use per-execution planning because
-cutoff and cursor selectivity vary; this must be evaluated with the query and
-index combination, not as a general recommendation to disable prepared plans.
+public pagination order. Plain incremental queries with page sizes 1 or 100 use
+cached statements with the validated page size embedded in the query; cutoffs and
+cursors remain parameters. The exact page bound lets PostgreSQL consider reusing
+a generic plan instead of repeatedly planning the common shapes. Additional
+filters and other page sizes retain per-execution planning. This is specific to
+the adaptive query and replacement indexes, not a global plan-cache setting.
 The probe bounds returned keys, not all index entries examined. Very large recent
 histories, sparse cursors and different filter mixes still need measurement.
 

@@ -220,7 +220,7 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 }
 
 // filteredPageQuery fetches payloads only after selecting a filtered page's keys.
-func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int, prepared ...bool) string {
+func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limitExpression string, prepared ...bool) string {
 	if filter == nil || (filter.SubstringName == nil && filter.UpdatedSince == nil) {
 		return ordinary
 	}
@@ -246,26 +246,26 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
             ), candidates AS MATERIALIZED (
                 (SELECT server_name, version FROM recent
                  WHERE (SELECT small FROM choice)
-                 ORDER BY server_name, version LIMIT $%d)
+                 ORDER BY server_name, version LIMIT %s)
                 UNION ALL
                 (SELECT server_name, version FROM servers
                  %s AND NOT (SELECT small FROM choice)
-                 ORDER BY server_name, version LIMIT $%d)
+                 ORDER BY server_name, version LIMIT %s)
             )
             SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
                    s.published_at, s.updated_at, s.is_latest, %s
             FROM (
                 SELECT server_name, version FROM candidates
-                ORDER BY server_name, version LIMIT $%d
+                ORDER BY server_name, version LIMIT %s
             ) page
             JOIN servers s USING (server_name, version)
             ORDER BY s.server_name, s.version
-        `, whereClause, limitArg, whereClause, limitArg, payload, limitArg)
+        `, whereClause, limitExpression, whereClause, limitExpression, payload, limitExpression)
 	}
 	// For substring searches, a small LIMIT can favor scanning most of the
 	// ordered index over a selective GIN lookup. Plan for a larger key batch;
 	// the outer LIMIT still defines the exact page before payload fetch.
-	candidateLimit := fmt.Sprintf("GREATEST($%d, 8192)", limitArg)
+	candidateLimit := fmt.Sprintf("GREATEST(%s, 8192)", limitExpression)
 	return fmt.Sprintf(`
         WITH candidates AS MATERIALIZED (
             SELECT server_name, version FROM servers
@@ -278,11 +278,19 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
         FROM (
             SELECT server_name, version FROM candidates
             ORDER BY server_name, version
-            LIMIT $%d
+            LIMIT %s
         ) page
         JOIN servers s USING (server_name, version)
         ORDER BY s.server_name, s.version
-    `, whereClause, candidateLimit, payload, limitArg)
+    `, whereClause, candidateLimit, payload, limitExpression)
+}
+
+// cacheUpdatedPage bounds the extra statement-cache shapes to the two common
+// page sizes. Other incremental filters retain parameter-specific planning.
+func cacheUpdatedPage(filter *ServerFilter, limit int) bool {
+	return filter != nil && filter.UpdatedSince != nil &&
+		filter.SubstringName == nil && filter.Name == nil && filter.Version == nil &&
+		filter.IsLatest == nil && filter.RemoteURL == nil && (limit == 1 || limit == 100)
 }
 
 func filteredQueryArgs(filter *ServerFilter, args []any) []any {
@@ -375,16 +383,28 @@ func (db *PostgreSQL) listServerRows(
 	if prepared {
 		payload = listingPayload("")
 	}
+	cachePage := cacheUpdatedPage(filter, limit)
+	limitExpression := fmt.Sprintf("$%d", argIndex)
+	if cachePage {
+		// Only the validated constants 1 and 100 are embedded. Cutoffs and
+		// cursors remain parameters. This gives generic plans an exact page
+		// bound without forcing generic planning for other query shapes.
+		limitExpression = fmt.Sprintf("%d", limit)
+	}
 	query := fmt.Sprintf(`
         SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, %s
         FROM servers
         %s
         ORDER BY server_name, version
-        LIMIT $%d
-    `, payload, whereClause, argIndex)
-	query = filteredPageQuery(filter, query, whereClause, argIndex, prepared)
-	args = append(args, limit)
-	args = filteredQueryArgs(filter, args)
+        LIMIT %s
+    `, payload, whereClause, limitExpression)
+	query = filteredPageQuery(filter, query, whereClause, limitExpression, prepared)
+	if cachePage {
+		args = append([]any{pgx.QueryExecModeCacheStatement}, args...)
+	} else {
+		args = append(args, limit)
+		args = filteredQueryArgs(filter, args)
+	}
 
 	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
