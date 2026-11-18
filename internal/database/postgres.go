@@ -224,24 +224,48 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
 	if filter == nil || (filter.SubstringName == nil && filter.UpdatedSince == nil) {
 		return ordinary
 	}
-	// Find the page using only its keys before fetching the JSON payloads.
-	// The covering index can reject nonmatching names without visiting the
-	// heap. The materialized candidate query plans for a larger key batch:
-	// a small LIMIT otherwise assumes rare matches occur early in name order
-	// and can favor scanning most of the ordered index over a selective GIN
-	// lookup. The outer LIMIT still defines the exact page before payload fetch.
-	// PostgreSQL 17 can stop the ordered CTE scan after the requested rows.
+	// Select the page using only its keys before fetching JSON payloads.
 	payload := "s.value"
 	if len(prepared) > 0 && prepared[0] {
 		payload = listingPayload("s.")
 	}
-	// Incremental sync needs only the exact page. Its all-status covering index
-	// includes deleted versions, which consumers need to remove local records.
-	// Retain the larger planning boundary only for substring searches.
-	candidateLimit := fmt.Sprintf("$%d", limitArg)
-	if filter.SubstringName != nil {
-		candidateLimit = fmt.Sprintf("GREATEST($%d, 8192)", limitArg)
+	if filter.UpdatedSince != nil && filter.SubstringName == nil {
+		// Probe a bounded set in timestamp order. If it contains every matching
+		// key, sort just that set; otherwise fetch the page in name order.
+		// Both paths use the complete predicate in one statement/snapshot.
+		// The exact page limit and late payload lookup remain unchanged.
+		// This bounds returned probe keys, not all timestamp-index entries visited.
+		return fmt.Sprintf(`
+            WITH recent AS MATERIALIZED (
+                SELECT server_name, version FROM servers
+                %s
+                ORDER BY updated_at DESC
+                LIMIT 129
+            ), choice AS MATERIALIZED (
+                SELECT count(*) <= 128 AS small FROM recent
+            ), candidates AS MATERIALIZED (
+                (SELECT server_name, version FROM recent
+                 WHERE (SELECT small FROM choice)
+                 ORDER BY server_name, version LIMIT $%d)
+                UNION ALL
+                (SELECT server_name, version FROM servers
+                 %s AND NOT (SELECT small FROM choice)
+                 ORDER BY server_name, version LIMIT $%d)
+            )
+            SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
+                   s.published_at, s.updated_at, s.is_latest, %s
+            FROM (
+                SELECT server_name, version FROM candidates
+                ORDER BY server_name, version LIMIT $%d
+            ) page
+            JOIN servers s USING (server_name, version)
+            ORDER BY s.server_name, s.version
+        `, whereClause, limitArg, whereClause, limitArg, payload, limitArg)
 	}
+	// For substring searches, a small LIMIT can favor scanning most of the
+	// ordered index over a selective GIN lookup. Plan for a larger key batch;
+	// the outer LIMIT still defines the exact page before payload fetch.
+	candidateLimit := fmt.Sprintf("GREATEST($%d, 8192)", limitArg)
 	return fmt.Sprintf(`
         WITH candidates AS MATERIALIZED (
             SELECT server_name, version FROM servers
@@ -262,10 +286,10 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
 }
 
 func filteredQueryArgs(filter *ServerFilter, args []any) []any {
-	if filter != nil && filter.SubstringName != nil {
-		// Search selectivity varies by orders of magnitude. Use an unnamed
+	if filter != nil && (filter.SubstringName != nil || filter.UpdatedSince != nil) {
+		// Search and incremental-sync selectivity vary greatly. Use an unnamed
 		// extended-protocol query so PostgreSQL plans for these parameter values
-		// instead of reusing one generic plan for every term.
+		// instead of reusing one generic plan for every term, cutoff, and cursor.
 		return append([]any{pgx.QueryExecModeExec}, args...)
 	}
 	return args

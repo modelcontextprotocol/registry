@@ -1178,35 +1178,64 @@ failures and scope limits; functional production validation is not a maximum-cap
 
 ## Incremental-sync page index
 
-Migration 019 adds `idx_servers_updated_page_cover` on `(server_name, version)`
-including `updated_at`, `is_latest`, and `status`. Unlike the partial search
-index, it includes deleted versions required by incremental sync. Incremental
-queries select a page of keys before fetching payloads. They retain prepared
-statement reuse, binary payload transfer, and PostgreSQL automatic plan selection.
-Forcing unnamed text-format execution regressed concurrent throughput in staging. The
-watermark comparison, cursor ordering, filters, and response format are unchanged.
+Migration 020 replaces migration 019's included-column timestamp index with
+`idx_servers_updated_name_cover` on `(server_name, version, updated_at)` including
+`is_latest` and `status`. It also replaces the single-column timestamp index with
+`idx_servers_updated_time_cover` on `(updated_at DESC, server_name, version)`.
+Both include deleted versions needed by incremental-sync clients.
 
-On a busy existing database, prebuild before deploying the application:
+For `updated_since` without substring search, the query first probes up to 129
+matching keys in timestamp order. With at most 128 matches it sorts that complete
+set into name/version order; otherwise it fetches the requested page in name
+order. Both branches use the full predicate and one statement snapshot, with
+payloads fetched only for the selected page. Timestamp order never becomes the
+public pagination order. Incremental queries use per-execution planning because
+cutoff and cursor selectivity vary; this must be evaluated with the query and
+index combination, not as a general recommendation to disable prepared plans.
+The probe bounds returned keys, not all index entries examined. Very large recent
+histories, sparse cursors and different filter mixes still need measurement.
+
+On a busy existing database, **prebuild both indexes before deploying** the
+application. These steps assume migration 019 is already applied; older
+deployments must also prebuild indexes for their earlier pending migrations.
+Startup migrations run inside a transaction and cannot use
+`CONCURRENTLY`; without a prebuild they use regular index creation, which blocks
+writes during the build. Use a maintenance window if prebuilding is not possible.
+Run these as separate statements in autocommit, outside a transaction:
 
 ```sql
-SET application_name = 'registry-updated-page-index-build';
+SET application_name = 'registry-updated-listing-index-build';
 SET lock_timeout = '5s';
 SET statement_timeout = '10min';
-CREATE INDEX CONCURRENTLY idx_servers_updated_page_cover
-    ON public.servers (server_name, version) INCLUDE (updated_at, is_latest, status);
+CREATE INDEX CONCURRENTLY idx_servers_updated_name_cover
+    ON public.servers (server_name, version, updated_at) INCLUDE (is_latest, status);
+CREATE INDEX CONCURRENTLY idx_servers_updated_time_cover
+    ON public.servers (updated_at DESC, server_name, version);
+
+SELECT c.relname, i.indisvalid, i.indisready, pg_get_indexdef(i.indexrelid)
+FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+WHERE c.relname IN ('idx_servers_updated_name_cover', 'idx_servers_updated_time_cover');
 ```
 
-Run in autocommit, outside a transaction. Verify the definition and both
-`indisvalid` and `indisready` before deploying. The migration creates the index
-on fresh databases and rejects an existing invalid index. A concurrent build
-uses CPU, I/O, and disk space; monitor it and repair any incomplete build before
-retrying.
+Check both definitions and both readiness flags before deployment. Concurrent
+builds consume CPU, I/O and temporary disk space; the old indexes remain until
+migration 020 succeeds. If a build fails, inspect its state, drop only that new
+incomplete index with `DROP INDEX CONCURRENTLY`, and retry in autocommit. Do not
+use `IF NOT EXISTS` to assume a failed prebuild is usable.
 
-Compare recent, old, and empty incremental-sync windows, deep cursors, deleted
-records, and latest/version filters. Measure SQL execution and buffer access as
-well as end-to-end latency, pool queues, CPU, and actual completed request rate.
-Rolling back the application can leave this additive index in place; removal
-is optional and should happen only after all candidate instances are gone.
+Migration 020 validates the replacements, then drops `idx_servers_updated_page_cover`
+and `idx_servers_updated_at` in the same transaction. Its five-second lock timeout
+bounds lock acquisition, not the duration of an index build. A failure rolls back
+the migration and retains the old indexes; investigate before retrying. It does
+not change table data, connection limits, HPA targets or replica counts.
+
+An application rollback remains schema-compatible with the replacement indexes,
+but its planner choices and performance may differ. Leave the replacements in
+place during an application rollback and measure behavior; restoring the exact
+old physical layout requires a separate concurrent prebuild and reviewed cleanup.
+Validate sparse/empty windows, early/deep cursors, `limit=1`, publishing, deleted
+records and latest/version/search filters before production deployment. Compare
+completed request rate, latency, CPU and pool queues at matched workloads.
 
 ### Packed production workers
 
