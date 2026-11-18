@@ -230,6 +230,12 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
 		payload = listingPayload("s.")
 	}
 	if filter.UpdatedSince != nil && filter.SubstringName == nil {
+		probe := 128
+		// The cached 100-row shape uses a larger probe for sparse histories.
+		// Keep the smaller bound for limit=1 and parameter-specific queries.
+		if limitExpression == "100" {
+			probe = 512
+		}
 		// Probe a bounded set in timestamp order. If it contains every matching
 		// key, sort just that set; otherwise fetch the page in name order.
 		// Both paths use the complete predicate in one statement/snapshot.
@@ -240,9 +246,9 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
                 SELECT server_name, version FROM servers
                 %s
                 ORDER BY updated_at DESC
-                LIMIT 129
+                LIMIT %d
             ), choice AS MATERIALIZED (
-                SELECT count(*) <= 128 AS small FROM recent
+                SELECT count(*) <= %d AS small FROM recent
             ), candidates AS MATERIALIZED (
                 (SELECT server_name, version FROM recent
                  WHERE (SELECT small FROM choice)
@@ -260,7 +266,7 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
             ) page
             JOIN servers s USING (server_name, version)
             ORDER BY s.server_name, s.version
-        `, whereClause, limitExpression, whereClause, limitExpression, payload, limitExpression)
+        `, whereClause, probe+1, probe, limitExpression, whereClause, limitExpression, payload, limitExpression)
 	}
 	// For substring searches, a small LIMIT can favor scanning most of the
 	// ordered index over a selective GIN lookup. Plan for a larger key batch;

@@ -1184,10 +1184,13 @@ Migration 020 replaces migration 019's included-column timestamp index with
 `idx_servers_updated_time_cover` on `(updated_at DESC, server_name, version)`.
 Both include deleted versions needed by incremental-sync clients.
 
-For `updated_since` without substring search, the query first probes up to 129
-matching keys in timestamp order. With at most 128 matches it sorts that complete
-set into name/version order; otherwise it fetches the requested page in name
-order. Both branches use the full predicate and one statement snapshot, with
+For plain `updated_since` queries with `limit=100`, the query first probes up to
+513 matching keys in timestamp order. With at most 512 matches it sorts that
+complete set into name/version order; otherwise it fetches the requested page in
+name order. Other incremental shapes without substring search retain the smaller
+129-key probe and 128-match boundary. The larger probe avoids switching to a
+costly name scan for moderately sparse pages, but adds work for larger histories.
+Both branches use the full predicate and one statement snapshot, with
 payloads fetched only for the selected page. Timestamp order never becomes the
 public pagination order. Plain incremental queries with page sizes 1 or 100 use
 cached statements with the validated page size embedded in the query; cutoffs and

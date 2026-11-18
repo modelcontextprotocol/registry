@@ -15,7 +15,7 @@ func TestUpdatedPageCachePreservesChangingWatermarksAndBounds(t *testing.T) {
 	db := NewTestDB(t).(*PostgreSQL)
 	ctx := context.Background()
 	epoch := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
-	for i := 1; i <= 140; i++ {
+	for i := 1; i <= 540; i++ {
 		stamp := epoch.Add(time.Duration(i) * time.Second)
 		_, err := db.CreateServer(ctx, nil, &apiv0.ServerJSON{Name: fmt.Sprintf("com.example/cached-%03d", i), Version: "1.0.0", Description: "cached page fixture"}, &apiv0.RegistryExtensions{Status: model.StatusActive, PublishedAt: epoch, UpdatedAt: stamp, StatusChangedAt: stamp, IsLatest: true})
 		require.NoError(t, err)
@@ -29,8 +29,8 @@ func TestUpdatedPageCachePreservesChangingWatermarksAndBounds(t *testing.T) {
 	defer func() { require.NoError(t, tx.Rollback(ctx)) }()
 	yes := true
 	for round := 0; round < 3; round++ {
-		for _, count := range []int{1, 128, 129, 140, 0, 21} {
-			cutoff := epoch.Add(time.Duration(140-count) * time.Second)
+		for _, count := range []int{1, 128, 129, 511, 512, 513, 540, 0, 21} {
+			cutoff := epoch.Add(time.Duration(540-count) * time.Second)
 			filter := &ServerFilter{UpdatedSince: &cutoff, IncludeDeleted: &yes}
 			for _, limit := range []int{1, 100} {
 				for _, after := range []int{0, 51} {
@@ -41,8 +41,8 @@ func TestUpdatedPageCachePreservesChangingWatermarksAndBounds(t *testing.T) {
 					rows, _, err := db.ListServers(ctx, tx, filter, cursor, limit)
 					require.NoError(t, err)
 					var want []string
-					for i := 1; i <= 140 && len(want) < limit; i++ {
-						if i > 140-count && i > after {
+					for i := 1; i <= 540 && len(want) < limit; i++ {
+						if i > 540-count && i > after {
 							want = append(want, fmt.Sprintf("com.example/cached-%03d", i))
 						}
 					}
