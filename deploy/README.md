@@ -1189,7 +1189,17 @@ For plain `updated_since` queries with `limit=100`, the query first probes up to
 complete set into name/version order; otherwise it fetches the requested page in
 name order. Other incremental shapes without substring search retain the smaller
 129-key probe and 128-match boundary. The larger probe avoids switching to a
-costly name scan for moderately sparse pages, but adds work for larger histories.
+costly name scan for moderately sparse pages. To avoid repeatedly paying for that
+probe on large histories, each app samples one in 16 eligible plain 100-row
+requests and retains up to 32 query-strategy hints for five seconds. A hint
+records a timestamp/name range containing more than 512 matches. Requests
+covered by that range can skip the probe; PostgreSQL verifies cursor ordering
+behind a materialized guard so this decision does not defeat generic-plan reuse.
+Hints are separated by deletion filtering and are not used in caller-owned
+transactions or additional filter shapes. They contain no response data: writes
+can make a hint suboptimal until it expires, but every request still applies the
+complete predicate to current data. Sampled queries return an internal marker
+row that is removed before pagination, serialization and returned-row metrics.
 Both branches use the full predicate and one statement snapshot, with
 payloads fetched only for the selected page. Timestamp order never becomes the
 public pagination order. Plain incremental queries with page sizes 1 or 100 use

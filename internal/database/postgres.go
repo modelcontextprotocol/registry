@@ -22,9 +22,10 @@ import (
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
-	pool           *pgxpool.Pool
-	poolMetrics    metric.Registration
-	listingMetrics metric.Int64Counter
+	updatedPageHints updatedPageHints
+	pool             *pgxpool.Pool
+	poolMetrics      metric.Registration
+	listingMetrics   metric.Int64Counter
 }
 
 // Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
@@ -220,53 +221,17 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 }
 
 // filteredPageQuery fetches payloads only after selecting a filtered page's keys.
-func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limitExpression string, prepared ...bool) string {
+func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limitExpression string, prepared bool, strategy updatedPageStrategy) string {
 	if filter == nil || (filter.SubstringName == nil && filter.UpdatedSince == nil) {
 		return ordinary
 	}
 	// Select the page using only its keys before fetching JSON payloads.
 	payload := "s.value"
-	if len(prepared) > 0 && prepared[0] {
+	if prepared {
 		payload = listingPayload("s.")
 	}
 	if filter.UpdatedSince != nil && filter.SubstringName == nil {
-		probe := 128
-		// The cached 100-row shape uses a larger probe for sparse histories.
-		// Keep the smaller bound for limit=1 and parameter-specific queries.
-		if limitExpression == "100" {
-			probe = 512
-		}
-		// Probe a bounded set in timestamp order. If it contains every matching
-		// key, sort just that set; otherwise fetch the page in name order.
-		// Both paths use the complete predicate in one statement/snapshot.
-		// The exact page limit and late payload lookup remain unchanged.
-		// This bounds returned probe keys, not all timestamp-index entries visited.
-		return fmt.Sprintf(`
-            WITH recent AS MATERIALIZED (
-                SELECT server_name, version FROM servers
-                %s
-                ORDER BY updated_at DESC
-                LIMIT %d
-            ), choice AS MATERIALIZED (
-                SELECT count(*) <= %d AS small FROM recent
-            ), candidates AS MATERIALIZED (
-                (SELECT server_name, version FROM recent
-                 WHERE (SELECT small FROM choice)
-                 ORDER BY server_name, version LIMIT %s)
-                UNION ALL
-                (SELECT server_name, version FROM servers
-                 %s AND NOT (SELECT small FROM choice)
-                 ORDER BY server_name, version LIMIT %s)
-            )
-            SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
-                   s.published_at, s.updated_at, s.is_latest, %s
-            FROM (
-                SELECT server_name, version FROM candidates
-                ORDER BY server_name, version LIMIT %s
-            ) page
-            JOIN servers s USING (server_name, version)
-            ORDER BY s.server_name, s.version
-        `, whereClause, probe+1, probe, limitExpression, whereClause, limitExpression, payload, limitExpression)
+		return updatedPageQuery(whereClause, limitExpression, payload, prepared, strategy)
 	}
 	// For substring searches, a small LIMIT can favor scanning most of the
 	// ordered index over a selective GIN lookup. Plan for a larger key batch;
@@ -372,6 +337,7 @@ func (db *PostgreSQL) listServerRows(
 	whereConditions, args, argIndex := buildFilterConditions(filter, argIndex)
 
 	// Add cursor pagination
+	cursorArgIndex := argIndex
 	cursorCondition, cursorArgs, argIndex := addCursorCondition(cursor, argIndex)
 	if cursorCondition != "" {
 		whereConditions = append(whereConditions, cursorCondition)
@@ -404,7 +370,8 @@ func (db *PostgreSQL) listServerRows(
         ORDER BY server_name, version
         LIMIT %s
     `, payload, whereClause, limitExpression)
-	query = filteredPageQuery(filter, query, whereClause, limitExpression, prepared)
+	strategy, args := db.chooseUpdatedPageStrategy(tx, filter, limit, cursorArgs, cursorArgIndex, argIndex, args)
+	query = filteredPageQuery(filter, query, whereClause, limitExpression, prepared, strategy)
 	if cachePage {
 		args = append([]any{pgx.QueryExecModeCacheStatement}, args...)
 	} else {
@@ -416,7 +383,7 @@ func (db *PostgreSQL) listServerRows(
 	if err != nil {
 		return nil, fmt.Errorf("failed to query servers: %w", err)
 	}
-	return readListingRows(ctx, rows, diagnostic, prepared)
+	return db.readUpdatedPageRows(ctx, rows, diagnostic, prepared, strategy, filter)
 }
 
 type listingRow struct {
@@ -426,7 +393,7 @@ type listingRow struct {
 	prepared      bool
 }
 
-func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic, prepared bool) ([]listingRow, error) {
+func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic, prepared bool, observation *updatedPageObservation) ([]listingRow, error) {
 	defer rows.Close()
 
 	// Copy the bounded page before decoding JSON. Exhausting/closing pooled rows
@@ -436,7 +403,6 @@ func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.L
 	var page []listingRow
 	diagnostic.Phase("row_fetch")
 	for rows.Next() {
-		diagnostic.RowReceived()
 		diagnostic.Phase("row_fetch")
 		if err := ctx.Err(); err != nil {
 			return nil, err
@@ -453,6 +419,10 @@ func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.L
 		if err := rows.Scan(dest...); err != nil {
 			return nil, fmt.Errorf("failed to scan server row: %w", err)
 		}
+		if observation != nil && observation.consume(row) {
+			continue
+		}
+		diagnostic.RowReceived()
 		meta.Status = model.Status(status)
 		diagnostic.AddBytes(len(row.value))
 		page = append(page, row)

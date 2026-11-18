@@ -147,6 +147,12 @@ func TestUpdatedPageProbeBoundary(t *testing.T) {
 					require.Equal(t, next, decoded.Metadata.NextCursor)
 					require.Len(t, decoded.Servers, len(rows))
 					for i := range rows {
+						// Typed pgx timestamps can use the host timezone; compare
+						// the same instants regardless of the developer's locale.
+						meta := decoded.Servers[i].Meta.Official
+						meta.PublishedAt = meta.PublishedAt.UTC()
+						meta.UpdatedAt = meta.UpdatedAt.UTC()
+						meta.StatusChangedAt = meta.StatusChangedAt.UTC()
 						expectedJSON, err := json.Marshal(rows[i])
 						require.NoError(t, err)
 						actualJSON, err := json.Marshal(decoded.Servers[i])
