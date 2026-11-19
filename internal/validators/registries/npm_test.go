@@ -18,6 +18,14 @@ import (
 // newNPMMock stands in for registry.npmjs.org: it routes the version fetch and
 // package probe by path shape and returns the given statuses (versionBody used on 200).
 func newNPMMock(versionStatus int, versionBody string, packageStatus int) *httptest.Server {
+	return newNPMMockWithPackument(versionStatus, versionBody, packageStatus,
+		`{"versions":{"1.0.0":{}}}`)
+}
+
+// newNPMMockWithPackument is newNPMMock plus control over the packument body that
+// the package-level endpoint returns on a full GET, which the validator reads to
+// tell a live package from an unpublished tombstone.
+func newNPMMockWithPackument(versionStatus int, versionBody string, packageStatus int, packument string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Route on the escaped path: a scoped name like @scope/pkg is sent as the
 		// single segment @scope%2Fpkg, and decoding it would wrongly split it in two.
@@ -36,12 +44,20 @@ func newNPMMock(versionStatus int, versionBody string, packageStatus int) *httpt
 			}
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = io.WriteString(w, versionBody)
-		case 1: // /{name}  (package-existence probe)
-			if r.Method != http.MethodHead {
+		case 1: // /{name}  (package-existence probe, then tombstone check)
+			switch r.Method {
+			case http.MethodHead:
+				w.WriteHeader(packageStatus)
+			case http.MethodGet:
+				if packageStatus != http.StatusOK {
+					w.WriteHeader(packageStatus)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = io.WriteString(w, packument)
+			default:
 				w.WriteHeader(http.StatusMethodNotAllowed)
-				return
 			}
-			w.WriteHeader(packageStatus)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -313,4 +329,54 @@ func TestValidateNPM_RealPackages(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestValidateNPM_UnpublishedTombstoneIsMissingPackage is the #1862 regression:
+// npm answers 200 on both GET and HEAD for an unpublished unscoped package, with
+// `time.unpublished` set and no versions. The validator used to read that 200 as
+// "package exists, version missing" and told the publisher to publish the version.
+func TestValidateNPM_UnpublishedTombstoneIsMissingPackage(t *testing.T) {
+	ctx := context.Background()
+	mock := newNPMMockWithPackument(http.StatusNotFound, "", http.StatusOK,
+		`{"time":{"unpublished":{"time":"2026-08-05T17:24:17.672Z","versions":["0.1.0","0.1.1"]}},"versions":{}}`)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypeNPM, RegistryBaseURL: mock.URL,
+		Identifier: "ace-context-mcp", Version: "0.1.1"}
+	err := registries.ValidateNPMPackage(ctx, pkg, "io.github.test/demo")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
+	assert.NotContains(t, err.Error(), "exists, but version")
+}
+
+// An empty versions map with no explicit tombstone timestamp is also a package
+// that cannot be installed; treat it the same way.
+func TestValidateNPM_EmptyVersionsIsMissingPackage(t *testing.T) {
+	ctx := context.Background()
+	mock := newNPMMockWithPackument(http.StatusNotFound, "", http.StatusOK, `{"versions":{}}`)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypeNPM, RegistryBaseURL: mock.URL,
+		Identifier: "gone-mcp", Version: "1.0.0"}
+	err := registries.ValidateNPMPackage(ctx, pkg, "io.github.test/demo")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
+	assert.NotContains(t, err.Error(), "exists, but version")
+}
+
+// A live package with a missing version must keep the actionable message.
+func TestValidateNPM_LivePackageMissingVersionStillSaysVersion(t *testing.T) {
+	ctx := context.Background()
+	mock := newNPMMockWithPackument(http.StatusNotFound, "", http.StatusOK,
+		`{"time":{"modified":"2026-11-01T00:00:00.000Z"},"versions":{"2.0.0":{}}}`)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypeNPM, RegistryBaseURL: mock.URL,
+		Identifier: "live-mcp", Version: "9.9.9"}
+	err := registries.ValidateNPMPackage(ctx, pkg, "io.github.test/demo")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "exists, but version")
 }
