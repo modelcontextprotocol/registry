@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func TestUpdatedListingIndexMigration(t *testing.T) {
-	for _, mode := range []string{"fresh", "upgrade", "prebuilt", "prebuilt-reader", "prebuilt-writer", "wrong-definition"} {
+	for _, mode := range []string{"fresh", "upgrade", "prebuilt", "prebuilt-reader", "prebuilt-writer", "wrong-definition", "wrong-name-opclass", "wrong-time-opclass", "wrong-name-collation", "wrong-time-collation"} {
 		t.Run(mode, func(t *testing.T) {
 			db := NewTestDB(t).(*PostgreSQL)
 			ctx := context.Background()
@@ -43,6 +44,15 @@ func TestUpdatedListingIndexMigration(t *testing.T) {
 					require.NoError(t, err)
 					_, err = conn.Exec(ctx, `CREATE INDEX CONCURRENTLY idx_servers_updated_time_cover ON servers(updated_at DESC,server_name,version)`)
 					require.NoError(t, err)
+				case "wrong-name-opclass", "wrong-time-opclass", "wrong-name-collation", "wrong-time-collation":
+					definitions := map[string]string{
+						"wrong-name-opclass":   `CREATE INDEX idx_servers_updated_name_cover ON servers(server_name varchar_pattern_ops,version,updated_at) INCLUDE(is_latest,status)`,
+						"wrong-time-opclass":   `CREATE INDEX idx_servers_updated_time_cover ON servers(updated_at DESC,server_name,version varchar_pattern_ops)`,
+						"wrong-name-collation": `CREATE INDEX idx_servers_updated_name_cover ON servers(server_name COLLATE "C",version,updated_at) INCLUDE(is_latest,status)`,
+						"wrong-time-collation": `CREATE INDEX idx_servers_updated_time_cover ON servers(updated_at DESC,server_name,version COLLATE "C")`,
+					}
+					_, err = conn.Exec(ctx, definitions[mode])
+					require.NoError(t, err)
 				case "wrong-definition":
 					// The old INCLUDE layout must not silently satisfy the new index name.
 					_, err = conn.Exec(ctx, `CREATE INDEX idx_servers_updated_name_cover ON servers(server_name,version) INCLUDE(updated_at,is_latest,status)`)
@@ -64,11 +74,11 @@ func TestUpdatedListingIndexMigration(t *testing.T) {
 				migrationCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 				defer cancel()
 				err = migrator.applyMigration(migrationCtx, migration)
-				if mode == "wrong-definition" {
+				if strings.HasPrefix(mode, "wrong-") {
 					require.ErrorContains(t, err, "expected definition")
 					assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_page_cover", true)
 					assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_at", true)
-					assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_time_cover", false)
+					assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_time_cover", strings.HasPrefix(mode, "wrong-time-"))
 					var applied bool
 					require.NoError(t, conn.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version=20)").Scan(&applied))
 					require.False(t, applied)

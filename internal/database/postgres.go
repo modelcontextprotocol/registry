@@ -425,6 +425,8 @@ func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.L
 		meta.Status = model.Status(status)
 		diagnostic.AddBytes(len(row.value))
 		page = append(page, row)
+		// The next Next/Close can wait on the database again.
+		diagnostic.Phase("row_fetch")
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
