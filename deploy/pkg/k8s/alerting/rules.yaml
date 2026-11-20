@@ -186,7 +186,7 @@ groups:
               datasourceUid: P4169E866C3094E38
               model:
                 editorMode: code
-                expr: max(mcp_registry_service_up{})
+                expr: max(up{job="mcp-registry"}) or vector(0)
                 instant: true
                 intervalMs: 1000
                 legendFormat: __auto
