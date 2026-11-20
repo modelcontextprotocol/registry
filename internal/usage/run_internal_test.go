@@ -262,7 +262,7 @@ func TestRunSkipsADayWithoutTraffic(t *testing.T) {
 	require.NoError(t, collector.Run(t.Context()))
 	assert.Empty(t, storedDays(t, store))
 	assert.Contains(t, f.log.String(), "2026-10-06 has nothing to collect: the gateway counted no registry requests and no access record shows one")
-	assert.Equal(t, 2, f.gateway.logCalls)
+	assert.Equal(t, 1, f.gateway.logCalls, "one unsampled read")
 	report, err := os.ReadFile(filepath.Join(reports, "2026-10-06.md"))
 	require.NoError(t, err)
 	assert.Equal(t, string(readFixture(t, "scenarios", "empty", "report.md")), string(report))

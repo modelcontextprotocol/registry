@@ -138,11 +138,17 @@ How many access records Cloud Logging holds for a day is not known in advance. A
 
 1. It reads a small sample of the day and keeps none of it: 100 records for every `MAX_RECORDS` the day holds. For a day of 5 million records at the default limit that is 5 requests.
 2. From that count it picks the fraction that returns about `MAX_RECORDS` records, and reads the day at that fraction. A day that holds fewer is read whole.
-3. A read that still returns more than twice `MAX_RECORDS` is stopped and repeated at a smaller fraction, sized from what it had returned. That happens only when the sample is very uneven, as when many records share one request ID. After four such attempts the day fails.
+3. That read is kept if it fits and is about as large as intended. Otherwise another fraction is tried, at most four more times:
+   - A read that returns more than twice `MAX_RECORDS` is stopped. The next fraction is halfway between the largest that is known to fit and the smallest that is known not to.
+   - A read that returns less than half of `MAX_RECORDS`, or no registry request at all, is not settled for. The next fraction is larger, chosen from what that read returned.
 
-So a day costs about `MAX_RECORDS / 1000` requests for the read, plus one for every million records it holds, and never keeps more than twice `MAX_RECORDS` records in memory. Requests are spaced to stay under `LOG_READS_PER_MINUTE`, across days as well.
+Step 3 matters only when samples are uneven. Samples are taken on the request ID, and the gateway logs the ID a client sends in `X-Request-ID` when it sends one, so requests that share an ID are all in a sample or all out of it. If no fraction near the limit works, the largest sample that is known to fit is used. The day's `caveats` say that it could not be sampled evenly; they say the same when a sample is kept after another returned too many. If the largest sample that fits holds no registry request, the day fails with "could not be sampled": the records exist, but cannot be collected at this limit.
 
-Samples are taken on the request ID, so reading the same day again returns the same records.
+What a sample returned is only ever used to choose the next fraction. Nothing is concluded from a sample about the rest of the day: not that the day is as busy as the part a stopped read saw, and not that records are absent because a sample held none.
+
+So a normal day costs about `MAX_RECORDS / 1000` requests for the read, plus one for every million records it holds. No attempt keeps more than twice `MAX_RECORDS` records in memory. A day with very uneven samples can cost up to six such reads, on every run until it leaves the look-back window if it fails. Requests are spaced to stay under `LOG_READS_PER_MINUTE`, across days as well.
+
+Reading the same day again at the same fraction returns the same records.
 
 ### How well a day was measured
 
@@ -178,7 +184,7 @@ A day is normally **not collected** if something it needs could not be used: the
 
 To collect a degraded day at any other time, name it with `--day` and add `--allow-degraded`. That also applies without the request counters; the read is sized the same way.
 
-**Days with nothing to collect.** A day is skipped, without failing the run and without storing anything, when all of this holds: the gateway's request counter has series that day, they show no registry request, and no access record shows one either. A day for which neither the counters nor Cloud Logging hold anything at all is different: that cannot be told from a collector pointed at the wrong place, so it fails like any day without counters. And when the counters did count requests but no access records are found, the day fails too: the records are somewhere the log settings do not point, or were not written.
+**Days with nothing to collect.** A day is skipped, without failing the run and without storing anything, when all of this holds: the gateway's request counter has series that day, they show no registry request, and none of the day's access records is a registry request. The last is checked by reading every record of the day, not a sample; a day with more than twice `MAX_RECORDS` records is not skipped, because not all of them are looked at. A day for which neither the counters nor Cloud Logging hold anything at all is different: that cannot be told from a collector pointed at the wrong place, so it fails like any day without counters. And when the counters did count requests but the whole day holds no access record of one, the day fails too: the records are somewhere the log settings do not point, or were not written.
 
 ## Privacy
 

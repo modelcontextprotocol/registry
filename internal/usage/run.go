@@ -241,7 +241,8 @@ func (c *Collector) collect(ctx context.Context, day time.Time) error {
 	}
 	if errors.Is(err, ErrNoTraffic) {
 		// Nothing is stored, so the day is looked at again while it is in the
-		// look-back window. That costs a few small requests.
+		// look-back window. That costs one read of its dashboard and
+		// background records.
 		c.logf("%s has nothing to collect: %v", day.Format(dayLayout), err)
 		return nil
 	}

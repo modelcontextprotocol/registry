@@ -118,8 +118,23 @@ func TestLogReaderRetriesAndPages(t *testing.T) {
 	assert.Equal(t, []any{"projects/example-project"}, scripted.bodies[0]["resourceNames"])
 }
 
-// TestLogReaderPacesItsRequests checks that requests start no more often than
-// the setting allows, however quickly the pages come back, and that the
+// timedTransport notes when each request is sent, by the reader's clock, and
+// lets the request take some time.
+type timedTransport struct {
+	scripted *scriptedLogging
+	next     http.RoundTripper
+	took     time.Duration
+	sent     []time.Duration
+}
+
+func (t *timedTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	t.sent = append(t.sent, t.scripted.clock.Sub(time.Unix(1790000000, 0)))
+	t.scripted.clock = t.scripted.clock.Add(t.took)
+	return t.next.RoundTrip(request)
+}
+
+// TestLogReaderPacesItsRequests checks that requests are sent no more often
+// than the setting allows, whatever else takes time between them, and that the
 // spacing carries over from one read to the next.
 func TestLogReaderPacesItsRequests(t *testing.T) {
 	var waits []time.Duration
@@ -128,24 +143,28 @@ func TestLogReaderPacesItsRequests(t *testing.T) {
 	scripted := newScriptedLogging(t, more, more, more, last, last)
 	reader := scripted.reader(&waits)
 	reader.ReadsPerMinute = 50
-	// How long each request takes. The third is slower than the spacing.
-	took := []time.Duration{200 * time.Millisecond, 200 * time.Millisecond, 3 * time.Second, 200 * time.Millisecond, 200 * time.Millisecond}
+	transport := &timedTransport{scripted: scripted, next: scripted.server.Client().Transport, took: 200 * time.Millisecond}
+	reader.Client = &http.Client{Transport: transport}
+	// Getting the token for the second request takes three seconds, as a refresh can.
 	token := reader.Token
+	tokens := 0
 	reader.Token = func(ctx context.Context) (string, error) {
-		scripted.clock = scripted.clock.Add(took[len(scripted.tokens)])
+		if tokens++; tokens == 2 {
+			scripted.clock = scripted.clock.Add(3 * time.Second)
+		}
 		return token(ctx)
 	}
-	started := scripted.clock
 
 	_, err := readAll(t, reader)
 	require.NoError(t, err)
-	assert.Equal(t, []time.Duration{time.Second, time.Second}, waits,
-		"requests start 1.2 seconds apart; nothing is added after one that took longer than that")
 	_, err = readAll(t, reader)
 	require.NoError(t, err)
-	assert.Equal(t, []time.Duration{time.Second, time.Second, time.Second}, waits, "the next read waits its turn too")
-	assert.Equal(t, int32(5), scripted.calls.Load())
-	assert.Equal(t, 6800*time.Millisecond, scripted.clock.Sub(started))
+	assert.Equal(t, []time.Duration{0, 3200 * time.Millisecond, 4400 * time.Millisecond, 5600 * time.Millisecond, 6800 * time.Millisecond}, transport.sent,
+		"the second request waits for its token; every later one is sent 1.2 seconds after the one before, also in the next read")
+	for index := 1; index < len(transport.sent); index++ {
+		assert.GreaterOrEqual(t, transport.sent[index]-transport.sent[index-1], 1200*time.Millisecond)
+	}
+	assert.Equal(t, []time.Duration{time.Second, time.Second, time.Second}, waits)
 }
 
 func TestLogReaderStopsOnPermanentErrors(t *testing.T) {

@@ -145,9 +145,6 @@ func (c *CloudLogging) Read(ctx context.Context, window LogWindow, each func(tim
 	}
 	pages, retries := 0, 0
 	for {
-		if err := c.pace(ctx); err != nil {
-			return err
-		}
 		page, err := c.page(ctx, body)
 		if err != nil {
 			wait, retryable := retryAfter(err)
@@ -181,7 +178,7 @@ func (c *CloudLogging) Read(ctx context.Context, window LogWindow, each func(tim
 	}
 }
 
-// pace waits until the next request may start. Staying under the project's
+// pace waits until the next request may be sent. Staying under the project's
 // limit is steadier than running into it and waiting out the refusals.
 func (c *CloudLogging) pace(ctx context.Context) error {
 	perMinute := c.ReadsPerMinute
@@ -261,6 +258,11 @@ func (c *CloudLogging) page(ctx context.Context, body map[string]any) (*logPage,
 	token, err := c.Token(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errNoToken, err)
+	}
+	// The wait comes after everything else that can take time, such as a new
+	// token, so that it spaces the requests themselves.
+	if err := c.pace(ctx); err != nil {
+		return nil, err
 	}
 	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()
