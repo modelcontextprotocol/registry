@@ -69,6 +69,22 @@ func sensitiveIn(payload map[string]any, catalogue *Catalogue) []string {
 	return out
 }
 
+// identifyingAgents are fixture user agents whose product name is not a
+// product: it says who or where the client is. Beside each is what the name
+// would be if it were only cleaned of unusual characters, which is what must
+// not be stored.
+var identifyingAgents = map[string]string{
+	"192.0.2.77/1.0":                         "192.0.2.77",
+	"[2001:db8::7]:443/2":                    "2001?db8??7",
+	"crawler-203.0.113.5 (linux)":            "crawler-203.0.113.5",
+	"ip-198-51-100-9.internal/0.1":           "ip-198-51-100-9",
+	"jane.doe@example.org/1.0":               "jane.doe",
+	"janes-laptop.local/3":                   "janes-laptop",
+	"00:00:5e:00:53:af":                      "00?00?5e?00?53?af",
+	"f47ac10b-58cc-4372-a567-0e02b2c3d479/1": "f47ac10b",
+	"Mozilla/5.0 (compatible; 192.0.2.88)":   "192.0.2.88",
+}
+
 // TestNothingSensitiveLeavesTheProcess runs whole days, including records
 // crafted to be awkward, and searches everything the collector produced: the
 // stored rows, the report and its own log.
@@ -106,6 +122,36 @@ func TestNothingSensitiveLeavesTheProcess(t *testing.T) {
 				}
 			}
 			assert.Contains(t, produced["stored rows"], notListed, "requests for unknown names are counted as one group")
+
+			if name != "typical" {
+				return
+			}
+			// The name taken from a user agent, not only the user agent as a whole.
+			agents := map[string]bool{}
+			for _, raw := range f.scenario.entries(t) {
+				var item struct {
+					Payload struct {
+						Agent string `json:"user_agent"`
+					} `json:"jsonPayload"`
+				}
+				require.NoError(t, json.Unmarshal(raw, &item))
+				agents[item.Payload.Agent] = true
+			}
+			for agent, extracted := range identifyingAgents {
+				require.True(t, agents[agent], "the fixture should contain the user agent %q", agent)
+				for where, text := range produced {
+					assert.False(t, strings.Contains(text, extracted), "%s contains %q, taken from the user agent %q", where, extracted, agent)
+				}
+			}
+			for _, label := range []string{clientAddress, clientEmail, clientHost, clientIdentifier} {
+				assert.Contains(t, produced["stored rows"], `"dimension":"client","name":"`+label+`"`, "a fixed label is stored in its place")
+			}
+			assert.NotContains(t, produced["stored rows"], `"dimension":"organization","name":"(`, "a withheld name is not an organization")
+
+			// Requests to the gateway's test hosts are not registry traffic.
+			require.True(t, agents["gateway-canary-load/1.0"])
+			assert.NotContains(t, produced["stored rows"], "gateway-canary-load")
+			assert.NotContains(t, produced["report"], "gateway-canary-load")
 		})
 	}
 }

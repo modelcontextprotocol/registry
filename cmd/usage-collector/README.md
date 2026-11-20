@@ -111,10 +111,25 @@ Reading one day's access records takes a few minutes.
 | `usage_daily` | One row per UTC day: requests, data sent, and the day's headline rates. |
 | `usage_share` | That day's breakdowns, one row per name: organizations, clients, networks, what the unnamed traffic is made of, endpoints, listing use, page sizes, responses, and which servers, namespaces and server types were looked up. |
 | `publish_version` | One row per published server version, copied from the registry database. |
-| `usage_detail`, `usage_buckets()`, `usage_series()`, `usage_leaderboard()` | The view and functions the dashboards query. |
+| `usage_detail`, `usage_buckets()`, `usage_series()`, `usage_leaderboard()` | The view and functions the dashboards query. They are replaced whenever their definitions change. |
 | `usage_collector_state`, `usage_schema_migrations` | What the collector remembers between runs. |
 
 Collecting a day again replaces that day's rows in one transaction.
+
+### What a rate is a rate of
+
+Shares and rates are stored per day. To combine them across days or rows, the view and functions weight each by its own base, which is stored too:
+
+| Figure | Its base |
+| --- | --- |
+| Shares in most dimensions | all of the day's requests and data: `requests`, `gib` |
+| Shares in `listing_use` and `page_size` | the day's listing traffic: `listing_requests`, `listing_gib` |
+| `cache_hit_pct` | `listing_requests` |
+| `listings_compressed_pct`, `listings_compressed_data_pct` | listing responses whose encoding is known: `compression_known_requests`, `compression_known_gib` |
+| A row's `compressed_pct` | that row's such responses, as a share of the day's requests: `compression_known_pct` |
+| A row's `not_found_pct`, `top_client_pct` | that row's own lookups |
+
+A figure that cannot be worked out from what is stored is empty rather than approximated. The main case is the client that looked a server up most. Each stored row knows only its own day's winner. Over a range, `usage_leaderboard()` names a winner when every row behind a line has the same one, in which case its share is exact; when the rows disagree, the name and the share are empty.
 
 ### How well a day was measured
 
@@ -155,9 +170,21 @@ To collect a degraded day at any other time, name it with `--day` and add `--all
 - Client addresses are used only in memory, to count distinct sources and to look up the network owner. They are never logged, written to the report, or stored.
 - A requested server name is stored only if that server is published. Every other requested name is counted in one group, "Names not in the catalogue", and is never written down.
 - User agents are reduced to a product name of at most 28 plain characters. Requested page sizes are reduced to 8 letters or digits.
+- A product name that says who or where the client is, rather than what it is, is not kept. A fixed label is stored in its place and the client counts as unnamed:
+
+  | The product name is | Stored as |
+  | --- | --- |
+  | an IPv4 or IPv6 address, with or without a port, also inside a longer name; a hardware address | `(address withheld)` |
+  | someone at somewhere, such as `name@example.org` or `name@host` | `(email withheld)` |
+  | a host name that only resolves inside a private network (`.local`, `.internal`, `.lan`, `.corp`, `.home`, `.private`, `.intranet`, `.localdomain`, `.arpa`, `localhost`) | `(host name withheld)` |
+  | a UUID, or 16 or more hexadecimal digits in a row | `(identifier withheld)` |
+
+  The rule errs towards withholding: a four-part version number cannot be told from an IPv4 address and is withheld too. It cannot catch everything. A person's name used as a product name, or a host name under a public domain, looks like any other product name and is kept.
 - The collector's own log contains counts and status codes. It contains no access records, addresses, request paths or credentials.
 
-`TestNothingSensitiveLeavesTheProcess` checks all of this against the stored rows, the report and the log.
+`TestNothingSensitiveLeavesTheProcess` checks all of this against the stored rows, the report and the log, including the names taken out of user agents.
+
+Requests to the dashboards' own host and to the gateway's test hosts are not registry traffic. The gateway's counters leave them out, and so does the collector. `TestFixtureHostsMatchTheGateway` fails if the two disagree about which hosts those are.
 
 ## Tests
 

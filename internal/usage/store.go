@@ -2,7 +2,9 @@ package usage
 
 import (
 	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
@@ -82,35 +84,51 @@ type schemaFile struct {
 	sql     string
 }
 
-func loadSchema() ([]schemaFile, error) {
+// queriesFile holds the view and functions the dashboards call. Unlike the
+// numbered files, which change tables and run once, it is applied again
+// whenever its content changes: it only replaces definitions.
+const (
+	queriesFile = "dashboard_queries.sql"
+	queriesKey  = "dashboard_queries_sha256"
+)
+
+func loadSchema() (migrations []schemaFile, queries string, err error) {
 	found, err := schemaFiles.ReadDir("schema")
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	var files []schemaFile
 	for _, item := range found {
+		if item.Name() == queriesFile {
+			sql, err := schemaFiles.ReadFile("schema/" + queriesFile)
+			if err != nil {
+				return nil, "", err
+			}
+			queries = string(sql)
+			continue
+		}
 		name := strings.TrimSuffix(item.Name(), ".sql")
 		number, _, ok := strings.Cut(name, "_")
 		version, err := strconv.Atoi(number)
 		if !ok || err != nil {
-			return nil, fmt.Errorf("schema file %s is not named <number>_<name>.sql", item.Name())
+			return nil, "", fmt.Errorf("schema file %s is not named <number>_<name>.sql", item.Name())
 		}
 		sql, err := schemaFiles.ReadFile("schema/" + item.Name())
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		files = append(files, schemaFile{version: version, name: name, sql: string(sql)})
 	}
 	sort.Slice(files, func(i, j int) bool { return files[i].version < files[j].version })
-	return files, nil
+	return files, queries, nil
 }
 
-// applySchema runs the schema files that have not been applied yet. Every
-// statement in them is written so that running it again changes nothing, and
-// the whole step holds a lock so that two collectors starting together do not
-// collide.
+// applySchema runs the numbered schema files that have not been applied yet,
+// then the dashboards' queries if they have changed. Every statement in them
+// is written so that running it again changes nothing, and the whole step
+// holds a lock so that two collectors starting together do not collide.
 func (s *Store) applySchema(ctx context.Context) error {
-	files, err := loadSchema()
+	files, queries, err := loadSchema()
 	if err != nil {
 		return err
 	}
@@ -146,6 +164,21 @@ func (s *Store) applySchema(ctx context.Context) error {
 			return fmt.Errorf("%s: %w", file.name, err)
 		}
 		if _, err := tx.Exec(ctx, "INSERT INTO usage_schema_migrations (version, name) VALUES ($1, $2)", file.version, file.name); err != nil {
+			return err
+		}
+	}
+	digest := sha256.Sum256([]byte(queries))
+	wanted, current := hex.EncodeToString(digest[:]), ""
+	err = tx.QueryRow(ctx, "SELECT value FROM usage_collector_state WHERE key = $1", queriesKey).Scan(&current)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return err
+	}
+	if current != wanted {
+		if _, err := tx.Exec(ctx, queries); err != nil {
+			return fmt.Errorf("%s: %w", queriesFile, err)
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO usage_collector_state (key, value) VALUES ($1, $2)
+			ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`, queriesKey, wanted); err != nil {
 			return err
 		}
 	}
@@ -315,24 +348,28 @@ func (s *Store) ReplaceDay(ctx context.Context, daily Daily, shares []Share, col
 	_, err = tx.Exec(ctx, `INSERT INTO usage_daily (day, requests, gib, cost_usd, user_agents, named_orgs, named_requests_pct,
 			named_data_pct, listings_compressed_pct, listings_compressed_data_pct, cache_hit_pct, records_sampled,
 			log_requests_ratio, log_data_ratio, sample_fraction, listing_weight_min, listing_weight_max, background_records,
-			totals_source, caveats, collected_at, collector_version)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`,
+			totals_source, caveats, collected_at, collector_version,
+			listing_requests, listing_gib, compression_known_requests, compression_known_gib)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22,
+			$23, $24, $25, $26)`,
 		daily.Day, daily.Requests, number(&daily.GiB), number(&daily.CostUSD), daily.UserAgents, daily.NamedOrgs,
 		number(daily.NamedRequestsPct), number(daily.NamedDataPct), number(daily.ListingsCompressedPct),
 		number(daily.ListingsCompressedDataPct), number(daily.CacheHitPct), daily.RecordsSampled,
 		number(daily.LogRequestsRatio), number(daily.LogDataRatio), number(&daily.SampleFraction),
 		number(&daily.ListingWeightMin), number(&daily.ListingWeightMax), daily.BackgroundCount,
-		daily.TotalsSource, daily.Caveats, collectedAt, collectorVersion)
+		daily.TotalsSource, daily.Caveats, collectedAt, collectorVersion,
+		number(daily.ListingRequests), number(daily.ListingGiB), number(daily.CompressionKnownRequests),
+		number(daily.CompressionKnownGiB))
 	if err != nil {
 		return err
 	}
 	columns := []string{"day", "dimension", "name", "kind", "rank", "requests_pct", "data_pct", "compressed_pct", "addresses",
-		"identified_by", "category", "rollup_count", "not_found_pct", "top_client_pct"}
+		"identified_by", "category", "rollup_count", "not_found_pct", "top_client_pct", "compression_known_pct"}
 	_, err = tx.CopyFrom(ctx, pgx.Identifier{"usage_share"}, columns, pgx.CopyFromSlice(len(shares), func(i int) ([]any, error) {
 		row := shares[i]
 		return []any{daily.Day, row.Dimension, row.Name, row.Kind, int32(row.Rank), //nolint:gosec // G115: a rank is a small count
 			number(row.RequestsPct), number(row.DataPct), number(row.CompressedPct), row.Addresses, row.IdentifiedBy, row.Category,
-			row.RollupCount, number(row.NotFoundPct), number(row.TopClientPct)}, nil
+			row.RollupCount, number(row.NotFoundPct), number(row.TopClientPct), number(row.CompressionKnownPct)}, nil
 	}))
 	if err != nil {
 		return err

@@ -377,7 +377,9 @@ func (c *dayCollector) addressID(address string) uint32 {
 
 // accept turns one access record into a record, or drops it.
 func (c *dayCollector) accept(timestamp string, payload map[string]any) error {
-	if strings.HasPrefix(pyField(payload, "host"), "grafana.") {
+	// The counters cover the registry's own traffic only. Records for the
+	// dashboards' host and for the gateway's test routes are not part of it.
+	if host := pyField(payload, "host"); strings.HasPrefix(host, "grafana.") || isFixtureHost(host) {
 		return nil
 	}
 	if pyStr(payload["request_bytes"]) == "0" {

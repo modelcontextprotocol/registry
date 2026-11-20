@@ -24,7 +24,23 @@ Everything in this directory is synthetic.
 
 This package replaces a Python prototype: a report script and a wrapper that extracted more detail from it. The expected output was produced by that prototype, run on these fixtures with its inputs replaced: the counter queries, the log read, and the two network reference files.
 
-One more thing was replaced, in memory only. The prototype named an organization's networks in its own table; this package takes such aliases from a setting. For each scenario the prototype's table was therefore set to the scenario's aliases followed by its hosting providers.
+### Where this package deliberately differs from the prototype
+
+The prototype was wrong, or environment-specific, in a few places. So that it could still be the reference for everything else, the same corrections were applied to it in memory when the expected output was produced. Its file was not changed. Each correction was written a second time for that purpose, independently of the Go code.
+
+| Behaviour | Prototype | This package |
+| --- | --- | --- |
+| A product name in a user agent that is an address, an email address, a private host name or a long identifier | kept as a client and organization name | replaced by a fixed label, and the client counts as unnamed |
+| Access records for the gateway's own test hosts | counted, although the gateway's counters leave them out | left out |
+| An organization's own networks | named in a table in the script | named by a setting; each scenario lists its aliases |
+
+Three more differences need no correction to the prototype, because the fixtures that would show them are not replayed through it:
+
+- A requested page size beginning with `default` is cleaned like any other. The prototype printed it as it was.
+- A request target that cannot be split, or a user agent that is not text, counts as an unknown path or name. The prototype stopped.
+- When the gateway counters answer but hold nothing for the day, the day counts as degraded. The prototype said nothing.
+
+The view and functions the dashboards call were never part of the prototype. Their arithmetic is tested against figures worked out by hand, in `queries_internal_test.go`.
 
 - `report.md` is the prototype's report. The tests require the same bytes.
 - `rows.json` is the wrapper's output: one row per line, fields that are empty left out. The tests require the same rows with the same figures, digit for digit. A scenario has no `rows.json` when its rows are the same as another scenario's and only its report differs.

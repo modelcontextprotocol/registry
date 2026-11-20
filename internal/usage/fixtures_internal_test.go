@@ -349,7 +349,12 @@ func TestFixturesAreSynthetic(t *testing.T) {
 			return err
 		}
 		for _, pattern := range []*regexp.Regexp{dottedQuad, colonGroups} {
-			for _, candidate := range pattern.FindAll(data, -1) {
+			for _, span := range pattern.FindAllIndex(data, -1) {
+				candidate := data[span[0]:span[1]]
+				// Without a digit it is part of a name such as Some::Module, as the collector also judges.
+				if pattern == colonGroups && !bytes.ContainsAny(candidate, "0123456789") {
+					continue
+				}
 				address, err := netip.ParseAddr(string(candidate))
 				if err != nil {
 					continue // not an address: a timestamp, a version, or a deliberately malformed value

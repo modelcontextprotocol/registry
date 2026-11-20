@@ -295,6 +295,366 @@ null,
 [
 "Apache-HttpClient/4.5",
 "Apache-HttpClient"
+],
+[
+"192.0.2.77/1.0",
+"(address withheld)"
+],
+[
+"192.0.2.77",
+"(address withheld)"
+],
+[
+"198.51.100.9:8080",
+"(address withheld)"
+],
+[
+"crawler-203.0.113.5 (linux)",
+"(address withheld)"
+],
+[
+"ip-198-51-100-9.internal/0.1",
+"(address withheld)"
+],
+[
+"192_0_2_42",
+"(address withheld)"
+],
+[
+"192.0.2.41.",
+"(address withheld)"
+],
+[
+"x192.0.2.41",
+"(address withheld)"
+],
+[
+"192.0.2",
+"192.0.2"
+],
+[
+"192.0.2.300",
+"192.0.2.300"
+],
+[
+"192.0.2.5.6",
+"(address withheld)"
+],
+[
+"0192.0.2.5",
+"0192.0.2.5"
+],
+[
+"Mozilla/5.0 (compatible; 192.0.2.88)",
+"(address withheld)"
+],
+[
+"[2001:db8::7]:443/2",
+"(address withheld)"
+],
+[
+"2001:db8::9",
+"(address withheld)"
+],
+[
+"2001:db8::a%eth0/1",
+"(address withheld)"
+],
+[
+"[2001:DB8::B]",
+"(address withheld)"
+],
+[
+"host-2001:db8::c",
+"(address withheld)"
+],
+[
+"2001:db8::1.",
+"(address withheld)"
+],
+[
+"x2001:db8::1",
+"(address withheld)"
+],
+[
+"2001:db8::1x",
+"(address withheld)"
+],
+[
+"::ffff:192.0.2.5",
+"(address withheld)"
+],
+[
+"2001:db8",
+"2001?db8"
+],
+[
+"Example::Client/2",
+"Example??Client"
+],
+[
+"Perl::Module",
+"Perl??Module"
+],
+[
+"::",
+"??"
+],
+[
+"00:00:5e:00:53:af",
+"(address withheld)"
+],
+[
+"00-00-5E-00-53-01",
+"(address withheld)"
+],
+[
+"00:00:5e:00:53",
+"(address withheld)"
+],
+[
+"x00:00:5e:00:53:af",
+"(address withheld)"
+],
+[
+"jane.doe@example.org/1.0",
+"(email withheld)"
+],
+[
+"someone@mail.example.org",
+"(email withheld)"
+],
+[
+"operator@localhost",
+"(email withheld)"
+],
+[
+"operator@build.internal",
+"(email withheld)"
+],
+[
+"@example-scope/client/1.0",
+"?example-scope"
+],
+[
+"@scope",
+"?scope"
+],
+[
+"a@b",
+"(email withheld)"
+],
+[
+"worker@1.2.3 (node)",
+"worker?1.2.3"
+],
+[
+"tool@2.0.1",
+"tool?2.0.1"
+],
+[
+"x@y.z",
+"(email withheld)"
+],
+[
+"x@y.zz",
+"(email withheld)"
+],
+[
+"jane@laptop",
+"(email withheld)"
+],
+[
+"tool@v2.0",
+"tool?v2.0"
+],
+[
+"a@b@1.2",
+"(email withheld)"
+],
+[
+"tool@",
+"tool?"
+],
+[
+"cafe2001:db8::1",
+"(address withheld)"
+],
+[
+"someone@163.example/1.0",
+"(email withheld)"
+],
+[
+"ops@3d.example.org",
+"(email withheld)"
+],
+[
+"jane@v2.example.org",
+"(email withheld)"
+],
+[
+"@jane@social.example",
+"(email withheld)"
+],
+[
+"tool@1.2.3-beta.1",
+"tool?1.2.3-beta.1"
+],
+[
+"tool@v10",
+"tool?v10"
+],
+[
+"tool@1.x",
+"(email withheld)"
+],
+[
+"tool@latest",
+"(email withheld)"
+],
+[
+"Mozilla/5.0 (compatible; jane.doe@example.org)",
+"(email withheld)"
+],
+[
+"Mozilla/5.0 (compatible; 2001:db8::5)",
+"(address withheld)"
+],
+[
+"Mozilla/5.0 (compatible; bot@1.2; x)",
+"bot"
+],
+[
+"Mozilla/5.0 (compatible; ExampleBot/2.1; +https://bot.example)",
+"ExampleBot"
+],
+[
+"ip:2001:db8::1",
+"(address withheld)"
+],
+[
+"from:2001:db8::2/1.0",
+"(address withheld)"
+],
+[
+"2001:db8:0:0:0:0:0:1:8080",
+"(address withheld)"
+],
+[
+"2001:db8::1:",
+"(address withheld)"
+],
+[
+"feed2001:db8::1",
+"(address withheld)"
+],
+[
+"12:30:45",
+"12?30?45"
+],
+[
+"12:30:45:10",
+"(address withheld)"
+],
+[
+"Some::Thing",
+"Some??Thing"
+],
+[
+"Ab::Cd",
+"Ab??Cd"
+],
+[
+"janes-laptop.local/3",
+"(host name withheld)"
+],
+[
+"build-agent.corp.example.internal",
+"(host name withheld)"
+],
+[
+"LOCALHOST:3000",
+"(host name withheld)"
+],
+[
+"localhost",
+"(host name withheld)"
+],
+[
+"localhosts",
+"localhosts"
+],
+[
+"printer.lan.",
+"(host name withheld)"
+],
+[
+"local",
+"local"
+],
+[
+".local",
+".local"
+],
+[
+"my.locale",
+"my.locale"
+],
+[
+"example.com-bot/1",
+"example.com-bot"
+],
+[
+"host.home.arpa",
+"(host name withheld)"
+],
+[
+"node7.INTERNAL",
+"(host name withheld)"
+],
+[
+"Mozilla/5.0 (compatible; node7.internal)",
+"(host name withheld)"
+],
+[
+"f47ac10b-58cc-4372-a567-0e02b2c3d479/1",
+"(identifier withheld)"
+],
+[
+"F47AC10B-58CC-4372-A567-0E02B2C3D479",
+"(identifier withheld)"
+],
+[
+"deadbeefdeadbeefdeadbeef/1",
+"(identifier withheld)"
+],
+[
+"device-0123456789abcdef0123",
+"(identifier withheld)"
+],
+[
+"deadbeefdeadbee",
+"deadbeefdeadbee"
+],
+[
+"0123456789012345",
+"(identifier withheld)"
+],
+[
+"v2026.11.20",
+"v2026.11.20"
+],
+[
+"2026-11-20",
+"2026-11-20"
+],
+[
+"release-1.2.3",
+"release-1.2.3"
+],
+[
+"\u0661\u0669\u0662.0.2.4",
+"???.0.2.4"
 ]
 ],
 "generic_client": [
@@ -593,6 +953,366 @@ true
 [
 "Apache-HttpClient",
 true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"192.0.2",
+false
+],
+[
+"192.0.2.300",
+false
+],
+[
+"(address withheld)",
+true
+],
+[
+"0192.0.2.5",
+false
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"2001?db8",
+false
+],
+[
+"Example??Client",
+false
+],
+[
+"Perl??Module",
+false
+],
+[
+"??",
+false
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"?example-scope",
+false
+],
+[
+"?scope",
+false
+],
+[
+"(email withheld)",
+true
+],
+[
+"worker?1.2.3",
+false
+],
+[
+"tool?2.0.1",
+false
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"tool?v2.0",
+false
+],
+[
+"(email withheld)",
+true
+],
+[
+"tool?",
+false
+],
+[
+"(address withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"tool?1.2.3-beta.1",
+false
+],
+[
+"tool?v10",
+false
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(email withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"bot",
+false
+],
+[
+"ExampleBot",
+false
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"(address withheld)",
+true
+],
+[
+"12?30?45",
+false
+],
+[
+"(address withheld)",
+true
+],
+[
+"Some??Thing",
+false
+],
+[
+"Ab??Cd",
+false
+],
+[
+"(host name withheld)",
+true
+],
+[
+"(host name withheld)",
+true
+],
+[
+"(host name withheld)",
+true
+],
+[
+"(host name withheld)",
+true
+],
+[
+"localhosts",
+false
+],
+[
+"(host name withheld)",
+true
+],
+[
+"local",
+false
+],
+[
+".local",
+false
+],
+[
+"my.locale",
+false
+],
+[
+"example.com-bot",
+false
+],
+[
+"(host name withheld)",
+true
+],
+[
+"(host name withheld)",
+true
+],
+[
+"(host name withheld)",
+true
+],
+[
+"(identifier withheld)",
+true
+],
+[
+"(identifier withheld)",
+true
+],
+[
+"(identifier withheld)",
+true
+],
+[
+"(identifier withheld)",
+true
+],
+[
+"deadbeefdeadbee",
+false
+],
+[
+"(identifier withheld)",
+true
+],
+[
+"v2026.11.20",
+false
+],
+[
+"2026-11-20",
+false
+],
+[
+"release-1.2.3",
+false
+],
+[
+"???.0.2.4",
+false
 ]
 ],
 "endpoint": [

@@ -23,6 +23,21 @@ const (
 	stampLayout     = "2006-01-02T15:04:05Z"
 )
 
+// fixtureHosts are the hosts of the gateway's own test routes. The gateway
+// counts requests to them as fixture traffic, apart from the registry's, so
+// the counters this program reads leave them out and the access records it
+// reads must leave them out too.
+var fixtureHosts = []string{"fixture.gateway-canary.invalid", "alias.gateway-canary.invalid"}
+
+func isFixtureHost(host string) bool {
+	for _, fixture := range fixtureHosts {
+		if host == fixture {
+			return true
+		}
+	}
+	return false
+}
+
 // LogWindow selects the access records to read. Fraction below 1 asks Cloud
 // Logging for a deterministic sample keyed on the request ID.
 type LogWindow struct {
@@ -102,6 +117,9 @@ func (c *CloudLogging) Filter(window LogWindow) string {
 		`jsonPayload.kind="registry_access"`,
 		`timestamp>="` + window.Start.UTC().Format(stampLayout) + `"`,
 		`timestamp<"` + window.End.UTC().Format(stampLayout) + `"`,
+	}
+	for _, host := range fixtureHosts {
+		parts = append(parts, `NOT jsonPayload.host="`+host+`"`)
 	}
 	if window.Fraction < 1 {
 		parts = append(parts, "sample(jsonPayload.request_id, "+strconv.FormatFloat(window.Fraction, 'f', -1, 64)+")")

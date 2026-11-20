@@ -172,13 +172,17 @@ func encodeGolden(s scenario, sample *Sample) []byte {
 // filter, since both must read the same deterministic sample.
 func TestGoldenFilter(t *testing.T) {
 	f := newFixture(t, "subsampled")
-	_, err := f.collect(t)
+	sample, err := f.collect(t)
 	require.NoError(t, err)
 	require.NotEmpty(t, f.gateway.filters)
+	// The fraction is the prototype's, checked against its golden file; here it is only spelled out.
+	fraction := pyFloatRepr(sample.fraction)
+	require.Regexp(t, `^0\.\d{1,3}$`, fraction, "this scenario should be read as a sample")
 	assert.Equal(t, `resource.type="k8s_container" AND resource.labels.cluster_name="example-cluster" AND `+
 		`resource.labels.namespace_name="ingress-nginx" AND resource.labels.container_name="nginx" AND `+
 		`jsonPayload.kind="registry_access" AND timestamp>="2026-10-06T00:00:00Z" AND timestamp<"2026-10-07T00:00:00Z" AND `+
-		`sample(jsonPayload.request_id, 0.365)`, f.gateway.filters[0])
+		`NOT jsonPayload.host="fixture.gateway-canary.invalid" AND NOT jsonPayload.host="alias.gateway-canary.invalid" AND `+
+		`sample(jsonPayload.request_id, `+fraction+`)`, f.gateway.filters[0])
 	assert.Greater(t, f.gateway.logCalls, 1, "the fixture should span several pages")
 
 	require.GreaterOrEqual(t, len(f.gateway.queries), 26)

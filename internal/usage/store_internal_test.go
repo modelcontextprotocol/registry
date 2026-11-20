@@ -42,13 +42,15 @@ func exampleDay(day time.Time, requests int64) (Daily, []Share) {
 func storedShares(t *testing.T, store *Store, day time.Time) []Share {
 	t.Helper()
 	rows, err := store.pool.Query(t.Context(), `SELECT dimension, name, kind, rank, requests_pct::float8, data_pct::float8,
-		compressed_pct::float8, addresses, identified_by, category, rollup_count, not_found_pct::float8, top_client_pct::float8
+		compressed_pct::float8, addresses, identified_by, category, rollup_count, not_found_pct::float8, top_client_pct::float8,
+		compression_known_pct::float8
 		FROM usage_share WHERE day = $1 ORDER BY dimension, rank`, day)
 	require.NoError(t, err)
 	shares, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (Share, error) {
 		var out Share
 		err := row.Scan(&out.Dimension, &out.Name, &out.Kind, &out.Rank, &out.RequestsPct, &out.DataPct, &out.CompressedPct,
-			&out.Addresses, &out.IdentifiedBy, &out.Category, &out.RollupCount, &out.NotFoundPct, &out.TopClientPct)
+			&out.Addresses, &out.IdentifiedBy, &out.Category, &out.RollupCount, &out.NotFoundPct, &out.TopClientPct,
+			&out.CompressionKnownPct)
 		return out, err
 	})
 	require.NoError(t, err)
@@ -80,12 +82,14 @@ func TestSchemaIsAdditiveAndRepeatable(t *testing.T) {
 
 	// Opening the store again, and even running every schema statement again, changes nothing.
 	again := newStore(t, url)
-	files, err := loadSchema()
+	files, queries, err := loadSchema()
 	require.NoError(t, err)
 	for _, file := range files {
 		_, err := pool.Exec(t.Context(), file.sql)
 		require.NoError(t, err, file.name)
 	}
+	_, err = pool.Exec(t.Context(), queries)
+	require.NoError(t, err)
 	var applied, days, rows int
 	require.NoError(t, pool.QueryRow(t.Context(), `SELECT (SELECT count(*) FROM usage_schema_migrations), (SELECT count(*) FROM usage_daily),
 		(SELECT count(*) FROM usage_share)`).Scan(&applied, &days, &rows))

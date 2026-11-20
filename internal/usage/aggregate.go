@@ -48,6 +48,15 @@ type Daily struct {
 	CacheHitPct               *float64
 	RecordsSampled            int
 
+	// What the rates above are rates of, as volumes on the scale of Requests
+	// and GiB, so that they can be combined across days. Listing requests are
+	// the base of the cache rate and of the listing-use and page-size shares.
+	// The compression rates are of listing responses whose encoding is known.
+	ListingRequests          *float64
+	ListingGiB               *float64
+	CompressionKnownRequests *float64
+	CompressionKnownGiB      *float64
+
 	// How closely the log-based estimate matched the gateway counters: 1 is a
 	// perfect match. Nil when the counters were unavailable.
 	LogRequestsRatio *float64
@@ -75,6 +84,9 @@ type Share struct {
 	RollupCount   *int
 	NotFoundPct   *float64
 	TopClientPct  *float64
+	// CompressionKnownPct is the part of the day's requests that CompressedPct
+	// is a rate of: this row's listing responses whose encoding is known.
+	CompressionKnownPct *float64
 }
 
 func share(part, total float64) *float64 {
@@ -82,6 +94,15 @@ func share(part, total float64) *float64 {
 		return nil
 	}
 	value := 100 * part / total
+	return &value
+}
+
+// scaled is the part of a day's total that part is of whole.
+func scaled(total, part, whole float64) *float64 {
+	if whole <= 0 {
+		return nil
+	}
+	value := total * part / whole
 	return &value
 }
 
@@ -188,6 +209,7 @@ func (s *Sample) row(b breakdown, name string, members []*group, kind string, ro
 	}
 	if gzAll != 0 {
 		out.CompressedPct = share(gz, gzAll)
+		out.CompressionKnownPct = share(gzAll, s.estRequests)
 	}
 	if rollup {
 		count := len(members)
@@ -258,6 +280,10 @@ func (s *Sample) daily(a *analysis) Daily {
 		BackgroundCount:           s.background,
 		Caveats:                   append(append([]string{}, s.notes...), s.recorded...),
 	}
+	daily.ListingRequests = scaled(s.requests, a.listingRequests, s.estRequests)
+	daily.ListingGiB = scaled(gib, a.listingBytes, s.estBytes)
+	daily.CompressionKnownRequests = scaled(s.requests, a.gzAll, s.estRequests)
+	daily.CompressionKnownGiB = scaled(gib, a.gzBytesAll, s.estBytes)
 	fromCounters := 0
 	if truthy(s.counters.requests, s.counters.hasRequests) {
 		fromCounters++
