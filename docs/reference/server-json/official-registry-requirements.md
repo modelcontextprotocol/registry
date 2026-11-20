@@ -92,6 +92,36 @@ When your `publisher-provided` metadata gets large or comes from multiple source
 
 This is **not enforced**; flat keys work fine for simple cases, and existing examples in this repo use the flat form. Use the namespaced form when organizing metadata from more than one source.
 
+### Security Scan Receipts
+
+The `io.modelcontextprotocol.registry/security-scan` extension defines a scanner-neutral, evidence-scoped receipt shape (see the [format specification](./generic-server-json.md#security-scan-receipts-iomodelcontextprotocolregistrysecurity-scan)). It is defined at the format level so any registry or client can read and verify receipts.
+
+Today the official registry preserves only the `io.modelcontextprotocol.registry/publisher-provided` key, so a **publisher-asserted** scan receipt (`"attestation": "publisher-asserted"`) is carried by nesting it under `publisher-provided`, where it counts against the 4KB limit like any other publisher metadata. Receipts with `"attestation": "registry-attested"` or `"third-party-attested"` are not yet produced or stored by the official registry; those values are reserved for when registry- or third-party-attested receipts are supported.
+
+When publishing to the official registry, nest the receipt array under `publisher-provided`:
+
+```jsonc
+{
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "io.modelcontextprotocol.registry/security-scan": [
+        {
+          "scanner": "example-scanner",
+          "scanner_version": "1.2.3",
+          "scanned_artifact_digest": "sha256:...",
+          "scan_scope": ["dependency", "package"],
+          "verdict": "clean",
+          "scanned_at": "2026-06-28T00:00:00Z",
+          "attestation": "publisher-asserted"
+        }
+      ]
+    }
+  }
+}
+```
+
+Regardless of where a receipt is stored, the client invariant holds: do not render `clean` unless the receipt's `scanned_artifact_digest` binds to the current package or artifact and the displayed claim names the covered `scan_scope`.
+
 ### Registry API Metadata vs server.json Metadata
 
 The `_meta` field in `server.json` is **different** from the `_meta` field returned in registry API responses:
