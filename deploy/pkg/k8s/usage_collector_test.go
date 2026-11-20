@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -66,6 +67,20 @@ func at(value any, keys ...string) any {
 	}
 	return value
 }
+
+// decoded reads a value from a Secret's data field.
+func decoded(t *testing.T, value any) string {
+	t.Helper()
+	text, _ := value.(string)
+	raw, err := base64.StdEncoding.DecodeString(text)
+	if err != nil || text == "" {
+		t.Errorf("%q is not a value of a Secret's data field", text)
+	}
+	return string(raw)
+}
+
+// fakeEncoded is how a fake password starts once it is encoded for a Secret.
+const fakeEncoded = "RkFLRVBBU1Mt"
 
 func (m *usageMonitor) resource(t *testing.T, identity string) map[string]any {
 	t.Helper()
@@ -165,7 +180,8 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 			t.Errorf("%s would be dropped with its resource", name)
 		}
 		password := m.resource(t, "kubernetes:core/v1:Secret::"+name+"-password")
-		if at(password, "metadata", "namespace") != want.namespace || at(password, "stringData", "password") != "FAKEPASS-"+name+"-password" {
+		if at(password, "metadata", "namespace") != want.namespace || decoded(t, at(password, "data", "password")) != "FAKEPASS-"+name+"-password" ||
+			decoded(t, at(password, "data", "username")) != want.role {
 			t.Errorf("%s does not get its own password beside its cluster", name)
 		}
 	}
@@ -175,7 +191,7 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 	}
 
 	// The collector's Secret holds both URLs and the aliases, encrypted in Pulumi's state.
-	stored := m.resources["kubernetes:core/v1:Secret::registry-usage-collector"]["stringData"]
+	stored := m.resources["kubernetes:core/v1:Secret::registry-usage-collector"]["data"]
 	if !stored.IsSecret() {
 		t.Error("the collector's settings are not a Pulumi secret")
 	}
@@ -185,8 +201,17 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 		"USAGE_COLLECTOR_REGISTRY_DATABASE_URL": "postgres://registry_usage_reader:FAKEPASS-registry-usage-reader-password@registry-pg-rw.default.svc:5432/app?sslmode=require",
 		"USAGE_COLLECTOR_ORGANIZATION_ALIASES":  fakeAliases,
 	} {
-		if settings[name] != want {
+		if decoded(t, settings[name]) != want {
 			t.Errorf("%s is %v", name, settings[name])
+		}
+	}
+	// A deployment applies a saved plan. The Kubernetes provider moves
+	// stringData into data once it knows the values, so a Secret whose values
+	// are unknown at preview differs from its plan and fails the apply. The
+	// first staging deployment of the collector failed this way.
+	for identity, inputs := range m.resources {
+		if strings.HasPrefix(identity, "kubernetes:core/v1:Secret::registry-usage-") && inputs["stringData"].HasValue() {
+			t.Errorf("%s uses stringData for values that are not known at preview", identity)
 		}
 	}
 	if key := m.resources["kubernetes:core/v1:Secret::registry-usage-collector-gcp"]["data"]; !key.IsSecret() || at(plain(key), "key.json") != fakeGoogleKey {
@@ -218,7 +243,7 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 	}
 	// Credentials reach the pod from Secrets only.
 	plainSettings, _ := json.Marshal(container["env"])
-	for _, private := range []string{"FAKEPASS", fakeGoogleKey, fakeAliases, "postgres://"} {
+	for _, private := range []string{"FAKEPASS", fakeEncoded, fakeGoogleKey, fakeAliases, "postgres://"} {
 		if strings.Contains(string(plainSettings), private) {
 			t.Errorf("%s is written into the pod specification", private)
 		}
@@ -246,7 +271,7 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 		}
 	}
 	// Not Grafana's database credentials, and nothing of the registry's backup.
-	for _, forbidden := range []string{"grafana-pg-app", "grafana-pg-superuser", "k8up-repo-password", "k8up-backup-credentials", "postgres-custom-v1", "registry-pg", "FAKEPASS", fakeGoogleKey} {
+	for _, forbidden := range []string{"grafana-pg-app", "grafana-pg-superuser", "k8up-repo-password", "k8up-backup-credentials", "postgres-custom-v1", "registry-pg", "FAKEPASS", fakeEncoded, fakeGoogleKey} {
 		if strings.Contains(string(backup), forbidden) {
 			t.Errorf("the history backup refers to %s", forbidden)
 		}
@@ -254,7 +279,7 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 
 	// Grafana gets the read-only role's password from its Secret. The chart
 	// registers what it renders with plain inputs, so no credential may be a value.
-	for _, private := range []string{"FAKEPASS", fakeGoogleKey, fakeAliases} {
+	for _, private := range []string{"FAKEPASS", fakeEncoded, fakeGoogleKey, fakeAliases} {
 		if strings.Contains(m.raw, private) {
 			t.Errorf("%s reached the Grafana chart values", private)
 		}
