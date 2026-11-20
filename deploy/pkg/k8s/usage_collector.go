@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"encoding/base64"
 	"errors"
 	"strings"
 
@@ -52,6 +53,15 @@ type usageRole struct {
 	resource pulumi.Resource
 }
 
+// usageSecretValue encodes a value for a Secret's data field. Values that are
+// not known until they are created must go there and not into stringData: the
+// Kubernetes provider moves stringData into data once it knows the values,
+// and a deployment applies a saved plan, which rejects a resource whose
+// properties differ from the preview's.
+func usageSecretValue(text string) string {
+	return base64.StdEncoding.EncodeToString([]byte(text))
+}
+
 // usageDatabaseRole creates a login role with a random password in a CNPG
 // cluster. The role outlives its resource, so that retiring the collector
 // cannot take the role's objects with it.
@@ -74,8 +84,11 @@ func usageDatabaseRole(ctx *pulumi.Context, provider *kubernetes.Provider, names
 			Namespace: namespace,
 			Labels:    pulumi.StringMap{"cnpg.io/reload": pulumi.String("true")},
 		},
-		Type:       pulumi.String("kubernetes.io/basic-auth"),
-		StringData: pulumi.StringMap{"username": pulumi.String(role), "password": password.Result},
+		Type: pulumi.String("kubernetes.io/basic-auth"),
+		Data: pulumi.StringMap{
+			"username": pulumi.String(usageSecretValue(role)),
+			"password": password.Result.ApplyT(usageSecretValue).(pulumi.StringOutput),
+		},
 	}, pulumi.Provider(provider))
 	if err != nil {
 		return nil, err
@@ -173,17 +186,17 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 	// primary. Each key is the name of the setting it supplies.
 	settings := pulumi.StringMap{
 		"USAGE_COLLECTOR_DATABASE_URL": pulumi.Sprintf("postgres://%s:%s@grafana-pg-rw:5432/%s?sslmode=require",
-			usageCollectorRole, collectorRole.password, usageDatabase),
+			usageCollectorRole, collectorRole.password, usageDatabase).ApplyT(usageSecretValue).(pulumi.StringOutput),
 		"USAGE_COLLECTOR_REGISTRY_DATABASE_URL": pulumi.Sprintf("postgres://%s:%s@registry-pg-rw.default.svc:5432/app?sslmode=require",
-			usageRegistryRole, registryRole.password),
+			usageRegistryRole, registryRole.password).ApplyT(usageSecretValue).(pulumi.StringOutput),
 	}
 	if aliases != "" {
-		settings["USAGE_COLLECTOR_ORGANIZATION_ALIASES"] = pulumi.ToSecret(pulumi.String(aliases)).(pulumi.StringOutput)
+		settings["USAGE_COLLECTOR_ORGANIZATION_ALIASES"] = pulumi.ToSecret(pulumi.String(usageSecretValue(aliases))).(pulumi.StringOutput)
 	}
 	settingsSecret, err := corev1.NewSecret(ctx, usageWorkload, &corev1.SecretArgs{
-		Metadata:   &metav1.ObjectMetaArgs{Name: pulumi.String(usageWorkload), Namespace: namespace},
-		Type:       pulumi.String("Opaque"),
-		StringData: settings,
+		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String(usageWorkload), Namespace: namespace},
+		Type:     pulumi.String("Opaque"),
+		Data:     settings,
 	}, provider)
 	if err != nil {
 		return nil, err
