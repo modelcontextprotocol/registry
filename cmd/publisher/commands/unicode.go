@@ -8,6 +8,17 @@ import (
 	"unicode/utf8"
 )
 
+// utf8BOM is the UTF-8 byte order mark. Some Windows tools (e.g. PowerShell's
+// Out-File) prepend it when writing UTF-8 files. RFC 8259 permits JSON parsers
+// to ignore it, but Go's encoding/json rejects it, so it is stripped before
+// parsing.
+var utf8BOM = []byte{0xEF, 0xBB, 0xBF}
+
+// stripUTF8BOM returns data without a leading UTF-8 byte order mark.
+func stripUTF8BOM(data []byte) []byte {
+	return bytes.TrimPrefix(data, utf8BOM)
+}
+
 func validateJSONUnicode(filename string, data []byte) error {
 	if !utf8.Valid(data) {
 		return fmt.Errorf("%s must be encoded as UTF-8", filename)
