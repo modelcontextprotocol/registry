@@ -507,6 +507,42 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 | `gcp:region` | GCP Region | No (default: us-central1) |
 | `gcp:credentials` | GCP service account credentials JSON | No (secret; set in staging/prod) |
 
+## Grafana Dashboards
+
+Every Grafana dashboard is kept in this repository and provisioned by Pulumi:
+
+| Dashboard | File | Grafana folder |
+|-----------|------|----------------|
+| Registry Application Dashboard | `pkg/k8s/dashboards/registry-application.json` | General |
+| Registry Deployment/Critical Issues | `pkg/k8s/dashboards/registry-deployment-critical-issues.json` | General |
+| Registry Gateway Canary | `pkg/k8s/gatewaycanary/assets/dashboard.json` | Gateway Canary |
+
+Grafana refuses to save a provisioned dashboard from the UI, so a change goes
+through a pull request:
+
+1. Open the dashboard in Grafana, edit it, and use **Export → Export as JSON**
+   instead of saving.
+2. Replace the file with the export. Keep the `uid` and remove the top-level
+   `id` and `version`, which belong to one Grafana database.
+3. Run `go -C deploy test ./pkg/k8s/`. The test rejects a changed production
+   `uid`, a duplicate title and a data source that is not provisioned.
+
+To add a dashboard, put its JSON in `pkg/k8s/dashboards/`. It may only use the
+data sources provisioned in `pkg/k8s/monitoring.go`.
+
+Dashboard changes reach staging when they merge to `main` and production with
+the next production deployment. Grafana rereads the files on its own; only a
+new mount restarts it.
+
+The two General dashboards were first built in the production UI. Grafana
+adopts an existing dashboard whose `uid` matches a provisioned file, so they
+kept their links. Removing the `registry` provider, including by reverting the
+change that added it, makes Grafana delete the dashboards it manages. The JSON
+stays in git, but re-importing it by hand would be needed to bring them back.
+
+Alert rules, contact points and notification policies are still managed inside
+Grafana and are not in this repository.
+
 ## Database Backups
 
 The production-only `registry-database-backup` CronJob backs up the registry's
