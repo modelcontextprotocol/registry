@@ -1,0 +1,34 @@
+{
+ "data": [
+  {
+   "asn": 64502,
+   "name": "Northwind Fiber Co-op (AS64502)",
+   "info_type": "Cable/DSL/ISP"
+  },
+  {
+   "asn": 64503,
+   "name": "Contoso Universit\u00e9 R\u00e9seau",
+   "info_type": "Educational/Research"
+  },
+  {
+   "asn": 64504,
+   "name": "Fabrikam Hosting",
+   "info_type": "Content"
+  },
+  {
+   "asn": 64506,
+   "name": "",
+   "info_type": "NSP"
+  },
+  {
+   "asn": 64508,
+   "name": "Tailspin_Toys",
+   "info_type": ""
+  },
+  {
+   "asn": 64510,
+   "name": null,
+   "info_type": "Enterprise"
+  }
+ ]
+}

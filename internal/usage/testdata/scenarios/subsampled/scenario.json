@@ -1,0 +1,14 @@
+{
+ "day": "2026-10-06",
+ "max_records": 600,
+ "counters": "typical",
+ "fail": [],
+ "networks": true,
+ "network_types": true,
+ "catalogue": true,
+ "drop_fields": [],
+ "drop_before": "",
+ "rows": true,
+ "organization_aliases": "LITWARE=Litware;lit-ware = Litware",
+ "entries": "typical"
+}

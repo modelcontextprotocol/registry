@@ -1,4 +1,4 @@
-.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check ko-build ko-rebuild dev-compose dev-down clean publisher generate-schema check-schema
+.PHONY: help build test test-unit test-integration test-endpoints test-publish test-all lint lint-fix validate validate-schemas validate-examples check ko-build ko-rebuild dev-compose dev-down clean publisher usage-collector generate-schema check-schema
 
 # Use bash for all commands to support pipefail
 SHELL := /bin/bash
@@ -16,6 +16,10 @@ build: ## Build the registry application with version info
 publisher: ## Build the publisher tool with version info
 	@mkdir -p bin
 	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/mcp-publisher ./cmd/publisher
+
+usage-collector: ## Build the usage collector for the hosted instance with version info
+	@mkdir -p bin
+	go build -ldflags="-X main.Version=dev-$(shell git rev-parse --short HEAD) -X main.GitCommit=$(shell git rev-parse HEAD) -X main.BuildTime=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o bin/usage-collector ./cmd/usage-collector
 
 # Schema generation targets
 generate-schema: ## Generate server.schema.json from openapi.yaml

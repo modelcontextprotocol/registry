@@ -1,0 +1,6188 @@
+{
+"client_name": [
+[
+null,
+"(not recorded)"
+],
+[
+"",
+"(no user agent)"
+],
+[
+"   ",
+"(no user agent)"
+],
+[
+"\u2003\u2003",
+"(no user agent)"
+],
+[
+"\u001f",
+"(no user agent)"
+],
+[
+"\u001c \u001d",
+"(no user agent)"
+],
+[
+"curl/8.5.0",
+"curl"
+],
+[
+"Litware/1.0 (lw-http)",
+"Litware"
+],
+[
+"litware/2.0",
+"litware"
+],
+[
+"node",
+"node"
+],
+[
+"Node.js/20",
+"Node.js"
+],
+[
+"python-requests/2.32.3",
+"python-requests"
+],
+[
+"Python/3.12 aiohttp/3.9.5",
+"Python"
+],
+[
+"Go-http-client/2.0",
+"Go-http-client"
+],
+[
+"okhttp/4.12.0",
+"okhttp"
+],
+[
+"Mozilla",
+"Web browser"
+],
+[
+"Mozilla/5.0",
+"Web browser"
+],
+[
+"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15",
+"Web browser"
+],
+[
+"Mozilla/5.0 (compatible; ExampleBot/2.1; +https://bot.example)",
+"ExampleBot"
+],
+[
+"Mozilla/5.0 (compatible;)",
+"Web browser"
+],
+[
+"Mozilla/5.0 (compatible;\tTabBot)",
+"TabBot"
+],
+[
+"Mozilla/5.0 (compatible;\u2003EmBot/1)",
+"EmBot"
+],
+[
+"Mozilla/5.0 (compatible;\u000bVtBot)",
+"VtBot"
+],
+[
+"Mozilla/5.0 (compatible;\u00a0Spacebot/1.0)",
+"Spacebot"
+],
+[
+"Mozilla/5.0 (compatible; \u00e9Bot)",
+"Web browser"
+],
+[
+"Mozilla/4.0 compatible; a compatible; b",
+"a"
+],
+[
+"Mozilla/5.0 (COMPATIBLE; Shout)",
+"Web browser"
+],
+[
+"mozilla/5.0",
+"mozilla"
+],
+[
+"Mozilla(x)",
+"Web browser"
+],
+[
+"Mozilla /5.0",
+"Web browser"
+],
+[
+"(compatible; nothing)",
+"(no user agent)"
+],
+[
+"/leading-slash",
+"(no user agent)"
+],
+[
+"(paren",
+"(no user agent)"
+],
+[
+"\ud83d\ude00\ud83d\ude00/1.0",
+"??"
+],
+[
+"na\u00efve\u200bclient",
+"na?ve?client"
+],
+[
+"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+"xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+],
+[
+"\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9\u00e9",
+"????????????????????????????"
+],
+[
+"a|b<script>/1",
+"a?b?script?"
+],
+[
+"a+b_c.d-e~f",
+"a+b_c.d-e?f"
+],
+[
+"Tailspin_Toys",
+"Tailspin_Toys"
+],
+[
+"tailspin toys",
+"tailspin"
+],
+[
+"Litware\n/1.0",
+"Litware?"
+],
+[
+"\tcurl/8",
+"curl"
+],
+[
+"proseware-sync/0.3 (+https://proseware.example)",
+"proseware-sync"
+],
+[
+"trey-agent (build 7)",
+"trey-agent"
+],
+[
+"Test",
+"Test"
+],
+[
+"TEST",
+"TEST"
+],
+[
+"MyHTTPClient/2",
+"MyHTTPClient"
+],
+[
+"my-http-client-lib",
+"my-http-client-lib"
+],
+[
+"httpclient",
+"httpclient"
+],
+[
+"PYTHON",
+"PYTHON"
+],
+[
+"nodejs-thing",
+"nodejs-thing"
+],
+[
+"K6/0.5",
+"K6"
+],
+[
+"\u212a6/0.5",
+"?6"
+],
+[
+"got",
+"got"
+],
+[
+"gotcha",
+"gotcha"
+],
+[
+"Web browser",
+"Web"
+],
+[
+"(not recorded)",
+"(no user agent)"
+],
+[
+"(no user agent)",
+"(no user agent)"
+],
+[
+"java",
+"java"
+],
+[
+"javascript-thing",
+"javascript-thing"
+],
+[
+"rustacean",
+"rustacean"
+],
+[
+"swiftly",
+"swiftly"
+],
+[
+"ktor-client",
+"ktor-client"
+],
+[
+"urllib3",
+"urllib3"
+],
+[
+"Electron",
+"Electron"
+],
+[
+"bun",
+"bun"
+],
+[
+"bunny",
+"bunny"
+],
+[
+"fetch",
+"fetch"
+],
+[
+"fetcher",
+"fetcher"
+],
+[
+"requests",
+"requests"
+],
+[
+"PostmanRuntime/7.39",
+"PostmanRuntime"
+],
+[
+"lua-resty-http/0.17",
+"lua-resty-http"
+],
+[
+"Apache-HttpClient/4.5",
+"Apache-HttpClient"
+]
+],
+"generic_client": [
+[
+"(not recorded)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"curl",
+true
+],
+[
+"Litware",
+false
+],
+[
+"litware",
+false
+],
+[
+"node",
+true
+],
+[
+"Node.js",
+true
+],
+[
+"python-requests",
+true
+],
+[
+"Python",
+true
+],
+[
+"Go-http-client",
+true
+],
+[
+"okhttp",
+true
+],
+[
+"Web browser",
+true
+],
+[
+"Web browser",
+true
+],
+[
+"Web browser",
+true
+],
+[
+"ExampleBot",
+false
+],
+[
+"Web browser",
+true
+],
+[
+"TabBot",
+false
+],
+[
+"EmBot",
+false
+],
+[
+"VtBot",
+false
+],
+[
+"Spacebot",
+false
+],
+[
+"Web browser",
+true
+],
+[
+"a",
+false
+],
+[
+"Web browser",
+true
+],
+[
+"mozilla",
+false
+],
+[
+"Web browser",
+true
+],
+[
+"Web browser",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"??",
+false
+],
+[
+"na?ve?client",
+false
+],
+[
+"xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+false
+],
+[
+"????????????????????????????",
+false
+],
+[
+"a?b?script?",
+false
+],
+[
+"a+b_c.d-e?f",
+false
+],
+[
+"Tailspin_Toys",
+false
+],
+[
+"tailspin",
+false
+],
+[
+"Litware?",
+false
+],
+[
+"curl",
+true
+],
+[
+"proseware-sync",
+false
+],
+[
+"trey-agent",
+false
+],
+[
+"Test",
+true
+],
+[
+"TEST",
+true
+],
+[
+"MyHTTPClient",
+true
+],
+[
+"my-http-client-lib",
+true
+],
+[
+"httpclient",
+true
+],
+[
+"PYTHON",
+true
+],
+[
+"nodejs-thing",
+true
+],
+[
+"K6",
+true
+],
+[
+"?6",
+false
+],
+[
+"got",
+true
+],
+[
+"gotcha",
+false
+],
+[
+"Web",
+false
+],
+[
+"(no user agent)",
+true
+],
+[
+"(no user agent)",
+true
+],
+[
+"java",
+true
+],
+[
+"javascript-thing",
+true
+],
+[
+"rustacean",
+true
+],
+[
+"swiftly",
+true
+],
+[
+"ktor-client",
+true
+],
+[
+"urllib3",
+true
+],
+[
+"Electron",
+true
+],
+[
+"bun",
+true
+],
+[
+"bunny",
+false
+],
+[
+"fetch",
+true
+],
+[
+"fetcher",
+false
+],
+[
+"requests",
+true
+],
+[
+"PostmanRuntime",
+true
+],
+[
+"lua-resty-http",
+true
+],
+[
+"Apache-HttpClient",
+true
+]
+],
+"endpoint": [
+[
+"GET",
+"/",
+"Docs and home page"
+],
+[
+"POST",
+"/",
+"Docs and home page"
+],
+[
+"GET",
+"",
+"Unknown paths"
+],
+[
+"POST",
+"",
+"Unknown paths"
+],
+[
+"GET",
+"/openapi.yaml",
+"Docs and home page"
+],
+[
+"POST",
+"/openapi.yaml",
+"Docs and home page"
+],
+[
+"GET",
+"/openapi.yaml/",
+"Unknown paths"
+],
+[
+"POST",
+"/openapi.yaml/",
+"Unknown paths"
+],
+[
+"GET",
+"/docs",
+"Docs and home page"
+],
+[
+"POST",
+"/docs",
+"Docs and home page"
+],
+[
+"GET",
+"/docs/index.html",
+"Docs and home page"
+],
+[
+"POST",
+"/docs/index.html",
+"Docs and home page"
+],
+[
+"GET",
+"/docsify",
+"Docs and home page"
+],
+[
+"POST",
+"/docsify",
+"Docs and home page"
+],
+[
+"GET",
+"/doc",
+"Unknown paths"
+],
+[
+"POST",
+"/doc",
+"Unknown paths"
+],
+[
+"GET",
+"/v0",
+"Unknown paths"
+],
+[
+"POST",
+"/v0",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/",
+"Unknown paths"
+],
+[
+"POST",
+"/v0/",
+"Unknown paths"
+],
+[
+"GET",
+"/v0.1",
+"Unknown paths"
+],
+[
+"POST",
+"/v0.1",
+"Unknown paths"
+],
+[
+"GET",
+"/v0.1/",
+"Unknown paths"
+],
+[
+"POST",
+"/v0.1/",
+"Unknown paths"
+],
+[
+"GET",
+"/v0.10/servers",
+"Unknown paths"
+],
+[
+"POST",
+"/v0.10/servers",
+"Unknown paths"
+],
+[
+"GET",
+"/V0/servers",
+"Unknown paths"
+],
+[
+"POST",
+"/V0/servers",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/servers",
+"List servers (v0)"
+],
+[
+"POST",
+"/v0/servers",
+"Unknown paths"
+],
+[
+"GET",
+"/v0.1/servers",
+"List servers (v0.1)"
+],
+[
+"POST",
+"/v0.1/servers",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/servers/",
+"Other server calls"
+],
+[
+"POST",
+"/v0/servers/",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1//servers",
+"Unknown paths"
+],
+[
+"POST",
+"/v0.1//servers",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/servers/a",
+"Other server calls"
+],
+[
+"POST",
+"/v0/servers/a",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/a/versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0/servers/a/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/a/versions/",
+"Other server calls"
+],
+[
+"POST",
+"/v0/servers/a/versions/",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/a/versions//",
+"Other server calls"
+],
+[
+"POST",
+"/v0/servers/a/versions//",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/a/versions/1",
+"Get one server version"
+],
+[
+"POST",
+"/v0/servers/a/versions/1",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/a/versions/1/",
+"Other server calls"
+],
+[
+"POST",
+"/v0/servers/a/versions/1/",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/a/versions/1/2",
+"Other server calls"
+],
+[
+"POST",
+"/v0/servers/a/versions/1/2",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers//versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0/servers//versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0/servers/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/versions/versions",
+"Get one server version"
+],
+[
+"POST",
+"/v0/servers/versions/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/versions/versions/versions",
+"Get one server version"
+],
+[
+"POST",
+"/v0/servers/versions/versions/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0/servers/a/b/c/versions/latest",
+"Get one server version"
+],
+[
+"POST",
+"/v0/servers/a/b/c/versions/latest",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/io.github.example%2Fserver/versions/latest",
+"Get one server version"
+],
+[
+"POST",
+"/v0.1/servers/io.github.example%2Fserver/versions/latest",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/io.github.example%2Fserver/versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0.1/servers/io.github.example%2Fserver/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/io.github.example/server/versions/1.0.0",
+"Get one server version"
+],
+[
+"POST",
+"/v0.1/servers/io.github.example/server/versions/1.0.0",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/%E2%82/versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0.1/servers/%E2%82/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/\u00fcber%2Fx/versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0.1/servers/\u00fcber%2Fx/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/a%00b/versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0.1/servers/a%00b/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/a\u000bb/versions",
+"List one server's versions"
+],
+[
+"POST",
+"/v0.1/servers/a\u000bb/versions",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/a\u2028b/versions/x",
+"Get one server version"
+],
+[
+"POST",
+"/v0.1/servers/a\u2028b/versions/x",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/a/versions\f",
+"Other server calls"
+],
+[
+"POST",
+"/v0.1/servers/a/versions\f",
+"Other server calls"
+],
+[
+"GET",
+"/v0/publish",
+"Publish"
+],
+[
+"POST",
+"/v0/publish",
+"Publish"
+],
+[
+"GET",
+"/v0/publish/extra",
+"Publish"
+],
+[
+"POST",
+"/v0/publish/extra",
+"Publish"
+],
+[
+"GET",
+"/v0/publishing",
+"Publish"
+],
+[
+"POST",
+"/v0/publishing",
+"Publish"
+],
+[
+"GET",
+"/v0/auth",
+"Unknown paths"
+],
+[
+"POST",
+"/v0/auth",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/auth/",
+"Sign in"
+],
+[
+"POST",
+"/v0/auth/",
+"Sign in"
+],
+[
+"GET",
+"/v0/auth/github-at",
+"Sign in"
+],
+[
+"POST",
+"/v0/auth/github-at",
+"Sign in"
+],
+[
+"GET",
+"/v0/health",
+"Health and version checks"
+],
+[
+"POST",
+"/v0/health",
+"Health and version checks"
+],
+[
+"GET",
+"/v0/healthz",
+"Unknown paths"
+],
+[
+"POST",
+"/v0/healthz",
+"Unknown paths"
+],
+[
+"GET",
+"/v0.1/ping",
+"Health and version checks"
+],
+[
+"POST",
+"/v0.1/ping",
+"Health and version checks"
+],
+[
+"GET",
+"/v0.1/version",
+"Health and version checks"
+],
+[
+"POST",
+"/v0.1/version",
+"Health and version checks"
+],
+[
+"GET",
+"/v0/version/",
+"Unknown paths"
+],
+[
+"POST",
+"/v0/version/",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/unknown",
+"Unknown paths"
+],
+[
+"POST",
+"/v0/unknown",
+"Unknown paths"
+],
+[
+"GET",
+"/wp-login.php",
+"Unknown paths"
+],
+[
+"POST",
+"/wp-login.php",
+"Unknown paths"
+],
+[
+"GET",
+"v0/servers",
+"Unknown paths"
+],
+[
+"POST",
+"v0/servers",
+"Unknown paths"
+],
+[
+"GET",
+" /v0/servers",
+"Unknown paths"
+],
+[
+"POST",
+" /v0/servers",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/servers ",
+"Unknown paths"
+],
+[
+"POST",
+"/v0/servers ",
+"Unknown paths"
+],
+[
+"GET",
+"/v0.1/servers/a/versionsx",
+"Other server calls"
+],
+[
+"POST",
+"/v0.1/servers/a/versionsx",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers/a/xversions/1",
+"Other server calls"
+],
+[
+"POST",
+"/v0.1/servers/a/xversions/1",
+"Other server calls"
+],
+[
+"GET",
+"/v1/servers",
+"Unknown paths"
+],
+[
+"POST",
+"/v1/servers",
+"Unknown paths"
+],
+[
+"GET",
+"/v0.1/servers/a/versions/\u00e9",
+"Get one server version"
+],
+[
+"POST",
+"/v0.1/servers/a/versions/\u00e9",
+"Other server calls"
+],
+[
+"GET",
+"/v0.1/servers",
+"List servers (v0.1)"
+],
+[
+"HEAD",
+"/v0.1/servers",
+"List servers (v0.1)"
+],
+[
+"POST",
+"/v0.1/servers",
+"Unknown paths"
+],
+[
+"DELETE",
+"/v0.1/servers",
+"Unknown paths"
+],
+[
+"get",
+"/v0.1/servers",
+"Unknown paths"
+],
+[
+"",
+"/v0.1/servers",
+"Unknown paths"
+],
+[
+"None",
+"/v0.1/servers",
+"Unknown paths"
+],
+[
+"GET",
+"/v0/servers/a/versions/1",
+"Get one server version"
+],
+[
+"HEAD",
+"/v0/servers/a/versions/1",
+"Get one server version"
+],
+[
+"POST",
+"/v0/servers/a/versions/1",
+"Other server calls"
+],
+[
+"DELETE",
+"/v0/servers/a/versions/1",
+"Other server calls"
+],
+[
+"get",
+"/v0/servers/a/versions/1",
+"Other server calls"
+],
+[
+"",
+"/v0/servers/a/versions/1",
+"Other server calls"
+],
+[
+"None",
+"/v0/servers/a/versions/1",
+"Other server calls"
+]
+],
+"lookup": [
+[
+"GET",
+"/",
+null
+],
+[
+"POST",
+"/",
+null
+],
+[
+"HEAD",
+"/",
+null
+],
+[
+"GET",
+"",
+null
+],
+[
+"POST",
+"",
+null
+],
+[
+"HEAD",
+"",
+null
+],
+[
+"GET",
+"/openapi.yaml",
+null
+],
+[
+"POST",
+"/openapi.yaml",
+null
+],
+[
+"HEAD",
+"/openapi.yaml",
+null
+],
+[
+"GET",
+"/openapi.yaml/",
+null
+],
+[
+"POST",
+"/openapi.yaml/",
+null
+],
+[
+"HEAD",
+"/openapi.yaml/",
+null
+],
+[
+"GET",
+"/docs",
+null
+],
+[
+"POST",
+"/docs",
+null
+],
+[
+"HEAD",
+"/docs",
+null
+],
+[
+"GET",
+"/docs/index.html",
+null
+],
+[
+"POST",
+"/docs/index.html",
+null
+],
+[
+"HEAD",
+"/docs/index.html",
+null
+],
+[
+"GET",
+"/docsify",
+null
+],
+[
+"POST",
+"/docsify",
+null
+],
+[
+"HEAD",
+"/docsify",
+null
+],
+[
+"GET",
+"/doc",
+null
+],
+[
+"POST",
+"/doc",
+null
+],
+[
+"HEAD",
+"/doc",
+null
+],
+[
+"GET",
+"/v0",
+null
+],
+[
+"POST",
+"/v0",
+null
+],
+[
+"HEAD",
+"/v0",
+null
+],
+[
+"GET",
+"/v0/",
+null
+],
+[
+"POST",
+"/v0/",
+null
+],
+[
+"HEAD",
+"/v0/",
+null
+],
+[
+"GET",
+"/v0.1",
+null
+],
+[
+"POST",
+"/v0.1",
+null
+],
+[
+"HEAD",
+"/v0.1",
+null
+],
+[
+"GET",
+"/v0.1/",
+null
+],
+[
+"POST",
+"/v0.1/",
+null
+],
+[
+"HEAD",
+"/v0.1/",
+null
+],
+[
+"GET",
+"/v0.10/servers",
+null
+],
+[
+"POST",
+"/v0.10/servers",
+null
+],
+[
+"HEAD",
+"/v0.10/servers",
+null
+],
+[
+"GET",
+"/V0/servers",
+null
+],
+[
+"POST",
+"/V0/servers",
+null
+],
+[
+"HEAD",
+"/V0/servers",
+null
+],
+[
+"GET",
+"/v0/servers",
+null
+],
+[
+"POST",
+"/v0/servers",
+null
+],
+[
+"HEAD",
+"/v0/servers",
+null
+],
+[
+"GET",
+"/v0.1/servers",
+null
+],
+[
+"POST",
+"/v0.1/servers",
+null
+],
+[
+"HEAD",
+"/v0.1/servers",
+null
+],
+[
+"GET",
+"/v0/servers/",
+null
+],
+[
+"POST",
+"/v0/servers/",
+null
+],
+[
+"HEAD",
+"/v0/servers/",
+null
+],
+[
+"GET",
+"/v0.1//servers",
+null
+],
+[
+"POST",
+"/v0.1//servers",
+null
+],
+[
+"HEAD",
+"/v0.1//servers",
+null
+],
+[
+"GET",
+"/v0/servers/a",
+null
+],
+[
+"POST",
+"/v0/servers/a",
+null
+],
+[
+"HEAD",
+"/v0/servers/a",
+null
+],
+[
+"GET",
+"/v0/servers/a/versions",
+"a"
+],
+[
+"POST",
+"/v0/servers/a/versions",
+null
+],
+[
+"HEAD",
+"/v0/servers/a/versions",
+"a"
+],
+[
+"GET",
+"/v0/servers/a/versions/",
+"a"
+],
+[
+"POST",
+"/v0/servers/a/versions/",
+null
+],
+[
+"HEAD",
+"/v0/servers/a/versions/",
+"a"
+],
+[
+"GET",
+"/v0/servers/a/versions//",
+null
+],
+[
+"POST",
+"/v0/servers/a/versions//",
+null
+],
+[
+"HEAD",
+"/v0/servers/a/versions//",
+null
+],
+[
+"GET",
+"/v0/servers/a/versions/1",
+"a"
+],
+[
+"POST",
+"/v0/servers/a/versions/1",
+null
+],
+[
+"HEAD",
+"/v0/servers/a/versions/1",
+"a"
+],
+[
+"GET",
+"/v0/servers/a/versions/1/",
+"a"
+],
+[
+"POST",
+"/v0/servers/a/versions/1/",
+null
+],
+[
+"HEAD",
+"/v0/servers/a/versions/1/",
+"a"
+],
+[
+"GET",
+"/v0/servers/a/versions/1/2",
+null
+],
+[
+"POST",
+"/v0/servers/a/versions/1/2",
+null
+],
+[
+"HEAD",
+"/v0/servers/a/versions/1/2",
+null
+],
+[
+"GET",
+"/v0/servers//versions",
+null
+],
+[
+"POST",
+"/v0/servers//versions",
+null
+],
+[
+"HEAD",
+"/v0/servers//versions",
+null
+],
+[
+"GET",
+"/v0/servers/versions",
+null
+],
+[
+"POST",
+"/v0/servers/versions",
+null
+],
+[
+"HEAD",
+"/v0/servers/versions",
+null
+],
+[
+"GET",
+"/v0/servers/versions/versions",
+"versions"
+],
+[
+"POST",
+"/v0/servers/versions/versions",
+null
+],
+[
+"HEAD",
+"/v0/servers/versions/versions",
+"versions"
+],
+[
+"GET",
+"/v0/servers/versions/versions/versions",
+"versions"
+],
+[
+"POST",
+"/v0/servers/versions/versions/versions",
+null
+],
+[
+"HEAD",
+"/v0/servers/versions/versions/versions",
+"versions"
+],
+[
+"GET",
+"/v0/servers/a/b/c/versions/latest",
+"a/b/c"
+],
+[
+"POST",
+"/v0/servers/a/b/c/versions/latest",
+null
+],
+[
+"HEAD",
+"/v0/servers/a/b/c/versions/latest",
+"a/b/c"
+],
+[
+"GET",
+"/v0.1/servers/io.github.example%2Fserver/versions/latest",
+"io.github.example/server"
+],
+[
+"POST",
+"/v0.1/servers/io.github.example%2Fserver/versions/latest",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/io.github.example%2Fserver/versions/latest",
+"io.github.example/server"
+],
+[
+"GET",
+"/v0.1/servers/io.github.example%2Fserver/versions",
+"io.github.example/server"
+],
+[
+"POST",
+"/v0.1/servers/io.github.example%2Fserver/versions",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/io.github.example%2Fserver/versions",
+"io.github.example/server"
+],
+[
+"GET",
+"/v0.1/servers/io.github.example/server/versions/1.0.0",
+"io.github.example/server"
+],
+[
+"POST",
+"/v0.1/servers/io.github.example/server/versions/1.0.0",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/io.github.example/server/versions/1.0.0",
+"io.github.example/server"
+],
+[
+"GET",
+"/v0.1/servers/%E2%82/versions",
+"\ufffd"
+],
+[
+"POST",
+"/v0.1/servers/%E2%82/versions",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/%E2%82/versions",
+"\ufffd"
+],
+[
+"GET",
+"/v0.1/servers/\u00fcber%2Fx/versions",
+"\u00fcber/x"
+],
+[
+"POST",
+"/v0.1/servers/\u00fcber%2Fx/versions",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/\u00fcber%2Fx/versions",
+"\u00fcber/x"
+],
+[
+"GET",
+"/v0.1/servers/a%00b/versions",
+"a\u0000b"
+],
+[
+"POST",
+"/v0.1/servers/a%00b/versions",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/a%00b/versions",
+"a\u0000b"
+],
+[
+"GET",
+"/v0.1/servers/a\u000bb/versions",
+"a\u000bb"
+],
+[
+"POST",
+"/v0.1/servers/a\u000bb/versions",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/a\u000bb/versions",
+"a\u000bb"
+],
+[
+"GET",
+"/v0.1/servers/a\u2028b/versions/x",
+"a\u2028b"
+],
+[
+"POST",
+"/v0.1/servers/a\u2028b/versions/x",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/a\u2028b/versions/x",
+"a\u2028b"
+],
+[
+"GET",
+"/v0.1/servers/a/versions\f",
+null
+],
+[
+"POST",
+"/v0.1/servers/a/versions\f",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/a/versions\f",
+null
+],
+[
+"GET",
+"/v0/publish",
+null
+],
+[
+"POST",
+"/v0/publish",
+null
+],
+[
+"HEAD",
+"/v0/publish",
+null
+],
+[
+"GET",
+"/v0/publish/extra",
+null
+],
+[
+"POST",
+"/v0/publish/extra",
+null
+],
+[
+"HEAD",
+"/v0/publish/extra",
+null
+],
+[
+"GET",
+"/v0/publishing",
+null
+],
+[
+"POST",
+"/v0/publishing",
+null
+],
+[
+"HEAD",
+"/v0/publishing",
+null
+],
+[
+"GET",
+"/v0/auth",
+null
+],
+[
+"POST",
+"/v0/auth",
+null
+],
+[
+"HEAD",
+"/v0/auth",
+null
+],
+[
+"GET",
+"/v0/auth/",
+null
+],
+[
+"POST",
+"/v0/auth/",
+null
+],
+[
+"HEAD",
+"/v0/auth/",
+null
+],
+[
+"GET",
+"/v0/auth/github-at",
+null
+],
+[
+"POST",
+"/v0/auth/github-at",
+null
+],
+[
+"HEAD",
+"/v0/auth/github-at",
+null
+],
+[
+"GET",
+"/v0/health",
+null
+],
+[
+"POST",
+"/v0/health",
+null
+],
+[
+"HEAD",
+"/v0/health",
+null
+],
+[
+"GET",
+"/v0/healthz",
+null
+],
+[
+"POST",
+"/v0/healthz",
+null
+],
+[
+"HEAD",
+"/v0/healthz",
+null
+],
+[
+"GET",
+"/v0.1/ping",
+null
+],
+[
+"POST",
+"/v0.1/ping",
+null
+],
+[
+"HEAD",
+"/v0.1/ping",
+null
+],
+[
+"GET",
+"/v0.1/version",
+null
+],
+[
+"POST",
+"/v0.1/version",
+null
+],
+[
+"HEAD",
+"/v0.1/version",
+null
+],
+[
+"GET",
+"/v0/version/",
+null
+],
+[
+"POST",
+"/v0/version/",
+null
+],
+[
+"HEAD",
+"/v0/version/",
+null
+],
+[
+"GET",
+"/v0/unknown",
+null
+],
+[
+"POST",
+"/v0/unknown",
+null
+],
+[
+"HEAD",
+"/v0/unknown",
+null
+],
+[
+"GET",
+"/wp-login.php",
+null
+],
+[
+"POST",
+"/wp-login.php",
+null
+],
+[
+"HEAD",
+"/wp-login.php",
+null
+],
+[
+"GET",
+"v0/servers",
+null
+],
+[
+"POST",
+"v0/servers",
+null
+],
+[
+"HEAD",
+"v0/servers",
+null
+],
+[
+"GET",
+" /v0/servers",
+null
+],
+[
+"POST",
+" /v0/servers",
+null
+],
+[
+"HEAD",
+" /v0/servers",
+null
+],
+[
+"GET",
+"/v0/servers ",
+null
+],
+[
+"POST",
+"/v0/servers ",
+null
+],
+[
+"HEAD",
+"/v0/servers ",
+null
+],
+[
+"GET",
+"/v0.1/servers/a/versionsx",
+null
+],
+[
+"POST",
+"/v0.1/servers/a/versionsx",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/a/versionsx",
+null
+],
+[
+"GET",
+"/v0.1/servers/a/xversions/1",
+null
+],
+[
+"POST",
+"/v0.1/servers/a/xversions/1",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/a/xversions/1",
+null
+],
+[
+"GET",
+"/v1/servers",
+null
+],
+[
+"POST",
+"/v1/servers",
+null
+],
+[
+"HEAD",
+"/v1/servers",
+null
+],
+[
+"GET",
+"/v0.1/servers/a/versions/\u00e9",
+"a"
+],
+[
+"POST",
+"/v0.1/servers/a/versions/\u00e9",
+null
+],
+[
+"HEAD",
+"/v0.1/servers/a/versions/\u00e9",
+"a"
+]
+],
+"listing_use": [
+[
+"",
+"First page only"
+],
+[
+"limit=100",
+"First page only"
+],
+[
+"cursor=abc&limit=100",
+"Paging through all versions"
+],
+[
+"cursor=abc&version=latest",
+"Paging through latest versions"
+],
+[
+"cursor=abc&version=latest&version=1",
+"Paging through all versions"
+],
+[
+"version=latest",
+"First page only"
+],
+[
+"cursor&version=latest",
+"Paging through latest versions"
+],
+[
+"cursor=&version=LATEST",
+"Paging through all versions"
+],
+[
+"search=x",
+"Search by name"
+],
+[
+"search",
+"Search by name"
+],
+[
+"Search=x",
+"First page only"
+],
+[
+"se%61rch=x",
+"Search by name"
+],
+[
+"a=1;search=x",
+"First page only"
+],
+[
+"updated_since=1",
+"Incremental sync"
+],
+[
+"updated_since=1&search=2",
+"Search by name"
+],
+[
+"cursor=1&updated_since=2",
+"Incremental sync"
+],
+[
+"&&=&x",
+"First page only"
+],
+[
+"=",
+"First page only"
+],
+[
+"==",
+"First page only"
+],
+[
+"a=b=c",
+"First page only"
+],
+[
+"limit=",
+"First page only"
+],
+[
+"limit",
+"First page only"
+],
+[
+"limit=100&limit=5",
+"First page only"
+],
+[
+"limit=+7",
+"First page only"
+],
+[
+"limit=%ZZ",
+"First page only"
+],
+[
+"limit=%",
+"First page only"
+],
+[
+"limit=%4",
+"First page only"
+],
+[
+"limit=%E2%82",
+"First page only"
+],
+[
+"limit=%FF%FE",
+"First page only"
+],
+[
+"limit=%E2%82%AC%F0%9F%98",
+"First page only"
+],
+[
+"limit=%ED%A0%80x",
+"First page only"
+],
+[
+"limit=%C3\u00e9%A9",
+"First page only"
+],
+[
+"limit=1%2C000%20rows",
+"First page only"
+],
+[
+"limit=\u0661\u0660",
+"First page only"
+],
+[
+"limit=abcdefghijklmnop",
+"First page only"
+],
+[
+"limit=a+b",
+"First page only"
+],
+[
+"limit=%2B",
+"First page only"
+],
+[
+"limit=%00",
+"First page only"
+],
+[
+"limit=%f0%9f%98%80",
+"First page only"
+],
+[
+"limit=%C0%AF",
+"First page only"
+],
+[
+"limit=%E0%80%AF",
+"First page only"
+],
+[
+"limit=%F4%90%80%80",
+"First page only"
+],
+[
+"limit=%F8%88%80%80%80",
+"First page only"
+],
+[
+"limit=%80",
+"First page only"
+],
+[
+"limit=%E2%28%A1",
+"First page only"
+],
+[
+"limit=%E2%82%28",
+"First page only"
+],
+[
+"limit=%F0%28%8C%BC",
+"First page only"
+],
+[
+"limit=%F0%90%28%BC",
+"First page only"
+],
+[
+"limit=%F0%90%8C%28",
+"First page only"
+],
+[
+"cursor=a%26b&limit=1",
+"Paging through all versions"
+]
+],
+"parse_qs": [
+[
+"",
+{}
+],
+[
+"limit=100",
+{
+"limit": [
+"100"
+]
+}
+],
+[
+"cursor=abc&limit=100",
+{
+"cursor": [
+"abc"
+],
+"limit": [
+"100"
+]
+}
+],
+[
+"cursor=abc&version=latest",
+{
+"cursor": [
+"abc"
+],
+"version": [
+"latest"
+]
+}
+],
+[
+"cursor=abc&version=latest&version=1",
+{
+"cursor": [
+"abc"
+],
+"version": [
+"latest",
+"1"
+]
+}
+],
+[
+"version=latest",
+{
+"version": [
+"latest"
+]
+}
+],
+[
+"cursor&version=latest",
+{
+"cursor": [
+""
+],
+"version": [
+"latest"
+]
+}
+],
+[
+"cursor=&version=LATEST",
+{
+"cursor": [
+""
+],
+"version": [
+"LATEST"
+]
+}
+],
+[
+"search=x",
+{
+"search": [
+"x"
+]
+}
+],
+[
+"search",
+{
+"search": [
+""
+]
+}
+],
+[
+"Search=x",
+{
+"Search": [
+"x"
+]
+}
+],
+[
+"se%61rch=x",
+{
+"search": [
+"x"
+]
+}
+],
+[
+"a=1;search=x",
+{
+"a": [
+"1;search=x"
+]
+}
+],
+[
+"updated_since=1",
+{
+"updated_since": [
+"1"
+]
+}
+],
+[
+"updated_since=1&search=2",
+{
+"updated_since": [
+"1"
+],
+"search": [
+"2"
+]
+}
+],
+[
+"cursor=1&updated_since=2",
+{
+"cursor": [
+"1"
+],
+"updated_since": [
+"2"
+]
+}
+],
+[
+"&&=&x",
+{
+"": [
+""
+],
+"x": [
+""
+]
+}
+],
+[
+"=",
+{
+"": [
+""
+]
+}
+],
+[
+"==",
+{
+"": [
+"="
+]
+}
+],
+[
+"a=b=c",
+{
+"a": [
+"b=c"
+]
+}
+],
+[
+"limit=",
+{
+"limit": [
+""
+]
+}
+],
+[
+"limit",
+{
+"limit": [
+""
+]
+}
+],
+[
+"limit=100&limit=5",
+{
+"limit": [
+"100",
+"5"
+]
+}
+],
+[
+"limit=+7",
+{
+"limit": [
+" 7"
+]
+}
+],
+[
+"limit=%ZZ",
+{
+"limit": [
+"%ZZ"
+]
+}
+],
+[
+"limit=%",
+{
+"limit": [
+"%"
+]
+}
+],
+[
+"limit=%4",
+{
+"limit": [
+"%4"
+]
+}
+],
+[
+"limit=%E2%82",
+{
+"limit": [
+"\ufffd"
+]
+}
+],
+[
+"limit=%FF%FE",
+{
+"limit": [
+"\ufffd\ufffd"
+]
+}
+],
+[
+"limit=%E2%82%AC%F0%9F%98",
+{
+"limit": [
+"\u20ac\ufffd"
+]
+}
+],
+[
+"limit=%ED%A0%80x",
+{
+"limit": [
+"\ufffd\ufffd\ufffdx"
+]
+}
+],
+[
+"limit=%C3\u00e9%A9",
+{
+"limit": [
+"\ufffd\u00e9\ufffd"
+]
+}
+],
+[
+"limit=1%2C000%20rows",
+{
+"limit": [
+"1,000 rows"
+]
+}
+],
+[
+"limit=\u0661\u0660",
+{
+"limit": [
+"\u0661\u0660"
+]
+}
+],
+[
+"limit=abcdefghijklmnop",
+{
+"limit": [
+"abcdefghijklmnop"
+]
+}
+],
+[
+"limit=a+b",
+{
+"limit": [
+"a b"
+]
+}
+],
+[
+"limit=%2B",
+{
+"limit": [
+"+"
+]
+}
+],
+[
+"limit=%00",
+{
+"limit": [
+"\u0000"
+]
+}
+],
+[
+"limit=%f0%9f%98%80",
+{
+"limit": [
+"\ud83d\ude00"
+]
+}
+],
+[
+"limit=%C0%AF",
+{
+"limit": [
+"\ufffd\ufffd"
+]
+}
+],
+[
+"limit=%E0%80%AF",
+{
+"limit": [
+"\ufffd\ufffd\ufffd"
+]
+}
+],
+[
+"limit=%F4%90%80%80",
+{
+"limit": [
+"\ufffd\ufffd\ufffd\ufffd"
+]
+}
+],
+[
+"limit=%F8%88%80%80%80",
+{
+"limit": [
+"\ufffd\ufffd\ufffd\ufffd\ufffd"
+]
+}
+],
+[
+"limit=%80",
+{
+"limit": [
+"\ufffd"
+]
+}
+],
+[
+"limit=%E2%28%A1",
+{
+"limit": [
+"\ufffd(\ufffd"
+]
+}
+],
+[
+"limit=%E2%82%28",
+{
+"limit": [
+"\ufffd("
+]
+}
+],
+[
+"limit=%F0%28%8C%BC",
+{
+"limit": [
+"\ufffd(\ufffd\ufffd"
+]
+}
+],
+[
+"limit=%F0%90%28%BC",
+{
+"limit": [
+"\ufffd(\ufffd"
+]
+}
+],
+[
+"limit=%F0%90%8C%28",
+{
+"limit": [
+"\ufffd("
+]
+}
+],
+[
+"cursor=a%26b&limit=1",
+{
+"cursor": [
+"a&b"
+],
+"limit": [
+"1"
+]
+}
+]
+],
+"outcome": [
+[
+"200",
+"Success"
+],
+[
+"304",
+"Redirect or not modified"
+],
+[
+"404",
+"Not found (404)"
+],
+[
+"429",
+"Rate-limited (429)"
+],
+[
+"500",
+"Server error"
+],
+[
+"503",
+"Server error"
+],
+[
+"400",
+"Other client error"
+],
+[
+"401",
+"Other client error"
+],
+[
+"301",
+"Redirect or not modified"
+],
+[
+"101",
+"Other"
+],
+[
+"",
+"Other"
+],
+[
+"abc",
+"Other"
+],
+[
+"2xx",
+"Success"
+],
+[
+"4",
+"Other client error"
+],
+[
+"\u0662\u0660\u0660",
+"Other"
+],
+[
+"None",
+"Other"
+],
+[
+"True",
+"Other"
+],
+[
+"200.0",
+"Success"
+],
+[
+"0",
+"Other"
+]
+],
+"organization": [
+[
+"curl",
+"Acme",
+"organization",
+"Acme",
+"Network owner"
+],
+[
+"curl",
+"Amazon (AWS)",
+"cloud hosting",
+"Unnamed clients on cloud hosting",
+null
+],
+[
+"curl",
+"Example Telecom",
+"internet provider",
+"Unnamed clients on internet providers",
+null
+],
+[
+"curl",
+"Unknown",
+"unknown",
+"Unnamed clients on internet providers",
+null
+],
+[
+"proseware",
+"Acme",
+"organization",
+"proseware",
+"User agent"
+],
+[
+"proseware",
+"Amazon (AWS)",
+"cloud hosting",
+"proseware",
+"User agent"
+],
+[
+"proseware",
+"Example Telecom",
+"internet provider",
+"proseware",
+"User agent"
+],
+[
+"proseware",
+"Unknown",
+"unknown",
+"proseware",
+"User agent"
+],
+[
+"Web browser",
+"Acme",
+"organization",
+"Acme",
+"Network owner"
+],
+[
+"Web browser",
+"Amazon (AWS)",
+"cloud hosting",
+"Unnamed clients on cloud hosting",
+null
+],
+[
+"Web browser",
+"Example Telecom",
+"internet provider",
+"Unnamed clients on internet providers",
+null
+],
+[
+"Web browser",
+"Unknown",
+"unknown",
+"Unnamed clients on internet providers",
+null
+],
+[
+"(not recorded)",
+"Acme",
+"organization",
+"Acme",
+"Network owner"
+],
+[
+"(not recorded)",
+"Amazon (AWS)",
+"cloud hosting",
+"Unnamed clients on cloud hosting",
+null
+],
+[
+"(not recorded)",
+"Example Telecom",
+"internet provider",
+"Unnamed clients on internet providers",
+null
+],
+[
+"(not recorded)",
+"Unknown",
+"unknown",
+"Unnamed clients on internet providers",
+null
+],
+[
+"python-requests",
+"Acme",
+"organization",
+"Acme",
+"Network owner"
+],
+[
+"python-requests",
+"Amazon (AWS)",
+"cloud hosting",
+"Unnamed clients on cloud hosting",
+null
+],
+[
+"python-requests",
+"Example Telecom",
+"internet provider",
+"Unnamed clients on internet providers",
+null
+],
+[
+"python-requests",
+"Unknown",
+"unknown",
+"Unnamed clients on internet providers",
+null
+],
+[
+"Unnamed",
+"Acme",
+"organization",
+"Unnamed",
+"User agent"
+],
+[
+"Unnamed",
+"Amazon (AWS)",
+"cloud hosting",
+"Unnamed",
+"User agent"
+],
+[
+"Unnamed",
+"Example Telecom",
+"internet provider",
+"Unnamed",
+"User agent"
+],
+[
+"Unnamed",
+"Unknown",
+"unknown",
+"Unnamed",
+"User agent"
+]
+],
+"urlsplit": [
+[
+"/v0.1/servers?limit=5",
+"/v0.1/servers",
+"limit=5"
+],
+[
+"/v0.1/servers?limit=5#frag",
+"/v0.1/servers",
+"limit=5"
+],
+[
+"/v0.1/servers#frag?limit=9",
+"/v0.1/servers",
+""
+],
+[
+"//evil.example/v0/servers",
+"/v0/servers",
+""
+],
+[
+"//evil.example",
+"",
+""
+],
+[
+"//evil.example?x=1",
+"",
+"x=1"
+],
+[
+"///v0/servers",
+"/v0/servers",
+""
+],
+[
+"http://registry.example.org/v0.1/servers?limit=4",
+"/v0.1/servers",
+"limit=4"
+],
+[
+"HTTPS://registry.example.org:443/v0/servers",
+"/v0/servers",
+""
+],
+[
+"v0.1/servers",
+"v0.1/servers",
+""
+],
+[
+"foo:bar/v0/servers",
+"bar/v0/servers",
+""
+],
+[
+"1http://x/v0/servers",
+"1http://x/v0/servers",
+""
+],
+[
+"a+b-c.d:rest",
+"rest",
+""
+],
+[
+"a_b:rest",
+"a_b:rest",
+""
+],
+[
+":rest",
+":rest",
+""
+],
+[
+"a:",
+"",
+""
+],
+[
+"",
+"",
+""
+],
+[
+"*",
+"*",
+""
+],
+[
+"?",
+"",
+""
+],
+[
+"#",
+"",
+""
+],
+[
+"?#",
+"",
+""
+],
+[
+"/a?b?c#d#e",
+"/a",
+"b?c"
+],
+[
+"/v0.1/servers\t?limit=\n8",
+"/v0.1/servers",
+"limit=8"
+],
+[
+"\r\n",
+"",
+""
+],
+[
+" /v0.1/servers",
+" /v0.1/servers",
+""
+],
+[
+"/path with space",
+"/path with space",
+""
+],
+[
+"/\u00e9?\u00e9=1",
+"/\u00e9",
+"\u00e9=1"
+],
+[
+"//[::1]/x",
+"/x",
+""
+],
+[
+"//[::1/x",
+null,
+null
+],
+[
+"//::1]/x",
+null,
+null
+],
+[
+"//\u2100/x",
+null,
+null
+],
+[
+"//ex\uff0fample/x",
+null,
+null
+],
+[
+"//ex\u2048ample/x",
+null,
+null
+],
+[
+"//user@host:80/x",
+"/x",
+""
+],
+[
+"//ho\u00e9st/x",
+"/x",
+""
+],
+[
+"http:///x",
+"/x",
+""
+],
+[
+"x://",
+"",
+""
+],
+[
+"/a//b",
+"/a//b",
+""
+],
+[
+"//",
+"",
+""
+],
+[
+"/\u0000",
+"/\u0000",
+""
+],
+[
+"mailto:someone@example.org",
+"someone@example.org",
+""
+],
+[
+"HTTP:/single",
+"/single",
+""
+],
+[
+"\u00e9:x",
+"\u00e9:x",
+""
+],
+[
+"a\u00e9:x",
+"a\u00e9:x",
+""
+]
+],
+"unquote": [
+[
+"",
+""
+],
+[
+"limit=100",
+"limit=100"
+],
+[
+"cursor=abc&limit=100",
+"cursor=abc&limit=100"
+],
+[
+"cursor=abc&version=latest",
+"cursor=abc&version=latest"
+],
+[
+"cursor=abc&version=latest&version=1",
+"cursor=abc&version=latest&version=1"
+],
+[
+"version=latest",
+"version=latest"
+],
+[
+"cursor&version=latest",
+"cursor&version=latest"
+],
+[
+"cursor=&version=LATEST",
+"cursor=&version=LATEST"
+],
+[
+"search=x",
+"search=x"
+],
+[
+"search",
+"search"
+],
+[
+"Search=x",
+"Search=x"
+],
+[
+"se%61rch=x",
+"search=x"
+],
+[
+"a=1;search=x",
+"a=1;search=x"
+],
+[
+"updated_since=1",
+"updated_since=1"
+],
+[
+"updated_since=1&search=2",
+"updated_since=1&search=2"
+],
+[
+"cursor=1&updated_since=2",
+"cursor=1&updated_since=2"
+],
+[
+"&&=&x",
+"&&=&x"
+],
+[
+"=",
+"="
+],
+[
+"==",
+"=="
+],
+[
+"a=b=c",
+"a=b=c"
+],
+[
+"limit=",
+"limit="
+],
+[
+"limit",
+"limit"
+],
+[
+"limit=100&limit=5",
+"limit=100&limit=5"
+],
+[
+"limit=+7",
+"limit=+7"
+],
+[
+"limit=%ZZ",
+"limit=%ZZ"
+],
+[
+"limit=%",
+"limit=%"
+],
+[
+"limit=%4",
+"limit=%4"
+],
+[
+"limit=%E2%82",
+"limit=\ufffd"
+],
+[
+"limit=%FF%FE",
+"limit=\ufffd\ufffd"
+],
+[
+"limit=%E2%82%AC%F0%9F%98",
+"limit=\u20ac\ufffd"
+],
+[
+"limit=%ED%A0%80x",
+"limit=\ufffd\ufffd\ufffdx"
+],
+[
+"limit=%C3\u00e9%A9",
+"limit=\ufffd\u00e9\ufffd"
+],
+[
+"limit=1%2C000%20rows",
+"limit=1,000 rows"
+],
+[
+"limit=\u0661\u0660",
+"limit=\u0661\u0660"
+],
+[
+"limit=abcdefghijklmnop",
+"limit=abcdefghijklmnop"
+],
+[
+"limit=a+b",
+"limit=a+b"
+],
+[
+"limit=%2B",
+"limit=+"
+],
+[
+"limit=%00",
+"limit=\u0000"
+],
+[
+"limit=%f0%9f%98%80",
+"limit=\ud83d\ude00"
+],
+[
+"limit=%C0%AF",
+"limit=\ufffd\ufffd"
+],
+[
+"limit=%E0%80%AF",
+"limit=\ufffd\ufffd\ufffd"
+],
+[
+"limit=%F4%90%80%80",
+"limit=\ufffd\ufffd\ufffd\ufffd"
+],
+[
+"limit=%F8%88%80%80%80",
+"limit=\ufffd\ufffd\ufffd\ufffd\ufffd"
+],
+[
+"limit=%80",
+"limit=\ufffd"
+],
+[
+"limit=%E2%28%A1",
+"limit=\ufffd(\ufffd"
+],
+[
+"limit=%E2%82%28",
+"limit=\ufffd("
+],
+[
+"limit=%F0%28%8C%BC",
+"limit=\ufffd(\ufffd\ufffd"
+],
+[
+"limit=%F0%90%28%BC",
+"limit=\ufffd(\ufffd"
+],
+[
+"limit=%F0%90%8C%28",
+"limit=\ufffd("
+],
+[
+"cursor=a%26b&limit=1",
+"cursor=a&b&limit=1"
+],
+[
+"/",
+"/"
+],
+[
+"",
+""
+],
+[
+"/openapi.yaml",
+"/openapi.yaml"
+],
+[
+"/openapi.yaml/",
+"/openapi.yaml/"
+],
+[
+"/docs",
+"/docs"
+],
+[
+"/docs/index.html",
+"/docs/index.html"
+],
+[
+"/docsify",
+"/docsify"
+],
+[
+"/doc",
+"/doc"
+],
+[
+"/v0",
+"/v0"
+],
+[
+"/v0/",
+"/v0/"
+],
+[
+"/v0.1",
+"/v0.1"
+],
+[
+"/v0.1/",
+"/v0.1/"
+],
+[
+"/v0.10/servers",
+"/v0.10/servers"
+],
+[
+"/V0/servers",
+"/V0/servers"
+],
+[
+"/v0/servers",
+"/v0/servers"
+],
+[
+"/v0.1/servers",
+"/v0.1/servers"
+],
+[
+"/v0/servers/",
+"/v0/servers/"
+],
+[
+"/v0.1//servers",
+"/v0.1//servers"
+],
+[
+"/v0/servers/a",
+"/v0/servers/a"
+],
+[
+"/v0/servers/a/versions",
+"/v0/servers/a/versions"
+],
+[
+"/v0/servers/a/versions/",
+"/v0/servers/a/versions/"
+],
+[
+"/v0/servers/a/versions//",
+"/v0/servers/a/versions//"
+],
+[
+"/v0/servers/a/versions/1",
+"/v0/servers/a/versions/1"
+],
+[
+"/v0/servers/a/versions/1/",
+"/v0/servers/a/versions/1/"
+],
+[
+"/v0/servers/a/versions/1/2",
+"/v0/servers/a/versions/1/2"
+],
+[
+"/v0/servers//versions",
+"/v0/servers//versions"
+],
+[
+"/v0/servers/versions",
+"/v0/servers/versions"
+],
+[
+"/v0/servers/versions/versions",
+"/v0/servers/versions/versions"
+],
+[
+"/v0/servers/versions/versions/versions",
+"/v0/servers/versions/versions/versions"
+],
+[
+"/v0/servers/a/b/c/versions/latest",
+"/v0/servers/a/b/c/versions/latest"
+],
+[
+"/v0.1/servers/io.github.example%2Fserver/versions/latest",
+"/v0.1/servers/io.github.example/server/versions/latest"
+],
+[
+"/v0.1/servers/io.github.example%2Fserver/versions",
+"/v0.1/servers/io.github.example/server/versions"
+],
+[
+"/v0.1/servers/io.github.example/server/versions/1.0.0",
+"/v0.1/servers/io.github.example/server/versions/1.0.0"
+],
+[
+"/v0.1/servers/%E2%82/versions",
+"/v0.1/servers/\ufffd/versions"
+],
+[
+"/v0.1/servers/\u00fcber%2Fx/versions",
+"/v0.1/servers/\u00fcber/x/versions"
+],
+[
+"/v0.1/servers/a%00b/versions",
+"/v0.1/servers/a\u0000b/versions"
+],
+[
+"/v0.1/servers/a\u000bb/versions",
+"/v0.1/servers/a\u000bb/versions"
+],
+[
+"/v0.1/servers/a\u2028b/versions/x",
+"/v0.1/servers/a\u2028b/versions/x"
+],
+[
+"/v0.1/servers/a/versions\f",
+"/v0.1/servers/a/versions\f"
+],
+[
+"/v0/publish",
+"/v0/publish"
+],
+[
+"/v0/publish/extra",
+"/v0/publish/extra"
+],
+[
+"/v0/publishing",
+"/v0/publishing"
+],
+[
+"/v0/auth",
+"/v0/auth"
+],
+[
+"/v0/auth/",
+"/v0/auth/"
+],
+[
+"/v0/auth/github-at",
+"/v0/auth/github-at"
+],
+[
+"/v0/health",
+"/v0/health"
+],
+[
+"/v0/healthz",
+"/v0/healthz"
+],
+[
+"/v0.1/ping",
+"/v0.1/ping"
+],
+[
+"/v0.1/version",
+"/v0.1/version"
+],
+[
+"/v0/version/",
+"/v0/version/"
+],
+[
+"/v0/unknown",
+"/v0/unknown"
+],
+[
+"/wp-login.php",
+"/wp-login.php"
+],
+[
+"v0/servers",
+"v0/servers"
+],
+[
+" /v0/servers",
+" /v0/servers"
+],
+[
+"/v0/servers ",
+"/v0/servers "
+],
+[
+"/v0.1/servers/a/versionsx",
+"/v0.1/servers/a/versionsx"
+],
+[
+"/v0.1/servers/a/xversions/1",
+"/v0.1/servers/a/xversions/1"
+],
+[
+"/v1/servers",
+"/v1/servers"
+],
+[
+"/v0.1/servers/a/versions/\u00e9",
+"/v0.1/servers/a/versions/\u00e9"
+]
+],
+"str": [
+[
+"0",
+"0"
+],
+[
+"-0",
+"0"
+],
+[
+"1",
+"1"
+],
+[
+"200",
+"200"
+],
+[
+"-5",
+"-5"
+],
+[
+"12345678901234567890",
+"12345678901234567890"
+],
+[
+"0.0",
+"0.0"
+],
+[
+"-0.0",
+"-0.0"
+],
+[
+"1.0",
+"1.0"
+],
+[
+"200.0",
+"200.0"
+],
+[
+"0.004",
+"0.004"
+],
+[
+"1e-05",
+"1e-05"
+],
+[
+"1E-5",
+"1e-05"
+],
+[
+"0.0001",
+"0.0001"
+],
+[
+"0.00001",
+"1e-05"
+],
+[
+"1e16",
+"1e+16"
+],
+[
+"1e15",
+"1000000000000000.0"
+],
+[
+"123456789012345678",
+"123456789012345678"
+],
+[
+"1.5e300",
+"1.5e+300"
+],
+[
+"1e400",
+"inf"
+],
+[
+"-1e400",
+"-inf"
+],
+[
+"2048.9",
+"2048.9"
+],
+[
+"-2048.9",
+"-2048.9"
+],
+[
+"1e3",
+"1000.0"
+],
+[
+"0.1",
+"0.1"
+],
+[
+"100.0",
+"100.0"
+],
+[
+"5e-324",
+"5e-324"
+],
+[
+"1.7976931348623157e308",
+"1.7976931348623157e+308"
+],
+[
+"true",
+"True"
+],
+[
+"false",
+"False"
+],
+[
+"null",
+"None"
+],
+[
+"\"\"",
+""
+],
+[
+"\"0\"",
+"0"
+],
+[
+"\"00\"",
+"00"
+],
+[
+"\" 12 \"",
+" 12 "
+],
+[
+"\"+12\"",
+"+12"
+],
+[
+"\"-12\"",
+"-12"
+],
+[
+"\"1_000\"",
+"1_000"
+],
+[
+"\"_1\"",
+"_1"
+],
+[
+"\"1_\"",
+"1_"
+],
+[
+"\"1__0\"",
+"1__0"
+],
+[
+"\"12.5\"",
+"12.5"
+],
+[
+"\"1e3\"",
+"1e3"
+],
+[
+"\"abc\"",
+"abc"
+],
+[
+"\"\u0663\u0662\"",
+"\u0663\u0662"
+],
+[
+"\"\\u0663_\\u0662\"",
+"\u0663_\u0662"
+],
+[
+"\"0x10\"",
+"0x10"
+],
+[
+"\"\\t7\\n\"",
+"\t7\n"
+],
+[
+"\"\\u001f8\"",
+"\u001f8"
+],
+[
+"\"\\u00a09\"",
+"\u00a09"
+],
+[
+"\"99999999999999999999999\"",
+"99999999999999999999999"
+],
+[
+"\"- 1\"",
+"- 1"
+],
+[
+"\"+\"",
+"+"
+],
+[
+"\"1 2\"",
+"1 2"
+],
+[
+"\"gzip\"",
+"gzip"
+],
+[
+"\"None\"",
+"None"
+]
+],
+"truthy": [
+[
+"0",
+false
+],
+[
+"-0",
+false
+],
+[
+"1",
+true
+],
+[
+"200",
+true
+],
+[
+"-5",
+true
+],
+[
+"12345678901234567890",
+true
+],
+[
+"0.0",
+false
+],
+[
+"-0.0",
+false
+],
+[
+"1.0",
+true
+],
+[
+"200.0",
+true
+],
+[
+"0.004",
+true
+],
+[
+"1e-05",
+true
+],
+[
+"1E-5",
+true
+],
+[
+"0.0001",
+true
+],
+[
+"0.00001",
+true
+],
+[
+"1e16",
+true
+],
+[
+"1e15",
+true
+],
+[
+"123456789012345678",
+true
+],
+[
+"1.5e300",
+true
+],
+[
+"1e400",
+true
+],
+[
+"-1e400",
+true
+],
+[
+"2048.9",
+true
+],
+[
+"-2048.9",
+true
+],
+[
+"1e3",
+true
+],
+[
+"0.1",
+true
+],
+[
+"100.0",
+true
+],
+[
+"5e-324",
+true
+],
+[
+"1.7976931348623157e308",
+true
+],
+[
+"true",
+true
+],
+[
+"false",
+false
+],
+[
+"null",
+false
+],
+[
+"\"\"",
+false
+],
+[
+"\"0\"",
+true
+],
+[
+"\"00\"",
+true
+],
+[
+"\" 12 \"",
+true
+],
+[
+"\"+12\"",
+true
+],
+[
+"\"-12\"",
+true
+],
+[
+"\"1_000\"",
+true
+],
+[
+"\"_1\"",
+true
+],
+[
+"\"1_\"",
+true
+],
+[
+"\"1__0\"",
+true
+],
+[
+"\"12.5\"",
+true
+],
+[
+"\"1e3\"",
+true
+],
+[
+"\"abc\"",
+true
+],
+[
+"\"\u0663\u0662\"",
+true
+],
+[
+"\"\\u0663_\\u0662\"",
+true
+],
+[
+"\"0x10\"",
+true
+],
+[
+"\"\\t7\\n\"",
+true
+],
+[
+"\"\\u001f8\"",
+true
+],
+[
+"\"\\u00a09\"",
+true
+],
+[
+"\"99999999999999999999999\"",
+true
+],
+[
+"\"- 1\"",
+true
+],
+[
+"\"+\"",
+true
+],
+[
+"\"1 2\"",
+true
+],
+[
+"\"gzip\"",
+true
+],
+[
+"\"None\"",
+true
+]
+],
+"int": [
+[
+"0",
+0.0
+],
+[
+"-0",
+0.0
+],
+[
+"1",
+1.0
+],
+[
+"200",
+200.0
+],
+[
+"-5",
+-5.0
+],
+[
+"12345678901234567890",
+1.2345678901234567e+19
+],
+[
+"0.0",
+0.0
+],
+[
+"-0.0",
+0.0
+],
+[
+"1.0",
+1.0
+],
+[
+"200.0",
+200.0
+],
+[
+"0.004",
+0.0
+],
+[
+"1e-05",
+0.0
+],
+[
+"1E-5",
+0.0
+],
+[
+"0.0001",
+0.0
+],
+[
+"0.00001",
+0.0
+],
+[
+"1e16",
+1e+16
+],
+[
+"1e15",
+1000000000000000.0
+],
+[
+"123456789012345678",
+1.2345678901234568e+17
+],
+[
+"1.5e300",
+1.5e+300
+],
+[
+"1e400",
+null
+],
+[
+"-1e400",
+null
+],
+[
+"2048.9",
+2048.0
+],
+[
+"-2048.9",
+-2048.0
+],
+[
+"1e3",
+1000.0
+],
+[
+"0.1",
+0.0
+],
+[
+"100.0",
+100.0
+],
+[
+"5e-324",
+0.0
+],
+[
+"1.7976931348623157e308",
+1.7976931348623157e+308
+],
+[
+"true",
+1.0
+],
+[
+"false",
+0.0
+],
+[
+"null",
+null
+],
+[
+"\"\"",
+null
+],
+[
+"\"0\"",
+0.0
+],
+[
+"\"00\"",
+0.0
+],
+[
+"\" 12 \"",
+12.0
+],
+[
+"\"+12\"",
+12.0
+],
+[
+"\"-12\"",
+-12.0
+],
+[
+"\"1_000\"",
+1000.0
+],
+[
+"\"_1\"",
+null
+],
+[
+"\"1_\"",
+null
+],
+[
+"\"1__0\"",
+null
+],
+[
+"\"12.5\"",
+null
+],
+[
+"\"1e3\"",
+null
+],
+[
+"\"abc\"",
+null
+],
+[
+"\"\u0663\u0662\"",
+32.0
+],
+[
+"\"\\u0663_\\u0662\"",
+32.0
+],
+[
+"\"0x10\"",
+null
+],
+[
+"\"\\t7\\n\"",
+7.0
+],
+[
+"\"\\u001f8\"",
+null
+],
+[
+"\"\\u00a09\"",
+9.0
+],
+[
+"\"99999999999999999999999\"",
+1e+23
+],
+[
+"\"- 1\"",
+null
+],
+[
+"\"+\"",
+null
+],
+[
+"\"1 2\"",
+null
+],
+[
+"\"gzip\"",
+null
+],
+[
+"\"None\"",
+null
+]
+],
+"describe": [
+[
+"LITWARE - Litware, Inc.",
+"",
+"",
+"Litware, Inc.",
+"organization"
+],
+[
+"AMAZON-02 - Amazon.com, Inc.",
+"",
+"",
+"Amazon (AWS)",
+"cloud hosting"
+],
+[
+"Example Net",
+"Lit-Ware Hosting",
+"",
+"Lit-Ware Hosting",
+"organization"
+],
+[
+"EXAMPLE-TELECOM - Example Telecom Ltd",
+"",
+"",
+"Example Telecom Ltd",
+"internet provider"
+],
+[
+"ACME-CORP - Acme Widgets Inc",
+"",
+"",
+"Acme Widgets Inc",
+"organization"
+],
+[
+"ACME2 - Acme Widgets Inc",
+"",
+"NSP",
+"Acme Widgets Inc",
+"internet provider"
+],
+[
+"EXBANK_NET Example Savings Bank",
+"",
+"",
+"Example Savings Bank",
+"organization"
+],
+[
+"NORTHWIND - Northwind Traders",
+"Northwind Fiber Co-op (AS64502)",
+"Cable/DSL/ISP",
+"Northwind Fiber Co-op (AS64502)",
+"internet provider"
+],
+[
+"CONTOSO - Contoso Ltd",
+"Contoso Universit\u00e9 R\u00e9seau",
+"Educational/Research",
+"Contoso Universite Reseau",
+"organization"
+],
+[
+"AS64504 Fabrikam Hosting",
+"Fabrikam Hosting",
+"Content",
+"Fabrikam Hosting",
+"organization"
+],
+[
+"EXAMPLE-DIGI - Example Digi",
+"",
+"",
+"Example Digi",
+"internet provider"
+],
+[
+"EXAMPLE-DIGITAL - Example Digital",
+"",
+"",
+"Example Digital",
+"organization"
+],
+[
+"DISPATCH - Lakeshore Dispatch",
+"",
+"Enterprise",
+"Lakeshore Dispatch",
+"organization"
+],
+[
+"TAILSPIN - Tailspin Toys K.K.",
+"Tailspin_Toys",
+"",
+"Tailspin Toys",
+"organization"
+],
+[
+"AS64511",
+"",
+"",
+"AS64511",
+"organization"
+],
+[
+"AS64511  Two Spaces",
+"",
+"",
+"Two Spaces",
+"organization"
+],
+[
+"AS Name",
+"",
+"",
+"AS Name",
+"organization"
+],
+[
+"AS\u0661\u0662 Arabic Digits",
+"",
+"",
+"Arabic Digits",
+"organization"
+],
+[
+"AS12\u00a0Nbsp Name",
+"",
+"",
+"Nbsp Name",
+"organization"
+],
+[
+"as64511 lower",
+"",
+"",
+"as64511 lower",
+"organization"
+],
+[
+"XAS64511 Prefix",
+"",
+"",
+"XAS64511 Prefix",
+"organization"
+],
+[
+"WINGTIP_LABS Wingtip Research Labs With A Very Long Registered Name",
+"",
+"",
+"Wingtip Research Labs With A Ver",
+"organization"
+],
+[
+"A-B - C - D",
+"",
+"",
+"C - D",
+"organization"
+],
+[
+"NoHandle Name",
+"",
+"",
+"NoHandle Name",
+"organization"
+],
+[
+"HANDLE-ONLY",
+"",
+"",
+"HANDLE-ONLY",
+"organization"
+],
+[
+"HANDLE-X ",
+"",
+"",
+"HANDLE-X",
+"organization"
+],
+[
+"",
+"",
+"",
+"Unknown",
+"organization"
+],
+[
+"Not routed",
+"",
+"",
+"Not routed",
+"organization"
+],
+[
+"ISP",
+"",
+"",
+"ISP",
+"internet provider"
+],
+[
+"MY ISP",
+"",
+"",
+"MY ISP",
+"internet provider"
+],
+[
+"MYISP",
+"",
+"",
+"MYISP",
+"organization"
+],
+[
+"ISP1 - One",
+"",
+"",
+"One",
+"organization"
+],
+[
+"\u00c9ISP - Accent Before",
+"",
+"",
+"Accent Before",
+"organization"
+],
+[
+"ISP\u00c9 - Accent After",
+"",
+"",
+"Accent After",
+"organization"
+],
+[
+"X - ISP_NET",
+"",
+"",
+"ISP NET",
+"organization"
+],
+[
+"X - NTT.",
+"",
+"",
+"NTT.",
+"internet provider"
+],
+[
+"X - (COX)",
+"",
+"",
+"(COX)",
+"internet provider"
+],
+[
+"X - TELE2",
+"",
+"",
+"TELE2",
+"internet provider"
+],
+[
+"X - TELE20",
+"",
+"",
+"TELE20",
+"organization"
+],
+[
+"X - Stra\u00dfe Wirele\u00df",
+"",
+"",
+"Strae Wirele",
+"internet provider"
+],
+[
+"X - \ufb01ber Net",
+"",
+"",
+"fiber Net",
+"internet provider"
+],
+[
+"X - at&t Services",
+"",
+"",
+"at&t Services",
+"internet provider"
+],
+[
+"X - Bell Canada",
+"",
+"",
+"Bell Canada",
+"internet provider"
+],
+[
+"X - bell  canada",
+"",
+"",
+"bell  canada",
+"organization"
+],
+[
+"X - Route",
+"",
+"Route Server",
+"Route",
+"internet provider"
+],
+[
+"X - Plain",
+"",
+"Network Services",
+"Plain",
+"internet provider"
+],
+[
+"X - Plain",
+"",
+"route server",
+"Plain",
+"organization"
+],
+[
+"X - Plain",
+"Listed |<Name>",
+"",
+"Listed Name",
+"organization"
+],
+[
+"X - Plain",
+"___",
+"",
+"Plain",
+"organization"
+],
+[
+"X - !!!",
+"",
+"",
+"Unknown",
+"organization"
+],
+[
+"X - Long Long Long Long Long Long Long Long Long Long Long Long ",
+"",
+"",
+"Long Long Long Long Long Long Lo",
+"organization"
+],
+[
+"X - \u4e2d\u6587 Name",
+"",
+"",
+"Name",
+"organization"
+],
+[
+"X - Name",
+"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA B C",
+"",
+"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"organization"
+],
+[
+"X - \u2167 Roman",
+"",
+"",
+"VIII Roman",
+"organization"
+],
+[
+"LEASEWEB-NL - x",
+"",
+"",
+"Leaseweb",
+"cloud hosting"
+],
+[
+"X - M247 Europe",
+"",
+"",
+"M247",
+"cloud hosting"
+],
+[
+"X - Latitude.sh",
+"",
+"",
+"Latitude.sh",
+"cloud hosting"
+],
+[
+"X - microsoft",
+"google",
+"",
+"Microsoft (Azure)",
+"cloud hosting"
+],
+[
+"X - Fastly",
+"Amazon",
+"",
+"Amazon (AWS)",
+"cloud hosting"
+]
+],
+"describe_alias": [
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"LITWARE - Litware, Inc.",
+"",
+"",
+"Litware",
+"organization"
+],
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"Example Net",
+"Lit-Ware Hosting",
+"",
+"Litware",
+"organization"
+],
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"LIT-WARE-EU - Litware Europe on Amazon",
+"",
+"",
+"Litware",
+"organization"
+],
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"AMAZON-02 - Amazon.com, Inc.",
+"",
+"",
+"Amazon (AWS)",
+"cloud hosting"
+],
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"WOODGROVE-AS - Woodgrove Telecom Services",
+"",
+"NSP",
+"Woodgrove Bank, N.A.",
+"organization"
+],
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"LITWAR - Not Quite",
+"",
+"",
+"Not Quite",
+"organization"
+],
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"X - Plain",
+"woodgrove",
+"Cable/DSL/ISP",
+"Woodgrove Bank, N.A.",
+"organization"
+],
+[
+"LITWARE=Litware; lit-ware =Litware\nwoodgrove=Woodgrove Bank, N.A.",
+"NORTHWIND - Northwind Traders",
+"",
+"",
+"Northwind Traders",
+"organization"
+]
+],
+"tidy": [
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"Lit-Ware Hosting",
+"Lit-Ware Hosting"
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"Northwind Fiber Co-op (AS64502)",
+"Northwind Fiber Co-op (AS64502)"
+],
+[
+"Contoso Universit\u00e9 R\u00e9seau",
+"Contoso Universite Reseau"
+],
+[
+"Fabrikam Hosting",
+"Fabrikam Hosting"
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"Tailspin_Toys",
+"Tailspin Toys"
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"Listed |<Name>",
+"Listed Name"
+],
+[
+"___",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA B C",
+"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"",
+""
+],
+[
+"google",
+"google"
+],
+[
+"Amazon",
+"Amazon"
+],
+[
+"LITWARE - Litware, Inc.",
+"LITWARE - Litware, Inc."
+],
+[
+"AMAZON-02 - Amazon.com, Inc.",
+"AMAZON-02 - Amazon.com, Inc."
+],
+[
+"Example Net",
+"Example Net"
+],
+[
+"EXAMPLE-TELECOM - Example Telecom Ltd",
+"EXAMPLE-TELECOM - Example Teleco"
+],
+[
+"ACME-CORP - Acme Widgets Inc",
+"ACME-CORP - Acme Widgets Inc"
+],
+[
+"ACME2 - Acme Widgets Inc",
+"ACME2 - Acme Widgets Inc"
+],
+[
+"EXBANK_NET Example Savings Bank",
+"EXBANK NET Example Savings Bank"
+],
+[
+"NORTHWIND - Northwind Traders",
+"NORTHWIND - Northwind Traders"
+],
+[
+"CONTOSO - Contoso Ltd",
+"CONTOSO - Contoso Ltd"
+],
+[
+"AS64504 Fabrikam Hosting",
+"AS64504 Fabrikam Hosting"
+],
+[
+"EXAMPLE-DIGI - Example Digi",
+"EXAMPLE-DIGI - Example Digi"
+],
+[
+"EXAMPLE-DIGITAL - Example Digital",
+"EXAMPLE-DIGITAL - Example Digita"
+],
+[
+"DISPATCH - Lakeshore Dispatch",
+"DISPATCH - Lakeshore Dispatch"
+],
+[
+"TAILSPIN - Tailspin Toys K.K.",
+"TAILSPIN - Tailspin Toys K.K."
+],
+[
+"AS64511",
+"AS64511"
+],
+[
+"AS64511  Two Spaces",
+"AS64511  Two Spaces"
+],
+[
+"AS Name",
+"AS Name"
+],
+[
+"AS\u0661\u0662 Arabic Digits",
+"AS Arabic Digits"
+],
+[
+"AS12\u00a0Nbsp Name",
+"AS12 Nbsp Name"
+],
+[
+"as64511 lower",
+"as64511 lower"
+],
+[
+"XAS64511 Prefix",
+"XAS64511 Prefix"
+],
+[
+"WINGTIP_LABS Wingtip Research Labs With A Very Long Registered Name",
+"WINGTIP LABS Wingtip Research La"
+],
+[
+"A-B - C - D",
+"A-B - C - D"
+],
+[
+"NoHandle Name",
+"NoHandle Name"
+],
+[
+"HANDLE-ONLY",
+"HANDLE-ONLY"
+],
+[
+"HANDLE-X ",
+"HANDLE-X"
+],
+[
+"",
+""
+],
+[
+"Not routed",
+"Not routed"
+],
+[
+"ISP",
+"ISP"
+],
+[
+"MY ISP",
+"MY ISP"
+],
+[
+"MYISP",
+"MYISP"
+],
+[
+"ISP1 - One",
+"ISP1 - One"
+],
+[
+"\u00c9ISP - Accent Before",
+"EISP - Accent Before"
+],
+[
+"ISP\u00c9 - Accent After",
+"ISPE - Accent After"
+],
+[
+"X - ISP_NET",
+"X - ISP NET"
+],
+[
+"X - NTT.",
+"X - NTT."
+],
+[
+"X - (COX)",
+"X - (COX)"
+],
+[
+"X - TELE2",
+"X - TELE2"
+],
+[
+"X - TELE20",
+"X - TELE20"
+],
+[
+"X - Stra\u00dfe Wirele\u00df",
+"X - Strae Wirele"
+],
+[
+"X - \ufb01ber Net",
+"X - fiber Net"
+],
+[
+"X - at&t Services",
+"X - at&t Services"
+],
+[
+"X - Bell Canada",
+"X - Bell Canada"
+],
+[
+"X - bell  canada",
+"X - bell  canada"
+],
+[
+"X - Route",
+"X - Route"
+],
+[
+"X - Plain",
+"X - Plain"
+],
+[
+"X - Plain",
+"X - Plain"
+],
+[
+"X - Plain",
+"X - Plain"
+],
+[
+"X - Plain",
+"X - Plain"
+],
+[
+"X - !!!",
+"X -"
+],
+[
+"X - Long Long Long Long Long Long Long Long Long Long Long Long ",
+"X - Long Long Long Long Long Lon"
+],
+[
+"X - \u4e2d\u6587 Name",
+"X -  Name"
+],
+[
+"X - Name",
+"X - Name"
+],
+[
+"X - \u2167 Roman",
+"X - VIII Roman"
+],
+[
+"LEASEWEB-NL - x",
+"LEASEWEB-NL - x"
+],
+[
+"X - M247 Europe",
+"X - M247 Europe"
+],
+[
+"X - Latitude.sh",
+"X - Latitude.sh"
+],
+[
+"X - microsoft",
+"X - microsoft"
+],
+[
+"X - Fastly",
+"X - Fastly"
+]
+],
+"address": [
+[
+"192.0.2.1",
+"3221225985"
+],
+[
+"192.0.2.255",
+"3221226239"
+],
+[
+"198.51.100.7",
+"3325256711"
+],
+[
+"203.0.113.200",
+"3405803976"
+],
+[
+"0.0.0.0",
+"0"
+],
+[
+"255.255.255.255",
+"4294967295"
+],
+[
+"192.0.2.300",
+null
+],
+[
+"192.0.2.007",
+null
+],
+[
+"192.0.2",
+null
+],
+[
+"192.0.2.1.1",
+null
+],
+[
+" 192.0.2.5",
+null
+],
+[
+"192.0.2.5 ",
+null
+],
+[
+"192.0.2.5, 198.51.100.7",
+null
+],
+[
+"",
+null
+],
+[
+"not-an-address",
+null
+],
+[
+"None",
+null
+],
+[
+"2001:db8::1",
+"42540766411282592856903984951653826561"
+],
+[
+"2001:DB8:0:0:0:0:0:1",
+"42540766411282592856903984951653826561"
+],
+[
+"::ffff:192.0.2.5",
+"281473902969349"
+],
+[
+"::192.0.2.5",
+"3221225989"
+],
+[
+"::1",
+"1"
+],
+[
+"::",
+"0"
+],
+[
+"2001:db8::1%eth0",
+"42540766411282592856903984951653826561"
+],
+[
+"2001:db8::1%",
+null
+],
+[
+"2001:db8:::1",
+null
+],
+[
+"2001:db8:3:4:5:6:7:8",
+"42540766411286219708151212534669967368"
+],
+[
+"2001:db8:3:4:5:6:7:8:9",
+null
+],
+[
+"12345::1",
+null
+],
+[
+"::ffff:192.0.2.007",
+null
+],
+[
+"\u0661\u0669\u0662.0.2.4",
+null
+],
+[
+"192.0.2.-4",
+null
+],
+[
+"0192.0.2.4",
+null
+],
+[
+"192.0.2.4/24",
+null
+],
+[
+"[::1]",
+null
+],
+[
+"2001:db8::g",
+null
+]
+],
+"pct": [
+[
+0,
+100,
+"0%"
+],
+[
+0,
+0,
+"\u2013"
+],
+[
+5,
+0,
+"\u2013"
+],
+[
+5,
+-1,
+"\u2013"
+],
+[
+0.0001,
+100,
+"<0.1%"
+],
+[
+0.099,
+100,
+"<0.1%"
+],
+[
+0.1,
+100,
+"0.1%"
+],
+[
+0.95,
+10,
+"9.5%"
+],
+[
+9.94,
+100,
+"9.9%"
+],
+[
+9.95,
+100,
+"9.9%"
+],
+[
+9.96,
+100,
+"10.0%"
+],
+[
+10,
+100,
+"10%"
+],
+[
+10.5,
+100,
+"10%"
+],
+[
+11.5,
+100,
+"12%"
+],
+[
+99.4,
+100,
+"99%"
+],
+[
+99.5,
+100,
+"99.5%"
+],
+[
+99.94,
+100,
+"99.9%"
+],
+[
+99.95,
+100,
+"99.9%"
+],
+[
+99.999,
+100,
+"99.9%"
+],
+[
+100,
+100,
+"100%"
+],
+[
+150,
+100,
+"150%"
+],
+[
+-1,
+100,
+"<0.1%"
+],
+[
+1,
+3,
+"33%"
+],
+[
+2,
+3,
+"67%"
+],
+[
+1e-09,
+1,
+"<0.1%"
+],
+[
+0.25,
+100,
+"0.2%"
+],
+[
+0.35,
+100,
+"0.3%"
+],
+[
+2.5,
+100,
+"2.5%"
+],
+[
+0.5,
+100,
+"0.5%"
+],
+[
+1.5,
+100,
+"1.5%"
+]
+],
+"count": [
+[
+0,
+"0"
+],
+[
+0.4,
+"0"
+],
+[
+0.5,
+"0"
+],
+[
+1.5,
+"2"
+],
+[
+2.5,
+"2"
+],
+[
+999.5,
+"1,000"
+],
+[
+1234.5,
+"1,234"
+],
+[
+9999.4,
+"9,999"
+],
+[
+9999.5,
+"10,000"
+],
+[
+10000,
+"10K"
+],
+[
+12345,
+"12K"
+],
+[
+12500,
+"12K"
+],
+[
+13500,
+"14K"
+],
+[
+999499,
+"999K"
+],
+[
+999500,
+"1000K"
+],
+[
+999999.9,
+"1000K"
+],
+[
+1000000.0,
+"1.00M"
+],
+[
+1234567,
+"1.23M"
+],
+[
+31415926.0,
+"31.42M"
+],
+[
+1005000.0,
+"1.00M"
+],
+[
+1000000000.0,
+"1000.00M"
+],
+[
+4321.2,
+"4,321"
+],
+[
+27182.8,
+"27K"
+]
+],
+"page_size": [
+[
+"default (30)",
+"default (30)"
+],
+[
+"100",
+"limit=100"
+],
+[
+"",
+"limit="
+],
+[
+"abcdefghijklmnop",
+"limit=abcdefgh"
+],
+[
+"1,000 rows",
+"limit=1?000?ro"
+],
+[
+"\u0661\u0660",
+"limit=??"
+],
+[
+"%ZZ",
+"limit=?ZZ"
+],
+[
+"\ufffd\ufffd",
+"limit=??"
+],
+[
+"a b",
+"limit=a?b"
+],
+[
+"12345678",
+"limit=12345678"
+],
+[
+"123456789",
+"limit=12345678"
+]
+],
+"type_label": [
+[
+[],
+[],
+"No package or remote"
+],
+[
+[],
+[
+"sse"
+],
+"Remote only"
+],
+[
+[],
+[
+"streamable-http"
+],
+"Remote only"
+],
+[
+[],
+[
+"sse",
+"streamable-http"
+],
+"Remote only"
+],
+[
+[],
+[
+"websocket"
+],
+"Remote only"
+],
+[
+[
+"npm"
+],
+[],
+"npm"
+],
+[
+[
+"npm"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"npm"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"npm"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"npm"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"pypi"
+],
+[],
+"PyPI"
+],
+[
+[
+"pypi"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"pypi"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"pypi"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"pypi"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"oci"
+],
+[],
+"Docker (OCI)"
+],
+[
+[
+"oci"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"oci"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"oci"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"oci"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"nuget"
+],
+[],
+"NuGet"
+],
+[
+[
+"nuget"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"nuget"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"nuget"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"nuget"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"mcpb"
+],
+[],
+"MCPB"
+],
+[
+[
+"mcpb"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"mcpb"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"mcpb"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"mcpb"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"cargo"
+],
+[],
+"Cargo"
+],
+[
+[
+"cargo"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"cargo"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"cargo"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"cargo"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"gem"
+],
+[],
+"gem"
+],
+[
+[
+"gem"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"gem"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"gem"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"gem"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"unknown"
+],
+[],
+"unknown"
+],
+[
+[
+"unknown"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"unknown"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"unknown"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"unknown"
+],
+[
+"websocket"
+],
+"Remote and package"
+],
+[
+[
+"npm",
+"pypi"
+],
+[],
+"Several package types"
+],
+[
+[
+"npm",
+"pypi"
+],
+[
+"sse"
+],
+"Remote and package"
+],
+[
+[
+"npm",
+"pypi"
+],
+[
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"npm",
+"pypi"
+],
+[
+"sse",
+"streamable-http"
+],
+"Remote and package"
+],
+[
+[
+"npm",
+"pypi"
+],
+[
+"websocket"
+],
+"Remote and package"
+]
+]
+}
