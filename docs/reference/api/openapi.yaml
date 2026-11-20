@@ -664,11 +664,12 @@ components:
       properties:
         registryType:
           type: string
-          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'cargo', 'oci', 'nuget', 'mcpb')
+          description: Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'cargo', 'rubygems', 'oci', 'nuget', 'mcpb')
           examples:
             - "npm"
             - "pypi"
             - "cargo"
+            - "rubygems"
             - "oci"
             - "nuget"
             - "mcpb"
@@ -684,6 +685,7 @@ components:
             - "https://api.nuget.org/v3/index.json"
             - "https://github.com"
             - "https://gitlab.com"
+            - "https://rubygems.org"
         identifier:
           type: string
           description: Package identifier - either a package name (for registries) or URL (for direct downloads)
@@ -706,7 +708,7 @@ components:
         runtimeHint:
           type: string
           description: A hint to help clients determine the appropriate runtime for the package. This field should be provided when `runtimeArguments` are present.
-          examples: [npx, uvx, docker, dnx]
+          examples: [npx, uvx, docker, dnx, gem]
         transport:
           $ref: '#/components/schemas/LocalTransport'
           description: Transport protocol configuration for the package

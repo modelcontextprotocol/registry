@@ -243,17 +243,19 @@
             "https://docker.io",
             "https://api.nuget.org/v3/index.json",
             "https://github.com",
-            "https://gitlab.com"
+            "https://gitlab.com",
+            "https://rubygems.org"
           ],
           "format": "uri",
           "type": "string"
         },
         "registryType": {
-          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'cargo', 'oci', 'nuget', 'mcpb')",
+          "description": "Registry type indicating how to download packages (e.g., 'npm', 'pypi', 'cargo', 'rubygems', 'oci', 'nuget', 'mcpb')",
           "examples": [
             "npm",
             "pypi",
             "cargo",
+            "rubygems",
             "oci",
             "nuget",
             "mcpb"
@@ -273,7 +275,8 @@
             "npx",
             "uvx",
             "docker",
-            "dnx"
+            "dnx",
+            "gem"
           ],
           "type": "string"
         },

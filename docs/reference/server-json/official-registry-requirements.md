@@ -34,6 +34,7 @@ Only trusted public registries are supported. Private registries and alternative
 - **PyPI**: `https://pypi.org` only
 - **NuGet**: `https://api.nuget.org/v3/index.json` only
 - **Cargo**: `https://crates.io` only
+- **RubyGems**: `https://rubygems.org` only
 - **Docker/OCI**:
   - Docker Hub (`docker.io`)
   - GitHub Container Registry (`ghcr.io`)
