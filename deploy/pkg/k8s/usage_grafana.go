@@ -98,12 +98,13 @@ func usageDashboardFiles() (map[string]string, error) {
 type usageGrafana struct {
 	// dataSource provisions the data source, or deletes it.
 	dataSource string
-	// alertRules provisions the two rules, or deletes them. It is only used
-	// where alerting is configured.
+	// alertRules provisions the two rules, where alerting is configured.
 	alertRules string
-	mounts     pulumi.Array
-	password   pulumi.Map
-	checksum   string
+	// alertRemovals deletes them again, whether or not it still is.
+	alertRemovals string
+	mounts        pulumi.Array
+	password      pulumi.Map
+	checksum      string
 }
 
 // Grafana reads data source and provider files only when it starts, so the pod
@@ -171,9 +172,9 @@ func enabledUsageGrafana(ctx *pulumi.Context, provider *kubernetes.Provider, ns 
 // The dashboards go with their provider, which is no longer mounted.
 func retiredUsageGrafana() *usageGrafana {
 	return &usageGrafana{
-		dataSource: usageDataSourceRetired,
-		alertRules: usageAlertRulesRetired,
-		checksum:   usageChecksum("retired", usageDataSourceRetired),
+		dataSource:    usageDataSourceRetired,
+		alertRemovals: usageAlertRulesRetired,
+		checksum:      usageChecksum("retired", usageDataSourceRetired),
 	}
 }
 
@@ -185,12 +186,19 @@ func (u *usageGrafana) dataSourceFiles(files pulumi.StringMap) pulumi.StringMap 
 	return files
 }
 
-// alertingFiles are provisioned beside the registry's own alert rules.
-func (u *usageGrafana) alertingFiles() map[string]string {
+// alertingFiles are provisioned beside the registry's own alert rules: the
+// rules where alerting is configured, and their removal regardless of it.
+func (u *usageGrafana) alertingFiles() (rules, removals map[string]string) {
 	if u == nil {
-		return nil
+		return nil, nil
 	}
-	return map[string]string{usageAlertingFile: u.alertRules}
+	if u.alertRules != "" {
+		rules = map[string]string{usageAlertingFile: u.alertRules}
+	}
+	if u.alertRemovals != "" {
+		removals = map[string]string{usageAlertingFile: u.alertRemovals}
+	}
+	return rules, removals
 }
 
 // addTo adds the dashboard mounts, the password variable and the restart

@@ -166,9 +166,9 @@
       "options": {"showHeader": true, "cellHeight": "sm"}
     },
     {
-      "id": 127, "type": "timeseries", "title": "Names seen per day, by ${period}", "description": "Average per day within each ${period}. These are daily counts, not the number of distinct names across the whole ${period}.", "gridPos": {"x": 12, "y": 63, "w": 12, "h": 10},
+      "id": 127, "type": "timeseries", "title": "Names seen per day, by ${period}", "description": "Average per day within each ${period}. These are daily counts, not the number of distinct names across the whole ${period}. A day stored without the network-owner table is left out of the network count.", "gridPos": {"x": 12, "y": 63, "w": 12, "h": 10},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
-      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT b.time, round(b.named_orgs) AS \"Named organizations and products\", round(b.user_agents) AS \"Distinct user agents\", (SELECT round(avg(x.n)) FROM (SELECT count(*) FILTER (WHERE s.kind = 'named') + coalesce(max(s.rollup_count), 0) AS n FROM usage_share s WHERE s.dimension = 'network' AND date_trunc('${period}', s.day, 'UTC') = b.bucket AND $__timeFilter(s.day) GROUP BY s.day) x) AS \"Networks\" FROM usage_buckets('${period}', $__timeFrom(), $__timeTo()) b ORDER BY 1"}],
+      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT b.time, round(b.named_orgs) AS \"Named organizations and products\", round(b.user_agents) AS \"Distinct user agents\", (SELECT round(avg(coalesce(x.n, 0))) FROM usage_daily d LEFT JOIN (SELECT s.day, count(*) FILTER (WHERE s.kind = 'named') + coalesce(max(s.rollup_count), 0) AS n FROM usage_share s WHERE s.dimension = 'network' AND $__timeFilter(s.day) GROUP BY s.day) x USING (day) WHERE date_trunc('${period}', d.day, 'UTC') = b.bucket AND $__timeFilter(d.day) AND NOT EXISTS (SELECT 1 FROM unnest(d.caveats) AS caveat WHERE caveat LIKE 'The network-owner table could not be loaded%')) AS \"Networks\" FROM usage_buckets('${period}', $__timeFrom(), $__timeTo()) b ORDER BY 1"}],
       "fieldConfig": {"defaults": {"unit": "short", "min": 0, "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6}}, "overrides": []},
       "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
@@ -272,9 +272,9 @@
       "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
     },
     {
-      "id": 163, "type": "stat", "title": "Servers looked up per day, at least", "description": "Distinct catalogued servers seen in each day's sample of lookups, averaged over the selected range. The sample holds about one lookup in 75, so the true number is higher.", "gridPos": {"x": 12, "y": 115, "w": 6, "h": 4},
+      "id": 163, "type": "stat", "title": "Servers looked up per day, at least", "description": "Distinct catalogued servers seen in each day's sample of lookups, averaged over the days in the selected range. A day on which no catalogued server was looked up counts as zero; a day stored without a catalogue is left out. The sample holds about one lookup in 75, so the true number is higher.", "gridPos": {"x": 12, "y": 115, "w": 6, "h": 4},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
-      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT avg(n) AS \"Servers\" FROM (SELECT day, count(*) FILTER (WHERE kind = 'named') + coalesce(max(rollup_count), 0) AS n FROM usage_share WHERE dimension = 'server' AND $__timeFilter(day) GROUP BY day) x"}],
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT avg(coalesce(x.n, 0)) AS \"Servers\" FROM usage_daily d LEFT JOIN (SELECT day, count(*) FILTER (WHERE kind = 'named') + coalesce(max(rollup_count), 0) AS n FROM usage_share WHERE dimension = 'server' AND $__timeFilter(day) GROUP BY day) x USING (day) WHERE $__timeFilter(d.day) AND NOT EXISTS (SELECT 1 FROM unnest(d.caveats) AS caveat WHERE caveat LIKE 'No published servers were available%')"}],
       "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
       "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
     },

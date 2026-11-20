@@ -879,11 +879,28 @@ The archive goes into the database `registry_usage`, as the role that owns it.
 After `grafana-pg` has been rebuilt, the operator creates that database and
 the roles again from their `Database` and `DatabaseRole` objects; wait until
 `kubectl -n monitoring get databases.postgresql.cnpg.io registry-usage -o jsonpath='{.status.applied}'`
-prints `true`. Then:
+prints `true`. Then make sure nothing is writing to the database:
 
 ```bash
-# Keep the collector from writing during the restore.
+# No new scheduled runs.
 kubectl -n monitoring patch cronjob registry-usage-collector -p '{"spec":{"suspend":true}}'
+
+# Suspending does not stop a run that has already started, nor one started by
+# hand. List the runs, then wait for the active ones to finish or stop them.
+# Stopping is safe: a run stores each day in one transaction. Deleting also
+# removes the finished runs and their logs.
+kubectl -n monitoring get jobs -l app=registry-usage-collector
+kubectl -n monitoring delete jobs -l app=registry-usage-collector
+
+# Go on only when this lists no pod: a run that is still stopping would write
+# during the restore, or after it.
+kubectl -n monitoring get pods -l app=registry-usage-collector \
+  --field-selector=status.phase!=Succeeded,status.phase!=Failed
+```
+
+Then restore:
+
+```bash
 # In another terminal, and left running:
 kubectl -n monitoring port-forward svc/grafana-pg-rw 15432:5432
 
@@ -913,7 +930,10 @@ owned by the first in a disposable PostgreSQL 17, and run the same
 
 Both are in `pkg/k8s/usage/alerting/rules.yaml`, in the group `registry_usage`,
 and notify "Registry Dev". They exist only where the collector is on and
-`mcp-registry:alertDiscordWebhook` is set.
+`mcp-registry:alertDiscordWebhook` is set. Removing the webhook while the
+collector stays on leaves them in Grafana, as it leaves the registry's own
+rules; retiring the collector deletes them whether or not the webhook is still
+set.
 
 | Rule | Fires when |
 |------|------------|

@@ -85,6 +85,7 @@ func deployUsageBackup(ctx *pulumi.Context, namespace pulumi.StringPtrInput, env
 			SuccessfulJobsHistoryLimit: pulumi.Int(3),
 			FailedJobsHistoryLimit:     pulumi.Int(3),
 			JobTemplate: &batchv1.JobTemplateSpecArgs{
+				Metadata: &metav1.ObjectMetaArgs{Labels: labels},
 				Spec: &batchv1.JobSpecArgs{
 					BackoffLimit:          pulumi.Int(1),
 					ActiveDeadlineSeconds: pulumi.Int(1800),

@@ -379,6 +379,41 @@ func TestRetiredUsageCollectorCleansUpGrafana(t *testing.T) {
 	}
 }
 
+// The webhook may be removed before the collector is retired, or with it. The
+// rules must still be deleted then, with nothing else of alerting provisioned.
+func TestRetiredUsageCollectorDeletesItsRulesWithoutAlerting(t *testing.T) {
+	m, err := deployGrafanaWithUsage(map[string]string{usageFlagKey: "false"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	files := m.resource(t, "kubernetes:core/v1:ConfigMap::grafana-registry-alerting")["data"].(map[string]any)
+	var file alertingProvisioning
+	text, _ := files[usageAlertingFile].(string)
+	if err := yaml.Unmarshal([]byte(text), &file); err != nil {
+		t.Fatal(err)
+	}
+	if len(files) != 1 || len(file.DeleteRules) != 2 || len(file.Groups) != 0 || len(file.ContactPoints) != 0 {
+		t.Errorf("expected only the removal of the two usage rules: %v", files)
+	}
+	// No contact point is provisioned, so Grafana needs no webhook.
+	if _, ok := m.resources["kubernetes:core/v1:Secret::grafana-alerting"]; ok || strings.Contains(m.raw, alertWebhookEnv) {
+		t.Error("a webhook is expected where none is configured")
+	}
+	annotations, _ := m.values["podAnnotations"].(map[string]any)
+	if m.alertingMounts() != 1 || annotations["checksum/alerting"] == nil {
+		t.Error("Grafana is not restarted with the removal file mounted")
+	}
+
+	// Enabled without the webhook there is still nothing to notify, so no rules.
+	enabled, err := deployGrafanaWithUsage(map[string]string{usageFlagKey: "true"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := enabled.resources["kubernetes:core/v1:ConfigMap::grafana-registry-alerting"]; ok || enabled.alertingMounts() != 0 {
+		t.Error("usage rules are provisioned without a contact point to notify")
+	}
+}
+
 func TestUsageCollectorFollowsTheRegistryRelease(t *testing.T) {
 	m := &usageMonitor{grafanaChartMonitor{backupMonitor: backupMonitor{resources: map[string]resource.PropertyMap{}}}}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {

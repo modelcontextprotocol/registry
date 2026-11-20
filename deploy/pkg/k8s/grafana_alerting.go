@@ -66,11 +66,13 @@ func alertWebhook(ctx *pulumi.Context) (string, error) {
 	return webhook, nil
 }
 
-// grafanaAlerting is what the Grafana chart needs to provision the alert rules.
-// It is nil where the webhook is not configured, so that no environment gets
-// rules that notify a contact point it does not have.
+// grafanaAlerting is what the Grafana chart needs to provision alerting files.
+// Rules and the contact point are provisioned only where the webhook is
+// configured, so that no environment gets rules that notify a contact point it
+// does not have. It is nil where there is nothing to provision.
 type grafanaAlerting struct {
-	mount    pulumi.Map
+	mount pulumi.Map
+	// webhook is nil where only removals are provisioned.
 	webhook  pulumi.Map
 	checksum string
 }
@@ -78,30 +80,55 @@ type grafanaAlerting struct {
 // registryAlertingProvisioning creates the alerting ConfigMap and the webhook
 // Secret. Grafana adopts an existing rule or contact point that has the same
 // uid, then refuses edits made in the UI. Removing these files deletes nothing
-// and leaves what they provisioned locked. extra holds files other features
-// provision beside the registry's own, by file name.
-func registryAlertingProvisioning(ctx *pulumi.Context, provider *kubernetes.Provider, ns *corev1.Namespace, extra map[string]string) (*grafanaAlerting, error) {
+// and leaves what they provisioned locked.
+//
+// rules and removals are files other features provision beside the registry's
+// own, by file name. rules notify the contact point, so they need the webhook
+// like the registry's own. removals only delete what was provisioned earlier
+// and are provisioned without it: a rule must not outlive its feature, locked,
+// because the webhook was removed first.
+func registryAlertingProvisioning(ctx *pulumi.Context, provider *kubernetes.Provider, ns *corev1.Namespace, rules, removals map[string]string) (*grafanaAlerting, error) {
 	webhook, err := alertWebhook(ctx)
-	if err != nil || webhook == "" {
+	if err != nil {
 		return nil, err
 	}
-	files, err := registryAlertingFiles()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read Grafana alerting files: %w", err)
+	files := map[string]string{}
+	if webhook != "" {
+		if files, err = registryAlertingFiles(); err != nil {
+			return nil, fmt.Errorf("failed to read Grafana alerting files: %w", err)
+		}
+		for name, text := range rules {
+			if _, taken := files[name]; taken {
+				return nil, fmt.Errorf("two Grafana alerting files are named %s", name)
+			}
+			files[name] = text
+		}
 	}
-	for name, text := range extra {
+	for name, text := range removals {
 		if _, taken := files[name]; taken {
 			return nil, fmt.Errorf("two Grafana alerting files are named %s", name)
 		}
 		files[name] = text
 	}
-	secret, err := corev1.NewSecret(ctx, "grafana-alerting", &corev1.SecretArgs{
-		Metadata:   &metav1.ObjectMetaArgs{Name: pulumi.String("grafana-alerting"), Namespace: ns.Metadata.Name()},
-		StringData: pulumi.StringMap{alertWebhookEnv: pulumi.ToSecret(pulumi.String(webhook)).(pulumi.StringOutput)},
-		Type:       pulumi.String("Opaque"),
-	}, pulumi.Provider(provider))
-	if err != nil {
-		return nil, err
+	if len(files) == 0 {
+		return nil, nil
+	}
+	alerting := &grafanaAlerting{}
+	if webhook != "" {
+		secret, err := corev1.NewSecret(ctx, "grafana-alerting", &corev1.SecretArgs{
+			Metadata:   &metav1.ObjectMetaArgs{Name: pulumi.String("grafana-alerting"), Namespace: ns.Metadata.Name()},
+			StringData: pulumi.StringMap{alertWebhookEnv: pulumi.ToSecret(pulumi.String(webhook)).(pulumi.StringOutput)},
+			Type:       pulumi.String("Opaque"),
+		}, pulumi.Provider(provider))
+		if err != nil {
+			return nil, err
+		}
+		alerting.webhook = pulumi.Map{
+			"secretKeyRef": pulumi.Map{
+				"name": secret.Metadata.Name(),
+				"key":  pulumi.String(alertWebhookEnv),
+			},
+		}
 	}
 	configMap, err := corev1.NewConfigMap(ctx, "grafana-registry-alerting", &corev1.ConfigMapArgs{
 		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String("grafana-registry-alerting"), Namespace: ns.Metadata.Name()},
@@ -128,21 +155,14 @@ func registryAlertingProvisioning(ctx *pulumi.Context, provider *kubernetes.Prov
 	}
 	hash.Write([]byte(webhook))
 
-	return &grafanaAlerting{
-		mount: pulumi.Map{
-			"name":      pulumi.String("grafana-registry-alerting"),
-			"configMap": configMap.Metadata.Name().Elem(),
-			"mountPath": pulumi.String(registryAlertingPath),
-			"readOnly":  pulumi.Bool(true),
-		},
-		webhook: pulumi.Map{
-			"secretKeyRef": pulumi.Map{
-				"name": secret.Metadata.Name(),
-				"key":  pulumi.String(alertWebhookEnv),
-			},
-		},
-		checksum: hex.EncodeToString(hash.Sum(nil))[:12],
-	}, nil
+	alerting.mount = pulumi.Map{
+		"name":      pulumi.String("grafana-registry-alerting"),
+		"configMap": configMap.Metadata.Name().Elem(),
+		"mountPath": pulumi.String(registryAlertingPath),
+		"readOnly":  pulumi.Bool(true),
+	}
+	alerting.checksum = hex.EncodeToString(hash.Sum(nil))[:12]
+	return alerting, nil
 }
 
 // addTo adds the alerting mount, webhook variable and restart trigger to the
@@ -152,7 +172,9 @@ func (a *grafanaAlerting) addTo(values pulumi.Map) pulumi.Map {
 		return values
 	}
 	values["extraConfigmapMounts"] = append(values["extraConfigmapMounts"].(pulumi.Array), a.mount)
-	values["envValueFrom"].(pulumi.Map)[alertWebhookEnv] = a.webhook
+	if a.webhook != nil {
+		values["envValueFrom"].(pulumi.Map)[alertWebhookEnv] = a.webhook
+	}
 	addPodAnnotation(values, "checksum/alerting", a.checksum)
 	return values
 }

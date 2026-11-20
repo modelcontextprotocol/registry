@@ -244,6 +244,9 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 			SuccessfulJobsHistoryLimit: pulumi.Int(3),
 			FailedJobsHistoryLimit:     pulumi.Int(3),
 			JobTemplate: &batchv1.JobTemplateSpecArgs{
+				// Runs started by hand from this CronJob carry the label too, so
+				// that every run can be found, and stopped, by it.
+				Metadata: &metav1.ObjectMetaArgs{Labels: labels},
 				Spec: &batchv1.JobSpecArgs{
 					// The first run reads 13 days, about an hour. Days are stored one
 					// by one, so a run stopped here keeps what it finished.

@@ -579,7 +579,8 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		return err
 	}
 	dashboardMounts = append(dashboardMounts, registryMounts...)
-	alerting, err := registryAlertingProvisioning(ctx, cluster.Provider, ns, usage.alertingFiles())
+	usageRules, usageRemovals := usage.alertingFiles()
+	alerting, err := registryAlertingProvisioning(ctx, cluster.Provider, ns, usageRules, usageRemovals)
 	if err != nil {
 		return err
 	}
