@@ -38,6 +38,10 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 		return fmt.Errorf("stagingSmallCapacity requires prepare or enabled on isolated idle staging")
 	}
 	infraOnly := c.GetBool("productionInfrastructureOnly")
+	databaseMachine := c.Get("databaseNodeMachineType")
+	if databaseMachine != "" && (databaseMachine != "e2-standard-8" || !infraOnly || c.Get("environment") != "prod" || c.Get("provider") != "gcp" || !c.GetBool("isolatedDatabase") || !c.GetBool("coordinatedCapacity")) {
+		return fmt.Errorf("databaseNodeMachineType requires e2-standard-8 on the isolated production capacity profile")
+	}
 	phase := c.Get("productionAppScaling")
 	ingressScaling := c.GetBool("productionIngressScaling")
 	burstHeadroom := c.GetBool("productionBurstHeadroom")
@@ -123,7 +127,12 @@ func ValidateCapacityConfig(ctx *pulumi.Context) error {
 		}
 		nodeMax = "2"
 	}
-	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": "3", "nodeMinCount": nodeMin, "nodeMaxCount": nodeMax} {
+	dbLimit := "3"
+	if databaseMachine == "e2-standard-8" && c.Get("postgresCPURequest") != "3" {
+		// Keep 3/3 available for the node-first upgrade and CPU-first rollback.
+		dbCPU, dbLimit = "6", "6"
+	}
+	for key, expected := range map[string]string{"registryCPURequest": appCPU, "postgresCPURequest": dbCPU, "postgresCPULimit": dbLimit, "nodeMinCount": nodeMin, "nodeMaxCount": nodeMax} {
 		if c.Get(key) != expected {
 			return fmt.Errorf("coordinatedCapacity requires %s=%s", key, expected)
 		}

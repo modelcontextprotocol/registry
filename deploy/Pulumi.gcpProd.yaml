@@ -14,6 +14,8 @@ config:
   mcp-registry:preparedListingJSON: "true"
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
+  # Isolated DB only; workers retain their existing size and autoscaling range.
+  mcp-registry:databaseNodeMachineType: e2-standard-8
   mcp-registry:nodeAutoscaling: "true"
   mcp-registry:nodeMinCount: "3"
   mcp-registry:nodeMaxCount: "8"
@@ -29,9 +31,9 @@ config:
   mcp-registry:productionBurstHeadroom: "true"
   mcp-registry:productionInfrastructureOnly: "true"
   mcp-registry:registryCPURequest: "1200m"
-  mcp-registry:postgresCPURequest: "3"
+  mcp-registry:postgresCPURequest: "6"
   mcp-registry:postgresSharedBuffers: 512MB
-  mcp-registry:postgresCPULimit: "3"
+  mcp-registry:postgresCPULimit: "6"
   mcp-registry:imageTag: 1.8.9  # Set specific image tag for production (change this to deploy different versions)
   gcp:project: mcp-registry-prod
   mcp-registry:githubClientId: Iv23liUydBbI7Z2Q9bOZ
