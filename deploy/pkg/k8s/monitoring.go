@@ -569,6 +569,11 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		return err
 	}
 	dashboardMounts = append(dashboardMounts, canaryMounts...)
+	registryMounts, err := registryDashboardMounts(ctx, cluster.Provider, ns)
+	if err != nil {
+		return err
+	}
+	dashboardMounts = append(dashboardMounts, registryMounts...)
 
 	// Deploy Grafana
 	grafanaHost := "grafana." + environment + ".registry.modelcontextprotocol.io"
