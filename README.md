@@ -114,7 +114,8 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 ```
 ├── cmd/                     # Application entry points
 │   ├── publisher/           # Server publishing tool
-│   └── registry/            # Registry API server
+│   ├── registry/            # Registry API server
+│   └── usage-collector/     # Daily usage collector for the hosted instance
 ├── data/                    # Seed data
 ├── deploy/                  # Deployment configuration (Pulumi)
 ├── docs/                    # Documentation
@@ -126,6 +127,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   ├── importer/            # Seed data import
 │   ├── service/             # Business logic
 │   ├── telemetry/           # Metrics and monitoring
+│   ├── usage/               # Usage collection for the hosted instance
 │   └── validators/          # Input validation
 ├── pkg/                     # Public packages
 │   ├── api/                 # API types and structures

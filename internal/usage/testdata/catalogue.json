@@ -1,0 +1,5003 @@
+{
+"read_at": "2026-10-07T01:00:00Z",
+"versions": [
+{
+"name": "io.github.example-user-39/server-39",
+"version": "1.0.0",
+"published_at": "2026-04-28T00:00:00.000000Z",
+"updated_at": "2026-04-28T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team3/server-32",
+"version": "1.0.0",
+"published_at": "2026-04-21T00:00:00.000000Z",
+"updated_at": "2026-04-21T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-39/server-39",
+"version": "1.3.0",
+"published_at": "2026-04-27T03:00:00.000000Z",
+"updated_at": "2026-04-27T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-12/server-49",
+"version": "1.1.0",
+"published_at": "2026-05-07T17:00:00.000000Z",
+"updated_at": "2026-05-07T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-24/server-147",
+"version": "1.2.0",
+"published_at": "2026-08-13T10:00:00.000000Z",
+"updated_at": "2026-08-13T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team6/server-35",
+"version": "1.3.0",
+"published_at": "2026-04-23T03:00:00.000000Z",
+"updated_at": "2026-04-23T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-1/server-112",
+"version": "1.0.0",
+"published_at": "2026-07-10T00:00:00.000000Z",
+"updated_at": "2026-07-10T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-9/server-46",
+"version": "1.1.0",
+"published_at": "2026-05-04T17:00:00.000000Z",
+"updated_at": "2026-05-04T17:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-33/server-70",
+"version": "1.1.0",
+"published_at": "2026-05-28T17:00:00.000000Z",
+"updated_at": "2026-05-28T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-3/server-126",
+"version": "1.2.0",
+"published_at": "2026-07-23T10:00:00.000000Z",
+"updated_at": "2026-07-23T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-33/server-33",
+"version": "1.1.0",
+"published_at": "2026-04-21T17:00:00.000000Z",
+"updated_at": "2026-04-21T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team11/server-11",
+"version": "1.1.0",
+"published_at": "2026-03-30T17:00:00.000000Z",
+"updated_at": "2026-03-30T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-14/server-96",
+"version": "1.0.0",
+"published_at": "2026-06-24T00:00:00.000000Z",
+"updated_at": "2026-06-24T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-8/server-90",
+"version": "1.2.0",
+"published_at": "2026-06-17T10:00:00.000000Z",
+"updated_at": "2026-06-17T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team5/server-5",
+"version": "1.1.0",
+"published_at": "2026-03-24T17:00:00.000000Z",
+"updated_at": "2026-03-24T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team9/server-38",
+"version": "1.2.0",
+"published_at": "2026-04-26T10:00:00.000000Z",
+"updated_at": "2026-04-26T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-18/server-18",
+"version": "1.1.0",
+"published_at": "2026-04-06T17:00:00.000000Z",
+"updated_at": "2026-04-06T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-21/server-21",
+"version": "1.1.0",
+"published_at": "2026-04-09T17:00:00.000000Z",
+"updated_at": "2026-04-09T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team26/server-26",
+"version": "1.1.0",
+"published_at": "2026-04-14T17:00:00.000000Z",
+"updated_at": "2026-04-14T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-31/server-142",
+"version": "1.0.0",
+"published_at": "2026-08-09T00:00:00.000000Z",
+"updated_at": "2026-08-09T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team4/server-62",
+"version": "1.0.0",
+"published_at": "2026-05-21T00:00:00.000000Z",
+"updated_at": "2026-05-21T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-3/server-126",
+"version": "1.0.0",
+"published_at": "2026-07-24T00:00:00.000000Z",
+"updated_at": "2026-07-24T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-40/server-81",
+"version": "1.1.0",
+"published_at": "2026-06-08T17:00:00.000000Z",
+"updated_at": "2026-06-08T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team27/server-56",
+"version": "1.0.0",
+"published_at": "2026-05-15T00:00:00.000000Z",
+"updated_at": "2026-05-15T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-31/server-31",
+"version": "1.0.0",
+"published_at": "2026-04-20T00:00:00.000000Z",
+"updated_at": "2026-04-20T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-12/server-135",
+"version": "1.2.0",
+"published_at": "2026-08-01T10:00:00.000000Z",
+"updated_at": "2026-08-01T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team28/server-86",
+"version": "1.1.0",
+"published_at": "2026-06-13T17:00:00.000000Z",
+"updated_at": "2026-06-13T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-17/server-91",
+"version": "1.3.0",
+"published_at": "2026-06-18T03:00:00.000000Z",
+"updated_at": "2026-06-18T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team14/server-14",
+"version": "1.2.0",
+"published_at": "2026-04-02T10:00:00.000000Z",
+"updated_at": "2026-04-02T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-24/server-61",
+"version": "1.1.0",
+"published_at": "2026-05-19T17:00:00.000000Z",
+"updated_at": "2026-05-19T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team28/server-86",
+"version": "1.2.0",
+"published_at": "2026-06-13T10:00:00.000000Z",
+"updated_at": "2026-06-13T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team1/server-59",
+"version": "1.2.0",
+"published_at": "2026-05-17T10:00:00.000000Z",
+"updated_at": "2026-05-17T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-7/server-118",
+"version": "1.2.0",
+"published_at": "2026-07-15T10:00:00.000000Z",
+"updated_at": "2026-07-15T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-1/server-42",
+"version": "1.1.0",
+"published_at": "2026-04-30T17:00:00.000000Z",
+"updated_at": "2026-04-30T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-24/server-147",
+"version": "1.3.0",
+"published_at": "2026-08-13T03:00:00.000000Z",
+"updated_at": "2026-08-13T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-12/server-135",
+"version": "1.0.0",
+"published_at": "2026-08-02T00:00:00.000000Z",
+"updated_at": "2026-08-02T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-15/server-138",
+"version": "1.0.0",
+"published_at": "2026-08-05T00:00:00.000000Z",
+"updated_at": "2026-08-05T00:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-31/server-72",
+"version": "1.0.0",
+"published_at": "2026-05-31T00:00:00.000000Z",
+"updated_at": "2026-05-31T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-32/server-106",
+"version": "1.0.0",
+"published_at": "2026-07-04T00:00:00.000000Z",
+"updated_at": "2026-07-04T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-11/server-93",
+"version": "1.1.0",
+"published_at": "2026-06-20T17:00:00.000000Z",
+"updated_at": "2026-06-20T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-5/server-79",
+"version": "1.3.0",
+"published_at": "2026-06-06T03:00:00.000000Z",
+"updated_at": "2026-06-06T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-3/server-3",
+"version": "1.2.0",
+"published_at": "2026-03-22T10:00:00.000000Z",
+"updated_at": "2026-03-22T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-34/server-34",
+"version": "1.1.0",
+"published_at": "2026-04-22T17:00:00.000000Z",
+"updated_at": "2026-04-22T17:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team6/server-35",
+"version": "1.1.0",
+"published_at": "2026-04-23T17:00:00.000000Z",
+"updated_at": "2026-04-23T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team0/server-29",
+"version": "1.0.0",
+"published_at": "2026-04-18T00:00:00.000000Z",
+"updated_at": "2026-04-18T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.Example-Case/Tool",
+"version": "1.2.0",
+"published_at": "2026-08-16T10:00:00.000000Z",
+"updated_at": "2026-08-16T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-18/server-55",
+"version": "1.2.0",
+"published_at": "2026-05-13T10:00:00.000000Z",
+"updated_at": "2026-05-13T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-19/server-130",
+"version": "1.1.0",
+"published_at": "2026-07-27T17:00:00.000000Z",
+"updated_at": "2026-07-27T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team17/server-17",
+"version": "1.1.0",
+"published_at": "2026-04-05T17:00:00.000000Z",
+"updated_at": "2026-04-05T17:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-31/server-31",
+"version": "1.1.0",
+"published_at": "2026-04-19T17:00:00.000000Z",
+"updated_at": "2026-04-19T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-20/server-94",
+"version": "1.0.0",
+"published_at": "2026-06-22T00:00:00.000000Z",
+"updated_at": "2026-06-22T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team13/server-71",
+"version": "1.2.0",
+"published_at": "2026-05-29T10:00:00.000000Z",
+"updated_at": "2026-05-29T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team23/server-110",
+"version": "1.0.0",
+"published_at": "2026-07-08T00:00:00.000000Z",
+"updated_at": "2026-07-08T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-30/server-30",
+"version": "1.2.0",
+"published_at": "2026-04-18T10:00:00.000000Z",
+"updated_at": "2026-04-18T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-25/server-136",
+"version": "1.0.0",
+"published_at": "2026-08-03T00:00:00.000000Z",
+"updated_at": "2026-08-03T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-29/server-103",
+"version": "1.1.0",
+"published_at": "2026-06-30T17:00:00.000000Z",
+"updated_at": "2026-06-30T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-29/server-111",
+"version": "1.1.0",
+"published_at": "2026-07-08T17:00:00.000000Z",
+"updated_at": "2026-07-08T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-24/server-24",
+"version": "1.0.0",
+"published_at": "2026-04-13T00:00:00.000000Z",
+"updated_at": "2026-04-13T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team19/server-77",
+"version": "1.1.0",
+"published_at": "2026-06-04T17:00:00.000000Z",
+"updated_at": "2026-06-04T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team4/server-62",
+"version": "1.2.0",
+"published_at": "2026-05-20T10:00:00.000000Z",
+"updated_at": "2026-05-20T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-16/server-127",
+"version": "1.2.0",
+"published_at": "2026-07-24T10:00:00.000000Z",
+"updated_at": "2026-07-24T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-4/server-115",
+"version": "1.3.0",
+"published_at": "2026-07-12T03:00:00.000000Z",
+"updated_at": "2026-07-12T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-24/server-147",
+"version": "1.0.0",
+"published_at": "2026-08-14T00:00:00.000000Z",
+"updated_at": "2026-08-14T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team10/server-68",
+"version": "1.0.0",
+"published_at": "2026-05-27T00:00:00.000000Z",
+"updated_at": "2026-05-27T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-7/server-118",
+"version": "1.0.0",
+"published_at": "2026-07-16T00:00:00.000000Z",
+"updated_at": "2026-07-16T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-13/server-54",
+"version": "1.0.0",
+"published_at": "2026-05-13T00:00:00.000000Z",
+"updated_at": "2026-05-13T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-case/tool",
+"version": "1.1.0",
+"published_at": "2026-08-17T17:00:00.000000Z",
+"updated_at": "2026-08-17T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-7/server-7",
+"version": "1.2.0",
+"published_at": "2026-03-26T10:00:00.000000Z",
+"updated_at": "2026-03-26T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-30/server-67",
+"version": "1.2.0",
+"published_at": "2026-05-25T10:00:00.000000Z",
+"updated_at": "2026-05-25T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-10/server-121",
+"version": "1.0.0",
+"published_at": "2026-07-19T00:00:00.000000Z",
+"updated_at": "2026-07-19T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-19/server-19",
+"version": "1.1.0",
+"published_at": "2026-04-07T17:00:00.000000Z",
+"updated_at": "2026-04-07T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-9/server-46",
+"version": "1.2.0",
+"published_at": "2026-05-04T10:00:00.000000Z",
+"updated_at": "2026-05-04T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team13/server-71",
+"version": "1.0.0",
+"published_at": "2026-05-30T00:00:00.000000Z",
+"updated_at": "2026-05-30T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-28/server-28",
+"version": "1.0.0",
+"published_at": "2026-04-17T00:00:00.000000Z",
+"updated_at": "2026-04-17T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-28/server-139",
+"version": "1.1.0",
+"published_at": "2026-08-05T17:00:00.000000Z",
+"updated_at": "2026-08-05T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team1/server-59",
+"version": "1.3.0",
+"published_at": "2026-05-17T03:00:00.000000Z",
+"updated_at": "2026-05-17T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-30/server-67",
+"version": "1.1.0",
+"published_at": "2026-05-25T17:00:00.000000Z",
+"updated_at": "2026-05-25T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-39/server-39",
+"version": "1.1.0",
+"published_at": "2026-04-27T17:00:00.000000Z",
+"updated_at": "2026-04-27T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team15/server-131",
+"version": "1.1.0",
+"published_at": "2026-07-28T17:00:00.000000Z",
+"updated_at": "2026-07-28T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team12/server-41",
+"version": "1.0.0",
+"published_at": "2026-04-30T00:00:00.000000Z",
+"updated_at": "2026-04-30T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team16/server-74",
+"version": "1.1.0",
+"published_at": "2026-06-01T17:00:00.000000Z",
+"updated_at": "2026-06-01T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-21/server-58",
+"version": "1.2.0",
+"published_at": "2026-05-16T10:00:00.000000Z",
+"updated_at": "2026-05-16T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-5/server-87",
+"version": "1.1.0",
+"published_at": "2026-06-14T17:00:00.000000Z",
+"updated_at": "2026-06-14T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-8/server-82",
+"version": "1.0.0",
+"published_at": "2026-06-10T00:00:00.000000Z",
+"updated_at": "2026-06-10T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team23/server-110",
+"version": "1.2.0",
+"published_at": "2026-07-07T10:00:00.000000Z",
+"updated_at": "2026-07-07T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-19/server-130",
+"version": "1.0.0",
+"published_at": "2026-07-28T00:00:00.000000Z",
+"updated_at": "2026-07-28T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-8/server-90",
+"version": "1.1.0",
+"published_at": "2026-06-17T17:00:00.000000Z",
+"updated_at": "2026-06-17T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team20/server-107",
+"version": "1.3.0",
+"published_at": "2026-07-04T03:00:00.000000Z",
+"updated_at": "2026-07-04T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-13/server-13",
+"version": "1.0.0",
+"published_at": "2026-04-02T00:00:00.000000Z",
+"updated_at": "2026-04-02T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-36/server-73",
+"version": "1.0.0",
+"published_at": "2026-06-01T00:00:00.000000Z",
+"updated_at": "2026-06-01T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-30/server-30",
+"version": "1.0.0",
+"published_at": "2026-04-19T00:00:00.000000Z",
+"updated_at": "2026-04-19T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-5/server-87",
+"version": "1.0.0",
+"published_at": "2026-06-15T00:00:00.000000Z",
+"updated_at": "2026-06-15T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team18/server-47",
+"version": "1.2.0",
+"published_at": "2026-05-05T10:00:00.000000Z",
+"updated_at": "2026-05-05T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-21/server-21",
+"version": "1.0.0",
+"published_at": "2026-04-10T00:00:00.000000Z",
+"updated_at": "2026-04-10T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team3/server-119",
+"version": "1.2.0",
+"published_at": "2026-07-16T10:00:00.000000Z",
+"updated_at": "2026-07-16T10:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-8/server-82",
+"version": "1.2.0",
+"published_at": "2026-06-09T10:00:00.000000Z",
+"updated_at": "2026-06-09T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team6/server-122",
+"version": "1.0.0",
+"published_at": "2026-07-20T00:00:00.000000Z",
+"updated_at": "2026-07-20T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team23/server-23",
+"version": "1.0.0",
+"published_at": "2026-04-12T00:00:00.000000Z",
+"updated_at": "2026-04-12T00:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-19/server-19",
+"version": "1.0.0",
+"published_at": "2026-04-08T00:00:00.000000Z",
+"updated_at": "2026-04-08T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-28/server-139",
+"version": "1.0.0",
+"published_at": "2026-08-06T00:00:00.000000Z",
+"updated_at": "2026-08-06T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team19/server-77",
+"version": "1.0.0",
+"published_at": "2026-06-05T00:00:00.000000Z",
+"updated_at": "2026-06-05T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team27/server-143",
+"version": "1.3.0",
+"published_at": "2026-08-09T03:00:00.000000Z",
+"updated_at": "2026-08-09T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team25/server-83",
+"version": "1.1.0",
+"published_at": "2026-06-10T17:00:00.000000Z",
+"updated_at": "2026-06-10T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team22/server-80",
+"version": "1.0.0",
+"published_at": "2026-06-08T00:00:00.000000Z",
+"updated_at": "2026-06-08T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team11/server-98",
+"version": "1.1.0",
+"published_at": "2026-06-25T17:00:00.000000Z",
+"updated_at": "2026-06-25T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team2/server-89",
+"version": "1.1.0",
+"published_at": "2026-06-16T17:00:00.000000Z",
+"updated_at": "2026-06-16T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team24/server-140",
+"version": "1.0.0",
+"published_at": "2026-08-07T00:00:00.000000Z",
+"updated_at": "2026-08-07T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team11/server-11",
+"version": "1.0.0",
+"published_at": "2026-03-31T00:00:00.000000Z",
+"updated_at": "2026-03-31T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team1/server-146",
+"version": "1.0.0",
+"published_at": "2026-08-13T00:00:00.000000Z",
+"updated_at": "2026-08-13T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-5/server-87",
+"version": "1.3.0",
+"published_at": "2026-06-14T03:00:00.000000Z",
+"updated_at": "2026-06-14T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-5/server-79",
+"version": "1.0.0",
+"published_at": "2026-06-07T00:00:00.000000Z",
+"updated_at": "2026-06-07T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-6/server-129",
+"version": "1.0.0",
+"published_at": "2026-07-27T00:00:00.000000Z",
+"updated_at": "2026-07-27T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-0/server-37",
+"version": "1.1.0",
+"published_at": "2026-04-25T17:00:00.000000Z",
+"updated_at": "2026-04-25T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-8/server-82",
+"version": "1.1.0",
+"published_at": "2026-06-09T17:00:00.000000Z",
+"updated_at": "2026-06-09T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-4/server-4",
+"version": "1.0.0",
+"published_at": "2026-03-24T00:00:00.000000Z",
+"updated_at": "2026-03-24T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-39/server-39",
+"version": "1.2.0",
+"published_at": "2026-04-27T10:00:00.000000Z",
+"updated_at": "2026-04-27T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-29/server-111",
+"version": "1.3.0",
+"published_at": "2026-07-08T03:00:00.000000Z",
+"updated_at": "2026-07-08T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-0/server-123",
+"version": "1.0.0",
+"published_at": "2026-07-21T00:00:00.000000Z",
+"updated_at": "2026-07-21T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-22/server-63",
+"version": "1.2.0",
+"published_at": "2026-05-21T10:00:00.000000Z",
+"updated_at": "2026-05-21T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-10/server-51",
+"version": "1.1.0",
+"published_at": "2026-05-09T17:00:00.000000Z",
+"updated_at": "2026-05-09T17:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-18/server-141",
+"version": "1.0.0",
+"published_at": "2026-08-08T00:00:00.000000Z",
+"updated_at": "2026-08-08T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team21/server-137",
+"version": "1.1.0",
+"published_at": "2026-08-03T17:00:00.000000Z",
+"updated_at": "2026-08-03T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-37/server-78",
+"version": "1.0.0",
+"published_at": "2026-06-06T00:00:00.000000Z",
+"updated_at": "2026-06-06T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-19/server-130",
+"version": "1.2.0",
+"published_at": "2026-07-27T10:00:00.000000Z",
+"updated_at": "2026-07-27T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-6/server-6",
+"version": "1.2.0",
+"published_at": "2026-03-25T10:00:00.000000Z",
+"updated_at": "2026-03-25T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-19/server-19",
+"version": "1.2.0",
+"published_at": "2026-04-07T10:00:00.000000Z",
+"updated_at": "2026-04-07T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-28/server-69",
+"version": "1.0.0",
+"published_at": "2026-05-28T00:00:00.000000Z",
+"updated_at": "2026-05-28T00:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-0/server-123",
+"version": "1.2.0",
+"published_at": "2026-07-20T10:00:00.000000Z",
+"updated_at": "2026-07-20T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-31/server-142",
+"version": "1.2.0",
+"published_at": "2026-08-08T10:00:00.000000Z",
+"updated_at": "2026-08-08T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-22/server-63",
+"version": "1.0.0",
+"published_at": "2026-05-22T00:00:00.000000Z",
+"updated_at": "2026-05-22T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-25/server-25",
+"version": "1.0.0",
+"published_at": "2026-04-14T00:00:00.000000Z",
+"updated_at": "2026-04-14T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team16/server-74",
+"version": "1.2.0",
+"published_at": "2026-06-01T10:00:00.000000Z",
+"updated_at": "2026-06-01T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team4/server-149",
+"version": "1.0.0",
+"published_at": "2026-08-16T00:00:00.000000Z",
+"updated_at": "2026-08-16T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-18/server-141",
+"version": "1.1.0",
+"published_at": "2026-08-07T17:00:00.000000Z",
+"updated_at": "2026-08-07T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team9/server-125",
+"version": "1.0.0",
+"published_at": "2026-07-23T00:00:00.000000Z",
+"updated_at": "2026-07-23T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-9/server-132",
+"version": "1.0.0",
+"published_at": "2026-07-30T00:00:00.000000Z",
+"updated_at": "2026-07-30T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team20/server-107",
+"version": "1.0.0",
+"published_at": "2026-07-05T00:00:00.000000Z",
+"updated_at": "2026-07-05T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-32/server-114",
+"version": "1.1.0",
+"published_at": "2026-07-11T17:00:00.000000Z",
+"updated_at": "2026-07-11T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team15/server-131",
+"version": "1.0.0",
+"published_at": "2026-07-29T00:00:00.000000Z",
+"updated_at": "2026-07-29T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-33/server-70",
+"version": "1.0.0",
+"published_at": "2026-05-29T00:00:00.000000Z",
+"updated_at": "2026-05-29T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-25/server-66",
+"version": "1.0.0",
+"published_at": "2026-05-25T00:00:00.000000Z",
+"updated_at": "2026-05-25T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team24/server-53",
+"version": "1.1.0",
+"published_at": "2026-05-11T17:00:00.000000Z",
+"updated_at": "2026-05-11T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team11/server-98",
+"version": "1.2.0",
+"published_at": "2026-06-25T10:00:00.000000Z",
+"updated_at": "2026-06-25T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.Example-Case/Tool",
+"version": "1.0.0",
+"published_at": "2026-08-17T00:00:00.000000Z",
+"updated_at": "2026-08-17T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-27/server-27",
+"version": "1.1.0",
+"published_at": "2026-04-15T17:00:00.000000Z",
+"updated_at": "2026-04-15T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-17/server-91",
+"version": "1.2.0",
+"published_at": "2026-06-18T10:00:00.000000Z",
+"updated_at": "2026-06-18T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-0/server-123",
+"version": "1.1.0",
+"published_at": "2026-07-20T17:00:00.000000Z",
+"updated_at": "2026-07-20T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-31/server-31",
+"version": "1.3.0",
+"published_at": "2026-04-19T03:00:00.000000Z",
+"updated_at": "2026-04-19T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-34/server-75",
+"version": "1.1.0",
+"published_at": "2026-06-02T17:00:00.000000Z",
+"updated_at": "2026-06-02T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team11/server-98",
+"version": "1.0.0",
+"published_at": "2026-06-26T00:00:00.000000Z",
+"updated_at": "2026-06-26T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team3/server-119",
+"version": "1.1.0",
+"published_at": "2026-07-16T17:00:00.000000Z",
+"updated_at": "2026-07-16T17:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-10/server-10",
+"version": "1.1.0",
+"published_at": "2026-03-29T17:00:00.000000Z",
+"updated_at": "2026-03-29T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-28/server-69",
+"version": "1.1.0",
+"published_at": "2026-05-27T17:00:00.000000Z",
+"updated_at": "2026-05-27T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-37/server-78",
+"version": "1.2.0",
+"published_at": "2026-06-05T10:00:00.000000Z",
+"updated_at": "2026-06-05T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-32/server-106",
+"version": "1.2.0",
+"published_at": "2026-07-03T10:00:00.000000Z",
+"updated_at": "2026-07-03T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-14/server-88",
+"version": "1.0.0",
+"published_at": "2026-06-16T00:00:00.000000Z",
+"updated_at": "2026-06-16T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-24/server-147",
+"version": "1.1.0",
+"published_at": "2026-08-13T17:00:00.000000Z",
+"updated_at": "2026-08-13T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-case/tool",
+"version": "1.0.0",
+"published_at": "2026-08-18T00:00:00.000000Z",
+"updated_at": "2026-08-18T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-29/server-103",
+"version": "1.0.0",
+"published_at": "2026-07-01T00:00:00.000000Z",
+"updated_at": "2026-07-01T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-18/server-55",
+"version": "1.0.0",
+"published_at": "2026-05-14T00:00:00.000000Z",
+"updated_at": "2026-05-14T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team25/server-83",
+"version": "1.2.0",
+"published_at": "2026-06-10T10:00:00.000000Z",
+"updated_at": "2026-06-10T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team20/server-107",
+"version": "1.1.0",
+"published_at": "2026-07-04T17:00:00.000000Z",
+"updated_at": "2026-07-04T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-28/server-139",
+"version": "1.2.0",
+"published_at": "2026-08-05T10:00:00.000000Z",
+"updated_at": "2026-08-05T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-21/server-144",
+"version": "1.0.0",
+"published_at": "2026-08-11T00:00:00.000000Z",
+"updated_at": "2026-08-11T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team6/server-35",
+"version": "1.2.0",
+"published_at": "2026-04-23T10:00:00.000000Z",
+"updated_at": "2026-04-23T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-16/server-57",
+"version": "1.1.0",
+"published_at": "2026-05-15T17:00:00.000000Z",
+"updated_at": "2026-05-15T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-32/server-106",
+"version": "1.1.0",
+"published_at": "2026-07-03T17:00:00.000000Z",
+"updated_at": "2026-07-03T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-11/server-93",
+"version": "1.0.0",
+"published_at": "2026-06-21T00:00:00.000000Z",
+"updated_at": "2026-06-21T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-26/server-100",
+"version": "1.0.0",
+"published_at": "2026-06-28T00:00:00.000000Z",
+"updated_at": "2026-06-28T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-30/server-67",
+"version": "1.0.0",
+"published_at": "2026-05-26T00:00:00.000000Z",
+"updated_at": "2026-05-26T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-1/server-42",
+"version": "1.2.0",
+"published_at": "2026-04-30T10:00:00.000000Z",
+"updated_at": "2026-04-30T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-35/server-117",
+"version": "1.1.0",
+"published_at": "2026-07-14T17:00:00.000000Z",
+"updated_at": "2026-07-14T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team21/server-50",
+"version": "1.1.0",
+"published_at": "2026-05-08T17:00:00.000000Z",
+"updated_at": "2026-05-08T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-27/server-27",
+"version": "1.3.0",
+"published_at": "2026-04-15T03:00:00.000000Z",
+"updated_at": "2026-04-15T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-17/server-91",
+"version": "1.0.0",
+"published_at": "2026-06-19T00:00:00.000000Z",
+"updated_at": "2026-06-19T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-3/server-3",
+"version": "1.0.0",
+"published_at": "2026-03-23T00:00:00.000000Z",
+"updated_at": "2026-03-23T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-35/server-109",
+"version": "1.1.0",
+"published_at": "2026-07-06T17:00:00.000000Z",
+"updated_at": "2026-07-06T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team18/server-134",
+"version": "1.1.0",
+"published_at": "2026-07-31T17:00:00.000000Z",
+"updated_at": "2026-07-31T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-18/server-18",
+"version": "1.2.0",
+"published_at": "2026-04-06T10:00:00.000000Z",
+"updated_at": "2026-04-06T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team27/server-143",
+"version": "1.1.0",
+"published_at": "2026-08-09T17:00:00.000000Z",
+"updated_at": "2026-08-09T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-33/server-70",
+"version": "1.2.0",
+"published_at": "2026-05-28T10:00:00.000000Z",
+"updated_at": "2026-05-28T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team12/server-41",
+"version": "1.1.0",
+"published_at": "2026-04-29T17:00:00.000000Z",
+"updated_at": "2026-04-29T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-32/server-114",
+"version": "1.2.0",
+"published_at": "2026-07-11T10:00:00.000000Z",
+"updated_at": "2026-07-11T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-13/server-54",
+"version": "1.2.0",
+"published_at": "2026-05-12T10:00:00.000000Z",
+"updated_at": "2026-05-12T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team11/server-11",
+"version": "1.2.0",
+"published_at": "2026-03-30T10:00:00.000000Z",
+"updated_at": "2026-03-30T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-21/server-58",
+"version": "1.1.0",
+"published_at": "2026-05-16T17:00:00.000000Z",
+"updated_at": "2026-05-16T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team9/server-125",
+"version": "1.1.0",
+"published_at": "2026-07-22T17:00:00.000000Z",
+"updated_at": "2026-07-22T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team7/server-65",
+"version": "1.1.0",
+"published_at": "2026-05-23T17:00:00.000000Z",
+"updated_at": "2026-05-23T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-25/server-25",
+"version": "1.1.0",
+"published_at": "2026-04-13T17:00:00.000000Z",
+"updated_at": "2026-04-13T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-13/server-54",
+"version": "1.1.0",
+"published_at": "2026-05-12T17:00:00.000000Z",
+"updated_at": "2026-05-12T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-20/server-94",
+"version": "1.2.0",
+"published_at": "2026-06-21T10:00:00.000000Z",
+"updated_at": "2026-06-21T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-10/server-121",
+"version": "1.1.0",
+"published_at": "2026-07-18T17:00:00.000000Z",
+"updated_at": "2026-07-18T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team28/server-86",
+"version": "1.0.0",
+"published_at": "2026-06-14T00:00:00.000000Z",
+"updated_at": "2026-06-14T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-34/server-75",
+"version": "1.3.0",
+"published_at": "2026-06-02T03:00:00.000000Z",
+"updated_at": "2026-06-02T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-35/server-117",
+"version": "1.0.0",
+"published_at": "2026-07-15T00:00:00.000000Z",
+"updated_at": "2026-07-15T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team26/server-113",
+"version": "1.1.0",
+"published_at": "2026-07-10T17:00:00.000000Z",
+"updated_at": "2026-07-10T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-28/server-139",
+"version": "1.3.0",
+"published_at": "2026-08-05T03:00:00.000000Z",
+"updated_at": "2026-08-05T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-3/server-3",
+"version": "1.1.0",
+"published_at": "2026-03-22T17:00:00.000000Z",
+"updated_at": "2026-03-22T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-12/server-135",
+"version": "1.3.0",
+"published_at": "2026-08-01T03:00:00.000000Z",
+"updated_at": "2026-08-01T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team27/server-143",
+"version": "1.2.0",
+"published_at": "2026-08-09T10:00:00.000000Z",
+"updated_at": "2026-08-09T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-3/server-3",
+"version": "1.3.0",
+"published_at": "2026-03-22T03:00:00.000000Z",
+"updated_at": "2026-03-22T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-23/server-97",
+"version": "1.1.0",
+"published_at": "2026-06-24T17:00:00.000000Z",
+"updated_at": "2026-06-24T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-3/server-126",
+"version": "1.1.0",
+"published_at": "2026-07-23T17:00:00.000000Z",
+"updated_at": "2026-07-23T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-38/server-120",
+"version": "1.0.0",
+"published_at": "2026-07-18T00:00:00.000000Z",
+"updated_at": "2026-07-18T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-16/server-16",
+"version": "1.0.0",
+"published_at": "2026-04-05T00:00:00.000000Z",
+"updated_at": "2026-04-05T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-34/server-75",
+"version": "1.0.0",
+"published_at": "2026-06-03T00:00:00.000000Z",
+"updated_at": "2026-06-03T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team13/server-71",
+"version": "1.1.0",
+"published_at": "2026-05-29T17:00:00.000000Z",
+"updated_at": "2026-05-29T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-10/server-10",
+"version": "1.2.0",
+"published_at": "2026-03-29T10:00:00.000000Z",
+"updated_at": "2026-03-29T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-27/server-64",
+"version": "1.0.0",
+"published_at": "2026-05-23T00:00:00.000000Z",
+"updated_at": "2026-05-23T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team16/server-74",
+"version": "1.0.0",
+"published_at": "2026-06-02T00:00:00.000000Z",
+"updated_at": "2026-06-02T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team18/server-134",
+"version": "1.0.0",
+"published_at": "2026-08-01T00:00:00.000000Z",
+"updated_at": "2026-08-01T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-6/server-43",
+"version": "1.3.0",
+"published_at": "2026-05-01T03:00:00.000000Z",
+"updated_at": "2026-05-01T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-4/server-45",
+"version": "1.1.0",
+"published_at": "2026-05-03T17:00:00.000000Z",
+"updated_at": "2026-05-03T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-21/server-58",
+"version": "1.0.0",
+"published_at": "2026-05-17T00:00:00.000000Z",
+"updated_at": "2026-05-17T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-15/server-15",
+"version": "1.3.0",
+"published_at": "2026-04-03T03:00:00.000000Z",
+"updated_at": "2026-04-03T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-29/server-103",
+"version": "1.3.0",
+"published_at": "2026-06-30T03:00:00.000000Z",
+"updated_at": "2026-06-30T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-1/server-1",
+"version": "1.0.0",
+"published_at": "2026-03-21T00:00:00.000000Z",
+"updated_at": "2026-03-21T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-10/server-51",
+"version": "1.0.0",
+"published_at": "2026-05-10T00:00:00.000000Z",
+"updated_at": "2026-05-10T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team2/server-2",
+"version": "1.0.0",
+"published_at": "2026-03-22T00:00:00.000000Z",
+"updated_at": "2026-03-22T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team21/server-50",
+"version": "1.0.0",
+"published_at": "2026-05-09T00:00:00.000000Z",
+"updated_at": "2026-05-09T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team14/server-14",
+"version": "1.1.0",
+"published_at": "2026-04-02T17:00:00.000000Z",
+"updated_at": "2026-04-02T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team8/server-95",
+"version": "1.3.0",
+"published_at": "2026-06-22T03:00:00.000000Z",
+"updated_at": "2026-06-22T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team11/server-11",
+"version": "1.3.0",
+"published_at": "2026-03-30T03:00:00.000000Z",
+"updated_at": "2026-03-30T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team15/server-44",
+"version": "1.0.0",
+"published_at": "2026-05-03T00:00:00.000000Z",
+"updated_at": "2026-05-03T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-12/server-49",
+"version": "1.0.0",
+"published_at": "2026-05-08T00:00:00.000000Z",
+"updated_at": "2026-05-08T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-23/server-105",
+"version": "1.1.0",
+"published_at": "2026-07-02T17:00:00.000000Z",
+"updated_at": "2026-07-02T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-4/server-115",
+"version": "1.2.0",
+"published_at": "2026-07-12T10:00:00.000000Z",
+"updated_at": "2026-07-12T10:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-4/server-115",
+"version": "1.1.0",
+"published_at": "2026-07-12T17:00:00.000000Z",
+"updated_at": "2026-07-12T17:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-40/server-81",
+"version": "1.0.0",
+"published_at": "2026-06-09T00:00:00.000000Z",
+"updated_at": "2026-06-09T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-1/server-42",
+"version": "1.0.0",
+"published_at": "2026-05-01T00:00:00.000000Z",
+"updated_at": "2026-05-01T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-0/server-123",
+"version": "1.3.0",
+"published_at": "2026-07-20T03:00:00.000000Z",
+"updated_at": "2026-07-20T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-17/server-99",
+"version": "1.0.0",
+"published_at": "2026-06-27T00:00:00.000000Z",
+"updated_at": "2026-06-27T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-9/server-9",
+"version": "1.0.0",
+"published_at": "2026-03-29T00:00:00.000000Z",
+"updated_at": "2026-03-29T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-22/server-63",
+"version": "1.3.0",
+"published_at": "2026-05-21T03:00:00.000000Z",
+"updated_at": "2026-05-21T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team25/server-83",
+"version": "1.3.0",
+"published_at": "2026-06-10T03:00:00.000000Z",
+"updated_at": "2026-06-10T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-10/server-51",
+"version": "1.3.0",
+"published_at": "2026-05-09T03:00:00.000000Z",
+"updated_at": "2026-05-09T03:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-16/server-57",
+"version": "1.0.0",
+"published_at": "2026-05-16T00:00:00.000000Z",
+"updated_at": "2026-05-16T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team6/server-122",
+"version": "1.2.0",
+"published_at": "2026-07-19T10:00:00.000000Z",
+"updated_at": "2026-07-19T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-9/server-9",
+"version": "1.1.0",
+"published_at": "2026-03-28T17:00:00.000000Z",
+"updated_at": "2026-03-28T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-9/server-46",
+"version": "1.0.0",
+"published_at": "2026-05-05T00:00:00.000000Z",
+"updated_at": "2026-05-05T00:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team4/server-149",
+"version": "1.1.0",
+"published_at": "2026-08-15T17:00:00.000000Z",
+"updated_at": "2026-08-15T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team1/server-146",
+"version": "1.2.0",
+"published_at": "2026-08-12T10:00:00.000000Z",
+"updated_at": "2026-08-12T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-6/server-43",
+"version": "1.0.0",
+"published_at": "2026-05-02T00:00:00.000000Z",
+"updated_at": "2026-05-02T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-37/server-78",
+"version": "1.1.0",
+"published_at": "2026-06-05T17:00:00.000000Z",
+"updated_at": "2026-06-05T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-30/server-30",
+"version": "1.1.0",
+"published_at": "2026-04-18T17:00:00.000000Z",
+"updated_at": "2026-04-18T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-5/server-79",
+"version": "1.1.0",
+"published_at": "2026-06-06T17:00:00.000000Z",
+"updated_at": "2026-06-06T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team5/server-92",
+"version": "1.0.0",
+"published_at": "2026-06-20T00:00:00.000000Z",
+"updated_at": "2026-06-20T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-6/server-6",
+"version": "1.0.0",
+"published_at": "2026-03-26T00:00:00.000000Z",
+"updated_at": "2026-03-26T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-0/server-37",
+"version": "1.0.0",
+"published_at": "2026-04-26T00:00:00.000000Z",
+"updated_at": "2026-04-26T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-25/server-66",
+"version": "1.1.0",
+"published_at": "2026-05-24T17:00:00.000000Z",
+"updated_at": "2026-05-24T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team7/server-65",
+"version": "1.0.0",
+"published_at": "2026-05-24T00:00:00.000000Z",
+"updated_at": "2026-05-24T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-29/server-103",
+"version": "1.2.0",
+"published_at": "2026-06-30T10:00:00.000000Z",
+"updated_at": "2026-06-30T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-18/server-55",
+"version": "1.1.0",
+"published_at": "2026-05-13T17:00:00.000000Z",
+"updated_at": "2026-05-13T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-10/server-51",
+"version": "1.2.0",
+"published_at": "2026-05-09T10:00:00.000000Z",
+"updated_at": "2026-05-09T10:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-24/server-61",
+"version": "1.0.0",
+"published_at": "2026-05-20T00:00:00.000000Z",
+"updated_at": "2026-05-20T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-17/server-99",
+"version": "1.3.0",
+"published_at": "2026-06-26T03:00:00.000000Z",
+"updated_at": "2026-06-26T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-11/server-85",
+"version": "1.0.0",
+"published_at": "2026-06-13T00:00:00.000000Z",
+"updated_at": "2026-06-13T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team23/server-110",
+"version": "1.1.0",
+"published_at": "2026-07-07T17:00:00.000000Z",
+"updated_at": "2026-07-07T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team15/server-131",
+"version": "1.3.0",
+"published_at": "2026-07-28T03:00:00.000000Z",
+"updated_at": "2026-07-28T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team14/server-101",
+"version": "1.0.0",
+"published_at": "2026-06-29T00:00:00.000000Z",
+"updated_at": "2026-06-29T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-25/server-66",
+"version": "1.2.0",
+"published_at": "2026-05-24T10:00:00.000000Z",
+"updated_at": "2026-05-24T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-16/server-127",
+"version": "1.0.0",
+"published_at": "2026-07-25T00:00:00.000000Z",
+"updated_at": "2026-07-25T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team2/server-89",
+"version": "1.0.0",
+"published_at": "2026-06-17T00:00:00.000000Z",
+"updated_at": "2026-06-17T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team3/server-119",
+"version": "1.3.0",
+"published_at": "2026-07-16T03:00:00.000000Z",
+"updated_at": "2026-07-16T03:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-23/server-97",
+"version": "1.0.0",
+"published_at": "2026-06-25T00:00:00.000000Z",
+"updated_at": "2026-06-25T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team26/server-113",
+"version": "1.0.0",
+"published_at": "2026-07-11T00:00:00.000000Z",
+"updated_at": "2026-07-11T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-2/server-76",
+"version": "1.0.0",
+"published_at": "2026-06-04T00:00:00.000000Z",
+"updated_at": "2026-06-04T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team1/server-146",
+"version": "1.1.0",
+"published_at": "2026-08-12T17:00:00.000000Z",
+"updated_at": "2026-08-12T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-15/server-138",
+"version": "1.1.0",
+"published_at": "2026-08-04T17:00:00.000000Z",
+"updated_at": "2026-08-04T17:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team2/server-2",
+"version": "1.1.0",
+"published_at": "2026-03-21T17:00:00.000000Z",
+"updated_at": "2026-03-21T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team25/server-83",
+"version": "1.0.0",
+"published_at": "2026-06-11T00:00:00.000000Z",
+"updated_at": "2026-06-11T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team5/server-5",
+"version": "1.0.0",
+"published_at": "2026-03-25T00:00:00.000000Z",
+"updated_at": "2026-03-25T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-12/server-135",
+"version": "1.1.0",
+"published_at": "2026-08-01T17:00:00.000000Z",
+"updated_at": "2026-08-01T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-11/server-85",
+"version": "1.1.0",
+"published_at": "2026-06-12T17:00:00.000000Z",
+"updated_at": "2026-06-12T17:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-15/server-15",
+"version": "1.2.0",
+"published_at": "2026-04-03T10:00:00.000000Z",
+"updated_at": "2026-04-03T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team17/server-104",
+"version": "1.0.0",
+"published_at": "2026-07-02T00:00:00.000000Z",
+"updated_at": "2026-07-02T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-22/server-22",
+"version": "1.0.0",
+"published_at": "2026-04-11T00:00:00.000000Z",
+"updated_at": "2026-04-11T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-15/server-52",
+"version": "1.0.0",
+"published_at": "2026-05-11T00:00:00.000000Z",
+"updated_at": "2026-05-11T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-31/server-142",
+"version": "1.1.0",
+"published_at": "2026-08-08T17:00:00.000000Z",
+"updated_at": "2026-08-08T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-36/server-36",
+"version": "1.0.0",
+"published_at": "2026-04-25T00:00:00.000000Z",
+"updated_at": "2026-04-25T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team8/server-95",
+"version": "1.2.0",
+"published_at": "2026-06-22T10:00:00.000000Z",
+"updated_at": "2026-06-22T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team23/server-23",
+"version": "1.2.0",
+"published_at": "2026-04-11T10:00:00.000000Z",
+"updated_at": "2026-04-11T10:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-17/server-91",
+"version": "1.1.0",
+"published_at": "2026-06-18T17:00:00.000000Z",
+"updated_at": "2026-06-18T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team14/server-14",
+"version": "1.0.0",
+"published_at": "2026-04-03T00:00:00.000000Z",
+"updated_at": "2026-04-03T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-15/server-15",
+"version": "1.1.0",
+"published_at": "2026-04-03T17:00:00.000000Z",
+"updated_at": "2026-04-03T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-15/server-15",
+"version": "1.0.0",
+"published_at": "2026-04-04T00:00:00.000000Z",
+"updated_at": "2026-04-04T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-29/server-111",
+"version": "1.0.0",
+"published_at": "2026-07-09T00:00:00.000000Z",
+"updated_at": "2026-07-09T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team0/server-29",
+"version": "1.1.0",
+"published_at": "2026-04-17T17:00:00.000000Z",
+"updated_at": "2026-04-17T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team4/server-62",
+"version": "1.1.0",
+"published_at": "2026-05-20T17:00:00.000000Z",
+"updated_at": "2026-05-20T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team6/server-122",
+"version": "1.1.0",
+"published_at": "2026-07-19T17:00:00.000000Z",
+"updated_at": "2026-07-19T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team18/server-47",
+"version": "1.1.0",
+"published_at": "2026-05-05T17:00:00.000000Z",
+"updated_at": "2026-05-05T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team14/server-101",
+"version": "1.1.0",
+"published_at": "2026-06-28T17:00:00.000000Z",
+"updated_at": "2026-06-28T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-22/server-22",
+"version": "1.1.0",
+"published_at": "2026-04-10T17:00:00.000000Z",
+"updated_at": "2026-04-10T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-26/server-108",
+"version": "1.0.0",
+"published_at": "2026-07-06T00:00:00.000000Z",
+"updated_at": "2026-07-06T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-7/server-7",
+"version": "1.1.0",
+"published_at": "2026-03-26T17:00:00.000000Z",
+"updated_at": "2026-03-26T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team8/server-95",
+"version": "1.1.0",
+"published_at": "2026-06-22T17:00:00.000000Z",
+"updated_at": "2026-06-22T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team23/server-23",
+"version": "1.1.0",
+"published_at": "2026-04-11T17:00:00.000000Z",
+"updated_at": "2026-04-11T17:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-27/server-27",
+"version": "1.0.0",
+"published_at": "2026-04-16T00:00:00.000000Z",
+"updated_at": "2026-04-16T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-10/server-10",
+"version": "1.0.0",
+"published_at": "2026-03-30T00:00:00.000000Z",
+"updated_at": "2026-03-30T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-32/server-114",
+"version": "1.0.0",
+"published_at": "2026-07-12T00:00:00.000000Z",
+"updated_at": "2026-07-12T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-31/server-31",
+"version": "1.2.0",
+"published_at": "2026-04-19T10:00:00.000000Z",
+"updated_at": "2026-04-19T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-16/server-127",
+"version": "1.1.0",
+"published_at": "2026-07-24T17:00:00.000000Z",
+"updated_at": "2026-07-24T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team0/server-116",
+"version": "1.0.0",
+"published_at": "2026-07-14T00:00:00.000000Z",
+"updated_at": "2026-07-14T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team9/server-38",
+"version": "1.1.0",
+"published_at": "2026-04-26T17:00:00.000000Z",
+"updated_at": "2026-04-26T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-17/server-99",
+"version": "1.1.0",
+"published_at": "2026-06-26T17:00:00.000000Z",
+"updated_at": "2026-06-26T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-19/server-60",
+"version": "1.0.0",
+"published_at": "2026-05-19T00:00:00.000000Z",
+"updated_at": "2026-05-19T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-22/server-63",
+"version": "1.1.0",
+"published_at": "2026-05-21T17:00:00.000000Z",
+"updated_at": "2026-05-21T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team15/server-131",
+"version": "1.2.0",
+"published_at": "2026-07-28T10:00:00.000000Z",
+"updated_at": "2026-07-28T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team3/server-119",
+"version": "1.0.0",
+"published_at": "2026-07-17T00:00:00.000000Z",
+"updated_at": "2026-07-17T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-30/server-67",
+"version": "1.3.0",
+"published_at": "2026-05-25T03:00:00.000000Z",
+"updated_at": "2026-05-25T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-35/server-109",
+"version": "1.0.0",
+"published_at": "2026-07-07T00:00:00.000000Z",
+"updated_at": "2026-07-07T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-34/server-145",
+"version": "1.0.0",
+"published_at": "2026-08-12T00:00:00.000000Z",
+"updated_at": "2026-08-12T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team13/server-71",
+"version": "1.3.0",
+"published_at": "2026-05-29T03:00:00.000000Z",
+"updated_at": "2026-05-29T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-13/server-124",
+"version": "1.0.0",
+"published_at": "2026-07-22T00:00:00.000000Z",
+"updated_at": "2026-07-22T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team27/server-143",
+"version": "1.0.0",
+"published_at": "2026-08-10T00:00:00.000000Z",
+"updated_at": "2026-08-10T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-16/server-127",
+"version": "1.3.0",
+"published_at": "2026-07-24T03:00:00.000000Z",
+"updated_at": "2026-07-24T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team6/server-35",
+"version": "1.0.0",
+"published_at": "2026-04-24T00:00:00.000000Z",
+"updated_at": "2026-04-24T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-20/server-102",
+"version": "1.1.0",
+"published_at": "2026-06-29T17:00:00.000000Z",
+"updated_at": "2026-06-29T17:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-2/server-84",
+"version": "1.0.0",
+"published_at": "2026-06-12T00:00:00.000000Z",
+"updated_at": "2026-06-12T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team8/server-8",
+"version": "1.0.0",
+"published_at": "2026-03-28T00:00:00.000000Z",
+"updated_at": "2026-03-28T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team18/server-134",
+"version": "1.2.0",
+"published_at": "2026-07-31T10:00:00.000000Z",
+"updated_at": "2026-07-31T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team20/server-20",
+"version": "1.0.0",
+"published_at": "2026-04-09T00:00:00.000000Z",
+"updated_at": "2026-04-09T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-6/server-43",
+"version": "1.1.0",
+"published_at": "2026-05-01T17:00:00.000000Z",
+"updated_at": "2026-05-01T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team21/server-50",
+"version": "1.2.0",
+"published_at": "2026-05-08T10:00:00.000000Z",
+"updated_at": "2026-05-08T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-6/server-129",
+"version": "1.1.0",
+"published_at": "2026-07-26T17:00:00.000000Z",
+"updated_at": "2026-07-26T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-0/server-0",
+"version": "1.0.0",
+"published_at": "2026-03-20T00:00:00.000000Z",
+"updated_at": "2026-03-20T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-case/tool",
+"version": "1.3.0",
+"published_at": "2026-08-17T03:00:00.000000Z",
+"updated_at": "2026-08-17T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.Example-Case/Tool",
+"version": "1.1.0",
+"published_at": "2026-08-16T17:00:00.000000Z",
+"updated_at": "2026-08-16T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-7/server-7",
+"version": "1.3.0",
+"published_at": "2026-03-26T03:00:00.000000Z",
+"updated_at": "2026-03-26T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-22/server-133",
+"version": "1.1.0",
+"published_at": "2026-07-30T17:00:00.000000Z",
+"updated_at": "2026-07-30T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-36/server-73",
+"version": "1.1.0",
+"published_at": "2026-05-31T17:00:00.000000Z",
+"updated_at": "2026-05-31T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-33/server-33",
+"version": "1.0.0",
+"published_at": "2026-04-22T00:00:00.000000Z",
+"updated_at": "2026-04-22T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team18/server-47",
+"version": "1.0.0",
+"published_at": "2026-05-06T00:00:00.000000Z",
+"updated_at": "2026-05-06T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-17/server-99",
+"version": "1.2.0",
+"published_at": "2026-06-26T10:00:00.000000Z",
+"updated_at": "2026-06-26T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-5/server-79",
+"version": "1.2.0",
+"published_at": "2026-06-06T10:00:00.000000Z",
+"updated_at": "2026-06-06T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team26/server-26",
+"version": "1.0.0",
+"published_at": "2026-04-15T00:00:00.000000Z",
+"updated_at": "2026-04-15T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-18/server-55",
+"version": "1.3.0",
+"published_at": "2026-05-13T03:00:00.000000Z",
+"updated_at": "2026-05-13T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team9/server-38",
+"version": "1.0.0",
+"published_at": "2026-04-27T00:00:00.000000Z",
+"updated_at": "2026-04-27T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-13/server-13",
+"version": "1.1.0",
+"published_at": "2026-04-01T17:00:00.000000Z",
+"updated_at": "2026-04-01T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-8/server-90",
+"version": "1.0.0",
+"published_at": "2026-06-18T00:00:00.000000Z",
+"updated_at": "2026-06-18T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-19/server-19",
+"version": "1.3.0",
+"published_at": "2026-04-07T03:00:00.000000Z",
+"updated_at": "2026-04-07T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team21/server-137",
+"version": "1.0.0",
+"published_at": "2026-08-04T00:00:00.000000Z",
+"updated_at": "2026-08-04T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-6/server-6",
+"version": "1.1.0",
+"published_at": "2026-03-25T17:00:00.000000Z",
+"updated_at": "2026-03-25T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-12/server-12",
+"version": "1.0.0",
+"published_at": "2026-04-01T00:00:00.000000Z",
+"updated_at": "2026-04-01T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-20/server-94",
+"version": "1.1.0",
+"published_at": "2026-06-21T17:00:00.000000Z",
+"updated_at": "2026-06-21T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-22/server-133",
+"version": "1.0.0",
+"published_at": "2026-07-31T00:00:00.000000Z",
+"updated_at": "2026-07-31T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-34/server-34",
+"version": "1.2.0",
+"published_at": "2026-04-22T10:00:00.000000Z",
+"updated_at": "2026-04-22T10:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team26/server-26",
+"version": "1.2.0",
+"published_at": "2026-04-14T10:00:00.000000Z",
+"updated_at": "2026-04-14T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-6/server-43",
+"version": "1.2.0",
+"published_at": "2026-05-01T10:00:00.000000Z",
+"updated_at": "2026-05-01T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-27/server-27",
+"version": "1.2.0",
+"published_at": "2026-04-15T10:00:00.000000Z",
+"updated_at": "2026-04-15T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-20/server-102",
+"version": "1.2.0",
+"published_at": "2026-06-29T10:00:00.000000Z",
+"updated_at": "2026-06-29T10:00:00.000000Z",
+"status": "deprecated",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-34/server-34",
+"version": "1.0.0",
+"published_at": "2026-04-23T00:00:00.000000Z",
+"updated_at": "2026-04-23T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "io.github.example-user-18/server-18",
+"version": "1.0.0",
+"published_at": "2026-04-07T00:00:00.000000Z",
+"updated_at": "2026-04-07T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-1/server-1",
+"version": "1.1.0",
+"published_at": "2026-03-20T17:00:00.000000Z",
+"updated_at": "2026-03-20T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-4/server-45",
+"version": "1.0.0",
+"published_at": "2026-05-04T00:00:00.000000Z",
+"updated_at": "2026-05-04T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-34/server-75",
+"version": "1.2.0",
+"published_at": "2026-06-02T10:00:00.000000Z",
+"updated_at": "2026-06-02T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-5/server-87",
+"version": "1.2.0",
+"published_at": "2026-06-14T10:00:00.000000Z",
+"updated_at": "2026-06-14T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-7/server-118",
+"version": "1.1.0",
+"published_at": "2026-07-15T17:00:00.000000Z",
+"updated_at": "2026-07-15T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team8/server-95",
+"version": "1.0.0",
+"published_at": "2026-06-23T00:00:00.000000Z",
+"updated_at": "2026-06-23T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team24/server-53",
+"version": "1.0.0",
+"published_at": "2026-05-12T00:00:00.000000Z",
+"updated_at": "2026-05-12T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-case/tool",
+"version": "1.2.0",
+"published_at": "2026-08-17T10:00:00.000000Z",
+"updated_at": "2026-08-17T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team23/server-23",
+"version": "1.3.0",
+"published_at": "2026-04-11T03:00:00.000000Z",
+"updated_at": "2026-04-11T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm",
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-7/server-48",
+"version": "1.0.0",
+"published_at": "2026-05-07T00:00:00.000000Z",
+"updated_at": "2026-05-07T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "org.example.team2/server-2",
+"version": "1.2.0",
+"published_at": "2026-03-21T10:00:00.000000Z",
+"updated_at": "2026-03-21T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-22/server-22",
+"version": "1.2.0",
+"published_at": "2026-04-10T10:00:00.000000Z",
+"updated_at": "2026-04-10T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"npm"
+],
+"package_transports": [],
+"remotes": [
+"streamable-http"
+]
+},
+{
+"name": "com.example-7/server-7",
+"version": "1.0.0",
+"published_at": "2026-03-27T00:00:00.000000Z",
+"updated_at": "2026-03-27T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-29/server-111",
+"version": "1.2.0",
+"published_at": "2026-07-08T10:00:00.000000Z",
+"updated_at": "2026-07-08T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "com.example-34/server-145",
+"version": "1.1.0",
+"published_at": "2026-08-11T17:00:00.000000Z",
+"updated_at": "2026-08-11T17:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-0/server-148",
+"version": "1.0.0",
+"published_at": "2026-08-15T00:00:00.000000Z",
+"updated_at": "2026-08-15T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"cargo"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team12/server-128",
+"version": "1.0.0",
+"published_at": "2026-07-26T00:00:00.000000Z",
+"updated_at": "2026-07-26T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team20/server-107",
+"version": "1.2.0",
+"published_at": "2026-07-04T10:00:00.000000Z",
+"updated_at": "2026-07-04T10:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"mcpb"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team18/server-47",
+"version": "1.3.0",
+"published_at": "2026-05-05T03:00:00.000000Z",
+"updated_at": "2026-05-05T03:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "com.example-4/server-115",
+"version": "1.0.0",
+"published_at": "2026-07-13T00:00:00.000000Z",
+"updated_at": "2026-07-13T00:00:00.000000Z",
+"status": "deleted",
+"is_latest": false,
+"packages": [
+"gem"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "com.example-3/server-40",
+"version": "1.0.0",
+"published_at": "2026-04-29T00:00:00.000000Z",
+"updated_at": "2026-04-29T00:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [
+"pypi"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-23/server-105",
+"version": "1.0.0",
+"published_at": "2026-07-03T00:00:00.000000Z",
+"updated_at": "2026-07-03T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [
+"oci"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "org.example.team1/server-59",
+"version": "1.1.0",
+"published_at": "2026-05-17T17:00:00.000000Z",
+"updated_at": "2026-05-17T17:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "org.example.team1/server-59",
+"version": "1.0.0",
+"published_at": "2026-05-18T00:00:00.000000Z",
+"updated_at": "2026-05-18T00:00:00.000000Z",
+"status": "active",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse"
+]
+},
+{
+"name": "io.github.example-user-15/server-138",
+"version": "1.2.0",
+"published_at": "2026-08-04T10:00:00.000000Z",
+"updated_at": "2026-08-04T10:00:00.000000Z",
+"status": "active",
+"is_latest": true,
+"packages": [],
+"package_transports": [],
+"remotes": [
+"sse",
+"streamable-http"
+]
+},
+{
+"name": "org.example.team17/server-17",
+"version": "1.0.0",
+"published_at": "2026-04-06T00:00:00.000000Z",
+"updated_at": "2026-04-06T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [
+"nuget"
+],
+"package_transports": [],
+"remotes": []
+},
+{
+"name": "io.github.example-user-20/server-102",
+"version": "1.0.0",
+"published_at": "2026-06-30T00:00:00.000000Z",
+"updated_at": "2026-06-30T00:00:00.000000Z",
+"status": "deprecated",
+"is_latest": false,
+"packages": [],
+"package_transports": [],
+"remotes": []
+}
+]
+}
