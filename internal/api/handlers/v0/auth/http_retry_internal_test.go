@@ -18,20 +18,24 @@ func TestHTTPKeyFetcherRetryCancellation(t *testing.T) {
 	for _, duringBody := range []bool{false, true} {
 		t.Run(fmt.Sprint(duringBody), func(t *testing.T) {
 			var count atomic.Int32
+			release := make(chan struct{})
 			started := make(chan struct{})
-			srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 				if count.Add(1) == 1 {
 					close(started)
 				}
 				if duringBody {
 					w.WriteHeader(http.StatusOK)
 					w.(http.Flusher).Flush()
-					<-r.Context().Done()
+					<-release
 				} else {
 					w.WriteHeader(http.StatusServiceUnavailable)
 				}
 			}))
 			defer srv.Close()
+			// Keep the handler stalled until FetchKey returns. Returning on request
+			// cancellation can race the client timeout with a normal response EOF.
+			defer close(release)
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			done := make(chan error, 1)
@@ -56,13 +60,17 @@ func TestHTTPKeyFetcherRetryCancellation(t *testing.T) {
 
 func TestHTTPKeyFetcherRetryHonorsEarlierCallerDeadline(t *testing.T) {
 	var count atomic.Int32
-	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	release := make(chan struct{})
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		count.Add(1)
 		w.WriteHeader(http.StatusOK)
 		w.(http.Flusher).Flush()
-		<-r.Context().Done()
+		<-release
 	}))
 	defer srv.Close()
+	// Keep the handler stalled until FetchKey returns. Returning on request
+	// cancellation can race the client timeout with a normal response EOF.
+	defer close(release)
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
 	started := time.Now()
@@ -74,14 +82,18 @@ func TestHTTPKeyFetcherRetryHonorsEarlierCallerDeadline(t *testing.T) {
 
 func TestHTTPKeyFetcherRetryRecoversAfterAttemptTimeout(t *testing.T) {
 	var count atomic.Int32
-	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	release := make(chan struct{})
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		if count.Add(1) == 1 {
-			<-r.Context().Done()
+			<-release
 			return
 		}
 		_, _ = w.Write([]byte("recovered"))
 	}))
 	defer srv.Close()
+	// Keep the handler stalled until FetchKey returns. Returning on request
+	// cancellation can race the client timeout with a normal response EOF.
+	defer close(release)
 	fetcher := newLocalTLSFetcher(srv)
 	fetcher.client.Timeout = 200 * time.Millisecond
 	key, err := fetcher.FetchKey(context.Background(), internalTestDomain)
@@ -184,13 +196,17 @@ func TestHTTPKeyFetcherRetryTLSVerificationFailsClosed(t *testing.T) {
 
 func TestHTTPKeyFetcherRetryProductionTimeBudget(t *testing.T) {
 	var count atomic.Int32
-	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	release := make(chan struct{})
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		count.Add(1)
 		w.WriteHeader(http.StatusOK)
 		w.(http.Flusher).Flush()
-		<-r.Context().Done()
+		<-release
 	}))
 	defer srv.Close()
+	// Keep the handler stalled until FetchKey returns. Returning on request
+	// cancellation can race the client timeout with a normal response EOF.
+	defer close(release)
 	started := time.Now()
 	_, err := newLocalTLSFetcher(srv).FetchKey(context.Background(), internalTestDomain)
 	elapsed := time.Since(started)

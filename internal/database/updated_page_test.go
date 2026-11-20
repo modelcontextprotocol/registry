@@ -103,6 +103,76 @@ func TestUpdatedPagePreservesWatermarkPaginationAndPayloads(t *testing.T) {
 	}
 }
 
+// Exercise both selection branches, including exact probe-boundary counts,
+// using an independently constructed expected sequence and full pagination.
+func TestUpdatedPageProbeBoundary(t *testing.T) {
+	db := database.NewTestDB(t)
+	ctx := context.Background()
+	epoch := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
+	yes, no := true, false
+	version := "1.0.0"
+	var fixture []*apiv0.ServerResponse
+	for i := 0; i < 260; i++ {
+		status := model.StatusActive
+		if i%3 == 0 {
+			status = model.StatusDeleted
+		}
+		stamp := epoch.Add(time.Duration(i+1) * time.Second)
+		r, err := db.CreateServer(ctx, nil, &apiv0.ServerJSON{Name: fmt.Sprintf("com.example/boundary-%03d", i), Version: version, Description: "boundary payload"}, &apiv0.RegistryExtensions{Status: status, StatusChangedAt: stamp, PublishedAt: epoch, UpdatedAt: stamp, IsLatest: true})
+		require.NoError(t, err)
+		fixture = append(fixture, r)
+	}
+	for _, count := range []int{0, 1, 127, 128, 129, 130, 260} {
+		cutoff := epoch.Add(time.Duration(260-count) * time.Second)
+		for _, includeDeleted := range []*bool{&yes, &no, nil} {
+			f := &database.ServerFilter{UpdatedSince: &cutoff, IncludeDeleted: includeDeleted, Version: &version}
+			want := expectedUpdatedServers(fixture, f, cutoff)
+			for _, limit := range []int{1, 100, 128, 129, 1000} {
+				var got []*apiv0.ServerResponse
+				cursor := ""
+				for page := 0; page < 262; page++ {
+					rows, next, err := db.ListServers(ctx, nil, f, cursor, limit)
+					require.NoError(t, err)
+					for _, r := range rows {
+						r.Meta.Official.PublishedAt = r.Meta.Official.PublishedAt.UTC()
+						r.Meta.Official.UpdatedAt = r.Meta.Official.UpdatedAt.UTC()
+						r.Meta.Official.StatusChangedAt = r.Meta.Official.StatusChangedAt.UTC()
+					}
+					wire, err := db.(*database.PostgreSQL).ListServersJSON(ctx, f, cursor, limit)
+					require.NoError(t, err)
+					encoded, err := json.Marshal(wire)
+					require.NoError(t, err)
+					var decoded apiv0.ServerListResponse
+					require.NoError(t, json.Unmarshal(encoded, &decoded))
+					require.Equal(t, next, decoded.Metadata.NextCursor)
+					require.Len(t, decoded.Servers, len(rows))
+					for i := range rows {
+						// Typed pgx timestamps can use the host timezone; compare
+						// the same instants regardless of the developer's locale.
+						meta := decoded.Servers[i].Meta.Official
+						meta.PublishedAt = meta.PublishedAt.UTC()
+						meta.UpdatedAt = meta.UpdatedAt.UTC()
+						meta.StatusChangedAt = meta.StatusChangedAt.UTC()
+						expectedJSON, err := json.Marshal(rows[i])
+						require.NoError(t, err)
+						actualJSON, err := json.Marshal(decoded.Servers[i])
+						require.NoError(t, err)
+						require.JSONEq(t, string(expectedJSON), string(actualJSON))
+					}
+					got = append(got, rows...)
+					if next == "" {
+						break
+					}
+					require.NotEqual(t, cursor, next)
+					cursor = next
+					require.Less(t, page, 261)
+				}
+				require.Equal(t, want, got, "count=%d limit=%d", count, limit)
+			}
+		}
+	}
+}
+
 func expectedUpdatedServers(fixture []*apiv0.ServerResponse, filter *database.ServerFilter, cutoff time.Time) []*apiv0.ServerResponse {
 	var want []*apiv0.ServerResponse
 	for _, server := range fixture {

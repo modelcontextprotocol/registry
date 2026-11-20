@@ -22,9 +22,10 @@ import (
 
 // PostgreSQL is an implementation of the Database interface using PostgreSQL
 type PostgreSQL struct {
-	pool           *pgxpool.Pool
-	poolMetrics    metric.Registration
-	listingMetrics metric.Int64Counter
+	updatedPageHints updatedPageHints
+	pool             *pgxpool.Pool
+	poolMetrics      metric.Registration
+	listingMetrics   metric.Int64Counter
 }
 
 // Executor is an interface for executing queries (satisfied by both pgx.Tx and pgxpool.Pool)
@@ -220,28 +221,22 @@ func addCursorCondition(cursor string, argIndex int) (string, []any, int) {
 }
 
 // filteredPageQuery fetches payloads only after selecting a filtered page's keys.
-func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limitArg int, prepared ...bool) string {
+func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limitExpression string, prepared bool, strategy updatedPageStrategy) string {
 	if filter == nil || (filter.SubstringName == nil && filter.UpdatedSince == nil) {
 		return ordinary
 	}
-	// Find the page using only its keys before fetching the JSON payloads.
-	// The covering index can reject nonmatching names without visiting the
-	// heap. The materialized candidate query plans for a larger key batch:
-	// a small LIMIT otherwise assumes rare matches occur early in name order
-	// and can favor scanning most of the ordered index over a selective GIN
-	// lookup. The outer LIMIT still defines the exact page before payload fetch.
-	// PostgreSQL 17 can stop the ordered CTE scan after the requested rows.
+	// Select the page using only its keys before fetching JSON payloads.
 	payload := "s.value"
-	if len(prepared) > 0 && prepared[0] {
+	if prepared {
 		payload = listingPayload("s.")
 	}
-	// Incremental sync needs only the exact page. Its all-status covering index
-	// includes deleted versions, which consumers need to remove local records.
-	// Retain the larger planning boundary only for substring searches.
-	candidateLimit := fmt.Sprintf("$%d", limitArg)
-	if filter.SubstringName != nil {
-		candidateLimit = fmt.Sprintf("GREATEST($%d, 8192)", limitArg)
+	if filter.UpdatedSince != nil && filter.SubstringName == nil {
+		return updatedPageQuery(whereClause, limitExpression, payload, prepared, strategy)
 	}
+	// For substring searches, a small LIMIT can favor scanning most of the
+	// ordered index over a selective GIN lookup. Plan for a larger key batch;
+	// the outer LIMIT still defines the exact page before payload fetch.
+	candidateLimit := fmt.Sprintf("GREATEST(%s, 8192)", limitExpression)
 	return fmt.Sprintf(`
         WITH candidates AS MATERIALIZED (
             SELECT server_name, version FROM servers
@@ -254,16 +249,24 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
         FROM (
             SELECT server_name, version FROM candidates
             ORDER BY server_name, version
-            LIMIT $%d
+            LIMIT %s
         ) page
         JOIN servers s USING (server_name, version)
         ORDER BY s.server_name, s.version
-    `, whereClause, candidateLimit, payload, limitArg)
+    `, whereClause, candidateLimit, payload, limitExpression)
+}
+
+// cacheUpdatedPage bounds the extra statement-cache shapes to the two common
+// page sizes. Every shape respects the configured connection execution mode.
+func cacheUpdatedPage(filter *ServerFilter, limit int) bool {
+	return filter != nil && filter.UpdatedSince != nil &&
+		filter.SubstringName == nil && filter.Name == nil && filter.Version == nil &&
+		filter.IsLatest == nil && filter.RemoteURL == nil && (limit == 1 || limit == 100)
 }
 
 func filteredQueryArgs(filter *ServerFilter, args []any) []any {
 	if filter != nil && filter.SubstringName != nil {
-		// Search selectivity varies by orders of magnitude. Use an unnamed
+		// Search selectivity varies greatly. Use an unnamed
 		// extended-protocol query so PostgreSQL plans for these parameter values
 		// instead of reusing one generic plan for every term.
 		return append([]any{pgx.QueryExecModeExec}, args...)
@@ -351,22 +354,35 @@ func (db *PostgreSQL) listServerRows(
 	if prepared {
 		payload = listingPayload("")
 	}
+	cachePage := cacheUpdatedPage(filter, limit)
+	limitExpression := fmt.Sprintf("$%d", argIndex)
+	if cachePage {
+		// Only the validated constants 1 and 100 are embedded. Cutoffs and
+		// cursors remain parameters. This gives generic plans an exact page
+		// bound without forcing generic planning for other query shapes.
+		limitExpression = fmt.Sprintf("%d", limit)
+	}
 	query := fmt.Sprintf(`
         SELECT server_name, version, status, status_changed_at, status_message, published_at, updated_at, is_latest, %s
         FROM servers
         %s
         ORDER BY server_name, version
-        LIMIT $%d
-    `, payload, whereClause, argIndex)
-	query = filteredPageQuery(filter, query, whereClause, argIndex, prepared)
-	args = append(args, limit)
+        LIMIT %s
+    `, payload, whereClause, limitExpression)
+	strategy := db.chooseUpdatedPageStrategy(tx, filter, limit, cursorArgs)
+	query = filteredPageQuery(filter, query, whereClause, limitExpression, prepared, strategy)
+	if !cachePage {
+		args = append(args, limit)
+	}
+	// Respect the connection's execution mode, including disabled caches.
+	// Incremental queries retain binary results with the default pgx mode.
 	args = filteredQueryArgs(filter, args)
 
 	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query servers: %w", err)
 	}
-	return readListingRows(ctx, rows, diagnostic, prepared)
+	return db.readUpdatedPageRows(ctx, rows, diagnostic, prepared, strategy, filter)
 }
 
 type listingRow struct {
@@ -376,7 +392,7 @@ type listingRow struct {
 	prepared      bool
 }
 
-func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic, prepared bool) ([]listingRow, error) {
+func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic, prepared bool, observation *updatedPageObservation) ([]listingRow, error) {
 	defer rows.Close()
 
 	// Copy the bounded page before decoding JSON. Exhausting/closing pooled rows
@@ -386,7 +402,6 @@ func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.L
 	var page []listingRow
 	diagnostic.Phase("row_fetch")
 	for rows.Next() {
-		diagnostic.RowReceived()
 		diagnostic.Phase("row_fetch")
 		if err := ctx.Err(); err != nil {
 			return nil, err
@@ -403,9 +418,15 @@ func readListingRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.L
 		if err := rows.Scan(dest...); err != nil {
 			return nil, fmt.Errorf("failed to scan server row: %w", err)
 		}
+		if observation != nil && observation.consume(row) {
+			continue
+		}
+		diagnostic.RowReceived()
 		meta.Status = model.Status(status)
 		diagnostic.AddBytes(len(row.value))
 		page = append(page, row)
+		// The next Next/Close can wait on the database again.
+		diagnostic.Phase("row_fetch")
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {

@@ -1178,35 +1178,112 @@ failures and scope limits; functional production validation is not a maximum-cap
 
 ## Incremental-sync page index
 
-Migration 019 adds `idx_servers_updated_page_cover` on `(server_name, version)`
-including `updated_at`, `is_latest`, and `status`. Unlike the partial search
-index, it includes deleted versions required by incremental sync. Incremental
-queries select a page of keys before fetching payloads. They retain prepared
-statement reuse, binary payload transfer, and PostgreSQL automatic plan selection.
-Forcing unnamed text-format execution regressed concurrent throughput in staging. The
-watermark comparison, cursor ordering, filters, and response format are unchanged.
+Migration 020 replaces migration 019's included-column timestamp index with
+`idx_servers_updated_name_cover` on `(server_name, version, updated_at)` including
+`is_latest` and `status`. It also replaces the single-column timestamp index with
+`idx_servers_updated_time_cover` on `(updated_at DESC, server_name, version)`.
+Both include deleted versions needed by incremental-sync clients. Migration 020
+retains the old indexes; remove them concurrently in a separate post-rollout step.
 
-On a busy existing database, prebuild before deploying the application:
+For first-page `updated_since` queries with `limit=100`, the query probes up to
+513 matching keys in timestamp order. With at most 512 matches it sorts that
+complete set into name/version order; otherwise it fetches the requested page in
+name order. Other first-page incremental shapes without substring search retain
+the smaller 129-key probe and 128-match boundary. The larger probe avoids switching to a
+costly name scan for moderately sparse pages. To avoid repeatedly paying for that
+probe on large histories, each app samples one in 16 eligible plain 100-row
+requests and retains up to 32 query-strategy hints for five seconds. A hint
+records a timestamp/name range containing more than 512 matches. Requests
+covered by that range can skip the probe. Plain cursor pages first inspect up to
+512 eligible keys in name/version order after the cursor and apply the timestamp
+filter. If that window supplies the requested page, or exhausts the remaining
+name range, it returns those matches without a timestamp scan. Otherwise it
+probes up to 513 matching keys in timestamp order, sorts a complete result of at
+most 512 keys, or falls back to the full name-ordered query. This preserves the
+cheap timestamp path for sparse pages while avoiding the consumed timestamp
+prefix for dense deep pages and exhausted suffixes. It also supports `limit=1`,
+the default page size, and legacy name-only cursors. Cursor pages with additional
+filters retain the direct name seek. The timestamp probe bounds returned keys,
+not all index entries visited; sparse deep pages can still scan a consumed
+timestamp prefix. No selection path caches response rows.
+The plain cursor query evaluates its cutoff and cursor parameters in one
+materialized row so varying parameter estimates do not prevent plan reuse.
+Hints are separated by deletion filtering and are not used for cursor pages,
+caller-owned transactions or additional filters.
+They contain no response data: writes can make a hint suboptimal until it expires,
+but every request still applies the
+complete predicate to current data. Sampled queries return an internal marker
+row that is removed before pagination, serialization and returned-row metrics.
+All selection branches use the full predicate and one statement snapshot, with
+payloads fetched only for the selected page. Timestamp order never becomes the
+public pagination order. Plain incremental queries with page sizes 1 or 100 use
+the validated page size embedded in the query; cutoffs and cursors remain
+parameters. The exact page bound lets PostgreSQL consider reusing a generic plan
+instead of repeatedly planning the common shapes. All incremental shapes respect
+the connection's configured execution mode (including a disabled statement
+cache); the default mode preserves prepared-statement reuse and binary payload
+transfer. Substring searches retain their existing parameter-specific planning.
+No global plan-cache setting is changed.
+The probe bounds returned keys, not all index entries examined. Very large recent
+histories, sparse cursors and different filter mixes still need measurement.
+
+On a busy existing database, **prebuild both indexes before deploying** the
+application. These steps assume migration 019 is already applied; older
+deployments must also prebuild indexes for their earlier pending migrations.
+Startup migrations run inside a transaction and cannot use
+`CONCURRENTLY`; without a prebuild they use regular index creation, which blocks
+writes during the build. Use a maintenance window if prebuilding is not possible.
+Run these as separate statements in autocommit, outside a transaction:
 
 ```sql
-SET application_name = 'registry-updated-page-index-build';
+SET application_name = 'registry-updated-listing-index-build';
 SET lock_timeout = '5s';
 SET statement_timeout = '10min';
-CREATE INDEX CONCURRENTLY idx_servers_updated_page_cover
-    ON public.servers (server_name, version) INCLUDE (updated_at, is_latest, status);
+CREATE INDEX CONCURRENTLY idx_servers_updated_name_cover
+    ON public.servers (server_name, version, updated_at) INCLUDE (is_latest, status);
+CREATE INDEX CONCURRENTLY idx_servers_updated_time_cover
+    ON public.servers (updated_at DESC, server_name, version);
+
+SELECT c.relname, i.indisvalid, i.indisready, pg_get_indexdef(i.indexrelid)
+FROM pg_index i JOIN pg_class c ON c.oid = i.indexrelid
+WHERE c.relname IN ('idx_servers_updated_name_cover', 'idx_servers_updated_time_cover');
 ```
 
-Run in autocommit, outside a transaction. Verify the definition and both
-`indisvalid` and `indisready` before deploying. The migration creates the index
-on fresh databases and rejects an existing invalid index. A concurrent build
-uses CPU, I/O, and disk space; monitor it and repair any incomplete build before
-retrying.
+Check both definitions and both readiness flags before deployment. Concurrent
+builds consume CPU, I/O and temporary disk space; the old indexes remain until
+the separate post-rollout cleanup. If a build fails, inspect its state, drop only that new
+incomplete index with `DROP INDEX CONCURRENTLY`, and retry in autocommit. Do not
+use `IF NOT EXISTS` to assume a failed prebuild is usable.
 
-Compare recent, old, and empty incremental-sync windows, deep cursors, deleted
-records, and latest/version filters. Measure SQL execution and buffer access as
-well as end-to-end latency, pool queues, CPU, and actual completed request rate.
-Rolling back the application can leave this additive index in place; removal
-is optional and should happen only after all candidate instances are gone.
+Migration 020 checks for each index before issuing CREATE INDEX, avoiding the
+write-blocking lock that even CREATE INDEX IF NOT EXISTS requests for an existing
+index. It validates both replacements and retains the old indexes. Its five-second
+lock timeout bounds lock acquisition, not the duration of a missing-index build.
+A failure rolls back the migration; investigate before retrying. It does not
+change table data, connection limits, HPA targets or replica counts.
+
+After rollout validation and the application rollback observation window, remove
+only the two obsolete indexes using separate statements in autocommit. Ordinary
+DROP INDEX inside a startup transaction can block both readers and writers.
+Keeping all four temporarily costs disk space and write maintenance, so schedule
+this cleanup explicitly. These commands must not run inside a transaction:
+
+```sql
+SET lock_timeout = '5s';
+SET statement_timeout = '10min';
+DROP INDEX CONCURRENTLY IF EXISTS public.idx_servers_updated_page_cover;
+DROP INDEX CONCURRENTLY IF EXISTS public.idx_servers_updated_at;
+```
+
+Inspect index validity/state after any interrupted concurrent drop before retrying.
+An application rollback remains schema-compatible with the replacement indexes,
+but its planner choices and performance may differ. Leave the replacements and
+any retained old indexes in place during an application rollback and measure
+behavior. After cleanup, restoring the exact old physical layout requires a
+separate concurrent prebuild and reviewed cleanup.
+Validate sparse/empty windows, early/deep cursors, `limit=1`, publishing, deleted
+records and latest/version/search filters before production deployment. Compare
+completed request rate, latency, CPU and pool queues at matched workloads.
 
 ### Packed production workers
 
