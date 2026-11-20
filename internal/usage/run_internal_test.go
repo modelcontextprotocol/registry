@@ -59,7 +59,7 @@ func TestRunFillsMissingDays(t *testing.T) {
 	err := collector.Run(t.Context())
 	require.Error(t, err, "three of the four days in the window have no access records")
 	for _, day := range []string{"2026-10-05", "2026-10-07", "2026-10-08"} {
-		assert.ErrorContains(t, err, day+": no access records were found")
+		assert.ErrorContains(t, err, day+": no access records were found for this period, although the gateway counted 5073 requests")
 	}
 	assert.NotContains(t, err.Error(), "2026-10-06:")
 	assert.Equal(t, []string{"2026-10-06"}, storedDays(t, store))
@@ -101,7 +101,7 @@ func TestRunFillsMissingDays(t *testing.T) {
 	for _, filter := range f.gateway.filters {
 		assert.NotContains(t, filter, `timestamp>="2026-10-06T`, "a stored day is not read again")
 	}
-	assert.Len(t, f.gateway.filters, 3)
+	assert.Len(t, f.gateway.filters, 6, "each of the three days is sized and then read")
 }
 
 func TestRunWaitsForTheDayToSettle(t *testing.T) {
@@ -236,14 +236,36 @@ func TestRunNeedsAnUpToDateCatalogue(t *testing.T) {
 	})
 }
 
-// TestRunGivesUpOnADayThatIsTooLarge checks the guard against a read that
-// could not be sampled and would otherwise fill memory.
-func TestRunGivesUpOnADayThatIsTooLarge(t *testing.T) {
-	f := newFixture(t, "no-counters")
-	f.limits.MaxRecords = 100
-	_, err := f.collect(t)
-	require.ErrorContains(t, err, "the day holds more than 1000 access records at fraction 1.0")
-	assert.Equal(t, 3, f.gateway.logCalls, "reading stops at the page that crosses the limit")
+// idleMetrics is a gateway whose counters were being recorded but show no
+// registry request: the day's queries return nothing, and the question
+// whether the counter had any series that day is answered with a count.
+type idleMetrics struct{}
+
+func (idleMetrics) Query(_ context.Context, query string, _ time.Time) ([]MetricSample, error) {
+	if strings.Contains(query, "last_over_time") {
+		return []MetricSample{{Value: 6}}, nil
+	}
+	return nil, nil
+}
+
+// TestRunSkipsADayWithoutTraffic covers a day on which the gateway served the
+// registry nothing: its counters were recorded and show no request, and there
+// are no access records. That is not a failure, and nothing is stored for it.
+func TestRunSkipsADayWithoutTraffic(t *testing.T) {
+	f := newFixture(t, "empty")
+	f.sources.Metrics = idleMetrics{}
+	store := newStore(t, newDatabase(t))
+	reports := t.TempDir()
+	collector := newCollector(t, f, store, Options{MarkdownDir: reports, Now: at("2026-10-07T03:00:00Z")})
+	collector.Lookback = 1
+
+	require.NoError(t, collector.Run(t.Context()))
+	assert.Empty(t, storedDays(t, store))
+	assert.Contains(t, f.log.String(), "2026-10-06 has nothing to collect: the gateway counted no registry requests and no access record shows one")
+	assert.Equal(t, 2, f.gateway.logCalls)
+	report, err := os.ReadFile(filepath.Join(reports, "2026-10-06.md"))
+	require.NoError(t, err)
+	assert.Equal(t, string(readFixture(t, "scenarios", "empty", "report.md")), string(report))
 }
 
 // TestRunStoresADegradedDayOnItsLastChance checks what happens to a day that
@@ -295,8 +317,8 @@ func TestRunStoresADegradedDayOnItsLastChance(t *testing.T) {
 		})
 	}
 
-	// Without the request counters the read cannot be sampled and the records
-	// cannot be scaled to the gateway's totals, so there is nothing sound to store.
+	// Without the request counters the records cannot be scaled to the
+	// gateway's totals, so there is nothing sound to store.
 	t.Run("no-counters", func(t *testing.T) {
 		f := newFixture(t, "no-counters")
 		store := newStore(t, newDatabase(t))

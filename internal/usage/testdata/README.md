@@ -13,6 +13,7 @@ Everything in this directory is synthetic.
 | --- | --- |
 | `entries/typical.jsonl` | A day of access records, one Cloud Logging entry per line. It mirrors the storage rule: about 1 in 10 fast successful listing records are present, and every other record is. |
 | `entries/typical.counters.json` | The gateway counters for that day, covering all of its traffic. |
+| `entries/quiet.jsonl`, `entries/quiet.counters.json` | A day with so little traffic that in several hours no fast listing record was kept. |
 | `entries/hostile.jsonl` | Records with malformed and unusual fields. Read this one to see which inputs are covered. |
 | `networks/` | A small address-range table and network-type list in the formats of the public files. |
 | `catalogue.json` | Published server versions, for the server lookup breakdowns. |
@@ -33,12 +34,16 @@ The prototype was wrong, or environment-specific, in a few places. So that it co
 | A product name in a user agent that is an address, an email address, a private host name or a long identifier | kept as a client and organization name | replaced by a fixed label, and the client counts as unnamed |
 | Access records for the gateway's own test hosts | counted, although the gateway's counters leave them out | left out |
 | An organization's own networks | named in a table in the script | named by a setting; each scenario lists its aliases |
+| How much of a day to read | sized from the counters, assuming 1 in 10 successful listing records was stored | sized by counting a small sample of the day's records first |
+| An hour in which every fast listing record was thinned out | the listing requests the counters saw in that hour were lost from the estimate | they are carried by the nearest hour that kept such a record |
 
 Three more differences need no correction to the prototype, because the fixtures that would show them are not replayed through it:
 
 - A requested page size beginning with `default` is cleaned like any other. The prototype printed it as it was.
 - A request target that cannot be split, or a user agent that is not text, counts as an unknown path or name. The prototype stopped.
-- When the gateway counters answer but hold nothing for the day, the day counts as degraded. The prototype said nothing.
+- When the gateway counters answer but hold nothing for the day, the day counts as degraded. When they were recorded and show no registry request, and no access record shows one, there is nothing to collect. The prototype said nothing in either case.
+
+Days too large to replay through the prototype are made up in `sizing_internal_test.go`, to check that a read stays near its limit whatever share of the records was stored. The fake log API returns the same sample for the same fraction, as Cloud Logging does, but picks it with a hash of its own.
 
 The view and functions the dashboards call were never part of the prototype. Their arithmetic is tested against figures worked out by hand, in `queries_internal_test.go`.
 

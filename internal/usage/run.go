@@ -102,6 +102,7 @@ func Run(ctx context.Context, settings Settings, options Options) error {
 			Logs: &CloudLogging{
 				Project: settings.GCPProject, Cluster: settings.ClusterName, Namespace: settings.LogNamespace,
 				Container: settings.LogContainer, QuotaProject: quotaProject, Client: client, Logf: logf,
+				ReadsPerMinute: settings.LogReadsPerMinute,
 				Token: func(ctx context.Context) (string, error) {
 					token, err := creds.Token(ctx)
 					if err != nil {
@@ -232,11 +233,17 @@ func (c *Collector) collect(ctx context.Context, day time.Time) error {
 	limits := c.Limits
 	limits.Require = c.tolerance(day)
 	sample, err := CollectDay(ctx, c.Sources, limits, day)
-	if err != nil && !errors.Is(err, ErrNoRecords) {
+	if err != nil && !errors.Is(err, ErrNoRecords) && !errors.Is(err, ErrNoTraffic) {
 		return err
 	}
 	if reportErr := c.report(sample); reportErr != nil {
 		return reportErr
+	}
+	if errors.Is(err, ErrNoTraffic) {
+		// Nothing is stored, so the day is looked at again while it is in the
+		// look-back window. That costs a few small requests.
+		c.logf("%s has nothing to collect: %v", day.Format(dayLayout), err)
+		return nil
 	}
 	if err != nil || c.Store == nil {
 		return err

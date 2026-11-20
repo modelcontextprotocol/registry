@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -135,9 +137,59 @@ func noSleep(context.Context, time.Duration) error {
 	return nil
 }
 
+var sampleClause = regexp.MustCompile(`sample\(jsonPayload\.request_id, ([0-9.]+)\)`)
+
+// fakeEntry is a log entry with what the fake needs to apply a filter to it.
+type fakeEntry struct {
+	raw  json.RawMessage
+	host string
+	// position places the entry's request ID between 0 and 1. A sample of a
+	// fraction holds the entries below it, so the same entries are returned
+	// each time, as with Cloud Logging. Its hash is not known; any will do.
+	position float64
+}
+
+func newFakeEntry(t *testing.T, raw json.RawMessage) fakeEntry {
+	t.Helper()
+	var entry struct {
+		Payload struct {
+			Host      any `json:"host"`
+			RequestID any `json:"request_id"`
+		} `json:"jsonPayload"`
+	}
+	require.NoError(t, json.Unmarshal(raw, &entry))
+	host, _ := entry.Payload.Host.(string)
+	id, _ := entry.Payload.RequestID.(string)
+	sum := sha256.Sum256([]byte(id))
+	return fakeEntry{raw: raw, host: host, position: float64(binary.BigEndian.Uint64(sum[:8])) / (1 << 64)}
+}
+
+// matching returns the entries a filter selects: it leaves out the hosts the
+// filter excludes and keeps the sample the filter asks for.
+func matching(entries []fakeEntry, filter string) []json.RawMessage {
+	fraction := 1.0
+	if clause := sampleClause.FindStringSubmatch(filter); clause != nil {
+		fraction, _ = strconv.ParseFloat(clause[1], 64)
+	}
+	var out []json.RawMessage
+	for _, entry := range entries {
+		if entry.host != "" && strings.Contains(filter, `NOT jsonPayload.host="`+entry.host+`"`) {
+			continue
+		}
+		if fraction < 1 && entry.position >= fraction {
+			continue
+		}
+		out = append(out, entry.raw)
+	}
+	return out
+}
+
 func newFakeGateway(t *testing.T, s scenario) *fakeGateway {
 	t.Helper()
-	entries := s.entries(t)
+	var entries []fakeEntry
+	for _, raw := range s.entries(t) {
+		entries = append(entries, newFakeEntry(t, raw))
+	}
 	var counters struct {
 		Requests json.RawMessage   `json:"requests"`
 		Bytes    json.RawMessage   `json:"bytes"`
@@ -163,9 +215,9 @@ func newFakeGateway(t *testing.T, s scenario) *fakeGateway {
 		gateway.logCalls++
 		gateway.mu.Unlock()
 		// The fixture holds one day. Any other day has no access records.
-		available := entries
-		if !strings.Contains(body.Filter, `timestamp>="`+s.Day+`T00:00:00Z"`) {
-			available = nil
+		var available []json.RawMessage
+		if strings.Contains(body.Filter, `timestamp>="`+s.Day+`T00:00:00Z"`) {
+			available = matching(entries, body.Filter)
 		}
 		offset, _ := strconv.Atoi(body.PageToken)
 		// Smaller pages than asked for, as Cloud Logging may return, to exercise paging.

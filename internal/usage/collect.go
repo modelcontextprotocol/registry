@@ -29,14 +29,37 @@ const (
 	noteStaleCatalogue = "The catalogue could not be refreshed, so lookups of recently published servers may be counted as unknown names."
 	noteLastChance     = "Stored as it is because this was the last run that could collect the day."
 
-	// A day is expected to hold about MaxRecords records once sampled. Far more
-	// than that means the sample could not be sized, and reading on would only
-	// exhaust memory.
-	recordCapFactor = 10
+	// A day's read is sized by first counting a small sample of its records.
+	// For a day that holds exactly MaxRecords records that sample returns
+	// about this many, which puts the count within about a tenth of the truth;
+	// it is closer for larger days.
+	sizingRecords = 100
+	// A read that returns more than this many times MaxRecords is stopped and
+	// repeated at a smaller fraction. Sizing keeps a read near MaxRecords, so
+	// this is reached only when the sample is very uneven, as when many
+	// records share one request ID.
+	readCapFactor = 2
+	maxResizes    = 4
+	minFraction   = 0.000001
 )
 
 // ErrNoRecords means Cloud Logging returned no access records for the day.
 var ErrNoRecords = errors.New("no access records were found for this period")
+
+// ErrNoTraffic means the gateway's counters were being recorded on the day
+// and show no registry request, and no access record shows one either, so
+// there is nothing to collect.
+var ErrNoTraffic = errors.New("the gateway counted no registry requests and no access record shows one")
+
+// overflowError stops a read that has returned more records than it should.
+type overflowError struct {
+	// at is the timestamp of the record that was one too many.
+	at string
+}
+
+func (e *overflowError) Error() string {
+	return "the read returned more access records than expected"
+}
 
 // DegradedError means a day was not read because a source it needs could not
 // be used.
@@ -62,9 +85,9 @@ const (
 	// AnyDay collects a day whatever is missing, and says so in its caveats.
 	AnyDay Tolerance = iota
 	// ScalableDay refuses only a day whose request counters could not be used.
-	// Without them the read cannot be sampled, and its records cannot be
-	// scaled to the gateway's totals. Anything else that is missing makes the
-	// day less detailed, not wrong, and is recorded in its caveats.
+	// Without them its records cannot be scaled to the gateway's totals.
+	// Anything else that is missing makes the day less detailed, not wrong, and
+	// is recorded in its caveats.
 	ScalableDay
 	// CompleteDay refuses a day when any source it needs could not be used.
 	CompleteDay
@@ -84,7 +107,8 @@ type Sources struct {
 
 // Limits tune a collection.
 type Limits struct {
-	// MaxRecords is how many access records to read before asking Cloud Logging to sub-sample.
+	// MaxRecords is about how many access records a day's read may return. A
+	// day that holds more is read as a sample of about this many.
 	MaxRecords int
 	// DollarsPerGiB prices the data sent, for the cost estimate.
 	DollarsPerGiB float64
@@ -185,6 +209,8 @@ type dayCollector struct {
 	requests  *counter
 	hourly    []hourlyTotal
 	sample    *Sample
+	// seen is how many records the current read has returned, kept or not.
+	seen int
 }
 
 type hourlyTotal struct {
@@ -192,8 +218,9 @@ type hourlyTotal struct {
 	known     bool
 }
 
-// CollectDay reads one full UTC day. It returns ErrNoRecords, together with a
-// sample that can still be rendered, when the day has no access records.
+// CollectDay reads one full UTC day. It returns ErrNoRecords or ErrNoTraffic,
+// together with a sample that can still be rendered, when the day has no
+// access records.
 func CollectDay(ctx context.Context, sources Sources, limits Limits, day time.Time) (*Sample, error) {
 	start := time.Date(day.Year(), day.Month(), day.Day(), 0, 0, 0, 0, time.UTC)
 	collector := &dayCollector{
@@ -218,9 +245,20 @@ func CollectDay(ctx context.Context, sources Sources, limits Limits, day time.Ti
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	sample.fraction = sampleFraction(sample.counters, limits.MaxRecords)
-	collector.logf("window %s..%s; reading logs at fraction %s", sample.Start.Format(stampLayout), sample.End.Format(stampLayout),
-		pyFloatRepr(sample.fraction))
+	// The counters were being recorded and show no registry request. If no
+	// access record says otherwise, the gateway served the registry nothing
+	// that day, which is not a failure. Such a day holds few records, so they
+	// are read before anything else is decided.
+	read := false
+	if collector.idle(ctx) {
+		if err := collector.read(ctx); err != nil {
+			return nil, err
+		}
+		if read = true; len(sample.records) == 0 {
+			sample.kinds = collector.owners.kinds()
+			return sample, ErrNoTraffic
+		}
+	}
 
 	if !sources.Networks.OwnersLoaded() {
 		sample.notes = append(sample.notes, noteNoOwners)
@@ -237,8 +275,8 @@ func CollectDay(ctx context.Context, sources Sources, limits Limits, day time.Ti
 		sample.recorded = append(sample.recorded, noteNoCatalogue)
 	}
 	// Everything that can make a day incomplete is known by now. Reading its
-	// access records takes minutes, and without the counters the read cannot
-	// even be sampled, so a day that will not be kept is not read at all.
+	// access records takes minutes, so a day that will not be kept is not read
+	// at all.
 	switch {
 	case len(sample.degraded) == 0:
 	case limits.Require == CompleteDay, limits.Require == ScalableDay && sample.unscalable:
@@ -246,12 +284,17 @@ func CollectDay(ctx context.Context, sources Sources, limits Limits, day time.Ti
 	case limits.Require == ScalableDay:
 		sample.recorded = append(sample.recorded, noteLastChance)
 	}
-	window := LogWindow{Start: sample.Start, End: sample.End, Fraction: sample.fraction}
-	if err := sources.Logs.Read(ctx, window, collector.accept); err != nil {
-		return nil, err
+	if !read {
+		if err := collector.read(ctx); err != nil {
+			return nil, err
+		}
 	}
 	sample.kinds = collector.owners.kinds()
 	if len(sample.records) == 0 {
+		if truthy(sample.counters.requests, sample.counters.hasRequests) {
+			return sample, fmt.Errorf("%w, although the gateway counted %.0f requests; "+
+				"the log settings may not name where the gateway wrote its access records that day", ErrNoRecords, sample.counters.requests)
+		}
 		return sample, ErrNoRecords
 	}
 	collector.weigh()
@@ -341,17 +384,108 @@ func (c *dayCollector) dayTotals(ctx context.Context) (gatewayTotals, error) {
 	return totals, nil
 }
 
-// sampleFraction decides how much of the day's records to read. Cloud Logging
-// keeps about 1 in 10 fast successful listing records and every other record.
-func sampleFraction(totals gatewayTotals, maxRecords int) float64 {
-	if !truthy(totals.requests, totals.hasRequests) {
+// idle reports whether the gateway's counters were being recorded on the day
+// and show no registry request. Counters with no data at all are a different
+// thing: that cannot be told from looking in the wrong place.
+func (c *dayCollector) idle(ctx context.Context) bool {
+	if !c.sample.counters.hasRequests || c.sample.counters.requests != 0 {
+		return false
+	}
+	rows, err := c.sources.Metrics.Query(ctx, fmt.Sprintf("count(last_over_time(%s[%ds]))", requestsMetric, daySeconds), c.sample.End)
+	return err == nil && len(rows) > 0 && rows[0].Value > 0
+}
+
+// read sizes the day's read and then reads it. How many records Cloud Logging
+// holds for a day depends on how much of the traffic its storage rule thinned
+// out, which changes from day to day and within a day. So that is counted, on
+// a small sample, and never assumed.
+func (c *dayCollector) read(ctx context.Context) error {
+	sample := c.sample
+	stored, err := c.countStored(ctx)
+	if err != nil {
+		return err
+	}
+	sample.fraction = readFraction(stored, c.limits.MaxRecords)
+	c.logf("window %s..%s; Cloud Logging holds about %.0f access records; reading logs at fraction %s", sample.Start.Format(stampLayout),
+		sample.End.Format(stampLayout), stored, pyFloatRepr(sample.fraction))
+	for resizes := 0; ; resizes++ {
+		window := LogWindow{Start: sample.Start, End: sample.End, Fraction: sample.fraction}
+		err := c.sources.Logs.Read(ctx, window, c.accept)
+		var over *overflowError
+		if !errors.As(err, &over) {
+			return err
+		}
+		smaller := readFraction(c.projected(c.seen, over.at)/sample.fraction, c.limits.MaxRecords)
+		if resizes == maxResizes || smaller >= sample.fraction {
+			return fmt.Errorf("the day's read returned more than %d access records at fraction %s, and a smaller sample could not be sized",
+				readCapFactor*c.limits.MaxRecords, pyFloatRepr(sample.fraction))
+		}
+		c.logf("  more than %d access records at fraction %s; reading again at fraction %s",
+			readCapFactor*c.limits.MaxRecords, pyFloatRepr(sample.fraction), pyFloatRepr(smaller))
+		c.restart()
+		sample.fraction = smaller
+	}
+}
+
+// countStored estimates how many access records Cloud Logging holds for the
+// day, by reading a small sample of them and keeping none.
+func (c *dayCollector) countStored(ctx context.Context) (float64, error) {
+	limit := c.limits.MaxRecords
+	if limit <= 0 {
+		return 0, nil
+	}
+	fraction := math.Min(1, sizingRecords/float64(limit))
+	count := 0
+	window := LogWindow{Start: c.sample.Start, End: c.sample.End, Fraction: fraction}
+	err := c.sources.Logs.Read(ctx, window, func(timestamp string, _ map[string]any) error {
+		count++
+		if count > readCapFactor*limit {
+			return &overflowError{at: timestamp}
+		}
+		return nil
+	})
+	var over *overflowError
+	switch {
+	case errors.As(err, &over):
+		return c.projected(count, over.at) / fraction, nil
+	case err != nil:
+		return 0, err
+	}
+	return float64(count) / fraction, nil
+}
+
+// projected scales the records a read returned before it was stopped to the
+// whole day, as if the rest of the day were as busy as the part that was read.
+func (c *dayCollector) projected(seen int, stoppedAt string) float64 {
+	elapsed := daySeconds
+	if len(stoppedAt) >= 19 {
+		if at, err := time.Parse(stampLayout, stoppedAt[:19]+"Z"); err == nil {
+			elapsed = min(max(int(at.Sub(c.start).Seconds()), 1), daySeconds)
+		}
+	}
+	return float64(seen) * daySeconds / float64(elapsed)
+}
+
+// restart forgets what a stopped read has taken in.
+func (c *dayCollector) restart() {
+	c.seen = 0
+	c.owners = newOwnerLookup(c.sources.Networks)
+	c.addresses = map[string]uint32{}
+	c.requests = newCounter()
+	c.sample.records = nil
+	c.sample.background = 0
+}
+
+// readFraction is the share of a day's stored records to read so that about
+// maxRecords are returned.
+func readFraction(stored float64, maxRecords int) float64 {
+	if maxRecords <= 0 || stored <= float64(maxRecords) {
 		return 1
 	}
-	expected := fmul(totals.listingOK, 0.11) + fmul(totals.requests-totals.listingOK, 1.1)
-	if expected <= float64(maxRecords) {
-		return 1
+	if fraction := math.Trunc(float64(1000*maxRecords)/stored) / 1000; fraction >= 0.001 {
+		return fraction
 	}
-	return math.Max(0.001, math.Trunc(float64(1000*maxRecords)/expected)/1000)
+	return math.Max(minFraction, math.Trunc(1e6*float64(maxRecords)/stored)/1e6)
 }
 
 func (c *dayCollector) bucket(timestamp string) int {
@@ -377,6 +511,10 @@ func (c *dayCollector) addressID(address string) uint32 {
 
 // accept turns one access record into a record, or drops it.
 func (c *dayCollector) accept(timestamp string, payload map[string]any) error {
+	c.seen++
+	if limit := readCapFactor * c.limits.MaxRecords; limit > 0 && c.seen > limit {
+		return &overflowError{at: timestamp}
+	}
 	// The counters cover the registry's own traffic only. Records for the
 	// dashboards' host and for the gateway's test routes are not part of it.
 	if host := pyField(payload, "host"); strings.HasPrefix(host, "grafana.") || isFixtureHost(host) {
@@ -385,10 +523,6 @@ func (c *dayCollector) accept(timestamp string, payload map[string]any) error {
 	if pyStr(payload["request_bytes"]) == "0" {
 		c.sample.background++
 		return nil
-	}
-	if limit := recordCapFactor * c.limits.MaxRecords; limit > 0 && len(c.sample.records) >= limit {
-		return fmt.Errorf("the day holds more than %d access records at fraction %s, which is too many to keep in memory",
-			limit, pyFloatRepr(c.sample.fraction))
 	}
 	method, status := pyField(payload, "method"), pyField(payload, "status")
 	path, rawQuery, err := pyURLSplit(pyField(payload, "uri"))
@@ -487,13 +621,7 @@ func (c *dayCollector) weigh() {
 	if truthy(sample.counters.listingOK, sample.counters.hasRequests) && totalSampled > 0 {
 		fallback = math.Max(other, (sample.counters.listingOK-fmul(totalKept, other))/totalSampled)
 	}
-	weights := make([]float64, sample.buckets)
-	for index := range weights {
-		weights[index] = fallback
-		if c.hourly[index].known && sampled[index] > 0 {
-			weights[index] = math.Max(other, (c.hourly[index].listingOK-fmul(kept[index], other))/sampled[index])
-		}
-	}
+	weights := c.hourlyWeights(sampled, kept, other, fallback)
 	sample.otherWeight, sample.weightMin, sample.weightMax = other, weights[0], weights[0]
 	for _, weight := range weights {
 		sample.weightMin, sample.weightMax = math.Min(sample.weightMin, weight), math.Max(sample.weightMax, weight)
@@ -514,6 +642,51 @@ func (c *dayCollector) weigh() {
 	if truthy(sample.counters.bytes, sample.counters.hasBytes) {
 		sample.data = sample.counters.bytes
 	}
+}
+
+// hourlyWeights is how many requests one sampled record of each hour stands
+// for, given how many sampled and other listing records each hour has.
+func (c *dayCollector) hourlyWeights(sampled, kept []float64, other, fallback float64) []float64 {
+	// share is how many requests an hour's sampled records stand for. When
+	// every such record of an hour was thinned out, nothing is left to carry
+	// that hour's requests, so they go to the nearest hour that kept some.
+	// On a quiet day most hours are like that.
+	share := make([]float64, len(sampled))
+	for index := range share {
+		if c.hourly[index].known {
+			share[index] = c.hourly[index].listingOK - fmul(kept[index], other)
+		}
+	}
+	for index := range share {
+		if !c.hourly[index].known || sampled[index] > 0 || share[index] <= 0 {
+			continue
+		}
+		if nearest := nearestSampled(sampled, index); nearest >= 0 {
+			share[nearest] += share[index]
+		}
+	}
+	weights := make([]float64, len(sampled))
+	for index := range weights {
+		weights[index] = fallback
+		if c.hourly[index].known && sampled[index] > 0 {
+			weights[index] = math.Max(other, share[index]/sampled[index])
+		}
+	}
+	return weights
+}
+
+// nearestSampled is the hour closest to the given one that has sampled
+// records, the earlier one if two are equally close, or -1 if none has.
+func nearestSampled(sampled []float64, hour int) int {
+	for distance := 1; distance < len(sampled); distance++ {
+		if before := hour - distance; before >= 0 && sampled[before] > 0 {
+			return before
+		}
+		if after := hour + distance; after < len(sampled) && sampled[after] > 0 {
+			return after
+		}
+	}
+	return -1
 }
 
 // review compares the log-based estimate with the counters and notes anything

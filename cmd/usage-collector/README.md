@@ -49,7 +49,8 @@ All settings are environment variables with the prefix `USAGE_COLLECTOR_`. Nothi
 | `READER_ROLE` | An existing database role to give read-only access to what the dashboards query. See below. | none |
 | `ORGANIZATION_ALIASES` | Names for organizations' own networks, as `KEY=Name;KEY=Name`. See below. | none |
 | `LOOKBACK_DAYS` | How far back a run looks for days it has not stored. | `13` |
-| `MAX_RECORDS` | Access records to read for a day before asking Cloud Logging for a sample instead. | `100000` |
+| `MAX_RECORDS` | About how many access records to read for a day. A day that holds more is read as a sample of about this many. See [How much is read](#how-much-is-read). | `100000` |
+| `LOG_READS_PER_MINUTE` | How many requests to Cloud Logging may start in a minute. Cloud Logging allows a project 60. | `50` |
 | `DOLLARS_PER_GIB` | Price used for the cost estimate. | `0.10` |
 | `CACHE_DIR` | Where the public network reference files are kept between runs. They are downloaded again weekly. | the user cache directory |
 | `NETWORK_OWNERS_URL`, `NETWORK_TYPES_URL` | Where those files are downloaded from. | iptoasn.com, peeringdb.com |
@@ -102,7 +103,7 @@ USAGE_COLLECTOR_METRICS_URL=http://127.0.0.1:18428/api/v1/namespaces/monitoring/
 ./bin/usage-collector --day 2026-11-19 --no-store --markdown-dir reports
 ```
 
-Reading one day's access records takes a few minutes.
+Reading one day's access records takes two to three minutes at the default settings, however busy the day was.
 
 ## What it stores
 
@@ -131,13 +132,25 @@ Shares and rates are stored per day. To combine them across days or rows, the vi
 
 A figure that cannot be worked out from what is stored is empty rather than approximated. The main case is the client that looked a server up most. Each stored row knows only its own day's winner. Over a range, `usage_leaderboard()` names a winner when every row behind a line has the same one, in which case its share is exact; when the rows disagree, the name and the share are empty.
 
+### How much is read
+
+How many access records Cloud Logging holds for a day is not known in advance. A storage rule there keeps about 1 in 10 fast successful listing records and every other record, but it applies only to fast responses and can be changed or switched off, so on a slow or unusual day almost every record is kept. The collector therefore counts before it reads:
+
+1. It reads a small sample of the day and keeps none of it: 100 records for every `MAX_RECORDS` the day holds. For a day of 5 million records at the default limit that is 5 requests.
+2. From that count it picks the fraction that returns about `MAX_RECORDS` records, and reads the day at that fraction. A day that holds fewer is read whole.
+3. A read that still returns more than twice `MAX_RECORDS` is stopped and repeated at a smaller fraction, sized from what it had returned. That happens only when the sample is very uneven, as when many records share one request ID. After four such attempts the day fails.
+
+So a day costs about `MAX_RECORDS / 1000` requests for the read, plus one for every million records it holds, and never keeps more than twice `MAX_RECORDS` records in memory. Requests are spaced to stay under `LOG_READS_PER_MINUTE`, across days as well.
+
+Samples are taken on the request ID, so reading the same day again returns the same records.
+
 ### How well a day was measured
 
-Cloud Logging keeps about 1 in 10 fast successful listing records and every other record. The collector scales the listing records back up to the gateway's counters, hour by hour. Each day's row records how that went:
+The collector scales the listing records back up to the gateway's counters, hour by hour, whatever share of them was kept in that hour. In an hour that kept no fast listing record at all, which is common when there is little traffic, the requests the counters saw are carried by the records of the nearest hour that kept some. Each day's row records how the scaling went:
 
 | Column | Meaning |
 | --- | --- |
-| `log_requests_ratio`, `log_data_ratio` | The log-based estimate divided by the counters. Close to 1 when the access records and the sampling rule are what the collector expects. A drift away from 1 means the log format or the sampling rule has changed. |
+| `log_requests_ratio`, `log_data_ratio` | The log-based estimate divided by the counters. Close to 1 when the access records and the counters describe the same traffic. A lasting drift away from 1 means the log format, the storage rule or the counters have changed. On a day with few listing records the data ratio is noisy, because a handful of records stand for all the listing data. |
 | `sample_fraction` | The fraction of records Cloud Logging was asked for. |
 | `listing_weight_min`, `listing_weight_max` | The range of hourly scaling factors for sampled listing records. |
 | `totals_source` | `counters`; `logs` if the counters were unavailable; `mixed` if only one of requests and data sent came from the counters. |
@@ -161,9 +174,11 @@ A day is normally **not collected** if something it needs could not be used: the
 | Up-to-date catalogue | Stored. Lookups of recently published servers may count as unknown names. |
 | Hourly counters | Stored. One scaling factor is used for the whole day. |
 | Data-volume counter only | Stored. Data sent is estimated from the access records; `totals_source` is `mixed`. |
-| Request counters | **Not stored.** Without them the read cannot be sampled and the records cannot be scaled to the gateway's totals. |
+| Request counters | **Not stored.** Without them the records cannot be scaled to the gateway's totals. |
 
-To collect a degraded day at any other time, name it with `--day` and add `--allow-degraded`. That also applies without the request counters, but then the read is not sampled and reads every record of the day; a read that passes ten times `MAX_RECORDS` is abandoned rather than allowed to fill memory.
+To collect a degraded day at any other time, name it with `--day` and add `--allow-degraded`. That also applies without the request counters; the read is sized the same way.
+
+**Days with nothing to collect.** A day is skipped, without failing the run and without storing anything, when all of this holds: the gateway's request counter has series that day, they show no registry request, and no access record shows one either. A day for which neither the counters nor Cloud Logging hold anything at all is different: that cannot be told from a collector pointed at the wrong place, so it fails like any day without counters. And when the counters did count requests but no access records are found, the day fails too: the records are somewhere the log settings do not point, or were not written.
 
 ## Privacy
 

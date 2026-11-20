@@ -41,10 +41,13 @@ type Settings struct {
 	// LookbackDays is how far back a run looks for days it has not stored.
 	// The gateway counters are kept for 14 days; older days cannot be scaled.
 	LookbackDays int `env:"LOOKBACK_DAYS" envDefault:"13"`
-	// MaxRecords is how many access records a day may hold before Cloud
-	// Logging is asked for a sample instead.
-	MaxRecords    int     `env:"MAX_RECORDS" envDefault:"100000"`
-	DollarsPerGiB float64 `env:"DOLLARS_PER_GIB" envDefault:"0.10"`
+	// MaxRecords is about how many access records are read for a day. A day
+	// that holds more is read as a sample of about this many.
+	MaxRecords int `env:"MAX_RECORDS" envDefault:"100000"`
+	// LogReadsPerMinute paces the requests to Cloud Logging, which allows a
+	// project 60 read requests a minute.
+	LogReadsPerMinute int     `env:"LOG_READS_PER_MINUTE" envDefault:"50"`
+	DollarsPerGiB     float64 `env:"DOLLARS_PER_GIB" envDefault:"0.10"`
 
 	// OrganizationAliases name organizations' own networks, written as
 	// "KEY=Name;KEY=Name". See ParseOrganizationAliases.
@@ -101,14 +104,18 @@ func (s Settings) Validate(store bool) error {
 	if store && s.DatabaseURL == "" {
 		problems = append(problems, errors.New("USAGE_COLLECTOR_DATABASE_URL is required unless --no-store is given"))
 	}
-	if s.LookbackDays < 1 || s.LookbackDays > 30 {
-		problems = append(problems, errors.New("USAGE_COLLECTOR_LOOKBACK_DAYS must be between 1 and 30, the log retention"))
-	}
-	if s.MaxRecords < 1000 {
-		problems = append(problems, errors.New("USAGE_COLLECTOR_MAX_RECORDS must be at least 1000"))
-	}
-	if s.DollarsPerGiB < 0 {
-		problems = append(problems, errors.New("USAGE_COLLECTOR_DOLLARS_PER_GIB cannot be negative"))
+	for _, limit := range []struct {
+		ok      bool
+		problem string
+	}{
+		{s.LookbackDays >= 1 && s.LookbackDays <= 30, "USAGE_COLLECTOR_LOOKBACK_DAYS must be between 1 and 30, the log retention"},
+		{s.MaxRecords >= 1000, "USAGE_COLLECTOR_MAX_RECORDS must be at least 1000"},
+		{s.LogReadsPerMinute >= 1 && s.LogReadsPerMinute <= 600, "USAGE_COLLECTOR_LOG_READS_PER_MINUTE must be between 1 and 600"},
+		{s.DollarsPerGiB >= 0, "USAGE_COLLECTOR_DOLLARS_PER_GIB cannot be negative"},
+	} {
+		if !limit.ok {
+			problems = append(problems, errors.New(limit.problem))
+		}
 	}
 	if _, err := ParseOrganizationAliases(s.OrganizationAliases); err != nil {
 		problems = append(problems, fmt.Errorf("USAGE_COLLECTOR_ORGANIZATION_ALIASES: %w", err))
