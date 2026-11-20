@@ -40,10 +40,17 @@ paths:
             type: string
         - name: limit
           in: query
-          description: Maximum number of items to return
+          description: |
+            Maximum number of items to return.
+
+            Defaults to 30. Values above 100 are rejected with 422, so a client that wants
+            one page of everything has to follow `metadata.nextCursor` instead.
           required: false
           schema:
             type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
         - name: search
           in: query
           description: Search servers by name (substring match)

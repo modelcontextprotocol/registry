@@ -302,6 +302,38 @@ git push origin v1.0.0
 
 The workflow will run tests, build the package, publish the package to npm, and publish the server to the MCP Registry.
 
+### Verify what actually landed
+
+A successful publish means the registry accepted the `version` in your `server.json`. It does not mean that version matches the tag you pushed. Confirm both right after publishing:
+
+```bash
+# The publish response echoes the accepted version, for example:
+#   Server io.github.username/my-server version 1.0.0
+#
+# Check that the same version is listed for your server. Path parameters must be
+# URL-encoded, and this endpoint returns every version of one server in a single
+# response, with no pagination.
+want="1.0.0"
+curl --fail --silent --compressed \
+  "https://registry.modelcontextprotocol.io/v0.1/servers/io.github.username%2Fmy-server/versions" \
+  | jq -e --arg v "$want" '[.servers[].server.version] | index($v)' >/dev/null \
+  && echo "registry lists ${want}" \
+  || { echo "registry does not list ${want}"; exit 1; }
+```
+
+A mismatch between the echoed version and your tag nearly always means `server.json` was not bumped before the workflow ran. The publish still reports success, so make the job fail on the mismatch instead of finding out later:
+
+```yaml
+      - name: Publish server to MCP Registry
+        run: |
+          set -euo pipefail
+          out="$(./mcp-publisher publish)"
+          echo "$out"
+          want="${GITHUB_REF_NAME#v}"
+          echo "$out" | grep -q "version ${want}$" \
+            || { echo "::error::published a version that does not match tag ${GITHUB_REF_NAME}"; exit 1; }
+```
+
 ## Troubleshooting
 
 {/* prettier-ignore-start */}
@@ -311,5 +343,7 @@ The workflow will run tests, build the package, publish the package to npm, and 
 | "Authentication failed" | Ensure `id-token: write` permission is set for OIDC, or check secrets. |
 | "invalid audience" | Your `mcp-publisher` binary is too old for this registry deployment. Update `MCP_PUBLISHER_VERSION` to a compatible release and rerun the workflow. |
 | "Package validation failed" | Verify your package successfully published to the package registry (e.g., npm, PyPI), and that your package has the [necessary verification information](./package-types). |
+| Publish reports success but the new version is missing from the listing | `GET /v0.1/servers` returns 30 records by default and may not include your server at all. Follow `metadata.nextCursor`, or read `GET /v0.1/servers/{serverName}/versions`, which returns every version of one server without pagination. |
+| Publish reports success but under the wrong version | The registry accepts the `version` from `server.json`, not your git tag. Set it from the tag before publishing and assert the version echoed by the publish response, as shown in "Verify what actually landed". |
 
 {/* prettier-ignore-end */}
