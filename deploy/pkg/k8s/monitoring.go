@@ -574,6 +574,10 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		return err
 	}
 	dashboardMounts = append(dashboardMounts, registryMounts...)
+	alerting, err := registryAlertingProvisioning(ctx, cluster.Provider, ns)
+	if err != nil {
+		return err
+	}
 
 	// Deploy Grafana
 	grafanaHost := "grafana." + environment + ".registry.modelcontextprotocol.io"
@@ -585,7 +589,7 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 			Repo: pulumi.String("https://grafana.github.io/helm-charts"),
 		},
 		Namespace: ns.Metadata.Name().Elem(),
-		Values: pulumi.Map{
+		Values: alerting.addTo(pulumi.Map{
 			// Match grafana.ini so the chart omits the unused, randomly generated admin Secret.
 			// Keep the chart configuration stable while upgrading the Grafana binary.
 			"image": pulumi.Map{
@@ -676,7 +680,7 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 					"memory": pulumi.String("256Mi"),
 				},
 			},
-		},
+		}),
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
 		return err
