@@ -231,6 +231,27 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 		t.Error("the deployment waits for the cache volume")
 	}
 
+	// The history is archived by the role that owns it, which has no access to
+	// Grafana's own database in the same cluster, and goes to a bucket of its
+	// own with the collector's Google key.
+	backup, _ := json.Marshal(at(m.resource(t, "kubernetes:batch/v1:CronJob::registry-usage-history-backup"), "spec", "jobTemplate", "spec", "template", "spec"))
+	for _, required := range []string{
+		`"name":"registry-usage-collector-password"`, `{"name":"PGDATABASE","value":"registry_usage"}`,
+		`{"name":"PGOPTIONS","value":"-c default_transaction_read_only=on"}`, `{"name":"PGSSLMODE","value":"require"}`,
+		`{"name":"RESTIC_REPOSITORY","value":"gs:mcp-registry-staging-usage-backups:/usage-history-v1"}`,
+		`"secretName":"registry-usage-collector-gcp"`, "--keep-daily", "restic check --read-data",
+	} {
+		if !strings.Contains(string(backup), required) {
+			t.Errorf("the history backup lacks %s", required)
+		}
+	}
+	// Not Grafana's database credentials, and nothing of the registry's backup.
+	for _, forbidden := range []string{"grafana-pg-app", "grafana-pg-superuser", "k8up-repo-password", "k8up-backup-credentials", "postgres-custom-v1", "registry-pg", "FAKEPASS", fakeGoogleKey} {
+		if strings.Contains(string(backup), forbidden) {
+			t.Errorf("the history backup refers to %s", forbidden)
+		}
+	}
+
 	// Grafana gets the read-only role's password from its Secret. The chart
 	// registers what it renders with plain inputs, so no credential may be a value.
 	for _, private := range []string{"FAKEPASS", fakeGoogleKey, fakeAliases} {

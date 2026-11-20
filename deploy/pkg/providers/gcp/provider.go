@@ -372,7 +372,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	if gcpProvider != nil {
 		usageOpts = append(usageOpts, pulumi.Provider(gcpProvider))
 	}
-	usageKey, err := usageCollectorKey(ctx, projectID, usageOpts)
+	usageKey, err := usageCollectorAccess(ctx, projectID, environment, usageOpts)
 	if err != nil {
 		return nil, err
 	}

@@ -330,6 +330,10 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 	if err != nil {
 		return nil, err
 	}
+	if err := deployUsageBackup(ctx, namespace, environment, collectorRole, googleSecret, priority.Metadata.Name(),
+		provider, pulumi.DependsOn([]pulumi.Resource{database})); err != nil {
+		return nil, err
+	}
 
 	return enabledUsageGrafana(ctx, cluster.Provider, ns, grafanaRole.secret)
 }

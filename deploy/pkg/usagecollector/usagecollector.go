@@ -26,7 +26,21 @@ const (
 	// CredentialGeneration is recorded with the account key and the three
 	// database passwords. Raising it replaces all four.
 	CredentialGeneration = "1"
+
+	// BackupRepository is where, in the backup bucket, the history's Restic
+	// repository is kept.
+	BackupRepository = "usage-history-v1"
+	// BackupPassword is what Restic requires to open that repository. It is
+	// not a secret: a generated one would be lost with the Pulumi state that
+	// held it, and the backups with it. Access to the bucket protects them.
+	BackupPassword = "registry-usage-history"
 )
+
+// BackupBucket holds the backups of an environment's usage history, and
+// nothing else, so that what can write them cannot reach any other backup.
+func BackupBucket(environment string) string {
+	return "mcp-registry-" + environment + "-usage-backups"
+}
 
 // State is what mcp-registry:usageCollector asks for.
 type State int

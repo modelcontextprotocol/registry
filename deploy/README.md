@@ -681,9 +681,9 @@ the collector scales its figures by.
 
 | Where | What |
 |-------|------|
-| Google Cloud | `roles/logging.viewer` on the project for the existing `registry-usage-reader` service account, and a key for it |
+| Google Cloud | `roles/logging.viewer` on the project for the existing `registry-usage-reader` service account, and a key for it; the bucket `mcp-registry-<environment>-usage-backups` and that account's access to it |
 | `default` | Role `registry_usage_reader` on `registry-pg`, and its password |
-| `monitoring` | Roles `registry_usage_collector` and `registry_usage_grafana` and database `registry_usage` on `grafana-pg`; the CronJob `registry-usage-collector` with its Secrets and a 10Gi cache volume; the dashboards |
+| `monitoring` | Roles `registry_usage_collector` and `registry_usage_grafana` and database `registry_usage` on `grafana-pg`; the CronJob `registry-usage-collector` with its Secrets and a 10Gi cache volume; the CronJob `registry-usage-history-backup`; the dashboards |
 | Cluster | PriorityClass `registry-usage-batch` |
 | Grafana | Data source "Registry usage", the two dashboards and, where [alerting](#grafana-alerts) is configured, two alert rules |
 
@@ -769,8 +769,8 @@ state and in Kubernetes Secrets. None is written to this repository.
 
 | Credential | Used by | What it can do |
 |------------|---------|----------------|
-| Key of `registry-usage-reader@<project>` | The collector | Read log entries of its own project |
-| `registry_usage_collector` | The collector | Owns database `registry_usage` on `grafana-pg` |
+| Key of `registry-usage-reader@<project>` | The collector and the backup | Read log entries of its own project; read and write the usage backup bucket, and no other bucket |
+| `registry_usage_collector` | The collector and the backup | Owns database `registry_usage` on `grafana-pg`. It has no access to Grafana's own database in that cluster. The backup uses it in read-only transactions. |
 | `registry_usage_grafana` | Grafana's data source | Read the tables, the view and the functions the dashboards query. The collector grants this each time it starts. |
 | `registry_usage_reader` | The collector | Read the registry database |
 
@@ -823,9 +823,91 @@ format, without printing it.
 Indefinitely: nothing prunes it. It grows by about 400 MB a year at the current
 rate of publishing, on the 10Gi volume it shares with Grafana's own database.
 
-**It is not backed up.** `grafana-pg` is a single instance and the nightly
-backup covers only the registry database. If that volume is lost, the last 13
-days can be collected again and everything older is gone.
+### Backups of the history
+
+`grafana-pg` is a single instance, so the history is backed up every day at
+03:30 UTC, wherever the collector is on, by the CronJob
+`registry-usage-history-backup`. It works like the registry's
+[database backup](#database-backups): `pg_dump` writes an uncompressed
+custom-format archive of `registry_usage`, reads it back in full and records
+its checksum; Restic then stores it, checks the whole repository and keeps the
+last 28 daily snapshots. `REGISTRY_USAGE_BACKUP_SUCCESS` is logged only when
+every step has succeeded.
+
+| | |
+|---|---|
+| Where | `gs://mcp-registry-<environment>-usage-backups/usage-history-v1`, a bucket that holds nothing else |
+| Who makes the archive | `registry_usage_collector`, in read-only transactions. No credential of Grafana's own database is involved, and that database is not backed up. |
+| Who writes to the bucket | The collector's service account, which is granted this one bucket. It cannot reach the registry's backups. |
+| Restic password | `registry-usage-history`. This is not a secret. A generated password would exist only in Pulumi's state, and losing it would lose the backups; access to the bucket is what protects them. |
+| Cost | The repository is the size of the database, well under a gigabyte for years: a few cents a month. |
+
+Each snapshot holds the whole history, so the newest is all a restore needs;
+the older ones are there to undo damage that is noticed late. Unlike the
+registry's job, this one creates its repository if there is none and logs
+`REGISTRY_USAGE_BACKUP_REPOSITORY_INITIALIZED` when it does, so nothing has to
+be initialised by hand.
+
+**A failed backup is not alerted on.** The [backup alerts](#backup-alerts)
+cover the registry's job only. Check this one with:
+
+```bash
+kubectl -n monitoring get cronjob registry-usage-history-backup
+kubectl -n monitoring logs job/JOB_NAME -c pg-dump
+kubectl -n monitoring logs job/JOB_NAME -c restic
+```
+
+#### Restoring the history
+
+On a workstation with Restic, the PostgreSQL 17 client tools and a Google
+account that can read the bucket, fetch the archive and check it:
+
+```bash
+export RESTIC_REPOSITORY=gs:mcp-registry-prod-usage-backups:/usage-history-v1
+export RESTIC_PASSWORD=registry-usage-history
+export GOOGLE_PROJECT_ID=mcp-registry-prod
+export GOOGLE_ACCESS_TOKEN=$(gcloud auth print-access-token)
+umask 077
+restic --no-lock snapshots
+# "latest", or the ID of an earlier snapshot.
+restic --no-lock dump latest /backup/registry-usage.dump > registry-usage.dump
+restic --no-lock dump latest /backup/registry-usage.dump.sha256 > registry-usage.dump.sha256
+shasum -a 256 -c registry-usage.dump.sha256
+```
+
+The archive goes into the database `registry_usage`, as the role that owns it.
+After `grafana-pg` has been rebuilt, the operator creates that database and
+the roles again from their `Database` and `DatabaseRole` objects; wait until
+`kubectl -n monitoring get databases.postgresql.cnpg.io registry-usage -o jsonpath='{.status.applied}'`
+prints `true`. Then:
+
+```bash
+# Keep the collector from writing during the restore.
+kubectl -n monitoring patch cronjob registry-usage-collector -p '{"spec":{"suspend":true}}'
+# In another terminal, and left running:
+kubectl -n monitoring port-forward svc/grafana-pg-rw 15432:5432
+
+PGSSLMODE=require \
+PGPASSWORD=$(kubectl -n monitoring get secret registry-usage-collector-password -o jsonpath='{.data.password}' | base64 -d) \
+pg_restore --host 127.0.0.1 --port 15432 --username registry_usage_collector --dbname registry_usage \
+  --clean --if-exists --no-owner --exit-on-error --single-transaction registry-usage.dump
+
+# Collect whatever is missing since the snapshot.
+kubectl -n monitoring patch cronjob registry-usage-collector -p '{"spec":{"suspend":false}}'
+kubectl -n monitoring create job --from=cronjob/registry-usage-collector usage-after-restore
+```
+
+The restore replaces the collector's tables, view and functions with the
+archive's in one transaction, whether the database is empty or the collector
+has already written to it, and brings back Grafana's read access with them.
+Anything stored after the snapshot is replaced too; the run that follows
+collects again every day of the last 13 that the archive does not have. Days
+are lost only if more than 13 days pass between the snapshot and that run.
+
+To test an archive without touching a cluster, create the roles
+`registry_usage_collector` and `registry_usage_grafana` and an empty database
+owned by the first in a disposable PostgreSQL 17, and run the same
+`pg_restore` against it.
 
 ### Alert rules
 
@@ -851,15 +933,22 @@ keeps a provisioned data source and provisioned alert rules after their files
 are gone, the rules locked and failing, and only the `"false"` deployment
 deletes them.
 
-With `"false"`, Pulumi removes the CronJob, the Secrets, the cache volume, the
-service account's key and role, and the dashboards' files. Grafana restarts and
-deletes the data source, the two dashboards and the two rules. The database
-`registry_usage`, its history and the three database roles stay in PostgreSQL,
-with passwords that no longer exist anywhere. Setting `"true"` again is meant
-to take them over and set new passwords; that path has not been exercised on a
-cluster yet.
+With `"false"`, Pulumi removes the two CronJobs, the Secrets, the cache volume,
+the service account's key and its roles, and the dashboards' files. Grafana
+restarts and deletes the data source, the two dashboards and the two rules.
+What stays:
 
-Once that deployment has run, the setting can be removed.
+- The database `registry_usage`, its history and the three database roles, in
+  PostgreSQL, with passwords that no longer exist anywhere. Setting `"true"`
+  again is meant to take them over and set new passwords; that path has not
+  been exercised on a cluster yet.
+- The backup bucket and every snapshot in it. No new ones are made, and Restic
+  no longer prunes, so the last 28 stay.
+
+Leave the setting at `"false"` rather than removing it. Removing it deletes
+nothing, the bucket included, but Pulumi then forgets the bucket, and a later
+`"true"` would fail to create a bucket that already exists until it is
+imported into the stack.
 
 ## Database Backups
 
