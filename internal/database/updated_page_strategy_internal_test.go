@@ -95,21 +95,22 @@ func TestUpdatedPageStrategyScopeAndBoundParameters(t *testing.T) {
 		{UpdatedSince: &cutoff, SubstringName: &search}, {UpdatedSince: &cutoff, IsLatest: &yes},
 		{UpdatedSince: &cutoff, RemoteURL: &remote},
 	} {
-		strategy, _ := db.chooseUpdatedPageStrategy(nil, filter, 100, nil, 2, 2, nil)
+		strategy := db.chooseUpdatedPageStrategy(nil, filter, 100, nil)
 		require.Equal(t, updatedPageStrategy{}, strategy)
 	}
 	for _, limit := range []int{1, 10, 128, 1000} {
-		strategy, _ := db.chooseUpdatedPageStrategy(nil, &ServerFilter{UpdatedSince: &cutoff}, limit, nil, 2, 2, nil)
+		strategy := db.chooseUpdatedPageStrategy(nil, &ServerFilter{UpdatedSince: &cutoff}, limit, nil)
 		require.Equal(t, updatedPageStrategy{}, strategy)
 	}
 	require.Zero(t, db.updatedPageHints.requests)
 	db.updatedPageHints.remember(now, updatedPageObservation{large: true, before: now, nameBefore: "com.example/z'--"}, false)
 	cursor := "com.example/a' OR true --"
-	strategy, args := db.chooseUpdatedPageStrategy(nil, &ServerFilter{UpdatedSince: &cutoff}, 100, []any{cursor}, 2, 3, []any{cutoff, cursor})
-	require.True(t, strategy.skipProbe)
-	require.Equal(t, "($2::text < $3::text)", strategy.cursorGuard)
-	require.Equal(t, []any{cutoff, cursor, "com.example/z'--"}, args)
-	query := updatedPageQuery("WHERE updated_at > $1 AND server_name > $2", "100", "s.value", false, strategy)
-	require.NotContains(t, query, cursor)
-	require.NotContains(t, query, strategy.nameBefore)
+	for _, limit := range []int{1, 30, 100} {
+		strategy := db.chooseUpdatedPageStrategy(nil, &ServerFilter{UpdatedSince: &cutoff}, limit, []any{cursor})
+		require.True(t, strategy.skipProbe)
+		require.False(t, strategy.observe)
+		query := updatedPageQuery("WHERE updated_at > $1 AND server_name > $2", fmt.Sprint(limit), "s.value", false, strategy)
+		require.NotContains(t, query, cursor)
+	}
+	require.Zero(t, db.updatedPageHints.requests, "cursor pages do not sample or reuse hints")
 }

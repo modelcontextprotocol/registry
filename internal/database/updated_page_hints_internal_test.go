@@ -156,16 +156,15 @@ func TestUpdatedPageHintsMovingWatermarkAndBoundedKeys(t *testing.T) {
 	}
 	db.updatedPageHints.mu.Unlock()
 	for i := 0; i < 16; i++ {
-		require.Equal(t, 100, read(epoch, "com.example/aab:1", yes))
+		require.Equal(t, 100, read(epoch, "", yes))
 	}
 	db.updatedPageHints.mu.Lock()
 	require.Len(t, db.updatedPageHints.entries, 1)
 	db.updatedPageHints.mu.Unlock()
 }
 
-// Exercise the actual prepared guard shape on one connection: a custom-plan
-// shortcut must not prevent generic reuse as watermarks/cursors change.
-func TestUpdatedPageGuardReusesPlanAndChecksCursor(t *testing.T) {
+// Cursor seeks must still reuse plans and apply changing watermarks/cursors.
+func TestUpdatedPageCursorReusesPlanAndChecksPredicate(t *testing.T) {
 	db := NewTestDB(t).(*PostgreSQL)
 	ctx := context.Background()
 	epoch := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -176,10 +175,10 @@ func TestUpdatedPageGuardReusesPlanAndChecksCursor(t *testing.T) {
 	conn, err := db.pool.Acquire(ctx)
 	require.NoError(t, err)
 	defer conn.Release()
-	strategy := updatedPageStrategy{skipProbe: true, cursorGuard: "($2::text < $4::text)"}
+	strategy := updatedPageStrategy{skipProbe: true}
 	query := updatedPageQuery("WHERE updated_at > $1 AND (server_name, version) > ($2, $3)", "100", "s.value", false, strategy)
 	for i := 0; i < 24; i++ {
-		rows, err := conn.Query(ctx, query, pgx.QueryExecModeCacheStatement, epoch.Add(time.Duration(i)*time.Millisecond), "com.example/aaa", fmt.Sprint(i), "com.example/guard-000")
+		rows, err := conn.Query(ctx, query, pgx.QueryExecModeCacheStatement, epoch.Add(time.Duration(i)*time.Millisecond), "com.example/aaa", fmt.Sprint(i))
 		require.NoError(t, err)
 		page, err := readListingRows(ctx, rows, telemetry.ListingFromContext(ctx), false, nil)
 		require.NoError(t, err)
@@ -188,11 +187,10 @@ func TestUpdatedPageGuardReusesPlanAndChecksCursor(t *testing.T) {
 	}
 	var generic, custom int
 	require.NoError(t, conn.QueryRow(ctx, "SELECT generic_plans, custom_plans FROM pg_prepared_statements WHERE statement = $1", query).Scan(&generic, &custom))
-	require.Positive(t, generic, "guard must permit generic-plan reuse")
+	require.Positive(t, generic, "cursor seek must permit generic-plan reuse")
 	require.Less(t, custom, 24)
-	// Deliberately supply an unsuitable hint. The database guard rejects it;
-	// the timestamp probe still returns the sparse remaining page correctly.
-	rows, err := conn.Query(ctx, query, pgx.QueryExecModeCacheStatement, epoch, "com.example/guard-530", "1.0.0", "com.example/guard-000")
+	// Later cursor pages still return the complete remaining result.
+	rows, err := conn.Query(ctx, query, pgx.QueryExecModeCacheStatement, epoch, "com.example/guard-530", "1.0.0")
 	require.NoError(t, err)
 	page, err := readListingRows(ctx, rows, telemetry.ListingFromContext(ctx), false, nil)
 	require.NoError(t, err)

@@ -69,7 +69,7 @@ func TestUpdatedPageCachePreservesChangingWatermarksAndBounds(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, rows)
 
-	// Keep additional filters and uncommon sizes on their existing custom path.
+	// Additional filters and uncommon sizes also respect the configured mode.
 	version, name, search, remote := "1.0.0", "com.example/cached-001", "cached", "https://example.invalid/mcp"
 	for _, filter := range []*ServerFilter{
 		{UpdatedSince: &epoch, Version: &version}, {UpdatedSince: &epoch, Name: &name},
@@ -85,5 +85,5 @@ func TestUpdatedPageCachePreservesChangingWatermarksAndBounds(t *testing.T) {
 	}
 	var after int
 	require.NoError(t, tx.QueryRow(ctx, "SELECT count(*) FROM pg_prepared_statements WHERE statement ~ '^[[:space:]]*WITH recent AS MATERIALIZED'").Scan(&after))
-	require.Equal(t, cached, after)
+	require.Greater(t, after, cached, "default execution also caches uncommon incremental shapes")
 }

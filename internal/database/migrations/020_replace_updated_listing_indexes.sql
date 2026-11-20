@@ -3,13 +3,19 @@
 -- A new name avoids silently reusing 019's included-column timestamp layout.
 SET LOCAL lock_timeout = '5s';
 
-CREATE INDEX IF NOT EXISTS idx_servers_updated_name_cover
-    ON servers (server_name, version, updated_at) INCLUDE (is_latest, status);
-CREATE INDEX IF NOT EXISTS idx_servers_updated_time_cover
-    ON servers (updated_at DESC, server_name, version);
-
 DO $$
 BEGIN
+    -- Avoid even requesting a table write lock when indexes were prebuilt.
+    -- CREATE INDEX IF NOT EXISTS takes that lock before checking the name.
+    IF to_regclass('idx_servers_updated_name_cover') IS NULL THEN
+        CREATE INDEX idx_servers_updated_name_cover
+            ON servers (server_name, version, updated_at) INCLUDE (is_latest, status);
+    END IF;
+    IF to_regclass('idx_servers_updated_time_cover') IS NULL THEN
+        CREATE INDEX idx_servers_updated_time_cover
+            ON servers (updated_at DESC, server_name, version);
+    END IF;
+
     IF NOT EXISTS (
         SELECT 1 FROM pg_index
         WHERE indexrelid = 'idx_servers_updated_name_cover'::regclass
@@ -45,7 +51,6 @@ BEGIN
 END
 $$;
 
--- Both replacements are usable before the old indexes are removed. The
--- transaction rolls back on lock timeout, retaining the old indexes on failure.
-DROP INDEX IF EXISTS idx_servers_updated_page_cover;
-DROP INDEX IF EXISTS idx_servers_updated_at;
+-- Retain old indexes during startup. Ordinary DROP INDEX locks the table and
+-- can stall readers/writers even after a successful concurrent prebuild.
+-- Remove obsolete indexes separately with DROP INDEX CONCURRENTLY after rollout.

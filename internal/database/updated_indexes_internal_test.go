@@ -3,13 +3,14 @@ package database
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUpdatedListingIndexMigration(t *testing.T) {
-	for _, mode := range []string{"fresh", "upgrade", "prebuilt", "wrong-definition"} {
+	for _, mode := range []string{"fresh", "upgrade", "prebuilt", "prebuilt-reader", "prebuilt-writer", "wrong-definition"} {
 		t.Run(mode, func(t *testing.T) {
 			db := NewTestDB(t).(*PostgreSQL)
 			ctx := context.Background()
@@ -30,13 +31,13 @@ func TestUpdatedListingIndexMigration(t *testing.T) {
 				_, err = conn.Exec(ctx, `
      DROP INDEX idx_servers_updated_name_cover;
      DROP INDEX idx_servers_updated_time_cover;
-     CREATE INDEX idx_servers_updated_page_cover ON servers(server_name,version) INCLUDE(updated_at,is_latest,status);
-     CREATE INDEX idx_servers_updated_at ON servers(updated_at DESC);
+     CREATE INDEX IF NOT EXISTS idx_servers_updated_page_cover ON servers(server_name,version) INCLUDE(updated_at,is_latest,status);
+     CREATE INDEX IF NOT EXISTS idx_servers_updated_at ON servers(updated_at DESC);
      DELETE FROM schema_migrations WHERE version=20;
     `)
 				require.NoError(t, err)
 				switch mode {
-				case "prebuilt":
+				case "prebuilt", "prebuilt-reader", "prebuilt-writer":
 					// Concurrent builds must be separate autocommit statements.
 					_, err = conn.Exec(ctx, `CREATE INDEX CONCURRENTLY idx_servers_updated_name_cover ON servers(server_name,version,updated_at) INCLUDE(is_latest,status)`)
 					require.NoError(t, err)
@@ -47,7 +48,22 @@ func TestUpdatedListingIndexMigration(t *testing.T) {
 					_, err = conn.Exec(ctx, `CREATE INDEX idx_servers_updated_name_cover ON servers(server_name,version) INCLUDE(updated_at,is_latest,status)`)
 					require.NoError(t, err)
 				}
-				err = migrator.applyMigration(ctx, migration)
+				if mode == "prebuilt-reader" || mode == "prebuilt-writer" {
+					// Hold a real reader/writer open while startup applies 020.
+					// A prebuilt migration must not request conflicting table locks.
+					blocker, beginErr := db.pool.Begin(ctx)
+					require.NoError(t, beginErr)
+					defer func() { require.NoError(t, blocker.Rollback(ctx)) }()
+					statement := "SELECT count(*) FROM servers"
+					if mode == "prebuilt-writer" {
+						statement = "UPDATE servers SET updated_at=updated_at WHERE false"
+					}
+					_, err = blocker.Exec(ctx, statement)
+					require.NoError(t, err)
+				}
+				migrationCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+				defer cancel()
+				err = migrator.applyMigration(migrationCtx, migration)
 				if mode == "wrong-definition" {
 					require.ErrorContains(t, err, "expected definition")
 					assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_page_cover", true)
@@ -60,8 +76,8 @@ func TestUpdatedListingIndexMigration(t *testing.T) {
 				}
 				require.NoError(t, err)
 			}
-			assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_page_cover", false)
-			assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_at", false)
+			assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_page_cover", true)
+			assertUpdatedIndexExists(t, conn.Conn(), "idx_servers_updated_at", true)
 			for _, name := range []string{"idx_servers_updated_name_cover", "idx_servers_updated_time_cover"} {
 				var usable bool
 				require.NoError(t, conn.QueryRow(ctx, `SELECT indisvalid AND indisready AND indnkeyatts=3 FROM pg_index WHERE indexrelid=to_regclass($1)`, name).Scan(&usable))

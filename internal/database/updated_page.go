@@ -37,10 +37,9 @@ type updatedPageHint struct {
 }
 
 type updatedPageStrategy struct {
-	observe     bool
-	skipProbe   bool
-	nameBefore  string
-	cursorGuard string // SQL over bound parameters, never interpolated cursor data.
+	observe    bool
+	skipProbe  bool
+	nameBefore string
 }
 
 func (h *updatedPageHints) choose(now, since time.Time, cursorName string, includeDeleted bool) updatedPageStrategy {
@@ -52,8 +51,8 @@ func (h *updatedPageHints) choose(now, since time.Time, cursorName string, inclu
 		if hint.includeDeleted != includeDeleted || !now.Before(hint.expires) || !since.Before(hint.before) {
 			continue
 		}
-		// This screen can miss opportunities under a different DB collation.
-		// SQL rechecks strict name ordering before skipping a cursor-page probe.
+		// Conservatively screen name boundaries. Production query selection
+		// only consults hints for first pages; cursor pages use a direct seek.
 		if cursorName != "" && cursorName >= hint.nameBefore {
 			continue
 		}
@@ -118,24 +117,18 @@ func (o *updatedPageObservation) consume(row listingRow) bool {
 	return true
 }
 
-// chooseUpdatedPageStrategy is limited to the common plain 100-row shape.
-// Transaction-owned reads and additional filters never consult or populate hints.
-func (db *PostgreSQL) chooseUpdatedPageStrategy(tx pgx.Tx, filter *ServerFilter, limit int, cursorArgs []any, cursorArgIndex, nextArg int, args []any) (updatedPageStrategy, []any) {
+// Cursor pages always retain the name-ordered seek. A timestamp probe can scan
+// the entire consumed prefix again on every page, especially with limit=1.
+// First-page hints are limited to the plain 100-row shape and never cache data.
+func (db *PostgreSQL) chooseUpdatedPageStrategy(tx pgx.Tx, filter *ServerFilter, limit int, cursorArgs []any) updatedPageStrategy {
+	if filter != nil && filter.UpdatedSince != nil && filter.SubstringName == nil && len(cursorArgs) > 0 {
+		return updatedPageStrategy{skipProbe: true}
+	}
 	if tx != nil || limit != 100 || !cacheUpdatedPage(filter, limit) {
-		return updatedPageStrategy{}, args
+		return updatedPageStrategy{}
 	}
 	includeDeleted := filter.IncludeDeleted != nil && *filter.IncludeDeleted
-	cursorName := ""
-	if len(cursorArgs) > 0 {
-		cursorName = cursorArgs[0].(string)
-	}
-	strategy := db.updatedPageHints.choose(time.Now(), *filter.UpdatedSince, cursorName, includeDeleted)
-	if strategy.skipProbe && len(cursorArgs) > 0 {
-		// PostgreSQL verifies ordering with server_name's default collation.
-		strategy.cursorGuard = fmt.Sprintf("($%d::text < $%d::text)", cursorArgIndex, nextArg)
-		args = append(args, strategy.nameBefore)
-	}
-	return strategy, args
+	return db.updatedPageHints.choose(time.Now(), *filter.UpdatedSince, "", includeDeleted)
 }
 
 func (db *PostgreSQL) readUpdatedPageRows(ctx context.Context, rows pgx.Rows, diagnostic *telemetry.ListingDiagnostic, prepared bool, strategy updatedPageStrategy, filter *ServerFilter) ([]listingRow, error) {
@@ -159,15 +152,9 @@ func updatedPageQuery(whereClause, limitExpression, payload string, prepared boo
 	if limitExpression == "100" {
 		probe = updatedPageProbe
 	}
-	prefix, covered := "", "FALSE"
+	covered := "FALSE"
 	if strategy.skipProbe {
 		covered = "TRUE"
-		if strategy.cursorGuard != "" {
-			// Constant folding otherwise makes early custom plans artificially
-			// cheap and can prevent PostgreSQL from reusing a generic plan.
-			prefix = "hint_guard AS MATERIALIZED (SELECT " + strategy.cursorGuard + " AS covers_page), "
-			covered = "(SELECT covers_page FROM hint_guard)"
-		}
 	}
 	columns, observation := "", ""
 	probeWhere := whereClause
@@ -180,7 +167,7 @@ func updatedPageQuery(whereClause, limitExpression, payload string, prepared boo
 		columns = ", updated_at"
 		observation = fmt.Sprintf(", count(*) > %d AS observed_large", probe)
 	}
-	ctes := fmt.Sprintf(`WITH %srecent AS MATERIALIZED (
+	ctes := fmt.Sprintf(`WITH recent AS MATERIALIZED (
         SELECT server_name, version%s FROM servers
         %s
         ORDER BY updated_at DESC LIMIT %d
@@ -194,7 +181,7 @@ func updatedPageQuery(whereClause, limitExpression, payload string, prepared boo
         (SELECT server_name, version FROM servers
          %s AND NOT (SELECT small FROM choice)
          ORDER BY server_name, version LIMIT %s)
-    )`, prefix, columns, probeWhere, probe+1, choice, observation, limitExpression, whereClause, limitExpression)
+    )`, columns, probeWhere, probe+1, choice, observation, limitExpression, whereClause, limitExpression)
 	page := fmt.Sprintf(`SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
         s.published_at, s.updated_at, s.is_latest, %s
         FROM (SELECT server_name, version FROM candidates

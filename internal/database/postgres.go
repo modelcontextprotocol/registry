@@ -265,10 +265,10 @@ func cacheUpdatedPage(filter *ServerFilter, limit int) bool {
 }
 
 func filteredQueryArgs(filter *ServerFilter, args []any) []any {
-	if filter != nil && (filter.SubstringName != nil || filter.UpdatedSince != nil) {
-		// Search and incremental-sync selectivity vary greatly. Use an unnamed
+	if filter != nil && filter.SubstringName != nil {
+		// Search selectivity varies greatly. Use an unnamed
 		// extended-protocol query so PostgreSQL plans for these parameter values
-		// instead of reusing one generic plan for every term, cutoff, and cursor.
+		// instead of reusing one generic plan for every term.
 		return append([]any{pgx.QueryExecModeExec}, args...)
 	}
 	return args
@@ -337,7 +337,6 @@ func (db *PostgreSQL) listServerRows(
 	whereConditions, args, argIndex := buildFilterConditions(filter, argIndex)
 
 	// Add cursor pagination
-	cursorArgIndex := argIndex
 	cursorCondition, cursorArgs, argIndex := addCursorCondition(cursor, argIndex)
 	if cursorCondition != "" {
 		whereConditions = append(whereConditions, cursorCondition)
@@ -370,14 +369,14 @@ func (db *PostgreSQL) listServerRows(
         ORDER BY server_name, version
         LIMIT %s
     `, payload, whereClause, limitExpression)
-	strategy, args := db.chooseUpdatedPageStrategy(tx, filter, limit, cursorArgs, cursorArgIndex, argIndex, args)
+	strategy := db.chooseUpdatedPageStrategy(tx, filter, limit, cursorArgs)
 	query = filteredPageQuery(filter, query, whereClause, limitExpression, prepared, strategy)
-	if cachePage {
-		args = append([]any{pgx.QueryExecModeCacheStatement}, args...)
-	} else {
+	if !cachePage {
 		args = append(args, limit)
-		args = filteredQueryArgs(filter, args)
 	}
+	// Respect the connection's execution mode, including disabled caches.
+	// Incremental queries retain binary results with the default pgx mode.
+	args = filteredQueryArgs(filter, args)
 
 	rows, err := db.getExecutor(tx).Query(ctx, query, args...)
 	if err != nil {
