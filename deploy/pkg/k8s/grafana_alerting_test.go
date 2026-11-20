@@ -217,7 +217,7 @@ func deployGrafanaWith(webhook string, secret bool) (*grafanaChartMonitor, error
 		if err != nil {
 			return err
 		}
-		return deployGrafana(ctx, &providers.ProviderInfo{Provider: provider}, ns, "staging", nil)
+		return deployGrafana(ctx, &providers.ProviderInfo{Provider: provider}, ns, "staging", nil, nil)
 	}, pulumi.WithMocks("mcp-registry-infra", "test", m), func(info *pulumi.RunInfo) {
 		// Standalone skips the ingress-nginx Ingress, which is not part of this test.
 		info.Config = map[string]string{"mcp-registry:googleOauthClientSecret": "oauth", "mcp-registry:gatewayStagingStandalone": "true"}

@@ -78,8 +78,9 @@ type grafanaAlerting struct {
 // registryAlertingProvisioning creates the alerting ConfigMap and the webhook
 // Secret. Grafana adopts an existing rule or contact point that has the same
 // uid, then refuses edits made in the UI. Removing these files deletes nothing
-// and leaves what they provisioned locked.
-func registryAlertingProvisioning(ctx *pulumi.Context, provider *kubernetes.Provider, ns *corev1.Namespace) (*grafanaAlerting, error) {
+// and leaves what they provisioned locked. extra holds files other features
+// provision beside the registry's own, by file name.
+func registryAlertingProvisioning(ctx *pulumi.Context, provider *kubernetes.Provider, ns *corev1.Namespace, extra map[string]string) (*grafanaAlerting, error) {
 	webhook, err := alertWebhook(ctx)
 	if err != nil || webhook == "" {
 		return nil, err
@@ -87,6 +88,12 @@ func registryAlertingProvisioning(ctx *pulumi.Context, provider *kubernetes.Prov
 	files, err := registryAlertingFiles()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read Grafana alerting files: %w", err)
+	}
+	for name, text := range extra {
+		if _, taken := files[name]; taken {
+			return nil, fmt.Errorf("two Grafana alerting files are named %s", name)
+		}
+		files[name] = text
 	}
 	secret, err := corev1.NewSecret(ctx, "grafana-alerting", &corev1.SecretArgs{
 		Metadata:   &metav1.ObjectMetaArgs{Name: pulumi.String("grafana-alerting"), Namespace: ns.Metadata.Name()},
@@ -146,6 +153,6 @@ func (a *grafanaAlerting) addTo(values pulumi.Map) pulumi.Map {
 	}
 	values["extraConfigmapMounts"] = append(values["extraConfigmapMounts"].(pulumi.Array), a.mount)
 	values["envValueFrom"].(pulumi.Map)[alertWebhookEnv] = a.webhook
-	values["podAnnotations"] = pulumi.Map{"checksum/alerting": pulumi.String(a.checksum)}
+	addPodAnnotation(values, "checksum/alerting", a.checksum)
 	return values
 }

@@ -74,6 +74,55 @@ jobs:
           python3 deploy/scripts/staging_image.py "$image" > "$RUNNER_TEMP/registry-image-validated.txt"
           echo "image=$(cat "$RUNNER_TEMP/registry-image-validated.txt")" >> "$GITHUB_OUTPUT"
 
+  # A separate job that nothing depends on: a failed collector build shows up
+  # here without holding back the registry image or the staging deployment.
+  ko-push-usage-collector:
+    if: github.event_name == 'push'
+    name: Build and Push Usage Collector Image with ko
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Set up ko
+        uses: ko-build/setup-ko@v0.10
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get build timestamp and tags
+        id: build-info
+        run: |
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +%Y%m%d)" >> $GITHUB_OUTPUT
+          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push with ko
+        env:
+          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}-usage-collector
+          VERSION: main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }}
+          GIT_COMMIT: ${{ github.sha }}
+          BUILD_TIME: ${{ steps.build-info.outputs.timestamp }}
+        run: |
+          # Staging's daily job pulls the main tag each time it starts.
+          ko build ./cmd/usage-collector \
+            --bare \
+            --platform=linux/amd64,linux/arm64 \
+            --tags=main-${{ steps.build-info.outputs.date }}-${{ steps.build-info.outputs.short_sha }},main
+
   deploy-staging:
     if: ${{ !cancelled() && (needs.ko-push.result == 'success' || github.event_name == 'workflow_dispatch') }}
     name: Deploy to Staging

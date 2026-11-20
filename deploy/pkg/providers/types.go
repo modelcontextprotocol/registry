@@ -12,6 +12,9 @@ type ProviderInfo struct {
 	StagingIngressAddress pulumi.StringOutput
 	Name                  pulumi.StringOutput
 	Provider              *kubernetes.Provider
+	// UsageCollectorKey is the usage collector's Google credential, as
+	// base64-encoded JSON. It is only set where the collector is enabled.
+	UsageCollectorKey pulumi.StringOutput
 }
 
 // BackupStorageInfo represents S3-compatible backup storage configuration

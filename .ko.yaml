@@ -23,6 +23,16 @@ builds:
       - -X main.BuildTime={{ .Env.BUILD_TIME }}
     env:
       - CGO_ENABLED=0
+  # The usage collector for the hosted instance; see cmd/usage-collector/README.md
+  - id: usage-collector
+    main: ./cmd/usage-collector
+    ldflags:
+      - -s -w
+      - -X main.Version={{ .Env.VERSION }}
+      - -X main.GitCommit={{ .Env.GIT_COMMIT }}
+      - -X main.BuildTime={{ .Env.BUILD_TIME }}
+    env:
+      - CGO_ENABLED=0
 
 # SBOM (Software Bill of Materials) configuration
 sbom: spdx

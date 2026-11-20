@@ -1,0 +1,127 @@
+# The usage collector's two alert rules, in the format Grafana exports.
+# They are provisioned only where mcp-registry:usageCollector is "true" and
+# alerting is configured. Both read the collector's database through the
+# read-only "Registry usage" data source, once an hour.
+#
+# Grafana expands environment variables in this file, so nothing here, comments
+# included, may contain a dollar sign.
+# retired.yaml must list every uid in this file: it is how the rules are
+# deleted when the collector is retired.
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: registry_usage
+      folder: application alerts
+      interval: 1h
+      rules:
+        # A stored day starts at 00:00 UTC and the collector runs at 01:15 UTC.
+        # While yesterday is stored there is always a day that started less
+        # than 52 hours ago; if it is not, there is none from 04:00 UTC on.
+        # The first run fills its 13 days oldest first and takes about an hour,
+        # so the rule waits two hours before it notifies. Grafana applies the
+        # same wait to a query error; the rule below reports one at once.
+        - uid: registry-usage-missed-day
+          title: Usage collection missed a day
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: registry-usage-pg
+              model:
+                editorMode: code
+                format: table
+                intervalMs: 1000
+                maxDataPoints: 43200
+                rawQuery: true
+                rawSql: SELECT count(*) AS recent_days FROM usage_daily WHERE day >= now() - interval '52 hours'
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 2h
+          annotations:
+            summary: Yesterday's registry usage was not stored by 04:00 UTC
+            description: The daily usage collector did not store the last full UTC day. The next run collects every missing day of the last 13, so a single miss heals itself; days older than that are lost. See "Usage collector" in deploy/README.md.
+          isPaused: false
+          notification_settings:
+            receiver: Registry Dev
+            repeat_interval: 24h
+        # The collector notes a day as approximate at the same 10 percent.
+        - uid: registry-usage-drift
+          title: Usage estimate drifted from the gateway counters
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: registry-usage-pg
+              model:
+                editorMode: code
+                format: table
+                intervalMs: 1000
+                maxDataPoints: 43200
+                rawQuery: true
+                rawSql: SELECT coalesce((SELECT 100 * greatest(abs(log_requests_ratio - 1), abs(log_data_ratio - 1)) FROM usage_daily ORDER BY day DESC LIMIT 1), 0) AS drift_percent
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 10
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: NoData
+          execErrState: Error
+          for: 0s
+          annotations:
+            summary: The newest day's log-based estimate is more than 10 percent from the gateway counters
+            description: Requests or data sent, estimated from the sampled access records, no longer match the gateway's counters for the newest stored day. The access record format or the log sampling rule has probably changed; that day's shares are approximate. See "Usage collector" in deploy/README.md.
+          isPaused: false
+          notification_settings:
+            receiver: Registry Dev
+            repeat_interval: 24h
