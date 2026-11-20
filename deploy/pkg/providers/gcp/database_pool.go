@@ -8,6 +8,10 @@ import (
 )
 
 func createDatabaseNodePool(ctx *pulumi.Context, cluster *container.Cluster, project, zone, machineType string, provider *gcp.Provider) (*container.NodePool, error) {
+	// The database can grow without resizing the application worker pool.
+	if override := config.New(ctx, "mcp-registry").Get("databaseNodeMachineType"); override != "" {
+		machineType = override
+	}
 	opts := []pulumi.ResourceOption{pulumi.Protect(true)}
 	if provider != nil {
 		opts = append(opts, pulumi.Provider(provider))

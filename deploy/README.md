@@ -254,6 +254,32 @@ unchanged during this comparison to attribute the capacity change's effect.
 Reverting machine type causes another disruptive rolling update; investigate a
 stalled GKE operation before reversing configuration.
 
+### Independent production database capacity
+
+`databaseNodeMachineType: e2-standard-8` opts the isolated production database
+pool into eight vCPUs while keeping application workers at `e2-standard-4`.
+The validated steady-state profile uses PostgreSQL CPU request/limit 6/6; 3/3
+is also allowed for staged upgrade/rollback. It retains the
+4 GiB memory limit, 512 MiB shared buffers, 200 server connections, app pools
+20/5, app HPA 2–6 at 60%, worker range 2–7, and the existing database PVC.
+Omitting the setting preserves the worker-sized database pool and previous CPU
+budget. Staging does not use this production override.
+
+Preview the full stack and require an in-place update of the protected database
+node pool, never pool/cluster/PVC replacement. The Kubernetes provider depends
+on the node pools, so the larger node is available before the six-CPU database
+request is applied. GKE will roll the database node with surge capacity; the
+singleton database must stop and reattach its PVC, causing an interruption.
+Check a recent usable backup, free disk space and quota before applying. Verify
+PVC identity, database readiness, connections, CPU, errors and latency after the
+move and resource reconciliation. Memory, buffers and app concurrency are not
+part of this change. This larger database VM remains billable during idle time.
+
+Keep application promotion separate: prebuild and validate the query indexes,
+then promote a tested stable image. Retain the previous image and indexes for
+rollback. Downsizing the DB also rolls its node; first return PostgreSQL to its
+three-CPU budget and verify it fits before reverting the node size.
+
 ### PostgreSQL shared buffers
 
 `mcp-registry:postgresSharedBuffers` optionally sets `shared_buffers` on the
