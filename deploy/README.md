@@ -502,6 +502,7 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 | `mcp-registry:githubClientSecret` | GitHub OAuth Client Secret | Yes (secret) |
 | `mcp-registry:jwtPrivateKey` | Ed25519 seed used to sign registry JWTs | Yes (secret) |
 | `mcp-registry:googleOauthClientSecret` | Google OAuth client secret for Grafana login | Yes (secret) |
+| `mcp-registry:alertDiscordWebhook` | Discord webhook for Grafana alert notifications; alerts are provisioned only where it is set | No (secret) |
 | `mcp-registry:imageTag` | Docker image tag for production environment | Yes (prod only) |
 | `gcp:project` | GCP Project ID | Yes when `provider=gcp` |
 | `gcp:region` | GCP Region | No (default: us-central1) |
@@ -540,8 +541,114 @@ kept their links. Removing the `registry` provider, including by reverting the
 change that added it, makes Grafana delete the dashboards it manages. The JSON
 stays in git, but re-importing it by hand would be needed to bring them back.
 
-Alert rules, contact points and notification policies are still managed inside
-Grafana and are not in this repository.
+Alert rules and their contact point are covered in [Grafana Alerts](#grafana-alerts).
+
+## Grafana Alerts
+
+The alert rules and the Discord contact point they notify are kept in this
+repository and provisioned by Pulumi:
+
+| What | File |
+|------|------|
+| Rule group `application_alerts` in the folder "application alerts" | `pkg/k8s/alerting/rules.yaml` |
+| Contact point "Registry Dev" (Discord) | `pkg/k8s/alerting/contact-points.yaml` |
+
+They are provisioned only in an environment where
+`mcp-registry:alertDiscordWebhook` is set. Without it nothing alert-related is
+deployed there and Grafana is left exactly as it is. Notification policies,
+templates and mute timings are still managed inside Grafana; the rules name
+their contact point directly and do not use the policy tree.
+
+**Provisioning is a one-way lock.** Once Grafana has provisioned or adopted a
+rule or contact point, it can only be changed through this repository: the UI
+and the API refuse to edit or delete it. Removing the files, or the webhook,
+does not unlock it or delete it. See [Removing rules](#removing-rules).
+
+### Setting the webhook
+
+The webhook is a credential and this repository is public, so it is only ever
+stored encrypted. For production (for staging use `make staging-login`,
+`gcpStaging` and `passphrase.staging.txt`):
+
+```bash
+cd deploy
+make prod-login
+PULUMI_CONFIG_PASSPHRASE_FILE=passphrase.prod.txt \
+  pulumi config set --stack gcpProd --secret mcp-registry:alertDiscordWebhook
+```
+
+Paste the webhook at the prompt rather than putting it on the command line,
+which would leave it in the shell history. Commit the resulting `secure:` entry
+in `Pulumi.gcpProd.yaml`; merging it deploys production. To rotate the webhook,
+set the new value the same way. The deployment restarts Grafana so that it
+picks the new value up.
+
+For production, use the webhook of the existing "Registry Dev" contact point
+(Discord: channel settings → Integrations → Webhooks → Copy Webhook URL). The
+configured value replaces the one Grafana has stored. A deployment refuses a
+webhook that is not encrypted or is not an `https://` URL, without printing it.
+If the webhook was ever committed unencrypted, replace it in Discord.
+
+Set staging's webhook first, so that the first place these files are applied
+is not production. Staging has no alerts until then; it then gets the same
+rules, evaluated against staging's metrics. Give it a webhook for a test
+channel of its own: staging carries little traffic, so rules whose series go
+missing there may send "DatasourceNoData" notifications.
+
+### Changing rules
+
+Grafana refuses to save a provisioned rule or contact point from the UI, so a
+change goes through a pull request:
+
+1. For a threshold, a duration or a query, edit `pkg/k8s/alerting/rules.yaml`
+   directly. For a larger change, open the rule in Grafana, choose
+   **Export → With modifications**, edit it there and export it as YAML, then
+   copy the rule into the file.
+2. Keep the `uid` of an existing rule. Give a new rule a `uid` of its own and a
+   `notification_settings.receiver` that is defined in `contact-points.yaml`.
+3. A rule title cannot contain `$`, and a literal `$` in a contact point
+   setting is written `$$`: Grafana replaces `$NAME` in those fields with
+   environment variables.
+4. Run `go -C deploy test ./pkg/k8s/`. The test rejects a changed production
+   `uid`, a rule whose contact point, data source or dashboard panel does not
+   exist, a webhook written into a file, and a provisioned notification policy.
+
+Changes reach staging when they merge to `main` and production with the next
+production deployment. Grafana reads these files only when it starts, so the
+deployment restarts it whenever a file or the webhook changes.
+
+Grafana does not start with a file it cannot provision: invalid YAML, an
+invalid rule, or a rule that notifies a missing contact point. The new pod then
+never becomes ready, the running one keeps serving and the deployment fails.
+Fix it promptly, because the running pod would hit the same error if it
+restarted.
+
+### Removing rules
+
+Taking a rule out of the file does not delete it, and neither does removing
+this provisioning altogether, whether by unsetting the webhook or by reverting
+the change that added it. The rules and the contact point stay in Grafana, keep
+evaluating and notifying, and stay read-only: neither the UI nor the API can
+edit or delete them afterwards, and they cannot be returned to UI editing.
+
+To delete a rule, remove it from `groups` and list its `uid` in the same file:
+
+```yaml
+deleteRules:
+    - orgId: 1
+      uid: <uid of the rule>
+```
+
+The entry can stay; it does nothing once the rule is gone. Never list a `uid`
+that is still defined, because Grafana would delete and recreate that rule at
+every start. `deleteContactPoints` removes a contact point in the same way, but
+only once no rule notifies it; Grafana does not start otherwise.
+
+Production's four rules and its contact point were first built in the UI.
+Grafana adopts an existing rule or contact point whose `uid` matches a
+provisioned one. A rehearsal of that takeover on Grafana 12.4.14 kept the
+queries, thresholds, timings, routing and alert state, and neither lost nor
+repeated a notification.
 
 ## Database Backups
 

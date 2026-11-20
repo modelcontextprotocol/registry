@@ -1,0 +1,15 @@
+# The Discord contact point the alert rules notify. Grafana replaces
+# $ALERT_DISCORD_WEBHOOK with the value of the Pulumi secret
+# mcp-registry:alertDiscordWebhook when it starts; the webhook itself must never
+# be written here. Keep the uid: Grafana adopted production's contact point by it.
+apiVersion: 1
+contactPoints:
+    - orgId: 1
+      name: Registry Dev
+      receivers:
+        - uid: eexrbxaqfwj5sf
+          type: discord
+          settings:
+            url: $ALERT_DISCORD_WEBHOOK
+            use_discord_username: false
+          disableResolveMessage: false

@@ -1,0 +1,231 @@
+# The four production alert rules, in the format Grafana exports
+# (Alerting -> Alert rules -> Export). deploy/README.md, "Grafana Alerts",
+# explains how to change them. Keep every uid: Grafana adopted production's
+# existing rules by uid, and a new uid would create a duplicate beside them.
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: application_alerts
+      folder: application alerts
+      interval: 5m
+      rules:
+        - uid: bexrc60etvhmoa
+          title: Availability dropped below 95%
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: P4169E866C3094E38
+              model:
+                editorMode: code
+                expr: (1 - ((sum(rate(mcp_registry_http_errors_total{status_code=~"5.*"}[4m])) or vector(0)) / sum(rate(mcp_registry_http_requests_total{}[4m])))) * 100
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 95
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+          panelId: 3
+          noDataState: NoData
+          execErrState: Error
+          for: 10m
+          annotations:
+            __dashboardUid__: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+            __panelId__: "3"
+            description: No. of 5xx are increased from acceptable limit i.e. 5% of total throughput
+            summary: Availability (1-error_rate) dropped below 95%
+          isPaused: false
+          notification_settings:
+            receiver: Registry Dev
+        - uid: bexrekma88v7ke
+          title: P95 on servers endpoint is above 2s
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: P4169E866C3094E38
+              model:
+                editorMode: code
+                expr: sum_over_time((histogram_quantile(0.95, sum by (le, path)(rate(mcp_registry_http_request_duration_bucket{path=~"/v0([.]1)?/servers.*"}[4m])*60)) > bool 2)[10m:1m])
+                instant: true
+                interval: 1m
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 5
+                        type: gte
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+          panelId: 4
+          noDataState: NoData
+          execErrState: Error
+          annotations:
+            __dashboardUid__: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+            __panelId__: "4"
+            summary: /v0/servers and /v0.1/servers endpoints are experiencing latency of greater than 2s(P95) for at-least 5mins in past 10mins
+          isPaused: false
+          notification_settings:
+            receiver: Registry Dev
+        - uid: fexrh31qna3nkc
+          title: Publish Endpoint Latency
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 1800
+                to: 0
+              datasourceUid: P4169E866C3094E38
+              model:
+                editorMode: code
+                expr: sum(increase(mcp_registry_http_request_duration_count{path=~"/v0([.]1)?/publish"}[30m])) - sum(increase(mcp_registry_http_request_duration_bucket{path=~"/v0([.]1)?/publish",le="10"}[30m]))
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 5
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+          panelId: 4
+          noDataState: OK
+          execErrState: Error
+          for: 10m
+          annotations:
+            __dashboardUid__: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+            __panelId__: "4"
+            summary: More than 5 publish requests took longer than 10s in the last 30m
+          isPaused: false
+          notification_settings:
+            receiver: Registry Dev
+        - uid: bexrhynsud6gwa
+          title: Registry Service Down
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: P4169E866C3094E38
+              model:
+                editorMode: code
+                expr: max(up{job="mcp-registry"}) or vector(0)
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 1
+                        type: lt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+          panelId: 2
+          noDataState: NoData
+          execErrState: Error
+          annotations:
+            __dashboardUid__: 1d4f7dbe-3a6c-47c7-adf3-da688b509748
+            __panelId__: "2"
+            summary: Registry service is down
+          isPaused: false
+          notification_settings:
+            receiver: Registry Dev
