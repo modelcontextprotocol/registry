@@ -104,7 +104,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "max(mcp_registry_service_up{})",
+          "expr": "max(up{job=\"mcp-registry\"}) or vector(0)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "Service Health"
@@ -171,32 +171,7 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "(1 - (sum(rate(mcp_registry_http_errors_total{status_code=~\"5.*\"}[4m])) / sum(rate(mcp_registry_http_requests_total{}[4m])))) * 100"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -222,7 +197,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "(1 - (sum(rate(mcp_registry_http_errors_total{status_code=~\"5.*\"}[4m])) / sum(rate(mcp_registry_http_requests_total{}[4m])))) * 100",
+          "expr": "(1 - ((sum(rate(mcp_registry_http_errors_total{status_code=~\"5.*\"}[4m])) or vector(0)) / sum(rate(mcp_registry_http_requests_total{}[4m])))) * 100",
           "hide": false,
           "legendFormat": "__auto",
           "range": true,
@@ -330,32 +305,7 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "{path=\"/v0/validate\", status_code=\"422\"}"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -453,32 +403,7 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "{path=\"/v0/servers\", status_code=\"500\"}"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -672,32 +597,7 @@
             ]
           }
         },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "/v0/publish"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
