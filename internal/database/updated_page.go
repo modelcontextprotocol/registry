@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,9 +38,10 @@ type updatedPageHint struct {
 }
 
 type updatedPageStrategy struct {
-	observe    bool
-	skipProbe  bool
-	nameBefore string
+	cursorProbe bool
+	observe     bool
+	skipProbe   bool
+	nameBefore  string
 }
 
 func (h *updatedPageHints) choose(now, since time.Time, cursorName string, includeDeleted bool) updatedPageStrategy {
@@ -52,7 +54,7 @@ func (h *updatedPageHints) choose(now, since time.Time, cursorName string, inclu
 			continue
 		}
 		// Conservatively screen name boundaries. Production query selection
-		// only consults hints for first pages; cursor pages use a direct seek.
+		// only consults hints for first pages; cursor pages select independently.
 		if cursorName != "" && cursorName >= hint.nameBefore {
 			continue
 		}
@@ -117,11 +119,16 @@ func (o *updatedPageObservation) consume(row listingRow) bool {
 	return true
 }
 
-// Cursor pages always retain the name-ordered seek. A timestamp probe can scan
-// the entire consumed prefix again on every page, especially with limit=1.
+// Plain cursor pages check a bounded name window before probing timestamps.
+// This avoids scanning either a sparse name suffix or a dense consumed timestamp
+// prefix unconditionally. Additional filters retain the direct name seek.
 // First-page hints are limited to the plain 100-row shape and never cache data.
 func (db *PostgreSQL) chooseUpdatedPageStrategy(tx pgx.Tx, filter *ServerFilter, limit int, cursorArgs []any) updatedPageStrategy {
 	if filter != nil && filter.UpdatedSince != nil && filter.SubstringName == nil && len(cursorArgs) > 0 {
+		// The plain shape binds the cutoff first, followed by cursor fields.
+		if cacheUpdatedPage(filter, 100) {
+			return updatedPageStrategy{cursorProbe: true}
+		}
 		return updatedPageStrategy{skipProbe: true}
 	}
 	if tx != nil || limit != 100 || !cacheUpdatedPage(filter, limit) {
@@ -148,6 +155,9 @@ func (db *PostgreSQL) readUpdatedPageRows(ctx context.Context, rows pgx.Rows, di
 // sorting a large history. Both branches use one statement snapshot and the full
 // predicate. The probe bounds returned keys, not every index entry visited.
 func updatedPageQuery(whereClause, limitExpression, payload string, prepared bool, strategy updatedPageStrategy) string {
+	if strategy.cursorProbe {
+		return updatedCursorPageQuery(whereClause, limitExpression, payload)
+	}
 	probe := 128
 	if limitExpression == "100" {
 		probe = updatedPageProbe
@@ -205,4 +215,60 @@ func updatedPageMarker(prepared bool) string {
         'epoch'::timestamptz AS published_at,
         (SELECT CASE WHEN observed_large THEN (SELECT min(updated_at) FROM recent) ELSE 'epoch'::timestamptz END FROM choice) AS updated_at,
         (SELECT observed_large FROM choice) AS is_latest, ` + payload
+}
+
+// updatedCursorPageQuery first checks a bounded name-ordered window. A dense
+// page or exhausted suffix can be answered without rescanning the consumed
+// timestamp prefix. Sparse windows fall back to the timestamp selection path.
+// Every branch uses the same snapshot and predicates; no response is cached.
+func updatedCursorPageQuery(whereClause, limitExpression, payload string) string {
+	nameWhere := strings.Replace(whereClause, "updated_at > $1", "TRUE", 1)
+	// A runtime cutoff keeps custom and generic estimates comparable without
+	// changing the predicate or forcing a connection execution mode.
+	timedWhere := strings.Replace(whereClause, "updated_at > $1", "updated_at > (SELECT stamp FROM cutoff)", 1)
+	// Keep cursor selectivity estimates independent of specific parameter values,
+	// so repeated calls can reuse a generic plan in the configured execution mode.
+	bounds := "$1::timestamptz AS stamp, $2::text AS cursor_name"
+	cursorCondition := "server_name > $2"
+	boundedCursor := "server_name > (SELECT cursor_name FROM cutoff)"
+	if strings.Contains(whereClause, "(server_name, version) > ($2, $3)") {
+		bounds += ", $3::text AS cursor_version"
+		cursorCondition = "(server_name, version) > ($2, $3)"
+		boundedCursor = "(server_name, version) > ((SELECT cursor_name FROM cutoff), (SELECT cursor_version FROM cutoff))"
+	}
+	nameWhere = strings.Replace(nameWhere, cursorCondition, boundedCursor, 1)
+	timedWhere = strings.Replace(timedWhere, cursorCondition, boundedCursor, 1)
+	return fmt.Sprintf(`WITH cutoff AS MATERIALIZED (SELECT %s),
+ name_window AS MATERIALIZED (
+  SELECT server_name, version, updated_at FROM servers
+  %s ORDER BY server_name, version LIMIT 512
+ ), name_matches AS MATERIALIZED (
+  SELECT server_name, version FROM name_window
+  WHERE updated_at > (SELECT stamp FROM cutoff)
+  ORDER BY server_name, version LIMIT %s
+ ), name_choice AS MATERIALIZED (
+  SELECT (SELECT count(*) FROM name_matches) >= %s
+      OR (SELECT count(*) FROM name_window) < 512 AS complete
+ ), recent AS MATERIALIZED (
+  SELECT server_name, version FROM servers
+  %s AND NOT (SELECT complete FROM name_choice)
+  ORDER BY updated_at DESC LIMIT 513
+ ), time_choice AS MATERIALIZED (
+  SELECT count(*) <= 512 AS small FROM recent
+ ), candidates AS MATERIALIZED (
+  (SELECT server_name, version FROM name_matches WHERE (SELECT complete FROM name_choice))
+  UNION ALL
+  (SELECT server_name, version FROM recent
+   WHERE NOT (SELECT complete FROM name_choice) AND (SELECT small FROM time_choice)
+   ORDER BY server_name, version LIMIT %s)
+  UNION ALL
+  (SELECT server_name, version FROM servers
+   %s AND NOT (SELECT complete FROM name_choice) AND NOT (SELECT small FROM time_choice)
+   ORDER BY server_name, version LIMIT %s)
+ )
+ SELECT s.server_name, s.version, s.status, s.status_changed_at, s.status_message,
+ s.published_at, s.updated_at, s.is_latest, %s
+ FROM (SELECT server_name, version FROM candidates ORDER BY server_name, version LIMIT %s) page
+ JOIN servers s USING (server_name, version)
+ ORDER BY s.server_name, s.version`, bounds, nameWhere, limitExpression, limitExpression, timedWhere, limitExpression, timedWhere, limitExpression, payload, limitExpression)
 }

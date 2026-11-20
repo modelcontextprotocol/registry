@@ -1194,17 +1194,27 @@ costly name scan for moderately sparse pages. To avoid repeatedly paying for tha
 probe on large histories, each app samples one in 16 eligible plain 100-row
 requests and retains up to 32 query-strategy hints for five seconds. A hint
 records a timestamp/name range containing more than 512 matches. Requests
-covered by that range can skip the probe. Cursor pages always use the name-ordered
-seek with the full predicate, including `limit=1` and legacy name-only cursors.
-This avoids repeatedly scanning the consumed prefix in timestamp order. Sparse
-cursor pages may still scan many names; this is the previous name-seek tradeoff,
-not a guarantee of bounded work. Hints are separated by deletion filtering and
-are not used for cursor pages, caller-owned transactions or additional filters.
+covered by that range can skip the probe. Plain cursor pages first inspect up to
+512 eligible keys in name/version order after the cursor and apply the timestamp
+filter. If that window supplies the requested page, or exhausts the remaining
+name range, it returns those matches without a timestamp scan. Otherwise it
+probes up to 513 matching keys in timestamp order, sorts a complete result of at
+most 512 keys, or falls back to the full name-ordered query. This preserves the
+cheap timestamp path for sparse pages while avoiding the consumed timestamp
+prefix for dense deep pages and exhausted suffixes. It also supports `limit=1`,
+the default page size, and legacy name-only cursors. Cursor pages with additional
+filters retain the direct name seek. The timestamp probe bounds returned keys,
+not all index entries visited; sparse deep pages can still scan a consumed
+timestamp prefix. No selection path caches response rows.
+The plain cursor query evaluates its cutoff and cursor parameters in one
+materialized row so varying parameter estimates do not prevent plan reuse.
+Hints are separated by deletion filtering and are not used for cursor pages,
+caller-owned transactions or additional filters.
 They contain no response data: writes can make a hint suboptimal until it expires,
 but every request still applies the
 complete predicate to current data. Sampled queries return an internal marker
 row that is removed before pagination, serialization and returned-row metrics.
-Both branches use the full predicate and one statement snapshot, with
+All selection branches use the full predicate and one statement snapshot, with
 payloads fetched only for the selected page. Timestamp order never becomes the
 public pagination order. Plain incremental queries with page sizes 1 or 100 use
 the validated page size embedded in the query; cutoffs and cursors remain

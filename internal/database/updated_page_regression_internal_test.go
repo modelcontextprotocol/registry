@@ -99,44 +99,46 @@ func TestUpdatedPageDeepCursorAvoidsConsumedTimestampPrefix(t *testing.T) {
 	for _, planMode := range []string{"force_custom_plan", "force_generic_plan"} {
 		_, err = conn.Exec(ctx, "SET plan_cache_mode="+planMode)
 		require.NoError(t, err)
-		for _, limit := range []int{1, 30, 100} {
-			cursor := "com.example/deep-45000"
-			strategy := db.chooseUpdatedPageStrategy(nil, &ServerFilter{UpdatedSince: &epoch}, limit, []any{cursor, "1.0.0"})
-			limitExpression := fmt.Sprint(limit)
-			executeArgs := "'2026-01-01T00:00:00Z', 'com.example/deep-45000', '1.0.0'"
-			if limit == 30 {
-				limitExpression = "$4"
-				executeArgs += ", 30"
-			}
-			query := updatedPageQuery("WHERE updated_at > $1 AND (server_name, version) > ($2, $3)", limitExpression, "s.value", false, strategy)
-			_, err = conn.Conn().Prepare(ctx, "deep_cursor", query)
-			require.NoError(t, err)
-			var raw []byte
-			require.NoError(t, conn.QueryRow(ctx, "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) EXECUTE deep_cursor("+executeArgs+")").Scan(&raw))
-			require.NoError(t, conn.Conn().Deallocate(ctx, "deep_cursor"))
-			var plans []struct {
-				Plan map[string]any `json:"Plan"`
-			}
-			require.NoError(t, json.Unmarshal(raw, &plans))
-			var inspect func(map[string]any)
-			inspect = func(node map[string]any) {
-				if loops, _ := node["Actual Loops"].(float64); loops > 0 {
-					index, _ := node["Index Name"].(string)
-					require.False(t, strings.Contains(index, "updated_time") || index == "idx_servers_updated_at", "%s limit=%d unexpectedly executed timestamp scan: %s", planMode, limit, raw)
-					removed, _ := node["Rows Removed by Filter"].(float64)
-					require.Less(t, removed, float64(1000), "must seek past the consumed prefix: %s", raw)
+		for _, after := range []int{45000, 49998, 50000} {
+			for _, limit := range []int{1, 30, 100} {
+				cursor := fmt.Sprintf("com.example/deep-%05d", after)
+				strategy := db.chooseUpdatedPageStrategy(nil, &ServerFilter{UpdatedSince: &epoch}, limit, []any{cursor, "1.0.0"})
+				limitExpression := fmt.Sprint(limit)
+				executeArgs := fmt.Sprintf("'2026-01-01T00:00:00Z', '%s', '1.0.0'", cursor)
+				if limit == 30 {
+					limitExpression = "$4"
+					executeArgs += ", 30"
 				}
-				children, _ := node["Plans"].([]any)
-				for _, child := range children {
-					inspect(child.(map[string]any))
+				query := updatedPageQuery("WHERE updated_at > $1 AND (server_name, version) > ($2, $3)", limitExpression, "s.value", false, strategy)
+				_, err = conn.Conn().Prepare(ctx, "deep_cursor", query)
+				require.NoError(t, err)
+				var raw []byte
+				require.NoError(t, conn.QueryRow(ctx, "EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) EXECUTE deep_cursor("+executeArgs+")").Scan(&raw))
+				require.NoError(t, conn.Conn().Deallocate(ctx, "deep_cursor"))
+				var plans []struct {
+					Plan map[string]any `json:"Plan"`
 				}
-			}
-			inspect(plans[0].Plan)
-			rows, _, listErr := db.ListServers(ctx, nil, &ServerFilter{UpdatedSince: &epoch}, cursor+":1.0.0", limit)
-			require.NoError(t, listErr)
-			require.Len(t, rows, limit)
-			for i, row := range rows {
-				require.Equal(t, fmt.Sprintf("com.example/deep-%05d", 45001+i), row.Server.Name)
+				require.NoError(t, json.Unmarshal(raw, &plans))
+				var inspect func(map[string]any)
+				inspect = func(node map[string]any) {
+					if loops, _ := node["Actual Loops"].(float64); loops > 0 {
+						index, _ := node["Index Name"].(string)
+						require.False(t, strings.Contains(index, "updated_time") || index == "idx_servers_updated_at", "%s limit=%d unexpectedly executed timestamp scan: %s", planMode, limit, raw)
+						removed, _ := node["Rows Removed by Filter"].(float64)
+						require.Less(t, removed, float64(1000), "must seek past the consumed prefix: %s", raw)
+					}
+					children, _ := node["Plans"].([]any)
+					for _, child := range children {
+						inspect(child.(map[string]any))
+					}
+				}
+				inspect(plans[0].Plan)
+				rows, _, listErr := db.ListServers(ctx, nil, &ServerFilter{UpdatedSince: &epoch}, cursor+":1.0.0", limit)
+				require.NoError(t, listErr)
+				require.Len(t, rows, min(limit, 50000-after))
+				for i, row := range rows {
+					require.Equal(t, fmt.Sprintf("com.example/deep-%05d", after+1+i), row.Server.Name)
+				}
 			}
 		}
 	}

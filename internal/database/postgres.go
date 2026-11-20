@@ -257,7 +257,7 @@ func filteredPageQuery(filter *ServerFilter, ordinary, whereClause string, limit
 }
 
 // cacheUpdatedPage bounds the extra statement-cache shapes to the two common
-// page sizes. Other incremental filters retain parameter-specific planning.
+// page sizes. Every shape respects the configured connection execution mode.
 func cacheUpdatedPage(filter *ServerFilter, limit int) bool {
 	return filter != nil && filter.UpdatedSince != nil &&
 		filter.SubstringName == nil && filter.Name == nil && filter.Version == nil &&

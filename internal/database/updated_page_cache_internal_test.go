@@ -56,10 +56,10 @@ func TestUpdatedPageCachePreservesChangingWatermarksAndBounds(t *testing.T) {
 		}
 	}
 	var cached int
-	require.NoError(t, tx.QueryRow(ctx, "SELECT count(*) FROM pg_prepared_statements WHERE statement ~ '^[[:space:]]*WITH recent AS MATERIALIZED'").Scan(&cached))
+	require.NoError(t, tx.QueryRow(ctx, "SELECT count(*) FROM pg_prepared_statements WHERE statement ~ '^[[:space:]]*WITH (recent|cutoff) AS MATERIALIZED'").Scan(&cached))
 	require.Equal(t, 4, cached, "two page sizes, with and without a compound cursor")
 	var parameterizedLimit int
-	require.NoError(t, tx.QueryRow(ctx, "SELECT count(*) FROM pg_prepared_statements WHERE statement ~ '^[[:space:]]*WITH recent AS MATERIALIZED' AND statement LIKE '%LIMIT $%'").Scan(&parameterizedLimit))
+	require.NoError(t, tx.QueryRow(ctx, "SELECT count(*) FROM pg_prepared_statements WHERE statement ~ '^[[:space:]]*WITH (recent|cutoff) AS MATERIALIZED' AND statement LIKE '%LIMIT $%'").Scan(&parameterizedLimit))
 	require.Zero(t, parameterizedLimit)
 
 	// Changes are visible without reconnecting or clearing the cached statements.
@@ -84,6 +84,6 @@ func TestUpdatedPageCachePreservesChangingWatermarksAndBounds(t *testing.T) {
 		require.NoError(t, err)
 	}
 	var after int
-	require.NoError(t, tx.QueryRow(ctx, "SELECT count(*) FROM pg_prepared_statements WHERE statement ~ '^[[:space:]]*WITH recent AS MATERIALIZED'").Scan(&after))
+	require.NoError(t, tx.QueryRow(ctx, "SELECT count(*) FROM pg_prepared_statements WHERE statement ~ '^[[:space:]]*WITH (recent|cutoff) AS MATERIALIZED'").Scan(&after))
 	require.Greater(t, after, cached, "default execution also caches uncommon incremental shapes")
 }

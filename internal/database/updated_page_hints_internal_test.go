@@ -175,7 +175,7 @@ func TestUpdatedPageCursorReusesPlanAndChecksPredicate(t *testing.T) {
 	conn, err := db.pool.Acquire(ctx)
 	require.NoError(t, err)
 	defer conn.Release()
-	strategy := updatedPageStrategy{skipProbe: true}
+	strategy := updatedPageStrategy{cursorProbe: true}
 	query := updatedPageQuery("WHERE updated_at > $1 AND (server_name, version) > ($2, $3)", "100", "s.value", false, strategy)
 	for i := 0; i < 24; i++ {
 		rows, err := conn.Query(ctx, query, pgx.QueryExecModeCacheStatement, epoch.Add(time.Duration(i)*time.Millisecond), "com.example/aaa", fmt.Sprint(i))

@@ -107,7 +107,7 @@ func TestUpdatedPageStrategyScopeAndBoundParameters(t *testing.T) {
 	cursor := "com.example/a' OR true --"
 	for _, limit := range []int{1, 30, 100} {
 		strategy := db.chooseUpdatedPageStrategy(nil, &ServerFilter{UpdatedSince: &cutoff}, limit, []any{cursor})
-		require.True(t, strategy.skipProbe)
+		require.True(t, strategy.cursorProbe)
 		require.False(t, strategy.observe)
 		query := updatedPageQuery("WHERE updated_at > $1 AND server_name > $2", fmt.Sprint(limit), "s.value", false, strategy)
 		require.NotContains(t, query, cursor)
