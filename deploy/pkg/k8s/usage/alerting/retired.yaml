@@ -1,0 +1,9 @@
+# Provisioned in place of rules.yaml where mcp-registry:usageCollector is
+# "false". Grafana keeps a provisioned rule, locked, after its file is removed;
+# only this deletes it. Lists every uid in rules.yaml.
+apiVersion: 1
+deleteRules:
+    - orgId: 1
+      uid: registry-usage-missed-day
+    - orgId: 1
+      uid: registry-usage-drift

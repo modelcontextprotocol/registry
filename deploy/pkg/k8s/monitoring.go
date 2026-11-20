@@ -15,7 +15,7 @@ import (
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 )
 
-func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart) error {
+func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart, registryPg *apiextensions.CustomResource) error {
 	vmMemoryRequest, vmMemoryLimit, vmCPURequest := "128Mi", "256Mi", "50m"
 	vmExtraArgs := pulumi.StringMap{}
 	if config.New(ctx, "mcp-registry").GetBool("victoriaMetricsCapacity") {
@@ -143,7 +143,7 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 	}
 
 	// Deploy Grafana
-	return deployGrafana(ctx, cluster, ns, environment, ingressNginx)
+	return deployGrafana(ctx, cluster, ns, environment, ingressNginx, registryPg)
 }
 
 // deployVictoriaLogs deploys VictoriaLogs for log storage
@@ -478,7 +478,7 @@ func deployOtelCollectorDaemonSet(ctx *pulumi.Context, cluster *providers.Provid
 }
 
 //nolint:goconst // Keep Kubernetes and Helm schema keys literal.
-func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *corev1.Namespace, environment string, ingressNginx *helm.Chart) error {
+func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *corev1.Namespace, environment string, ingressNginx *helm.Chart, registryPg *apiextensions.CustomResource) error {
 	conf := config.New(ctx, "mcp-registry")
 	grafanaSecret, err := corev1.NewSecret(ctx, "grafana-secrets", &corev1.SecretArgs{
 		Metadata: &metav1.ObjectMetaArgs{
@@ -519,6 +519,11 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		return err
 	}
 
+	usage, err := deployUsageCollector(ctx, cluster, ns, environment, grafanaPgCluster, registryPg)
+	if err != nil {
+		return err
+	}
+
 	// Create VictoriaMetrics and VictoriaLogs datasources
 	datasourcesConfig := map[string]interface{}{
 		"apiVersion": 1,
@@ -548,9 +553,9 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 			Name:      pulumi.String("grafana-datasources"),
 			Namespace: ns.Metadata.Name(),
 		},
-		Data: pulumi.StringMap{
+		Data: usage.dataSourceFiles(pulumi.StringMap{
 			"datasources.yaml": pulumi.String(string(datasourcesConfigYAML)),
-		},
+		}),
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
 		return err
@@ -574,7 +579,8 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 		return err
 	}
 	dashboardMounts = append(dashboardMounts, registryMounts...)
-	alerting, err := registryAlertingProvisioning(ctx, cluster.Provider, ns)
+	usageRules, usageRemovals := usage.alertingFiles()
+	alerting, err := registryAlertingProvisioning(ctx, cluster.Provider, ns, usageRules, usageRemovals)
 	if err != nil {
 		return err
 	}
@@ -589,7 +595,7 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 			Repo: pulumi.String("https://grafana.github.io/helm-charts"),
 		},
 		Namespace: ns.Metadata.Name().Elem(),
-		Values: alerting.addTo(pulumi.Map{
+		Values: usage.addTo(alerting.addTo(pulumi.Map{
 			// Match grafana.ini so the chart omits the unused, randomly generated admin Secret.
 			// Keep the chart configuration stable while upgrading the Grafana binary.
 			"image": pulumi.Map{
@@ -680,7 +686,7 @@ func deployGrafana(ctx *pulumi.Context, cluster *providers.ProviderInfo, ns *cor
 					"memory": pulumi.String("256Mi"),
 				},
 			},
-		}),
+		})),
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
 		return err

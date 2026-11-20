@@ -1,0 +1,163 @@
+{
+  "uid": "registry-publishing",
+  "title": "Registry publishing",
+  "description": "What gets published to the MCP Registry, of which type and by whom, by day, week or month.",
+  "tags": ["registry", "publishing"],
+  "timezone": "utc",
+  "weekStart": "monday",
+  "time": {"from": "now-11w/w", "to": "now-1d/d"},
+  "refresh": "",
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 41,
+  "links": [
+    {"type": "link", "icon": "dashboard", "title": "Usage board", "tooltip": "Who uses the registry and how much", "url": "/d/registry-usage/registry-usage", "targetBlank": false, "keepTime": false, "includeVars": false, "asDropdown": false, "tags": []},
+    {"type": "link", "icon": "dashboard", "title": "By day · last 30 days", "tooltip": "Daily view", "url": "/d/registry-publishing/registry-publishing?from=now-30d%2Fd&to=now-1d%2Fd&var-period=day", "targetBlank": false, "keepTime": false, "includeVars": false, "asDropdown": false, "tags": []},
+    {"type": "link", "icon": "dashboard", "title": "By week · last 12 weeks", "tooltip": "Weekly view", "url": "/d/registry-publishing/registry-publishing?from=now-11w%2Fw&to=now-1d%2Fd&var-period=week", "targetBlank": false, "keepTime": false, "includeVars": false, "asDropdown": false, "tags": []},
+    {"type": "link", "icon": "dashboard", "title": "By month · last 12 months", "tooltip": "Monthly view", "url": "/d/registry-publishing/registry-publishing?from=now-11M%2FM&to=now-1d%2Fd&var-period=month", "targetBlank": false, "keepTime": false, "includeVars": false, "asDropdown": false, "tags": []},
+    {"type": "link", "icon": "dashboard", "title": "Last 7 days", "tooltip": "The last seven full days, by day", "url": "/d/registry-publishing/registry-publishing?from=now-7d%2Fd&to=now-1d%2Fd&var-period=day", "targetBlank": false, "keepTime": false, "includeVars": false, "asDropdown": false, "tags": []},
+    {"type": "link", "icon": "dashboard", "title": "Month to date", "tooltip": "This calendar month so far, by day", "url": "/d/registry-publishing/registry-publishing?from=now%2FM&to=now-1d%2Fd&var-period=day", "targetBlank": false, "keepTime": false, "includeVars": false, "asDropdown": false, "tags": []}
+  ],
+  "templating": {"list": [
+    {"name": "period", "label": "Group by", "type": "custom", "query": "day,week,month", "multi": false, "includeAll": false, "current": {"text": "week", "value": "week", "selected": true}, "options": [{"text": "day", "value": "day", "selected": false}, {"text": "week", "value": "week", "selected": true}, {"text": "month", "value": "month", "selected": false}]}
+  ]},
+  "panels": [
+    {
+      "id": 1, "type": "text", "title": "", "gridPos": {"x": 0, "y": 0, "w": 24, "h": 3},
+      "options": {"mode": "markdown", "content": "**How to read this.** Every figure comes from the registry's public catalogue, which keeps each published version with the time it was published, so these are exact counts and go back to the start. A version counts in the ${period} it was published, even if it was deleted later. A new server is the first version published under a name. Each version gets one type: its package type, or remote only, or remote and package; the \"offers\" panel counts every package type and remote separately. Panels marked \"today\" ignore the time range."}
+    },
+
+    {"id": 100, "type": "row", "title": "How much: the selected time range in total", "collapsed": false, "gridPos": {"x": 0, "y": 3, "w": 24, "h": 1}, "panels": []},
+    {
+      "id": 101, "type": "stat", "title": "Versions published", "gridPos": {"x": 0, "y": 4, "w": 4, "h": 5},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT count(*) AS \"Versions\" FROM publish_version WHERE $__timeFilter(published_at)"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
+    },
+    {
+      "id": 102, "type": "stat", "title": "New servers", "description": "Names whose first version was published in the selected range.", "gridPos": {"x": 4, "y": 4, "w": 4, "h": 5},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT count(*) AS \"New servers\" FROM publish_version WHERE first_for_server AND $__timeFilter(published_at)"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
+    },
+    {
+      "id": 103, "type": "stat", "title": "Publishers active", "description": "Distinct namespaces (the part of a server name before the slash) that published at least one version in the selected range.", "gridPos": {"x": 8, "y": 4, "w": 4, "h": 5},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT count(DISTINCT namespace) AS \"Publishers\" FROM publish_version WHERE $__timeFilter(published_at)"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
+    },
+    {
+      "id": 104, "type": "stat", "title": "New publishers", "description": "Namespaces whose first ever version was published in the selected range.", "gridPos": {"x": 12, "y": 4, "w": 4, "h": 5},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT count(*) AS \"New publishers\" FROM (SELECT namespace, min(published_at) AS first_at FROM publish_version GROUP BY namespace) x WHERE $__timeFilter(first_at)"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
+    },
+    {
+      "id": 105, "type": "stat", "title": "Servers listed today", "description": "Servers in the catalogue now, not counting deleted ones. Ignores the time range.", "gridPos": {"x": 16, "y": 4, "w": 4, "h": 5},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT count(*) AS \"Servers\" FROM publish_version WHERE is_latest AND coalesce(status, '') <> 'deleted'"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "text"}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
+    },
+    {
+      "id": 106, "type": "stat", "title": "Versions listed today", "description": "Every version in the catalogue now, not counting deleted ones. This is what a client reads when it pages through all versions. Ignores the time range.", "gridPos": {"x": 20, "y": 4, "w": 4, "h": 5},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT count(*) AS \"Versions\" FROM publish_version WHERE coalesce(status, '') <> 'deleted'"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "text"}}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
+    },
+
+    {"id": 110, "type": "row", "title": "How it changes, by ${period}", "collapsed": false, "gridPos": {"x": 0, "y": 9, "w": 24, "h": 1}, "panels": []},
+    {
+      "id": 111, "type": "timeseries", "title": "Versions published, by ${period}", "description": "New servers are the first version under a name; the rest are new versions of servers that already existed.", "gridPos": {"x": 0, "y": 10, "w": 12, "h": 9},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT greatest(date_trunc('${period}', published_at, 'UTC'), $__timeFrom()::timestamptz) AS time, count(*) FILTER (WHERE first_for_server) AS \"New servers\", count(*) FILTER (WHERE NOT first_for_server) AS \"New versions of existing servers\" FROM publish_version WHERE $__timeFilter(published_at) GROUP BY 1 ORDER BY 1"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "min": 0, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 0, "barAlignment": 1, "barWidthFactor": 0.85, "stacking": {"mode": "normal", "group": "A"}}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "sum"]}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "id": 112, "type": "timeseries", "title": "Servers ever published, by ${period}", "description": "Running count of distinct server names published up to the end of each ${period}, or up to the end of the selected range in the last one. Deleted servers are not taken out.", "gridPos": {"x": 12, "y": 10, "w": 12, "h": 9},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "WITH firsts AS (SELECT date_trunc('${period}', published_at, 'UTC') AS bucket, count(*) AS added FROM publish_version WHERE first_for_server AND published_at <= $__timeTo()::timestamptz GROUP BY 1), running AS (SELECT bucket, sum(added) OVER (ORDER BY bucket) AS total FROM firsts) SELECT greatest(bucket, $__timeFrom()::timestamptz) AS time, total AS \"Servers ever published\" FROM running WHERE bucket >= date_trunc('${period}', $__timeFrom()::timestamptz, 'UTC') AND bucket <= $__timeTo()::timestamptz ORDER BY 1"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}, "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 5}}, "overrides": []},
+      "options": {"legend": {"showLegend": false}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "id": 113, "type": "timeseries", "title": "New servers by type, by ${period}", "description": "First versions only, by the one type each was published with.", "gridPos": {"x": 0, "y": 19, "w": 12, "h": 10},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT greatest(date_trunc('${period}', published_at, 'UTC'), $__timeFrom()::timestamptz) AS time, type_label AS metric, count(*) AS value FROM publish_version WHERE first_for_server AND $__timeFilter(published_at) GROUP BY 1, 2 ORDER BY 1, 2"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "min": 0, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 0, "barAlignment": 1, "barWidthFactor": 0.85, "stacking": {"mode": "normal", "group": "A"}}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "sum"], "sortBy": "Total", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+    {
+      "id": 114, "type": "timeseries", "title": "All versions published by type, by ${period}", "description": "Every version, including new versions of existing servers, by the one type each was published with.", "gridPos": {"x": 12, "y": 19, "w": 12, "h": 10},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT greatest(date_trunc('${period}', published_at, 'UTC'), $__timeFrom()::timestamptz) AS time, type_label AS metric, count(*) AS value FROM publish_version WHERE $__timeFilter(published_at) GROUP BY 1, 2 ORDER BY 1, 2"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "min": 0, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 0, "barAlignment": 1, "barWidthFactor": 0.85, "stacking": {"mode": "normal", "group": "A"}}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "sum"], "sortBy": "Total", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}}
+    },
+
+    {"id": 120, "type": "row", "title": "What kinds of servers", "collapsed": false, "gridPos": {"x": 0, "y": 29, "w": 24, "h": 1}, "panels": []},
+    {
+      "id": 121, "type": "piechart", "title": "Servers listed today, by type", "description": "The latest version of every server in the catalogue now, by its one type. Ignores the time range.", "gridPos": {"x": 0, "y": 30, "w": 6, "h": 12},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT type_label AS \"Type\", count(*) AS \"Servers\" FROM publish_version WHERE is_latest AND coalesce(status, '') <> 'deleted' GROUP BY 1 ORDER BY 2 DESC"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"pieType": "donut", "sort": "none", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Servers$/", "values": true}, "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom", "values": ["value", "percent"]}, "displayLabels": [], "tooltip": {"mode": "single", "sort": "none"}}
+    },
+    {
+      "id": 122, "type": "bargauge", "title": "What listed servers offer today", "description": "How many servers in the catalogue now offer each package type or remote. Remote (HTTP) is the streamable HTTP transport. A server that offers several counts in each, so these add up to more than the number of servers. Ignores the time range.", "gridPos": {"x": 6, "y": 30, "w": 8, "h": 12},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT offer AS \"Offers\", count(*) AS \"Servers\" FROM publish_version, unnest(offers) AS offer WHERE is_latest AND coalesce(status, '') <> 'deleted' GROUP BY 1 ORDER BY 2 DESC"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "min": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
+      "options": {"orientation": "horizontal", "displayMode": "basic", "valueMode": "color", "showUnfilled": true, "minVizHeight": 10, "namePlacement": "left", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Servers$/", "values": true}}
+    },
+    {
+      "id": 123, "type": "table", "title": "Types: listed today and published in the selected range", "description": "Listed today counts servers in the catalogue now. New in range counts first versions published in the selected range; All in range counts every version published in it.", "gridPos": {"x": 14, "y": 30, "w": 10, "h": 12},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "WITH listed AS (SELECT type_label, count(*) AS servers FROM publish_version WHERE is_latest AND coalesce(status, '') <> 'deleted' GROUP BY 1), ranged AS (SELECT type_label, count(*) AS versions, count(*) FILTER (WHERE first_for_server) AS new_servers FROM publish_version WHERE $__timeFilter(published_at) GROUP BY 1) SELECT type_label AS \"Type\", l.servers AS \"Listed today\", 100.0 * l.servers / sum(l.servers) OVER () AS \"Share today\", r.new_servers AS \"New in range\", 100.0 * r.new_servers / nullif(sum(r.new_servers) OVER (), 0) AS \"Share of new\", r.versions AS \"All in range\" FROM listed l FULL JOIN ranged r USING (type_label) ORDER BY l.servers DESC NULLS LAST"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "custom": {"align": "auto"}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "/^Share/"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "decimals", "value": 1}]},
+        {"matcher": {"id": "byRegexp", "options": "/today|range|^Share/"}, "properties": [{"id": "custom.width", "value": 96}]},
+        {"matcher": {"id": "byName", "options": "Type"}, "properties": [{"id": "custom.width", "value": 180}]}
+      ]},
+      "options": {"showHeader": true, "cellHeight": "sm"}
+    },
+
+    {"id": 130, "type": "row", "title": "Who publishes, over the selected time range", "collapsed": false, "gridPos": {"x": 0, "y": 42, "w": 24, "h": 1}, "panels": []},
+    {
+      "id": 131, "type": "table", "title": "Most active publishers", "description": "Namespaces ranked by versions published in the selected range. A namespace is the part of a server name before the slash; it is proved either with a GitHub account or by owning the domain.", "gridPos": {"x": 0, "y": 43, "w": 16, "h": 14},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT namespace AS \"Publisher namespace\", namespace_kind AS \"Proved by\", count(*) AS \"Versions published\", count(DISTINCT name) AS \"Servers\", count(*) FILTER (WHERE first_for_server) AS \"New servers\", round(count(*)::numeric / count(DISTINCT name), 1) AS \"Versions per server\", string_agg(DISTINCT type_label, ', ') AS \"Types\" FROM publish_version WHERE $__timeFilter(published_at) GROUP BY 1, 2 ORDER BY 3 DESC, 1 LIMIT 50"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "custom": {"align": "auto"}}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Publisher namespace"}, "properties": [{"id": "custom.width", "value": 250}]},
+        {"matcher": {"id": "byName", "options": "Proved by"}, "properties": [{"id": "custom.width", "value": 125}]},
+        {"matcher": {"id": "byRegexp", "options": "/^(Servers|New servers)$/"}, "properties": [{"id": "custom.width", "value": 110}]},
+        {"matcher": {"id": "byRegexp", "options": "/^(Versions published|Versions per server)$/"}, "properties": [{"id": "custom.width", "value": 155}]}
+      ]},
+      "options": {"showHeader": true, "cellHeight": "sm"}
+    },
+    {
+      "id": 132, "type": "piechart", "title": "New servers, by how the namespace was proved", "description": "First versions published in the selected range, by whether the namespace is a GitHub account (io.github.*) or a domain.", "gridPos": {"x": 16, "y": 43, "w": 8, "h": 6},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT namespace_kind AS \"Proved by\", count(*) AS \"New servers\" FROM publish_version WHERE first_for_server AND $__timeFilter(published_at) GROUP BY 1 ORDER BY 2 DESC"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "palette-classic"}}, "overrides": []},
+      "options": {"pieType": "donut", "sort": "none", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^New servers$/", "values": true}, "legend": {"showLegend": true, "displayMode": "table", "placement": "right", "values": ["value", "percent"]}, "displayLabels": [], "tooltip": {"mode": "single", "sort": "none"}}
+    },
+    {
+      "id": 133, "type": "table", "title": "How concentrated publishing is", "description": "Publishers in the selected range, grouped by how many versions each published.", "gridPos": {"x": 16, "y": 49, "w": 8, "h": 8},
+      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
+      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "WITH p AS (SELECT namespace, count(*) AS versions FROM publish_version WHERE $__timeFilter(published_at) GROUP BY 1), g AS (SELECT CASE WHEN versions = 1 THEN 1 WHEN versions <= 5 THEN 2 WHEN versions <= 20 THEN 3 WHEN versions <= 100 THEN 4 ELSE 5 END AS band, count(*) AS publishers, sum(versions) AS versions FROM p GROUP BY 1) SELECT (ARRAY['1 version', '2 to 5 versions', '6 to 20 versions', '21 to 100 versions', 'More than 100 versions'])[band] AS \"Published\", publishers AS \"Publishers\", versions AS \"Versions\", 100.0 * versions / sum(versions) OVER () AS \"Share of versions\" FROM g ORDER BY band"}],
+      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "custom": {"align": "auto"}}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Published"}, "properties": [{"id": "custom.width", "value": 185}]},
+        {"matcher": {"id": "byRegexp", "options": "/^(Publishers|Versions)$/"}, "properties": [{"id": "custom.width", "value": 95}]},
+        {"matcher": {"id": "byName", "options": "Share of versions"}, "properties": [{"id": "unit", "value": "percent"}, {"id": "decimals", "value": 1}]}
+      ]},
+      "options": {"showHeader": true, "cellHeight": "sm"}
+    }
+  ]
+}

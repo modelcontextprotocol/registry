@@ -84,3 +84,16 @@ jobs:
             --bare \
             --platform=linux/amd64,linux/arm64 \
             --tags=${{ steps.build-info.outputs.version }},latest
+
+      - name: Build and push the usage collector with ko
+        env:
+          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}-usage-collector
+          VERSION: ${{ steps.build-info.outputs.version }}
+          GIT_COMMIT: ${{ github.sha }}
+          BUILD_TIME: ${{ steps.build-info.outputs.timestamp }}
+        run: |
+          # Production runs the collector image with the same tag as the registry's.
+          ko build ./cmd/usage-collector \
+            --bare \
+            --platform=linux/amd64,linux/arm64 \
+            --tags=${{ steps.build-info.outputs.version }},latest

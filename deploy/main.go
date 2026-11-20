@@ -11,6 +11,7 @@ import (
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers/gcp"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers/local"
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/usagecollector"
 )
 
 // createProvider creates the appropriate cluster provider based on configuration
@@ -43,6 +44,10 @@ func main() {
 		}
 
 		if err := gatewaycanary.Validate(ctx); err != nil {
+			return err
+		}
+
+		if err := usagecollector.Validate(ctx); err != nil {
 			return err
 		}
 

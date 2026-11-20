@@ -5,6 +5,7 @@ go 1.26.10
 require (
 	github.com/pulumi/pulumi-gcp/sdk/v8 v8.41.1
 	github.com/pulumi/pulumi-kubernetes/sdk/v4 v4.34.3
+	github.com/pulumi/pulumi-random/sdk/v4 v4.21.6
 	github.com/pulumi/pulumi/sdk/v3 v3.274.1
 	golang.org/x/mod v0.42.0
 	gopkg.in/yaml.v2 v2.4.0

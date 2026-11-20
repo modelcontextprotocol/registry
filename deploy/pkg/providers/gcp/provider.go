@@ -368,6 +368,15 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
+	usageOpts := []pulumi.ResourceOption{}
+	if gcpProvider != nil {
+		usageOpts = append(usageOpts, pulumi.Provider(gcpProvider))
+	}
+	usageKey, err := usageCollectorAccess(ctx, projectID, environment, usageOpts)
+	if err != nil {
+		return nil, err
+	}
+
 	// Keep ingress configuration reloads in place once the public-read policy is managed.
 	var configMapMutable pulumi.BoolPtrInput
 	if config.New(ctx, "mcp-registry").Get("publicReadCompression") != "" {
@@ -425,6 +434,7 @@ users:
 		StagingIngressAddress: stagingIngressAddress,
 		Name:                  nodePool.Cluster,
 		Provider:              k8sProvider,
+		UsageCollectorKey:     usageKey,
 	}, nil
 }
 
