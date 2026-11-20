@@ -48,6 +48,7 @@ type ServerJSON struct {
 	Icons       []model.Icon      `json:"icons,omitempty" doc:"Optional set of sized icons that the client can display in a user interface."`
 	Packages    []model.Package   `json:"packages,omitempty" doc:"Array of package configurations"`
 	Remotes     []model.Transport `json:"remotes,omitempty" doc:"Array of remote configurations"`
+	ServerCard  string            `json:"serverCard,omitempty" format:"uri" doc:"Optional URL of the server's MCP Server Card (SEP-2127). Clients SHOULD fetch this to verify the endpoint identifies as this server name." example:"https://example.com/mcp/server-card"`
 	Meta        *ServerMeta       `json:"_meta,omitempty" doc:"Extension metadata using reverse DNS namespacing for vendor-specific data"`
 }
 

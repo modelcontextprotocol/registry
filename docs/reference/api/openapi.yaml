@@ -1005,6 +1005,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RemoteTransport'
+        serverCard:
+          type: string
+          format: uri
+          description: "Optional URL of the server's MCP Server Card (SEP-2127). When present, clients SHOULD fetch this document to verify that the endpoint identifies itself as this server name, instead of inferring the card location from the remote URL."
+          example: "https://example.com/mcp/server-card"
         _meta:
           type: object
           description: "Extension metadata using reverse DNS namespacing for vendor-specific data"
