@@ -1,7 +1,7 @@
 {
   "uid": "registry-usage",
   "title": "Registry usage",
-  "description": "Who uses the production MCP Registry and how much, by day, week or month.",
+  "description": "Who uses the MCP Registry and how much, by day, week or month.",
   "tags": ["registry", "usage"],
   "timezone": "utc",
   "weekStart": "monday",

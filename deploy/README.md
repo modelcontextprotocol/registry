@@ -775,8 +775,11 @@ state and in Kubernetes Secrets. None is written to this repository.
 | `registry_usage_reader` | The collector | Read the registry database |
 
 **The registry role can read every table in the registry database.** It is a
-member of PostgreSQL's `pg_read_all_data`, and it cannot write, create or
-change anything. Today that database holds two tables: `servers`, which the
+member of PostgreSQL's `pg_read_all_data`. It cannot write to, create or change
+any table or other lasting object there: in staging and in production the
+`public` schema lets only the database's owner create in it. Like every role,
+it can create temporary tables of its own, which is PostgreSQL's default.
+Today that database holds two tables: `servers`, which the
 registry publishes in full, and `schema_migrations`. The collector only needs
 `servers`. A grant on that one table has to be made by the table's owner and is
 dropped by the weekly staging restore, which is why membership is used instead.
