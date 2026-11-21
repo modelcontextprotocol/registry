@@ -166,6 +166,21 @@ func isResourceMatch(resource, pattern string) bool {
 	if pattern == "*" {
 		return true
 	}
+
+	// GitHub logins are case-insensitive, but the registry preserves the original
+	// case of published server names. Compare only the owner portion of GitHub
+	// namespace-wide grants without changing other permission matching semantics.
+	const githubPrefix = "io.github."
+	if strings.HasPrefix(pattern, githubPrefix) && strings.HasSuffix(pattern, "/*") {
+		owner := strings.TrimSuffix(strings.TrimPrefix(pattern, githubPrefix), "/*")
+		if owner != "" && !strings.ContainsAny(owner, "./") {
+			resourceNamespace, _, hasSlash := strings.Cut(resource, "/")
+			return hasSlash &&
+				strings.HasPrefix(resourceNamespace, githubPrefix) &&
+				strings.EqualFold(strings.TrimPrefix(resourceNamespace, githubPrefix), owner)
+		}
+	}
+
 	if strings.HasSuffix(pattern, "*") {
 		return strings.HasPrefix(resource, strings.TrimSuffix(pattern, "*"))
 	}
