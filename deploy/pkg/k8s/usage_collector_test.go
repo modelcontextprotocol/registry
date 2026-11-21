@@ -265,6 +265,9 @@ func TestUsageCollectorRunsWithConfinedCredentials(t *testing.T) {
 		`{"name":"PGOPTIONS","value":"-c default_transaction_read_only=on"}`, `{"name":"PGSSLMODE","value":"require"}`,
 		`{"name":"RESTIC_REPOSITORY","value":"gs:mcp-registry-staging-usage-backups:/usage-history-v1"}`,
 		`"secretName":"registry-usage-collector-gcp"`, "--keep-daily", "restic check --read-data",
+		// Its success is reported for the alert rule, after the snapshot has been checked.
+		`{"name":"SUCCESS_METRIC","value":"` + usageBackupMetric + `"}`, `{"name":"METRICS_URL","value":"` + usageMetricsURL + `"}`,
+		`$METRICS_URL/api/v1/import/prometheus`,
 	} {
 		if !strings.Contains(string(backup), required) {
 			t.Errorf("the history backup lacks %s", required)
@@ -337,8 +340,8 @@ func TestUsageAlertRulesNeedTheFlagAndAlerting(t *testing.T) {
 		t.Fatal(err)
 	}
 	file := provisionedUsageRules(t, m)
-	if len(file.Groups) != 1 || len(file.Groups[0].Rules) != 2 || len(file.DeleteRules) != 0 {
-		t.Errorf("the two usage rules are not provisioned: %+v", file)
+	if len(file.Groups) != 1 || len(file.Groups[0].Rules) != 3 || len(file.DeleteRules) != 0 {
+		t.Errorf("the three usage rules are not provisioned: %+v", file)
 	}
 	// Each feature restarts Grafana for its own files without undoing the other's trigger.
 	annotations, _ := m.values["podAnnotations"].(map[string]any)
@@ -417,8 +420,8 @@ func TestRetiredUsageCollectorDeletesItsRulesWithoutAlerting(t *testing.T) {
 	if err := yaml.Unmarshal([]byte(text), &file); err != nil {
 		t.Fatal(err)
 	}
-	if len(files) != 1 || len(file.DeleteRules) != 2 || len(file.Groups) != 0 || len(file.ContactPoints) != 0 {
-		t.Errorf("expected only the removal of the two usage rules: %v", files)
+	if len(files) != 1 || len(file.DeleteRules) != 3 || len(file.Groups) != 0 || len(file.ContactPoints) != 0 {
+		t.Errorf("expected only the removal of the three usage rules: %v", files)
 	}
 	// No contact point is provisioned, so Grafana needs no webhook.
 	if _, ok := m.resources["kubernetes:core/v1:Secret::grafana-alerting"]; ok || strings.Contains(m.raw, alertWebhookEnv) {
@@ -568,9 +571,13 @@ func TestUsageAlertRulesCanBeProvisioned(t *testing.T) {
 			t.Errorf("rule %q: notifies %q, which is not in contact-points.yaml", rule.Title, rule.NotificationSettings.Receiver)
 		}
 		for _, query := range rule.Data {
-			if query.DatasourceUID != "__expr__" && query.DatasourceUID != usageDataSourceUID {
-				t.Errorf("rule %q: uses data source %s, not the provisioned %s", rule.Title, query.DatasourceUID, usageDataSourceUID)
+			if query.DatasourceUID != "__expr__" && query.DatasourceUID != usageDataSourceUID && !provisionedDataSources[query.DatasourceUID] {
+				t.Errorf("rule %q: uses data source %s, which is not provisioned", rule.Title, query.DatasourceUID)
 			}
 		}
+	}
+	// The backup rule can only see a success that the job reports under the same name.
+	if !strings.Contains(usageAlertRules, "last_over_time("+usageBackupMetric+"[") {
+		t.Errorf("no rule reads %s, which the history backup reports", usageBackupMetric)
 	}
 }
