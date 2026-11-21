@@ -179,13 +179,22 @@ REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" ALL_VERSIONS=true \
 ## Malware Checks
 
 The registry checks the npm, PyPI, NuGet and Cargo packages that servers point at against the
-malware records (`MAL-*`) that [OSV.dev](https://osv.dev) publishes. A package matches only when
-OSV lists exactly the version the server names. OCI images and MCPB bundles are not covered.
+malware records (`MAL-*`) that [OSV.dev](https://osv.dev) publishes. OCI images and MCPB bundles
+are not covered.
+
+A package matches when a record names exactly the version the server points at, or names no
+versions at all, which is how OSV records a package that is malware in every release. A record
+that lists some versions does not match the others, even where it also carries a range covering
+them. PyPI and NuGet versions are compared the way those registries do, so `2.0` and `v2.0.0` are
+the same release. An npm dist-tag such as `next` is not a version: it is refused on publish, and
+an existing entry that names one cannot be checked, so the sweep lists it as
+`REGISTRY_MALWARE_SWEEP_UNCHECKED`.
 
 - **On publish and edit**: a matching package is refused with a `400` that links to the OSV record.
   The check runs alongside the package-ownership lookup. OSV takes about 0.3 seconds to answer,
   which is longer than the lookup, so a publish takes about that much longer.
-  If OSV has not answered within 2 seconds the request goes ahead unchecked.
+  If OSV has not answered within 2 seconds the request goes ahead unchecked; a match OSV did
+  confirm in that time is still refused.
   `MCP_REGISTRY_ENABLE_MALWARE_CHECK=false` switches the check off.
 - **Daily**: a sweep re-checks every listed (not deleted) server version, because OSV usually
   learns about a malicious release after it was published here. The sweep only reports. It never
@@ -197,10 +206,13 @@ On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` an
 (see [Malware sweep](../../deploy/README.md#malware-sweep)). Do not discuss a match in public
 channels before the entry is down.
 
-1. Read the matches. Each line names a server version, the package it points at and the OSV record:
+1. Read the matches of the newest run. Each line names a server version, the package it points at
+   and the OSV record. Earlier runs are kept beside it, and theirs may be out of date:
 
    ```bash
-   kubectl -n default logs -l app=registry-malware-sweep --tail=-1 | grep REGISTRY_MALWARE_SWEEP_HIT
+   JOB=$(kubectl -n default get jobs -l app=registry-malware-sweep \
+     --sort-by=.metadata.creationTimestamp -o name | tail -1)
+   kubectl -n default logs "$JOB" --tail=-1 | grep '^REGISTRY_MALWARE_SWEEP_'
    ```
 
    ```
@@ -208,7 +220,15 @@ channels before the entry is down.
    ```
 
 2. Confirm the record at `https://osv.dev/vulnerability/<id>` and that it lists the package version.
-3. Take that version down, with the reason (see [Takedown a Specific Version](#takedown-a-specific-version)):
+3. Confirm that the entry still points at that package version. It may have been edited or taken
+   down since the run; a version that is already deleted answers `404`:
+
+   ```bash
+   curl -s "https://registry.modelcontextprotocol.io/v0/servers/com.example%2Fmy-server/versions/1.0.0" \
+     | jq '.server.packages[] | {registryType, identifier, version}'
+   ```
+
+4. Take that version down, with the reason (see [Takedown a Specific Version](#takedown-a-specific-version)):
 
    ```bash
    REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="com.example/my-server" VERSION="1.0.0" \
@@ -232,7 +252,8 @@ go run ./cmd/registry -malware-sweep
 
 It ends with `REGISTRY_MALWARE_SWEEP_SUCCESS` and the number of matches, or with
 `REGISTRY_MALWARE_SWEEP_FAILED` and a non-zero exit status when it could not read the whole
-registry or reach OSV. Set `MCP_REGISTRY_MALWARE_SWEEP_REGISTRY_URL` to sweep another registry.
+registry or get a complete answer from OSV. A failed sweep still reports the matches OSV had
+confirmed. Set `MCP_REGISTRY_MALWARE_SWEEP_REGISTRY_URL` to sweep another registry.
 
 ## Connecting to the Production Database
 

@@ -178,6 +178,9 @@ func main() {
 const (
 	malwareSweepTimeout    = 30 * time.Minute
 	malwareSweepOSVTimeout = 60 * time.Second
+	// A request OSV turns away or fails is made again this often, so that one
+	// bad moment does not cost the day's sweep.
+	malwareSweepOSVRetries = 3
 )
 
 // runMalwareSweep checks every package the registry lists against OSV's
@@ -186,7 +189,8 @@ const (
 //
 // What it prints is what the hosted instance alerts on; see "Malware Checks"
 // in docs/administration/admin-operations.md. Matches are a finding, not a
-// failure, so the status is non-zero only when the sweep could not finish.
+// failure, so the status is non-zero only when the sweep could not finish. A
+// sweep that could not finish has still printed the matches it had confirmed.
 func runMalwareSweep() int {
 	cfg := config.NewConfig()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -194,13 +198,13 @@ func runMalwareSweep() int {
 	ctx, cancel := context.WithTimeout(ctx, malwareSweepTimeout)
 	defer cancel()
 
-	osv := malware.NewClient(cfg.OSVAPIURL, malwareSweepOSVTimeout)
+	osv := malware.NewClient(cfg.OSVAPIURL, malwareSweepOSVTimeout, malwareSweepOSVRetries)
 	result, err := malware.Sweep(ctx, cfg.MalwareSweepRegistryURL, osv, os.Stdout)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_FAILED registry=%q error=%q\n", cfg.MalwareSweepRegistryURL, err.Error())
 		return 1
 	}
-	fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_SUCCESS registry=%q versions=%d packages=%d hits=%d\n",
-		cfg.MalwareSweepRegistryURL, result.Versions, result.Packages, result.Hits)
+	fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_SUCCESS registry=%q versions=%d packages=%d hits=%d unchecked=%d\n",
+		cfg.MalwareSweepRegistryURL, result.Versions, result.Packages, result.Hits, result.Unchecked)
 	return 0
 }

@@ -758,16 +758,16 @@ func ValidateNoKnownMalware(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 	// The bound is on the whole check, however many requests it takes.
 	checkCtx, cancel := context.WithTimeout(ctx, malwareCheckTimeout)
 	defer cancel()
-	found, err := malware.NewClient(cfg.OSVAPIURL, malwareCheckTimeout).Malware(checkCtx, packages)
-	if err != nil {
-		slog.WarnContext(ctx, "malware check skipped", "server", req.Name, "version", req.Version, "error", err.Error())
-		return nil
-	}
+	// What OSV did answer is acted on even when the answer is incomplete.
+	found, err := malware.NewClient(cfg.OSVAPIURL, malwareCheckTimeout, 0).Malware(checkCtx, packages)
 	for i, pkg := range packages {
 		if ids := found[pkg]; len(ids) > 0 {
 			return fmt.Errorf("%w: package %d (%s) version %s is listed by OSV as %s, see https://osv.dev/vulnerability/%s",
 				ErrKnownMalware, i, pkg.Identifier, pkg.Version, strings.Join(ids, ", "), ids[0])
 		}
+	}
+	if err != nil {
+		slog.WarnContext(ctx, "malware check skipped", "server", req.Name, "version", req.Version, "error", err.Error())
 	}
 	return nil
 }

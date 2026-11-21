@@ -47,9 +47,13 @@ New `include_deleted` query parameter added to multiple endpoints:
 
 #### Malware check on publish and edit
 
-The official registry now refuses `POST /publish` and `PUT /servers/{serverName}/versions/{version}` with `400` when a package in the request is listed as malware by [OSV.dev](https://osv.dev) (a `MAL-*` record) at exactly the version named. The error names the package and links to the OSV record. This applies to npm, PyPI, NuGet and Cargo packages on both `/v0` and `/v0.1`; OCI images and MCPB bundles are not covered by OSV.
+The official registry now refuses `POST /publish` and `PUT /servers/{serverName}/versions/{version}` with `400` when a package in the request is listed as malware by [OSV.dev](https://osv.dev) (a `MAL-*` record) at exactly the version named: the record names that version, or names no versions because every release is malware. The error names the package and links to the OSV record. This applies to npm, PyPI, NuGet and Cargo packages on both `/v0` and `/v0.1`; OCI images and MCPB bundles are not covered by OSV.
 
 Ordinary vulnerabilities (CVE, GHSA) are not a reason to refuse. Status changes, including taking a version down, are not checked. If OSV cannot be reached the request proceeds as before. Request and response schemas are unchanged.
+
+#### npm dist-tags are refused as package versions
+
+An npm package `version` that is a dist-tag, such as `next` or `beta`, is now refused with `400` on publish and edit; the error gives the version the tag points at. A package version was already required to be a specific version (`latest` and ranges are refused), but npm resolved other tags, so they passed. A tag can be moved to another release after publishing, and an entry that names one cannot be checked against malware records. Existing entries are unchanged.
 
 ## 2025-10-17
 

@@ -182,6 +182,26 @@ func TestValidateNPM_PositivePathMock(t *testing.T) {
 	assert.NoError(t, err, "a version response with the matching mcpName should validate")
 }
 
+// TestValidateNPM_DistTagIsNotAVersion: npm answers a dist-tag with the release it
+// points at, so an entry naming the tag must be refused and told the real version.
+func TestValidateNPM_DistTagIsNotAVersion(t *testing.T) {
+	ctx := context.Background()
+	const serverName = "io.github.test/demo"
+	body := fmt.Sprintf(`{"mcpName":%q,"version":"2.0.0-rc.1"}`, serverName)
+	mock := newNPMMock(http.StatusOK, body, http.StatusOK)
+	defer mock.Close()
+
+	pkg := model.Package{RegistryType: model.RegistryTypeNPM, RegistryBaseURL: mock.URL, Identifier: "demo-pkg", Version: "next"}
+	err := registries.ValidateNPMPackage(ctx, pkg, serverName)
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "dist-tag")
+		assert.Contains(t, err.Error(), "2.0.0-rc.1")
+	}
+
+	pkg.Version = "2.0.0-rc.1"
+	assert.NoError(t, registries.ValidateNPMPackage(ctx, pkg, serverName), "the release itself validates")
+}
+
 func TestValidateNPM_RealPackages(t *testing.T) {
 	ctx := context.Background()
 

@@ -1007,12 +1007,18 @@ the cluster has not been timed yet. It writes to its log:
 | Line starts with | Meaning |
 |------------------|---------|
 | `REGISTRY_MALWARE_SWEEP_HIT` | A server version points at a package version that OSV lists as malware. One line per server version and package. |
-| `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the number of versions, packages and matches. |
-| `REGISTRY_MALWARE_SWEEP_FAILED` | The registry could not be read in full, or OSV did not answer. Nothing is reported for a partial run; the Job is retried once. |
+| `REGISTRY_MALWARE_SWEEP_UNCHECKED` | A server version names an npm dist-tag as its package version, so there is no release to check. One line per server version and package; it does not alert. |
+| `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the number of versions, packages, matches and unchecked entries. |
+| `REGISTRY_MALWARE_SWEEP_FAILED` | The registry could not be read in full, or OSV did not answer in full after three more attempts at each request. Matches OSV had confirmed are still reported; the Job is retried once. |
+
+Each run's log is kept with its Job, and the last three runs are kept, so read
+the newest one rather than everything with the label:
 
 ```bash
 kubectl --context=YOUR_CONTEXT -n default get cronjob registry-malware-sweep
-kubectl --context=YOUR_CONTEXT -n default logs -l app=registry-malware-sweep --tail=-1
+JOB=$(kubectl --context=YOUR_CONTEXT -n default get jobs -l app=registry-malware-sweep \
+  --sort-by=.metadata.creationTimestamp -o name | tail -1)
+kubectl --context=YOUR_CONTEXT -n default logs "$JOB" --tail=-1
 # Run it now:
 kubectl --context=YOUR_CONTEXT -n default create job --from=cronjob/registry-malware-sweep registry-malware-sweep-manual
 ```
