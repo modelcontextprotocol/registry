@@ -74,25 +74,18 @@
 
     {"id": 110, "type": "row", "title": "Who: the selected time range in total", "collapsed": false, "gridPos": {"x": 0, "y": 9, "w": 24, "h": 1}, "panels": []},
     {
-      "id": 111, "type": "piechart", "title": "Where the data goes", "description": "Share of all data sent in the selected range. Named organizations are ranked by data received.", "gridPos": {"x": 0, "y": 10, "w": 6, "h": 12},
+      "id": 111, "type": "piechart", "title": "Where the data goes", "description": "Share of all data sent in the selected range. Named organizations are ranked by data received.", "gridPos": {"x": 0, "y": 10, "w": 12, "h": 12},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT CASE WHEN kind = 'unnamed' THEN replace(name, 'Unnamed clients on', 'Unnamed, on') WHEN kind = 'other' THEN 'Smaller named clients' WHEN pos = 1 THEN name WHEN pos <= 10 THEN 'Named, ranked 2 to 10' ELSE 'Named, ranked 11 to 50' END AS \"Group\", sum(data_pct) AS \"Share\" FROM usage_leaderboard('organization', $__timeFrom(), $__timeTo(), 50) GROUP BY 1 ORDER BY min(pos)"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "color": {"mode": "palette-classic"}}, "overrides": []},
       "options": {"pieType": "donut", "sort": "none", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Share$/", "values": true}, "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom", "values": ["value"]}, "displayLabels": [], "tooltip": {"mode": "single", "sort": "none"}}
     },
     {
-      "id": 112, "type": "piechart", "title": "Where the requests come from", "description": "Share of all requests in the selected range, in the same groups as the panel on the left.", "gridPos": {"x": 6, "y": 10, "w": 6, "h": 12},
+      "id": 112, "type": "piechart", "title": "Where the requests come from", "description": "Share of all requests in the selected range, in the same groups as the panel on the left.", "gridPos": {"x": 12, "y": 10, "w": 12, "h": 12},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT CASE WHEN kind = 'unnamed' THEN replace(name, 'Unnamed clients on', 'Unnamed, on') WHEN kind = 'other' THEN 'Smaller named clients' WHEN pos = 1 THEN name WHEN pos <= 10 THEN 'Named, ranked 2 to 10' ELSE 'Named, ranked 11 to 50' END AS \"Group\", sum(requests_pct) AS \"Share\" FROM usage_leaderboard('organization', $__timeFrom(), $__timeTo(), 50) GROUP BY 1 ORDER BY min(pos)"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "color": {"mode": "palette-classic"}}, "overrides": []},
       "options": {"pieType": "donut", "sort": "none", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Share$/", "values": true}, "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom", "values": ["value"]}, "displayLabels": [], "tooltip": {"mode": "single", "sort": "none"}}
-    },
-    {
-      "id": 113, "type": "bargauge", "title": "After the largest client: data per day", "description": "The next twelve named organizations by data received in the selected range, as an average per day.", "gridPos": {"x": 12, "y": 10, "w": 12, "h": 12},
-      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
-      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT name AS \"Name\", gib / days AS \"Data per day\" FROM usage_leaderboard('organization', $__timeFrom(), $__timeTo(), 13) WHERE kind = 'named' AND pos > 1 ORDER BY pos"}],
-      "fieldConfig": {"defaults": {"unit": "gbytes", "decimals": 1, "min": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
-      "options": {"orientation": "horizontal", "displayMode": "basic", "valueMode": "color", "showUnfilled": true, "minVizHeight": 10, "namePlacement": "left", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Data per day$/", "values": true}}
     },
     {
       "id": 114, "type": "table", "title": "Organizations and products: the top 50 named, then the rest", "description": "Ranked by data received over the selected range. Days seen counts the days a name was in that day's top 50; addresses are an average per day, because distinct addresses cannot be added up across days.", "gridPos": {"x": 0, "y": 22, "w": 24, "h": 15},
@@ -173,23 +166,9 @@
       "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
 
-    {"id": 130, "type": "row", "title": "Inside the \"other\" and unnamed groups", "collapsed": false, "gridPos": {"x": 0, "y": 73, "w": 24, "h": 1}, "panels": []},
+    {"id": 130, "type": "row", "title": "Inside the unnamed groups", "collapsed": false, "gridPos": {"x": 0, "y": 73, "w": 24, "h": 1}, "panels": []},
     {
-      "id": 131, "type": "timeseries", "title": "Share of data, by size of client and ${period}", "description": "Named organizations ranked by data received within each ${period}, then everything that could not be named.", "gridPos": {"x": 0, "y": 74, "w": 12, "h": 10},
-      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
-      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT time, 100 * sum(gib) FILTER (WHERE pos = 1) / max(bucket_gib) AS \"Largest client\", 100 * sum(gib) FILTER (WHERE pos BETWEEN 2 AND 10) / max(bucket_gib) AS \"Ranked 2 to 10\", 100 * sum(gib) FILTER (WHERE pos BETWEEN 11 AND 50) / max(bucket_gib) AS \"Ranked 11 to 50\", 100 * sum(gib) FILTER (WHERE kind = 'other' OR pos > 50) / max(bucket_gib) AS \"Smaller named clients\", 100 * sum(gib) FILTER (WHERE kind = 'unnamed' AND name LIKE '%cloud%') / max(bucket_gib) AS \"Unnamed, on cloud hosting\", 100 * sum(gib) FILTER (WHERE kind = 'unnamed' AND name NOT LIKE '%cloud%') / max(bucket_gib) AS \"Unnamed, on internet providers\" FROM usage_series('organization', '${period}', $__timeFrom(), $__timeTo()) GROUP BY time ORDER BY 1"}],
-      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 0, "barAlignment": 1, "barWidthFactor": 0.85, "stacking": {"mode": "normal", "group": "A"}}}, "overrides": []},
-      "options": {"legend": {"displayMode": "table", "placement": "right", "width": 300, "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi", "sort": "none"}}
-    },
-    {
-      "id": 132, "type": "timeseries", "title": "Share of requests, by size of client and ${period}", "description": "The same groups as the panel on the left, by share of requests.", "gridPos": {"x": 12, "y": 74, "w": 12, "h": 10},
-      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
-      "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT time, 100 * sum(requests) FILTER (WHERE pos = 1) / max(bucket_requests) AS \"Largest client\", 100 * sum(requests) FILTER (WHERE pos BETWEEN 2 AND 10) / max(bucket_requests) AS \"Ranked 2 to 10\", 100 * sum(requests) FILTER (WHERE pos BETWEEN 11 AND 50) / max(bucket_requests) AS \"Ranked 11 to 50\", 100 * sum(requests) FILTER (WHERE kind = 'other' OR pos > 50) / max(bucket_requests) AS \"Smaller named clients\", 100 * sum(requests) FILTER (WHERE kind = 'unnamed' AND name LIKE '%cloud%') / max(bucket_requests) AS \"Unnamed, on cloud hosting\", 100 * sum(requests) FILTER (WHERE kind = 'unnamed' AND name NOT LIKE '%cloud%') / max(bucket_requests) AS \"Unnamed, on internet providers\" FROM usage_series('organization', '${period}', $__timeFrom(), $__timeTo()) GROUP BY time ORDER BY 1"}],
-      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 0, "barAlignment": 1, "barWidthFactor": 0.85, "stacking": {"mode": "normal", "group": "A"}}}, "overrides": []},
-      "options": {"legend": {"displayMode": "table", "placement": "right", "width": 300, "calcs": ["lastNotNull"]}, "tooltip": {"mode": "multi", "sort": "none"}}
-    },
-    {
-      "id": 133, "type": "table", "title": "Unnamed clients, by network", "description": "Over the selected range: requests from generic clients (HTTP libraries, runtimes, browsers, no user agent) on networks that do not identify an organization, split by the network they came from. Compressed is the share of their listing responses sent compressed.", "gridPos": {"x": 0, "y": 84, "w": 12, "h": 12},
+      "id": 133, "type": "table", "title": "Unnamed clients, by network", "description": "Over the selected range: requests from generic clients (HTTP libraries, runtimes, browsers, no user agent) on networks that do not identify an organization, split by the network they came from. Compressed is the share of their listing responses sent compressed.", "gridPos": {"x": 0, "y": 74, "w": 12, "h": 12},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT upper(left(category, 1)) || substr(category, 2) AS \"Hosted on\", CASE WHEN kind = 'other' THEN 'About ' || round(names_per_day) || ' others a day' ELSE name END AS \"Network\", requests_pct AS \"Requests\", data_pct AS \"Data sent\", gib / days AS \"Data per day\", compressed_pct AS \"Compressed\", addresses_per_day AS \"Addresses per day\" FROM usage_leaderboard('unnamed_network', $__timeFrom(), $__timeTo(), 12, true) ORDER BY pos"}],
       "fieldConfig": {"defaults": {"custom": {"align": "auto"}}, "overrides": [
@@ -202,7 +181,7 @@
       "options": {"showHeader": true, "cellHeight": "sm"}
     },
     {
-      "id": 134, "type": "table", "title": "Unnamed clients, by client software", "description": "The same unnamed requests over the selected range, split by what the user agent says the client is.", "gridPos": {"x": 12, "y": 84, "w": 12, "h": 12},
+      "id": 134, "type": "table", "title": "Unnamed clients, by client software", "description": "The same unnamed requests over the selected range, split by what the user agent says the client is.", "gridPos": {"x": 12, "y": 74, "w": 12, "h": 12},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT CASE WHEN kind = 'other' THEN 'About ' || round(names_per_day) || ' others a day' ELSE name END AS \"Client\", requests_pct AS \"Requests\", data_pct AS \"Data sent\", gib / days AS \"Data per day\", compressed_pct AS \"Compressed\", addresses_per_day AS \"Addresses per day\" FROM usage_leaderboard('unnamed_client', $__timeFrom(), $__timeTo(), 12) ORDER BY pos"}],
       "fieldConfig": {"defaults": {"custom": {"align": "auto"}}, "overrides": [
@@ -215,9 +194,9 @@
       "options": {"showHeader": true, "cellHeight": "sm"}
     },
 
-    {"id": 140, "type": "row", "title": "How it is used, and how efficiently, by ${period}", "collapsed": false, "gridPos": {"x": 0, "y": 96, "w": 24, "h": 1}, "panels": []},
+    {"id": 140, "type": "row", "title": "How it is used, and how efficiently, by ${period}", "collapsed": false, "gridPos": {"x": 0, "y": 86, "w": 24, "h": 1}, "panels": []},
     {
-      "id": 141, "type": "timeseries", "title": "Requests by endpoint", "gridPos": {"x": 0, "y": 97, "w": 12, "h": 9},
+      "id": 141, "type": "timeseries", "title": "Requests by endpoint", "gridPos": {"x": 0, "y": 87, "w": 12, "h": 9},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT time, name AS metric, 100 * requests / bucket_requests AS value FROM usage_series('endpoint', '${period}', $__timeFrom(), $__timeTo()) ORDER BY 1, 2"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "min": 0, "max": 100, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 0, "barAlignment": 1, "barWidthFactor": 0.85, "stacking": {"mode": "normal", "group": "A"}}}, "overrides": [
@@ -228,65 +207,65 @@
       "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull"], "sortBy": "Last *", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
     {
-      "id": 142, "type": "timeseries", "title": "Listing requests, by what the client was doing", "gridPos": {"x": 12, "y": 97, "w": 12, "h": 9},
+      "id": 142, "type": "timeseries", "title": "Listing requests, by what the client was doing", "gridPos": {"x": 12, "y": 87, "w": 12, "h": 9},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT time, name AS metric, 100 * requests / bucket_requests AS value FROM usage_series('listing_use', '${period}', $__timeFrom(), $__timeTo()) ORDER BY 1, 2"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "min": 0, "max": 100, "custom": {"drawStyle": "bars", "fillOpacity": 80, "lineWidth": 0, "barAlignment": 1, "barWidthFactor": 0.85, "stacking": {"mode": "normal", "group": "A"}}}, "overrides": []},
       "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull"], "sortBy": "Last *", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
     {
-      "id": 143, "type": "timeseries", "title": "Listing compression, all clients", "description": "Share of successful listing responses sent compressed, and the share of listing data they carried.", "gridPos": {"x": 0, "y": 106, "w": 8, "h": 8},
+      "id": 143, "type": "timeseries", "title": "Listing compression, all clients", "description": "Share of successful listing responses sent compressed, and the share of listing data they carried.", "gridPos": {"x": 0, "y": 96, "w": 8, "h": 8},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT time, listings_compressed_pct AS \"Listing responses compressed\", listings_compressed_data_pct AS \"Listing data carried by compressed responses\" FROM usage_buckets('${period}', $__timeFrom(), $__timeTo()) ORDER BY 1"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "min": 0, "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6}}, "overrides": []},
       "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
     {
-      "id": 144, "type": "timeseries", "title": "Listing requests served from the gateway cache", "gridPos": {"x": 8, "y": 106, "w": 8, "h": 8},
+      "id": 144, "type": "timeseries", "title": "Listing requests served from the gateway cache", "gridPos": {"x": 8, "y": 96, "w": 8, "h": 8},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT time, cache_hit_pct AS \"Served from cache\" FROM usage_buckets('${period}', $__timeFrom(), $__timeTo()) ORDER BY 1"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "min": 0, "max": 100, "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6}}, "overrides": []},
       "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
     {
-      "id": 145, "type": "timeseries", "title": "Responses that were not a success", "description": "Share of all requests, by outcome.", "gridPos": {"x": 16, "y": 106, "w": 8, "h": 8},
+      "id": 145, "type": "timeseries", "title": "Responses that were not a success", "description": "Share of all requests, by outcome.", "gridPos": {"x": 16, "y": 96, "w": 8, "h": 8},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT time, name AS metric, 100 * requests / bucket_requests AS value FROM usage_series('response', '${period}', $__timeFrom(), $__timeTo()) WHERE name <> 'success' ORDER BY 1, 2"}],
       "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6}}, "overrides": []},
       "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
 
-    {"id": 160, "type": "row", "title": "What gets looked up: servers and namespaces", "collapsed": false, "gridPos": {"x": 0, "y": 114, "w": 24, "h": 1}, "panels": []},
+    {"id": 160, "type": "row", "title": "What gets looked up: servers and namespaces", "collapsed": false, "gridPos": {"x": 0, "y": 104, "w": 24, "h": 1}, "panels": []},
     {
-      "id": 161, "type": "stat", "title": "Server lookups per day", "description": "Requests that read one specific server (its version list, or one version), as an average per day over the selected range. Listing requests are not lookups: they return pages of the whole catalogue.", "gridPos": {"x": 0, "y": 115, "w": 6, "h": 4},
+      "id": 161, "type": "stat", "title": "Server lookups per day", "description": "Requests that read one specific server (its version list, or one version), as an average per day over the selected range. Listing requests are not lookups: they return pages of the whole catalogue.", "gridPos": {"x": 0, "y": 105, "w": 6, "h": 4},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT sum(requests) / max(days) AS \"Lookups per day\" FROM usage_leaderboard('server_type', $__timeFrom(), $__timeTo(), 50)"}],
       "fieldConfig": {"defaults": {"unit": "short", "decimals": 2, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
       "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
     },
     {
-      "id": 162, "type": "stat", "title": "Share of all requests", "description": "Server lookups as a share of all requests in the selected range.", "gridPos": {"x": 6, "y": 115, "w": 6, "h": 4},
+      "id": 162, "type": "stat", "title": "Share of all requests", "description": "Server lookups as a share of all requests in the selected range.", "gridPos": {"x": 6, "y": 105, "w": 6, "h": 4},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT sum(requests_pct) AS \"Share\" FROM usage_leaderboard('server_type', $__timeFrom(), $__timeTo(), 50)"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
       "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
     },
     {
-      "id": 163, "type": "stat", "title": "Servers looked up per day, at least", "description": "Distinct catalogued servers seen in each day's sample of lookups, averaged over the days in the selected range. A day on which no catalogued server was looked up counts as zero; a day stored without a catalogue is left out. The sample holds about one lookup in 75, so the true number is higher.", "gridPos": {"x": 12, "y": 115, "w": 6, "h": 4},
+      "id": 163, "type": "stat", "title": "Servers looked up per day, at least", "description": "Distinct catalogued servers seen in each day's sample of lookups, averaged over the days in the selected range. A day on which no catalogued server was looked up counts as zero; a day stored without a catalogue is left out. The sample holds about one lookup in 75, so the true number is higher.", "gridPos": {"x": 12, "y": 105, "w": 6, "h": 4},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT avg(coalesce(x.n, 0)) AS \"Servers\" FROM usage_daily d LEFT JOIN (SELECT day, count(*) FILTER (WHERE kind = 'named') + coalesce(max(rollup_count), 0) AS n FROM usage_share WHERE dimension = 'server' AND $__timeFilter(day) GROUP BY day) x USING (day) WHERE $__timeFilter(d.day) AND NOT EXISTS (SELECT 1 FROM unnest(d.caveats) AS caveat WHERE caveat LIKE 'No published servers were available%')"}],
       "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
       "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
     },
     {
-      "id": 164, "type": "stat", "title": "For names not in the catalogue", "description": "Share of lookups that asked for a name the public catalogue does not have. Those names are not kept, only counted.", "gridPos": {"x": 18, "y": 115, "w": 6, "h": 4},
+      "id": 164, "type": "stat", "title": "For names not in the catalogue", "description": "Share of lookups that asked for a name the public catalogue does not have. Those names are not kept, only counted.", "gridPos": {"x": 18, "y": 105, "w": 6, "h": 4},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT 100 * coalesce(sum(requests) FILTER (WHERE kind = 'unnamed'), 0) / sum(requests) AS \"Share\" FROM usage_leaderboard('server_type', $__timeFrom(), $__timeTo(), 50)"}],
       "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1, "color": {"mode": "fixed", "fixedColor": "text"}}, "overrides": []},
       "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "graphMode": "none", "colorMode": "value", "textMode": "value"}
     },
     {
-      "id": 165, "type": "table", "title": "Most looked-up servers", "description": "Over the selected range, ranked by lookups. Only names in the public catalogue are listed. Asked most by is the organization or product that asked for a server most, and From it is its share of that server's lookups; From others a day is what is left, which is the better guide to broad demand when one client polls a fixed list. These three are blank when the days in the range, or the servers grouped into one row, do not agree on who asked most. Not found is the share of lookups that returned 404, usually a version that does not exist. Click a column heading to sort by it.", "gridPos": {"x": 0, "y": 119, "w": 16, "h": 14},
+      "id": 165, "type": "table", "title": "Most looked-up servers", "description": "Over the selected range, ranked by lookups. Only names in the public catalogue are listed. Asked most by is the organization or product that asked for a server most, and From it is its share of that server's lookups; From others a day is what is left, which is the better guide to broad demand when one client polls a fixed list. These three are blank when the days in the range, or the servers grouped into one row, do not agree on who asked most. Not found is the share of lookups that returned 404, usually a version that does not exist. Click a column heading to sort by it.", "gridPos": {"x": 0, "y": 109, "w": 16, "h": 14},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT CASE WHEN kind = 'named' THEN pos END AS \"#\", CASE WHEN kind = 'other' THEN 'About ' || round(names_per_day) || ' other servers a day' ELSE name END AS \"Server\", category AS \"Type\", requests / days AS \"Lookups a day\", 100 * requests / sum(requests) OVER () AS \"Share\", identified_by AS \"Asked most by\", top_client_pct AS \"From it\", requests / days * (1 - top_client_pct / 100) AS \"From others a day\", not_found_pct AS \"Not found\" FROM usage_leaderboard('server', $__timeFrom(), $__timeTo(), 50, false, true) ORDER BY pos"}],
       "fieldConfig": {"defaults": {"custom": {"align": "auto"}}, "overrides": [
@@ -299,7 +278,7 @@
       "options": {"showHeader": true, "cellHeight": "sm"}
     },
     {
-      "id": 166, "type": "table", "title": "Most looked-up namespaces", "description": "The same lookups grouped by namespace, the part of a server name before the slash.", "gridPos": {"x": 16, "y": 119, "w": 8, "h": 14},
+      "id": 166, "type": "table", "title": "Most looked-up namespaces", "description": "The same lookups grouped by namespace, the part of a server name before the slash.", "gridPos": {"x": 16, "y": 109, "w": 8, "h": 14},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT CASE WHEN kind = 'named' THEN pos END AS \"#\", CASE WHEN kind = 'other' THEN 'About ' || round(names_per_day) || ' others a day' ELSE name END AS \"Namespace\", category AS \"Proved by\", requests / days AS \"Lookups per day\", 100 * requests / sum(requests) OVER () AS \"Share\" FROM usage_leaderboard('server_namespace', $__timeFrom(), $__timeTo(), 40, false, true) ORDER BY pos"}],
       "fieldConfig": {"defaults": {"custom": {"align": "auto"}}, "overrides": [
@@ -311,23 +290,23 @@
       "options": {"showHeader": true, "cellHeight": "sm"}
     },
     {
-      "id": 167, "type": "timeseries", "title": "Lookups per day for the top servers, by ${period}", "description": "The eight most looked-up servers of the selected range, as an average per day within each ${period}.", "gridPos": {"x": 0, "y": 133, "w": 16, "h": 10},
+      "id": 167, "type": "timeseries", "title": "Lookups per day for the top servers, by ${period}", "description": "The eight most looked-up servers of the selected range, as an average per day within each ${period}.", "gridPos": {"x": 0, "y": 123, "w": 16, "h": 10},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "time_series", "rawQuery": true, "editorMode": "code", "rawSql": "WITH top AS (SELECT name FROM usage_leaderboard('server', $__timeFrom(), $__timeTo(), 8, false, true) WHERE kind = 'named') SELECT s.time, s.name AS metric, round(s.requests / s.days) AS value FROM usage_series('server', '${period}', $__timeFrom(), $__timeTo()) s JOIN top USING (name) WHERE s.kind = 'named' ORDER BY 1, 2"}],
       "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "min": 0, "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "always", "pointSize": 6}}, "overrides": []},
       "options": {"legend": {"displayMode": "table", "placement": "right", "calcs": ["lastNotNull", "mean"], "sortBy": "Mean", "sortDesc": true}, "tooltip": {"mode": "multi", "sort": "desc"}}
     },
     {
-      "id": 168, "type": "piechart", "title": "Lookups by type of server", "description": "Lookups over the selected range, by the type of the server that was asked for.", "gridPos": {"x": 16, "y": 133, "w": 8, "h": 10},
+      "id": 168, "type": "piechart", "title": "Lookups by type of server", "description": "Lookups over the selected range, by the type of the server that was asked for.", "gridPos": {"x": 16, "y": 123, "w": 8, "h": 10},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT name AS \"Type\", requests / days AS \"Lookups per day\" FROM usage_leaderboard('server_type', $__timeFrom(), $__timeTo(), 50, false, true) ORDER BY requests DESC"}],
       "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "palette-classic"}}, "overrides": []},
       "options": {"pieType": "donut", "sort": "none", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Lookups per day$/", "values": true}, "legend": {"showLegend": true, "displayMode": "table", "placement": "right", "values": ["value", "percent"]}, "displayLabels": [], "tooltip": {"mode": "single", "sort": "none"}}
     },
 
-    {"id": 150, "type": "row", "title": "More detail: the selected time range in total", "collapsed": false, "gridPos": {"x": 0, "y": 143, "w": 24, "h": 1}, "panels": []},
+    {"id": 150, "type": "row", "title": "More detail: the selected time range in total", "collapsed": false, "gridPos": {"x": 0, "y": 133, "w": 24, "h": 1}, "panels": []},
     {
-      "id": 151, "type": "table", "title": "Client software, as named in the user agent: the top 40", "gridPos": {"x": 0, "y": 144, "w": 12, "h": 14},
+      "id": 151, "type": "table", "title": "Client software, as named in the user agent: the top 40", "gridPos": {"x": 0, "y": 134, "w": 12, "h": 14},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT CASE WHEN kind = 'other' THEN 'About ' || round(names_per_day) || ' others a day' ELSE name END AS \"Client\", requests_pct AS \"Requests\", data_pct AS \"Data sent\", gib / days AS \"Data per day\", compressed_pct AS \"Compressed\", addresses_per_day AS \"Addresses per day\" FROM usage_leaderboard('client', $__timeFrom(), $__timeTo(), 40) ORDER BY pos"}],
       "fieldConfig": {"defaults": {"custom": {"align": "auto"}}, "overrides": [
@@ -340,7 +319,7 @@
       "options": {"showHeader": true, "cellHeight": "sm"}
     },
     {
-      "id": 152, "type": "table", "title": "Network owner of the source address: the top 30", "gridPos": {"x": 12, "y": 144, "w": 12, "h": 14},
+      "id": 152, "type": "table", "title": "Network owner of the source address: the top 30", "gridPos": {"x": 12, "y": 134, "w": 12, "h": 14},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT CASE WHEN kind = 'other' THEN 'About ' || round(names_per_day) || ' others a day' ELSE name END AS \"Network\", upper(left(category, 1)) || substr(category, 2) AS \"Type\", requests_pct AS \"Requests\", data_pct AS \"Data sent\", gib / days AS \"Data per day\", addresses_per_day AS \"Addresses per day\" FROM usage_leaderboard('network', $__timeFrom(), $__timeTo(), 30) ORDER BY pos"}],
       "fieldConfig": {"defaults": {"custom": {"align": "auto"}}, "overrides": [
