@@ -73,6 +73,9 @@ groups:
             receiver: Registry Dev
             repeat_interval: 24h
         # The collector notes a day as approximate at the same 10 percent.
+        # A day with fewer than 20,000 sampled records is not judged: on such
+        # a day a handful of listing records stand for all listing data, and
+        # the estimate strays beyond 10 percent by chance.
         - uid: registry-usage-drift
           title: Usage estimate drifted from the gateway counters
           condition: C
@@ -88,7 +91,7 @@ groups:
                 intervalMs: 1000
                 maxDataPoints: 43200
                 rawQuery: true
-                rawSql: SELECT coalesce((SELECT 100 * greatest(abs(log_requests_ratio - 1), abs(log_data_ratio - 1)) FROM usage_daily ORDER BY day DESC LIMIT 1), 0) AS drift_percent
+                rawSql: SELECT coalesce((SELECT CASE WHEN records_sampled >= 20000 THEN 100 * greatest(abs(log_requests_ratio - 1), abs(log_data_ratio - 1)) END FROM usage_daily ORDER BY day DESC LIMIT 1), 0) AS drift_percent
                 refId: A
             - refId: C
               datasourceUid: __expr__
@@ -120,7 +123,7 @@ groups:
           for: 0s
           annotations:
             summary: The newest day's log-based estimate is more than 10 percent from the gateway counters
-            description: Requests or data sent, estimated from the sampled access records, no longer match the gateway's counters for the newest stored day. The access record format or the log sampling rule has probably changed; that day's shares are approximate. See "Usage collector" in deploy/README.md.
+            description: Requests or data sent, estimated from the sampled access records, no longer match the gateway's counters for the newest stored day. The access record format or the log sampling rule has probably changed; that day's shares are approximate. Days with fewer than 20,000 sampled records are not judged. See "Usage collector" in deploy/README.md.
           isPaused: false
           notification_settings:
             receiver: Registry Dev
