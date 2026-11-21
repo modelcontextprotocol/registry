@@ -938,7 +938,7 @@ set.
 | Rule | Fires when |
 |------|------------|
 | Usage collection missed a day | Yesterday was not stored by 04:00 UTC and still is not two hours later. The notification arrives between 06:00 and 07:00 UTC. |
-| Usage estimate drifted from the gateway counters | On the newest stored day, requests or data sent estimated from the access records are more than 10% from the gateway's counters. A day with fewer than 20,000 sampled records is not judged: so few records stray that far by chance. |
+| Usage estimate drifted from the gateway counters | On the newest stored day, requests or data sent estimated from the access records are more than 10% from the gateway's counters. Requests are judged when the gateway counted at least 1,000 that day, so a busy day whose access records went missing is reported. Data is judged when at least 1,000 listing records were sampled; fewer stray that far by chance. |
 
 The first usually heals itself with the next run; look at the job's log if it
 repeats. The second means the access record format or the log sampling rule has
