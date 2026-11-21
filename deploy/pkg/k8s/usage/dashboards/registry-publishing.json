@@ -103,21 +103,14 @@
 
     {"id": 120, "type": "row", "title": "What kinds of servers", "collapsed": false, "gridPos": {"x": 0, "y": 29, "w": 24, "h": 1}, "panels": []},
     {
-      "id": 121, "type": "piechart", "title": "Servers listed today, by type", "description": "The latest version of every server in the catalogue now, by its one type. Ignores the time range.", "gridPos": {"x": 0, "y": 30, "w": 6, "h": 12},
-      "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
-      "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT type_label AS \"Type\", count(*) AS \"Servers\" FROM publish_version WHERE is_latest AND coalesce(status, '') <> 'deleted' GROUP BY 1 ORDER BY 2 DESC"}],
-      "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "color": {"mode": "palette-classic"}}, "overrides": []},
-      "options": {"pieType": "donut", "sort": "none", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Servers$/", "values": true}, "legend": {"showLegend": true, "displayMode": "table", "placement": "bottom", "values": ["value", "percent"]}, "displayLabels": [], "tooltip": {"mode": "single", "sort": "none"}}
-    },
-    {
-      "id": 122, "type": "bargauge", "title": "What listed servers offer today", "description": "How many servers in the catalogue now offer each package type or remote. Remote (HTTP) is the streamable HTTP transport. A server that offers several counts in each, so these add up to more than the number of servers. Ignores the time range.", "gridPos": {"x": 6, "y": 30, "w": 8, "h": 12},
+      "id": 122, "type": "bargauge", "title": "What listed servers offer today", "description": "How many servers in the catalogue now offer each package type or remote. Remote (HTTP) is the streamable HTTP transport. A server that offers several counts in each, so these add up to more than the number of servers. Ignores the time range.", "gridPos": {"x": 0, "y": 30, "w": 12, "h": 12},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "SELECT offer AS \"Offers\", count(*) AS \"Servers\" FROM publish_version, unnest(offers) AS offer WHERE is_latest AND coalesce(status, '') <> 'deleted' GROUP BY 1 ORDER BY 2 DESC"}],
       "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "min": 0, "color": {"mode": "fixed", "fixedColor": "blue"}}, "overrides": []},
       "options": {"orientation": "horizontal", "displayMode": "basic", "valueMode": "color", "showUnfilled": true, "minVizHeight": 10, "namePlacement": "left", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "/^Servers$/", "values": true}}
     },
     {
-      "id": 123, "type": "table", "title": "Types: listed today and published in the selected range", "description": "Listed today counts servers in the catalogue now. New in range counts first versions published in the selected range; All in range counts every version published in it.", "gridPos": {"x": 14, "y": 30, "w": 10, "h": 12},
+      "id": 123, "type": "table", "title": "Types: listed today and published in the selected range", "description": "Listed today counts servers in the catalogue now. New in range counts first versions published in the selected range; All in range counts every version published in it.", "gridPos": {"x": 12, "y": 30, "w": 12, "h": 12},
       "datasource": {"type": "grafana-postgresql-datasource", "uid": "registry-usage-pg"},
       "targets": [{"refId": "A", "format": "table", "rawQuery": true, "editorMode": "code", "rawSql": "WITH listed AS (SELECT type_label, count(*) AS servers FROM publish_version WHERE is_latest AND coalesce(status, '') <> 'deleted' GROUP BY 1), ranged AS (SELECT type_label, count(*) AS versions, count(*) FILTER (WHERE first_for_server) AS new_servers FROM publish_version WHERE $__timeFilter(published_at) GROUP BY 1) SELECT type_label AS \"Type\", l.servers AS \"Listed today\", 100.0 * l.servers / sum(l.servers) OVER () AS \"Share today\", r.new_servers AS \"New in range\", 100.0 * r.new_servers / nullif(sum(r.new_servers) OVER (), 0) AS \"Share of new\", r.versions AS \"All in range\" FROM listed l FULL JOIN ranged r USING (type_label) ORDER BY l.servers DESC NULLS LAST"}],
       "fieldConfig": {"defaults": {"unit": "locale", "decimals": 0, "custom": {"align": "auto"}}, "overrides": [
