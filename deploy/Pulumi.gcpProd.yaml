@@ -48,4 +48,6 @@ config:
     secure: v1:0QwJl5e504ECQfjb:j8b4v1KxxqS8g9E8JTL0Wq5EEDbk/xPUglyg4/hyuL8go+pH2EE6skjf+7D5aAsld1SDRGlhXQBOZIVnjLBffsVN7cBhVlKy2qwTCC6QH5Q=
   mcp-registry:googleOauthClientSecret:
     secure: v1:6AUQwlFpA6TjYPTa:MUqOWbXufz2tr2s+OvapEsAWFl3VbDE0VxDRTcJ1qbAQM/phmDj/BVCutozvlolmurHD
+  mcp-registry:alertDiscordWebhook:
+    secure: v1:hS/+DRHFc3NAcRtC:hX8JkcuwPp8DR8HnXLmblTwAB+hl2dLhJ7g51ZN/J/IFowYpgSb4YXZPym6ezvEfMCD9Idhq+u2oHgCqSBcn+GZf4xjaRyVAAN6NU0Fj/bIKeWDyWZfoz2AoO5R8Cw2pWcBRogVURSDMBk/GZQnWiAYGMFTcAHnc1i00iTseF2rgPZFNkHHxJvg=
 encryptionsalt: v1:0funtAX4m9k=:v1:yMCnBXyBO+q4+/yy:AqWJTzwwIWXmUK0JGCzqbeg0RUr8Jw==
