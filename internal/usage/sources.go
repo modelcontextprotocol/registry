@@ -20,7 +20,10 @@ const (
 	logPageMaxBytes = 256 << 20
 	logPageSize     = 1000
 	logMaxRetries   = 12
-	stampLayout     = "2006-01-02T15:04:05Z"
+	// Cloud Logging allows a project 60 read requests a minute. The default
+	// leaves some of that for anyone else reading logs.
+	defaultLogReadsPerMinute = 50
+	stampLayout              = "2006-01-02T15:04:05Z"
 )
 
 // fixtureHosts are the hosts of the gateway's own test routes. The gateway
@@ -74,13 +77,18 @@ type CloudLogging struct {
 	// Token returns a bearer token; it is asked again for every page so that an
 	// expired token is replaced.
 	Token func(ctx context.Context) (string, error)
-	// Endpoint, Client, Pause and Logf are optional.
+	// ReadsPerMinute is how many requests may start in a minute, retries
+	// included. They are spaced evenly, across reads. Zero means the default.
+	ReadsPerMinute int
+	// Endpoint, Client and Logf are optional.
 	Endpoint string
 	Client   *http.Client
-	Pause    time.Duration
 	Logf     func(format string, args ...any)
 
 	sleep func(ctx context.Context, wait time.Duration) error
+	now   func() time.Time
+	// next is when the next request may start.
+	next time.Time
 }
 
 type logPage struct {
@@ -135,10 +143,6 @@ func (c *CloudLogging) Read(ctx context.Context, window LogWindow, each func(tim
 		"orderBy":       "timestamp asc",
 		"pageSize":      logPageSize,
 	}
-	pause := c.Pause
-	if pause == 0 {
-		pause = 400 * time.Millisecond
-	}
 	pages, retries := 0, 0
 	for {
 		page, err := c.page(ctx, body)
@@ -171,10 +175,27 @@ func (c *CloudLogging) Read(ctx context.Context, window LogWindow, each func(tim
 			return nil
 		}
 		body["pageToken"] = page.NextPageToken
-		if err := c.wait(ctx, pause); err != nil {
+	}
+}
+
+// pace waits until the next request may be sent. Staying under the project's
+// limit is steadier than running into it and waiting out the refusals.
+func (c *CloudLogging) pace(ctx context.Context) error {
+	perMinute := c.ReadsPerMinute
+	if perMinute <= 0 {
+		perMinute = defaultLogReadsPerMinute
+	}
+	clock := c.now
+	if clock == nil {
+		clock = time.Now
+	}
+	if wait := c.next.Sub(clock()); wait > 0 {
+		if err := c.wait(ctx, wait); err != nil {
 			return err
 		}
 	}
+	c.next = clock().Add(time.Minute / time.Duration(perMinute))
+	return nil
 }
 
 func (c *CloudLogging) logf(format string, args ...any) {
@@ -237,6 +258,11 @@ func (c *CloudLogging) page(ctx context.Context, body map[string]any) (*logPage,
 	token, err := c.Token(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", errNoToken, err)
+	}
+	// The wait comes after everything else that can take time, such as a new
+	// token, so that it spaces the requests themselves.
+	if err := c.pace(ctx); err != nil {
+		return nil, err
 	}
 	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()

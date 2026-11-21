@@ -174,16 +174,18 @@ func TestGoldenFilter(t *testing.T) {
 	f := newFixture(t, "subsampled")
 	sample, err := f.collect(t)
 	require.NoError(t, err)
-	require.NotEmpty(t, f.gateway.filters)
-	// The fraction is the prototype's, checked against its golden file; here it is only spelled out.
+	require.Len(t, f.gateway.filters, 3, "one request to size the read, then two pages")
+	// The fraction is checked against the golden file; here it is only spelled out.
 	fraction := pyFloatRepr(sample.fraction)
 	require.Regexp(t, `^0\.\d{1,3}$`, fraction, "this scenario should be read as a sample")
-	assert.Equal(t, `resource.type="k8s_container" AND resource.labels.cluster_name="example-cluster" AND `+
-		`resource.labels.namespace_name="ingress-nginx" AND resource.labels.container_name="nginx" AND `+
-		`jsonPayload.kind="registry_access" AND timestamp>="2026-10-06T00:00:00Z" AND timestamp<"2026-10-07T00:00:00Z" AND `+
-		`NOT jsonPayload.host="fixture.gateway-canary.invalid" AND NOT jsonPayload.host="alias.gateway-canary.invalid" AND `+
-		`sample(jsonPayload.request_id, `+fraction+`)`, f.gateway.filters[0])
-	assert.Greater(t, f.gateway.logCalls, 1, "the fixture should span several pages")
+	const day = `resource.type="k8s_container" AND resource.labels.cluster_name="example-cluster" AND ` +
+		`resource.labels.namespace_name="ingress-nginx" AND resource.labels.container_name="nginx" AND ` +
+		`jsonPayload.kind="registry_access" AND timestamp>="2026-10-06T00:00:00Z" AND timestamp<"2026-10-07T00:00:00Z" AND ` +
+		`NOT jsonPayload.host="fixture.gateway-canary.invalid" AND NOT jsonPayload.host="alias.gateway-canary.invalid" AND `
+	// The read is sized on a sample expected to return 100 records if the day held exactly the limit of 600.
+	assert.Equal(t, day+`sample(jsonPayload.request_id, 0.16666666666666666)`, f.gateway.filters[0])
+	assert.Equal(t, day+`sample(jsonPayload.request_id, `+fraction+`)`, f.gateway.filters[1])
+	assert.Equal(t, f.gateway.filters[1], f.gateway.filters[2])
 
 	require.GreaterOrEqual(t, len(f.gateway.queries), 26)
 	assert.Equal(t, `sum by (route, method, status) (increase(registry_gateway_canary_requests_total{traffic="registry"}[86400s]))`, f.gateway.queries[0])
@@ -194,7 +196,8 @@ func TestGoldenFilter(t *testing.T) {
 	whole := newFixture(t, "typical")
 	_, err = whole.collect(t)
 	require.NoError(t, err)
-	assert.NotContains(t, whole.gateway.filters[0], "sample(", "a day that fits is read whole")
+	assert.Contains(t, whole.gateway.filters[0], "sample(jsonPayload.request_id, 0.001)")
+	assert.NotContains(t, whole.gateway.filters[1], "sample(", "a day that fits is read whole")
 }
 
 // TestStoredSharesMatchReport checks that the "how it is used" rows, which the

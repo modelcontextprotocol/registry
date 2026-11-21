@@ -162,8 +162,8 @@ func TestReferenceFilesAreCached(t *testing.T) {
 
 func TestSettingsValidation(t *testing.T) {
 	valid := Settings{GCPProject: "example-project", ClusterName: "example-cluster", LogNamespace: "ingress-nginx", LogContainer: "nginx",
-		MetricsURL: "http://metrics.monitoring:8428", DatabaseURL: "postgres://usage", LookbackDays: 13, MaxRecords: 100000, DollarsPerGiB: 0.1,
-		OrganizationAliases: fixtureAliases, ReaderRole: "dashboards@example-project.iam"}
+		MetricsURL: "http://metrics.monitoring:8428", DatabaseURL: "postgres://usage", LookbackDays: 13, MaxRecords: 100000, LogReadsPerMinute: 50,
+		DollarsPerGiB: 0.1, OrganizationAliases: fixtureAliases, ReaderRole: "dashboards@example-project.iam"}
 	require.NoError(t, valid.Validate(true))
 
 	withoutDatabase := valid
@@ -180,7 +180,7 @@ func TestSettingsValidation(t *testing.T) {
 		OrganizationAliases: "LITWARE", ReaderRole: strings.Repeat("r", 64)}
 	err := broken.Validate(true)
 	for _, problem := range []string{"GCP_PROJECT is required", "CLUSTER_NAME is required", "LOG_NAMESPACE is required", "METRICS_URL must be",
-		"DATABASE_URL is required", "LOOKBACK_DAYS must be", "MAX_RECORDS must be", "DOLLARS_PER_GIB cannot be",
+		"DATABASE_URL is required", "LOOKBACK_DAYS must be", "MAX_RECORDS must be", "LOG_READS_PER_MINUTE must be", "DOLLARS_PER_GIB cannot be",
 		"ORGANIZATION_ALIASES: an alias is written KEY=Name", "READER_ROLE is not a role name"} {
 		assert.ErrorContains(t, err, problem)
 	}
