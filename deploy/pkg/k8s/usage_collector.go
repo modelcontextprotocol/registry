@@ -35,6 +35,9 @@ const (
 	usagePriorityClass = "registry-usage-batch"
 	usageCachePath     = "/var/cache/usage-collector"
 	usageGoogleKeyPath = "/var/run/secrets/google"
+	// VictoriaMetrics, in the same namespace: the collector reads the gateway
+	// counters from it and the history backup reports its success to it.
+	usageMetricsURL = "http://victoria-metrics-victoria-metrics-single-server:8428"
 )
 
 // usageCollectorImage follows the registry's own image: the main build in
@@ -302,7 +305,7 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 									// The Gateway's data plane writes the access records.
 									setting("USAGE_COLLECTOR_LOG_NAMESPACE", gatewaycanary.EdgeNamespace),
 									setting("USAGE_COLLECTOR_LOG_CONTAINER", "nginx"),
-									setting("USAGE_COLLECTOR_METRICS_URL", "http://victoria-metrics-victoria-metrics-single-server:8428"),
+									setting("USAGE_COLLECTOR_METRICS_URL", usageMetricsURL),
 									setting("USAGE_COLLECTOR_READER_ROLE", usageGrafanaRole),
 									setting("USAGE_COLLECTOR_CACHE_DIR", usageCachePath),
 									setting("GOOGLE_APPLICATION_CREDENTIALS", usageGoogleKeyPath+"/key.json"),
