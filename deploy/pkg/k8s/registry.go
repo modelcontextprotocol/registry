@@ -411,6 +411,10 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		return nil, err
 	}
 
+	if err := deployMalwareSweep(ctx, cluster, image, service); err != nil {
+		return nil, err
+	}
+
 	if gatewaycanary.Standalone(ctx) {
 		ctx.Export("ingressHosts", pulumi.ToStringArray(gatewaycanary.RegistryHosts(ctx)))
 		return service, nil

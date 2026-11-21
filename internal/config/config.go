@@ -20,6 +20,12 @@ type Config struct {
 	EnableAnonymousAuth      bool   `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 	EnableRegistryValidation bool   `env:"ENABLE_REGISTRY_VALIDATION" envDefault:"true"`
 
+	// Malware checks against OSV.dev. EnableMalwareCheck applies on publish and
+	// edit, and only where EnableRegistryValidation is on.
+	EnableMalwareCheck      bool   `env:"ENABLE_MALWARE_CHECK" envDefault:"true"`
+	OSVAPIURL               string `env:"OSV_API_URL" envDefault:"https://api.osv.dev"`
+	MalwareSweepRegistryURL string `env:"MALWARE_SWEEP_REGISTRY_URL" envDefault:"https://registry.modelcontextprotocol.io"`
+
 	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
 
 	// OIDC Configuration

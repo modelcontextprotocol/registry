@@ -317,6 +317,7 @@ You should see your server's metadata in the search results JSON:
 | Error Message | Action |
 | --- | --- |
 |"Registry validation failed for package"|Ensure your package includes the required ownership-verification marker for its package type. For npm this is `mcpName` in `package.json`; for PyPI and NuGet it is an `mcp-name: <server-name>` line (or HTML comment) in the package README; for other types see [Package Types](./package-types).|
+|"package is known malware"|[OSV.dev](https://osv.dev) lists that exact version of your package as malware; the error links to the record. Publish a version that is not listed. If the record is wrong, ask the source named in it to correct it.|
 |"Invalid or expired Registry JWT token"|Re-authenticate by running `mcp-publisher login github`.|
 |"You do not have permission to publish this server"|Your authentication method doesn't match your server's namespace format. With GitHub auth, your server name must start with `io.github.your-username/`.|
 

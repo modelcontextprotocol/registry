@@ -176,6 +176,64 @@ REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="$SERVER_NAME" ALL_VERSIONS=true \
   STATUS_MESSAGE="Removed per moderation policy" ./tools/admin/takedown.sh
 ```
 
+## Malware Checks
+
+The registry checks the npm, PyPI, NuGet and Cargo packages that servers point at against the
+malware records (`MAL-*`) that [OSV.dev](https://osv.dev) publishes. A package matches only when
+OSV lists exactly the version the server names. OCI images and MCPB bundles are not covered.
+
+- **On publish and edit**: a matching package is refused with a `400` that links to the OSV record.
+  The check runs alongside the package-ownership lookup. OSV takes about 0.3 seconds to answer,
+  which is longer than the lookup, so a publish takes about that much longer.
+  If OSV has not answered within 2 seconds the request goes ahead unchecked.
+  `MCP_REGISTRY_ENABLE_MALWARE_CHECK=false` switches the check off.
+- **Daily**: a sweep re-checks every listed (not deleted) server version, because OSV usually
+  learns about a malicious release after it was published here. The sweep only reports. It never
+  changes an entry; taking one down is a maintainer's decision.
+
+### Responding to an alert
+
+On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` and alerts by email
+(see [Malware sweep](../../deploy/README.md#malware-sweep)). Do not discuss a match in public
+channels before the entry is down.
+
+1. Read the matches. Each line names a server version, the package it points at and the OSV record:
+
+   ```bash
+   kubectl -n default logs -l app=registry-malware-sweep --tail=-1 | grep REGISTRY_MALWARE_SWEEP_HIT
+   ```
+
+   ```
+   REGISTRY_MALWARE_SWEEP_HIT server="com.example/my-server" version="1.0.0" registry_type="npm" package="my-package" package_version="1.0.0" osv="MAL-2026-1234"
+   ```
+
+2. Confirm the record at `https://osv.dev/vulnerability/<id>` and that it lists the package version.
+3. Take that version down, with the reason (see [Takedown a Specific Version](#takedown-a-specific-version)):
+
+   ```bash
+   REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="com.example/my-server" VERSION="1.0.0" \
+     STATUS_MESSAGE="Removed per moderation policy: package listed as malware (OSV MAL-2026-1234)" \
+     ./tools/admin/takedown.sh
+   ```
+
+   Take down the single version, not the whole server, unless every version matches: the registry
+   then promotes the highest remaining version to latest.
+
+The sweep reports a match every day until the version is deleted.
+
+### Running a sweep by hand
+
+The sweep needs no credentials and changes nothing, so it can be run from anywhere. It reads the
+public listing, which takes about 12 minutes:
+
+```bash
+go run ./cmd/registry -malware-sweep
+```
+
+It ends with `REGISTRY_MALWARE_SWEEP_SUCCESS` and the number of matches, or with
+`REGISTRY_MALWARE_SWEEP_FAILED` and a non-zero exit status when it could not read the whole
+registry or reach OSV. Set `MCP_REGISTRY_MALWARE_SWEEP_REGISTRY_URL` to sweep another registry.
+
 ## Connecting to the Production Database
 
 For debugging or data analysis, you can connect directly to the production PostgreSQL database. Use caution and prefer read-only access.

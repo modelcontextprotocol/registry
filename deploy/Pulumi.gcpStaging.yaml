@@ -35,4 +35,6 @@ config:
   mcp-registry:registryCPURequest: "100m"
   # Daily usage collector with its dashboards; see "Usage collector" in README.md.
   mcp-registry:usageCollector: "true"
+  # Daily check of listed packages against OSV malware records; see "Malware sweep" in README.md.
+  mcp-registry:malwareSweep: "true"
 encryptionsalt: v1:EKBwmTmss1c=:v1:JLd4a7cM0X8Jroh+:z9/q6RSCEFTDzMV6X6h5Tpbw0tnpkA==

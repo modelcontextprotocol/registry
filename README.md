@@ -125,6 +125,7 @@ For Claude and other AI tools: Always prefer make targets over custom commands w
 │   ├── config/              # Configuration management
 │   ├── database/            # Data persistence (PostgreSQL)
 │   ├── importer/            # Seed data import
+│   ├── malware/             # OSV.dev malware checks (on publish and the daily sweep)
 │   ├── service/             # Business logic
 │   ├── telemetry/           # Metrics and monitoring
 │   ├── usage/               # Usage collection for the hosted instance

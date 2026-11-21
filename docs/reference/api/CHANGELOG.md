@@ -45,6 +45,12 @@ New `include_deleted` query parameter added to multiple endpoints:
 - `GET /v0/servers/{serverName}/versions/{version}` - Include deleted servers in detail results (default: `false`)
 - `GET /v0/servers/{serverName}/versions` - Include deleted servers in version history (default: `false`)
 
+#### Malware check on publish and edit
+
+The official registry now refuses `POST /publish` and `PUT /servers/{serverName}/versions/{version}` with `400` when a package in the request is listed as malware by [OSV.dev](https://osv.dev) (a `MAL-*` record) at exactly the version named. The error names the package and links to the OSV record. This applies to npm, PyPI, NuGet and Cargo packages on both `/v0` and `/v0.1`; OCI images and MCPB bundles are not covered by OSV.
+
+Ordinary vulnerabilities (CVE, GHSA) are not a reason to refuse. Status changes, including taking a version down, are not checked. If OSV cannot be reached the request proceeds as before. Request and response schemas are unchanged.
+
 ## 2025-10-17
 
 ### Added
