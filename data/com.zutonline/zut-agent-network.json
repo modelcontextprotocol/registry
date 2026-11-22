@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/registry/main/schema/server.schema.json",
+  "name": "com.zutonline/zut-agent-network",
+  "description": "Free infrastructure hub for AI agent builders: MCP Marketplace (1,730+ servers), MCP Testbed, Live Oracle, MCP Rooms, Challenge Ladder and Games. No API key required.",
+  "version": "1.0.0",
+  "homepage": "https://zutonline.com",
+  "repository": {
+    "url": "https://github.com/zut1331-hub/zut-openclaw",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "transportType": "http",
+      "url": "https://zutonline.com/api/public/mcp"
+    }
+  ]
+}
