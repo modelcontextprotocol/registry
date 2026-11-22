@@ -725,7 +725,7 @@
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
-      "description": "Database connections the registry pods hold between them: in use, and the most they may open. \"Waiting\" counts requests queued for a free connection; anything above 0 for long means the pool is too small for the load.",
+      "description": "Database connections the registry pods hold between them: in use, and the most they may open. \"Acquiring\" counts requests that are getting a connection at the moment of the scrape, whether they wait for a free one or for a new one to open. If it stays above 0 while \"In use\" is near the limit, the pool is too small for the load; if \"In use\" is low, opening connections is slow.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -779,7 +779,7 @@
           },
           "editorMode": "code",
           "expr": "sum(mcp_registry_db_pool_acquire_pending)",
-          "legendFormat": "Waiting for a connection",
+          "legendFormat": "Acquiring a connection",
           "range": true,
           "refId": "B"
         },

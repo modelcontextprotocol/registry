@@ -288,7 +288,7 @@
         "type": "victoriametrics-logs-datasource",
         "uid": "PD775F2863313E6C7"
       },
-      "description": "The kernel killed a process because a container reached its memory limit or a node ran out of memory. Empty means it did not happen.",
+      "description": "Out-of-memory events: the kernel killed a process because a container reached its memory limit or a node ran out of memory. Empty means no such event was recorded. It does not rule out a kill: a container killed at its limit always shows as OOMKilled in its pod's last state, which kubectl describe pod prints.",
       "gridPos": {
         "h": 5,
         "w": 12,
