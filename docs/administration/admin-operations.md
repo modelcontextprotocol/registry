@@ -218,7 +218,7 @@ Every sweep ends with one line holding everything a maintainer has to look at, i
 |--------|---------|
 | `malware` | The entry points at a package version that OSV lists as malware. |
 | `unchecked` | The entry names no release that can be checked: no version, or an npm dist-tag. |
-| `missing-package` | The entry's package is gone from npm, PyPI, NuGet or crates.io. A package that still exists without the version the entry names is not reported. |
+| `missing-package` | The entry's package is gone from npm, PyPI, NuGet or crates.io. An npm package whose every version was unpublished counts as gone. A package that still exists without the version the entry names is not reported. |
 
 On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` (see
 [Malware sweep](../../deploy/README.md#malware-sweep)). A day whose report is not empty sends one
