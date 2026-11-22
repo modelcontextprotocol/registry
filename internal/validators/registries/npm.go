@@ -74,7 +74,7 @@ func validateNPMPackage(ctx context.Context, pkg model.Package, serverName strin
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to fetch package metadata from NPM: %w", err)
+		return failed(FailureTransient, "failed to fetch package metadata from NPM: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -88,11 +88,11 @@ func validateNPMPackage(ctx context.Context, pkg model.Package, serverName strin
 	}
 
 	if npmResp.MCPName == "" {
-		return fmt.Errorf("NPM package '%s' is missing required 'mcpName' field. Add this to your package.json: \"mcpName\": \"%s\"", pkg.Identifier, serverName)
+		return failed(FailureOwnership, "NPM package '%s' is missing required 'mcpName' field. Add this to your package.json: \"mcpName\": \"%s\"", pkg.Identifier, serverName)
 	}
 
 	if npmResp.MCPName != serverName {
-		return fmt.Errorf("NPM package ownership validation failed. Expected mcpName '%s', got '%s'", serverName, npmResp.MCPName)
+		return failed(FailureOwnership, "NPM package ownership validation failed. Expected mcpName '%s', got '%s'", serverName, npmResp.MCPName)
 	}
 
 	// NPM answers a dist-tag such as "next" with whichever release the tag
@@ -131,9 +131,9 @@ func npmFetchStatusError(ctx context.Context, client *http.Client, pkg model.Pac
 	case status == http.StatusNotFound:
 		return npmVersion404Error(ctx, client, pkg)
 	case status == http.StatusTooManyRequests:
-		return fmt.Errorf("NPM rate-limited the metadata request for package '%s' (status: 429). Likely transient, retry later", pkg.Identifier)
+		return failed(FailureTransient, "NPM rate-limited the metadata request for package '%s' (status: 429). Likely transient, retry later", pkg.Identifier)
 	case status >= 500 && status < 600:
-		return fmt.Errorf("NPM upstream error fetching metadata for package '%s' (status: %d). Likely transient, retry later", pkg.Identifier, status)
+		return failed(FailureTransient, "NPM upstream error fetching metadata for package '%s' (status: %d). Likely transient, retry later", pkg.Identifier, status)
 	default:
 		return fmt.Errorf("NPM package '%s' metadata fetch failed (status: %d)", pkg.Identifier, status)
 	}
@@ -147,16 +147,16 @@ func npmFetchStatusError(ctx context.Context, client *http.Client, pkg model.Pac
 func npmVersion404Error(ctx context.Context, client *http.Client, pkg model.Package) error {
 	switch probeNPMPackage(ctx, client, pkg.RegistryBaseURL, pkg.Identifier) {
 	case npmPackageExists:
-		return fmt.Errorf("NPM package '%s' exists, but version '%s' was not found (status: 404). A newly published release can take a moment to appear on the registry. Wait and retry, or publish version '%s' before registering it", pkg.Identifier, pkg.Version, pkg.Version)
+		return failed(FailureNotFound, "NPM package '%s' exists, but version '%s' was not found (status: 404). A newly published release can take a moment to appear on the registry. Wait and retry, or publish version '%s' before registering it", pkg.Identifier, pkg.Version, pkg.Version)
 	case npmPackageMissing:
-		return fmt.Errorf("NPM package '%s' not found (status: 404)", pkg.Identifier)
+		return failed(FailureNotFound, "NPM package '%s' not found (status: 404)", pkg.Identifier)
 	case npmPackageTransient:
-		return fmt.Errorf("NPM could not confirm package '%s' version '%s' (version status: 404, package check inconclusive). Likely transient, retry later", pkg.Identifier, pkg.Version)
+		return failed(FailureTransient, "NPM could not confirm package '%s' version '%s' (version status: 404, package check inconclusive). Likely transient, retry later", pkg.Identifier, pkg.Version)
 	case npmPackageUnknown:
 		// Probe returned an unclassifiable status, so fall through to the
 		// best-effort message below.
 	}
-	return fmt.Errorf("NPM package '%s' version '%s' not found (status: 404)", pkg.Identifier, pkg.Version)
+	return failed(FailureNotFound, "NPM package '%s' version '%s' not found (status: 404)", pkg.Identifier, pkg.Version)
 }
 
 // probeNPMPackage checks whether a package exists on the NPM registry regardless

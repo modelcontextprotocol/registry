@@ -20,6 +20,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/malware"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
+	"github.com/modelcontextprotocol/registry/internal/validators"
 )
 
 // Version info for the MCP Registry application
@@ -185,6 +186,9 @@ const (
 	// packages not yet asked about are left unknown, so that reading the
 	// listing over the public address still fits inside malwareSweepTimeout.
 	malwareSweepExistenceTimeout = 12 * time.Minute
+	// A day's share of the releases is asked about in two or three minutes.
+	// Past this the rest is left unknown, for the same reason.
+	malwareSweepOwnershipTimeout = 6 * time.Minute
 	// A request OSV turns away or fails is made again this often, so that one
 	// bad moment does not cost the day's sweep.
 	malwareSweepOSVRetries = 3
@@ -205,17 +209,26 @@ func runMalwareSweep() int {
 	ctx, cancel := context.WithTimeout(ctx, malwareSweepTimeout)
 	defer cancel()
 
-	result, err := malware.Sweep(ctx, malware.SweepConfig{
+	sweep := malware.SweepConfig{
 		RegistryURL:        cfg.MalwareSweepRegistryURL,
 		OSV:                malware.NewClient(cfg.OSVAPIURL, malwareSweepOSVTimeout, malwareSweepOSVRetries),
 		CheckPackagesExist: cfg.MalwareSweepMissingPackages,
 		ExistenceTimeout:   malwareSweepExistenceTimeout,
-	}, os.Stdout)
+		OwnershipDays:      cfg.MalwareSweepOwnershipDays,
+		OwnershipDay:       int(time.Now().Unix() / (24 * 60 * 60)),
+		OwnershipTimeout:   malwareSweepOwnershipTimeout,
+	}
+	if cfg.MalwareSweepOwnership {
+		sweep.Ownership = validators.PackageOwnership
+	}
+	result, err := malware.Sweep(ctx, sweep, os.Stdout)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_FAILED registry=%q error=%q\n", cfg.MalwareSweepRegistryURL, err.Error())
 		return 1
 	}
-	fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_SUCCESS registry=%q versions=%d packages=%d hits=%d unchecked=%d missing=%d existence_unknown=%d\n",
-		cfg.MalwareSweepRegistryURL, result.Versions, result.Packages, result.Hits, result.Unchecked, result.Missing, result.ExistenceUnknown)
+	fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_SUCCESS registry=%q versions=%d packages=%d hits=%d unchecked=%d missing=%d existence_unknown=%d"+
+		" ownership_checked=%d missing_version=%d ownership_mismatch=%d ownership_unknown=%d\n",
+		cfg.MalwareSweepRegistryURL, result.Versions, result.Packages, result.Hits, result.Unchecked, result.Missing, result.ExistenceUnknown,
+		result.OwnershipChecked, result.MissingVersion, result.OwnershipMismatch, result.OwnershipUnknown)
 	return 0
 }

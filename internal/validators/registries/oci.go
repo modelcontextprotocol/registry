@@ -97,7 +97,7 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	if err != nil {
 		// Check if this is a timeout error
 		if errors.Is(err, context.DeadlineExceeded) {
-			return fmt.Errorf("OCI image validation timed out after 30 seconds for '%s'. The registry may be slow or unreachable", pkg.Identifier)
+			return failed(FailureTransient, "OCI image validation timed out after 30 seconds for '%s'. The registry may be slow or unreachable", pkg.Identifier)
 		}
 
 		// Check for specific HTTP status codes
@@ -111,11 +111,13 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 				// here would let a publisher bind their server record to an arbitrary
 				// public image they do not control, which is the bug this branch
 				// used to have. Surface the rate-limit as a retryable error instead.
-				return fmt.Errorf("OCI registry is currently rate-limiting validations for '%s'; please retry shortly", pkg.Identifier)
+				return failed(FailureTransient, "OCI registry is currently rate-limiting validations for '%s'; please retry shortly", pkg.Identifier)
 			case http.StatusNotFound:
-				return fmt.Errorf("OCI image '%s' does not exist in the registry", pkg.Identifier)
+				return failed(FailureNotFound, "OCI image '%s' does not exist in the registry", pkg.Identifier)
 			case http.StatusUnauthorized, http.StatusForbidden:
-				return fmt.Errorf("OCI image '%s' is private or requires authentication. Only public images are supported", pkg.Identifier)
+				// Not found, to whoever would install it: Docker Hub answers
+				// this way for a repository that has been deleted too.
+				return failed(FailureNotFound, "OCI image '%s' is private or requires authentication. Only public images are supported", pkg.Identifier)
 			}
 		}
 		return fmt.Errorf("failed to fetch OCI image: %w", err)
@@ -129,16 +131,16 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 
 	// Validate the MCP server name label
 	if configFile.Config.Labels == nil {
-		return fmt.Errorf("OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
+		return failed(FailureOwnership, "OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
 	}
 
 	mcpName, exists := configFile.Config.Labels["io.modelcontextprotocol.server.name"]
 	if !exists {
-		return fmt.Errorf("OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
+		return failed(FailureOwnership, "OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
 	}
 
 	if mcpName != serverName {
-		return fmt.Errorf("OCI image ownership validation failed. Expected annotation 'io.modelcontextprotocol.server.name' = '%s', got '%s'", serverName, mcpName)
+		return failed(FailureOwnership, "OCI image ownership validation failed. Expected annotation 'io.modelcontextprotocol.server.name' = '%s', got '%s'", serverName, mcpName)
 	}
 
 	return nil

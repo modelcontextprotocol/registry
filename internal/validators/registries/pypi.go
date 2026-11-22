@@ -76,7 +76,7 @@ func validatePyPIPackage(ctx context.Context, pkg model.Package, serverName stri
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to fetch package metadata from PyPI: %w", err)
+		return failed(FailureTransient, "failed to fetch package metadata from PyPI: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -101,10 +101,10 @@ func validatePyPIPackage(ctx context.Context, pkg model.Package, serverName stri
 	// If the token IS present but glued to a trailing character, say so — otherwise
 	// the publisher sees "must appear as mcp-name: X" while looking at exactly that.
 	if trailing, glued := mcpNameTokenGluedTrailing(description, serverName); glued {
-		return fmt.Errorf("PyPI package '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and republish", pkg.Identifier, serverName, trailing)
+		return failed(FailureOwnership, "PyPI package '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and republish", pkg.Identifier, serverName, trailing)
 	}
 
-	return fmt.Errorf("PyPI package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
+	return failed(FailureOwnership, "PyPI package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
 }
 
 // pypiPackageState is the outcome of probing the package-level PyPI metadata
@@ -132,9 +132,9 @@ func pypiFetchStatusError(ctx context.Context, client *http.Client, pkg model.Pa
 	case status == http.StatusNotFound:
 		return pypiVersion404Error(ctx, client, pkg)
 	case status == http.StatusTooManyRequests:
-		return fmt.Errorf("PyPI rate-limited the metadata request for package '%s' (status: 429). Likely transient, retry later", pkg.Identifier)
+		return failed(FailureTransient, "PyPI rate-limited the metadata request for package '%s' (status: 429). Likely transient, retry later", pkg.Identifier)
 	case status >= 500 && status < 600:
-		return fmt.Errorf("PyPI upstream error fetching metadata for package '%s' (status: %d). Likely transient, retry later", pkg.Identifier, status)
+		return failed(FailureTransient, "PyPI upstream error fetching metadata for package '%s' (status: %d). Likely transient, retry later", pkg.Identifier, status)
 	default:
 		return fmt.Errorf("PyPI package '%s' metadata fetch failed (status: %d)", pkg.Identifier, status)
 	}
@@ -148,16 +148,16 @@ func pypiFetchStatusError(ctx context.Context, client *http.Client, pkg model.Pa
 func pypiVersion404Error(ctx context.Context, client *http.Client, pkg model.Package) error {
 	switch probePyPIPackage(ctx, client, pkg.RegistryBaseURL, pkg.Identifier) {
 	case pypiPackageExists:
-		return fmt.Errorf("PyPI package '%s' exists, but version '%s' was not found (status: 404). A newly published release can take a moment to appear on PyPI. Wait and retry, or publish version '%s' before registering it", pkg.Identifier, pkg.Version, pkg.Version)
+		return failed(FailureNotFound, "PyPI package '%s' exists, but version '%s' was not found (status: 404). A newly published release can take a moment to appear on PyPI. Wait and retry, or publish version '%s' before registering it", pkg.Identifier, pkg.Version, pkg.Version)
 	case pypiPackageMissing:
-		return fmt.Errorf("PyPI package '%s' not found (status: 404)", pkg.Identifier)
+		return failed(FailureNotFound, "PyPI package '%s' not found (status: 404)", pkg.Identifier)
 	case pypiPackageTransient:
-		return fmt.Errorf("PyPI could not confirm package '%s' version '%s' (version status: 404, package check inconclusive). Likely transient, retry later", pkg.Identifier, pkg.Version)
+		return failed(FailureTransient, "PyPI could not confirm package '%s' version '%s' (version status: 404, package check inconclusive). Likely transient, retry later", pkg.Identifier, pkg.Version)
 	case pypiPackageUnknown:
 		// Probe returned an unclassifiable status, so fall through to the
 		// best-effort message below.
 	}
-	return fmt.Errorf("PyPI package '%s' version '%s' not found (status: 404)", pkg.Identifier, pkg.Version)
+	return failed(FailureNotFound, "PyPI package '%s' version '%s' not found (status: 404)", pkg.Identifier, pkg.Version)
 }
 
 // probePyPIPackage checks whether a package exists on PyPI regardless of version,

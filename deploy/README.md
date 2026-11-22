@@ -1002,7 +1002,9 @@ imported into the stack.
 Once a day the malware sweep checks every package the registry lists against
 the malware records that [OSV.dev](https://osv.dev) publishes, and asks each
 package's own registry whether the package is still there. It reports the
-server versions that point at malware or at a package that is gone. It reports
+server versions that point at malware or at a package that is gone. For a
+seventh of the servers each day it also asks whether the release the latest
+version names is still there and still names the server. It reports
 only; a maintainer takes the entry down. What it checks, and how to respond to
 its report, is described in
 [Admin Operations](../docs/administration/admin-operations.md#malware-checks);
@@ -1048,6 +1050,16 @@ asks there more than a few hundred times.)
 `MCP_REGISTRY_MALWARE_SWEEP_MISSING_PACKAGES=false` on the CronJob's container
 would switch those requests off; nothing sets it.
 
+Last, for the servers whose day of the seven it is, it asks about the package
+that the server's latest version names. At npm it reads the package's whole
+record, in its short form, and looks for the release in it. Everywhere else it
+makes the requests a publish makes: the release's metadata at `pypi.org`, its
+README at `api.nuget.org` or `crates.io`, and the image's manifest and
+configuration at its own registry, without signing in.
+`MCP_REGISTRY_MALWARE_SWEEP_OWNERSHIP=false` would switch those off, and
+`MCP_REGISTRY_MALWARE_SWEEP_OWNERSHIP_DAYS` sets the number of days; nothing
+sets either.
+
 ### Switching it on
 
 Set `mcp-registry:malwareSweep: "true"` in the stack file. In production,
@@ -1070,15 +1082,24 @@ took a little over four minutes, npm being nearly all of it at 32 requests at
 a time. It is given 12 minutes: a package not reached by then is counted as
 `existence_unknown`, and the sweep still succeeds with what OSV said.
 
+Asking about the releases and their owners comes last. Measured the same way
+on the same day, the day's 3,872 package references took two minutes and 24
+seconds, twice over, with none left unanswered and no registry turning the
+sweep away: npm is asked eight at a time, PyPI and NuGet four, an image
+registry two, and crates.io one every three seconds. It is given six minutes,
+and what is not reached by then is counted as `ownership_unknown`.
+
 It writes to its log:
 
 | Line starts with | Meaning |
 |------------------|---------|
 | `REGISTRY_MALWARE_SWEEP_HIT` | A server version points at a package version that OSV lists as malware. One line per server version and package. |
 | `REGISTRY_MALWARE_SWEEP_MISSING` | A server version points at a package that is gone from its own registry. One line per server version and package. |
+| `REGISTRY_MALWARE_SWEEP_VERSION_MISSING` | The latest version of a server points at a package that is there without the release it names, or at an image that is gone or no longer public. |
+| `REGISTRY_MALWARE_SWEEP_OWNERSHIP` | The latest version of a server points at a release that is there and does not name the server. |
 | `REGISTRY_MALWARE_SWEEP_UNCHECKED` | A server version names a covered package but no release of it to check: no version, or an npm dist-tag. One line per server version and package, with the reason. |
 | `{"event":"REGISTRY_MALWARE_SWEEP_REPORT"` | The one line that holds all of the above, as JSON: the counts, a summary, and the entries as far as they fit in one log line. It is written by a failed sweep too, with `"complete":false`. The alerts read this line. |
-| `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the counts, among them `existence_unknown`: packages whose registry gave no usable answer, which are not reported as missing. |
+| `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the counts, among them `existence_unknown`: packages whose registry gave no usable answer, which are not reported as missing. Likewise `ownership_checked`, the package references asked about that day, and `ownership_unknown`, those of them that got no usable answer. |
 | `REGISTRY_MALWARE_SWEEP_FAILED` | The registry could not be read in full, or OSV did not answer in full after three more attempts at each request. Matches OSV had confirmed are still reported; the Job is retried once. |
 
 Each run's log is kept with its Job, and the last three runs are kept, so read
@@ -1110,7 +1131,7 @@ The script reuses an email channel and updates only its labelled policies:
 | Policy | Fires when |
 |--------|------------|
 | Registry sweep found malware (critical) | A sweep's report holds an entry that points at known malware. |
-| Registry sweep found entries to review (warning) | A sweep's report holds entries, none of them malware: a package that is gone, or an entry that cannot be checked. Also when a package registry left more than a tenth of its packages unanswered, or reported so many missing that it is not believed (`existence_incomplete`), so that a registry that stops answering is not read as one that has lost nothing. |
+| Registry sweep found entries to review (warning) | A sweep's report holds entries, none of them malware: a package or a release that is gone, a release that names another server, or an entry that cannot be checked. Also when a package registry left more than a tenth of its packages unanswered, or reported so many missing that it is not believed (`existence_incomplete`), so that a registry that stops answering is not read as one that has lost nothing. The same holds for the releases and their owners (`ownership_incomplete`). |
 | Registry publish named known malware (warning) | A publish or edit logged `REGISTRY_MALWARE_PUBLISH_MATCH`. |
 | Registry malware sweep missing for 25 hours (warning) | No sweep has completed, including complete absence of the success metric. |
 

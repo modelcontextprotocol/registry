@@ -202,9 +202,9 @@ func probeCargoVersion(ctx context.Context, client *http.Client, baseURL, identi
 func cargoMetadataStatusError(identifier string, status int) error {
 	switch {
 	case status == http.StatusTooManyRequests:
-		return fmt.Errorf("crates.io rate-limited the metadata request for cargo package '%s' (status: 429) — likely transient, retry later", identifier)
+		return failed(FailureTransient, "crates.io rate-limited the metadata request for cargo package '%s' (status: 429) — likely transient, retry later", identifier)
 	case status >= 500 && status < 600:
-		return fmt.Errorf("crates.io upstream error fetching metadata for cargo package '%s' (status: %d) — likely transient, retry later", identifier, status)
+		return failed(FailureTransient, "crates.io upstream error fetching metadata for cargo package '%s' (status: %d) — likely transient, retry later", identifier, status)
 	default:
 		return fmt.Errorf("cargo package '%s' metadata fetch failed (status: %d)", identifier, status)
 	}
@@ -217,9 +217,9 @@ func cargoMetadataStatusError(identifier string, status int) error {
 func cargoReadmeStatusError(ctx context.Context, client *http.Client, pkg model.Package, serverName string, status int) error {
 	switch {
 	case status == http.StatusTooManyRequests:
-		return fmt.Errorf("crates.io rate-limited the README fetch for cargo package '%s' version '%s' (status: 429) — likely transient, retry later", pkg.Identifier, pkg.Version)
+		return failed(FailureTransient, "crates.io rate-limited the README fetch for cargo package '%s' version '%s' (status: 429) — likely transient, retry later", pkg.Identifier, pkg.Version)
 	case status >= 500 && status < 600:
-		return fmt.Errorf("crates.io upstream error fetching README for cargo package '%s' version '%s' (status: %d) — likely transient, retry later", pkg.Identifier, pkg.Version, status)
+		return failed(FailureTransient, "crates.io upstream error fetching README for cargo package '%s' version '%s' (status: %d) — likely transient, retry later", pkg.Identifier, pkg.Version, status)
 	case status == http.StatusForbidden, status == http.StatusNotFound:
 		return cargoReadmeUnavailableError(ctx, client, pkg, serverName, status)
 	default:
@@ -240,14 +240,14 @@ func cargoReadmeUnavailableError(ctx context.Context, client *http.Client, pkg m
 		// transient CDN/WAF block), so don't flatly assert "no README".
 		return fmt.Errorf("cargo package '%s' version '%s' exists on crates.io, but its rendered README could not be retrieved (status: %d). If it has no README, add one containing 'mcp-name: %s' and publish a new version", pkg.Identifier, pkg.Version, status, serverName)
 	case cargoVersionMissing:
-		return fmt.Errorf("cargo package '%s' version '%s' not found on crates.io", pkg.Identifier, pkg.Version)
+		return failed(FailureNotFound, "cargo package '%s' version '%s' not found on crates.io", pkg.Identifier, pkg.Version)
 	case cargoVersionTransient:
-		return fmt.Errorf("crates.io could not confirm cargo package '%s' version '%s' (README status: %d, version check inconclusive) — likely transient, retry later", pkg.Identifier, pkg.Version, status)
+		return failed(FailureTransient, "crates.io could not confirm cargo package '%s' version '%s' (README status: %d, version check inconclusive) — likely transient, retry later", pkg.Identifier, pkg.Version, status)
 	case cargoVersionUnknown:
 		// Probe returned an unclassifiable status — fall through to the
 		// best-effort message below.
 	}
-	return fmt.Errorf("cargo package '%s' version '%s' not found on crates.io (status: %d)", pkg.Identifier, pkg.Version, status)
+	return failed(FailureNotFound, "cargo package '%s' version '%s' not found on crates.io (status: %d)", pkg.Identifier, pkg.Version, status)
 }
 
 // validateCargoREADME performs the two-call README fetch and the mcp-name token
@@ -273,7 +273,7 @@ func validateCargoREADME(ctx context.Context, pkg model.Package, serverName stri
 
 	metaResp, err := client.Do(metaReq)
 	if err != nil {
-		return fmt.Errorf("failed to fetch package metadata from crates.io: %w", err)
+		return failed(FailureTransient, "failed to fetch package metadata from crates.io: %w", err)
 	}
 	defer metaResp.Body.Close()
 
@@ -310,7 +310,7 @@ func validateCargoREADME(ctx context.Context, pkg model.Package, serverName stri
 
 	readmeResp, err := client.Do(readmeReq)
 	if err != nil {
-		return fmt.Errorf("failed to fetch rendered README from crates.io: %w", err)
+		return failed(FailureTransient, "failed to fetch rendered README from crates.io: %w", err)
 	}
 	defer readmeResp.Body.Close()
 
@@ -334,8 +334,8 @@ func validateCargoREADME(ctx context.Context, pkg model.Package, serverName stri
 	// If the token IS present but glued to a trailing character, explain that
 	// rather than telling the publisher to add a token they can already see.
 	if trailing, glued := mcpNameTokenGluedTrailing(string(body), serverName); glued {
-		return fmt.Errorf("cargo package '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, or an HTML tag — put it on its own line and publish a new version", pkg.Identifier, serverName, trailing)
+		return failed(FailureOwnership, "cargo package '%s' ownership validation failed: found 'mcp-name: %s' in the README, but it is immediately followed by %q rather than a boundary. The token must be followed by a space, newline, or an HTML tag — put it on its own line and publish a new version", pkg.Identifier, serverName, trailing)
 	}
 
-	return fmt.Errorf("cargo package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
+	return failed(FailureOwnership, "cargo package '%s' ownership validation failed. The server name '%s' must appear as 'mcp-name: %s' in the package README", pkg.Identifier, serverName, serverName)
 }

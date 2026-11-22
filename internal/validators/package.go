@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/modelcontextprotocol/registry/internal/malware"
 	"github.com/modelcontextprotocol/registry/internal/validators/registries"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
@@ -28,4 +29,24 @@ func ValidatePackage(ctx context.Context, pkg model.Package, serverName string) 
 	default:
 		return fmt.Errorf("unsupported registry type: %s", pkg.RegistryType)
 	}
+}
+
+// PackageOwnership asks what ValidatePackage asks on a publish, about a
+// package a registry entry already names, and returns what the answer means
+// for the daily sweep.
+func PackageOwnership(ctx context.Context, serverName string, pkg malware.Package) malware.Ownership {
+	err := ValidatePackage(ctx, model.Package{RegistryType: pkg.RegistryType, Identifier: pkg.Identifier, Version: pkg.Version}, serverName)
+	if err == nil {
+		return malware.OwnershipHeld
+	}
+	switch registries.KindOf(err) {
+	case registries.FailureNotFound:
+		return malware.OwnershipReleaseMissing
+	case registries.FailureOwnership:
+		return malware.OwnershipMismatch
+	case registries.FailureTransient:
+		return malware.OwnershipUnknown
+	case registries.FailureOther:
+	}
+	return malware.OwnershipUncheckable
 }

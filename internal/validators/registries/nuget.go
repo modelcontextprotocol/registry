@@ -101,9 +101,9 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 	case ValidReadme:
 		return nil
 	case InvalidReadme:
-		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed. The server name '%s' must appear as 'mcp-name: %s' in the package README. Add it to your README and publish a new package version", pkg.Identifier, pkg.Version, serverName, serverName)
+		return failed(FailureOwnership, "NuGet package '%s' ownership validation for version %s failed. The server name '%s' must appear as 'mcp-name: %s' in the package README. Add it to your README and publish a new package version", pkg.Identifier, pkg.Version, serverName, serverName)
 	case GluedReadme:
-		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed: found 'mcp-name: %s' in the README, but it is immediately followed by another character rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and publish a new package version", pkg.Identifier, pkg.Version, serverName)
+		return failed(FailureOwnership, "NuGet package '%s' ownership validation for version %s failed: found 'mcp-name: %s' in the README, but it is immediately followed by another character rather than a boundary. The token must be followed by a space, newline, an HTML tag, or a comment close ('-->') — put it on its own line and publish a new package version", pkg.Identifier, pkg.Version, serverName)
 	case NoReadme:
 		// Continue to check if package exists
 	default:
@@ -117,11 +117,11 @@ func ValidateNuGet(ctx context.Context, pkg model.Package, serverName string) er
 
 	switch existenceState {
 	case PackageIDNotFound:
-		return fmt.Errorf("NuGet package '%s' does not exist in the registry. If you recently published the package for the first time, wait for validation to complete", pkg.Identifier)
+		return failed(FailureNotFound, "NuGet package '%s' does not exist in the registry. If you recently published the package for the first time, wait for validation to complete", pkg.Identifier)
 	case PackageExistsVersionMissing:
-		return fmt.Errorf("NuGet package '%s' exists but version %s does not exist in the registry. If you recently published the version, wait for validation to complete", pkg.Identifier, pkg.Version)
+		return failed(FailureNotFound, "NuGet package '%s' exists but version %s does not exist in the registry. If you recently published the version, wait for validation to complete", pkg.Identifier, pkg.Version)
 	case PackageAndVersionExist:
-		return fmt.Errorf("NuGet package '%s' ownership validation for version %s failed because it does not have an embedded README. Add one to your package and publish a new version", pkg.Identifier, pkg.Version)
+		return failed(FailureOwnership, "NuGet package '%s' ownership validation for version %s failed because it does not have an embedded README. Add one to your package and publish a new version", pkg.Identifier, pkg.Version)
 	default:
 		return fmt.Errorf("unexpected package existence state: %d", existenceState)
 	}
@@ -178,12 +178,12 @@ func fetchAndCacheServiceIndex(ctx context.Context, client *http.Client, baseURL
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch NuGet service index: %w", err)
+		return nil, failed(FailureTransient, "failed to fetch NuGet service index: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("NuGet service index returned status %d", resp.StatusCode)
+		return nil, failed(statusKind(resp.StatusCode), "NuGet service index returned status %d", resp.StatusCode)
 	}
 
 	var index serviceIndex
@@ -229,7 +229,7 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return NoReadme, fmt.Errorf("failed to fetch NuGet README: %w", err)
+		return NoReadme, failed(FailureTransient, "failed to fetch NuGet README: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -258,7 +258,7 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 		return NoReadme, nil
 	}
 
-	return InvalidReadme, fmt.Errorf("NuGet README request returned status %d", resp.StatusCode)
+	return InvalidReadme, failed(statusKind(resp.StatusCode), "NuGet README request returned status %d", resp.StatusCode)
 }
 
 func getPackageContentBaseURL(index *serviceIndex) (string, error) {
@@ -291,7 +291,7 @@ func validatePackageExists(ctx context.Context, lowerID, lowerVersion string, cl
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return PackageIDNotFound, fmt.Errorf("failed to fetch NuGet package index: %w", err)
+		return PackageIDNotFound, failed(FailureTransient, "failed to fetch NuGet package index: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -300,7 +300,7 @@ func validatePackageExists(ctx context.Context, lowerID, lowerVersion string, cl
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return PackageIDNotFound, fmt.Errorf("NuGet package index returned status %d", resp.StatusCode)
+		return PackageIDNotFound, failed(statusKind(resp.StatusCode), "NuGet package index returned status %d", resp.StatusCode)
 	}
 
 	var contentIndex packageContentIndex
