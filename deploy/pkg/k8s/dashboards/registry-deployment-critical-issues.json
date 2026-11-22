@@ -64,7 +64,7 @@
         "type": "victoriametrics-logs-datasource",
         "uid": "PD775F2863313E6C7"
       },
-      "description": "Kubernetes events of type Warning about the registry's own objects (pods, jobs, autoscaler), counted in 10-minute steps. Events about nodes are left out; the node panel below covers the ones that matter. Events are collected for the default namespace only.",
+      "description": "Updates to Kubernetes Warning events about the registry's objects (pods, jobs, autoscaler). Each event UID and count is counted once per 10-minute interval, even when several collectors record it. Events about nodes are left out; the node panel below covers the ones that matter. Events are collected for the default namespace only.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -117,14 +117,14 @@
             "uid": "PD775F2863313E6C7"
           },
           "editorMode": "code",
-          "expr": "severity:Warning k8s.namespace.name:* | stats by (k8s.event.reason) count() as events",
+          "expr": "severity:Warning k8s.namespace.name:* | stats by (k8s.event.reason) count_uniq(k8s.event.uid, k8s.event.count) as events",
           "legendFormat": "{{k8s.event.reason}}",
           "queryType": "statsRange",
           "refId": "A",
           "step": "10m"
         }
       ],
-      "title": "Warning events per 10 minutes, by reason",
+      "title": "Warning event updates per 10 minutes, by reason",
       "type": "timeseries"
     },
     {

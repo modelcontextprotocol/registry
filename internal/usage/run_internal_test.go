@@ -248,10 +248,8 @@ func (idleMetrics) Query(_ context.Context, query string, _ time.Time) ([]Metric
 	return nil, nil
 }
 
-// TestRunSkipsADayWithoutTraffic covers a day on which the gateway served the
-// registry nothing: its counters were recorded and show no request, and there
-// are no access records. That is not a failure, and nothing is stored for it.
-func TestRunSkipsADayWithoutTraffic(t *testing.T) {
+// A verified idle day counts toward freshness and is read only once.
+func TestRunStoresADayWithoutTraffic(t *testing.T) {
 	f := newFixture(t, "empty")
 	f.sources.Metrics = idleMetrics{}
 	store := newStore(t, newDatabase(t))
@@ -260,8 +258,13 @@ func TestRunSkipsADayWithoutTraffic(t *testing.T) {
 	collector.Lookback = 1
 
 	require.NoError(t, collector.Run(t.Context()))
-	assert.Empty(t, storedDays(t, store))
-	assert.Contains(t, f.log.String(), "2026-10-06 has nothing to collect: the gateway counted no registry requests and no access record shows one")
+	require.Equal(t, []string{"2026-10-06"}, storedDays(t, store))
+	var idle bool
+	require.NoError(t, store.pool.QueryRow(t.Context(), `SELECT requests = 0 AND gib = 0 AND listing_requests = 0
+		AND listing_gib = 0 AND sample_fraction = 1 AND cache_hit_pct IS NULL AND log_requests_ratio IS NULL
+		AND NOT EXISTS (SELECT 1 FROM usage_share) FROM usage_daily`).Scan(&idle))
+	require.True(t, idle)
+	require.NoError(t, collector.Run(t.Context()))
 	assert.Equal(t, 1, f.gateway.logCalls, "one unsampled read")
 	report, err := os.ReadFile(filepath.Join(reports, "2026-10-06.md"))
 	require.NoError(t, err)
