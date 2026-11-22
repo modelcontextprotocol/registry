@@ -1089,9 +1089,9 @@ project.
 Log metrics are not backfilled, so the freshness policy counts only sweeps that
 finish after it was created. On a new stack, provision the alerts once the
 sweep is switched on and then run a sweep by hand; the policy may alert once in
-between and closes about a quarter of an hour after the sweep finishes. Its
-email does not name the cluster in the subject (it reads "on `__missing__`");
-the project is in the body. Removing the setting does not remove the policies;
+between and closes about a quarter of an hour after the sweep finishes. Every
+email's subject starts with the cluster's name, since staging and production
+may send to the same address. Removing the setting does not remove the policies;
 delete them in Cloud Monitoring (label `managed_by: registry-malware-monitoring`).
 
 Alerts that have fired can be read without the email:
