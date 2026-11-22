@@ -44,17 +44,20 @@ func stagingImage(conf *config.Config) string {
 func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart, pgCluster *apiextensions.CustomResource) (*corev1.Service, error) {
 	conf := config.New(ctx, "mcp-registry")
 	githubClientId := conf.Require("githubClientId")
-	rolloutCommit := conf.Get("registryRolloutCommit")
-	if rolloutCommit == "" {
-		rolloutCommit = getGitCommitHash()
-	}
 
-	// Determine Docker image tag based on environment
-	imageTag := "main" // Default for staging
+	imageTag := "main"
+	var rolloutAnnotations pulumi.StringMapInput
 	if environment == "prod" {
-		// Use explicitly configured image tag for production
-		// This prevents automatic promotion and requires manual control of production releases
-		imageTag = conf.Require("imageTag") // Explicit configuration required - no fallback
+		imageTag = conf.Require("imageTag")
+	} else {
+		// A new commit can deploy a new build under the same non-production tag.
+		rolloutCommit := conf.Get("registryRolloutCommit")
+		if rolloutCommit == "" {
+			rolloutCommit = getGitCommitHash()
+		}
+		rolloutAnnotations = pulumi.StringMap{
+			"registry.modelcontextprotocol.io/deployCommit": pulumi.String(rolloutCommit),
+		}
 	}
 
 	image := "ghcr.io/modelcontextprotocol/registry:" + imageTag
@@ -210,10 +213,7 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 					Labels: pulumi.StringMap{
 						"app": pulumi.String("mcp-registry"),
 					},
-					Annotations: pulumi.StringMap{
-						// Use git commit hash to trigger pod restarts when deploying new infra versions
-						"registry.modelcontextprotocol.io/deployCommit": pulumi.String(rolloutCommit),
-					},
+					Annotations: rolloutAnnotations,
 				},
 				Spec: &corev1.PodSpecArgs{
 					Affinity:                      appAffinity,
