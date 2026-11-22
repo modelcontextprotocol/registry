@@ -558,7 +558,7 @@
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
-      "description": "The time within which 95% of requests to each endpoint were answered, over the last 4 minutes. It moves in steps because the registry records response times in fixed ranges. The two latency alerts watch the servers and publish endpoints.",
+      "description": "The time within which 95% of requests to each endpoint were answered, over the last 4 minutes. Treat values under 100 ms as rough: the registry records response times in ranges and has none between 5 ms and 100 ms. The Gateway board's upstream p95 measures the application's response time more finely, though not by endpoint. The two latency alerts watch the servers and publish endpoints.",
       "fieldConfig": {
         "defaults": {
           "color": {

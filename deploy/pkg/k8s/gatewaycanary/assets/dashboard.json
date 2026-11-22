@@ -220,8 +220,9 @@
     },
     {
       "id": 7,
-      "title": "Upstream p95 latency (single attempt)",
+      "title": "Upstream p95 latency: one attempt, and summed across attempts",
       "type": "timeseries",
+      "description": "How long the upstream takes to answer the gateway; for registry traffic the upstream is the registry application. The two lines differ only when the gateway tries a request more than once, so most of the time one hides the other.",
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -243,7 +244,12 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_upstream_duration_seconds_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "p95"
+          "legendFormat": "One attempt"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_upstream_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
+          "legendFormat": "Summed across attempts"
         }
       ]
     },
@@ -326,35 +332,6 @@
       ]
     },
     {
-      "id": 10,
-      "title": "p95 upstream time summed across measured attempts",
-      "type": "timeseries",
-      "fieldConfig": {
-        "defaults": {
-          "min": 0,
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "P4169E866C3094E38"
-      },
-      "gridPos": {
-        "x": 12,
-        "y": 32,
-        "w": 12,
-        "h": 8
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_upstream_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "p95"
-        }
-      ]
-    },
-    {
       "id": 11,
       "title": "Requests with multiple upstream attempts / groups per second",
       "type": "timeseries",
@@ -373,8 +350,8 @@
         "uid": "P4169E866C3094E38"
       },
       "gridPos": {
-        "x": 0,
-        "y": 40,
+        "x": 12,
+        "y": 32,
         "w": 12,
         "h": 8
       },
@@ -402,7 +379,7 @@
         "uid": "P4169E866C3094E38"
       },
       "gridPos": {
-        "x": 12,
+        "x": 0,
         "y": 40,
         "w": 12,
         "h": 8
@@ -431,8 +408,8 @@
         "uid": "P4169E866C3094E38"
       },
       "gridPos": {
-        "x": 0,
-        "y": 48,
+        "x": 12,
+        "y": 40,
         "w": 12,
         "h": 8
       },
@@ -460,7 +437,7 @@
         "uid": "P4169E866C3094E38"
       },
       "gridPos": {
-        "x": 12,
+        "x": 0,
         "y": 48,
         "w": 12,
         "h": 8
@@ -489,8 +466,8 @@
         "uid": "P4169E866C3094E38"
       },
       "gridPos": {
-        "x": 0,
-        "y": 56,
+        "x": 12,
+        "y": 48,
         "w": 12,
         "h": 8
       },
@@ -522,9 +499,9 @@
         "uid": "P4169E866C3094E38"
       },
       "gridPos": {
-        "x": 12,
+        "x": 0,
         "y": 56,
-        "w": 12,
+        "w": 24,
         "h": 8
       },
       "targets": [
