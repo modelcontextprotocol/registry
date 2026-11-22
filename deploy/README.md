@@ -505,7 +505,7 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 | `mcp-registry:alertDiscordWebhook` | Discord webhook for Grafana alert notifications; alerts are provisioned only where it is set | No (secret) |
 | `mcp-registry:usageCollector` | `"true"` runs the daily [usage collector](#usage-collector); `"false"` retires it | No (hosted stacks only) |
 | `mcp-registry:usageCollectorOrganizationAliases` | Names for organizations' own networks in the usage dashboards | No (secret) |
-| `mcp-registry:malwareSweep` | `"true"` runs the daily [malware sweep](#malware-sweep) | No |
+| `mcp-registry:malwareSweep` | `"true"` creates the [malware sweep](#malware-sweep), daily in production and on demand in staging | No |
 | `mcp-registry:malwareCheckMode` | What a publish does with a package OSV lists as malware: `report`, `enforce` or `off`; see [The publish-time check](#the-publish-time-check) | No (default: report) |
 | `mcp-registry:imageTag` | Docker image tag for production environment | Yes (prod only) |
 | `gcp:project` | GCP Project ID | Yes when `provider=gcp` |
@@ -999,7 +999,7 @@ imported into the stack.
 
 ## Malware sweep
 
-Once a day the malware sweep checks every package the registry lists against
+The malware sweep checks every package the registry lists against
 the malware records that [OSV.dev](https://osv.dev) publishes, and asks each
 package's own registry whether the package is still there. It reports the
 server versions that point at malware or at a package that is gone. It reports
@@ -1008,8 +1008,8 @@ its report, is described in
 [Admin Operations](../docs/administration/admin-operations.md#malware-checks);
 this section covers how it is deployed.
 
-It runs where `mcp-registry:malwareSweep` is `"true"`, which it is in staging
-and in production. Removing the setting deletes the CronJob.
+Both hosted stacks set `mcp-registry:malwareSweep` to `"true"`. Production runs daily.
+Staging keeps the CronJob suspended so an operator can start a Job from its template. Removing the setting deletes the CronJob.
 
 ### The publish-time check
 
@@ -1057,7 +1057,7 @@ It does not start a second registry.
 
 ### The daily run
 
-The run starts at 03:40 UTC and gives up after 30 minutes. Measured in
+Production starts at 03:40 UTC. Each run has a 30-minute timeout. Measured in
 production on 2026-11-22, before it asked the package registries, it took just
 under three minutes and about 120 MiB for 281,000 server versions. It reads the
 listing for about two of those minutes. In staging that added at most 0.18 CPU
@@ -1090,8 +1090,10 @@ JOB=$(kubectl --context=YOUR_CONTEXT -n default get jobs -l app=registry-malware
   --sort-by=.metadata.creationTimestamp -o name | tail -1 | cut -d/ -f2)
 # A run that failed was tried again in a second pod, so read every pod of the Job.
 kubectl --context=YOUR_CONTEXT -n default logs -l job-name="$JOB" --tail=-1 --prefix
-# Run it now:
-kubectl --context=YOUR_CONTEXT -n default create job --from=cronjob/registry-malware-sweep registry-malware-sweep-manual
+# Start a staging run and read its log:
+JOB="registry-malware-sweep-manual-$(date +%s)"
+kubectl --context=STAGING_CONTEXT -n default create job "$JOB" --from=cronjob/registry-malware-sweep
+kubectl --context=STAGING_CONTEXT -n default logs -f "job/$JOB"
 ```
 
 ### Malware alerts
@@ -1118,7 +1120,8 @@ Exactly one of the first two matches a report that has something in it, so a
 day sends one email about the sweep, with the report's summary in it, and a day
 with nothing to review sends none. Those two and the third close half an hour after
 the line that opened them, because an open alert sends nothing for a further
-match. The policies exist in both the staging and the production project.
+match. The staging and production projects both have these policies. The 25-hour freshness
+policy is disabled in staging because operators start its sweeps on demand.
 
 The first two replace an earlier policy that matched each
 `REGISTRY_MALWARE_SWEEP_HIT` line. The script removes that policy, but only
