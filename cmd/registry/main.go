@@ -63,6 +63,9 @@ func main() {
 
 	// Initialize configuration
 	cfg := config.NewConfig()
+	if err := cfg.ValidateMalwareCheckMode(); err != nil {
+		log.Fatalf("Invalid malware check configuration: %v", err)
+	}
 	poolLimits := database.PoolLimits{MaxConns: cfg.DatabaseMaxConnections, MinConns: cfg.DatabaseMinConnections}
 	if err := poolLimits.Validate(); err != nil {
 		log.Fatalf("Invalid database pool configuration: %v", err)

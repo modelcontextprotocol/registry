@@ -47,9 +47,11 @@ New `include_deleted` query parameter added to multiple endpoints:
 
 #### Malware check on publish and edit
 
-The official registry now refuses `POST /publish` and `PUT /servers/{serverName}/versions/{version}` with `400` when a package in the request is listed as malware by [OSV.dev](https://osv.dev) (a `MAL-*` record) at exactly the version named: the record names that version, or names no versions because every release is malware. The error names the package and links to the OSV record. This applies to npm, PyPI, NuGet and Cargo packages on both `/v0` and `/v0.1`; OCI images and MCPB bundles are not covered by OSV.
+The official registry now checks the packages in `POST /publish` and `PUT /servers/{serverName}/versions/{version}` against the malware records (`MAL-*`) of [OSV.dev](https://osv.dev). A package matches when a record lists it at exactly the version named: the record names that version, or names no versions because every release is malware. This applies to npm, PyPI, NuGet and Cargo packages on both `/v0` and `/v0.1`; OCI images and MCPB bundles are not covered by OSV.
 
-Ordinary vulnerabilities (CVE, GHSA) are not a reason to refuse. Status changes, including taking a version down, are not checked. If OSV cannot be reached the request proceeds as before. Request and response schemas are unchanged.
+The check starts in report mode: a match is logged for the maintainers and the request succeeds as before. Once it is set to enforce, a match is refused with `400`, and the error names the package and links to the OSV record. Operators choose with `MCP_REGISTRY_MALWARE_CHECK_MODE` (`report`, `enforce` or `off`).
+
+Ordinary vulnerabilities (CVE, GHSA) are not a match. Status changes, including taking a version down, are not checked. If OSV cannot be reached the request proceeds as before. Request and response schemas are unchanged.
 
 #### npm dist-tags are refused as package versions
 

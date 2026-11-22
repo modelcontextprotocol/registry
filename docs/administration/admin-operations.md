@@ -191,12 +191,19 @@ under either case and with `-` or `_`. An npm dist-tag such as `next` is not a v
 an existing entry that names one cannot be checked, so the sweep lists it as
 `REGISTRY_MALWARE_SWEEP_UNCHECKED`.
 
-- **On publish and edit**: a matching package is refused with a `400` that links to the OSV record.
+- **On publish and edit**: what happens to a matching package is set by
+  `MCP_REGISTRY_MALWARE_CHECK_MODE`. Every match is logged as `REGISTRY_MALWARE_PUBLISH_MATCH`.
+  - `report` (the default) lets the request through, logged with `action=allowed`. It is for
+    watching the check before relying on it: a wrong match shows up here without having cost a
+    publisher anything, and a missed one shows up in the daily sweep.
+  - `enforce` refuses the request with a `400` that links to the OSV record, logged with
+    `action=refused`.
+  - `off` does not ask OSV.
+
   The check runs alongside the package-ownership lookup. OSV takes about 0.3 seconds to answer,
   which is longer than the lookup, so a publish takes about that much longer.
   If OSV has not answered within 2 seconds the request goes ahead unchecked; a match OSV did
-  confirm in that time is still refused.
-  `MCP_REGISTRY_ENABLE_MALWARE_CHECK=false` switches the check off.
+  confirm in that time is still acted on.
 - **Daily**: a sweep re-checks every listed (not deleted) server version, because OSV usually
   learns about a malicious release after it was published here. The sweep only reports. It never
   changes an entry; taking one down is a maintainer's decision.
@@ -206,6 +213,15 @@ an existing entry that names one cannot be checked, so the sweep lists it as
 On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` and alerts by email
 (see [Malware sweep](../../deploy/README.md#malware-sweep)). Do not discuss a match in public
 channels before the entry is down.
+
+A publish-time match alerts too. Find it in the registry's own log, then follow steps 2 to 4
+below. With `action=refused` nothing was published. With `action=allowed` this check let the
+request through, and step 3 shows whether the version was published: another check, such as
+package ownership, may still have refused it:
+
+```bash
+kubectl -n default logs -l app=mcp-registry --tail=-1 | grep ' WARN REGISTRY_MALWARE_PUBLISH_MATCH '
+```
 
 1. Read the matches of the newest run. Each line names a server version, the package it points at
    and the OSV record. Earlier runs are kept beside it, and theirs may be out of date:

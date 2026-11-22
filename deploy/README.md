@@ -506,6 +506,7 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 | `mcp-registry:usageCollector` | `"true"` runs the daily [usage collector](#usage-collector); `"false"` retires it | No (hosted stacks only) |
 | `mcp-registry:usageCollectorOrganizationAliases` | Names for organizations' own networks in the usage dashboards | No (secret) |
 | `mcp-registry:malwareSweep` | `"true"` runs the daily [malware sweep](#malware-sweep) | No |
+| `mcp-registry:malwareCheckMode` | What a publish does with a package OSV lists as malware: `report`, `enforce` or `off`; see [The publish-time check](#the-publish-time-check) | No (default: report) |
 | `mcp-registry:imageTag` | Docker image tag for production environment | Yes (prod only) |
 | `gcp:project` | GCP Project ID | Yes when `provider=gcp` |
 | `gcp:region` | GCP Region | No (default: us-central1) |
@@ -983,6 +984,26 @@ this section covers how it is deployed.
 It runs where `mcp-registry:malwareSweep` is `"true"`: in staging, and not yet
 in production. Removing the setting deletes the CronJob.
 
+### The publish-time check
+
+The registry also checks packages when a server is published or edited. That
+check is part of the registry itself, so it arrives with the image and needs
+nothing created. `mcp-registry:malwareCheckMode` sets what it does with a match:
+
+| Value | Meaning |
+|-------|---------|
+| not set, or `report` | The match is logged and the request goes through. Nothing is refused. |
+| `enforce` | The match is logged and the request is refused with a `400`. |
+| `off` | OSV is not asked. |
+
+It is `report` in staging and not set in production, so both only report. The
+plan is to leave it there for a few days and read what it logs: a match that is
+wrong appears as `REGISTRY_MALWARE_PUBLISH_MATCH action=allowed` without a
+publisher having been turned away, and a match it missed appears in the daily
+sweep. To start refusing, set `mcp-registry:malwareCheckMode: enforce` in the
+stack file; in production that change is a deployment. Any other value fails
+the preview.
+
 ### What is created
 
 One CronJob, `registry-malware-sweep`, in `default`, and nothing else. It runs
@@ -1035,8 +1056,10 @@ python3 tools/admin/configure-malware-alerts.py \
 ```
 
 The script reuses an email channel and updates only its labelled policies. It
-alerts on any `REGISTRY_MALWARE_SWEEP_HIT` line, at most once an hour, and on no
-completed sweep in 25 hours, including complete absence of the success metric.
+alerts on any `REGISTRY_MALWARE_SWEEP_HIT` line and on any
+`REGISTRY_MALWARE_PUBLISH_MATCH` line in the registry's log, each at most once an
+hour, and on no completed sweep in 25 hours, including complete absence of the
+success metric.
 Log metrics are not backfilled: provision the alerts after the sweep is switched
 on, run a fresh job and verify that the success metric appears in Cloud
 Monitoring. The freshness policy initially alerts until a sweep completes. Alert
