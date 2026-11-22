@@ -181,6 +181,10 @@ func main() {
 const (
 	malwareSweepTimeout    = 30 * time.Minute
 	malwareSweepOSVTimeout = 60 * time.Second
+	// The package registries answer in about five minutes. Past this the
+	// packages not yet asked about are left unknown, so that reading the
+	// listing over the public address still fits inside malwareSweepTimeout.
+	malwareSweepExistenceTimeout = 12 * time.Minute
 	// A request OSV turns away or fails is made again this often, so that one
 	// bad moment does not cost the day's sweep.
 	malwareSweepOSVRetries = 3
@@ -201,13 +205,17 @@ func runMalwareSweep() int {
 	ctx, cancel := context.WithTimeout(ctx, malwareSweepTimeout)
 	defer cancel()
 
-	osv := malware.NewClient(cfg.OSVAPIURL, malwareSweepOSVTimeout, malwareSweepOSVRetries)
-	result, err := malware.Sweep(ctx, cfg.MalwareSweepRegistryURL, osv, os.Stdout)
+	result, err := malware.Sweep(ctx, malware.SweepConfig{
+		RegistryURL:        cfg.MalwareSweepRegistryURL,
+		OSV:                malware.NewClient(cfg.OSVAPIURL, malwareSweepOSVTimeout, malwareSweepOSVRetries),
+		CheckPackagesExist: cfg.MalwareSweepMissingPackages,
+		ExistenceTimeout:   malwareSweepExistenceTimeout,
+	}, os.Stdout)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_FAILED registry=%q error=%q\n", cfg.MalwareSweepRegistryURL, err.Error())
 		return 1
 	}
-	fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_SUCCESS registry=%q versions=%d packages=%d hits=%d unchecked=%d\n",
-		cfg.MalwareSweepRegistryURL, result.Versions, result.Packages, result.Hits, result.Unchecked)
+	fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_SUCCESS registry=%q versions=%d packages=%d hits=%d unchecked=%d missing=%d existence_unknown=%d\n",
+		cfg.MalwareSweepRegistryURL, result.Versions, result.Packages, result.Hits, result.Unchecked, result.Missing, result.ExistenceUnknown)
 	return 0
 }

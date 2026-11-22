@@ -205,40 +205,59 @@ sweep lists both as `REGISTRY_MALWARE_SWEEP_UNCHECKED`.
   If OSV has not answered within 2 seconds the request goes ahead unchecked; a match OSV did
   confirm in that time is still acted on.
 - **Daily**: a sweep re-checks every listed (not deleted) server version, because OSV usually
-  learns about a malicious release after it was published here. The sweep only reports. It never
-  changes an entry; taking one down is a maintainer's decision.
+  learns about a malicious release after it was published here. It also asks each package's own
+  registry whether the package is still there: a package that has been removed leaves an entry
+  that cannot be installed, and a name someone else can register. The sweep only reports. It
+  never changes an entry; taking one down is a maintainer's decision.
 
-### Responding to an alert
+### The daily report
 
-On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` and alerts by email
-(see [Malware sweep](../../deploy/README.md#malware-sweep)). Do not discuss a match in public
-channels before the entry is down.
+Every sweep ends with one line holding everything a maintainer has to look at, in this order:
 
-A publish-time match alerts too. Find it in the registry's own log, then follow steps 2 to 4
-below. With `action=refused` nothing was published. With `action=allowed` this check let the
-request through, and step 3 shows whether the version was published: another check, such as
-package ownership, may still have refused it:
+| Reason | Meaning |
+|--------|---------|
+| `malware` | The entry points at a package version that OSV lists as malware. |
+| `unchecked` | The entry names no release that can be checked: no version, or an npm dist-tag. |
+| `missing-package` | The entry's package is gone from npm, PyPI, NuGet or crates.io. A package that still exists without the version the entry names is not reported. |
+
+On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` (see
+[Malware sweep](../../deploy/README.md#malware-sweep)). A day whose report is not empty sends one
+email, with the report's summary in it: marked critical if any entry is malware, and a warning
+otherwise. A day with nothing to review sends none. The warning is also sent when the package
+registries left more than a tenth of the packages unanswered: the report then says
+`"existence_incomplete":true`, and that day's missing packages were not really looked for. Do not
+discuss an entry in public channels before it is down.
+
+The report itself is a JSON record, readable without the cluster:
 
 ```bash
-kubectl -n default logs -l app=mcp-registry --tail=-1 | grep ' WARN REGISTRY_MALWARE_PUBLISH_MATCH '
+gcloud logging read 'jsonPayload.event="REGISTRY_MALWARE_SWEEP_REPORT"' \
+  --project mcp-registry-prod --freshness=1d --limit 1 --format json \
+  | jq '.[0].jsonPayload | {to_review, malware, unchecked, missing, existence_incomplete, truncated, summary}'
 ```
 
-1. Read the matches of the newest run. Each line names a server version, the package it points at
-   and the OSV record. Earlier runs are kept beside it, and theirs may be out of date:
+Its `entries` hold the findings, malware first, as far as they fit in one log line; `truncated`
+says that some did not. The whole list is always in the run's log, one line for each entry:
 
-   ```bash
-   JOB=$(kubectl -n default get jobs -l app=registry-malware-sweep \
-     --sort-by=.metadata.creationTimestamp -o name | tail -1 | cut -d/ -f2)
-   # A run that failed was tried again in a second pod, so read every pod of the Job.
-   kubectl -n default logs -l job-name="$JOB" --tail=-1 --prefix | grep 'REGISTRY_MALWARE_SWEEP_'
-   ```
+```bash
+JOB=$(kubectl -n default get jobs -l app=registry-malware-sweep \
+  --sort-by=.metadata.creationTimestamp -o name | tail -1 | cut -d/ -f2)
+# A run that failed was tried again in a second pod, so read every pod of the Job.
+kubectl -n default logs -l job-name="$JOB" --tail=-1 \
+  | grep -E '^REGISTRY_MALWARE_SWEEP_(HIT|UNCHECKED|MISSING) '
+```
 
-   ```
-   REGISTRY_MALWARE_SWEEP_HIT server="com.example/my-server" version="1.0.0" registry_type="npm" package="my-package" package_version="1.0.0" osv="MAL-2026-1234"
-   ```
+```
+REGISTRY_MALWARE_SWEEP_HIT server="com.example/my-server" version="1.0.0" status="active" registry_type="npm" package="my-package" package_version="1.0.0" osv="MAL-2026-1234"
+REGISTRY_MALWARE_SWEEP_MISSING server="com.example/other" version="2.0.0" status="deprecated" registry_type="pypi" package="other-package" package_version="2.0.0"
+```
 
-2. Confirm the record at `https://osv.dev/vulnerability/<id>` and that it lists the package version.
-3. Confirm that the entry still points at that package version. It may have been edited or taken
+### Responding to the report
+
+For an entry that points at malware:
+
+1. Confirm the record at `https://osv.dev/vulnerability/<id>` and that it lists the package version.
+2. Confirm that the entry still points at that package version. It may have been edited or taken
    down since the run; a version that is already deleted answers `404`:
 
    ```bash
@@ -246,7 +265,7 @@ kubectl -n default logs -l app=mcp-registry --tail=-1 | grep ' WARN REGISTRY_MAL
      | jq '.server.packages[] | {registryType, identifier, version}'
    ```
 
-4. Take that version down, with the reason (see [Takedown a Specific Version](#takedown-a-specific-version)):
+3. Take that version down, with the reason (see [Takedown a Specific Version](#takedown-a-specific-version)):
 
    ```bash
    REGISTRY_TOKEN="$REGISTRY_TOKEN" SERVER_NAME="com.example/my-server" VERSION="1.0.0" \
@@ -257,21 +276,41 @@ kubectl -n default logs -l app=mcp-registry --tail=-1 | grep ' WARN REGISTRY_MAL
    Take down the single version, not the whole server, unless every version matches: the registry
    then promotes the highest remaining version to latest.
 
-The sweep reports a match every day until the version is deleted.
+For an entry whose package is gone, confirm it at the package's registry before acting; the
+moderation policy allows removing a server that cannot work. Usually every version of the server
+points at the same package, and the whole server is what to take down.
+
+For an unchecked entry, edit it to name the exact version (see
+[Edit a Specific Server Version](#edit-a-specific-server-version)).
+
+The sweep reports an entry every day until it is deleted or edited.
+
+A publish-time match alerts separately. Find it in the registry's own log, then follow the steps
+for malware above. With `action=refused` nothing was published. With `action=allowed` this check
+let the request through, and step 2 shows whether the version was published: another check, such
+as package ownership, may still have refused it:
+
+```bash
+kubectl -n default logs -l app=mcp-registry --tail=-1 | grep ' WARN REGISTRY_MALWARE_PUBLISH_MATCH '
+```
 
 ### Running a sweep by hand
 
-The sweep needs no credentials and changes nothing, so it can be run from anywhere. It reads the
-public listing, which takes about 12 minutes:
+The sweep needs no credentials and changes nothing, so it can be run from anywhere. It takes about
+16 minutes: most of that is reading the public listing, and about four are the package registries:
 
 ```bash
 go run ./cmd/registry -malware-sweep
 ```
 
-It ends with `REGISTRY_MALWARE_SWEEP_SUCCESS` and the number of matches, or with
+It ends with `REGISTRY_MALWARE_SWEEP_SUCCESS` and its counts, or with
 `REGISTRY_MALWARE_SWEEP_FAILED` and a non-zero exit status when it could not read the whole
-registry or get a complete answer from OSV. A failed sweep still reports the matches OSV had
-confirmed. Set `MCP_REGISTRY_MALWARE_SWEEP_REGISTRY_URL` to sweep another registry.
+registry or get a complete answer from OSV. A failed sweep still writes its report, with the
+matches OSV had confirmed. A package registry that does not answer about a package, or not within
+the 12 minutes the package registries are given, does not fail the sweep: the package is counted
+as `existence_unknown` and not reported. Set
+`MCP_REGISTRY_MALWARE_SWEEP_REGISTRY_URL` to sweep another registry, and
+`MCP_REGISTRY_MALWARE_SWEEP_MISSING_PACKAGES=false` to leave the package registries alone.
 
 ## Connecting to the Production Database
 
