@@ -1001,8 +1001,8 @@ entry down. What it checks, and how to respond to a match, is described in
 [Admin Operations](../docs/administration/admin-operations.md#malware-checks);
 this section covers how it is deployed.
 
-It runs where `mcp-registry:malwareSweep` is `"true"`: in staging, and not yet
-in production. Removing the setting deletes the CronJob.
+It runs where `mcp-registry:malwareSweep` is `"true"`, which it is in staging
+and in production. Removing the setting deletes the CronJob.
 
 ### The publish-time check
 
@@ -1032,18 +1032,21 @@ as the registry beside it. It has no Secret, database role or service account:
 it reads the listing from the `mcp-registry` Service, which bypasses the public
 rate limits, and sends package names and versions to `api.osv.dev`.
 
-### Switching it on in production
+### Switching it on
 
-Set `mcp-registry:malwareSweep: "true"` in `Pulumi.gcpProd.yaml` in the same
-change as, or after, an `imageTag` release that contains the sweep. An older
-image does not know the flag: the Job fails at once and reports nothing, and
-the freshness alert below says so. It does not start a second registry.
+Set `mcp-registry:malwareSweep: "true"` in the stack file. In production,
+`imageTag` must be 1.8.12 or later. An older image does not know the flag: the
+Job fails at once and reports nothing, and the freshness alert below says so.
+It does not start a second registry.
 
 ### The daily run
 
-The run starts at 03:40 UTC and gives up after 30 minutes. Read through the
-public listing, 280,000 server versions took 12 minutes and 160 MB; the run in
-the cluster has not been timed yet. It writes to its log:
+The run starts at 03:40 UTC and gives up after 30 minutes. Measured in
+production on 2026-11-22, it took just under three minutes and about 120 MiB
+for 281,000 server versions. It reads the listing for about two of those
+minutes. In staging that added at most 0.18 CPU to the registry and 0.14 CPU to
+Postgres, averaged over a minute; in production the busiest registry pod
+briefly reached 0.7 CPU and no replica was added. It writes to its log:
 
 | Line starts with | Meaning |
 |------------------|---------|
@@ -1080,13 +1083,25 @@ The script reuses an email channel and updates only its labelled policies. It
 alerts on any `REGISTRY_MALWARE_SWEEP_HIT` line and on any
 `REGISTRY_MALWARE_PUBLISH_MATCH` line in the registry's log, each at most once an
 hour, and on no completed sweep in 25 hours, including complete absence of the
-success metric.
-Log metrics are not backfilled: provision the alerts after the sweep is switched
-on, run a fresh job and verify that the success metric appears in Cloud
-Monitoring. The freshness policy initially alerts until a sweep completes. Alert
-delivery and channel verification should be checked with the notification
-recipient. Removing the setting does not remove the policies; delete them in
-Cloud Monitoring (label `managed_by: registry-malware-monitoring`).
+success metric. The policies exist in both the staging and the production
+project.
+
+Log metrics are not backfilled, so the freshness policy counts only sweeps that
+finish after it was created. On a new stack, provision the alerts once the
+sweep is switched on and then run a sweep by hand; the policy may alert once in
+between and closes about a quarter of an hour after the sweep finishes. Its
+email does not name the cluster in the subject (it reads "on `__missing__`");
+the project is in the body. Removing the setting does not remove the policies;
+delete them in Cloud Monitoring (label `managed_by: registry-malware-monitoring`).
+
+Alerts that have fired can be read without the email:
+
+```bash
+curl -s -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://monitoring.googleapis.com/v3/projects/mcp-registry-prod/alerts?pageSize=50" \
+  | jq -r '.alerts[]? | select(.policy.displayName | test("malware"; "i"))
+      | "\(.openTime) \(.state) \(.policy.displayName)"'
+```
 
 ## Database Backups
 
