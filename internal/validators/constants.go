@@ -20,6 +20,7 @@ var (
 	// Registry validation errors
 	ErrUnsupportedRegistryBaseURL   = errors.New("unsupported registry base URL")
 	ErrMismatchedRegistryTypeAndURL = errors.New("registry type and base URL do not match")
+	ErrKnownMalware                 = errors.New("package is known malware")
 
 	// Argument validation errors
 	ErrNamedArgumentNameRequired     = errors.New("named argument name is required")

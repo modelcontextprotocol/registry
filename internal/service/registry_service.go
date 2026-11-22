@@ -213,8 +213,9 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 	}()
 
 	// Registry-ownership validation fans out to npm/PyPI/NuGet/Cargo/OCI/MCPB with
-	// a 10s timeout per host. It runs before the transaction opens so those
-	// round-trips never hold a pgxpool connection. Inside the transaction, a burst
+	// a 10s timeout per host, alongside one OSV malware query bounded at 2s. It
+	// runs before the transaction opens so those round-trips never hold a pgxpool
+	// connection. Inside the transaction, a burst
 	// of publishes each waiting on a third-party registry would occupy connections
 	// while doing no database work, starving the pool and stalling unrelated
 	// requests in pool.Begin. Nothing here reads our own database, so hoisting it

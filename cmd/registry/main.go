@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/database"
 	"github.com/modelcontextprotocol/registry/internal/importer"
+	"github.com/modelcontextprotocol/registry/internal/malware"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
 )
@@ -36,7 +38,12 @@ var (
 func main() {
 	// Parse command line flags
 	showVersion := flag.Bool("version", false, "Display version information")
+	malwareSweep := flag.Bool("malware-sweep", false, "Check every listed package against OSV malware records, report the matches and exit")
 	flag.Parse()
+
+	if *malwareSweep {
+		os.Exit(runMalwareSweep())
+	}
 
 	// Show version information if requested
 	if *showVersion {
@@ -56,6 +63,9 @@ func main() {
 
 	// Initialize configuration
 	cfg := config.NewConfig()
+	if err := cfg.ValidateMalwareCheckMode(); err != nil {
+		log.Fatalf("Invalid malware check configuration: %v", err)
+	}
 	poolLimits := database.PoolLimits{MaxConns: cfg.DatabaseMaxConnections, MinConns: cfg.DatabaseMinConnections}
 	if err := poolLimits.Validate(); err != nil {
 		log.Fatalf("Invalid database pool configuration: %v", err)
@@ -166,4 +176,38 @@ func main() {
 	}
 
 	log.Println("Server exiting")
+}
+
+const (
+	malwareSweepTimeout    = 30 * time.Minute
+	malwareSweepOSVTimeout = 60 * time.Second
+	// A request OSV turns away or fails is made again this often, so that one
+	// bad moment does not cost the day's sweep.
+	malwareSweepOSVRetries = 3
+)
+
+// runMalwareSweep checks every package the registry lists against OSV's
+// malware records and returns the process's exit status. It needs no database
+// and no credentials: it reads the registry's public listing.
+//
+// What it prints is what the hosted instance alerts on; see "Malware Checks"
+// in docs/administration/admin-operations.md. Matches are a finding, not a
+// failure, so the status is non-zero only when the sweep could not finish. A
+// sweep that could not finish has still printed the matches it had confirmed.
+func runMalwareSweep() int {
+	cfg := config.NewConfig()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	ctx, cancel := context.WithTimeout(ctx, malwareSweepTimeout)
+	defer cancel()
+
+	osv := malware.NewClient(cfg.OSVAPIURL, malwareSweepOSVTimeout, malwareSweepOSVRetries)
+	result, err := malware.Sweep(ctx, cfg.MalwareSweepRegistryURL, osv, os.Stdout)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_FAILED registry=%q error=%q\n", cfg.MalwareSweepRegistryURL, err.Error())
+		return 1
+	}
+	fmt.Fprintf(os.Stdout, "REGISTRY_MALWARE_SWEEP_SUCCESS registry=%q versions=%d packages=%d hits=%d unchecked=%d\n",
+		cfg.MalwareSweepRegistryURL, result.Versions, result.Packages, result.Hits, result.Unchecked)
+	return 0
 }

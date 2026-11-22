@@ -20,6 +20,7 @@ var (
 // NPMPackageResponse represents the structure returned by the NPM registry API
 type NPMPackageResponse struct {
 	MCPName string `json:"mcpName"`
+	Version string `json:"version"`
 }
 
 // ValidateNPM validates that an NPM package contains the correct MCP server name
@@ -92,6 +93,14 @@ func validateNPMPackage(ctx context.Context, pkg model.Package, serverName strin
 
 	if npmResp.MCPName != serverName {
 		return fmt.Errorf("NPM package ownership validation failed. Expected mcpName '%s', got '%s'", serverName, npmResp.MCPName)
+	}
+
+	// NPM answers a dist-tag such as "next" with whichever release the tag
+	// points at today. An entry must name the release itself: the tag can be
+	// moved to another one later, and nothing that checks the entry by its
+	// version, the malware check included, can tell what it stands for.
+	if npmResp.Version != "" && npmResp.Version != pkg.Version {
+		return fmt.Errorf("NPM package '%s' version '%s' is a dist-tag, not a specific version. It currently points at '%s': use that version instead", pkg.Identifier, pkg.Version, npmResp.Version)
 	}
 
 	return nil

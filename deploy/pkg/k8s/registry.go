@@ -168,6 +168,17 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 			Value: pulumi.String(strconv.FormatBool(conf.GetBool("preparedListingJSON"))),
 		})
 	}
+	// Omission leaves the registry's default, which reports and does not refuse.
+	checkMode, modeErr := malwareCheckMode(ctx)
+	if modeErr != nil {
+		return nil, modeErr
+	}
+	if checkMode != "" {
+		poolEnv = append(poolEnv, &corev1.EnvVarArgs{
+			Name:  pulumi.String("MCP_REGISTRY_MALWARE_CHECK_MODE"),
+			Value: pulumi.String(checkMode),
+		})
+	}
 
 	// Create Deployment
 	_, err = v1.NewDeployment(ctx, "mcp-registry", &v1.DeploymentArgs{
@@ -408,6 +419,10 @@ func DeployMCPRegistry(ctx *pulumi.Context, cluster *providers.ProviderInfo, env
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {
+		return nil, err
+	}
+
+	if err := deployMalwareSweep(ctx, cluster, image, service); err != nil {
 		return nil, err
 	}
 

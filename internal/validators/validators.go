@@ -4,14 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/malware"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
+
+// malwareCheckTimeout bounds how long a publish waits for OSV before going
+// ahead without its answer.
+const malwareCheckTimeout = 2 * time.Second
 
 // Server name validation patterns
 var (
@@ -695,7 +702,7 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 
 	// Validate registry ownership for all packages if validation is enabled
 	if cfg.EnableRegistryValidation {
-		if err := validateRegistryOwnership(ctx, req); err != nil {
+		if err := validateRegistryPackages(ctx, req, cfg); err != nil {
 			return err
 		}
 	}
@@ -707,11 +714,78 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 // Note: ValidateServerJSON should be called separately before this function
 func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
 	if cfg.EnableRegistryValidation && !skipRegistryValidation {
-		if err := validateRegistryOwnership(ctx, req); err != nil {
+		if err := validateRegistryPackages(ctx, req, cfg); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+// validateRegistryPackages checks the request's packages against OSV's malware
+// records and against their own registries for ownership. The two run side by
+// side, so a request waits for the slower of them and not for both. That is
+// usually OSV: measured in November 2026 it took about 0.3s to answer, against
+// some 15ms for an npm lookup. Malware is reported in preference to an
+// ownership failure, so that the reason given does not depend on timing.
+func validateRegistryPackages(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
+	malwareResult := make(chan error, 1)
+	go func() {
+		malwareResult <- ValidateNoKnownMalware(ctx, req, cfg)
+	}()
+	ownershipErr := validateRegistryOwnership(ctx, req)
+	if err := <-malwareResult; err != nil {
+		return err
+	}
+	return ownershipErr
+}
+
+// ValidateNoKnownMalware checks a server's packages for one that OSV.dev lists
+// as malware at exactly the version named. One request covers every package.
+// What it does with a match is set by cfg.MalwareCheckMode: every match is
+// logged, and only in enforce mode is the server refused. In report mode it
+// goes through, so that the check can be watched before it is relied on.
+//
+// OSV being slow or unreachable never blocks a publish: the check is skipped
+// and logged, and the daily sweep (internal/malware) covers what it missed.
+func ValidateNoKnownMalware(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
+	enforce := cfg.MalwareCheckMode == config.MalwareCheckEnforce
+	if (!enforce && cfg.MalwareCheckMode != config.MalwareCheckReport) || len(req.Packages) == 0 {
+		return nil
+	}
+	packages := make([]malware.Package, 0, len(req.Packages))
+	for _, pkg := range req.Packages {
+		packages = append(packages, malware.Package{RegistryType: pkg.RegistryType, Identifier: pkg.Identifier, Version: pkg.Version})
+	}
+
+	// The bound is on the whole check, however many requests it takes.
+	checkCtx, cancel := context.WithTimeout(ctx, malwareCheckTimeout)
+	defer cancel()
+	// What OSV did answer is acted on even when the answer is incomplete.
+	found, err := malware.NewClient(cfg.OSVAPIURL, malwareCheckTimeout, 0).Malware(checkCtx, packages)
+	action := "allowed"
+	if enforce {
+		action = "refused"
+	}
+	var refusal error
+	for i, pkg := range packages {
+		ids := found[pkg]
+		if len(ids) == 0 {
+			continue
+		}
+		slog.WarnContext(ctx, malware.PublishMatchMarker, "action", action, "server", req.Name, "version", req.Version,
+			"registry_type", pkg.RegistryType, "package", pkg.Identifier, "package_version", pkg.Version, "osv", strings.Join(ids, ","))
+		if enforce && refusal == nil {
+			refusal = fmt.Errorf("%w: package %d (%s) version %s is listed by OSV as %s, see https://osv.dev/vulnerability/%s",
+				ErrKnownMalware, i, pkg.Identifier, pkg.Version, strings.Join(ids, ", "), ids[0])
+		}
+	}
+	if refusal != nil {
+		return refusal
+	}
+	if err != nil {
+		slog.WarnContext(ctx, "malware check skipped", "server", req.Name, "version", req.Version, "error", err.Error())
+	}
 	return nil
 }
 

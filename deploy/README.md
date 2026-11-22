@@ -505,6 +505,8 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 | `mcp-registry:alertDiscordWebhook` | Discord webhook for Grafana alert notifications; alerts are provisioned only where it is set | No (secret) |
 | `mcp-registry:usageCollector` | `"true"` runs the daily [usage collector](#usage-collector); `"false"` retires it | No (hosted stacks only) |
 | `mcp-registry:usageCollectorOrganizationAliases` | Names for organizations' own networks in the usage dashboards | No (secret) |
+| `mcp-registry:malwareSweep` | `"true"` runs the daily [malware sweep](#malware-sweep) | No |
+| `mcp-registry:malwareCheckMode` | What a publish does with a package OSV lists as malware: `report`, `enforce` or `off`; see [The publish-time check](#the-publish-time-check) | No (default: report) |
 | `mcp-registry:imageTag` | Docker image tag for production environment | Yes (prod only) |
 | `gcp:project` | GCP Project ID | Yes when `provider=gcp` |
 | `gcp:region` | GCP Region | No (default: us-central1) |
@@ -989,6 +991,102 @@ Leave the setting at `"false"` rather than removing it. Removing it deletes
 nothing, the bucket included, but Pulumi then forgets the bucket, and a later
 `"true"` would fail to create a bucket that already exists until it is
 imported into the stack.
+
+## Malware sweep
+
+Once a day the malware sweep checks every package the registry lists against
+the malware records that [OSV.dev](https://osv.dev) publishes, and reports the
+server versions that point at one. It reports only; a maintainer takes the
+entry down. What it checks, and how to respond to a match, is described in
+[Admin Operations](../docs/administration/admin-operations.md#malware-checks);
+this section covers how it is deployed.
+
+It runs where `mcp-registry:malwareSweep` is `"true"`: in staging, and not yet
+in production. Removing the setting deletes the CronJob.
+
+### The publish-time check
+
+The registry also checks packages when a server is published or edited. That
+check is part of the registry itself, so it arrives with the image and needs
+nothing created. `mcp-registry:malwareCheckMode` sets what it does with a match:
+
+| Value | Meaning |
+|-------|---------|
+| not set, or `report` | The match is logged and the request goes through. Nothing is refused. |
+| `enforce` | The match is logged and the request is refused with a `400`. |
+| `off` | OSV is not asked. |
+
+It is `report` in staging and not set in production, so both only report. The
+plan is to leave it there for a few days and read what it logs: a match that is
+wrong appears as `REGISTRY_MALWARE_PUBLISH_MATCH action=allowed` without a
+publisher having been turned away, and a match it missed appears in the daily
+sweep. To start refusing, set `mcp-registry:malwareCheckMode: enforce` in the
+stack file; in production that change is a deployment. Any other value fails
+the preview.
+
+### What is created
+
+One CronJob, `registry-malware-sweep`, in `default`, and nothing else. It runs
+the registry's own image with `-malware-sweep`, so it is always the same build
+as the registry beside it. It has no Secret, database role or service account:
+it reads the listing from the `mcp-registry` Service, which bypasses the public
+rate limits, and sends package names and versions to `api.osv.dev`.
+
+### Switching it on in production
+
+Set `mcp-registry:malwareSweep: "true"` in `Pulumi.gcpProd.yaml` in the same
+change as, or after, an `imageTag` release that contains the sweep. An older
+image does not know the flag: the Job fails at once and reports nothing, and
+the freshness alert below says so. It does not start a second registry.
+
+### The daily run
+
+The run starts at 03:40 UTC and gives up after 30 minutes. Read through the
+public listing, 280,000 server versions took 12 minutes and 160 MB; the run in
+the cluster has not been timed yet. It writes to its log:
+
+| Line starts with | Meaning |
+|------------------|---------|
+| `REGISTRY_MALWARE_SWEEP_HIT` | A server version points at a package version that OSV lists as malware. One line per server version and package. |
+| `REGISTRY_MALWARE_SWEEP_UNCHECKED` | A server version names a covered package but no release of it to check: no version, or an npm dist-tag. One line per server version and package, with the reason; it does not alert. |
+| `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the number of versions, packages, matches and unchecked entries. |
+| `REGISTRY_MALWARE_SWEEP_FAILED` | The registry could not be read in full, or OSV did not answer in full after three more attempts at each request. Matches OSV had confirmed are still reported; the Job is retried once. |
+
+Each run's log is kept with its Job, and the last three runs are kept, so read
+the newest one rather than everything with the label:
+
+```bash
+kubectl --context=YOUR_CONTEXT -n default get cronjob registry-malware-sweep
+JOB=$(kubectl --context=YOUR_CONTEXT -n default get jobs -l app=registry-malware-sweep \
+  --sort-by=.metadata.creationTimestamp -o name | tail -1 | cut -d/ -f2)
+# A run that failed was tried again in a second pod, so read every pod of the Job.
+kubectl --context=YOUR_CONTEXT -n default logs -l job-name="$JOB" --tail=-1 --prefix
+# Run it now:
+kubectl --context=YOUR_CONTEXT -n default create job --from=cronjob/registry-malware-sweep registry-malware-sweep-manual
+```
+
+### Malware alerts
+
+Matches are private until the entry is down, so they are sent by email from
+Cloud Monitoring and never to Discord. Provision/update the alerts with:
+
+```bash
+python3 tools/admin/configure-malware-alerts.py \
+  --project mcp-registry-prod --cluster mcp-registry-prod --email YOUR_EMAIL --dry-run
+# Review, then rerun without --dry-run.
+```
+
+The script reuses an email channel and updates only its labelled policies. It
+alerts on any `REGISTRY_MALWARE_SWEEP_HIT` line and on any
+`REGISTRY_MALWARE_PUBLISH_MATCH` line in the registry's log, each at most once an
+hour, and on no completed sweep in 25 hours, including complete absence of the
+success metric.
+Log metrics are not backfilled: provision the alerts after the sweep is switched
+on, run a fresh job and verify that the success metric appears in Cloud
+Monitoring. The freshness policy initially alerts until a sweep completes. Alert
+delivery and channel verification should be checked with the notification
+recipient. Removing the setting does not remove the policies; delete them in
+Cloud Monitoring (label `managed_by: registry-malware-monitoring`).
 
 ## Database Backups
 

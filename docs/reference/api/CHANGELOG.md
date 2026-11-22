@@ -45,6 +45,18 @@ New `include_deleted` query parameter added to multiple endpoints:
 - `GET /v0/servers/{serverName}/versions/{version}` - Include deleted servers in detail results (default: `false`)
 - `GET /v0/servers/{serverName}/versions` - Include deleted servers in version history (default: `false`)
 
+#### Malware check on publish and edit
+
+The official registry now checks the packages in `POST /publish` and `PUT /servers/{serverName}/versions/{version}` against the malware records (`MAL-*`) of [OSV.dev](https://osv.dev). A package matches when a record lists it at exactly the version named: the record names that version, or names no versions because every release is malware. This applies to npm, PyPI, NuGet and Cargo packages on both `/v0` and `/v0.1`; OCI images and MCPB bundles are not covered by OSV.
+
+The check starts in report mode: a match is logged for the maintainers and the request succeeds as before. Once it is set to enforce, a match is refused with `400`, and the error names the package and links to the OSV record. Operators choose with `MCP_REGISTRY_MALWARE_CHECK_MODE` (`report`, `enforce` or `off`).
+
+Ordinary vulnerabilities (CVE, GHSA) are not a match. Status changes, including taking a version down, are not checked. If OSV cannot be reached the request proceeds as before. Request and response schemas are unchanged.
+
+#### npm dist-tags are refused as package versions
+
+An npm package `version` that is a dist-tag, such as `next` or `beta`, is now refused with `400` on publish and edit; the error gives the version the tag points at. A package version was already required to be a specific version (`latest` and ranges are refused), but npm resolved other tags, so they passed. A tag can be moved to another release after publishing, and an entry that names one cannot be checked against malware records. Existing entries are unchanged.
+
 ## 2025-10-17
 
 ### Added

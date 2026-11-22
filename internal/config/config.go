@@ -1,8 +1,32 @@
 package config
 
 import (
+	"fmt"
+
 	env "github.com/caarlos0/env/v11"
 )
+
+// What the malware check does, on publish and edit, with a package that
+// OSV.dev lists as malware.
+const (
+	// MalwareCheckOff does not ask OSV at all.
+	MalwareCheckOff = "off"
+	// MalwareCheckReport logs the match and lets the request through.
+	MalwareCheckReport = "report"
+	// MalwareCheckEnforce logs the match and refuses the request.
+	MalwareCheckEnforce = "enforce"
+)
+
+// ValidateMalwareCheckMode rejects a mode that is none of the three, so that
+// a misspelt one cannot quietly leave the check off.
+func (c *Config) ValidateMalwareCheckMode() error {
+	switch c.MalwareCheckMode {
+	case MalwareCheckOff, MalwareCheckReport, MalwareCheckEnforce:
+		return nil
+	}
+	return fmt.Errorf("MCP_REGISTRY_MALWARE_CHECK_MODE must be %q, %q or %q, not %q",
+		MalwareCheckOff, MalwareCheckReport, MalwareCheckEnforce, c.MalwareCheckMode)
+}
 
 // Config holds the application configuration
 // See .env.example for more documentation
@@ -19,6 +43,12 @@ type Config struct {
 	JWTPrivateKey            string `env:"JWT_PRIVATE_KEY" envDefault:""`
 	EnableAnonymousAuth      bool   `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 	EnableRegistryValidation bool   `env:"ENABLE_REGISTRY_VALIDATION" envDefault:"true"`
+
+	// Malware checks against OSV.dev. MalwareCheckMode applies on publish and
+	// edit, and only where EnableRegistryValidation is on.
+	MalwareCheckMode        string `env:"MALWARE_CHECK_MODE" envDefault:"report"`
+	OSVAPIURL               string `env:"OSV_API_URL" envDefault:"https://api.osv.dev"`
+	MalwareSweepRegistryURL string `env:"MALWARE_SWEEP_REGISTRY_URL" envDefault:"https://registry.modelcontextprotocol.io"`
 
 	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
 
