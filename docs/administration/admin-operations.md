@@ -223,10 +223,11 @@ Every sweep ends with one line holding everything a maintainer has to look at, i
 On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` (see
 [Malware sweep](../../deploy/README.md#malware-sweep)). A day whose report is not empty sends one
 email, with the report's summary in it: marked critical if any entry is malware, and a warning
-otherwise. A day with nothing to review sends none. The warning is also sent when the package
-registries left more than a tenth of the packages unanswered: the report then says
-`"existence_incomplete":true`, and that day's missing packages were not really looked for. Do not
-discuss an entry in public channels before it is down.
+otherwise. A day with nothing to review sends none. The warning is also sent when a package
+registry left more than a tenth of its packages unanswered, or answered "not found" for more than
+a tenth of them (and at least 50), which is not believed: the report then says
+`"existence_incomplete":true`, and that day's missing packages were not really looked for there.
+Do not discuss an entry in public channels before it is down.
 
 The report itself is a JSON record, readable without the cluster:
 
@@ -281,7 +282,8 @@ moderation policy allows removing a server that cannot work. Usually every versi
 points at the same package, and the whole server is what to take down.
 
 For an unchecked entry, edit it to name the exact version (see
-[Edit a Specific Server Version](#edit-a-specific-server-version)).
+[Edit a Specific Server Version](#edit-a-specific-server-version)). An entry that is also reported
+as `missing-package` has no version to name: treat it as an entry whose package is gone.
 
 The sweep reports an entry every day until it is deleted or edited.
 

@@ -1105,7 +1105,7 @@ The script reuses an email channel and updates only its labelled policies:
 | Policy | Fires when |
 |--------|------------|
 | Registry sweep found malware (critical) | A sweep's report holds an entry that points at known malware. |
-| Registry sweep found entries to review (warning) | A sweep's report holds entries, none of them malware: a package that is gone, or an entry that cannot be checked. Also when the package registries left more than a tenth of the packages unanswered (`existence_incomplete`), so that a registry that stops answering is not read as one that has lost nothing. |
+| Registry sweep found entries to review (warning) | A sweep's report holds entries, none of them malware: a package that is gone, or an entry that cannot be checked. Also when a package registry left more than a tenth of its packages unanswered, or reported so many missing that it is not believed (`existence_incomplete`), so that a registry that stops answering is not read as one that has lost nothing. |
 | Registry publish named known malware (warning) | A publish or edit logged `REGISTRY_MALWARE_PUBLISH_MATCH`. |
 | Registry malware sweep missing for 25 hours (warning) | No sweep has completed, including complete absence of the success metric. |
 
