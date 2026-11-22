@@ -587,8 +587,17 @@ func TestDayWithoutRegistryTraffic(t *testing.T) {
 		day := idleDay(300)
 		sample, _, err := day.collect(t, CompleteDay)
 		require.ErrorIs(t, err, ErrNoTraffic)
+		assert.Equal(t, 150, sample.idleTotals().BackgroundCount)
 		assert.Contains(t, sample.Markdown(), "No access records were found for this period.")
 		assert.Equal(t, []syntheticRead{{fraction: 1, delivered: 300}}, day.reads, "every record of the day is looked at, once")
+	})
+
+	t.Run("positive byte counter rules out a zero-traffic day", func(t *testing.T) {
+		day := idleDay(300)
+		day.bytes = 5000
+		_, _, err := day.collect(t, CompleteDay)
+		require.Error(t, err)
+		require.NotErrorIs(t, err, ErrNoTraffic)
 	})
 
 	t.Run("counters without any data are not proof of an idle day", func(t *testing.T) {

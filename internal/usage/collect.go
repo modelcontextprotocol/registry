@@ -408,7 +408,7 @@ func (c *dayCollector) dayTotals(ctx context.Context) (gatewayTotals, error) {
 // and show no registry request. Counters with no data at all are a different
 // thing: that cannot be told from looking in the wrong place.
 func (c *dayCollector) idle(ctx context.Context) bool {
-	if !c.sample.counters.hasRequests || c.sample.counters.requests != 0 {
+	if !c.sample.counters.hasRequests || c.sample.counters.requests != 0 || c.sample.counters.bytes != 0 {
 		return false
 	}
 	rows, err := c.sources.Metrics.Query(ctx, fmt.Sprintf("count(last_over_time(%s[%ds]))", requestsMetric, daySeconds), c.sample.End)
@@ -422,13 +422,16 @@ func (c *dayCollector) idle(ctx context.Context) bool {
 // with more records than a read may return.
 func (c *dayCollector) noRegistryRecord(ctx context.Context) (bool, error) {
 	limit := readCapFactor * c.limits.MaxRecords
-	seen, found := 0, false
+	seen, background := 0, 0
 	window := LogWindow{Start: c.sample.Start, End: c.sample.End, Fraction: 1}
 	err := c.sources.Logs.Read(ctx, window, func(_ string, payload map[string]any) error {
 		seen++
-		if registry, _ := registryRecord(payload); registry {
-			found = true
+		registry, isBackground := registryRecord(payload)
+		if registry {
 			return errStopRead
+		}
+		if isBackground {
+			background++
 		}
 		if limit > 0 && seen > limit {
 			return errOverflow
@@ -444,7 +447,8 @@ func (c *dayCollector) noRegistryRecord(ctx context.Context) (bool, error) {
 	case err != nil:
 		return false, err
 	}
-	return !found, nil
+	c.sample.background = background
+	return true, nil
 }
 
 // read reads the day's access records, whole if they fit the limit and as a

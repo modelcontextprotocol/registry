@@ -231,6 +231,21 @@ func (s *Sample) row(b breakdown, name string, members []*group, kind string, ro
 	return out
 }
 
+// idleTotals records zero volumes for a day verified against counters and the
+// full access log. Percentages and drift ratios have no denominator.
+func (s *Sample) idleTotals() Daily {
+	zero, agents := 0.0, 0
+	source := totalsMixed // Requests from the counter, zero bytes from the full log.
+	if s.counters.hasBytes {
+		source = totalsFromCounters
+	}
+	return Daily{
+		Day: s.Start, UserAgents: &agents, TotalsSource: source, SampleFraction: 1,
+		BackgroundCount: s.background, ListingRequests: &zero, ListingGiB: &zero,
+		CompressionKnownRequests: &zero, CompressionKnownGiB: &zero,
+	}
+}
+
 // Rows turns the day into what is stored: its totals and every breakdown.
 func (s *Sample) Rows() (Daily, []Share) {
 	a := s.analyse()

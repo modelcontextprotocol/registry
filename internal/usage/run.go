@@ -233,30 +233,33 @@ func (c *Collector) collect(ctx context.Context, day time.Time) error {
 	limits := c.Limits
 	limits.Require = c.tolerance(day)
 	sample, err := CollectDay(ctx, c.Sources, limits, day)
-	if err != nil && !errors.Is(err, ErrNoRecords) && !errors.Is(err, ErrNoTraffic) {
+	idle := errors.Is(err, ErrNoTraffic)
+	if err != nil && !idle && !errors.Is(err, ErrNoRecords) {
 		return err
 	}
 	if reportErr := c.report(sample); reportErr != nil {
 		return reportErr
 	}
-	if errors.Is(err, ErrNoTraffic) {
-		// Nothing is stored, so the day is looked at again while it is in the
-		// look-back window. That costs one read of its dashboard and
-		// background records.
-		c.logf("%s has nothing to collect: %v", day.Format(dayLayout), err)
-		return nil
-	}
-	if err != nil || c.Store == nil {
+	if err != nil && !idle {
 		return err
 	}
-	daily, shares := sample.Rows()
+	if c.Store == nil {
+		return nil
+	}
+	var daily Daily
+	var shares []Share
+	if idle {
+		daily = sample.idleTotals()
+	} else {
+		daily, shares = sample.Rows()
+	}
 	if err := c.Store.ReplaceDay(ctx, daily, shares, c.Options.Version, c.now()); err != nil {
 		return fmt.Errorf("could not store the day: %w", err)
 	}
 	c.logf("stored %s: %d requests, %.1f GiB, %d rows from %d records; log estimate vs counters: requests %s, data %s",
 		day.Format(dayLayout), daily.Requests, daily.GiB, len(shares), daily.RecordsSampled,
 		ratioOrUnknown(daily.LogRequestsRatio), ratioOrUnknown(daily.LogDataRatio))
-	if missing := sample.Degraded(); len(missing) > 0 {
+	if missing := sample.Degraded(); !idle && len(missing) > 0 {
 		c.logf("%s was stored without %s; see its caveats", day.Format(dayLayout), strings.Join(missing, " and "))
 	}
 	return nil
