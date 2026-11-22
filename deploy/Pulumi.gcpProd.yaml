@@ -10,7 +10,7 @@ config:
   mcp-registry:environment: prod
   mcp-registry:victoriaMetricsCapacity: "true"
   # Incremental-sync query optimization; index prebuilt before rollout.
-  mcp-registry:registryRolloutCommit: 5fa0c6d2c2f1a3f51bbe2790cbb4d47e2b5ae5db
+  mcp-registry:registryRolloutCommit: 9432a0a9aa9e7092cf93f08226426487f8416423
   mcp-registry:preparedListingJSON: "true"
   mcp-registry:provider: gcp
   mcp-registry:nodeMachineType: e2-standard-4
@@ -34,10 +34,12 @@ config:
   mcp-registry:postgresCPURequest: "6"
   mcp-registry:postgresSharedBuffers: 512MB
   mcp-registry:postgresCPULimit: "6"
-  mcp-registry:imageTag: 1.8.11  # Set specific image tag for production (change this to deploy different versions)
+  mcp-registry:imageTag: 1.8.12  # Set specific image tag for production (change this to deploy different versions)
   # Daily usage collector with its dashboards; see "Usage collector" in README.md.
   # To switch it off set "false"; do not remove the line.
   mcp-registry:usageCollector: "true"
+  # Daily check of listed packages against OSV malware records; see "Malware sweep" in README.md.
+  mcp-registry:malwareSweep: "true"
   gcp:project: mcp-registry-prod
   mcp-registry:githubClientId: Iv23liUydBbI7Z2Q9bOZ
   mcp-registry:githubClientSecret:
