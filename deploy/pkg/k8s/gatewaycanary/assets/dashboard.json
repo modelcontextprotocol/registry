@@ -509,8 +509,10 @@
       "description": "Errors and unintended drops inside the collector that turns gateway access records into these metrics. 0 means none.",
       "fieldConfig": {
         "defaults": {
+          "custom": {
+            "axisSoftMax": 1
+          },
           "min": 0,
-          "noValue": "0",
           "unit": "ops"
         },
         "overrides": []
@@ -528,12 +530,12 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (component_id)(rate(vector_component_errors_total{job=\"gateway-canary-vector-metrics\"}[5m]))",
+          "expr": "sum by (component_id)(rate(vector_component_errors_total{job=\"gateway-canary-vector-metrics\"}[5m])) or on() vector(0)",
           "legendFormat": "component_errors_total {{component_id}}"
         },
         {
           "refId": "B",
-          "expr": "sum by (component_id)(rate(vector_component_discarded_events_total{job=\"gateway-canary-vector-metrics\",intentional=\"false\"}[5m]))",
+          "expr": "sum by (component_id)(rate(vector_component_discarded_events_total{job=\"gateway-canary-vector-metrics\",intentional=\"false\"}[5m])) or on() vector(0)",
           "legendFormat": "component_discarded_events_total {{component_id}}"
         }
       ]
