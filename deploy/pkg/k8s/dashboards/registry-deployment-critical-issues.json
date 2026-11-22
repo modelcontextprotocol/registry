@@ -15,13 +15,39 @@
       }
     ]
   },
+  "description": "What went wrong while running the registry: Kubernetes warning events, and the registry pods' memory and CPU.",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "links": [],
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Application board",
+      "tooltip": "Availability, errors, requests and response time of the registry application",
+      "type": "link",
+      "url": "/d/1d4f7dbe-3a6c-47c7-adf3-da688b509748"
+    },
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Gateway board",
+      "tooltip": "Traffic as the gateway in front of the registry sees it, including what its cache answers",
+      "type": "link",
+      "url": "/d/registry-gateway-canary"
+    }
+  ],
   "panels": [
     {
-      "collapsed": true,
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -29,782 +55,491 @@
         "y": 0
       },
       "id": 6,
-      "panels": [
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "PD775F2863313E6C7"
-          },
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "labels"
-                },
-                "properties": []
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Line"
-                },
-                "properties": []
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 1
-          },
-          "id": 7,
-          "options": {
-            "dedupStrategy": "none",
-            "enableInfiniteScrolling": false,
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showLabels": false,
-            "showTime": false,
-            "sortOrder": "Descending",
-            "wrapLogMessage": false
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "victoriametrics-logs-datasource",
-                "uid": "PD775F2863313E6C7"
-              },
-              "editorMode": "code",
-              "expr": "k8s.event.reason:Failed AND (_msg:*\"ImagePull\"* OR _msg:*\"ErrImagePull\"* OR _msg:*\"failed to pull and unpack image\"*)",
-              "hide": false,
-              "queryType": "instant",
-              "refId": "B"
-            }
-          ],
-          "title": "ImagePullBack Issues",
-          "type": "logs"
-        },
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "PD775F2863313E6C7"
-          },
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "labels"
-                },
-                "properties": []
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Line"
-                },
-                "properties": []
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 1
-          },
-          "id": 8,
-          "options": {
-            "dedupStrategy": "none",
-            "enableInfiniteScrolling": false,
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showLabels": false,
-            "showTime": false,
-            "sortOrder": "Descending",
-            "wrapLogMessage": false
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "victoriametrics-logs-datasource",
-                "uid": "PD775F2863313E6C7"
-              },
-              "editorMode": "code",
-              "expr": "k8s.event.reason:OOMKilled \n  | fields k8s.namespace.name, k8s.object.name, k8s.node.name, _msg, _time\n  | sort by (_time) desc",
-              "hide": false,
-              "queryType": "instant",
-              "refId": "A"
-            }
-          ],
-          "title": "OOM Issues",
-          "type": "logs"
-        },
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "PD775F2863313E6C7"
-          },
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "labels"
-                },
-                "properties": []
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Line"
-                },
-                "properties": []
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 9
-          },
-          "id": 9,
-          "options": {
-            "dedupStrategy": "none",
-            "enableInfiniteScrolling": false,
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showLabels": false,
-            "showTime": false,
-            "sortOrder": "Descending",
-            "wrapLogMessage": false
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "victoriametrics-logs-datasource",
-                "uid": "PD775F2863313E6C7"
-              },
-              "editorMode": "code",
-              "expr": "k8s.event.reason:FailedScheduling\n  | fields k8s.node.name, k8s.object.name, _msg, _time\n  | sort by (_time) desc",
-              "hide": false,
-              "queryType": "instant",
-              "refId": "A"
-            }
-          ],
-          "title": "Failed Scheduling",
-          "type": "logs"
-        },
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "PD775F2863313E6C7"
-          },
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "labels"
-                },
-                "properties": []
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Line"
-                },
-                "properties": []
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 9
-          },
-          "id": 10,
-          "options": {
-            "dedupStrategy": "none",
-            "enableInfiniteScrolling": false,
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showLabels": false,
-            "showTime": false,
-            "sortOrder": "Descending",
-            "wrapLogMessage": false
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "victoriametrics-logs-datasource",
-                "uid": "PD775F2863313E6C7"
-              },
-              "editorMode": "code",
-              "expr": "(k8s.event.reason:BackOff OR k8s.event.reason:CrashLoopBackOff)\n  | fields k8s.namespace.name, k8s.object.name, _msg, _time",
-              "hide": false,
-              "queryType": "instant",
-              "refId": "A"
-            }
-          ],
-          "title": "Backoff and CrashLoop ",
-          "type": "logs"
-        },
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "PD775F2863313E6C7"
-          },
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "labels"
-                },
-                "properties": []
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Line"
-                },
-                "properties": []
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 17
-          },
-          "id": 11,
-          "options": {
-            "dedupStrategy": "none",
-            "enableInfiniteScrolling": false,
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showLabels": false,
-            "showTime": false,
-            "sortOrder": "Descending",
-            "wrapLogMessage": false
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "victoriametrics-logs-datasource",
-                "uid": "PD775F2863313E6C7"
-              },
-              "editorMode": "code",
-              "expr": "k8s.event.reason:(FailedMount OR FailedAttachVolume OR VolumeFailedMount)",
-              "hide": false,
-              "queryType": "instant",
-              "refId": "A"
-            }
-          ],
-          "title": "Volume issues",
-          "type": "logs"
-        },
-        {
-          "datasource": {
-            "type": "victoriametrics-logs-datasource",
-            "uid": "PD775F2863313E6C7"
-          },
-          "fieldConfig": {
-            "defaults": {},
-            "overrides": [
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "labels"
-                },
-                "properties": []
-              },
-              {
-                "matcher": {
-                  "id": "byName",
-                  "options": "Line"
-                },
-                "properties": []
-              }
-            ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 17
-          },
-          "id": 12,
-          "options": {
-            "dedupStrategy": "none",
-            "enableInfiniteScrolling": false,
-            "enableLogDetails": true,
-            "prettifyLogMessage": false,
-            "showCommonLabels": false,
-            "showLabels": false,
-            "showTime": false,
-            "sortOrder": "Descending",
-            "wrapLogMessage": false
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "victoriametrics-logs-datasource",
-                "uid": "PD775F2863313E6C7"
-              },
-              "editorMode": "code",
-              "expr": "k8s.event.reason:NodeMemoryPressure",
-              "hide": false,
-              "queryType": "instant",
-              "refId": "MemoryPressure"
-            },
-            {
-              "datasource": {
-                "type": "victoriametrics-logs-datasource",
-                "uid": "PD775F2863313E6C7"
-              },
-              "editorMode": "code",
-              "expr": "k8s.event.reason:NodeDiskPressure",
-              "hide": false,
-              "queryType": "instant",
-              "refId": "DiskPressure"
-            }
-          ],
-          "title": "Node pressure",
-          "type": "logs"
-        }
-      ],
-      "title": "Deployment",
+      "panels": [],
+      "title": "Deployment: Kubernetes events",
       "type": "row"
     },
     {
-      "collapsed": true,
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "PD775F2863313E6C7"
+      },
+      "description": "Kubernetes events of type Warning about the registry's own objects (pods, jobs, autoscaler), counted in 10-minute steps. Events about nodes are left out; the node panel below covers the ones that matter. Events are collected for the default namespace only.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "lineWidth": 0,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "decimals": 0,
+          "min": 0,
+          "noValue": "No warnings",
+          "unit": "short"
+        },
+        "overrides": []
+      },
       "gridPos": {
-        "h": 1,
+        "h": 7,
         "w": 24,
         "x": 0,
         "y": 1
       },
-      "id": 5,
-      "panels": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P4169E866C3094E38"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 42
-          },
-          "id": 1,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "P4169E866C3094E38"
-              },
-              "editorMode": "code",
-              "expr": "({\"container.memory.usage\", \"k8s.container.name\"=\"mcp-registry\"}*100) / ({\"container.memory.working_set\", \"k8s.container.name\"=\"mcp-registry\"} + {\"container.memory.available\", \"k8s.container.name\"=\"mcp-registry\"})",
-              "hide": false,
-              "legendFormat": "{{k8s.pod.name}}",
-              "range": true,
-              "refId": "A"
-            }
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
           ],
-          "title": "Registry Memory Usage",
-          "type": "timeseries"
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Total",
+          "sortDesc": true
         },
+        "tooltip": {
+          "hideZeros": true,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "P4169E866C3094E38"
+            "type": "victoriametrics-logs-datasource",
+            "uid": "PD775F2863313E6C7"
           },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 42
-          },
-          "id": 2,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "P4169E866C3094E38"
-              },
-              "editorMode": "code",
-              "expr": "({\"k8s.pod.memory.usage\"}*100)/({\"k8s.pod.memory.available\"} + {\"k8s.pod.memory.working_set\"})",
-              "hide": false,
-              "instant": false,
-              "legendFormat": "{{k8s.node.name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Node Memory Usage",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P4169E866C3094E38"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 50
-          },
-          "id": 3,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "P4169E866C3094E38"
-              },
-              "editorMode": "code",
-              "expr": "{\"k8s.pod.cpu.usage\", \"k8s.pod.name\"=~\"mcp-registry.*\"} * 100",
-              "hide": false,
-              "legendFormat": "{{k8s.pod.name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Registry CPU Usage",
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P4169E866C3094E38"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "barWidthFactor": 0.6,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [],
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": 0
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": []
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 50
-          },
-          "id": 4,
-          "options": {
-            "legend": {
-              "calcs": [],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "hideZeros": false,
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "pluginVersion": "12.1.1",
-          "targets": [
-            {
-              "datasource": {
-                "type": "prometheus",
-                "uid": "P4169E866C3094E38"
-              },
-              "editorMode": "code",
-              "expr": "{\"k8s.pod.cpu.usage\"} * 100",
-              "hide": false,
-              "legendFormat": "{{k8s.pod.name}}",
-              "range": true,
-              "refId": "A"
-            }
-          ],
-          "title": "Node CPU Usage",
-          "type": "timeseries"
+          "editorMode": "code",
+          "expr": "severity:Warning k8s.namespace.name:* | stats by (k8s.event.reason) count() as events",
+          "legendFormat": "{{k8s.event.reason}}",
+          "queryType": "statsRange",
+          "refId": "A",
+          "step": "10m"
         }
       ],
-      "title": "Infra",
+      "title": "Warning events per 10 minutes, by reason",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "PD775F2863313E6C7"
+      },
+      "description": "A pod could not be placed on any node. A few while the cluster adds a node for a new pod are normal; a pod that stays here is stuck.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 9,
+      "options": {
+        "dedupStrategy": "exact",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "PD775F2863313E6C7"
+          },
+          "editorMode": "code",
+          "expr": "k8s.event.reason:FailedScheduling\n  | format \"<k8s.object.kind>/<k8s.object.name>: <_msg>\" as _msg\n  | fields _time, _msg, k8s.event.reason, k8s.namespace.name, k8s.object.kind, k8s.object.name, k8s.node.name, k8s.event.count\n  | sort by (_time) desc",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Failed scheduling",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "PD775F2863313E6C7"
+      },
+      "description": "A node could not download a container image: the tag does not exist yet, or the image registry could not be reached.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 7,
+      "options": {
+        "dedupStrategy": "exact",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "PD775F2863313E6C7"
+          },
+          "editorMode": "code",
+          "expr": "k8s.event.reason:Failed _msg:~\"ImagePull|pull image\"\n  | format \"<k8s.object.kind>/<k8s.object.name>: <_msg>\" as _msg\n  | fields _time, _msg, k8s.event.reason, k8s.namespace.name, k8s.object.kind, k8s.object.name, k8s.node.name, k8s.event.count\n  | sort by (_time) desc",
+          "queryType": "instant",
+          "refId": "B"
+        }
+      ],
+      "title": "Image pull failures",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "PD775F2863313E6C7"
+      },
+      "description": "Kubernetes is waiting before it retries: either an image that would not download, or a container that keeps crashing after it starts.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 10,
+      "options": {
+        "dedupStrategy": "exact",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "PD775F2863313E6C7"
+          },
+          "editorMode": "code",
+          "expr": "k8s.event.reason:BackOff\n  | format \"<k8s.object.kind>/<k8s.object.name>: <_msg>\" as _msg\n  | fields _time, _msg, k8s.event.reason, k8s.namespace.name, k8s.object.kind, k8s.object.name, k8s.node.name, k8s.event.count\n  | sort by (_time) desc",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Back-off: image pulls and crashing containers",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "PD775F2863313E6C7"
+      },
+      "description": "A disk could not be attached to a node or mounted into a pod.",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 11,
+      "options": {
+        "dedupStrategy": "exact",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "PD775F2863313E6C7"
+          },
+          "editorMode": "code",
+          "expr": "k8s.event.reason:(FailedMount OR FailedAttachVolume OR FailedMapVolume OR VolumeResizeFailed OR ProvisioningFailed)\n  | format \"<k8s.object.kind>/<k8s.object.name>: <_msg>\" as _msg\n  | fields _time, _msg, k8s.event.reason, k8s.namespace.name, k8s.object.kind, k8s.object.name, k8s.node.name, k8s.event.count\n  | sort by (_time) desc",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Volume issues",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "PD775F2863313E6C7"
+      },
+      "description": "Out-of-memory events: the kernel killed a process because a container reached its memory limit or a node ran out of memory. Empty means no such event was recorded. It does not rule out a kill: a container killed at its limit always shows as OOMKilled in its pod's last state, which kubectl describe pod prints.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 8,
+      "options": {
+        "dedupStrategy": "exact",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "PD775F2863313E6C7"
+          },
+          "editorMode": "code",
+          "expr": "k8s.event.reason:(OOMKilling OR SystemOOM OR OOMKilled)\n  | format \"<k8s.object.kind>/<k8s.object.name>: <_msg>\" as _msg\n  | fields _time, _msg, k8s.event.reason, k8s.namespace.name, k8s.object.kind, k8s.object.name, k8s.node.name, k8s.event.count\n  | sort by (_time) desc",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Out of memory",
+      "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "PD775F2863313E6C7"
+      },
+      "description": "A node ran short of memory, disk or process IDs, or evicted pods to recover. Empty means it did not happen.",
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 12,
+      "options": {
+        "dedupStrategy": "exact",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "PD775F2863313E6C7"
+          },
+          "editorMode": "code",
+          "expr": "k8s.event.reason:(NodeHasInsufficientMemory OR NodeHasDiskPressure OR NodeHasInsufficientPID OR EvictionThresholdMet OR Evicted)\n  | format \"<k8s.object.kind>/<k8s.object.name>: <_msg>\" as _msg\n  | fields _time, _msg, k8s.event.reason, k8s.namespace.name, k8s.object.kind, k8s.object.name, k8s.node.name, k8s.event.count\n  | sort by (_time) desc",
+          "queryType": "instant",
+          "refId": "A"
+        }
+      ],
+      "title": "Node pressure and evictions",
+      "type": "logs"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 5,
+      "panels": [],
+      "title": "Infra: the registry pods",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "description": "Registry pods that answer the metrics scrape. Steps up and down are the autoscaler adding and removing pods; a short dip during a rollout is normal.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 10,
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0,
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 30
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "count(up{job=\"mcp-registry\"} == 1) or vector(0)",
+          "legendFormat": "Pods running",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Registry pods running",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "description": "Memory each registry container uses, as a share of its memory limit. A container that runs out of memory is killed and restarted.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 0
+          },
+          "min": 0,
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 30
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "({\"container.memory.usage\", \"k8s.container.name\"=\"mcp-registry\"}*100) / ({\"container.memory.working_set\", \"k8s.container.name\"=\"mcp-registry\"} + {\"container.memory.available\", \"k8s.container.name\"=\"mcp-registry\"})",
+          "legendFormat": "{{k8s.pod.name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Registry memory, % of the limit, by pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "description": "CPU each registry pod uses, in cores. The autoscaler adds pods when the average across pods stays high.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "fillOpacity": 0
+          },
+          "min": 0,
+          "unit": "suffix: cores"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 30
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "{\"k8s.pod.cpu.usage\", \"k8s.pod.name\"=~\"mcp-registry.*\"}",
+          "legendFormat": "{{k8s.pod.name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Registry CPU, cores, by pod",
+      "type": "timeseries"
     }
   ],
   "preload": false,

@@ -15,16 +15,43 @@
       }
     ]
   },
+  "description": "How the registry application is doing right now: whether it is up, how many requests fail, how many arrive and how fast they are answered.",
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "links": [],
+  "graphTooltip": 1,
+  "links": [
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Deployment board",
+      "tooltip": "Kubernetes warning events, and the registry pods' memory and CPU",
+      "type": "link",
+      "url": "/d/83a0f65c-bac4-40ce-a197-e77d67431ef4"
+    },
+    {
+      "asDropdown": false,
+      "icon": "dashboard",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [],
+      "targetBlank": false,
+      "title": "Gateway board",
+      "tooltip": "Traffic as the gateway in front of the registry sees it, including what its cache answers",
+      "type": "link",
+      "url": "/d/registry-gateway-canary"
+    }
+  ],
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
+      "description": "1 while at least one registry pod answers the metrics scrape, 0 when none does. The \"Registry Service Down\" alert watches this.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -63,7 +90,10 @@
               "mode": "off"
             }
           },
+          "decimals": 0,
           "mappings": [],
+          "max": 1,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -105,12 +135,12 @@
         {
           "editorMode": "code",
           "expr": "max(up{job=\"mcp-registry\"}) or vector(0)",
-          "legendFormat": "__auto",
+          "legendFormat": "Registry up",
           "range": true,
           "refId": "Service Health"
         }
       ],
-      "title": "Service Uptime (bool)",
+      "title": "Service up (1 = up, 0 = down)",
       "type": "timeseries"
     },
     {
@@ -118,6 +148,7 @@
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
+      "description": "Share of requests that did not end in a server error (5xx), over the last 4 minutes. The dashed line is 95%: staying below it for 10 minutes raises the \"Availability dropped below 95%\" alert.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -129,6 +160,7 @@
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMin": 95,
             "barAlignment": 0,
             "barWidthFactor": 0.6,
             "drawStyle": "line",
@@ -153,23 +185,25 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "dashed"
             }
           },
           "mappings": [],
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "transparent",
                 "value": 0
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 95
               }
             ]
-          }
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -199,48 +233,9 @@
           "editorMode": "code",
           "expr": "(1 - ((sum(rate(mcp_registry_http_errors_total{status_code=~\"5.*\"}[4m])) or vector(0)) / sum(rate(mcp_registry_http_requests_total{}[4m])))) * 100",
           "hide": false,
-          "legendFormat": "__auto",
+          "legendFormat": "Availability",
           "range": true,
           "refId": "Availability"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P4169E866C3094E38"
-          },
-          "editorMode": "code",
-          "expr": " (sum by (path) (rate(mcp_registry_http_requests_total{}[4m])*60))",
-          "hide": true,
-          "instant": false,
-          "legendFormat": "throughput-{{path}}",
-          "range": true,
-          "refId": "Throughput"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P4169E866C3094E38"
-          },
-          "editorMode": "code",
-          "expr": "sum by (path) (rate(mcp_registry_http_errors_total{status_code=~\"5.*\"}[4m])*60)",
-          "hide": true,
-          "instant": false,
-          "legendFormat": "error-{{path}}",
-          "range": true,
-          "refId": "Errors"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "P4169E866C3094E38"
-          },
-          "editorMode": "code",
-          "expr": "((sum by (path)(rate(mcp_registry_http_errors_total{status_code=~\"5.*\"}[4m]))) / (sum by (path) (rate(mcp_registry_http_requests_total{}[4m]))))",
-          "hide": true,
-          "instant": false,
-          "legendFormat": "rate-{{path}}",
-          "range": true,
-          "refId": "Error rate"
         }
       ],
       "title": "Availability (%)",
@@ -251,6 +246,7 @@
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
+      "description": "Requests the registry refused with a 4xx status, per minute, averaged over 2 minutes. A 404 on a server lookup or a 401 on a login attempt is ordinary. Endpoints with none are left out.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -308,7 +304,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 0,
         "y": 8
@@ -316,15 +312,20 @@
       "id": 5,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "12.1.1",
@@ -335,13 +336,13 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum by (status_code, path) (increase(mcp_registry_http_errors_total{status_code=~\"4.*\"}[2m])) > 0",
-          "legendFormat": "__auto",
+          "expr": "sum by (status_code, path) (rate(mcp_registry_http_errors_total{status_code=~\"4.*\"}[2m])) * 60 > 0",
+          "legendFormat": "{{status_code}} {{path}}",
           "range": true,
           "refId": "Non 2xx Throughput"
         }
       ],
-      "title": "Client Side Errors Distribution (count)",
+      "title": "Client errors (4xx) per minute, by status and endpoint",
       "type": "timeseries"
     },
     {
@@ -349,6 +350,7 @@
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
+      "description": "Requests that failed inside the registry with a 5xx status, per minute, averaged over 2 minutes. These are what lower availability. 0 means none.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -406,7 +408,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 12,
         "y": 8
@@ -414,15 +416,20 @@
       "id": 6,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "12.1.1",
@@ -433,13 +440,13 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum by (status_code, path) (increase(mcp_registry_http_errors_total{status_code=~\"5.*\"}[2m])) > 0",
-          "legendFormat": "__auto",
+          "expr": "sum by (status_code, path) (rate(mcp_registry_http_errors_total{status_code=~\"5.*\"}[2m])) * 60 > 0",
+          "legendFormat": "{{status_code}} {{path}}",
           "range": true,
           "refId": "Non 2xx Throughput"
         }
       ],
-      "title": "Server Side Errors Distribution (count)",
+      "title": "Server errors (5xx) per minute, by status and endpoint",
       "type": "timeseries"
     },
     {
@@ -447,6 +454,7 @@
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
+      "description": "Requests that reach the registry application, per second, averaged over 2 minutes. Listings answered from the gateway's cache never reach it, so the gateway board counts more.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -498,28 +506,34 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "reqps"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 17
       },
       "id": 1,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "12.1.1",
@@ -530,13 +544,13 @@
             "uid": "P4169E866C3094E38"
           },
           "editorMode": "code",
-          "expr": "sum by (path) (increase(mcp_registry_http_requests_total{}[2m]))",
-          "legendFormat": "__auto",
+          "expr": "sum by (path) (rate(mcp_registry_http_requests_total{}[2m]))",
+          "legendFormat": "{{path}}",
           "range": true,
           "refId": "Throughput"
         }
       ],
-      "title": "Total Requests By Endpoint (count)",
+      "title": "Requests per second, by endpoint",
       "type": "timeseries"
     },
     {
@@ -544,6 +558,7 @@
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
       },
+      "description": "The time within which 95% of requests to each endpoint were answered, over the last 4 minutes. Treat values under 100 ms as rough: the registry records response times in ranges and has none between 5 ms and 100 ms. The Gateway board's upstream p95 measures the application's response time more finely, though not by endpoint. The two latency alerts watch the servers and publish endpoints.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -595,28 +610,34 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "s"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 17
       },
       "id": 4,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
+          "mode": "multi",
+          "sort": "desc"
         }
       },
       "pluginVersion": "12.1.1",
@@ -624,12 +645,157 @@
         {
           "editorMode": "code",
           "expr": "histogram_quantile(0.95, sum by (le, path)(rate(mcp_registry_http_request_duration_bucket{}[4m])*60))",
-          "legendFormat": "__auto",
+          "legendFormat": "{{path}}",
           "range": true,
           "refId": "Latency"
         }
       ],
-      "title": "P95 By Endpoint (seconds)",
+      "title": "P95 response time, by endpoint",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "description": "Requests the application is working on at the moment of each scrape, once a minute. A level that keeps rising means requests arrive faster than they finish.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "sum(mcp_registry_http_requests_in_flight)",
+          "legendFormat": "All pods together",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "max(sum by (instance) (mcp_registry_http_requests_in_flight))",
+          "legendFormat": "Busiest pod",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Requests in flight",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "description": "Database connections the registry pods hold between them: in use, and the most they may open. \"Acquiring\" counts requests that are getting a connection at the moment of the scrape, whether they wait for a free one or for a new one to open. If it stays above 0 while \"In use\" is near the limit, the pool is too small for the load; if \"In use\" is low, opening connections is slow.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0,
+          "min": 0,
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "sum(mcp_registry_db_pool_connections{state=\"acquired\"})",
+          "legendFormat": "In use",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "sum(mcp_registry_db_pool_acquire_pending)",
+          "legendFormat": "Acquiring a connection",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "P4169E866C3094E38"
+          },
+          "editorMode": "code",
+          "expr": "sum(mcp_registry_db_pool_max_connections)",
+          "legendFormat": "Limit, all pods",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "Database connections",
       "type": "timeseries"
     }
   ],

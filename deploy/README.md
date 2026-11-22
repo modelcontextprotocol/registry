@@ -516,13 +516,18 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 
 Every Grafana dashboard is kept in this repository and provisioned by Pulumi:
 
-| Dashboard | File | Grafana folder |
-|-----------|------|----------------|
-| Registry Application Dashboard | `pkg/k8s/dashboards/registry-application.json` | General |
-| Registry Deployment/Critical Issues | `pkg/k8s/dashboards/registry-deployment-critical-issues.json` | General |
-| Registry Gateway Canary | `pkg/k8s/gatewaycanary/assets/dashboard.json` | Gateway Canary |
-| Registry usage | `pkg/k8s/usage/dashboards/registry-usage.json` | General |
-| Registry publishing | `pkg/k8s/usage/dashboards/registry-publishing.json` | General |
+| Dashboard | Shows | File | Grafana folder |
+|-----------|-------|------|----------------|
+| Registry Application Dashboard | Whether the application is up, its errors, requests, response time, requests in flight and database connections | `pkg/k8s/dashboards/registry-application.json` | General |
+| Registry Deployment/Critical Issues | Kubernetes warning events, and the registry pods' count, memory and CPU | `pkg/k8s/dashboards/registry-deployment-critical-issues.json` | General |
+| Registry Gateway Canary | Traffic at the production gateway, including what its cache answers | `pkg/k8s/gatewaycanary/assets/dashboard.json` | Gateway Canary |
+| Registry usage | Who uses the registry and how much, by day, week or month | `pkg/k8s/usage/dashboards/registry-usage.json` | General |
+| Registry publishing | What gets published, of which type and by whom | `pkg/k8s/usage/dashboards/registry-publishing.json` | General |
+
+The Deployment/Critical Issues board reads Kubernetes events from VictoriaLogs,
+which holds the events of the `default` namespace only; that is also where
+Kubernetes records events about nodes. The first three boards link to each
+other at the top.
 
 The last two exist only where the [usage collector](#usage-collector) is on.
 They have a provider of their own and read its PostgreSQL data source.
