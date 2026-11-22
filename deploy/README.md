@@ -1038,8 +1038,13 @@ the registry's own image with `-malware-sweep`, so it is always the same build
 as the registry beside it. It has no Secret, database role or service account:
 it reads the listing from the `mcp-registry` Service, which bypasses the public
 rate limits, and sends package names and versions to `api.osv.dev`. It then
-makes one `HEAD` request for each distinct package, about 24,000 of them, to
-`registry.npmjs.org`, `pypi.org`, `api.nuget.org` or `crates.io`.
+makes one request for each distinct package, about 24,000 of them, to
+`registry.npmjs.org`, `pypi.org`, `api.nuget.org` or `crates.io`: a `HEAD`,
+except at npm, which still answers for a package whose every version was
+unpublished. There it reads the first kilobyte of the package's record, which
+tells such a package from one with a release. (npm's address for a package's
+latest release would tell them apart too, but npm turns away a client that
+asks there more than a few hundred times.)
 `MCP_REGISTRY_MALWARE_SWEEP_MISSING_PACKAGES=false` on the CronJob's container
 would switch those requests off; nothing sets it.
 
