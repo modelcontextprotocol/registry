@@ -1000,9 +1000,11 @@ imported into the stack.
 ## Malware sweep
 
 Once a day the malware sweep checks every package the registry lists against
-the malware records that [OSV.dev](https://osv.dev) publishes, and reports the
-server versions that point at one. It reports only; a maintainer takes the
-entry down. What it checks, and how to respond to a match, is described in
+the malware records that [OSV.dev](https://osv.dev) publishes, and asks each
+package's own registry whether the package is still there. It reports the
+server versions that point at malware or at a package that is gone. It reports
+only; a maintainer takes the entry down. What it checks, and how to respond to
+its report, is described in
 [Admin Operations](../docs/administration/admin-operations.md#malware-checks);
 this section covers how it is deployed.
 
@@ -1035,7 +1037,16 @@ One CronJob, `registry-malware-sweep`, in `default`, and nothing else. It runs
 the registry's own image with `-malware-sweep`, so it is always the same build
 as the registry beside it. It has no Secret, database role or service account:
 it reads the listing from the `mcp-registry` Service, which bypasses the public
-rate limits, and sends package names and versions to `api.osv.dev`.
+rate limits, and sends package names and versions to `api.osv.dev`. It then
+makes one request for each distinct package, about 24,000 of them, to
+`registry.npmjs.org`, `pypi.org`, `api.nuget.org` or `crates.io`: a `HEAD`,
+except at npm, which still answers for a package whose every version was
+unpublished. There it reads the first kilobyte of the package's record, which
+tells such a package from one with a release. (npm's address for a package's
+latest release would tell them apart too, but npm turns away a client that
+asks there more than a few hundred times.)
+`MCP_REGISTRY_MALWARE_SWEEP_MISSING_PACKAGES=false` on the CronJob's container
+would switch those requests off; nothing sets it.
 
 ### Switching it on
 
@@ -1047,17 +1058,27 @@ It does not start a second registry.
 ### The daily run
 
 The run starts at 03:40 UTC and gives up after 30 minutes. Measured in
-production on 2026-11-22, it took just under three minutes and about 120 MiB
-for 281,000 server versions. It reads the listing for about two of those
-minutes. In staging that added at most 0.18 CPU to the registry and 0.14 CPU to
-Postgres, averaged over a minute; in production the busiest registry pod
-briefly reached 0.7 CPU and no replica was added. It writes to its log:
+production on 2026-11-22, before it asked the package registries, it took just
+under three minutes and about 120 MiB for 281,000 server versions. It reads the
+listing for about two of those minutes. In staging that added at most 0.18 CPU
+to the registry and 0.14 CPU to Postgres, averaged over a minute; in production
+the busiest registry pod briefly reached 0.7 CPU and no replica was added.
+
+Asking the package registries comes after that and puts no load on the
+registry. Measured from outside the cluster on the same day, 24,000 packages
+took a little over four minutes, npm being nearly all of it at 32 requests at
+a time. It is given 12 minutes: a package not reached by then is counted as
+`existence_unknown`, and the sweep still succeeds with what OSV said.
+
+It writes to its log:
 
 | Line starts with | Meaning |
 |------------------|---------|
 | `REGISTRY_MALWARE_SWEEP_HIT` | A server version points at a package version that OSV lists as malware. One line per server version and package. |
-| `REGISTRY_MALWARE_SWEEP_UNCHECKED` | A server version names a covered package but no release of it to check: no version, or an npm dist-tag. One line per server version and package, with the reason; it does not alert. |
-| `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the number of versions, packages, matches and unchecked entries. |
+| `REGISTRY_MALWARE_SWEEP_MISSING` | A server version points at a package that is gone from its own registry. One line per server version and package. |
+| `REGISTRY_MALWARE_SWEEP_UNCHECKED` | A server version names a covered package but no release of it to check: no version, or an npm dist-tag. One line per server version and package, with the reason. |
+| `{"event":"REGISTRY_MALWARE_SWEEP_REPORT"` | The one line that holds all of the above, as JSON: the counts, a summary, and the entries as far as they fit in one log line. It is written by a failed sweep too, with `"complete":false`. The alerts read this line. |
+| `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the counts, among them `existence_unknown`: packages whose registry gave no usable answer, which are not reported as missing. |
 | `REGISTRY_MALWARE_SWEEP_FAILED` | The registry could not be read in full, or OSV did not answer in full after three more attempts at each request. Matches OSV had confirmed are still reported; the Job is retried once. |
 
 Each run's log is kept with its Job, and the last three runs are kept, so read
@@ -1084,12 +1105,25 @@ python3 tools/admin/configure-malware-alerts.py \
 # Review, then rerun without --dry-run.
 ```
 
-The script reuses an email channel and updates only its labelled policies. It
-alerts on any `REGISTRY_MALWARE_SWEEP_HIT` line and on any
-`REGISTRY_MALWARE_PUBLISH_MATCH` line in the registry's log, each at most once an
-hour, and on no completed sweep in 25 hours, including complete absence of the
-success metric. The policies exist in both the staging and the production
-project.
+The script reuses an email channel and updates only its labelled policies:
+
+| Policy | Fires when |
+|--------|------------|
+| Registry sweep found malware (critical) | A sweep's report holds an entry that points at known malware. |
+| Registry sweep found entries to review (warning) | A sweep's report holds entries, none of them malware: a package that is gone, or an entry that cannot be checked. Also when a package registry left more than a tenth of its packages unanswered, or reported so many missing that it is not believed (`existence_incomplete`), so that a registry that stops answering is not read as one that has lost nothing. |
+| Registry publish named known malware (warning) | A publish or edit logged `REGISTRY_MALWARE_PUBLISH_MATCH`. |
+| Registry malware sweep missing for 25 hours (warning) | No sweep has completed, including complete absence of the success metric. |
+
+Exactly one of the first two matches a report that has something in it, so a
+day sends one email about the sweep, with the report's summary in it, and a day
+with nothing to review sends none. Those two and the third close half an hour after
+the line that opened them, because an open alert sends nothing for a further
+match. The policies exist in both the staging and the production project.
+
+The first two replace an earlier policy that matched each
+`REGISTRY_MALWARE_SWEEP_HIT` line. The script removes that policy, but only
+once the cluster's sweep has written a report in the last 26 hours: a sweep from
+before the report writes none, and would otherwise go unwatched.
 
 Log metrics are not backfilled, so the freshness policy counts only sweeps that
 finish after it was created. On a new stack, provision the alerts once the

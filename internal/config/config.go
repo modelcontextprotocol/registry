@@ -49,6 +49,9 @@ type Config struct {
 	MalwareCheckMode        string `env:"MALWARE_CHECK_MODE" envDefault:"report"`
 	OSVAPIURL               string `env:"OSV_API_URL" envDefault:"https://api.osv.dev"`
 	MalwareSweepRegistryURL string `env:"MALWARE_SWEEP_REGISTRY_URL" envDefault:"https://registry.modelcontextprotocol.io"`
+	// MalwareSweepMissingPackages has the sweep also ask each package's own
+	// registry whether the package still exists.
+	MalwareSweepMissingPackages bool `env:"MALWARE_SWEEP_MISSING_PACKAGES" envDefault:"true"`
 
 	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
 
