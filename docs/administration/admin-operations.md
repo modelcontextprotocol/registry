@@ -188,8 +188,8 @@ that lists some versions does not match the others, even where it also carries a
 them. Names and versions are compared the way OSV and the package's registry do: on PyPI `2.0`,
 `v2.0.0` and `2.0.0.0` are one release, as are `1.0alpha1` and `1.0a1`, and a crate is the same
 under either case and with `-` or `_`. An npm dist-tag such as `next` is not a version: it is refused on publish, and
-an existing entry that names one cannot be checked, so the sweep lists it as
-`REGISTRY_MALWARE_SWEEP_UNCHECKED`.
+an existing entry that names one cannot be checked. Neither can one that names no version. The
+sweep lists both as `REGISTRY_MALWARE_SWEEP_UNCHECKED`.
 
 - **On publish and edit**: what happens to a matching package is set by
   `MCP_REGISTRY_MALWARE_CHECK_MODE`. Every match is logged as `REGISTRY_MALWARE_PUBLISH_MATCH`.
@@ -228,8 +228,9 @@ kubectl -n default logs -l app=mcp-registry --tail=-1 | grep ' WARN REGISTRY_MAL
 
    ```bash
    JOB=$(kubectl -n default get jobs -l app=registry-malware-sweep \
-     --sort-by=.metadata.creationTimestamp -o name | tail -1)
-   kubectl -n default logs "$JOB" --tail=-1 | grep '^REGISTRY_MALWARE_SWEEP_'
+     --sort-by=.metadata.creationTimestamp -o name | tail -1 | cut -d/ -f2)
+   # A run that failed was tried again in a second pod, so read every pod of the Job.
+   kubectl -n default logs -l job-name="$JOB" --tail=-1 --prefix | grep 'REGISTRY_MALWARE_SWEEP_'
    ```
 
    ```

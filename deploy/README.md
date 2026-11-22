@@ -1028,7 +1028,7 @@ the cluster has not been timed yet. It writes to its log:
 | Line starts with | Meaning |
 |------------------|---------|
 | `REGISTRY_MALWARE_SWEEP_HIT` | A server version points at a package version that OSV lists as malware. One line per server version and package. |
-| `REGISTRY_MALWARE_SWEEP_UNCHECKED` | A server version names an npm dist-tag as its package version, so there is no release to check. One line per server version and package; it does not alert. |
+| `REGISTRY_MALWARE_SWEEP_UNCHECKED` | A server version names a covered package but no release of it to check: no version, or an npm dist-tag. One line per server version and package, with the reason; it does not alert. |
 | `REGISTRY_MALWARE_SWEEP_SUCCESS` | The whole registry was checked. Carries the number of versions, packages, matches and unchecked entries. |
 | `REGISTRY_MALWARE_SWEEP_FAILED` | The registry could not be read in full, or OSV did not answer in full after three more attempts at each request. Matches OSV had confirmed are still reported; the Job is retried once. |
 
@@ -1038,8 +1038,9 @@ the newest one rather than everything with the label:
 ```bash
 kubectl --context=YOUR_CONTEXT -n default get cronjob registry-malware-sweep
 JOB=$(kubectl --context=YOUR_CONTEXT -n default get jobs -l app=registry-malware-sweep \
-  --sort-by=.metadata.creationTimestamp -o name | tail -1)
-kubectl --context=YOUR_CONTEXT -n default logs "$JOB" --tail=-1
+  --sort-by=.metadata.creationTimestamp -o name | tail -1 | cut -d/ -f2)
+# A run that failed was tried again in a second pod, so read every pod of the Job.
+kubectl --context=YOUR_CONTEXT -n default logs -l job-name="$JOB" --tail=-1 --prefix
 # Run it now:
 kubectl --context=YOUR_CONTEXT -n default create job --from=cronjob/registry-malware-sweep registry-malware-sweep-manual
 ```
