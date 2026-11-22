@@ -79,9 +79,8 @@ have been retired. Use the normal full-stack commands below for future changes.
 `REGISTRY_STAGING_IMAGE` supplies the current build digest to staging without
 editing committed stack configuration. An optional `stagingImage` configuration
 value overrides it for an intentional diagnostic freeze and must be digest-pinned.
-Normal staging has neither that override nor `registryRolloutCommit`, so a new
-main commit deploys automatically. Production keeps its explicit `imageTag`;
-its existing rollout annotation pin does not prevent image changes from rolling.
+Staging normally deploys each new main build. To promote a production release,
+set `imageTag` to its published version. Changing the tag rolls out the new image.
 
 Run `make staging-preview` and `make prod-preview` from this directory for read-only
 previews. `PULUMI_CONFIG_PASSPHRASE_FILE` can point to an existing local passphrase
@@ -152,13 +151,6 @@ VictoriaMetrics server, with a 2 GiB memory limit. The previous 128/256 MiB
 request/limit repeatedly OOM-restarted during the October 29 traffic cycle.
 The profile retains the chart/image, storage volume and 14-day retention.
 It does not change the registry application or its database.
-
-For an infrastructure-only apply, `registryRolloutCommit` can pin the app's
-existing `registry.modelcontextprotocol.io/deployCommit` pod annotation. Without
-this setting, each new Git commit changes the annotation and restarts app pods
-even when their image is unchanged. Update or remove the pin during the next
-intentional app rollout; image and other pod-template changes still trigger a
-rollout independently. A mutable image tag requires an updated rollout commit.
 
 Internal caches use a 40% memory allowance; search concurrency is capped at two
 queries with a 128 MiB per-query budget. These flags do not bound all process
@@ -1533,10 +1525,8 @@ The application HPA is 2–6 replicas with a 60% CPU target; see
 compact requests into production. The instantaneous production node count can
 change within these bounds; the migration did not reduce the capacity limits.
 
-Staging follows the current main build digest, with no committed `stagingImage`
-or `registryRolloutCommit` override. Production follows the explicit `imageTag`
-release configuration. The existing production rollout annotation does not block
-new images and is retained to avoid an unrelated rollout.
+Staging follows the current main build digest. Production follows the release
+selected by `imageTag`.
 
 The prior idle/burst experiments and one-off capacity adoption are complete.
 Their procedures are available in [the pre-cleanup deployment guide](https://github.com/modelcontextprotocol/registry/blob/d6d6b5ea1664c6b2b449ef9a518d9c92a825547d/deploy/README.md#node-capacity).
@@ -1668,7 +1658,7 @@ After migration 019 is prebuilt and release 1.8.9 is available, use two applies
 on the existing production burst-headroom profile:
 
 1. Set `productionSyncCapacity: prepare`, promote `imageTag` to 1.8.9 (or a later
-   tested stable release), and update `registryRolloutCommit`. This rolls out
+   tested stable release). This rolls out
    max/min pools of 20/5 while retaining HPA 2–4 at 70% CPU.
 2. Once every app is Ready on the new release with 20/5 pools and no old pods
    remain, set `productionSyncCapacity: enabled`. The HPA becomes 2–6 at 40%

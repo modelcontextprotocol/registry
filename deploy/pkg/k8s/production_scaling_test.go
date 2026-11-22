@@ -15,7 +15,7 @@ import (
 )
 
 func productionScalingConfig(phase string) map[string]string {
-	values := map[string]string{"productionAppScaling": phase, "productionInfrastructureOnly": "true", "coordinatedCapacity": "true", "isolatedDatabase": "true", "burstAutoscaling": "true", "provider": "gcp", "environment": "prod", "nodeMachineType": "e2-standard-4", "registryCPURequest": "1200m", "postgresCPURequest": "3", "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "5", "imageTag": "1.8.7", "preparedListingJSON": "true", "registryRolloutCommit": "tested-app", "githubClientId": "fixture", "githubClientSecret": "fixture", "jwtPrivateKey": "fixture"}
+	values := map[string]string{"productionAppScaling": phase, "productionInfrastructureOnly": "true", "coordinatedCapacity": "true", "isolatedDatabase": "true", "burstAutoscaling": "true", "provider": "gcp", "environment": "prod", "nodeMachineType": "e2-standard-4", "registryCPURequest": "1200m", "postgresCPURequest": "3", "postgresCPULimit": "3", "nodeMinCount": "3", "nodeMaxCount": "5", "imageTag": "1.8.7", "preparedListingJSON": "true", "githubClientId": "fixture", "githubClientSecret": "fixture", "jwtPrivateKey": "fixture"}
 	cfg := map[string]string{}
 	for k, v := range values {
 		cfg["mcp-registry:"+k] = v
@@ -64,7 +64,12 @@ func (m *productionScalingMonitor) NewResource(a pulumi.MockResourceArgs) (strin
 		if rolling["maxSurge"].NumberValue() != 0 || rolling["maxUnavailable"].NumberValue() != 1 {
 			m.t.Error("unexpected rollout overlap")
 		}
-		pod := spec["template"].ObjectValue()["spec"].ObjectValue()
+		template := spec["template"].ObjectValue()
+		annotations := template["metadata"].ObjectValue()["annotations"]
+		if annotations.IsObject() && annotations.ObjectValue()["registry.modelcontextprotocol.io/deployCommit"].HasValue() {
+			m.t.Error("production pod template contains a deploy commit annotation")
+		}
+		pod := template["spec"].ObjectValue()
 		if spec["minReadySeconds"].NumberValue() <= pod["terminationGracePeriodSeconds"].NumberValue() {
 			m.t.Error("replacement availability must wait beyond normal termination")
 		}
