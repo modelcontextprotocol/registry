@@ -7,3 +7,5 @@ deleteRules:
       uid: registry-usage-missed-day
     - orgId: 1
       uid: registry-usage-drift
+    - orgId: 1
+      uid: registry-usage-backup-missed

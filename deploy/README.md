@@ -715,10 +715,21 @@ and the database are separate `DatabaseRole` and `Database` objects.
    It creates its tables, reads every published version once and then the last
    13 days, oldest first. That takes about an hour. The dashboards fill in as
    it goes.
+4. Where alerting is configured, run a backup by hand within the hour instead
+   of waiting for 03:30 UTC. It need not wait for the first run to finish:
+
+   ```bash
+   kubectl -n monitoring create job --from=cronjob/registry-usage-history-backup usage-first-backup
+   kubectl -n monitoring logs -f job/usage-first-backup -c restic
+   ```
+
+   Until a backup has reported its success, "Usage history backup missed"
+   counts none as ever made, and notifies "Registry Dev" between one and two
+   hours after the deployment.
 
 The tables do not exist until that first run starts. Until then the dashboards
 show query errors and, where alerting is configured, both rules fail to
-evaluate. If step 3 is skipped, expect a `DatasourceError` notification to
+evaluate on them. If step 3 is skipped, expect a `DatasourceError` notification to
 "Registry Dev" naming "Usage estimate drifted from the gateway counters" within
 an hour of the deployment, and a second one naming "Usage collection missed a
 day" if the tables are still missing two hours later. Both resolve on their own
@@ -850,8 +861,14 @@ registry's job, this one creates its repository if there is none and logs
 `REGISTRY_USAGE_BACKUP_REPOSITORY_INITIALIZED` when it does, so nothing has to
 be initialised by hand.
 
-**A failed backup is not alerted on.** The [backup alerts](#backup-alerts)
-cover the registry's job only. Check this one with:
+After that, the job records the time in VictoriaMetrics as
+`registry_usage_backup_last_success_timestamp_seconds`. Where alerting is
+configured, the [alert rule](#alert-rules) "Usage history backup missed" fires
+when the newest record is more than 26 hours old, or when there is none. A
+backup that cannot reach VictoriaMetrics still counts as made: the job logs
+`REGISTRY_USAGE_BACKUP_SUCCESS_NOT_REPORTED` and finishes, and the rule then
+fires although the snapshot exists. The registry's own
+[backup alerts](#backup-alerts) do not cover this job. Check it with:
 
 ```bash
 kubectl -n monitoring get cronjob registry-usage-history-backup
@@ -930,8 +947,8 @@ owned by the first in a disposable PostgreSQL 17, and run the same
 
 ### Alert rules
 
-Both are in `pkg/k8s/usage/alerting/rules.yaml`, in the group `registry_usage`,
-and notify "Registry Dev". They exist only where the collector is on and
+All three are in `pkg/k8s/usage/alerting/rules.yaml`, in the group
+`registry_usage`, and notify "Registry Dev". They exist only where the collector is on and
 `mcp-registry:alertDiscordWebhook` is set. Removing the webhook while the
 collector stays on leaves them in Grafana, as it leaves the registry's own
 rules; retiring the collector deletes them whether or not the webhook is still
@@ -941,10 +958,13 @@ set.
 |------|------------|
 | Usage collection missed a day | Yesterday was not stored by 04:00 UTC and still is not two hours later. The notification arrives between 06:00 and 07:00 UTC. |
 | Usage estimate drifted from the gateway counters | On the newest stored day, requests or data sent estimated from the access records are more than 10% from the gateway's counters. Requests are judged when the gateway counted at least 1,000 that day, so a busy day whose access records went missing is reported. Data is judged when at least 1,000 listing records were sampled; fewer stray that far by chance. |
+| Usage history backup missed | No backup of the usage history has reported success for more than 26 hours, or none ever has, and that is still so an hour later. A missed night notifies between 06:30 and 07:30 UTC. |
 
 The first usually heals itself with the next run; look at the job's log if it
 repeats. The second means the access record format or the log sampling rule has
-changed, and the collector has to follow. [Changing rules](#changing-rules)
+changed, and the collector has to follow. The third does not heal itself until
+a backup succeeds: look at the newest `registry-usage-history-backup` job, as
+described under [Backups of the history](#backups-of-the-history). [Changing rules](#changing-rules)
 applies to this file too; a rule removed from it must be listed in
 `retired.yaml` beside it.
 

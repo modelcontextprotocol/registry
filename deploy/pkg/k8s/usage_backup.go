@@ -12,6 +12,9 @@ import (
 
 const (
 	usageBackupWorkload = "registry-usage-history-backup"
+	// The time of the last backup that was stored and checked in full. The
+	// "Usage history backup missed" rule in usage/alerting/rules.yaml reads it.
+	usageBackupMetric = "registry_usage_backup_last_success_timestamp_seconds"
 
 	// The same two steps as the registry's backup (postgres_backup_job.json):
 	// an archive that has been read back in full, then Restic. The table data
@@ -36,6 +39,11 @@ echo REGISTRY_USAGE_ARCHIVE_VALIDATED`
 	// snapshot holds the whole history, so a repository started afresh loses
 	// only older restore points, and says so. Restic refuses to initialise
 	// where a repository already is.
+	//
+	// The last step tells VictoriaMetrics that a backup succeeded, which is
+	// what the alert rule watches. A backup that cannot report is still a
+	// backup, so that step does not fail the job; the alert then fires and the
+	// log says why.
 	usageBackupUpload = `cd /backup
 sha256sum -c registry-usage.dump.sha256
 if ! restic cat config > /dev/null 2>&1; then
@@ -45,7 +53,11 @@ fi
 restic backup --host registry-usage --tag usage-history /backup
 restic check --read-data
 restic forget --prune --keep-daily "$KEEP_DAILY" --group-by host,paths,tags
-echo REGISTRY_USAGE_BACKUP_SUCCESS`
+echo REGISTRY_USAGE_BACKUP_SUCCESS
+if ! printf '%s %s\n' "$SUCCESS_METRIC" "$(date +%s)" | curl --fail --silent --show-error --max-time 10 \
+    --retry 3 --retry-delay 5 --retry-connrefused --data-binary @- "$METRICS_URL/api/v1/import/prometheus"; then
+  echo REGISTRY_USAGE_BACKUP_SUCCESS_NOT_REPORTED >&2
+fi`
 )
 
 // deployUsageBackup backs up the usage history every day to a bucket of its
@@ -136,6 +148,8 @@ func deployUsageBackup(ctx *pulumi.Context, namespace pulumi.StringPtrInput, env
 									// As for the registry. Each snapshot is the whole history;
 									// older ones only serve to undo damage found late.
 									variable("KEEP_DAILY", "28"),
+									variable("METRICS_URL", usageMetricsURL),
+									variable("SUCCESS_METRIC", usageBackupMetric),
 								},
 								VolumeMounts: corev1.VolumeMountArray{
 									&corev1.VolumeMountArgs{Name: pulumi.String("archive"), MountPath: pulumi.String("/backup"), ReadOnly: pulumi.Bool(true)},
