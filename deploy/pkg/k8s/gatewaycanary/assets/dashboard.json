@@ -13,11 +13,45 @@
     "to": "now"
   },
   "refresh": "15s",
+  "links": [
+    {
+      "type": "link",
+      "icon": "dashboard",
+      "title": "Application board",
+      "tooltip": "Availability, errors, requests and response time of the registry application",
+      "url": "/d/1d4f7dbe-3a6c-47c7-adf3-da688b509748",
+      "targetBlank": false,
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "tags": []
+    },
+    {
+      "type": "link",
+      "icon": "dashboard",
+      "title": "Deployment board",
+      "tooltip": "Kubernetes warning events, and the registry pods' memory and CPU",
+      "url": "/d/83a0f65c-bac4-40ce-a197-e77d67431ef4",
+      "targetBlank": false,
+      "keepTime": true,
+      "includeVars": false,
+      "asDropdown": false,
+      "tags": []
+    }
+  ],
   "panels": [
     {
       "id": 1,
       "title": "Requests / second",
       "type": "timeseries",
+      "description": "Requests the gateway receives, by route. This includes listings it answers from its cache, which never reach the registry application.",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -32,7 +66,7 @@
         {
           "refId": "A",
           "expr": "sum by (route) (rate(registry_gateway_canary_requests_total{traffic=\"$traffic\"}[5m]))",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "legendFormat": "{{route}}"
         }
       ]
     },
@@ -40,6 +74,13 @@
       "id": 2,
       "title": "p95 client latency",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -54,7 +95,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le,route)(rate(registry_gateway_canary_request_duration_seconds_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "legendFormat": "{{route}}"
         }
       ]
     },
@@ -62,6 +103,13 @@
       "id": 3,
       "title": "Cache hit fraction",
       "type": "timeseries",
+      "description": "Share of all responses the gateway marked as a cache hit. Stale answers, which it also serves from the cache while it refreshes an entry, are not counted as hits.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -76,7 +124,7 @@
         {
           "refId": "A",
           "expr": "sum(rate(registry_gateway_canary_cache_responses_total{traffic=\"$traffic\",cache=\"HIT\"}[5m])) / sum(rate(registry_gateway_canary_cache_responses_total{traffic=\"$traffic\"}[5m]))",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "legendFormat": "Cache hits"
         }
       ]
     },
@@ -84,6 +132,16 @@
       "id": 4,
       "title": "HTTP 5xx / second",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisSoftMax": 1
+          },
+          "min": 0,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -97,8 +155,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(rate(registry_gateway_canary_requests_total{traffic=\"$traffic\",status=~\"5..\"}[5m]))",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "expr": "sum(rate(registry_gateway_canary_requests_total{traffic=\"$traffic\",status=~\"5..\"}[5m])) or vector(0)",
+          "legendFormat": "5xx responses"
         }
       ]
     },
@@ -106,6 +164,13 @@
       "id": 5,
       "title": "p95 response bytes including headers",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -120,7 +185,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_response_bytes_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "legendFormat": "p95"
         }
       ]
     },
@@ -128,6 +193,13 @@
       "id": 6,
       "title": "Internal cache refreshes / second",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -142,7 +214,7 @@
         {
           "refId": "A",
           "expr": "sum(rate(registry_gateway_canary_internal_requests_total{traffic=\"$traffic\"}[5m]))",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "legendFormat": "Cache refreshes"
         }
       ]
     },
@@ -150,6 +222,13 @@
       "id": 7,
       "title": "Upstream p95 latency (single attempt)",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -164,7 +243,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_upstream_duration_seconds_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "legendFormat": "p95"
         }
       ]
     },
@@ -172,6 +251,13 @@
       "id": 8,
       "title": "Parse / CRI / timing errors per second",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "ops"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -209,6 +295,15 @@
       "id": 9,
       "title": "Scrape health",
       "type": "timeseries",
+      "description": "1 while a gateway metrics target answers its scrape, 0 when it does not.",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "max": 1,
+          "min": 0
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -223,7 +318,7 @@
         {
           "refId": "A",
           "expr": "up{job=~\"gateway-canary-.*\"}",
-          "legendFormat": "{{route}} {{job}} {{instance}}"
+          "legendFormat": "{{job}} {{instance}}"
         }
       ]
     },
@@ -231,6 +326,13 @@
       "id": 10,
       "title": "p95 upstream time summed across measured attempts",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -245,7 +347,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_upstream_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "{{route}} {{status}} {{component_id}}"
+          "legendFormat": "p95"
         }
       ]
     },
@@ -253,6 +355,13 @@
       "id": 11,
       "title": "Requests with multiple upstream attempts / groups per second",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -267,7 +376,7 @@
         {
           "refId": "A",
           "expr": "sum(rate(registry_gateway_canary_multi_upstream_requests_total{traffic=\"$traffic\"}[5m])) or vector(0)",
-          "legendFormat": "{{route}} {{status}} {{component_id}}"
+          "legendFormat": "Requests with more than one attempt"
         }
       ]
     },
@@ -275,6 +384,13 @@
       "id": 12,
       "title": "p95 connection time summed across measured attempts",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -289,7 +405,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_connect_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "{{route}} {{status}} {{component_id}}"
+          "legendFormat": "p95"
         }
       ]
     },
@@ -297,6 +413,13 @@
       "id": 13,
       "title": "p95 header time summed across measured attempts",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "s"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -311,7 +434,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_header_all_attempts_seconds_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "{{route}} {{status}} {{component_id}}"
+          "legendFormat": "p95"
         }
       ]
     },
@@ -319,6 +442,13 @@
       "id": 14,
       "title": "p95 request bytes",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -333,7 +463,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95,sum by (le)(rate(registry_gateway_canary_request_bytes_bucket{traffic=\"$traffic\"}[5m])))",
-          "legendFormat": "{{route}} {{status}} {{component_id}}"
+          "legendFormat": "p95"
         }
       ]
     },
@@ -341,6 +471,13 @@
       "id": 15,
       "title": "HTTP status / second",
       "type": "timeseries",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
@@ -355,7 +492,7 @@
         {
           "refId": "A",
           "expr": "sum by (status)(rate(registry_gateway_canary_requests_total{traffic=\"$traffic\"}[5m]))",
-          "legendFormat": "{{route}} {{status}} {{component_id}}"
+          "legendFormat": "{{status}}"
         }
       ]
     },
@@ -363,6 +500,15 @@
       "id": 16,
       "title": "Collector errors / discarded events per second",
       "type": "timeseries",
+      "description": "Errors and unintended drops inside the collector that turns gateway access records into these metrics. 0 means none.",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "noValue": "0",
+          "unit": "ops"
+        },
+        "overrides": []
+      },
       "datasource": {
         "type": "prometheus",
         "uid": "P4169E866C3094E38"
