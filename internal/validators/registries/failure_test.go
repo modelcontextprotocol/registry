@@ -13,7 +13,7 @@ import (
 
 // The daily sweep acts on what a failed validation means, so each of these
 // must keep its kind: a registry that is down must never read as a release
-// that has changed hands.
+// that is gone.
 func TestKindOfSaysWhatAFailedValidationMeans(t *testing.T) {
 	const serverName = "io.github.test/demo"
 	another := `{"info":{"description":"mcp-name: io.github.someone-else/demo\n"}}`

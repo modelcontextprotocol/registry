@@ -314,3 +314,23 @@ func TestValidateOCI_LabelMismatch(t *testing.T) {
 	assert.Contains(t, err.Error(), "ownership validation failed")
 	assert.Contains(t, err.Error(), "Expected annotation")
 }
+
+// The daily sweep reports an image as gone on FailureNotFound alone, so only
+// the registry's "not found" may be that: a refusal is also what a registry
+// that is refusing everyone looks like.
+func TestOCIImageExists(t *testing.T) {
+	ctx := context.Background()
+
+	assert.NoError(t, registries.OCIImageExists(ctx, "ghcr.io/github/github-mcp-server:latest"))
+
+	err := registries.OCIImageExists(ctx, "ghcr.io/github/github-mcp-server:no-such-tag-registry-check")
+	assert.Equal(t, registries.FailureNotFound, registries.KindOf(err), "a tag that is not there: %v", err)
+
+	err = registries.OCIImageExists(ctx, "ghcr.io/github/no-such-image-registry-check:latest")
+	assert.Error(t, err)
+	assert.NotEqual(t, registries.FailureNotFound, registries.KindOf(err), "a repository that is refused: %v", err)
+
+	err = registries.OCIImageExists(ctx, "example.com/some/image:1.0.0")
+	assert.ErrorIs(t, err, registries.ErrUnsupportedRegistry, "a registry it does not ask is not asked")
+	assert.Equal(t, registries.FailureOther, registries.KindOf(err))
+}

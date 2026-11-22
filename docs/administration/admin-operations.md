@@ -207,11 +207,10 @@ sweep lists both as `REGISTRY_MALWARE_SWEEP_UNCHECKED`.
 - **Daily**: a sweep re-checks every listed (not deleted) server version, because OSV usually
   learns about a malicious release after it was published here. It also asks each package's own
   registry whether the package is still there: a package that has been removed leaves an entry
-  that cannot be installed, and a name someone else can register. And it asks again what a
-  publish asks, about the package that the latest version of each server names: is the release
-  still there, and does it still name the server. A name that someone else has taken shows up
-  there and nowhere else, because the package exists again. Each server is asked about once in
-  seven days, a seventh of them on any one day. The sweep only reports. It
+  that cannot be installed, and a name someone else can register. And for the package that the
+  latest version of each server names, it asks whether that release is still in its registry:
+  a release can be removed while its package stays. Each server is asked about once in seven
+  days, a seventh of them on any one day. The sweep only reports. It
   never changes an entry; taking one down is a maintainer's decision.
 
 ### The daily report
@@ -221,13 +220,22 @@ Every sweep ends with one line holding everything a maintainer has to look at, i
 | Reason | Meaning |
 |--------|---------|
 | `malware` | The entry points at a package version that OSV lists as malware. |
-| `ownership-mismatch` | The release the entry names is in its registry and does not name the server: the PyPI, NuGet or crates.io README has no `mcp-name` line for it, or the image has no label for it. This is what a package looks like after someone else has taken its name, and also what an entry published without validation looks like. Not asked of npm, where a release cannot be changed or published a second time. |
 | `unchecked` | The entry names no release that can be checked: no version, or an npm dist-tag. |
 | `missing-package` | The entry's package is gone from npm, PyPI, NuGet or crates.io. An npm package whose every version was unpublished counts as gone. |
-| `missing-version` | The package is there without the release the entry names, or the image is gone or no longer public. On npm that release can never be published again, so whoever has the name now is publishing others. |
+| `missing-version` | The package is still in its registry, and the release that the server's latest version names is not; or the image's tag is gone. On npm that release can never be published again. |
 
-`ownership-mismatch` and `missing-version` are looked for only in the latest version of each
-server, and in an entry only on its day of the seven.
+A `missing-version` is reported only once it is certain. The package's registry has to say twice,
+a minute and a half apart, that the release is not there, npm at two different addresses; and
+the entry is read again, to be still the server's latest version and still naming that release.
+An answer that is not confirmed is counted as `releases_unknown` and not reported. Nor is an
+image that its registry refuses rather than calls missing, which is how a private or deleted
+repository answers and also how a registry that is refusing everyone does; or an entry published
+or edited in the last day, whose release may not be everywhere yet.
+
+A `missing-version` is looked for only in the latest version of each server, and in a server only
+on its day of the seven, so the report holds that day's and not every one there is. Its summary
+says how many package references were asked about. The sweep does not look at what a release
+says about its owner: a release that is there is not reported, whoever published it.
 
 On the hosted instance the sweep runs as the CronJob `registry-malware-sweep` (see
 [Malware sweep](../../deploy/README.md#malware-sweep)). A day whose report is not empty sends one
@@ -236,9 +244,9 @@ otherwise. A day with nothing to review sends none. The warning is also sent whe
 registry left more than a tenth of its packages unanswered, or answered "not found" for more than
 a tenth of them (and at least 50), which is not believed: the report then says
 `"existence_incomplete":true`, and that day's missing packages were not really looked for there.
-The same goes for the releases and their owners: a registry that left more than a tenth of what
-it was asked (and at least 10) unanswered, or called more than a tenth of it (and at least 50)
-gone or another's, is not believed, and the report says `"ownership_incomplete":true`.
+Likewise for the releases: a registry that left more than a tenth of what it was asked (and at
+least 10) without a usable answer, or called more than a tenth of it (and at least 50) missing,
+is not believed, and the report says `"releases_incomplete":true`.
 Do not discuss an entry in public channels before it is down.
 
 The report itself is a JSON record, readable without the cluster:
@@ -246,8 +254,8 @@ The report itself is a JSON record, readable without the cluster:
 ```bash
 gcloud logging read 'jsonPayload.event="REGISTRY_MALWARE_SWEEP_REPORT"' \
   --project mcp-registry-prod --freshness=1d --limit 1 --format json \
-  | jq '.[0].jsonPayload | {to_review, malware, ownership_mismatch, unchecked, missing, missing_version,
-      existence_incomplete, ownership_checked, ownership_incomplete, truncated, summary}'
+  | jq '.[0].jsonPayload | {to_review, malware, unchecked, missing, missing_version, releases_checked,
+      existence_incomplete, releases_incomplete, truncated, summary}'
 ```
 
 Its `entries` hold the findings, malware first, as far as they fit in one log line; `truncated`
@@ -258,13 +266,13 @@ JOB=$(kubectl -n default get jobs -l app=registry-malware-sweep \
   --sort-by=.metadata.creationTimestamp -o name | tail -1 | cut -d/ -f2)
 # A run that failed was tried again in a second pod, so read every pod of the Job.
 kubectl -n default logs -l job-name="$JOB" --tail=-1 \
-  | grep -E '^REGISTRY_MALWARE_SWEEP_(HIT|UNCHECKED|MISSING|VERSION_MISSING|OWNERSHIP) '
+  | grep -E '^REGISTRY_MALWARE_SWEEP_(HIT|UNCHECKED|MISSING|VERSION_MISSING) '
 ```
 
 ```
 REGISTRY_MALWARE_SWEEP_HIT server="com.example/my-server" version="1.0.0" status="active" registry_type="npm" package="my-package" package_version="1.0.0" osv="MAL-2026-1234"
 REGISTRY_MALWARE_SWEEP_MISSING server="com.example/other" version="2.0.0" status="deprecated" registry_type="pypi" package="other-package" package_version="2.0.0"
-REGISTRY_MALWARE_SWEEP_OWNERSHIP server="com.example/third" version="1.2.0" status="active" registry_type="pypi" package="third-package" package_version="1.2.0"
+REGISTRY_MALWARE_SWEEP_VERSION_MISSING server="com.example/third" version="1.2.0" status="active" registry_type="pypi" package="third-package" package_version="1.2.0"
 ```
 
 ### Responding to the report
@@ -299,19 +307,14 @@ For an unchecked entry, edit it to name the exact version (see
 [Edit a Specific Server Version](#edit-a-specific-server-version)). An entry that is also reported
 as `missing-package` has no version to name: treat it as an entry whose package is gone.
 
-For an entry whose release names another server, look at the release in its own registry first:
-who publishes the package now, and when the release was uploaded. A release uploaded after the
-entry was published, or a package under a publisher who is not the entry's, is a name that has
-changed hands: take the version down. A release that has never named the server is an entry
-published without validation, and is its publisher's to fix.
+For an entry whose release is gone while its package is not, that version cannot be installed
+as the entry names it. Take the version down, unless the server has another way to be installed,
+in which case edit the reference out of it. On npm, also look at who publishes the package now:
+if its present releases no longer name the server (`mcpName`), the name has changed hands, and
+every version of the server that points at it is worth a look.
 
-For an entry whose release is gone while its package is not, the release cannot be installed. On
-npm, check whether the package's present releases still name the server (`mcpName`); if they do
-not, the name has changed hands. Either way take the version down unless the server has another
-way to be installed, in which case edit the reference out of it.
-
-The sweep reports an entry every day until it is deleted or edited, except that an
-`ownership-mismatch` or `missing-version` comes round on the entry's day of the seven.
+The sweep reports an entry every day until it is deleted or edited, except that a
+`missing-version` comes round on the server's day of the seven.
 
 A publish-time match alerts separately. Find it in the registry's own log, then follow the steps
 for malware above. With `action=refused` nothing was published. With `action=allowed` this check
@@ -325,7 +328,7 @@ kubectl -n default logs -l app=mcp-registry --tail=-1 | grep ' WARN REGISTRY_MAL
 ### Running a sweep by hand
 
 The sweep needs no credentials and changes nothing, so it can be run from anywhere. It takes about
-18 minutes: most of that is reading the public listing, about four are the package registries
+19 minutes: most of that is reading the public listing, about four are the package registries
 saying whether each package exists, and two and a half are a day's share of the releases:
 
 ```bash
@@ -337,13 +340,14 @@ It ends with `REGISTRY_MALWARE_SWEEP_SUCCESS` and its counts, or with
 registry or get a complete answer from OSV. A failed sweep still writes its report, with the
 matches OSV had confirmed. A package registry that does not answer about a package, or not within
 the 12 minutes the package registries are given, does not fail the sweep: the package is counted
-as `existence_unknown` and not reported. Set
+as `existence_unknown` and not reported. The releases are asked about last and in the time that
+is left: if the sweep is about to run out of it, as it may over the public listing, the rest of
+them are counted as `releases_unknown`, and the sweep still succeeds. Set
 `MCP_REGISTRY_MALWARE_SWEEP_REGISTRY_URL` to sweep another registry,
 `MCP_REGISTRY_MALWARE_SWEEP_MISSING_PACKAGES=false` to leave the package registries alone, and
-`MCP_REGISTRY_MALWARE_SWEEP_OWNERSHIP=false` not to ask about releases and their owners.
-`MCP_REGISTRY_MALWARE_SWEEP_OWNERSHIP_DAYS=1` asks about every server at once instead of a
-seventh of them; that takes far longer than the six minutes it is given, and Docker Hub limits
-how many images an address may ask about without signing in.
+`MCP_REGISTRY_MALWARE_SWEEP_MISSING_VERSIONS=false` not to ask about releases.
+`MCP_REGISTRY_MALWARE_SWEEP_MISSING_VERSIONS_DAYS=1` asks about every server at once instead of
+a seventh of them, which takes longer than the eight minutes that step is given.
 
 ## Connecting to the Production Database
 

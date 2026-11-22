@@ -52,12 +52,12 @@ type Config struct {
 	// MalwareSweepMissingPackages has the sweep also ask each package's own
 	// registry whether the package still exists.
 	MalwareSweepMissingPackages bool `env:"MALWARE_SWEEP_MISSING_PACKAGES" envDefault:"true"`
-	// MalwareSweepOwnership has the sweep also ask, about the package each
-	// server's latest version names, whether the release is still there and
-	// still names the server. MalwareSweepOwnershipDays spreads the servers
-	// over that many days; 1 asks about every server in every sweep.
-	MalwareSweepOwnership     bool `env:"MALWARE_SWEEP_OWNERSHIP" envDefault:"true"`
-	MalwareSweepOwnershipDays int  `env:"MALWARE_SWEEP_OWNERSHIP_DAYS" envDefault:"7"`
+	// MalwareSweepMissingVersions has the sweep also ask, about the package
+	// each server's latest version names, whether that release is still in
+	// its registry. MalwareSweepMissingVersionsDays spreads the servers over
+	// that many days; 1 asks about every server in every sweep.
+	MalwareSweepMissingVersions     bool `env:"MALWARE_SWEEP_MISSING_VERSIONS" envDefault:"true"`
+	MalwareSweepMissingVersionsDays int  `env:"MALWARE_SWEEP_MISSING_VERSIONS_DAYS" envDefault:"7"`
 
 	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
 

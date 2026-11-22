@@ -247,7 +247,9 @@ func cargoReadmeUnavailableError(ctx context.Context, client *http.Client, pkg m
 		// Probe returned an unclassifiable status — fall through to the
 		// best-effort message below.
 	}
-	return failed(FailureNotFound, "cargo package '%s' version '%s' not found on crates.io (status: %d)", pkg.Identifier, pkg.Version, status)
+	// Carries no kind: the CDN's 403 or 404 does not by itself say that the
+	// version is gone, and the probe did not say either.
+	return fmt.Errorf("cargo package '%s' version '%s' not found on crates.io (status: %d)", pkg.Identifier, pkg.Version, status)
 }
 
 // validateCargoREADME performs the two-call README fetch and the mcp-name token

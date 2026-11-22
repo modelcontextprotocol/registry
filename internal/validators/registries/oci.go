@@ -97,7 +97,7 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 	if err != nil {
 		// Check if this is a timeout error
 		if errors.Is(err, context.DeadlineExceeded) {
-			return failed(FailureTransient, "OCI image validation timed out after 30 seconds for '%s'. The registry may be slow or unreachable", pkg.Identifier)
+			return fmt.Errorf("OCI image validation timed out after 30 seconds for '%s'. The registry may be slow or unreachable", pkg.Identifier)
 		}
 
 		// Check for specific HTTP status codes
@@ -111,13 +111,11 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 				// here would let a publisher bind their server record to an arbitrary
 				// public image they do not control, which is the bug this branch
 				// used to have. Surface the rate-limit as a retryable error instead.
-				return failed(FailureTransient, "OCI registry is currently rate-limiting validations for '%s'; please retry shortly", pkg.Identifier)
+				return fmt.Errorf("OCI registry is currently rate-limiting validations for '%s'; please retry shortly", pkg.Identifier)
 			case http.StatusNotFound:
-				return failed(FailureNotFound, "OCI image '%s' does not exist in the registry", pkg.Identifier)
+				return fmt.Errorf("OCI image '%s' does not exist in the registry", pkg.Identifier)
 			case http.StatusUnauthorized, http.StatusForbidden:
-				// Not found, to whoever would install it: Docker Hub answers
-				// this way for a repository that has been deleted too.
-				return failed(FailureNotFound, "OCI image '%s' is private or requires authentication. Only public images are supported", pkg.Identifier)
+				return fmt.Errorf("OCI image '%s' is private or requires authentication. Only public images are supported", pkg.Identifier)
 			}
 		}
 		return fmt.Errorf("failed to fetch OCI image: %w", err)
@@ -131,19 +129,56 @@ func ValidateOCI(ctx context.Context, pkg model.Package, serverName string) erro
 
 	// Validate the MCP server name label
 	if configFile.Config.Labels == nil {
-		return failed(FailureOwnership, "OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
+		return fmt.Errorf("OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
 	}
 
 	mcpName, exists := configFile.Config.Labels["io.modelcontextprotocol.server.name"]
 	if !exists {
-		return failed(FailureOwnership, "OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
+		return fmt.Errorf("OCI image '%s' is missing required annotation. Add this to your Dockerfile: LABEL io.modelcontextprotocol.server.name=\"%s\"", pkg.Identifier, serverName)
 	}
 
 	if mcpName != serverName {
-		return failed(FailureOwnership, "OCI image ownership validation failed. Expected annotation 'io.modelcontextprotocol.server.name' = '%s', got '%s'", serverName, mcpName)
+		return fmt.Errorf("OCI image ownership validation failed. Expected annotation 'io.modelcontextprotocol.server.name' = '%s', got '%s'", serverName, mcpName)
 	}
 
 	return nil
+}
+
+// OCIImageExists asks whether an image is still at its reference, in one of
+// the registries ValidateOCI asks, and nothing about what is in it. It makes
+// a HEAD request, which Docker Hub does not count against what an address may
+// pull without signing in.
+//
+// Only an answer of "not found" is FailureNotFound. An image that is refused
+// may be private or gone, and may as well be a registry that is refusing
+// everyone for the moment: that is not said to be missing.
+func OCIImageExists(ctx context.Context, identifier string) error {
+	if identifier == "" {
+		return ErrMissingIdentifierForOCI
+	}
+	ref, err := name.ParseReference(identifier)
+	if err != nil {
+		return fmt.Errorf("invalid OCI reference: %w", err)
+	}
+	if registry := ref.Context().RegistryStr(); !isAllowedRegistry(registry) {
+		return fmt.Errorf("%w: %s", ErrUnsupportedRegistry, registry)
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	_, err = remote.Head(ref, remote.WithAuth(authn.Anonymous), remote.WithContext(timeoutCtx))
+	if err == nil {
+		return nil
+	}
+	var transportErr *transport.Error
+	if !errors.As(err, &transportErr) {
+		// No answer at all: the registry could not be reached, or not in time.
+		return failed(FailureTransient, "failed to ask for OCI image '%s': %w", identifier, err)
+	}
+	if transportErr.StatusCode == http.StatusNotFound {
+		return failed(FailureNotFound, "OCI image '%s' does not exist in the registry", identifier)
+	}
+	return failed(statusKind(transportErr.StatusCode), "OCI registry answered status %d for image '%s'", transportErr.StatusCode, identifier)
 }
 
 // isAllowedRegistry checks if the given registry is in the allowlist.

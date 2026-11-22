@@ -31,22 +31,33 @@ func ValidatePackage(ctx context.Context, pkg model.Package, serverName string) 
 	}
 }
 
-// PackageOwnership asks what ValidatePackage asks on a publish, about a
-// package a registry entry already names, and returns what the answer means
-// for the daily sweep.
-func PackageOwnership(ctx context.Context, serverName string, pkg malware.Package) malware.Ownership {
-	err := ValidatePackage(ctx, model.Package{RegistryType: pkg.RegistryType, Identifier: pkg.Identifier, Version: pkg.Version}, serverName)
+// PackageRelease asks, about a package a registry entry already names,
+// whether the release is still in its registry. For PyPI, NuGet and crates.io
+// it asks at the addresses a publish asks, so that a release that was found
+// then is looked for the same way now; what the release says about its owner
+// is not part of the answer. For an image it asks only whether the image is
+// there. npm is not asked here: the sweep reads its record itself.
+func PackageRelease(ctx context.Context, serverName string, pkg malware.Package) malware.Release {
+	var err error
+	switch pkg.RegistryType {
+	case model.RegistryTypePyPI, model.RegistryTypeNuGet, model.RegistryTypeCargo:
+		err = ValidatePackage(ctx, model.Package{RegistryType: pkg.RegistryType, Identifier: pkg.Identifier, Version: pkg.Version}, serverName)
+	case model.RegistryTypeOCI:
+		err = registries.OCIImageExists(ctx, pkg.Identifier)
+	default:
+		return malware.ReleaseUnreadable
+	}
 	if err == nil {
-		return malware.OwnershipHeld
+		return malware.ReleasePresent
 	}
 	switch registries.KindOf(err) {
-	case registries.FailureNotFound:
-		return malware.OwnershipReleaseMissing
 	case registries.FailureOwnership:
-		return malware.OwnershipMismatch
+		return malware.ReleasePresent
+	case registries.FailureNotFound:
+		return malware.ReleaseMissing
 	case registries.FailureTransient:
-		return malware.OwnershipUnknown
+		return malware.ReleaseUnknown
 	case registries.FailureOther:
 	}
-	return malware.OwnershipUncheckable
+	return malware.ReleaseUnreadable
 }
