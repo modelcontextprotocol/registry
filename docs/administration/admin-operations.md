@@ -185,8 +185,9 @@ are not covered.
 A package matches when a record names exactly the version the server points at, or names no
 versions at all, which is how OSV records a package that is malware in every release. A record
 that lists some versions does not match the others, even where it also carries a range covering
-them. PyPI and NuGet versions are compared the way those registries do, so `2.0` and `v2.0.0` are
-the same release. An npm dist-tag such as `next` is not a version: it is refused on publish, and
+them. Names and versions are compared the way OSV and the package's registry do: on PyPI `2.0`,
+`v2.0.0` and `2.0.0.0` are one release, as are `1.0alpha1` and `1.0a1`, and a crate is the same
+under either case and with `-` or `_`. An npm dist-tag such as `next` is not a version: it is refused on publish, and
 an existing entry that names one cannot be checked, so the sweep lists it as
 `REGISTRY_MALWARE_SWEEP_UNCHECKED`.
 
