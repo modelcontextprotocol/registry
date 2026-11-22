@@ -1030,13 +1030,14 @@ the registry's own image with `-malware-sweep`, so it is always the same build
 as the registry beside it. It has no Secret, database role or service account:
 it reads the listing from the `mcp-registry` Service, which bypasses the public
 rate limits, and sends package names and versions to `api.osv.dev`. It then
-makes one request for each distinct package, about 24,000 of them, to
-`registry.npmjs.org`, `pypi.org`, `api.nuget.org` or `crates.io`: a `HEAD`,
-except at npm, which still answers for a package whose every version was
-unpublished. There it reads the first kilobyte of the package's record, which
-tells such a package from one with a release. (npm's address for a package's
-latest release would tell them apart too, but npm turns away a client that
-asks there more than a few hundred times.)
+checks each distinct package (about 24,000) at npm, PyPI, NuGet, or crates.io.
+It starts with a HEAD request, except at npm, where it reads the first kilobyte
+of the abbreviated package record. If a package appears missing, the sweep waits
+one second and asks again with a GET request. For PyPI it checks the project's
+install index, which can still exist after its last distribution was removed.
+For npm it requests the full package record and accepts a dated unpublish event
+only when no versions remain. A 404 or 410 on the confirmation request also
+confirms absence. An inconclusive response counts toward `existence_unknown`.
 `MCP_REGISTRY_MALWARE_SWEEP_MISSING_PACKAGES=false` on the CronJob's container
 would switch those requests off; nothing sets it.
 
