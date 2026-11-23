@@ -30,7 +30,7 @@ mcp-publisher status --status deleted --all-versions --message "Project archived
   io.github.my-username/my-server
 ```
 
-Deleted servers are hidden from default API listings but can still be retrieved with `include_deleted=true`. You can restore a deleted server by setting its status back to `active`.
+Deleted servers are hidden from default API listings but can still be retrieved with `include_deleted=true`. You can restore a version you withdrew by setting its status back to `active`. When registry moderators take down a version, only a registry moderator can restore it.
 
 **Note**: Server metadata is never permanently removed from the registry. The `deleted` status hides the server from discovery but preserves the historical record.
 

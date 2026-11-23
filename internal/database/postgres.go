@@ -808,7 +808,7 @@ func (db *PostgreSQL) UpdateServer(ctx context.Context, tx pgx.Tx, serverName, v
 }
 
 // SetServerStatus updates the status of a specific server version
-func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status model.Status, statusMessage *string) (*apiv0.ServerResponse, error) {
+func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status model.Status, statusMessage *string, moderator bool) (*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -820,9 +820,10 @@ func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName
 		SET
 			status = $1,
 			status_changed_at = CASE WHEN status != $1::varchar THEN NOW() ELSE status_changed_at END,
-			updated_at = NOW(),
-			status_message = $4
-		WHERE server_name = $2 AND version = $3
+			updated_at = CASE WHEN status != $1::varchar OR status_message IS DISTINCT FROM $4 THEN NOW() ELSE updated_at END,
+			status_message = $4,
+			moderation_hold = $5 AND $1::varchar = 'deleted'
+		WHERE server_name = $2 AND version = $3 AND ($5 OR NOT moderation_hold)
 		RETURNING server_name, version, status, value, published_at, updated_at, is_latest, status_changed_at, status_message
 	`
 
@@ -832,10 +833,10 @@ func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName
 	var valueJSON []byte
 	var resultStatusMessage *string
 
-	err := db.getExecutor(tx).QueryRow(ctx, query, string(status), serverName, version, statusMessage).Scan(&name, &vers, &currentStatus, &valueJSON, &publishedAt, &updatedAt, &isLatest, &statusChangedAt, &resultStatusMessage)
+	err := db.getExecutor(tx).QueryRow(ctx, query, string(status), serverName, version, statusMessage, moderator).Scan(&name, &vers, &currentStatus, &valueJSON, &publishedAt, &updatedAt, &isLatest, &statusChangedAt, &resultStatusMessage)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrNotFound
+			return nil, db.statusWriteMiss(ctx, tx, serverName, &version)
 		}
 		return nil, fmt.Errorf("failed to update server status: %w", err)
 	}
@@ -865,7 +866,7 @@ func (db *PostgreSQL) SetServerStatus(ctx context.Context, tx pgx.Tx, serverName
 }
 
 // SetAllVersionsStatus updates the status of all versions of a server in a single query
-func (db *PostgreSQL) SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serverName string, status model.Status, statusMessage *string) ([]*apiv0.ServerResponse, error) {
+func (db *PostgreSQL) SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serverName string, status model.Status, statusMessage *string, moderator bool) ([]*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
 		return nil, ctx.Err()
 	}
@@ -878,14 +879,17 @@ func (db *PostgreSQL) SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serve
 		SET
 			status = $1,
 			status_changed_at = CASE WHEN status != $1::varchar THEN NOW() ELSE status_changed_at END,
-			updated_at = NOW(),
-			status_message = $2
+			updated_at = CASE WHEN status != $1::varchar OR status_message IS DISTINCT FROM $2 THEN NOW() ELSE updated_at END,
+			status_message = $2,
+			moderation_hold = $4 AND $1::varchar = 'deleted'
 		WHERE server_name = $3
-			AND (status != $1::varchar OR status_message IS DISTINCT FROM $2)
+			AND ($4 OR NOT EXISTS (SELECT 1 FROM servers held WHERE held.server_name = $3 AND held.moderation_hold))
+			AND (status != $1::varchar OR status_message IS DISTINCT FROM $2
+				OR moderation_hold != ($4 AND $1::varchar = 'deleted'))
 		RETURNING server_name, version, status, value, published_at, updated_at, is_latest, status_changed_at, status_message
 	`
 
-	rows, err := db.getExecutor(tx).Query(ctx, query, string(status), statusMessage, serverName)
+	rows, err := db.getExecutor(tx).Query(ctx, query, string(status), statusMessage, serverName, moderator)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update all server versions status: %w", err)
 	}
@@ -930,10 +934,29 @@ func (db *PostgreSQL) SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serve
 	}
 
 	if len(results) == 0 {
-		return nil, ErrNotFound
+		if moderator && status == model.StatusDeleted {
+			// An idempotent takedown can change zero rows. The service re-reads
+			// the versions under the same lock and reports a missing server.
+			return results, nil
+		}
+		return nil, db.statusWriteMiss(ctx, tx, serverName, nil)
 	}
 
 	return results, nil
+}
+
+// Distinguish a held target from a missing one only when the guarded write missed.
+func (db *PostgreSQL) statusWriteMiss(ctx context.Context, tx pgx.Tx, name string, version *string) error {
+	var held bool
+	err := db.getExecutor(tx).QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM servers
+		WHERE server_name = $1 AND ($2::varchar IS NULL OR version = $2) AND moderation_hold)`, name, version).Scan(&held)
+	if err != nil {
+		return err
+	}
+	if held {
+		return ErrModerationHold
+	}
+	return ErrNotFound
 }
 
 // InTransaction executes a function within a database transaction

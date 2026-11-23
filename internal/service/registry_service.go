@@ -417,7 +417,7 @@ func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx 
 
 	// Handle status change if provided
 	if statusChange != nil {
-		if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
+		if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage, statusChange.Moderator); err != nil {
 			return nil, err
 		}
 		if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
@@ -446,7 +446,7 @@ func (s *registryServiceImpl) updateServerStatusInTransaction(ctx context.Contex
 	}
 
 	// Update only the status metadata
-	if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
+	if _, err := s.db.SetServerStatus(ctx, tx, serverName, version, statusChange.NewStatus, statusChange.StatusMessage, statusChange.Moderator); err != nil {
 		return nil, err
 	}
 	if err := s.recalculateLatest(ctx, tx, serverName); err != nil {
@@ -472,7 +472,7 @@ func (s *registryServiceImpl) updateAllVersionsStatusInTransaction(ctx context.C
 	}
 
 	// Update all versions' status in a single database call
-	if _, err := s.db.SetAllVersionsStatus(ctx, tx, serverName, statusChange.NewStatus, statusChange.StatusMessage); err != nil {
+	if _, err := s.db.SetAllVersionsStatus(ctx, tx, serverName, statusChange.NewStatus, statusChange.StatusMessage, statusChange.Moderator); err != nil {
 		return nil, err
 	}
 	if err := s.recalculateLatest(ctx, tx, serverName); err != nil {

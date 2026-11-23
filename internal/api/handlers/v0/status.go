@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -36,7 +37,7 @@ type UpdateServerStatusInput struct {
 // validateStatusTransition validates if the status transition is allowed
 // Returns nil if status or message differs from current (something to update)
 // Returns error if nothing changes (no-op) or if status transition is invalid
-func validateStatusTransition(currentServer *apiv0.ServerResponse, newStatus model.Status, body UpdateServerStatusBody) error {
+func validateStatusTransition(currentServer *apiv0.ServerResponse, newStatus model.Status, body UpdateServerStatusBody, moderator bool) error {
 	// Validate newStatus is a valid value
 	validStatuses := map[model.Status]bool{
 		model.StatusActive:     true,
@@ -50,6 +51,11 @@ func validateStatusTransition(currentServer *apiv0.ServerResponse, newStatus mod
 	// Reject status_message when setting status to active
 	if newStatus == model.StatusActive && body.StatusMessage != nil {
 		return huma.Error400BadRequest("status_message cannot be provided when setting status to active")
+	}
+
+	// A moderator can place a hold on an already withdrawn version.
+	if moderator && newStatus == model.StatusDeleted {
+		return nil
 	}
 
 	if currentServer.Meta.Official == nil {
@@ -134,19 +140,24 @@ func RegisterStatusEndpoints(api huma.API, pathPrefix string, registry service.R
 			return nil, huma.Error403Forbidden("You do not have publish or edit permissions for this server")
 		}
 
+		moderator := hasModerationAuthority(claims.Permissions)
+
 		// Validate status transition is allowed
-		if err := validateStatusTransition(currentServer, newStatus, input.Body); err != nil {
+		if err := validateStatusTransition(currentServer, newStatus, input.Body, moderator); err != nil {
 			return nil, err
 		}
 
 		// Build status change request
-		statusChange := buildStatusChangeRequestFromBody(input.Body)
+		statusChange := buildStatusChangeRequestFromBody(input.Body, moderator)
 
 		// Update the server status using the service
 		updatedServer, err := registry.UpdateServerStatus(ctx, serverName, version, statusChange)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
+			}
+			if errors.Is(err, database.ErrModerationHold) {
+				return nil, huma.Error403Forbidden("Only a registry moderator can change a held version")
 			}
 			return nil, huma.Error400BadRequest("Failed to update server status", err)
 		}
@@ -157,8 +168,12 @@ func RegisterStatusEndpoints(api huma.API, pathPrefix string, registry service.R
 	})
 }
 
+func hasModerationAuthority(permissions []auth.Permission) bool {
+	return slices.Contains(permissions, auth.Permission{ResourcePattern: "*", Action: auth.PermissionActionEdit})
+}
+
 // buildStatusChangeRequestFromBody constructs a StatusChangeRequest from the request body
-func buildStatusChangeRequestFromBody(body UpdateServerStatusBody) *service.StatusChangeRequest {
+func buildStatusChangeRequestFromBody(body UpdateServerStatusBody, moderator bool) *service.StatusChangeRequest {
 	var statusMessage *string
 
 	newStatus := model.Status(body.Status)
@@ -169,6 +184,7 @@ func buildStatusChangeRequestFromBody(body UpdateServerStatusBody) *service.Stat
 	}
 
 	return &service.StatusChangeRequest{
+		Moderator:     moderator,
 		NewStatus:     newStatus,
 		StatusMessage: statusMessage,
 	}
@@ -250,19 +266,24 @@ func RegisterAllVersionsStatusEndpoints(api huma.API, pathPrefix string, registr
 			return nil, huma.Error500InternalServerError("Failed to get server versions")
 		}
 
+		moderator := hasModerationAuthority(claims.Permissions)
+
 		// Validate bulk status transition - reject if no changes would occur
-		if err := validateBulkStatusTransition(allVersions, newStatus, input.Body); err != nil {
+		if err := validateBulkStatusTransition(allVersions, newStatus, input.Body, moderator); err != nil {
 			return nil, err
 		}
 
 		// Build status change request
-		statusChange := buildStatusChangeRequestFromBody(input.Body)
+		statusChange := buildStatusChangeRequestFromBody(input.Body, moderator)
 
 		// Update all versions' status using the service
 		updatedServers, err := registry.UpdateAllVersionsStatus(ctx, serverName, statusChange)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
+			}
+			if errors.Is(err, database.ErrModerationHold) {
+				return nil, huma.Error403Forbidden("Only a registry moderator can change a held version")
 			}
 			return nil, huma.Error400BadRequest("Failed to update server status", err)
 		}
@@ -284,14 +305,14 @@ func RegisterAllVersionsStatusEndpoints(api huma.API, pathPrefix string, registr
 
 // validateBulkStatusTransition validates if a bulk status transition would result in any changes
 // Returns an error if no changes would occur (all versions already have target status and message)
-func validateBulkStatusTransition(versions []*apiv0.ServerResponse, newStatus model.Status, body UpdateServerStatusBody) error {
+func validateBulkStatusTransition(versions []*apiv0.ServerResponse, newStatus model.Status, body UpdateServerStatusBody, moderator bool) error {
 	if len(versions) == 0 {
 		return nil
 	}
 
 	// Check if any version would have changes applied
 	for _, version := range versions {
-		err := validateStatusTransition(version, newStatus, body)
+		err := validateStatusTransition(version, newStatus, body, moderator)
 		if err == nil {
 			// This version has changes, so the bulk operation is valid
 			return nil

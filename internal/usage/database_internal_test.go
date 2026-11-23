@@ -113,7 +113,7 @@ func (r *registryFixture) publish(t *testing.T, name, version string, at time.Ti
 func (r *registryFixture) remove(t *testing.T, name, version, newLatest string) {
 	t.Helper()
 	ctx := t.Context()
-	_, err := r.db.SetServerStatus(ctx, nil, name, version, model.StatusDeleted, nil)
+	_, err := r.db.SetServerStatus(ctx, nil, name, version, model.StatusDeleted, nil, false)
 	require.NoError(t, err)
 	require.NoError(t, r.db.SetLatestVersion(ctx, nil, name, newLatest))
 }

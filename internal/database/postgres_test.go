@@ -543,7 +543,7 @@ func TestPostgreSQL_SetServerStatus(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := db.SetServerStatus(ctx, nil, tt.serverName, tt.version, model.Status(tt.newStatus), nil)
+			result, err := db.SetServerStatus(ctx, nil, tt.serverName, tt.version, model.Status(tt.newStatus), nil, false)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -587,7 +587,7 @@ func TestPostgreSQL_StatusChangedAtBehavior(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		// Change status from active to deprecated
-		result, err := db.SetServerStatus(ctx, nil, serverJSON.Name, serverJSON.Version, model.StatusDeprecated, nil)
+		result, err := db.SetServerStatus(ctx, nil, serverJSON.Name, serverJSON.Version, model.StatusDeprecated, nil, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, model.StatusDeprecated, result.Meta.Official.Status)
@@ -617,7 +617,7 @@ func TestPostgreSQL_StatusChangedAtBehavior(t *testing.T) {
 
 		// Update only the message, keep status the same
 		newMessage := "Updated message"
-		result, err := db.SetServerStatus(ctx, nil, serverJSON.Name, serverJSON.Version, model.StatusDeprecated, &newMessage)
+		result, err := db.SetServerStatus(ctx, nil, serverJSON.Name, serverJSON.Version, model.StatusDeprecated, &newMessage, false)
 		require.NoError(t, err)
 
 		assert.Equal(t, model.StatusDeprecated, result.Meta.Official.Status)
@@ -960,7 +960,7 @@ func TestPostgreSQL_EdgeCases(t *testing.T) {
 		}
 
 		for _, status := range statuses {
-			result, err := db.SetServerStatus(ctx, nil, serverName, version, model.Status(status), nil)
+			result, err := db.SetServerStatus(ctx, nil, serverName, version, model.Status(status), nil, false)
 			assert.NoError(t, err, "Should allow transition to %s", status)
 			assert.Equal(t, model.Status(status), result.Meta.Official.Status)
 		}
@@ -988,7 +988,7 @@ func TestPostgreSQL_EdgeCases(t *testing.T) {
 		statusMessage := "This server has been deprecated. Please use the new version."
 
 		// Test setting status with message
-		result, err := db.SetServerStatus(ctx, nil, testServerName, testVersion, model.StatusDeprecated, &statusMessage)
+		result, err := db.SetServerStatus(ctx, nil, testServerName, testVersion, model.StatusDeprecated, &statusMessage, false)
 		assert.NoError(t, err)
 		assert.Equal(t, model.StatusDeprecated, result.Meta.Official.Status)
 		assert.NotNil(t, result.Meta.Official.StatusMessage)
@@ -996,7 +996,7 @@ func TestPostgreSQL_EdgeCases(t *testing.T) {
 		assert.NotZero(t, result.Meta.Official.StatusChangedAt)
 
 		// Test clearing status message
-		result, err = db.SetServerStatus(ctx, nil, testServerName, testVersion, model.StatusActive, nil)
+		result, err = db.SetServerStatus(ctx, nil, testServerName, testVersion, model.StatusActive, nil, false)
 		assert.NoError(t, err)
 		assert.Equal(t, model.StatusActive, result.Meta.Official.Status)
 		assert.Nil(t, result.Meta.Official.StatusMessage)
@@ -1045,7 +1045,7 @@ func TestPostgreSQL_EdgeCases(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				// First ensure the server is in the expected starting status
 				if tt.fromStatus != model.StatusActive {
-					_, err := db.SetServerStatus(ctx, nil, testServerName, testVersion, tt.fromStatus, nil)
+					_, err := db.SetServerStatus(ctx, nil, testServerName, testVersion, tt.fromStatus, nil, false)
 					require.NoError(t, err, "failed to set initial status to %s", tt.fromStatus)
 				}
 
@@ -1056,7 +1056,7 @@ func TestPostgreSQL_EdgeCases(t *testing.T) {
 				assert.Equal(t, tt.fromStatus, currentServer.Meta.Official.Status, "server should be in %s status before transition", tt.fromStatus)
 
 				// Perform the transition
-				result, err := db.SetServerStatus(ctx, nil, testServerName, testVersion, tt.toStatus, &tt.description)
+				result, err := db.SetServerStatus(ctx, nil, testServerName, testVersion, tt.toStatus, &tt.description, false)
 				assert.NoError(t, err, "should allow transition from %s to %s", tt.fromStatus, tt.toStatus)
 				assert.NotNil(t, result)
 				assert.Equal(t, tt.toStatus, result.Meta.Official.Status, "status should be %s after transition", tt.toStatus)
@@ -1557,7 +1557,7 @@ func TestPostgreSQL_SetAllVersionsStatus(t *testing.T) {
 		// Update all versions to deprecated
 		statusMessage := "All versions deprecated"
 
-		results, err := db.SetAllVersionsStatus(ctx, nil, serverName, model.StatusDeprecated, &statusMessage)
+		results, err := db.SetAllVersionsStatus(ctx, nil, serverName, model.StatusDeprecated, &statusMessage, false)
 		assert.NoError(t, err)
 		assert.Len(t, results, 3)
 
@@ -1579,7 +1579,7 @@ func TestPostgreSQL_SetAllVersionsStatus(t *testing.T) {
 	})
 
 	t.Run("update non-existent server returns error", func(t *testing.T) {
-		results, err := db.SetAllVersionsStatus(ctx, nil, "com.example/non-existent-server", model.StatusDeprecated, nil)
+		results, err := db.SetAllVersionsStatus(ctx, nil, "com.example/non-existent-server", model.StatusDeprecated, nil, false)
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, database.ErrNotFound)
 		assert.Nil(t, results)
@@ -1609,7 +1609,7 @@ func TestPostgreSQL_SetAllVersionsStatus(t *testing.T) {
 
 		// Delete all versions
 		statusMessage := "Critical security vulnerability"
-		results, err := db.SetAllVersionsStatus(ctx, nil, serverName, model.StatusDeleted, &statusMessage)
+		results, err := db.SetAllVersionsStatus(ctx, nil, serverName, model.StatusDeleted, &statusMessage, false)
 		assert.NoError(t, err)
 		assert.Len(t, results, 2)
 
@@ -1644,7 +1644,7 @@ func TestPostgreSQL_SetAllVersionsStatus(t *testing.T) {
 		}
 
 		// Reactivate all versions
-		results, err := db.SetAllVersionsStatus(ctx, nil, serverName, model.StatusActive, nil)
+		results, err := db.SetAllVersionsStatus(ctx, nil, serverName, model.StatusActive, nil, false)
 		assert.NoError(t, err)
 		assert.Len(t, results, 2)
 

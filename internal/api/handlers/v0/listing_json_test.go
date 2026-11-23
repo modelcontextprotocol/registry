@@ -64,7 +64,7 @@ func TestEncodedListingMatchesTypedAPIThroughUpdates(t *testing.T) {
 	_, err = db.UpdateServer(ctx, nil, server.Name, server.Version, &server)
 	require.NoError(t, err)
 	check()
-	_, err = db.SetServerStatus(ctx, nil, server.Name, server.Version, model.StatusDeleted, nil)
+	_, err = db.SetServerStatus(ctx, nil, server.Name, server.Version, model.StatusDeleted, nil, false)
 	require.NoError(t, err)
 	check()
 	third := second

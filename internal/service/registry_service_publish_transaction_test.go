@@ -49,11 +49,11 @@ func (d *countingDB) UpdateServer(context.Context, pgx.Tx, string, string, *apiv
 	return nil, errUnexpectedCall
 }
 
-func (d *countingDB) SetServerStatus(context.Context, pgx.Tx, string, string, model.Status, *string) (*apiv0.ServerResponse, error) {
+func (d *countingDB) SetServerStatus(context.Context, pgx.Tx, string, string, model.Status, *string, bool) (*apiv0.ServerResponse, error) {
 	return nil, errUnexpectedCall
 }
 
-func (d *countingDB) SetAllVersionsStatus(context.Context, pgx.Tx, string, model.Status, *string) ([]*apiv0.ServerResponse, error) {
+func (d *countingDB) SetAllVersionsStatus(context.Context, pgx.Tx, string, model.Status, *string, bool) ([]*apiv0.ServerResponse, error) {
 	return nil, errUnexpectedCall
 }
 

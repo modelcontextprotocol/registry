@@ -12,6 +12,7 @@ import (
 
 // Common database errors
 var (
+	ErrModerationHold    = errors.New("this version is held by a registry moderator")
 	ErrNotFound          = errors.New("record not found")
 	ErrAlreadyExists     = errors.New("record already exists")
 	ErrInvalidInput      = errors.New("invalid input")
@@ -45,9 +46,9 @@ type Database interface {
 	// UpdateServer updates an existing server record
 	UpdateServer(ctx context.Context, tx pgx.Tx, serverName, version string, serverJSON *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
 	// SetServerStatus updates the status of a specific server version
-	SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status model.Status, statusMessage *string) (*apiv0.ServerResponse, error)
+	SetServerStatus(ctx context.Context, tx pgx.Tx, serverName, version string, status model.Status, statusMessage *string, moderator bool) (*apiv0.ServerResponse, error)
 	// SetAllVersionsStatus updates the status of all versions of a server in a single query
-	SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serverName string, status model.Status, statusMessage *string) ([]*apiv0.ServerResponse, error)
+	SetAllVersionsStatus(ctx context.Context, tx pgx.Tx, serverName string, status model.Status, statusMessage *string, moderator bool) ([]*apiv0.ServerResponse, error)
 	// ListServers retrieve server entries with optional filtering
 	ListServers(ctx context.Context, tx pgx.Tx, filter *ServerFilter, cursor string, limit int) ([]*apiv0.ServerResponse, string, error)
 	// GetServerByName retrieve a single server by its name
