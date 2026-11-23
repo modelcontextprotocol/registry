@@ -496,6 +496,7 @@ Configuration keys are namespaced. Set them with `pulumi config set <key> [--sec
 | `mcp-registry:googleOauthClientSecret` | Google OAuth client secret for Grafana login | Yes (secret) |
 | `mcp-registry:alertDiscordWebhook` | Discord webhook for Grafana alert notifications; alerts are provisioned only where it is set | No (secret) |
 | `mcp-registry:usageCollector` | `"true"` runs the daily [usage collector](#usage-collector); `"false"` retires it | No (hosted stacks only) |
+| `mcp-registry:usageIdentityPhase` | Stages [the migration to keyless usage jobs](#migrating-the-usage-jobs-to-workload-identity) in one hosted stack | No |
 | `mcp-registry:usageCollectorOrganizationAliases` | Names for organizations' own networks in the usage dashboards | No (secret) |
 | `mcp-registry:malwareSweep` | `"true"` creates the [malware sweep](#malware-sweep), daily in production and on demand in staging | No |
 | `mcp-registry:malwareCheckMode` | What a publish does with a package OSV lists as malware: `report`, `enforce` or `off`; see [The publish-time check](#the-publish-time-check) | No (default: report) |
@@ -672,7 +673,7 @@ Everything is behind one setting, `mcp-registry:usageCollector`:
 | `"true"` | The collector runs daily, with its database, dashboards and alert rules. |
 | `"false"` | Retired. The collector is removed, and Grafana deletes its data source, dashboards and alert rules. The stored history is kept. |
 
-It is `"true"` in staging and not set in production. It is only accepted on the
+It is `"true"` in staging and production. It is only accepted on the
 hosted stacks with the standalone Gateway, which produces the request counters
 the collector scales its figures by.
 
@@ -680,7 +681,7 @@ the collector scales its figures by.
 
 | Where | What |
 |-------|------|
-| Google Cloud | `roles/logging.viewer` on the project for the existing `registry-usage-reader` service account, and a key for it; the bucket `mcp-registry-<environment>-usage-backups` and that account's access to it |
+| Google Cloud | The retained bucket `mcp-registry-<environment>-usage-backups` and the [usage job identities](#credentials-and-access) |
 | `default` | Role `registry_usage_reader` on `registry-pg`, and its password |
 | `monitoring` | Roles `registry_usage_collector` and `registry_usage_grafana` and database `registry_usage` on `grafana-pg`; the CronJob `registry-usage-collector` with its Secrets and a 10Gi cache volume; the CronJob `registry-usage-history-backup`; the dashboards |
 | Cluster | PriorityClass `registry-usage-batch` |
@@ -774,12 +775,14 @@ a stored day again takes the collector's `--day` flag.
 
 ### Credentials and access
 
-All four credentials are created by Pulumi and exist only in its encrypted
-state and in Kubernetes Secrets. None is written to this repository.
+The keyless jobs get short-lived Google credentials from the GKE metadata server.
+Each Kubernetes ServiceAccount (KSA) receives one direct IAM grant. Database
+passwords are separate Kubernetes Secrets managed by Pulumi.
 
-| Credential | Used by | What it can do |
-|------------|---------|----------------|
-| Key of `registry-usage-reader@<project>` | The collector and the backup | Read log entries of its own project; read and write the usage backup bucket, and no other bucket |
+| Credential | Used by | Access |
+|------------|---------|--------|
+| `monitoring/registry-usage-collector` | Collector | `roles/logging.viewer` on its project |
+| `monitoring/registry-usage-history-backup` | Backup | `roles/storage.objectUser` on its environment's usage backup bucket |
 | `registry_usage_collector` | The collector and the backup | Owns database `registry_usage` on `grafana-pg`. It has no access to Grafana's own database in that cluster. The backup uses it in read-only transactions. |
 | `registry_usage_grafana` | Grafana's data source | Read the tables, the view and the functions the dashboards query. The collector grants this each time it starts. |
 | `registry_usage_reader` | The collector | Read the registry database |
@@ -801,13 +804,97 @@ ordinary logs, not only the gateway's access records. A log view restricted to
 those records would narrow it; the collector would then need a setting for the
 view it reads.
 
-The service account itself is not managed here. An operator created it in each
-project, and retiring the collector removes its role and its key but not the
-account.
+Until cutover, the two jobs mount the key of the operator-created
+`registry-usage-reader@<project>.iam.gserviceaccount.com`. Its original
+grants and key remain available for rollback through the cutover phase.
+Raising `CredentialGeneration` rotates the three database passwords and any
+legacy key still managed by Pulumi. Keep that value fixed during migration.
 
-To replace the key and the three passwords, raise `CredentialGeneration` in
-`pkg/usagecollector/usagecollector.go`. The deployment creates new ones and
-restarts Grafana.
+### Migrating the usage jobs to Workload Identity
+
+On 2026-11-23 the GKE API reported no workload pool in either Standard cluster
+in `us-central1-b`, and neither the worker nor the isolated database pool had
+a workload metadata configuration. Both CronJobs used the default Kubernetes
+identity, selected `registry-role=worker` and mounted
+`registry-usage-collector-gcp`. Each usage bucket contained four Restic snapshots.
+Recheck these facts for the target stack before approving a change. Each project had just one cluster. The IAM subjects
+identify KSAs by namespace and name within the project workload pool.
+
+Use a separate reviewed stack-file change and refreshed preview for each phase.
+Complete staging first, then repeat in production. The implementation alone leaves
+both checked-in stacks at the existing credential configuration. Merging deployment
+code to main triggers staging. A production stack-file merge triggers production.
+From `deploy/`, use `make staging-preview` or `make prod-preview` with the
+corresponding deployment credentials before approving each merge and apply.
+
+1. **Prepare.** Record the latest successful runs, the existing repository ID
+   (`restic --no-lock cat config | jq -r .id`) and a recent snapshot ID from
+   [the restore instructions](#restoring-the-history), using the target project.
+   Identify the Pulumi-managed `usage-collector-key` by its public key ID and
+   check for other consumers of this service account/key. Inspect only metadata.
+   Check the worker workloads for reliance on the Compute Engine node identity,
+   and confirm the IAM Service Account Credentials API is enabled. Approve
+   `mcp-registry:usageIdentityPhase: prepare` for this stack. The apply enables
+   `<project>.svc.id.goog` on the cluster, sets `GKE_METADATA` on its worker
+   pool, creates the two KSAs in `monitoring` and adds the two direct grants
+   above. Review the worker roll and capacity with the operator. Compact staging
+   has one worker, zero surge and one unavailable during replacement. Schedule
+   that work outside both jobs' windows and account for staging service disruption.
+   Production uses one surge and zero unavailable. Reject a preview that replaces
+   the cluster, changes the database pool, rotates credentials or changes the
+   backup bucket. Recheck registry health after the worker roll.
+2. **Verify the prepared identities.** Confirm that the workload pool matches
+   the project and a Ready worker carries both required labels. With operator
+   approval, run the following disposable probes from `deploy/` in Bash. They
+   use Google IAM permission checks. They read no log entries or backup objects
+   and print no tokens. Retry after IAM propagation if necessary. Both must pass.
+
+   ```bash
+   set -e
+   project=mcp-registry-staging  # use mcp-registry-prod for production
+   context="gke_${project}_us-central1-b_${project}"
+   gcloud container clusters describe "$project" --project="$project" --zone=us-central1-b \
+     --format='value(workloadIdentityConfig.workloadPool)'
+   kubectl --context "$context" get nodes -l 'registry-role=worker,iam.gke.io/gke-metadata-server-enabled=true'
+   for sa in registry-usage-collector registry-usage-history-backup; do
+     overrides=$(jq -nc --arg sa "$sa" '{spec:{serviceAccountName:$sa,automountServiceAccountToken:false,
+       nodeSelector:{"registry-role":"worker","iam.gke.io/gke-metadata-server-enabled":"true"}}}')
+     kubectl --context "$context" -n monitoring run "check-${sa}-$(date +%s)" \
+       --image=python:3.13-alpine --restart=Never --rm -i --attach --overrides="$overrides" \
+       --command -- python3 - "$project" "$sa" < scripts/check_usage_permissions.py
+   done
+   ```
+
+3. **Cut over.** Approve `usageIdentityPhase: cutover`. The two existing
+   schedules now use their own KSAs and select metadata-enabled workers. Existing
+   Jobs can finish with the legacy key. Inspect the next **scheduled** Jobs
+   and their Pods in `monitoring`. Confirm both completed using their matching
+   KSAs, with no Google Secret mount or credential environment variable. Check
+   that the 01:15 UTC collector read Cloud Logging and stored a new day. Check
+   that the 03:30 UTC backup logged `REGISTRY_USAGE_BACKUP_SUCCESS`, including
+   a successful full Restic check. Verify the repository ID, a pre-cutover
+   snapshot still within retention, and the new snapshot. Cutover and keyless
+   backups require the existing repository to open before writing. If a job
+   fails, keep the key and grants. Approve a return to **prepare** to put the
+   old templates back while keeping the worker configuration in place.
+4. **Revoke.** Once the evidence above is verified and all old Jobs/Pods
+   have drained, obtain separate approval for `usageIdentityPhase: keyless`.
+   Review the five planned deletions covering the exact managed key
+   `usage-collector-key`, the Secret `monitoring/registry-usage-collector-gcp`, the shared account's project
+   log grant and its two usage-bucket grants. The normal saved-plan apply
+   also checks the latest scheduled Jobs and their successful Pods before
+   deleting the key. Confirm the key ID is absent from the account, the Secret
+   and old grants are gone, both direct grants remain, and the next scheduled
+   runs succeed. After revocation, fix the federated identities in place. Returning
+   to an earlier phase would create a new exported key and needs a new approval.
+   The old Google service account stays operator-owned. Historical
+   encrypted state can contain the revoked key. Keep `keyless` set for later
+   deployments and feature retirement. Removing the phase while the feature is
+   enabled requests legacy credentials and changes the cluster configuration.
+
+GKE configuration and the Google client implementations are documented in
+[the GKE guide](https://cloud.google.com/kubernetes-engine/docs/how-to/workload-identity),
+[the collector](../internal/usage/run.go) and [Restic's pinned GCS backend](https://github.com/restic/restic/blob/v0.16.4/internal/backend/gs/gs.go).
 
 ### Naming organizations' networks
 
@@ -848,15 +935,15 @@ every step has succeeded.
 |---|---|
 | Where | `gs://mcp-registry-<environment>-usage-backups/usage-history-v1`, a bucket that holds nothing else |
 | Who makes the archive | `registry_usage_collector`, in read-only transactions. No credential of Grafana's own database is involved, and that database is not backed up. |
-| Who writes to the bucket | The collector's service account, which is granted this one bucket. It cannot reach the registry's backups. |
+| Who writes to the bucket | After cutover, the backup's own KSA with object access to this one bucket. |
 | Restic password | `registry-usage-history`. This is not a secret. A generated password would exist only in Pulumi's state, and losing it would lose the backups; access to the bucket is what protects them. |
 | Cost | The repository is the size of the database, well under a gigabyte for years: a few cents a month. |
 
 Each snapshot holds the whole history, so the newest is all a restore needs;
-the older ones are there to undo damage that is noticed late. Unlike the
-registry's job, this one creates its repository if there is none and logs
-`REGISTRY_USAGE_BACKUP_REPOSITORY_INITIALIZED` when it does, so nothing has to
-be initialised by hand.
+the older ones are there to undo damage that is noticed late. The legacy template initializes the repository on first use. The keyless
+template requires an existing repository. For a new, empty bucket an operator
+must approve and run `restic init` once at the documented path with the same
+password before the first keyless backup.
 
 After that, the job records the time in VictoriaMetrics as
 `registry_usage_backup_last_success_timestamp_seconds`. Where alerting is
@@ -973,7 +1060,7 @@ are gone, the rules locked and failing, and only the `"false"` deployment
 deletes them.
 
 With `"false"`, Pulumi removes the two CronJobs, the Secrets, the cache volume,
-the service account's key and its roles, and the dashboards' files. Grafana
+the usage IAM grants, KSAs, any remaining managed usage key, and the dashboards' files. Grafana
 restarts and deletes the data source, the two dashboards and the two rules.
 What stays:
 

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -104,7 +105,10 @@ func deployGrafanaWithUsage(settings map[string]string, secrets ...string) (*usa
 		if err != nil {
 			return err
 		}
-		cluster := &providers.ProviderInfo{Provider: provider, UsageCollectorKey: pulumi.ToSecret(pulumi.String(fakeGoogleKey)).(pulumi.StringOutput)}
+		cluster := &providers.ProviderInfo{Provider: provider, UsageAccess: &providers.UsageAccess{LegacyKey: pulumi.ToSecret(pulumi.String(fakeGoogleKey)).(pulumi.StringOutput)}}
+		if settings["mcp-registry:usageIdentityPhase"] == "keyless" {
+			cluster.UsageAccess.LegacyKey = pulumi.StringOutput{}
+		}
 		return deployGrafana(ctx, cluster, ns, "staging", nil, nil)
 	}, pulumi.WithMocks("mcp-registry-infra", "test", m), func(info *pulumi.RunInfo) {
 		info.Config = map[string]string{
@@ -123,7 +127,7 @@ func deployGrafanaWithUsage(settings map[string]string, secrets ...string) (*usa
 
 const fakeWebhook = "https://discord.example/api/webhooks/1/FAKEHOOK-test"
 
-// Production has no flag, and must not change until it gets one.
+// Stacks without the usage collector must remain untouched.
 func TestUsageCollectorIsAbsentWithoutItsFlag(t *testing.T) {
 	m, err := deployGrafanaWithUsage(map[string]string{alertWebhookKey: fakeWebhook}, alertWebhookKey)
 	if err != nil {
@@ -442,6 +446,66 @@ func TestRetiredUsageCollectorDeletesItsRulesWithoutAlerting(t *testing.T) {
 	}
 }
 
+func TestUsageIdentityMigrationPodTemplates(t *testing.T) {
+	const secret = "kubernetes:core/v1:Secret::registry-usage-collector-gcp"
+	previous := map[string]map[string]any{}
+	for _, phase := range []string{"", "prepare", "cutover", "keyless"} {
+		t.Run("phase-"+phase, func(t *testing.T) {
+			m, err := deployGrafanaWithUsage(map[string]string{usageFlagKey: "true", "mcp-registry:usageIdentityPhase": phase})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, ok := m.resources[secret]; ok != (phase != "keyless") {
+				t.Fatalf("legacy Secret present=%t", ok)
+			}
+			usesMetadata := phase == "cutover" || phase == "keyless"
+			for _, job := range []string{"registry-usage-collector", "registry-usage-history-backup"} {
+				account := "kubernetes:core/v1:ServiceAccount::" + job
+				if _, ok := m.resources[account]; ok != (phase != "") {
+					t.Fatalf("%s present=%t", account, ok)
+				}
+				if phase != "" {
+					ksa := m.resource(t, account)
+					if at(ksa, "metadata", "name") != job || at(ksa, "metadata", "namespace") != "monitoring" || ksa["automountServiceAccountToken"] != false {
+						t.Errorf("unexpected KSA: %v", ksa)
+					}
+				}
+				cron := m.resource(t, "kubernetes:batch/v1:CronJob::"+job)
+				if (phase == "prepare" || phase == "keyless") && !reflect.DeepEqual(previous[job], cron) {
+					t.Errorf("phase %s unexpectedly changes CronJob %s", phase, job)
+				}
+				previous[job] = cron
+				pod := at(cron, "spec", "jobTemplate", "spec", "template", "spec")
+				raw, err := json.Marshal(pod)
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, field := range []string{"registry-usage-collector-gcp", "GOOGLE_APPLICATION_CREDENTIALS", usageGoogleKeyPath} {
+					if strings.Contains(string(raw), field) == usesMetadata {
+						t.Errorf("%s: incorrect %s", job, field)
+					}
+				}
+				if job == usageBackupWorkload && (strings.Contains(string(raw), "restic init") == usesMetadata ||
+					!strings.Contains(string(raw), "gs:mcp-registry-staging-usage-backups:/usage-history-v1") ||
+					!strings.Contains(string(raw), "restic check --read-data")) {
+					t.Error("backup must verify the existing repository across cutover")
+				}
+				if at(pod, "automountServiceAccountToken") != false || at(pod, "nodeSelector", registryRoleLabel) != "worker" {
+					t.Errorf("%s: unsafe placement or token mount", job)
+				}
+				selector := at(pod, "nodeSelector", "iam.gke.io/gke-metadata-server-enabled")
+				if usesMetadata {
+					if at(pod, "serviceAccountName") != job || selector != "true" {
+						t.Errorf("%s cannot use its own metadata identity", job)
+					}
+				} else if at(pod, "serviceAccountName") != nil || selector != nil {
+					t.Errorf("%s switched before cutover", job)
+				}
+			}
+		})
+	}
+}
+
 func TestUsageCollectorFollowsTheRegistryRelease(t *testing.T) {
 	m := &usageMonitor{grafanaChartMonitor{backupMonitor: backupMonitor{resources: map[string]resource.PropertyMap{}}}}
 	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
@@ -453,7 +517,7 @@ func TestUsageCollectorFollowsTheRegistryRelease(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		cluster := &providers.ProviderInfo{Provider: provider, UsageCollectorKey: pulumi.String(fakeGoogleKey).ToStringOutput()}
+		cluster := &providers.ProviderInfo{Provider: provider, UsageAccess: &providers.UsageAccess{LegacyKey: pulumi.String(fakeGoogleKey).ToStringOutput()}}
 		_, err = deployUsageCollector(ctx, cluster, ns, "prod", nil, nil)
 		return err
 	}, pulumi.WithMocks("mcp-registry-infra", "test", m), func(info *pulumi.RunInfo) {

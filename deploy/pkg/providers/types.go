@@ -12,9 +12,14 @@ type ProviderInfo struct {
 	StagingIngressAddress pulumi.StringOutput
 	Name                  pulumi.StringOutput
 	Provider              *kubernetes.Provider
-	// UsageCollectorKey is the usage collector's Google credential, as
-	// base64-encoded JSON. It is only set where the collector is enabled.
-	UsageCollectorKey pulumi.StringOutput
+	UsageAccess           *UsageAccess
+}
+
+// UsageAccess keeps the original key during migration. The new service accounts
+// depend on the IAM grants before their CronJobs can use metadata credentials.
+type UsageAccess struct {
+	LegacyKey pulumi.StringOutput
+	Grants    []pulumi.Resource
 }
 
 // BackupStorageInfo represents S3-compatible backup storage configuration
