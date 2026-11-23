@@ -82,6 +82,8 @@ value overrides it for an intentional diagnostic freeze and must be digest-pinne
 Staging normally deploys each new main build. To promote a production release,
 set `imageTag` to its published version. Changing the tag rolls out the new image.
 
+To preview a production promotion from GitHub, run the production workflow on `main` with operation `preview` and the candidate `preview_image_tag` or `preview_usage_phase`. These inputs change the stack file in the preview runner only. Production applies read the committed configuration.
+
 Run `make staging-preview` and `make prod-preview` from this directory for read-only
 previews. `PULUMI_CONFIG_PASSPHRASE_FILE` can point to an existing local passphrase
 file; otherwise the scripts use `passphrase.staging.txt` / `passphrase.prod.txt`.
