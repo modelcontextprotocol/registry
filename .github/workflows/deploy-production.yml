@@ -8,6 +8,14 @@ on:
         type: choice
         options: [preview, apply]
         default: preview
+      preview_image_tag:
+        description: Optional release image tag to preview (e.g. 1.8.16)
+        type: string
+      preview_usage_phase:
+        description: Usage job identity phase to preview
+        type: choice
+        options: [unchanged, prepare, cutover, keyless]
+        default: unchanged
   push:
     branches:
       - main
@@ -73,12 +81,28 @@ jobs:
           PULUMI_PROD_PASSPHRASE: ${{ secrets.PULUMI_PROD_PASSPHRASE }}
           CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE: ""
           DEPLOY_OPERATION: ${{ inputs.operation }}
+          PREVIEW_IMAGE_TAG: ${{ inputs.preview_image_tag }}
+          PREVIEW_USAGE_PHASE: ${{ inputs.preview_usage_phase }}
         run: |
           umask 077
           trap 'rm -f passphrase.prod.txt' EXIT
           printf '%s' "$PULUMI_PROD_PASSPHRASE" > passphrase.prod.txt
           export PULUMI_CONFIG_PASSPHRASE_FILE="$PWD/passphrase.prod.txt"
           mode="${DEPLOY_OPERATION:-apply}"
+          phase="${PREVIEW_USAGE_PHASE:-unchanged}"
+          if [[ -n "$PREVIEW_IMAGE_TAG" || "$phase" != unchanged ]]; then
+            [[ "$GITHUB_REF" == refs/heads/main && "$mode" == preview ]] || exit 1
+            [[ -z "$PREVIEW_IMAGE_TAG" || "$PREVIEW_IMAGE_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || exit 1
+            case "$phase" in unchanged|prepare|cutover|keyless) ;; *) exit 1 ;; esac
+            # Edit only the runner's stack file using the two reviewed inputs.
+            export PULUMI_BACKEND_URL=gs://mcp-registry-prod-pulumi-state
+            if [[ -n "$PREVIEW_IMAGE_TAG" ]]; then
+              pulumi config set mcp-registry:imageTag "$PREVIEW_IMAGE_TAG" --stack gcpProd --plaintext
+            fi
+            if [[ "$phase" != unchanged ]]; then
+              pulumi config set mcp-registry:usageIdentityPhase "$phase" --stack gcpProd --plaintext
+            fi
+          fi
           if [ "$mode" = "apply" ]; then
             if [ "$GITHUB_REF" != "refs/heads/main" ]; then
               echo "Production apply requires main."
