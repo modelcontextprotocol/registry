@@ -100,10 +100,13 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 			return nil, huma.Error422UnprocessableEntity("Failed to edit server, invalid schema: call /validate for details")
 		}
 
-		updatedServer, err := registry.UpdateServer(ctx, serverName, version, &input.Body, nil)
+		updatedServer, err := registry.UpdateServer(ctx, currentServer, &input.Body, nil)
 		if err != nil {
 			if errors.Is(err, database.ErrNotFound) {
 				return nil, huma.Error404NotFound("Server not found")
+			}
+			if errors.Is(err, service.ErrEditConflict) {
+				return nil, huma.Error409Conflict("Server version changed during edit. Fetch it again before retrying.")
 			}
 			return nil, huma.Error400BadRequest("Failed to edit server", err)
 		}

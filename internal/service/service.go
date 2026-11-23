@@ -2,11 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/modelcontextprotocol/registry/internal/database"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 )
+
+// ErrEditConflict indicates that the version changed after the caller read it.
+var ErrEditConflict = errors.New("server version changed during edit")
 
 // StatusChangeRequest represents a request to change a server's status
 type StatusChangeRequest struct {
@@ -26,8 +30,8 @@ type RegistryService interface {
 	GetAllVersionsByServerName(ctx context.Context, serverName string, includeDeleted bool) ([]*apiv0.ServerResponse, error)
 	// CreateServer creates a new server version
 	CreateServer(ctx context.Context, req *apiv0.ServerJSON) (*apiv0.ServerResponse, error)
-	// UpdateServer updates an existing server and optionally its status
-	UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error)
+	// UpdateServer edits the previously read server version and optionally its status.
+	UpdateServer(ctx context.Context, previous *apiv0.ServerResponse, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error)
 	// UpdateServerStatus updates only the status metadata of a server version
 	UpdateServerStatus(ctx context.Context, serverName, version string, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error)
 	// UpdateAllVersionsStatus updates the status metadata of all versions of a server in a single transaction

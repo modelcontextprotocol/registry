@@ -31,6 +31,13 @@ type ServerFilter struct {
 	IncludeDeleted *bool      // for including deleted packages in results (default: exclude)
 }
 
+// VersionMetadata contains the fields needed to rank versions of a server.
+type VersionMetadata struct {
+	Version     string
+	Status      model.Status
+	PublishedAt time.Time
+}
+
 // Database defines the interface for database operations
 type Database interface {
 	// CreateServer inserts a new server version with official metadata
@@ -49,6 +56,7 @@ type Database interface {
 	GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, serverName string, version string, includeDeleted bool) (*apiv0.ServerResponse, error)
 	// GetAllVersionsByServerName retrieve all versions of a server by server name
 	GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string, includeDeleted bool) ([]*apiv0.ServerResponse, error)
+	ListVersionMetadata(ctx context.Context, tx pgx.Tx, serverName string) ([]VersionMetadata, error)
 	// GetCurrentLatestVersion retrieve the current latest version of a server by server name
 	GetCurrentLatestVersion(ctx context.Context, tx pgx.Tx, serverName string) (*apiv0.ServerResponse, error)
 	// CountServerVersions count the number of versions for a server

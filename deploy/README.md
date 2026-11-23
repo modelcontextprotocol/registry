@@ -37,7 +37,7 @@ Local development still uses ingress-nginx.
 
 **Note:** Deployments are automatically handled by GitHub Actions with separate workflows for staging and production:
 
-- **Staging:** All merges to the `main` branch automatically build and deploy the latest code to the `staging` environment via [deploy-staging.yml](../.github/workflows/deploy-staging.yml). The deployment uses the digest returned by that build; it does not remain pinned to an old experiment image. Manual runs resolve the current published `:main` image to a digest once.
+- **Staging:** Pushes to `main` automatically build and deploy to staging unless all changed files are the production stack config, the root or deployment README, or Markdown/MDX pages under `docs/`. See [deploy-staging.yml](../.github/workflows/deploy-staging.yml). The deployment uses the digest returned by that build; it does not remain pinned to an old experiment image. Manual runs resolve the current published `:main` image to a digest once.
 
 - **Production:** Deployment requires explicit configuration of the Docker image tag in `Pulumi.gcpProd.yaml` and is triggered automatically via [deploy-production.yml](../.github/workflows/deploy-production.yml) when this config file is pushed to `main`. This GitOps-style approach provides manual control and an audit trail for production versions.
 

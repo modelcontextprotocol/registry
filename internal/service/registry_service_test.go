@@ -420,7 +420,15 @@ func TestUpdateServer(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := service.UpdateServer(ctx, tt.serverName, tt.version, tt.updatedServer, tt.statusChange)
+			previous, err := service.GetServerByNameAndVersion(ctx, tt.serverName, tt.version, true)
+			if tt.expectError {
+				// Simulate a previously observed version that disappeared before commit.
+				require.ErrorIs(t, err, database.ErrNotFound)
+				previous = &apiv0.ServerResponse{Server: *tt.updatedServer, Meta: apiv0.ResponseMeta{Official: &apiv0.RegistryExtensions{Status: model.StatusActive}}}
+			} else {
+				require.NoError(t, err)
+			}
+			result, err := service.UpdateServer(ctx, previous, tt.updatedServer, tt.statusChange)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -437,6 +445,36 @@ func TestUpdateServer(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUpdateServerRejectsStaleEdits(t *testing.T) {
+	ctx := context.Background()
+	svc := NewRegistryService(database.NewTestDB(t), &config.Config{})
+	req := &apiv0.ServerJSON{Name: "com.example/edit-race", Version: "1.0.0", Description: "original"}
+	_, err := svc.CreateServer(ctx, req)
+	require.NoError(t, err)
+	observed, err := svc.GetServerByNameAndVersion(ctx, req.Name, req.Version, false)
+	require.NoError(t, err)
+
+	newer := *req
+	newer.Description = "newer"
+	updated, err := svc.UpdateServer(ctx, observed, &newer, nil)
+	require.NoError(t, err)
+	_, err = svc.UpdateServer(ctx, observed, req, nil)
+	require.ErrorIs(t, err, ErrEditConflict)
+
+	deleted, err := svc.UpdateServerStatus(ctx, req.Name, req.Version, &StatusChangeRequest{NewStatus: model.StatusDeleted})
+	require.NoError(t, err)
+	_, err = svc.UpdateServer(ctx, updated, req, nil)
+	require.ErrorIs(t, err, ErrEditConflict)
+
+	_, err = svc.UpdateServerStatus(ctx, req.Name, req.Version, &StatusChangeRequest{NewStatus: model.StatusActive})
+	require.NoError(t, err)
+	_, err = svc.UpdateServer(ctx, deleted, req, nil)
+	require.ErrorIs(t, err, ErrEditConflict, "an edit that skipped validation for a deleted version must not overwrite a restored one")
+	current, err := svc.GetServerByNameAndVersion(ctx, req.Name, req.Version, false)
+	require.NoError(t, err)
+	require.Equal(t, newer.Description, current.Server.Description)
 }
 
 func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
@@ -475,7 +513,9 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 	deletedStatusChange := &StatusChangeRequest{
 		NewStatus: model.StatusDeleted,
 	}
-	_, err = service.UpdateServer(ctx, serverName, version, invalidServer, deletedStatusChange)
+	previous, err := service.GetServerByNameAndVersion(ctx, serverName, version, true)
+	require.NoError(t, err)
+	_, err = service.UpdateServer(ctx, previous, invalidServer, deletedStatusChange)
 	require.NoError(t, err, "should be able to set server to deleted (validation should be skipped)")
 
 	// Verify server is now deleted (need includeDeleted=true to find it)
@@ -500,7 +540,7 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 	}
 
 	// This should succeed despite invalid packages because server is deleted
-	result, err := service.UpdateServer(ctx, serverName, version, updatedInvalidServer, nil)
+	result, err := service.UpdateServer(ctx, updatedServer, updatedInvalidServer, nil)
 	assert.NoError(t, err, "updating deleted server should skip registry validation")
 	assert.NotNil(t, result)
 	assert.Equal(t, "Updated description for deleted server", result.Server.Description)
@@ -532,7 +572,9 @@ func TestUpdateServer_SkipValidationForDeletedServers(t *testing.T) {
 	newDeletedStatusChange := &StatusChangeRequest{
 		NewStatus: model.StatusDeleted,
 	}
-	result2, err := service.UpdateServer(ctx, "com.example/being-deleted-test", "1.0.0", activeServer, newDeletedStatusChange)
+	previous, err = service.GetServerByNameAndVersion(ctx, activeServer.Name, activeServer.Version, true)
+	require.NoError(t, err)
+	result2, err := service.UpdateServer(ctx, previous, activeServer, newDeletedStatusChange)
 	assert.NoError(t, err, "updating server being set to deleted should skip registry validation")
 	assert.NotNil(t, result2)
 	assert.Equal(t, model.StatusDeleted, result2.Meta.Official.Status)

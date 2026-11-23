@@ -352,101 +352,65 @@ func (s *registryServiceImpl) createServerInTransaction(ctx context.Context, tx 
 // deleted version keeps the flag so admin lookups (GetServerByName with includeDeleted=true)
 // still find the server. Caller must hold the per-server publish lock.
 func (s *registryServiceImpl) recalculateLatest(ctx context.Context, tx pgx.Tx, serverName string) error {
-	versions, err := s.db.GetAllVersionsByServerName(ctx, tx, serverName, true)
+	versions, err := s.db.ListVersionMetadata(ctx, tx, serverName)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			return s.db.SetLatestVersion(ctx, tx, serverName, "")
-		}
 		return fmt.Errorf("failed to load versions for latest recalculation: %w", err)
 	}
 
 	winner := pickLatestVersion(versions, false)
-	if winner == nil {
-		// No non-deleted versions — fall back to highest deleted so the server is still
-		// addressable via includeDeleted=true lookups.
+	if winner == "" {
 		winner = pickLatestVersion(versions, true)
 	}
-
-	winnerVersion := ""
-	if winner != nil {
-		winnerVersion = winner.Server.Version
-	}
-	return s.db.SetLatestVersion(ctx, tx, serverName, winnerVersion)
+	return s.db.SetLatestVersion(ctx, tx, serverName, winner)
 }
 
-// pickLatestVersion returns the highest version from the given slice. If allowDeleted is
-// false, deleted versions are skipped.
-func pickLatestVersion(versions []*apiv0.ServerResponse, allowDeleted bool) *apiv0.ServerResponse {
-	var winner *apiv0.ServerResponse
-	for _, v := range versions {
-		if !allowDeleted && v.Meta.Official != nil && v.Meta.Official.Status == model.StatusDeleted {
+func pickLatestVersion(versions []database.VersionMetadata, allowDeleted bool) string {
+	var winner *database.VersionMetadata
+	for i := range versions {
+		v := &versions[i]
+		if !allowDeleted && v.Status == model.StatusDeleted {
 			continue
 		}
-		if winner == nil {
-			winner = v
-			continue
-		}
-		var winnerPublishedAt, candidatePublishedAt time.Time
-		if winner.Meta.Official != nil {
-			winnerPublishedAt = winner.Meta.Official.PublishedAt
-		}
-		if v.Meta.Official != nil {
-			candidatePublishedAt = v.Meta.Official.PublishedAt
-		}
-		if CompareVersions(v.Server.Version, winner.Server.Version, candidatePublishedAt, winnerPublishedAt) > 0 {
+		if winner == nil || CompareVersions(v.Version, winner.Version, v.PublishedAt, winner.PublishedAt) > 0 {
 			winner = v
 		}
 	}
-	return winner
-}
-
-// UpdateServer updates an existing server with new details
-func (s *registryServiceImpl) UpdateServer(ctx context.Context, serverName, version string, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
-	// Wrap the entire operation in a transaction
-	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
-		return s.updateServerInTransaction(ctx, tx, serverName, version, req, statusChange)
-	})
-}
-
-// updateServerInTransaction contains the actual UpdateServer logic within a transaction
-func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, serverName, version string, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
-	// Get current server to check if it's deleted or being deleted
-	// Include deleted servers since we may need to update or restore them
-	currentServer, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
-	if err != nil {
-		return nil, err
+	if winner == nil {
+		return ""
 	}
+	return winner.Version
+}
 
-	// Skip registry validation if:
-	// 1. Server is currently deleted, OR
-	// 2. Server is being set to deleted status
-	currentlyDeleted := currentServer.Meta.Official != nil && currentServer.Meta.Official.Status == model.StatusDeleted
-	beingDeleted := statusChange != nil && statusChange.NewStatus == model.StatusDeleted
-	skipRegistryValidation := currentlyDeleted || beingDeleted
-
-	// Unlike the publish path, this registry validation still runs inside the
-	// transaction, so its external HTTP calls hold a pool connection. It cannot
-	// simply be hoisted: skipRegistryValidation is derived from the
-	// GetServerByNameAndVersion read above, so moving validation out needs a
-	// second read before the transaction and a decision about the race in whether
-	// to skip. Left as-is because the edit path carries a small fraction of
-	// publish traffic. Note it emits no phase log of its own, so there is no
-	// tx_begin_ms to watch here — use mcp_registry_http_request_duration for the
-	// edit routes if this needs revisiting.
+// UpdateServer validates against the version read by the caller before opening a transaction.
+func (s *registryServiceImpl) UpdateServer(ctx context.Context, previous *apiv0.ServerResponse, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
+	meta := previous.Meta.Official
+	skipRegistryValidation := meta.Status == model.StatusDeleted || (statusChange != nil && statusChange.NewStatus == model.StatusDeleted)
 	if err := validators.ValidateUpdateRequest(ctx, *req, s.cfg, skipRegistryValidation); err != nil {
 		return nil, err
 	}
 
-	// Acquire advisory lock to prevent concurrent edits of servers with same name
+	return database.InTransactionT(ctx, s.db, func(ctx context.Context, tx pgx.Tx) (*apiv0.ServerResponse, error) {
+		return s.updateServerInTransaction(ctx, tx, previous, req, statusChange)
+	})
+}
+
+func (s *registryServiceImpl) updateServerInTransaction(ctx context.Context, tx pgx.Tx, previous *apiv0.ServerResponse, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
+	serverName, version := previous.Server.Name, previous.Server.Version
 	if err := s.db.AcquirePublishLock(ctx, tx, serverName); err != nil {
 		return nil, err
 	}
 
-	// Merge the request with the current server, preserving metadata
-	updatedServer := *req
+	// A restore, takedown or another edit may have committed during validation.
+	current, err := s.db.GetServerByNameAndVersion(ctx, tx, serverName, version, true)
+	if err != nil {
+		return nil, err
+	}
+	before, after := previous.Meta.Official, current.Meta.Official
+	if before.Status != after.Status || !before.UpdatedAt.Equal(after.UpdatedAt) {
+		return nil, ErrEditConflict
+	}
 
-	// Update server in database
-	updatedServerResponse, err := s.db.UpdateServer(ctx, tx, serverName, version, &updatedServer)
+	updatedServerResponse, err := s.db.UpdateServer(ctx, tx, serverName, version, req)
 	if err != nil {
 		return nil, err
 	}

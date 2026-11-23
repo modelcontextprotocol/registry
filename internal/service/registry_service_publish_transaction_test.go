@@ -73,6 +73,10 @@ func (d *countingDB) GetAllVersionsByServerName(context.Context, pgx.Tx, string,
 	return nil, errUnexpectedCall
 }
 
+func (d *countingDB) ListVersionMetadata(context.Context, pgx.Tx, string) ([]database.VersionMetadata, error) {
+	return nil, errUnexpectedCall
+}
+
 func (d *countingDB) GetCurrentLatestVersion(context.Context, pgx.Tx, string) (*apiv0.ServerResponse, error) {
 	return nil, errUnexpectedCall
 }
@@ -142,6 +146,18 @@ func TestCreateServerValidatesBeforeOpeningTransaction(t *testing.T) {
 	require.Error(t, err, "an unknown registry type must fail registry validation")
 	assert.Equal(t, 0, db.transactions,
 		"registry validation failed, so no transaction should have been opened: validation must run before the transaction to avoid holding a pool connection during external HTTP calls")
+}
+
+func TestUpdateServerValidatesBeforeOpeningTransaction(t *testing.T) {
+	db := &countingDB{}
+	svc := NewRegistryService(db, &config.Config{EnableRegistryValidation: true})
+	req := serverWithUnvalidatablePackage()
+	previous := &apiv0.ServerResponse{Server: *req, Meta: apiv0.ResponseMeta{Official: &apiv0.RegistryExtensions{Status: model.StatusActive}}}
+
+	_, err := svc.UpdateServer(context.Background(), previous, req, nil)
+
+	require.Error(t, err)
+	assert.Zero(t, db.transactions)
 }
 
 // slowBeginDB simulates a starved connection pool: pool.Begin blocks before the

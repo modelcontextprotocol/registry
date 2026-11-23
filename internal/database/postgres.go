@@ -590,6 +590,16 @@ func (db *PostgreSQL) GetServerByNameAndVersion(ctx context.Context, tx pgx.Tx, 
 	return serverResponse, nil
 }
 
+// ListVersionMetadata includes deleted versions for the all-deleted fallback.
+func (db *PostgreSQL) ListVersionMetadata(ctx context.Context, tx pgx.Tx, serverName string) ([]VersionMetadata, error) {
+	rows, err := db.getExecutor(tx).Query(ctx, `SELECT version, status, published_at
+		FROM servers WHERE server_name = $1 ORDER BY published_at DESC`, serverName)
+	if err != nil {
+		return nil, err
+	}
+	return pgx.CollectRows(rows, pgx.RowToStructByPos[VersionMetadata])
+}
+
 // GetAllVersionsByServerName retrieves all versions of a server by server name
 func (db *PostgreSQL) GetAllVersionsByServerName(ctx context.Context, tx pgx.Tx, serverName string, includeDeleted bool) ([]*apiv0.ServerResponse, error) {
 	if ctx.Err() != nil {
