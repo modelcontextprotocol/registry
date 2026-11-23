@@ -31,7 +31,7 @@ const (
 	usageRegistryRole = "registry_usage_reader"
 
 	usageImage         = "ghcr.io/modelcontextprotocol/registry-usage-collector"
-	usageWorkload      = "registry-usage-collector"
+	usageWorkload      = usagecollector.CollectorAccount
 	usagePriorityClass = "registry-usage-batch"
 	usageCachePath     = "/var/cache/usage-collector"
 	usageGoogleKeyPath = "/var/run/secrets/google"
@@ -134,7 +134,8 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 	if mode == usagecollector.Retired {
 		return retiredUsageGrafana(), nil
 	}
-	if cluster.UsageCollectorKey.OutputState == nil {
+	phase := usagecollector.Identity(ctx)
+	if cluster.UsageAccess == nil || (phase != usagecollector.Keyless && cluster.UsageAccess.LegacyKey.OutputState == nil) {
 		return nil, errors.New("the cluster provider supplied no Google credential for the usage collector")
 	}
 	aliases, err := usagecollector.Aliases(ctx)
@@ -204,13 +205,16 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 	if err != nil {
 		return nil, err
 	}
-	googleSecret, err := corev1.NewSecret(ctx, usageWorkload+"-gcp", &corev1.SecretArgs{
-		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String(usageWorkload + "-gcp"), Namespace: namespace},
-		Type:     pulumi.String("Opaque"),
-		Data:     pulumi.StringMap{"key.json": cluster.UsageCollectorKey},
-	}, provider)
-	if err != nil {
-		return nil, err
+	var googleSecret *corev1.Secret
+	if phase != usagecollector.Keyless {
+		googleSecret, err = corev1.NewSecret(ctx, usageWorkload+"-gcp", &corev1.SecretArgs{
+			Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String(usageWorkload + "-gcp"), Namespace: namespace},
+			Type:     pulumi.String("Opaque"),
+			Data:     pulumi.StringMap{"key.json": cluster.UsageAccess.LegacyKey},
+		}, provider)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Any ordinary pod that needs the room evicts the collector, and the
@@ -248,6 +252,25 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 		return &corev1.EnvVarArgs{Name: pulumi.String(name), Value: pulumi.String(value)}
 	}
 	labels := pulumi.StringMap{"app": pulumi.String(usageWorkload)}
+	identity, err := usageIdentityForPod(ctx, cluster, namespace, usageWorkload, googleSecret)
+	if err != nil {
+		return nil, err
+	}
+	env := corev1.EnvVarArray{
+		setting("USAGE_COLLECTOR_GCP_PROJECT", config.New(ctx, "gcp").Get("project")),
+		setting("USAGE_COLLECTOR_CLUSTER_NAME", "mcp-registry-"+environment),
+		// The Gateway's data plane writes the access records.
+		setting("USAGE_COLLECTOR_LOG_NAMESPACE", gatewaycanary.EdgeNamespace),
+		setting("USAGE_COLLECTOR_LOG_CONTAINER", "nginx"),
+		setting("USAGE_COLLECTOR_METRICS_URL", usageMetricsURL),
+		setting("USAGE_COLLECTOR_READER_ROLE", usageGrafanaRole),
+		setting("USAGE_COLLECTOR_CACHE_DIR", usageCachePath),
+	}
+	env = append(env, identity.env...)
+	env = append(env,
+		// Go collects garbage harder before the limit is reached.
+		setting("GOMEMLIMIT", "900MiB"),
+	)
 	_, err = batchv1.NewCronJob(ctx, usageWorkload, &batchv1.CronJobArgs{
 		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String(usageWorkload), Namespace: namespace, Labels: labels},
 		Spec: &batchv1.CronJobSpecArgs{
@@ -286,7 +309,8 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 							AutomountServiceAccountToken: pulumi.Bool(false),
 							PriorityClassName:            priority.Metadata.Name(),
 							// Never on the database's node.
-							NodeSelector: workerNodeSelector(ctx),
+							NodeSelector:       identity.selector,
+							ServiceAccountName: identity.account,
 							SecurityContext: &corev1.PodSecurityContextArgs{
 								RunAsNonRoot:   pulumi.Bool(true),
 								RunAsUser:      pulumi.Int(65532),
@@ -299,19 +323,7 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 								Image: pulumi.String(usageCollectorImage(config.New(ctx, "mcp-registry"), environment)),
 								// The staging tag moves with every build.
 								ImagePullPolicy: pulumi.String("Always"),
-								Env: corev1.EnvVarArray{
-									setting("USAGE_COLLECTOR_GCP_PROJECT", config.New(ctx, "gcp").Get("project")),
-									setting("USAGE_COLLECTOR_CLUSTER_NAME", "mcp-registry-"+environment),
-									// The Gateway's data plane writes the access records.
-									setting("USAGE_COLLECTOR_LOG_NAMESPACE", gatewaycanary.EdgeNamespace),
-									setting("USAGE_COLLECTOR_LOG_CONTAINER", "nginx"),
-									setting("USAGE_COLLECTOR_METRICS_URL", usageMetricsURL),
-									setting("USAGE_COLLECTOR_READER_ROLE", usageGrafanaRole),
-									setting("USAGE_COLLECTOR_CACHE_DIR", usageCachePath),
-									setting("GOOGLE_APPLICATION_CREDENTIALS", usageGoogleKeyPath+"/key.json"),
-									// Go collects garbage harder before the limit is reached.
-									setting("GOMEMLIMIT", "900MiB"),
-								},
+								Env:             env,
 								EnvFrom: corev1.EnvFromSourceArray{&corev1.EnvFromSourceArgs{
 									SecretRef: &corev1.SecretEnvSourceArgs{Name: settingsSecret.Metadata.Name()},
 								}},
@@ -326,20 +338,15 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 									ReadOnlyRootFilesystem:   pulumi.Bool(true),
 									Capabilities:             &corev1.CapabilitiesArgs{Drop: pulumi.StringArray{pulumi.String("ALL")}},
 								},
-								VolumeMounts: corev1.VolumeMountArray{
+								VolumeMounts: append(corev1.VolumeMountArray{
 									&corev1.VolumeMountArgs{Name: pulumi.String("cache"), MountPath: pulumi.String(usageCachePath)},
-									&corev1.VolumeMountArgs{Name: pulumi.String("google"), MountPath: pulumi.String(usageGoogleKeyPath), ReadOnly: pulumi.Bool(true)},
-								},
+								}, identity.mounts...),
 							}},
-							Volumes: corev1.VolumeArray{
+							Volumes: append(corev1.VolumeArray{
 								&corev1.VolumeArgs{Name: pulumi.String("cache"), PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSourceArgs{
 									ClaimName: cache.Metadata.Name().Elem(),
 								}},
-								&corev1.VolumeArgs{Name: pulumi.String("google"), Secret: &corev1.SecretVolumeSourceArgs{
-									SecretName:  googleSecret.Metadata.Name(),
-									DefaultMode: pulumi.Int(0o440),
-								}},
-							},
+							}, identity.volumes...),
 						},
 					},
 				},
@@ -349,7 +356,7 @@ func deployUsageCollector(ctx *pulumi.Context, cluster *providers.ProviderInfo, 
 	if err != nil {
 		return nil, err
 	}
-	if err := deployUsageBackup(ctx, namespace, environment, collectorRole, googleSecret, priority.Metadata.Name(),
+	if err := deployUsageBackup(ctx, cluster, namespace, environment, collectorRole, googleSecret, priority.Metadata.Name(),
 		provider, pulumi.DependsOn([]pulumi.Resource{database})); err != nil {
 		return nil, err
 	}

@@ -7,11 +7,12 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/usagecollector"
 )
 
 const (
-	usageBackupWorkload = "registry-usage-history-backup"
+	usageBackupWorkload = usagecollector.BackupAccount
 	// The time of the last backup that was stored and checked in full. The
 	// "Usage history backup missed" rule in usage/alerting/rules.yaml reads it.
 	usageBackupMetric = "registry_usage_backup_last_success_timestamp_seconds"
@@ -34,22 +35,17 @@ cd /backup
 sha256sum registry-usage.dump > registry-usage.dump.sha256
 echo REGISTRY_USAGE_ARCHIVE_VALIDATED`
 
-	// Unlike the registry's job this one creates its repository when there is
-	// none, so that switching the collector on needs no step by hand. Every
-	// snapshot holds the whole history, so a repository started afresh loses
-	// only older restore points, and says so. Restic refuses to initialise
-	// where a repository already is.
-	//
-	// The last step tells VictoriaMetrics that a backup succeeded, which is
-	// what the alert rule watches. A backup that cannot report is still a
-	// backup, so that step does not fail the job; the alert then fires and the
-	// log says why.
-	usageBackupUpload = `cd /backup
-sha256sum -c registry-usage.dump.sha256
-if ! restic cat config > /dev/null 2>&1; then
+	// Preserve bootstrap behavior for the existing templates. Keyless jobs
+	// must open the existing repository before writing or pruning anything.
+	usageBackupBootstrap = `if ! restic cat config > /dev/null 2>&1; then
   restic init
   echo REGISTRY_USAGE_BACKUP_REPOSITORY_INITIALIZED
-fi
+fi`
+
+	usageBackupVerify = `cd /backup
+sha256sum -c registry-usage.dump.sha256
+`
+	usageBackupUpload = `
 restic backup --host registry-usage --tag usage-history /backup
 restic check --read-data
 restic forget --prune --keep-daily "$KEEP_DAILY" --group-by host,paths,tags
@@ -63,10 +59,10 @@ fi`
 // deployUsageBackup backs up the usage history every day to a bucket of its
 // own. The archive is made by the role that owns the usage database, in
 // read-only transactions; that role has no access to Grafana's own database
-// in the same cluster. The bucket is reached with the collector's Google key.
+// in the same cluster.
 //
 // The backups are kept when this job is removed.
-func deployUsageBackup(ctx *pulumi.Context, namespace pulumi.StringPtrInput, environment string, owner *usageRole, google *corev1.Secret,
+func deployUsageBackup(ctx *pulumi.Context, cluster *providers.ProviderInfo, namespace pulumi.StringPtrInput, environment string, owner *usageRole, google *corev1.Secret,
 	priority pulumi.StringPtrInput, options ...pulumi.ResourceOption) error {
 	variable := func(name, value string) corev1.EnvVarInput {
 		return &corev1.EnvVarArgs{Name: pulumi.String(name), Value: pulumi.String(value)}
@@ -86,7 +82,30 @@ func deployUsageBackup(ctx *pulumi.Context, namespace pulumi.StringPtrInput, env
 	}
 	shell := pulumi.StringArray{pulumi.String("/bin/sh"), pulumi.String("-ec")}
 	labels := pulumi.StringMap{"app": pulumi.String(usageBackupWorkload)}
-	_, err := batchv1.NewCronJob(ctx, usageBackupWorkload, &batchv1.CronJobArgs{
+	identity, err := usageIdentityForPod(ctx, cluster, namespace, usageBackupWorkload, google)
+	if err != nil {
+		return err
+	}
+	openRepository := usageBackupBootstrap
+	if usagecollector.Identity(ctx).UsesMetadata() {
+		openRepository = "restic cat config > /dev/null"
+	}
+	env := corev1.EnvVarArray{
+		variable("RESTIC_REPOSITORY", "gs:"+usagecollector.BackupBucket(environment)+":/"+usagecollector.BackupRepository),
+		variable("RESTIC_PASSWORD", usagecollector.BackupPassword),
+		variable("RESTIC_CACHE_DIR", "/tmp/restic-cache"),
+		variable("GOOGLE_PROJECT_ID", config.New(ctx, "gcp").Get("project")),
+	}
+	env = append(env, identity.env...)
+	env = append(env,
+		variable("HOME", "/tmp"),
+		// As for the registry. Each snapshot is the whole history;
+		// older ones only serve to undo damage found late.
+		variable("KEEP_DAILY", "28"),
+		variable("METRICS_URL", usageMetricsURL),
+		variable("SUCCESS_METRIC", usageBackupMetric),
+	)
+	_, err = batchv1.NewCronJob(ctx, usageBackupWorkload, &batchv1.CronJobArgs{
 		Metadata: &metav1.ObjectMetaArgs{Name: pulumi.String(usageBackupWorkload), Namespace: namespace, Labels: labels},
 		Spec: &batchv1.CronJobSpecArgs{
 			// After the collector's run at 01:15 UTC, which takes minutes.
@@ -107,7 +126,8 @@ func deployUsageBackup(ctx *pulumi.Context, namespace pulumi.StringPtrInput, env
 							RestartPolicy:                pulumi.String("Never"),
 							AutomountServiceAccountToken: pulumi.Bool(false),
 							PriorityClassName:            priority,
-							NodeSelector:                 workerNodeSelector(ctx),
+							NodeSelector:                 identity.selector,
+							ServiceAccountName:           identity.account,
 							SecurityContext: &corev1.PodSecurityContextArgs{
 								RunAsNonRoot: pulumi.Bool(true),
 								RunAsUser:    pulumi.Int(65532),
@@ -137,35 +157,18 @@ func deployUsageBackup(ctx *pulumi.Context, namespace pulumi.StringPtrInput, env
 								Name:    pulumi.String("restic"),
 								Image:   pulumi.String("ghcr.io/k8up-io/k8up:v2.12.0"),
 								Command: shell,
-								Args:    pulumi.StringArray{pulumi.String(usageBackupUpload)},
-								Env: corev1.EnvVarArray{
-									variable("RESTIC_REPOSITORY", "gs:"+usagecollector.BackupBucket(environment)+":/"+usagecollector.BackupRepository),
-									variable("RESTIC_PASSWORD", usagecollector.BackupPassword),
-									variable("RESTIC_CACHE_DIR", "/tmp/restic-cache"),
-									variable("GOOGLE_PROJECT_ID", config.New(ctx, "gcp").Get("project")),
-									variable("GOOGLE_APPLICATION_CREDENTIALS", usageGoogleKeyPath+"/key.json"),
-									variable("HOME", "/tmp"),
-									// As for the registry. Each snapshot is the whole history;
-									// older ones only serve to undo damage found late.
-									variable("KEEP_DAILY", "28"),
-									variable("METRICS_URL", usageMetricsURL),
-									variable("SUCCESS_METRIC", usageBackupMetric),
-								},
-								VolumeMounts: corev1.VolumeMountArray{
+								Args:    pulumi.StringArray{pulumi.String(usageBackupVerify + openRepository + usageBackupUpload)},
+								Env:     env,
+								VolumeMounts: append(corev1.VolumeMountArray{
 									&corev1.VolumeMountArgs{Name: pulumi.String("archive"), MountPath: pulumi.String("/backup"), ReadOnly: pulumi.Bool(true)},
-									&corev1.VolumeMountArgs{Name: pulumi.String("google"), MountPath: pulumi.String(usageGoogleKeyPath), ReadOnly: pulumi.Bool(true)},
-								},
+								}, identity.mounts...),
 								Resources:       resources,
 								SecurityContext: unprivileged,
 							}},
-							Volumes: corev1.VolumeArray{
+							Volumes: append(corev1.VolumeArray{
 								// Must hold the uncompressed archive.
 								&corev1.VolumeArgs{Name: pulumi.String("archive"), EmptyDir: &corev1.EmptyDirVolumeSourceArgs{SizeLimit: pulumi.String("4Gi")}},
-								&corev1.VolumeArgs{Name: pulumi.String("google"), Secret: &corev1.SecretVolumeSourceArgs{
-									SecretName:  google.Metadata.Name(),
-									DefaultMode: pulumi.Int(0o440),
-								}},
-							},
+							}, identity.volumes...),
 						},
 					},
 				},

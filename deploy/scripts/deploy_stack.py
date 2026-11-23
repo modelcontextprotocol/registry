@@ -14,6 +14,7 @@ import tempfile
 
 from production_apply import Blocked, require, quiet, parse_preview_events, decode_plan
 from staging_image import resolve, validate
+from usage_key_retirement import check_retirement
 from production_gateway import check as check_gateway, read_json as gateway_read_json
 
 
@@ -84,7 +85,8 @@ def main(environment, mode):
         directory = Path(temp)
         preview, apply = commands(stack, directory/'plan.json')
         result = quiet(preview, directory, 'preview', env)
-        print(json.dumps(summary(result.read_text()), indent=2), flush=True)
+        changes = summary(result.read_text())
+        print(json.dumps(changes, indent=2), flush=True)
         plan = directory/'plan.json'
         document = json.loads(plan.read_text())
         fixed = constrain_admission_job_ids(document, stack)
@@ -92,6 +94,7 @@ def main(environment, mode):
             plan.write_text(json.dumps(document))
             print(f'Constrained {fixed} Helm admission-job references to their fixed Kubernetes IDs.', flush=True)
         if mode == 'apply':
+            check_retirement(changes['resources'], stack, environment, directory, env)
             quiet(apply, directory, 'apply', env)
             print('Deployment completed using the saved full-stack plan.', flush=True)
 

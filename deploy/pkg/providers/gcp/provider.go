@@ -19,6 +19,7 @@ import (
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/traffic"
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/usagecollector"
 )
 
 // Provider implements the ClusterProvider interface for Google Kubernetes Engine
@@ -263,6 +264,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		clusterOpts = append(clusterOpts, pulumi.Provider(gcpProvider))
 	}
 
+	identity := usagecollector.Identity(ctx)
+	if identity != usagecollector.Legacy {
+		clusterArgs.WorkloadIdentityConfig = &container.ClusterWorkloadIdentityConfigArgs{WorkloadPool: pulumi.String(projectID + ".svc.id.goog")}
+	}
 	cluster, err := container.NewCluster(ctx, clusterName, clusterArgs, clusterOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GKE cluster: %w", err)
@@ -280,20 +285,21 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 	if config.New(ctx, "mcp-registry").GetBool("isolatedDatabase") {
 		nodeLabels = pulumi.StringMap{"registry-role": pulumi.String("worker")}
 	}
+	workerConfig := &container.NodePoolNodeConfigArgs{
+		MachineType: pulumi.String(nodeMachineType),
+		Labels:      nodeLabels,
+		// Boot disks also serve the ingress cache and container logs.
+		DiskSizeGb: pulumi.Int(50),
+		DiskType:   pulumi.String("pd-balanced"),
+	}
 	nodePoolArgs := &container.NodePoolArgs{
 		Cluster:  cluster.Name,
 		Location: pulumi.String(zone),
 		Project:  pulumi.String(projectID),
 
 		// Node pool configuration
-		NodeCount: pulumi.Int(nodeScaling.minimum),
-		NodeConfig: &container.NodePoolNodeConfigArgs{
-			MachineType: pulumi.String(nodeMachineType),
-			Labels:      nodeLabels,
-			// Boot disks also serve the ingress cache and container logs.
-			DiskSizeGb: pulumi.Int(50),
-			DiskType:   pulumi.String("pd-balanced"),
-		},
+		NodeCount:  pulumi.Int(nodeScaling.minimum),
+		NodeConfig: workerConfig,
 		UpgradeSettings: &container.NodePoolUpgradeSettingsArgs{
 			Strategy:       pulumi.String("SURGE"),
 			MaxSurge:       pulumi.Int(1),
@@ -305,6 +311,10 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 			AutoRepair:  pulumi.Bool(true),
 			AutoUpgrade: pulumi.Bool(true),
 		},
+	}
+
+	if identity != usagecollector.Legacy {
+		workerConfig.WorkloadMetadataConfig = &container.NodePoolNodeConfigWorkloadMetadataConfigArgs{Mode: pulumi.String("GKE_METADATA")}
 	}
 
 	if config.New(ctx, "mcp-registry").GetBool("gatewayStagingCompact") {
@@ -368,11 +378,7 @@ func (p *Provider) CreateCluster(ctx *pulumi.Context, environment string) (*prov
 		return nil, err
 	}
 
-	usageOpts := []pulumi.ResourceOption{}
-	if gcpProvider != nil {
-		usageOpts = append(usageOpts, pulumi.Provider(gcpProvider))
-	}
-	usageKey, err := usageCollectorAccess(ctx, projectID, environment, usageOpts)
+	usageAccess, err := usageCollectorAccess(ctx, projectID, environment, gcpProvider, cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +440,7 @@ users:
 		StagingIngressAddress: stagingIngressAddress,
 		Name:                  nodePool.Cluster,
 		Provider:              k8sProvider,
-		UsageCollectorKey:     usageKey,
+		UsageAccess:           usageAccess,
 	}, nil
 }
 

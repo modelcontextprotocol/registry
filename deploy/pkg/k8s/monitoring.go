@@ -13,6 +13,7 @@ import (
 
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/k8s/gatewaycanary"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/usagecollector"
 )
 
 func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo, environment string, ingressNginx *helm.Chart, registryPg *apiextensions.CustomResource) error {
@@ -35,7 +36,7 @@ func DeployMonitoringStack(ctx *pulumi.Context, cluster *providers.ProviderInfo,
 	// Create namespace
 	ns, err := corev1.NewNamespace(ctx, "monitoring", &corev1.NamespaceArgs{
 		Metadata: &metav1.ObjectMetaArgs{
-			Name: pulumi.String("monitoring"),
+			Name: pulumi.String(usagecollector.MonitoringNamespace),
 		},
 	}, pulumi.Provider(cluster.Provider))
 	if err != nil {

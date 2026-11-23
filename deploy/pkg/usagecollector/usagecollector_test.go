@@ -50,6 +50,8 @@ func TestTheFlagIsCheckedBeforeAnythingIsCreated(t *testing.T) {
 		invalid  bool
 	}{
 		"not set":                      {map[string]string{"mcp-registry:environment": "local"}, false},
+		"invalid identity phase":       {hosted(map[string]string{"mcp-registry:usageIdentityPhase": "cleanup"}), true},
+		"prepared staging":             {hosted(map[string]string{"mcp-registry:usageIdentityPhase": "prepare"}), false},
 		"hosted staging":               {hosted(nil), false},
 		"hosted production":            {hosted(map[string]string{"mcp-registry:environment": "prod", "mcp-registry:gatewayStagingStandalone": "", "mcp-registry:gatewayProductionPhase": "standalone"}), false},
 		"retired anywhere":             {map[string]string{flagKey: "false", "mcp-registry:environment": "local"}, false},

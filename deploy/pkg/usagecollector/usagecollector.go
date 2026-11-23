@@ -16,15 +16,20 @@ import (
 )
 
 const (
-	flagConfig    = "usageCollector"
-	aliasesConfig = "usageCollectorOrganizationAliases"
+	identityConfig = "usageIdentityPhase"
+	flagConfig     = "usageCollector"
+	aliasesConfig  = "usageCollectorOrganizationAliases"
 
-	// ServiceAccount reads the gateway's access records. An operator created it
-	// in each project; the deployment account may not create accounts.
-	ServiceAccount = "registry-usage-reader"
+	// The KSA names are part of their GKE IAM principal identifiers.
+	CollectorAccount    = "registry-usage-collector"
+	BackupAccount       = "registry-usage-history-backup"
+	MonitoringNamespace = "monitoring"
+
+	// LegacyServiceAccount is the operator-owned account used before cutover.
+	LegacyServiceAccount = "registry-usage-reader"
 
 	// CredentialGeneration is recorded with the account key and the three
-	// database passwords. Raising it replaces all four.
+	// database passwords. Raising it replaces the credentials still managed.
 	CredentialGeneration = "1"
 
 	// BackupRepository is where, in the backup bucket, the history's Restic
@@ -68,8 +73,35 @@ func Mode(ctx *pulumi.Context) (State, error) {
 	return Absent, errors.New(`mcp-registry:` + flagConfig + ` must be "true" or "false"`)
 }
 
+// IdentityPhase stages the migration of existing stacks. An unset phase preserves
+// the deployed jobs until the worker pool change is approved.
+type IdentityPhase string
+
+const (
+	Legacy  IdentityPhase = ""
+	Prepare IdentityPhase = "prepare"
+	Cutover IdentityPhase = "cutover"
+	Keyless IdentityPhase = "keyless"
+)
+
+func Identity(ctx *pulumi.Context) IdentityPhase {
+	return IdentityPhase(config.New(ctx, "mcp-registry").Get(identityConfig))
+}
+
+func (p IdentityPhase) UsesMetadata() bool { return p == Cutover || p == Keyless }
+
 // Validate runs before any resource is created.
 func Validate(ctx *pulumi.Context) error {
+	phase := Identity(ctx)
+	switch phase {
+	case Legacy:
+	case Prepare, Cutover, Keyless:
+		if config.New(ctx, "mcp-registry").Get("provider") != "gcp" {
+			return errors.New("usageIdentityPhase requires GKE")
+		}
+	default:
+		return errors.New("usageIdentityPhase must be prepare, cutover, keyless or unset")
+	}
 	mode, err := Mode(ctx)
 	if err != nil || mode != Enabled {
 		return err

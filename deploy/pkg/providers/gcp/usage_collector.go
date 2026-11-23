@@ -1,22 +1,30 @@
 package gcp
 
 import (
+	"fmt"
+
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp"
+	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/organizations"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/projects"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/serviceaccount"
 	"github.com/pulumi/pulumi-gcp/sdk/v8/go/gcp/storage"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 
+	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/providers"
 	"github.com/modelcontextprotocol/registry/deploy/infra/pkg/usagecollector"
 )
 
-// usageCollectorAccess lets the usage collector read this project's logs and
-// back up its history, and returns a key for it, as base64-encoded JSON. The
-// account is only referred to, never managed, so that retiring the collector
-// cannot delete it.
-func usageCollectorAccess(ctx *pulumi.Context, projectID, environment string, opts []pulumi.ResourceOption) (pulumi.StringOutput, error) {
+// Keep the bucket and legacy resource identities stable throughout the migration.
+func usageCollectorAccess(ctx *pulumi.Context, projectID, environment string, provider *gcp.Provider, cluster ...pulumi.Resource) (*providers.UsageAccess, error) {
+	var opts []pulumi.ResourceOption
+	var invokeOpts []pulumi.InvokeOption
+	if provider != nil {
+		opts = append(opts, pulumi.Provider(provider))
+		invokeOpts = append(invokeOpts, pulumi.Provider(provider))
+	}
 	mode, err := usagecollector.Mode(ctx)
 	if err != nil || mode == usagecollector.Absent {
-		return pulumi.StringOutput{}, err
+		return nil, err
 	}
 	// The bucket stays managed while the collector is retired, and is never
 	// deleted: not when the setting is removed, and not by a destroy.
@@ -46,45 +54,65 @@ func usageCollectorAccess(ctx *pulumi.Context, projectID, environment string, op
 		},
 	}, bucketOpts...)
 	if err != nil {
-		return pulumi.StringOutput{}, err
+		return nil, err
 	}
 	if mode != usagecollector.Enabled {
-		return pulumi.StringOutput{}, nil
+		return nil, nil
 	}
 
-	email := usagecollector.ServiceAccount + "@" + projectID + ".iam.gserviceaccount.com"
-	member := pulumi.String("serviceAccount:" + email)
-	// Reading access records needs logging.logEntries.list on the project. This
-	// role also reads the project's other logs, but not its data-access logs.
-	_, err = projects.NewIAMMember(ctx, "usage-collector-log-viewer", &projects.IAMMemberArgs{
-		Project: pulumi.String(projectID),
-		Role:    pulumi.String("roles/logging.viewer"),
-		Member:  member,
-	}, opts...)
-	if err != nil {
-		return pulumi.StringOutput{}, err
+	grantLogs := func(name, member string, options []pulumi.ResourceOption) (*projects.IAMMember, error) {
+		return projects.NewIAMMember(ctx, name, &projects.IAMMemberArgs{
+			Project: pulumi.String(projectID), Role: pulumi.String("roles/logging.viewer"), Member: pulumi.String(member),
+		}, options...)
 	}
-	// Restic writes, lists and prunes objects, and looks the bucket up first.
-	// Both grants are on this one bucket.
-	for name, role := range map[string]string{
-		"usage-backup-objects": "roles/storage.objectAdmin",
-		"usage-backup-bucket":  "roles/storage.legacyBucketReader",
-	} {
-		_, err = storage.NewBucketIAMMember(ctx, name, &storage.BucketIAMMemberArgs{
-			Bucket: bucket.Name,
-			Role:   pulumi.String(role),
-			Member: member,
-		}, opts...)
+	grantBucket := func(name, role, member string, options []pulumi.ResourceOption) (*storage.BucketIAMMember, error) {
+		return storage.NewBucketIAMMember(ctx, name, &storage.BucketIAMMemberArgs{
+			Bucket: bucket.Name, Role: pulumi.String(role), Member: pulumi.String(member),
+		}, options...)
+	}
+
+	access := &providers.UsageAccess{}
+	phase := usagecollector.Identity(ctx)
+	if phase != usagecollector.Legacy {
+		project, err := organizations.LookupProject(ctx, &organizations.LookupProjectArgs{ProjectId: &projectID}, invokeOpts...)
 		if err != nil {
-			return pulumi.StringOutput{}, err
+			return nil, err
 		}
+		prefix := fmt.Sprintf("principal://iam.googleapis.com/projects/%s/locations/global/workloadIdentityPools/%s.svc.id.goog/subject/ns/%s/sa/",
+			project.Number, projectID, usagecollector.MonitoringNamespace)
+		federatedOpts := append([]pulumi.ResourceOption{}, opts...)
+		federatedOpts = append(federatedOpts, pulumi.DependsOn(cluster))
+		logs, err := grantLogs("usage-collector-log-viewer-ksa", prefix+usagecollector.CollectorAccount, federatedOpts)
+		if err != nil {
+			return nil, err
+		}
+		objects, err := grantBucket("usage-backup-objects-ksa", "roles/storage.objectUser", prefix+usagecollector.BackupAccount, federatedOpts)
+		if err != nil {
+			return nil, err
+		}
+		access.Grants = []pulumi.Resource{logs, objects}
+	}
+	if phase == usagecollector.Keyless {
+		return access, nil
+	}
+	email := usagecollector.LegacyServiceAccount + "@" + projectID + ".iam.gserviceaccount.com"
+	member := "serviceAccount:" + email
+	if _, err := grantLogs("usage-collector-log-viewer", member, opts); err != nil {
+		return nil, err
+	}
+	if _, err := grantBucket("usage-backup-objects", "roles/storage.objectAdmin", member, opts); err != nil {
+		return nil, err
+	}
+	if _, err := grantBucket("usage-backup-bucket", "roles/storage.legacyBucketReader", member, opts); err != nil {
+		return nil, err
 	}
 	key, err := serviceaccount.NewKey(ctx, "usage-collector-key", &serviceaccount.KeyArgs{
 		ServiceAccountId: pulumi.String("projects/" + projectID + "/serviceAccounts/" + email),
 		Keepers:          pulumi.StringMap{"generation": pulumi.String(usagecollector.CredentialGeneration)},
 	}, opts...)
 	if err != nil {
-		return pulumi.StringOutput{}, err
+		return nil, err
 	}
-	return key.PrivateKey, nil
+	access.LegacyKey = key.PrivateKey
+	return access, nil
 }
