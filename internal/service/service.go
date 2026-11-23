@@ -14,6 +14,7 @@ var ErrEditConflict = errors.New("server version changed during edit")
 
 // StatusChangeRequest represents a request to change a server's status
 type StatusChangeRequest struct {
+	Moderator     bool         `json:"-"` // Set only from authenticated global edit authority.
 	NewStatus     model.Status `json:"newStatus"`
 	StatusMessage *string      `json:"statusMessage,omitempty"`
 }
