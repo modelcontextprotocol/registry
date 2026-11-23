@@ -13,6 +13,10 @@ on:
       - main
     paths-ignore:
       - 'deploy/Pulumi.gcpProd.yaml'
+      - 'README.md'
+      - 'deploy/README.md'
+      - 'docs/**/*.md'
+      - 'docs/**/*.mdx'
 
 permissions:
   contents: read
