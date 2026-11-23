@@ -10,6 +10,8 @@ This is a brief guide for admins and moderators managing content on the registry
 - `curl` and `jq` installed
 - `kubectl` installed with `gke-gcloud-auth-plugin` (for database access)
 
+A takedown made with global registry edit permission places a hold on the affected versions. A moderator can also place a hold on a previously withdrawn version by setting its status to `deleted` again. Restoring the version clears the hold. A publisher's bulk status change fails in full if any targeted version is held. New versions are evaluated separately.
+
 ## Authentication
 
 ```bash

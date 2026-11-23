@@ -883,3 +883,52 @@ func TestUpdateAllVersionsStatusEndpoint(t *testing.T) {
 func strPtr(s string) *string {
 	return &s
 }
+
+func TestModeratorHoldLifecycle(t *testing.T) {
+	ctx := context.Background()
+	cfg := &config.Config{JWTPrivateKey: hex.EncodeToString(make([]byte, ed25519.SeedSize))}
+	registry := service.NewRegistryService(database.NewTestDB(t), cfg)
+	const name = "io.github.testuser/hold"
+	for _, version := range []string{"1.0.0", "2.0.0"} {
+		_, err := registry.CreateServer(ctx, &apiv0.ServerJSON{Name: name, Version: version})
+		require.NoError(t, err)
+	}
+	mux := http.NewServeMux()
+	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
+	v0.RegisterStatusEndpoints(api, "/v0", registry, cfg)
+	v0.RegisterAllVersionsStatusEndpoints(api, "/v0", registry, cfg)
+	moderator := auth.Permission{Action: auth.PermissionActionEdit, ResourcePattern: "*"}
+	publisher := auth.Permission{Action: auth.PermissionActionPublish, ResourcePattern: "io.github.testuser/*"}
+	editor := auth.Permission{Action: auth.PermissionActionEdit, ResourcePattern: "io.github.testuser/*"}
+	patch := func(scope auth.Permission, version string, status model.Status, want int) {
+		t.Helper()
+		path := "/v0/servers/" + url.PathEscape(name)
+		if version != "" {
+			path += "/versions/" + version
+		}
+		token, err := auth.NewJWTManager(cfg).GenerateTokenResponse(ctx, auth.JWTClaims{Permissions: []auth.Permission{scope}})
+		require.NoError(t, err)
+		body, err := json.Marshal(v0.UpdateServerStatusBody{Status: string(status)})
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodPatch, path+"/status", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token.RegistryToken)
+		w := httptest.NewRecorder()
+		mux.ServeHTTP(w, req)
+		require.Equal(t, want, w.Code, "%s %s", path, w.Body.String())
+	}
+	patch(publisher, "1.0.0", model.StatusDeleted, http.StatusOK)
+	patch(publisher, "1.0.0", model.StatusActive, http.StatusOK)
+	patch(publisher, "1.0.0", model.StatusDeleted, http.StatusOK)
+	patch(moderator, "1.0.0", model.StatusDeleted, http.StatusOK)
+	patch(editor, "1.0.0", model.StatusActive, http.StatusForbidden)
+	patch(publisher, "", model.StatusDeprecated, http.StatusForbidden)
+	other, err := registry.GetServerByNameAndVersion(ctx, name, "2.0.0", false)
+	require.NoError(t, err)
+	require.Equal(t, model.StatusActive, other.Meta.Official.Status)
+	patch(moderator, "", model.StatusDeleted, http.StatusOK)
+	patch(moderator, "", model.StatusDeleted, http.StatusOK)
+	patch(publisher, "2.0.0", model.StatusDeprecated, http.StatusForbidden)
+	patch(moderator, "", model.StatusActive, http.StatusOK)
+	patch(publisher, "", model.StatusDeprecated, http.StatusOK)
+}
