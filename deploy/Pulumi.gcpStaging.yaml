@@ -35,6 +35,7 @@ config:
   mcp-registry:registryCPURequest: "100m"
   # Daily usage collector with its dashboards; see "Usage collector" in README.md.
   mcp-registry:usageCollector: "true"
+  mcp-registry:usageIdentityPhase: prepare
   # On-demand malware sweep for release validation. See "Malware sweep" in README.md.
   mcp-registry:malwareSweep: "true"
   # What a publish does with a package OSV lists as malware: "report" logs it and lets it through, "enforce" refuses it.
