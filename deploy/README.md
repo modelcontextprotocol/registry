@@ -846,8 +846,16 @@ corresponding deployment credentials before approving each merge and apply.
    the cluster, changes the database pool, rotates credentials or changes the
    backup bucket. Recheck registry health after the worker roll.
 2. **Verify the prepared identities.** Confirm that the workload pool matches
-   the project and a Ready worker carries both required labels. With operator
-   approval, run the following disposable probes from `deploy/` in Bash. They
+   the project and a Ready, schedulable worker carries both required labels.
+   Confirm that the GKE metadata server is Ready on that worker. During the
+   staging migration, GKE reported the pool update complete while the reused
+   node still lacked its identity label and the metadata server had zero Pods.
+   Keep the jobs on their existing credentials in this condition. With the
+   operator's approval, provision a fresh worker in the configured pool and
+   verify it before draining the old one. Account for single-replica workloads,
+   their persistent disks and their disruption budgets when planning the drain.
+   Let GKE assign the protected identity label.
+   With operator approval, run the following disposable probes from `deploy/` in Bash. They
    use Google IAM permission checks. They read no log entries or backup objects
    and print no tokens. Retry after IAM propagation if necessary. Both must pass.
 
@@ -858,6 +866,7 @@ corresponding deployment credentials before approving each merge and apply.
    gcloud container clusters describe "$project" --project="$project" --zone=us-central1-b \
      --format='value(workloadIdentityConfig.workloadPool)'
    kubectl --context "$context" get nodes -l 'registry-role=worker,iam.gke.io/gke-metadata-server-enabled=true'
+   kubectl --context "$context" -n kube-system get pods -l k8s-app=gke-metadata-server -o wide
    for sa in registry-usage-collector registry-usage-history-backup; do
      overrides=$(jq -nc --arg sa "$sa" '{spec:{serviceAccountName:$sa,automountServiceAccountToken:false,
        nodeSelector:{"registry-role":"worker","iam.gke.io/gke-metadata-server-enabled":"true"}}}')
