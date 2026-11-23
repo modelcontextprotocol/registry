@@ -29,6 +29,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 
 ### Other
 
+- [addon-declaration](https://github.com/bcrypto0/addon-declaration) - Draft spec and zero dependency Node CLI: `prepare` signs a statement of a listing's tool list (mcp-tool-set-digest/1) with the domain key the registry already checks and writes the pointer block for server.json; `check-listing` reads a listing from the registry by name and verifies the declaration it points to. Dated results at [declaredlist.com](https://declaredlist.com) (one listing so far, the author's own).
 - [Eclipse AI Registry](https://ai.open-vsx.org) - Vendor-neutral registry hosted at the Eclipse Foundation, where organizations publish which MCP servers, Agent Skills, plugins and A2A agents they approve. A downstream aggregator of the official MCP Registry: checks MCP servers against it and retrieves their metadata from it ([source code](https://github.com/eclipsefdn-ai-registry/ai-registry-core)).
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
 - [MCP Registry Remote MCP Server](https://github.com/jaw9c/mcp-registry-mcp) - Open Remote MCP server for the Registry at `https://registry-mcp.remote-mcp.com`
