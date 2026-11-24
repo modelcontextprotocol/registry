@@ -68,7 +68,7 @@ class RetirementTests(unittest.TestCase):
                 'status': {'phase': 'Succeeded'}, 'spec': deepcopy(job['spec']['template']['spec'])}
             items.extend((job, pod))
             scheduled['spec']['template']['spec']['volumes'] = [{'secret': {'secretName': SECRET}}]
-            spec = cron['spec']['jobTemplate']['spec']['template']['spec']
+            spec = cron['spec']
             proof[name] = {
                 'schedule': cron['status']['lastScheduleTime'], 'cron': name, 'job': name + '-manual',
                 'pod': name + '-pod',
@@ -82,7 +82,7 @@ class RetirementTests(unittest.TestCase):
             candidate[JOBS[0]][field] = 'different'
             with self.subTest(field=field), self.assertRaises(Blocked):
                 verify_runs(items, candidate)
-        for target in ('failed-job', 'foreign-pod', 'active-legacy', 'pod-key'):
+        for target in ('failed-job', 'foreign-pod', 'active-legacy', 'pod-key', 'schedule-change'):
             altered = deepcopy(items)
             job, pod = altered[-2:]
             if target == 'failed-job':
@@ -92,6 +92,8 @@ class RetirementTests(unittest.TestCase):
             if target == 'active-legacy':
                 altered.append({'kind': 'Pod', 'metadata': {}, 'status': {'phase': 'Running'},
                                 'spec': {'volumes': [{'secret': {'secretName': SECRET}}]}})
+            if target == 'schedule-change':
+                altered[0]['spec']['schedule'] = '0 0 * * 0'
             if target == 'pod-key':
                 pod['spec']['env'] = [{'name': 'GOOGLE_APPLICATION_CREDENTIALS'}]
             with self.subTest(target=target), self.assertRaises(Blocked):

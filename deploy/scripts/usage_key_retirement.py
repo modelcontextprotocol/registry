@@ -29,14 +29,14 @@ PRODUCTION_PROOF = {
     'registry-usage-collector': {
         'schedule': '2026-11-24T01:15:00Z',
         'cron': 'f90dd92d-c563-4967-a15c-3c061b9c94cd',
-        'template': '9921c4d383d3e10ea5461ec98884a2428cd9e5e6dd91b26368879987d170ddd9',
+        'template': 'c06334a0eb28d521534e8fccaa111e6f35eb5c0ac0b8aa8254c52d6eb6cebd8d',
         'job': 'fcb11196-8470-4662-967a-3208dcc8f319',
         'pod': 'ddcb4c3c-60da-4806-a6e4-fcfeed4b5633',
     },
     'registry-usage-history-backup': {
         'schedule': '2026-11-24T03:30:00Z',
         'cron': '4097b1db-c8eb-4844-ae7d-babe5dee6f30',
-        'template': '47e5ee9a4f61d9004091638a06bbabf1f4d1e73739cc01086cb267331100639b',
+        'template': '0072fd819f76f7b4d181626609b3825918fe1cad872564c6569469578a558453',
         'job': '2b029f07-c4da-4743-ba01-54ab21b60b6e',
         'pod': 'af1c26af-4bc3-4eef-9eae-a00690c2e7c0',
     },
@@ -80,7 +80,7 @@ def verify_runs(items, reviewed_proof=None):
         evidence = latest
         if reviewed_proof is not None:
             proof = reviewed_proof[name]
-            spec = cron['spec']['jobTemplate']['spec']['template']['spec']
+            spec = cron['spec']
             digest = hashlib.sha256(json.dumps(spec, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
             require(cron['metadata']['uid'] == proof['cron'] and schedule == proof['schedule']
                     and digest == proof['template'], f'{name}-reviewed-template')
@@ -125,6 +125,7 @@ def check_retirement(resources, stack, environment, directory, env, reviewed=Fal
         return
     config = read_json(['pulumi', 'config', '--json', '--stack', stack], env=env)
     if config.get('mcp-registry:usageCollector', {}).get('value') != 'true':
+        require(not reviewed, 'reviewed-usage-collector-required')
         return  # The independent full-feature retirement does not keep the jobs.
     require(config.get('mcp-registry:usageIdentityPhase', {}).get('value') == 'keyless', 'usage-key-retirement-phase')
     project = 'mcp-registry-' + environment
