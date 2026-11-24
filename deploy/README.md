@@ -893,8 +893,13 @@ corresponding deployment credentials before approving each merge and apply.
    Review the five planned deletions covering the exact managed key
    `usage-collector-key`, the Secret `monitoring/registry-usage-collector-gcp`, the shared account's project
    log grant and its two usage-bucket grants. The normal saved-plan apply
-   also checks the latest scheduled Jobs and their successful Pods before
-   deleting the key. Confirm the key ID is absent from the account, the Secret
+   checks the latest scheduled Jobs and their successful Pods. For the November
+   24, 2026 production cutover only, preview and apply may use the two reviewed
+   on-demand Jobs before November 25 at 01:15 UTC. The collector replayed November
+   23 into an isolated database and the backup checked all data in the existing
+   repository. The check binds the five deletions to the refreshed key ID, the
+   verified Job and Pod UIDs, and the live CronJob identities and templates.
+   Final operator approval and checks for active consumers still apply. Confirm the key ID is absent from the account, the Secret
    and old grants are gone, both direct grants remain, and the next scheduled
    runs succeed. After revocation, fix the federated identities in place. Returning
    to an earlier phase would create a new exported key and needs a new approval.
