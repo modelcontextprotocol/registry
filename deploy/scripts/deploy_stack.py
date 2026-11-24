@@ -7,6 +7,7 @@ The log contains resource identities/operations, never inputs or secret values.
 """
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
 import sys
@@ -14,7 +15,7 @@ import tempfile
 
 from production_apply import Blocked, require, quiet, parse_preview_events, decode_plan
 from staging_image import resolve, validate
-from usage_key_retirement import check_retirement
+from usage_key_retirement import check_retirement, reviewed_production_plan
 from production_gateway import check as check_gateway, read_json as gateway_read_json
 
 
@@ -93,8 +94,10 @@ def main(environment, mode):
         if fixed:
             plan.write_text(json.dumps(document))
             print(f'Constrained {fixed} Helm admission-job references to their fixed Kubernetes IDs.', flush=True)
+        reviewed = reviewed_production_plan(changes['resources'], stack, environment, datetime.now(timezone.utc), result)
+        if reviewed or mode == 'apply':
+            check_retirement(changes['resources'], stack, environment, directory, env, reviewed)
         if mode == 'apply':
-            check_retirement(changes['resources'], stack, environment, directory, env)
             quiet(apply, directory, 'apply', env)
             print('Deployment completed using the saved full-stack plan.', flush=True)
 
