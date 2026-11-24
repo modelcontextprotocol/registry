@@ -36,7 +36,7 @@ config:
   # Daily usage collector with its dashboards; see "Usage collector" in README.md.
   # To switch it off set "false"; do not remove the line.
   mcp-registry:usageCollector: "true"
-  mcp-registry:usageIdentityPhase: cutover
+  mcp-registry:usageIdentityPhase: keyless
   # Daily check of listed packages against OSV malware records; see "Malware sweep" in README.md.
   mcp-registry:malwareSweep: "true"
   gcp:project: mcp-registry-prod
