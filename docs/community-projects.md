@@ -29,6 +29,7 @@ Self-hostable servers that implement the MCP Registry API specification.
 
 ### Other
 
+- [7Maps](https://7it.co.il/7maps/) - Reads the official registry daily, checks every remote server's handshake and tool list, and publishes a signed, verifiable daily history of which servers answered.
 - [Eclipse AI Registry](https://ai.open-vsx.org) - Vendor-neutral registry hosted at the Eclipse Foundation, where organizations publish which MCP servers, Agent Skills, plugins and A2A agents they approve. A downstream aggregator of the official MCP Registry: checks MCP servers against it and retrieves their metadata from it ([source code](https://github.com/eclipsefdn-ai-registry/ai-registry-core)).
 - [MCP Registry Cheat Sheet](https://github.com/subbyte/mcp-registry-cheatsheet) - MCP Registry Cheat Sheet for MCP server developers, client developers, and registry admin
 - [MCP Registry Remote MCP Server](https://github.com/jaw9c/mcp-registry-mcp) - Open Remote MCP server for the Registry at `https://registry-mcp.remote-mcp.com`
