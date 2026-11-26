@@ -700,9 +700,9 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 		return err
 	}
 
-	// Validate registry ownership for all packages if validation is enabled
+	// Validate registry ownership and remote URL resolution if validation is enabled
 	if cfg.EnableRegistryValidation {
-		if err := validateRegistryPackages(ctx, req, cfg); err != nil {
+		if err := validateRegistryRequest(ctx, req, cfg); err != nil {
 			return err
 		}
 	}
@@ -714,12 +714,25 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 // Note: ValidateServerJSON should be called separately before this function
 func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
 	if cfg.EnableRegistryValidation && !skipRegistryValidation {
-		if err := validateRegistryPackages(ctx, req, cfg); err != nil {
+		if err := validateRegistryRequest(ctx, req, cfg); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func validateRegistryRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
+	remoteResult := make(chan error, 1)
+	go func() {
+		remoteResult <- validateRemoteURLs(ctx, req)
+	}()
+	pkgErr := validateRegistryPackages(ctx, req, cfg)
+	remoteErr := <-remoteResult
+	if pkgErr != nil {
+		return pkgErr
+	}
+	return remoteErr
 }
 
 // validateRegistryPackages checks the request's packages against OSV's malware
