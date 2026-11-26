@@ -163,14 +163,20 @@ var cgnatRange = mustCIDR("100.64.0.0/10")
 // helpers.
 //
 //	2002::/16       RFC 3056 6to4 — bits 16-47 are an IPv4 address
+//	2001::/32       RFC 4380 Teredo — low 32 bits are an obfuscated IPv4 address
 //	64:ff9b::/96    RFC 6052 NAT64 well-known — low 32 bits are IPv4
 //	64:ff9b:1::/48  RFC 8215 NAT64 local-use — same IPv4-embedding shape
+//	::/96           RFC 4291 IPv4-compatible (deprecated) — low 32 bits are IPv4
+//	                (:: and ::1 also fall in ::/96 and remain blocked via
+//	                IsUnspecified / IsLoopback)
 //	fec0::/10       RFC 3879 site-local (deprecated, still routed by some
 //	                stacks)
 var blockedIPv6Prefixes = []*net.IPNet{
 	mustCIDR("2002::/16"),
+	mustCIDR("2001::/32"),
 	mustCIDR("64:ff9b::/96"),
 	mustCIDR("64:ff9b:1::/48"),
+	mustCIDR("::/96"),
 	mustCIDR("fec0::/10"),
 }
 

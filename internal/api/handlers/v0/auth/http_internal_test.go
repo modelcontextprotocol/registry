@@ -45,6 +45,10 @@ func TestIsBlockedIP(t *testing.T) {
 		{"2002:a9fe:a9fe::", true},
 		{"2002:0a00:0001::", true},
 		{"2002::1", true},
+		// Blocked — IPv6 Teredo (RFC 4380 2001::/32); embeds an obfuscated
+		// client IPv4 address in the low 32 bits.
+		{"2001:0000:4136:e378:8000:63bf:5601:5601", true},
+		{"2001::1", true},
 		// Blocked — IPv6 NAT64 well-known prefix (RFC 6052 64:ff9b::/96);
 		// low 32 bits embed an IPv4 address.
 		{"64:ff9b::a9fe:a9fe", true},
@@ -52,6 +56,13 @@ func TestIsBlockedIP(t *testing.T) {
 		// Blocked — IPv6 NAT64 local-use prefix (RFC 8215 64:ff9b:1::/48).
 		{"64:ff9b:1::1", true},
 		{"64:ff9b:1:abcd::", true},
+		// Blocked — IPv6 deprecated IPv4-compatible prefix (RFC 4291 ::/96);
+		// low 32 bits embed an IPv4 address without the ::ffff: marker, so
+		// Go's To4() returns nil and Is* helpers do not classify them as IPv4.
+		{"::a9fe:a9fe", true},
+		{"::c0a8:0101", true},
+		{"::7f00:0001", true},
+		{"::169.254.169.254", true},
 		// Blocked — IPv6 deprecated site-local (RFC 3879 fec0::/10);
 		// still routed into internal networks by some stacks.
 		{"fec0::1", true},
@@ -62,15 +73,19 @@ func TestIsBlockedIP(t *testing.T) {
 		{"::ffff:127.0.0.1", true},
 		{"::ffff:10.0.0.1", true},
 		{"::ffff:169.254.169.254", true},
+		{"::ffff:100.64.0.1", true},
 		// Allowed — public
 		{"1.1.1.1", false},
 		{"8.8.8.8", false},
+		{"::ffff:8.8.8.8", false},
 		{"2606:4700:4700::1111", false},
 		{"2001:4860:4860::8888", false},
-		// Allowed — just outside the new IPv6 blocks
-		{"2001::1", false},    // outside 2002::/16
-		{"2003::1", false},    // outside 2002::/16 on the other side
-		{"64:ff9c::1", false}, // outside 64:ff9b::/96
+		// Allowed — just outside the blocked IPv6 prefixes
+		{"2001:1::1", false},    // outside 2001::/32 Teredo
+		{"2001:ffff::1", false}, // just below 2002::/16 6to4
+		{"2003::1", false},      // outside 2002::/16 on the other side
+		{"64:ff9c::1", false},   // outside 64:ff9b::/96
+		{"::1:0:0", false},      // outside ::/96 IPv4-compatible
 		// Allowed — outside CGNAT range
 		{"100.63.255.255", false},
 		{"100.128.0.1", false},
