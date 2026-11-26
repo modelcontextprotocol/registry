@@ -135,7 +135,7 @@ func main() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
-		importerService := importer.NewService(registryService)
+		importerService := importer.NewService(registryService, cfg)
 		if err := importerService.ImportFromPath(ctx, cfg.SeedFrom); err != nil {
 			log.Printf("Failed to import seed data: %v", err)
 		}

@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	schemeHTTP  = "http"
-	schemeHTTPS = "https"
+	schemeHTTP                 = "http"
+	schemeHTTPS                = "https"
+	genericTemplatePlaceholder = "placeholder"
 )
 
 var (
@@ -77,7 +78,7 @@ func replaceTemplateVariables(rawURL string) string {
 
 	// Replace any other remaining {variable} patterns with generic placeholder
 	re := regexp.MustCompile(`\{[^}]+\}`)
-	result = re.ReplaceAllString(result, "placeholder")
+	result = re.ReplaceAllString(result, genericTemplatePlaceholder)
 
 	return result
 }
@@ -139,34 +140,10 @@ func IsValidSubfolderPath(path string) bool {
 	return true
 }
 
-// IsValidRemoteURL checks if a URL is valid for remotes (stricter than packages - no localhost allowed)
+// IsValidRemoteURL checks if a URL is valid for remotes on a public registry
+// (stricter than packages - no localhost, private, link-local, or internal hosts allowed).
 func IsValidRemoteURL(rawURL string) bool {
-	// First check basic URL structure
-	if !IsValidURL(rawURL) {
-		return false
-	}
-
-	// Replace template variables with placeholders before parsing for localhost check
-	testURL := replaceTemplateVariables(rawURL)
-
-	// Parse the URL to check for localhost restriction
-	u, err := url.Parse(testURL)
-	if err != nil {
-		return false
-	}
-
-	// Reject localhost/loopback/unspecified/private/link-local/internal hosts for
-	// remotes (security/production concerns - a remote must point at a real,
-	// publicly reachable, non-internal endpoint).
-	if isDisallowedRemoteHost(u.Hostname(), rawURLHasTemplatedHostname(rawURL)) {
-		return false
-	}
-
-	if u.Scheme != schemeHTTPS {
-		return false
-	}
-
-	return true
+	return isValidRemoteURL(rawURL, false)
 }
 
 // IsValidTemplatedURL validates a URL with template variables against available variables

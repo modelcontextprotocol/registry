@@ -7,16 +7,33 @@ import (
 	"net"
 	"net/netip"
 	"net/url"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
+	"github.com/modelcontextprotocol/registry/pkg/model"
 )
 
-// remoteDNSLookupTimeout bounds per-hostname DNS resolution during publish and
-// update validation so a slow authoritative nameserver cannot stall requests.
-const remoteDNSLookupTimeout = 3 * time.Second
+const (
+	// remoteDNSLookupTimeout bounds a single per-hostname DNS lookup during
+	// publish and update validation.
+	remoteDNSLookupTimeout = 3 * time.Second
+
+	// remoteDNSOverallTimeout bounds total wall-clock time spent resolving all
+	// remote hostnames within one publish or update validation call.
+	remoteDNSOverallTimeout = 8 * time.Second
+
+	// maxRemoteHostLookupsPerRequest caps unique concrete remote DNS hostnames
+	// resolved in a single publish/update request to prevent DNS amplification
+	// and handler tarpits on large payloads.
+	maxRemoteHostLookupsPerRequest = 32
+
+	remoteDNSLookupConcurrency = 4
+)
 
 // HostResolver resolves a DNS hostname to IP addresses during publish/update validation.
 type HostResolver interface {
@@ -25,41 +42,57 @@ type HostResolver interface {
 
 var defaultHostResolver HostResolver = net.DefaultResolver
 
+var templateVarTokenRe = regexp.MustCompile(`\{([^}]+)\}`)
+
 var (
-	// cgnatPrefix is RFC 6598 shared address space (100.64.0.0/10), which is not
-	// publicly routable and is not covered by netip.Addr.IsPrivate.
-	cgnatPrefix = netip.MustParsePrefix("100.64.0.0/10")
-
-	// thisNetPrefix is RFC 1122 "this host on this network" (0.0.0.0/8). Many
-	// stacks route 0.x.x.x to local loopback, while IsUnspecified only checks 0.0.0.0.
-	thisNetPrefix = netip.MustParsePrefix("0.0.0.0/8")
-
-	ipv4Broadcast = netip.AddrFrom4([4]byte{255, 255, 255, 255})
+	// blockedRemoteIPv4Prefixes covers special-purpose and cluster-internal IPv4
+	// blocks not classified by netip.Addr's built-in Is* helpers:
+	//   0.0.0.0/8        RFC 1122 "this host on this network"
+	//   100.64.0.0/10    RFC 6598 Carrier-Grade NAT
+	//   192.0.0.0/24     RFC 6890 IETF protocol assignments
+	//   198.18.0.0/15    RFC 2544 benchmarking (commonly used by service meshes/VPCs)
+	//   240.0.0.0/4      RFC 1112 Class E reserved + 255.255.255.255 limited broadcast
+	//   34.118.224.0/20  GKE default privately-used public IP Service CIDR
+	blockedRemoteIPv4Prefixes = []netip.Prefix{
+		netip.MustParsePrefix("0.0.0.0/8"),
+		netip.MustParsePrefix("100.64.0.0/10"),
+		netip.MustParsePrefix("192.0.0.0/24"),
+		netip.MustParsePrefix("198.18.0.0/15"),
+		netip.MustParsePrefix("240.0.0.0/4"),
+		netip.MustParsePrefix("34.118.224.0/20"),
+	}
 
 	// blockedRemoteIPv6Prefixes covers IPv6 transition mechanisms that embed or
-	// tunnel arbitrary IPv4 addresses and deprecated site-local ranges not covered
-	// by netip.Addr's built-in Is* classifiers:
-	//   2002::/16       RFC 3056 6to4 (bits 16-47 embed IPv4)
-	//   2001::/32       RFC 4380 Teredo (low 32 bits embed obfuscated IPv4)
-	//   64:ff9b::/96    RFC 6052 NAT64 well-known prefix (low 32 bits embed IPv4)
-	//   64:ff9b:1::/48  RFC 8215 NAT64 local-use prefix
-	//   ::/96           RFC 4291 deprecated IPv4-compatible prefix (low 32 bits embed IPv4)
-	//   fec0::/10       RFC 3879 deprecated site-local prefix
+	// tunnel arbitrary IPv4 addresses, discard-only space, and deprecated
+	// site-local ranges not covered by netip.Addr's built-in Is* classifiers:
+	//   2002::/16         RFC 3056 6to4 (bits 16-47 embed IPv4)
+	//   2001::/32         RFC 4380 Teredo (low 32 bits embed obfuscated IPv4)
+	//   64:ff9b::/96      RFC 6052 NAT64 well-known prefix (low 32 bits embed IPv4)
+	//   64:ff9b:1::/48    RFC 8215 NAT64 local-use prefix
+	//   ::/96             RFC 4291 deprecated IPv4-compatible prefix (low 32 bits embed IPv4)
+	//   ::ffff:0:0:0/96   RFC 2765 SIIT IPv4-translated prefix (low 32 bits embed IPv4)
+	//   100::/64          RFC 6666 discard-only address block
+	//   fec0::/10         RFC 3879 deprecated site-local prefix
 	blockedRemoteIPv6Prefixes = []netip.Prefix{
 		netip.MustParsePrefix("2002::/16"),
 		netip.MustParsePrefix("2001::/32"),
 		netip.MustParsePrefix("64:ff9b::/96"),
 		netip.MustParsePrefix("64:ff9b:1::/48"),
 		netip.MustParsePrefix("::/96"),
+		netip.MustParsePrefix("::ffff:0:0:0/96"),
+		netip.MustParsePrefix("100::/64"),
 		netip.MustParsePrefix("fec0::/10"),
 	}
 
-	// blockedRemoteDomainSuffixes lists special-use / private TLDs and well-known
-	// public wildcard domains that unconditionally resolve to loopback or internal
-	// metadata endpoints.
+	// blockedRemoteDomainSuffixes lists special-use / private TLDs (RFC 6761,
+	// RFC 6762 mDNS / K8s cluster.local, RFC 8375 home.arpa, ICANN .internal)
+	// and well-known public wildcard domains that unconditionally resolve to
+	// loopback or internal endpoints.
 	blockedRemoteDomainSuffixes = []string{
 		"localhost",
 		"internal",
+		"local",
+		"home.arpa",
 		"localtest.me",
 		"lvh.me",
 		"vcap.me",
@@ -76,10 +109,56 @@ var (
 	}
 )
 
+// isValidRemoteURL validates rawURL as a remote MCP server endpoint. When
+// allowPrivate is true (for self-hosted intranet registries), private/loopback/
+// internal host restrictions are relaxed while structural HTTPS and authority
+// safety rules remain enforced.
+func isValidRemoteURL(rawURL string, allowPrivate bool) bool {
+	if !IsValidURL(rawURL) {
+		return false
+	}
+
+	testURL := replaceTemplateVariables(rawURL)
+	u, err := url.Parse(testURL)
+	if err != nil || u.Scheme != schemeHTTPS {
+		return false
+	}
+
+	hostname := u.Hostname()
+	if u.User != nil || strings.Contains(u.Host, "\\") || hostname == "" {
+		return false
+	}
+
+	if allowPrivate {
+		if strings.Contains(hostname, ":") {
+			_, err := netip.ParseAddr(hostname)
+			return err == nil
+		}
+		return true
+	}
+
+	_, isPureHost := pureAuthorityHostVariable(rawURL)
+	if isDisallowedRemoteHost(hostname, isPureHost) {
+		return false
+	}
+
+	// If the authority mixes literal text with {variable} tokens (e.g.
+	// "https://127.0.0.1{p}", "https://{p}127-0-0-1.sslip.io/mcp", or
+	// "https://YOUR_DOMAIN{p}"), also check the static host left behind when
+	// template tokens are empty or begin with a path delimiter "/".
+	if stripped, ok := strippedStaticAuthorityHost(rawURL, isPureHost); ok {
+		if isDisallowedRemoteHost(stripped, false) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // isDisallowedRemoteIP reports whether addr is non-global, host-scoped, or in a
-// private/loopback/link-local/CGNAT/transition range unsuitable for a public
-// MCP remote server. IPv4-mapped IPv6 addresses (::ffff:0:0/96) are unmapped
-// so all IPv4 checks apply to the underlying address.
+// private/loopback/link-local/CGNAT/special-purpose/cluster-internal/transition
+// range unsuitable for a public MCP remote server. IPv4-mapped IPv6 addresses
+// (::ffff:0:0/96) are unmapped so all IPv4 checks apply consistently.
 func isDisallowedRemoteIP(addr netip.Addr) bool {
 	if !addr.IsValid() || addr.Zone() != "" {
 		return true
@@ -97,17 +176,26 @@ func isDisallowedRemoteIP(addr netip.Addr) bool {
 		return true
 	}
 	if unmapped.Is4() {
-		return cgnatPrefix.Contains(unmapped) || thisNetPrefix.Contains(unmapped) || unmapped == ipv4Broadcast
+		for _, p := range blockedRemoteIPv4Prefixes {
+			if p.Contains(unmapped) {
+				return true
+			}
+		}
+	}
+	if k8sHost := os.Getenv("KUBERNETES_SERVICE_HOST"); k8sHost != "" {
+		if k8sAddr, err := netip.ParseAddr(k8sHost); err == nil && unmapped == k8sAddr.Unmap() {
+			return true
+		}
 	}
 	return false
 }
 
-// rawURLHasTemplatedHostname reports whether the host component of rawURL (as
-// distinct from scheme, port, or path) contains a {variable} placeholder.
-func rawURLHasTemplatedHostname(rawURL string) bool {
+// rawAuthorityHost extracts the raw host substring from rawURL prior to
+// template replacement.
+func rawAuthorityHost(rawURL string) (string, bool) {
 	schemeSep := strings.Index(rawURL, "://")
 	if schemeSep < 0 {
-		return false
+		return "", false
 	}
 	authority := rawURL[schemeSep+3:]
 	if end := strings.IndexAny(authority, "/?#"); end >= 0 {
@@ -124,7 +212,231 @@ func rawURLHasTemplatedHostname(rawURL string) bool {
 	} else if colon := strings.IndexByte(host, ':'); colon >= 0 {
 		host = host[:colon]
 	}
-	return len(extractTemplateVariables(host)) > 0
+	return host, true
+}
+
+// pureAuthorityHostVariable reports whether rawURL's host component is a single
+// standalone {variable} token (e.g. "https://{custom_host}/mcp" or
+// "https://{host}:{port}/mcp"), returning that variable's name.
+func pureAuthorityHostVariable(rawURL string) (string, bool) {
+	host, ok := rawAuthorityHost(rawURL)
+	if !ok || !strings.HasPrefix(host, "{") || !strings.HasSuffix(host, "}") {
+		return "", false
+	}
+	inner := host[1 : len(host)-1]
+	if inner == "" || strings.ContainsAny(inner, "{}") {
+		return "", false
+	}
+	return inner, true
+}
+
+// strippedStaticAuthorityHost removes {variable} tokens from rawURL's host and
+// returns the remaining literal string when it forms a standalone candidate
+// hostname (catching boundary cases like "https://attacker.example{p}" where p
+// starts with "/" or "https://{p}127-0-0-1.sslip.io/mcp" where p is "").
+func strippedStaticAuthorityHost(rawURL string, isPureHost bool) (string, bool) {
+	if isPureHost {
+		return "", false
+	}
+	rawHost, ok := rawAuthorityHost(rawURL)
+	if !ok || !strings.Contains(rawHost, "{") {
+		return "", false
+	}
+	stripped := templateVarTokenRe.ReplaceAllString(rawHost, "")
+	if !isCompleteHostCandidate(stripped) {
+		return "", false
+	}
+	return stripped, true
+}
+
+func isCompleteHostCandidate(h string) bool {
+	if h == "" || strings.HasPrefix(h, ".") || strings.HasSuffix(h, ".") || strings.Contains(h, "..") {
+		return false
+	}
+	if strings.HasPrefix(h, "-") || strings.HasSuffix(h, "-") || strings.Contains(h, "-.") || strings.Contains(h, ".-") {
+		return false
+	}
+	return true
+}
+
+func extractSchemeAndAuthorityVariables(rawURL string) []string {
+	schemeSep := strings.Index(rawURL, "://")
+	if schemeSep < 0 {
+		return extractTemplateVariables(rawURL)
+	}
+	rest := rawURL[schemeSep+3:]
+	prefix := rawURL
+	if end := strings.IndexAny(rest, "/?#"); end >= 0 {
+		prefix = rawURL[:schemeSep+3+end]
+	}
+	return extractTemplateVariables(prefix)
+}
+
+// validateRemoteTransportURL validates both obj.URL and any concrete URL
+// instantiations produced by obj.Variables (Value, Choices, and Default).
+func validateRemoteTransportURL(obj *model.Transport, allowPrivate bool) bool {
+	if !isValidRemoteURL(obj.URL, allowPrivate) {
+		return false
+	}
+	if hasUnsafeAuthorityVariableValues(obj) {
+		return false
+	}
+	strictURLs, structuralOnlyURLs := instantiateRemoteVariableURLs(obj)
+	for _, u := range strictURLs {
+		if !isValidRemoteURL(u, allowPrivate) {
+			return false
+		}
+	}
+	for _, u := range structuralOnlyURLs {
+		if !isValidRemoteURL(u, true) {
+			return false
+		}
+	}
+	return true
+}
+
+// hasUnsafeAuthorityVariableValues rejects scheme/authority/userinfo/backslash
+// delimiter smuggling in any variable positioned before the path delimiter.
+func hasUnsafeAuthorityVariableValues(obj *model.Transport) bool {
+	if len(obj.Variables) == 0 {
+		return false
+	}
+	for _, v := range extractSchemeAndAuthorityVariables(obj.URL) {
+		in, ok := obj.Variables[v]
+		if !ok {
+			continue
+		}
+		if containsAuthorityInjectionChars(in.Value) || containsAuthorityInjectionChars(in.Default) {
+			return true
+		}
+		for _, choice := range in.Choices {
+			if containsAuthorityInjectionChars(choice) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func containsAuthorityInjectionChars(s string) bool {
+	return strings.Contains(s, "://") || strings.ContainsAny(s, "@\\")
+}
+
+// instantiateRemoteVariableURLs substitutes concrete variable definitions from
+// obj.Variables into obj.URL.
+//
+// Policy on Default vs Value/Choices:
+//   - Value (fixed/non-editable) and Choices (enumerated allowed options) are
+//     always strictly validated against remote host rules.
+//   - Default is strictly validated whenever the variable is NOT a standalone
+//     pure {host} template (catching partial-host or path-boundary defaults such
+//     as "169.254.{oct}.254.sslip.io" or "attacker.example{p}"). On a pure
+//     standalone {host} template (e.g. "https://{host}/mcp"), Default is checked
+//     for structural HTTPS/no-userinfo validity so user-overridable self-hosted
+//     templates defaulting to "localhost" or "127.0.0.1:9090" remain valid.
+func instantiateRemoteVariableURLs(obj *model.Transport) (strictURLs []string, structuralOnlyURLs []string) {
+	vars := extractTemplateVariables(obj.URL)
+	if len(vars) == 0 || len(obj.Variables) == 0 {
+		return nil, nil
+	}
+
+	pureHostVar, isPureHost := pureAuthorityHostVariable(obj.URL)
+	baseVals, hasStrictConcrete := buildBaseTemplateValues(obj, vars, pureHostVar, isPureHost)
+
+	if hasStrictConcrete {
+		strictURLs = append(strictURLs, substituteTemplateMap(obj.URL, baseVals))
+	}
+
+	for _, v := range vars {
+		in, ok := obj.Variables[v]
+		if !ok {
+			continue
+		}
+		if in.Value != "" {
+			strictURLs = append(strictURLs, substituteTemplateOverride(obj.URL, baseVals, v, in.Value))
+		}
+		for _, choice := range in.Choices {
+			strictURLs = append(strictURLs, substituteTemplateOverride(obj.URL, baseVals, v, choice))
+		}
+		if in.Default != "" {
+			instantiated := substituteTemplateOverride(obj.URL, baseVals, v, in.Default)
+			if isPureHostVarName(isPureHost, pureHostVar, v) {
+				structuralOnlyURLs = append(structuralOnlyURLs, instantiated)
+			} else {
+				strictURLs = append(strictURLs, instantiated)
+			}
+		}
+	}
+
+	return strictURLs, structuralOnlyURLs
+}
+
+func isPureHostVarName(isPureHost bool, pureHostVar, varName string) bool {
+	return isPureHost && varName == pureHostVar
+}
+
+func buildBaseTemplateValues(obj *model.Transport, vars []string, pureHostVar string, isPureHost bool) (map[string]string, bool) {
+	baseVals := make(map[string]string, len(vars))
+	hasStrictConcrete := false
+
+	for _, v := range vars {
+		in, ok := obj.Variables[v]
+		pureVar := isPureHostVarName(isPureHost, pureHostVar, v)
+		switch {
+		case ok && in.Value != "":
+			baseVals[v] = in.Value
+			hasStrictConcrete = true
+		case ok && len(in.Choices) > 0:
+			baseVals[v] = in.Choices[0]
+			hasStrictConcrete = true
+		case ok && in.Default != "" && !pureVar:
+			baseVals[v] = in.Default
+			hasStrictConcrete = true
+		default:
+			baseVals[v] = fallbackPlaceholderForVar(obj.URL, v, pureVar)
+		}
+	}
+
+	return baseVals, hasStrictConcrete
+}
+
+func fallbackPlaceholderForVar(rawURL, varName string, isPureHostVar bool) string {
+	if isPureHostVar || varName == "host" {
+		return "example.com"
+	}
+	if varName == "port" || strings.Contains(rawURL, ":{"+varName+"}") {
+		return "8080"
+	}
+	if varName == "path" {
+		return "api"
+	}
+	if varName == "protocol" || varName == "scheme" {
+		return schemeHTTP
+	}
+	return genericTemplatePlaceholder
+}
+
+func substituteTemplateOverride(rawURL string, base map[string]string, key, val string) string {
+	return templateVarTokenRe.ReplaceAllStringFunc(rawURL, func(token string) string {
+		name := token[1 : len(token)-1]
+		if name == key {
+			return val
+		}
+		if b, ok := base[name]; ok {
+			return b
+		}
+		return genericTemplatePlaceholder
+	})
+}
+
+func substituteTemplateMap(rawURL string, vals map[string]string) string {
+	return templateVarTokenRe.ReplaceAllStringFunc(rawURL, func(token string) string {
+		name := token[1 : len(token)-1]
+		if v, ok := vals[name]; ok {
+			return v
+		}
+		return genericTemplatePlaceholder
+	})
 }
 
 // isDisallowedRemoteHost reports whether hostname is disallowed for a remote MCP
@@ -133,15 +445,11 @@ func isDisallowedRemoteHost(hostname string, templatedHost bool) bool {
 	if hostname == "" {
 		return true
 	}
-	// DNS is case-insensitive and a single trailing root dot is equivalent to its absence.
 	hostname = strings.ToLower(strings.TrimSuffix(hostname, "."))
 	if hostname == "" || strings.HasSuffix(hostname, ".") {
 		return true
 	}
 
-	// Colons are never valid in DNS names; any host containing ':' must parse as
-	// a valid, zone-free global IPv6 address (catches percent-encoded zone IDs
-	// such as fe80::1%25eth0 that net.ParseIP/netip.ParseAddr reject).
 	if strings.Contains(hostname, ":") {
 		addr, err := netip.ParseAddr(hostname)
 		if err != nil {
@@ -150,8 +458,6 @@ func isDisallowedRemoteHost(hostname string, templatedHost bool) bool {
 		return isDisallowedRemoteIP(addr)
 	}
 
-	// Canonical dotted-decimal IPv4 literals (netip.ParseAddr rejects octal, hex,
-	// and shorthand forms, which fall through and are rejected below).
 	if addr, err := netip.ParseAddr(hostname); err == nil {
 		return isDisallowedRemoteIP(addr)
 	}
@@ -161,17 +467,10 @@ func isDisallowedRemoteHost(hostname string, templatedHost bool) bool {
 		return true
 	}
 
-	// Single-label hostnames (e.g. "YOUR_DOMAIN", "HERMES_MCP_HOST", integer IPv4
-	// "2130706433", hex IPv4 "0x7f000001") are never valid public FQDNs. Allow a
-	// single label only when replaceTemplateVariables substituted a host template
-	// such as "https://{custom_host}/mcp" -> "placeholder".
 	if len(labels) == 1 {
 		return !templatedHost
 	}
 
-	// Reject shorthand/octal/hex IPv4 forms (e.g. "127.1", "0177.0.0.1",
-	// "0x7f.0.0.1") and any multi-label host whose TLD does not conform to
-	// ICANN/RFC 3696 alphabetic-start TLD rules.
 	if isLegacyIPv4Labels(labels) || !isValidTLDRootLabel(labels[len(labels)-1]) {
 		return true
 	}
@@ -201,8 +500,6 @@ func matchesDomainSuffixList(hostname string, suffixes []string) bool {
 	return false
 }
 
-// isLegacyIPv4Labels reports whether 1..4 dot-separated labels are all decimal,
-// octal, or 0x-hex numbers (BSD inet_aton / WHATWG non-canonical IPv4 forms).
 func isLegacyIPv4Labels(labels []string) bool {
 	if len(labels) == 0 || len(labels) > 4 {
 		return false
@@ -239,9 +536,6 @@ func isNumericOrHexPart(s string) bool {
 	return true
 }
 
-// isValidTLDRootLabel checks that the rightmost DNS label begins with an ASCII
-// letter (covering both standard alphabetic TLDs and "xn--" punycode IDN TLDs)
-// and does not end with a hyphen.
 func isValidTLDRootLabel(tld string) bool {
 	if tld == "" || strings.HasSuffix(tld, "-") {
 		return false
@@ -307,20 +601,23 @@ func parseFourDecimalOctets(parts []string) (netip.Addr, bool) {
 	return netip.AddrFrom4(octets), true
 }
 
+// hasDisallowedHexIPv4 inspects both the full label and every '-'-delimited
+// 8-hex-character token (catching e.g. "0a000001.nip.io", "app-7f000001.nip.io",
+// and "7f000001-app.nip.io").
 func hasDisallowedHexIPv4(label string) bool {
-	cand := label
-	if len(cand) != 8 {
-		idx := strings.LastIndexByte(label, '-')
-		if idx < 0 || len(label[idx+1:]) != 8 {
-			return false
+	for _, token := range strings.Split(label, "-") {
+		if len(token) != 8 {
+			continue
 		}
-		cand = label[idx+1:]
+		b, err := hex.DecodeString(token)
+		if err != nil || len(b) != 4 {
+			continue
+		}
+		if isDisallowedRemoteIP(netip.AddrFrom4([4]byte{b[0], b[1], b[2], b[3]})) {
+			return true
+		}
 	}
-	b, err := hex.DecodeString(cand)
-	if err != nil || len(b) != 4 {
-		return false
-	}
-	return isDisallowedRemoteIP(netip.AddrFrom4([4]byte{b[0], b[1], b[2], b[3]}))
+	return false
 }
 
 func hasDisallowedDashedIPv6(label string) bool {
@@ -354,60 +651,180 @@ func parseDashedIPv6(s string) (netip.Addr, bool) {
 	return addr, true
 }
 
-// validateRemoteURLs performs publish/update-time validation on req.Remotes,
-// including DNS resolution of non-templated remote hostnames to reject domains
-// that resolve to loopback, private, link-local, CGNAT, or transition IPs.
-//
-// Hostnames that do not resolve (e.g. NXDOMAIN on unpropagated domains or
-// RFC 2606 test fixtures) or fail due to transient DNS errors are not blocked.
-func validateRemoteURLs(ctx context.Context, req apiv0.ServerJSON) error {
+type remoteHostLookupTarget struct {
+	rawURL string
+	host   string
+}
+
+// validateRemoteURLs performs publish/update-time validation on req.Remotes.
+// When allowPrivate is false, concrete remote hostnames (including static
+// prefixes before path variables and concrete variable substitutions) are
+// resolved with a trailing root dot under bounded concurrency, a cap on unique
+// hostnames, and an overall deadline.
+func validateRemoteURLs(ctx context.Context, req apiv0.ServerJSON, allowPrivate bool) error {
 	if len(req.Remotes) == 0 {
 		return nil
 	}
-	checkedHosts := make(map[string]struct{}, len(req.Remotes))
-	for i, remote := range req.Remotes {
+
+	seenHosts := make(map[string]struct{}, len(req.Remotes))
+	var targets []remoteHostLookupTarget
+
+	for i := range req.Remotes {
+		remote := &req.Remotes[i]
 		if remote.URL == "" {
 			continue
 		}
-		if !IsValidRemoteURL(remote.URL) {
+		if !validateRemoteTransportURL(remote, allowPrivate) {
 			return fmt.Errorf("remote %d (%s): %w", i, remote.URL, ErrInvalidRemoteURL)
 		}
-		if rawURLHasTemplatedHostname(remote.URL) {
+		if allowPrivate {
 			continue
 		}
-		u, err := url.Parse(replaceTemplateVariables(remote.URL))
-		if err != nil {
-			return fmt.Errorf("remote %d (%s): %w", i, remote.URL, ErrInvalidRemoteURL)
-		}
-		host := strings.ToLower(strings.TrimSuffix(u.Hostname(), "."))
-		if _, err := netip.ParseAddr(host); err == nil {
-			continue
-		}
-		if _, seen := checkedHosts[host]; seen {
-			continue
-		}
-		checkedHosts[host] = struct{}{}
-
-		if err := checkRemoteHostResolution(ctx, remote.URL, host); err != nil {
-			return err
+		for _, host := range collectConcreteRemoteDNSLookupHosts(remote) {
+			if _, exists := seenHosts[host]; exists {
+				continue
+			}
+			seenHosts[host] = struct{}{}
+			targets = append(targets, remoteHostLookupTarget{rawURL: remote.URL, host: host})
 		}
 	}
-	return nil
+
+	if len(targets) == 0 {
+		return nil
+	}
+	if len(targets) > maxRemoteHostLookupsPerRequest {
+		return fmt.Errorf("%w: server specifies more than %d unique remote hostnames",
+			ErrInvalidRemoteURL, maxRemoteHostLookupsPerRequest)
+	}
+
+	return resolveRemoteHostTargets(ctx, targets)
+}
+
+func collectConcreteRemoteDNSLookupHosts(remote *model.Transport) []string {
+	var hosts []string
+	addHost := func(h string) {
+		h = strings.ToLower(strings.TrimSuffix(h, "."))
+		if h == "" {
+			return
+		}
+		if _, err := netip.ParseAddr(h); err == nil {
+			return
+		}
+		hosts = append(hosts, h)
+	}
+
+	rawHost, ok := rawAuthorityHost(remote.URL)
+	pureHostVar, isPureHost := pureAuthorityHostVariable(remote.URL)
+	if ok && !strings.Contains(rawHost, "{") {
+		if u, err := url.Parse(replaceTemplateVariables(remote.URL)); err == nil {
+			addHost(u.Hostname())
+		}
+	} else if stripped, ok := strippedStaticAuthorityHost(remote.URL, isPureHost); ok {
+		addHost(stripped)
+	}
+
+	if !allAuthorityVarsHaveStrictValues(remote, pureHostVar, isPureHost) {
+		return hosts
+	}
+
+	strictURLs, _ := instantiateRemoteVariableURLs(remote)
+	for _, uStr := range strictURLs {
+		if u, err := url.Parse(uStr); err == nil {
+			addHost(u.Hostname())
+		}
+	}
+
+	return hosts
+}
+
+func allAuthorityVarsHaveStrictValues(remote *model.Transport, pureHostVar string, isPureHost bool) bool {
+	authVars := extractSchemeAndAuthorityVariables(remote.URL)
+	if len(authVars) == 0 {
+		return false
+	}
+	for _, v := range authVars {
+		in, ok := remote.Variables[v]
+		if !ok {
+			return false
+		}
+		hasStrict := in.Value != "" || len(in.Choices) > 0 || (in.Default != "" && !isPureHostVarName(isPureHost, pureHostVar, v))
+		if !hasStrict {
+			return false
+		}
+	}
+	return true
+}
+
+func resolveRemoteHostTargets(ctx context.Context, targets []remoteHostLookupTarget) error {
+	overallCtx, cancel := context.WithTimeout(ctx, remoteDNSOverallTimeout)
+	defer cancel()
+
+	sem := make(chan struct{}, remoteDNSLookupConcurrency)
+	var (
+		wg       sync.WaitGroup
+		mu       sync.Mutex
+		firstErr error
+	)
+
+	for _, target := range targets {
+		if overallCtx.Err() != nil {
+			break
+		}
+		mu.Lock()
+		failed := firstErr != nil
+		mu.Unlock()
+		if failed {
+			break
+		}
+
+		select {
+		case sem <- struct{}{}:
+		case <-overallCtx.Done():
+			break
+		}
+		if overallCtx.Err() != nil {
+			break
+		}
+
+		wg.Add(1)
+		go func(t remoteHostLookupTarget) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			if err := checkRemoteHostResolution(overallCtx, t.rawURL, t.host); err != nil {
+				mu.Lock()
+				if firstErr == nil {
+					firstErr = err
+					cancel()
+				}
+				mu.Unlock()
+			}
+		}(target)
+	}
+
+	wg.Wait()
+	return firstErr
 }
 
 func checkRemoteHostResolution(ctx context.Context, rawURL, host string) error {
 	lookupCtx, cancel := context.WithTimeout(ctx, remoteDNSLookupTimeout)
 	defer cancel()
 
-	ips, err := defaultHostResolver.LookupIPAddr(lookupCtx, host)
+	// Append a trailing root dot so Go's resolver sends a single rooted query
+	// rather than expanding Kubernetes ndots:5 search domains (.svc.cluster.local,
+	// .google.internal).
+	fqdn := strings.TrimSuffix(host, ".") + "."
+	ips, err := defaultHostResolver.LookupIPAddr(lookupCtx, fqdn)
 	if err != nil {
 		return nil
 	}
 	for _, ipAddr := range ips {
 		addr, ok := netip.AddrFromSlice(ipAddr.IP)
 		if !ok || isDisallowedRemoteIP(addr) {
-			return fmt.Errorf("%w: remote URL %s (%s) resolves to disallowed IP address %s",
-				ErrInvalidRemoteURL, rawURL, host, ipAddr.IP.String())
+			// Do not echo the resolved IP address back to the caller, as that
+			// would act as an internal DNS / Pod-IP disclosure oracle.
+			return fmt.Errorf("%w: remote URL %s resolves to a disallowed non-public IP address",
+				ErrInvalidRemoteURL, rawURL)
 		}
 	}
 	return nil

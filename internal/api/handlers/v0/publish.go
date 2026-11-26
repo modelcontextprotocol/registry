@@ -55,7 +55,8 @@ func RegisterPublishEndpoint(api huma.API, pathPrefix string, registry service.R
 		}
 
 		// Validate server JSON structure and schema (returns 422 on validation failure)
-		validationResult := validators.ValidateServerJSON(&input.Body, validators.ValidationSchemaVersionAndSemantic)
+		opts := validators.ValidationSchemaVersionAndSemantic.WithAllowPrivateRemoteURLs(cfg != nil && cfg.AllowPrivateRemoteURLs)
+		validationResult := validators.ValidateServerJSON(&input.Body, opts)
 		if !validationResult.Valid {
 			return nil, huma.Error422UnprocessableEntity("Failed to publish server, invalid schema: call /validate for details")
 		}

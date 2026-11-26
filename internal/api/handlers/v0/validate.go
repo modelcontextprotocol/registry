@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 )
@@ -16,7 +17,10 @@ type ValidateServerInput struct {
 }
 
 // RegisterValidateEndpoint registers the validate endpoint with a custom path prefix
-func RegisterValidateEndpoint(api huma.API, pathPrefix string) {
+func RegisterValidateEndpoint(api huma.API, pathPrefix string, cfgs ...*config.Config) {
+	allowPrivate := len(cfgs) > 0 && cfgs[0] != nil && cfgs[0].AllowPrivateRemoteURLs
+	opts := validators.ValidationAll.WithAllowPrivateRemoteURLs(allowPrivate)
+
 	huma.Register(api, huma.Operation{
 		OperationID: "validate-server" + strings.ReplaceAll(pathPrefix, "/", "-"),
 		Method:      http.MethodPost,
@@ -26,7 +30,7 @@ func RegisterValidateEndpoint(api huma.API, pathPrefix string) {
 		Tags:        []string{"validate"},
 	}, func(_ context.Context, input *ValidateServerInput) (*Response[validators.ValidationResult], error) {
 		// Perform comprehensive validation (schema version, full schema validation, and semantic)
-		result := validators.ValidateServerJSON(&input.Body, validators.ValidationAll)
+		result := validators.ValidateServerJSON(&input.Body, opts)
 
 		// Return validation result (always 200 OK, validity indicated in result.Valid)
 		return &Response[validators.ValidationResult]{
