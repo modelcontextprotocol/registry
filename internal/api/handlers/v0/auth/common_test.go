@@ -18,6 +18,8 @@ func TestIsValidDomain(t *testing.T) {
 		{"a.b.c.d.example.com", true},
 		{"foo-bar.example.com", true},
 		{"123.example.com", true},
+		{"internal.example.com", true},
+		{"local.example.com", true},
 
 		// Invalid — empty / oversize
 		{"", false},
@@ -33,6 +35,15 @@ func TestIsValidDomain(t *testing.T) {
 		{"localhost", false},
 		{"kubernetes", false},
 		{"internal", false},
+
+		// Invalid — special-use / private TLDs (SSRF / mDNS / cluster-internal)
+		{"sub.localhost", false},
+		{"metadata.google.internal", false},
+		{"mcp.acme.internal", false},
+		{"api.default.svc.cluster.local", false},
+		{"printer.LOCAL", false},
+		{"home.arpa", false},
+		{"nas.home.arpa", false},
 
 		// Invalid — bad characters / structure
 		{"-example.com", false},

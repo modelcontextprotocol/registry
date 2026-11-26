@@ -27,9 +27,11 @@ type DNSResolver interface {
 // DefaultDNSResolver uses Go's standard DNS resolution
 type DefaultDNSResolver struct{}
 
-// LookupTXT performs DNS TXT record lookup
+// LookupTXT performs DNS TXT record lookup using a trailing-dot FQDN so
+// Kubernetes ndots search-domain suffixes are not appended.
 func (r *DefaultDNSResolver) LookupTXT(ctx context.Context, name string) ([]string, error) {
-	return (&net.Resolver{}).LookupTXT(ctx, name)
+	fqdn := strings.TrimSuffix(name, ".") + "."
+	return (&net.Resolver{}).LookupTXT(ctx, fqdn)
 }
 
 // DNSAuthHandler handles DNS-based authentication

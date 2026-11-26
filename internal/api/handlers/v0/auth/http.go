@@ -8,6 +8,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/netip"
+	"os"
 	"strings"
 	"time"
 
@@ -82,29 +84,44 @@ func newHTTPKeyFetcherClient(transport http.RoundTripper) *http.Client {
 	}
 }
 
+type ipAddrResolver interface {
+	LookupIPAddr(ctx context.Context, host string) ([]net.IPAddr, error)
+}
+
+var httpKeyDNSResolver ipAddrResolver = net.DefaultResolver
+
 // safeDialContext resolves the target hostname and refuses to dial loopback,
-// private (RFC1918, ULA), link-local, or unspecified addresses. Combined with
-// IsValidDomain rejecting IP literals, this neutralises SSRF abuse of the
-// well-known fetcher: an attacker cannot reach internal HTTPS services
-// (Kubernetes API server, internal admin panels, internal DNS-resolved hosts)
-// even if they control DNS for an attacker domain.
+// private (RFC1918, ULA), link-local, special-purpose, cluster-internal, or
+// unspecified addresses. Combined with IsValidDomain rejecting IP literals and
+// internal TLDs, this neutralises SSRF abuse of the well-known fetcher: an
+// attacker cannot reach internal HTTPS services (Kubernetes API server,
+// internal admin panels, internal DNS-resolved hosts) even if they control DNS
+// for an attacker domain.
+//
+// Lookups append a trailing root dot (e.g. "example.com.") so Go's resolver
+// issues a single rooted query instead of expanding Kubernetes ndots:5 search
+// domains (.svc.cluster.local, .google.internal), while the HTTP request URL
+// and TLS SNI ServerName retain the dot-free domain per RFC 6066.
 //
 // The hostname is resolved once here; we then dial the resolved IP directly,
 // which pins the connection against DNS rebinding (a TOCTOU where the resolver
 // returns a public IP to a pre-flight check and an internal IP to the actual
-// dial). TLS SNI and the Host header continue to use the original hostname
-// since they are set by http.Transport from the request URL, not the dial
-// address.
+// dial).
 func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, err
 	}
 
-	var resolver net.Resolver
-	ips, err := resolver.LookupIPAddr(ctx, host)
-	if err != nil {
-		return nil, err
+	var ips []net.IPAddr
+	if parsedIP := net.ParseIP(host); parsedIP != nil {
+		ips = []net.IPAddr{{IP: parsedIP}}
+	} else {
+		fqdn := strings.TrimSuffix(host, ".") + "."
+		ips, err = httpKeyDNSResolver.LookupIPAddr(ctx, fqdn)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Try each non-blocked address in order, falling through on dial failure.
@@ -140,67 +157,85 @@ func safeDialContext(ctx context.Context, network, addr string) (net.Conn, error
 	return nil, fmt.Errorf("dial %s: all resolved public addresses failed: %w", host, lastErr)
 }
 
-// mustCIDR parses a CIDR literal at init; panics on malformed input so a
-// typo surfaces at startup rather than letting a nil *IPNet through to the
-// blocklist check (which would silently fail-open).
-func mustCIDR(s string) *net.IPNet {
-	_, n, err := net.ParseCIDR(s)
-	if err != nil {
-		panic(fmt.Sprintf("auth: invalid CIDR %q: %v", s, err))
-	}
-	return n
+// blockedIPv4Prefixes covers special-purpose and cluster-internal IPv4 ranges
+// that Go's stdlib Is* helpers do not classify as private or loopback:
+//
+//	0.0.0.0/8        RFC 1122 "this host on this network" (routes to loopback on Linux/macOS)
+//	100.64.0.0/10    RFC 6598 Carrier-Grade NAT
+//	192.0.0.0/24     RFC 6890 IETF protocol assignments
+//	198.18.0.0/15    RFC 2544 benchmarking (frequently used by service meshes/VPCs)
+//	240.0.0.0/4      RFC 1112 Class E reserved + 255.255.255.255 limited broadcast
+//	34.118.224.0/20  GKE default privately-used public IP Service CIDR
+var blockedIPv4Prefixes = []netip.Prefix{
+	netip.MustParsePrefix("0.0.0.0/8"),
+	netip.MustParsePrefix("100.64.0.0/10"),
+	netip.MustParsePrefix("192.0.0.0/24"),
+	netip.MustParsePrefix("198.18.0.0/15"),
+	netip.MustParsePrefix("240.0.0.0/4"),
+	netip.MustParsePrefix("34.118.224.0/20"),
 }
-
-// cgnatRange covers RFC 6598 Carrier-Grade NAT (100.64.0.0/10), which the
-// stdlib does not classify via any Is* helper but is reachable on some
-// cloud / mobile networks where it shadows internal infrastructure.
-var cgnatRange = mustCIDR("100.64.0.0/10")
 
 // blockedIPv6Prefixes are IPv6 ranges that either embed an arbitrary IPv4
 // address (and therefore tunnel into RFC1918 / cloud-metadata space on
-// hosts with the corresponding routing) or are routed into site-local
-// internal networks. None of these are caught by Go's per-class Is*
+// hosts with the corresponding routing), are discard-only, or are routed into
+// site-local internal networks. None of these are caught by Go's per-class Is*
 // helpers.
 //
-//	2002::/16       RFC 3056 6to4 — bits 16-47 are an IPv4 address
-//	2001::/32       RFC 4380 Teredo — low 32 bits are an obfuscated IPv4 address
-//	64:ff9b::/96    RFC 6052 NAT64 well-known — low 32 bits are IPv4
-//	64:ff9b:1::/48  RFC 8215 NAT64 local-use — same IPv4-embedding shape
-//	::/96           RFC 4291 IPv4-compatible (deprecated) — low 32 bits are IPv4
-//	                (:: and ::1 also fall in ::/96 and remain blocked via
-//	                IsUnspecified / IsLoopback)
-//	fec0::/10       RFC 3879 site-local (deprecated, still routed by some
-//	                stacks)
-var blockedIPv6Prefixes = []*net.IPNet{
-	mustCIDR("2002::/16"),
-	mustCIDR("2001::/32"),
-	mustCIDR("64:ff9b::/96"),
-	mustCIDR("64:ff9b:1::/48"),
-	mustCIDR("::/96"),
-	mustCIDR("fec0::/10"),
+//	2002::/16         RFC 3056 6to4 — bits 16-47 are an IPv4 address
+//	2001::/32         RFC 4380 Teredo — low 32 bits are an obfuscated IPv4 address
+//	64:ff9b::/96      RFC 6052 NAT64 well-known — low 32 bits are IPv4
+//	64:ff9b:1::/48    RFC 8215 NAT64 local-use — same IPv4-embedding shape
+//	::/96             RFC 4291 IPv4-compatible (deprecated) — low 32 bits are IPv4
+//	                  (:: and ::1 also fall in ::/96 and remain blocked via
+//	                  IsUnspecified / IsLoopback)
+//	::ffff:0:0:0/96   RFC 2765 SIIT IPv4-translated — low 32 bits are IPv4
+//	100::/64          RFC 6666 discard-only address block
+//	fec0::/10         RFC 3879 site-local (deprecated, still routed by some stacks)
+var blockedIPv6Prefixes = []netip.Prefix{
+	netip.MustParsePrefix("2002::/16"),
+	netip.MustParsePrefix("2001::/32"),
+	netip.MustParsePrefix("64:ff9b::/96"),
+	netip.MustParsePrefix("64:ff9b:1::/48"),
+	netip.MustParsePrefix("::/96"),
+	netip.MustParsePrefix("::ffff:0:0:0/96"),
+	netip.MustParsePrefix("100::/64"),
+	netip.MustParsePrefix("fec0::/10"),
 }
 
 // isBlockedIP reports whether an IP must not be dialled by the namespace
 // verification fetcher. Covers loopback (127/8, ::1), RFC1918 + ULA via
 // IsPrivate, link-local (169.254/16, fe80::/10 — includes cloud metadata
-// 169.254.169.254), unspecified (0.0.0.0, ::), all multicast (admin-scoped
-// 239/8 and ff00::/8 in addition to link-local-multicast), CGNAT, and
-// IPv6 prefix families that tunnel to or embed arbitrary IPv4 addresses
-// (see blockedIPv6Prefixes). IPv4-mapped IPv6 (::ffff:0:0/96) is handled
-// implicitly: the stdlib Is* helpers honour the To4() fast-path, so e.g.
-// ::ffff:10.0.0.1 is correctly classified as IsPrivate.
+// 169.254.169.254), unspecified (0.0.0.0, ::), all multicast, special-purpose
+// IPv4/IPv6 blocks, GKE's default Service CIDR (34.118.224.0/20), and
+// KUBERNETES_SERVICE_HOST when set. IPv4-mapped IPv6 (::ffff:0:0/96) is
+// unmapped so all IPv4 checks apply consistently.
 func isBlockedIP(ip net.IP) bool {
-	if ip == nil {
+	addr, ok := netip.AddrFromSlice(ip)
+	if !ok || !addr.IsValid() || addr.Zone() != "" {
 		return true
 	}
-	if ip.IsLoopback() || ip.IsPrivate() ||
-		ip.IsLinkLocalUnicast() || ip.IsMulticast() ||
-		ip.IsUnspecified() ||
-		cgnatRange.Contains(ip) {
+	if addr.Is6() && !addr.Is4In6() {
+		for _, p := range blockedIPv6Prefixes {
+			if p.Contains(addr) {
+				return true
+			}
+		}
+	}
+	unmapped := addr.Unmap()
+	if unmapped.IsLoopback() || unmapped.IsPrivate() ||
+		unmapped.IsLinkLocalUnicast() || unmapped.IsLinkLocalMulticast() ||
+		unmapped.IsMulticast() || unmapped.IsUnspecified() {
 		return true
 	}
-	for _, p := range blockedIPv6Prefixes {
-		if p.Contains(ip) {
+	if unmapped.Is4() {
+		for _, p := range blockedIPv4Prefixes {
+			if p.Contains(unmapped) {
+				return true
+			}
+		}
+	}
+	if k8sHost := os.Getenv("KUBERNETES_SERVICE_HOST"); k8sHost != "" {
+		if k8sAddr, err := netip.ParseAddr(k8sHost); err == nil && unmapped == k8sAddr.Unmap() {
 			return true
 		}
 	}

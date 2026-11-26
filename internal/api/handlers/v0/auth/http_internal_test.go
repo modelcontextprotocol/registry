@@ -30,15 +30,26 @@ func TestIsBlockedIP(t *testing.T) {
 		// Blocked — link-local (includes cloud metadata 169.254.169.254)
 		{"169.254.169.254", true},
 		{"fe80::1", true},
-		// Blocked — unspecified
+		// Blocked — unspecified and 0.0.0.0/8 ("this host on this network")
 		{"0.0.0.0", true},
+		{"0.0.0.1", true},
 		{"::", true},
-		// Blocked — admin-scoped and broader multicast
+		// Blocked — admin-scoped and broader multicast, Class E reserved, and broadcast
 		{"239.0.0.1", true},
+		{"240.0.0.1", true},
+		{"255.255.255.255", true},
 		{"ff00::1", true},
 		// Blocked — Carrier-Grade NAT (RFC 6598)
 		{"100.64.0.1", true},
 		{"100.127.255.254", true},
+		// Blocked — RFC 6890 IETF protocol assignments & RFC 2544 benchmarking
+		{"192.0.0.1", true},
+		{"198.18.0.1", true},
+		{"198.19.255.254", true},
+		// Blocked — GKE default privately-used public IP Service CIDR (34.118.224.0/20)
+		{"34.118.224.1", true},
+		{"34.118.239.254", true},
+		{"::ffff:34.118.224.1", true},
 		// Blocked — IPv6 6to4 (RFC 3056 2002::/16); bits 16-47 are an
 		// arbitrary IPv4 address, so 2002:a9fe:a9fe:: tunnels to
 		// 169.254.169.254 and 2002:0a00:0001:: tunnels to 10.0.0.1.
@@ -63,13 +74,16 @@ func TestIsBlockedIP(t *testing.T) {
 		{"::c0a8:0101", true},
 		{"::7f00:0001", true},
 		{"::169.254.169.254", true},
+		// Blocked — RFC 2765 SIIT IPv4-translated (::ffff:0:0:0/96) and RFC 6666 discard (100::/64)
+		{"0:0:0:0:ffff:0:a9fe:a9fe", true},
+		{"100::1", true},
 		// Blocked — IPv6 deprecated site-local (RFC 3879 fec0::/10);
 		// still routed into internal networks by some stacks.
 		{"fec0::1", true},
 		{"feff::1", true},
 		// Blocked — IPv4-mapped IPv6 (::ffff:0:0/96) inherits the
-		// classification of the wrapped IPv4 via To4() fast-path; covered
-		// here as an explicit regression guard.
+		// classification of the wrapped IPv4 via Unmap(); covered here as an
+		// explicit regression guard.
 		{"::ffff:127.0.0.1", true},
 		{"::ffff:10.0.0.1", true},
 		{"::ffff:169.254.169.254", true},
@@ -86,9 +100,15 @@ func TestIsBlockedIP(t *testing.T) {
 		{"2003::1", false},      // outside 2002::/16 on the other side
 		{"64:ff9c::1", false},   // outside 64:ff9b::/96
 		{"::1:0:0", false},      // outside ::/96 IPv4-compatible
-		// Allowed — outside CGNAT range
+		{"100:0:0:1::1", false}, // outside 100::/64 discard
+		// Allowed — outside CGNAT, GKE Service CIDR, and special IPv4 ranges
 		{"100.63.255.255", false},
 		{"100.128.0.1", false},
+		{"34.118.223.255", false},
+		{"34.118.240.1", false},
+		{"192.0.1.1", false},
+		{"198.17.255.255", false},
+		{"198.20.0.1", false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.ip, func(t *testing.T) {
@@ -381,5 +401,48 @@ func TestHTTPKeyFetcher_DoesNotRetryAfterContextCancellation(t *testing.T) {
 	}
 	if got := atomic.LoadInt32(requests); got != 0 {
 		t.Errorf("server saw %d requests, want 0 (a cancelled context must not start a request)", got)
+	}
+}
+
+func TestIsBlockedIP_KubernetesServiceHost(t *testing.T) {
+	// Pick an IP outside default blocked prefixes so only KUBERNETES_SERVICE_HOST blocks it.
+	const customClusterIP = "34.118.240.42"
+	if isBlockedIP(net.ParseIP(customClusterIP)) {
+		t.Fatalf("precondition failed: %s should be allowed when KUBERNETES_SERVICE_HOST is unset", customClusterIP)
+	}
+
+	t.Setenv("KUBERNETES_SERVICE_HOST", customClusterIP)
+
+	for _, candidate := range []string{customClusterIP, "::ffff:" + customClusterIP} {
+		if !isBlockedIP(net.ParseIP(candidate)) {
+			t.Errorf("isBlockedIP(%q) = false, want true when KUBERNETES_SERVICE_HOST=%s", candidate, customClusterIP)
+		}
+	}
+}
+
+type recordingDNSResolver struct {
+	lookedUp []string
+	ips      []net.IPAddr
+}
+
+func (r *recordingDNSResolver) LookupIPAddr(_ context.Context, host string) ([]net.IPAddr, error) {
+	r.lookedUp = append(r.lookedUp, host)
+	return r.ips, nil
+}
+
+func TestSafeDialContext_AppendsTrailingDotForDNSLookup(t *testing.T) {
+	rec := &recordingDNSResolver{
+		ips: []net.IPAddr{{IP: net.ParseIP("127.0.0.1")}},
+	}
+	prev := httpKeyDNSResolver
+	httpKeyDNSResolver = rec
+	t.Cleanup(func() { httpKeyDNSResolver = prev })
+
+	_, err := safeDialContext(context.Background(), "tcp", "example.com:443")
+	if err == nil {
+		t.Fatal("expected safeDialContext to reject blocked IP")
+	}
+	if len(rec.lookedUp) != 1 || rec.lookedUp[0] != "example.com." {
+		t.Fatalf("LookupIPAddr received %v, want [\"example.com.\"] (trailing dot prevents ndots search-domain expansion)", rec.lookedUp)
 	}
 }
