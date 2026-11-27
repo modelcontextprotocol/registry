@@ -29,7 +29,7 @@ func RegisterValidateEndpoint(api huma.API, pathPrefix string, cfgs ...*config.C
 		Description: "Validate a server.json file without publishing it to the registry",
 		Tags:        []string{"validate"},
 	}, func(_ context.Context, input *ValidateServerInput) (*Response[validators.ValidationResult], error) {
-		// Perform comprehensive validation (schema version, full schema validation, and semantic)
+		// Check schema, semantics and local submission limits.
 		result := validators.ValidateServerJSON(&input.Body, opts)
 
 		// Return validation result (always 200 OK, validity indicated in result.Valid)

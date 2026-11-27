@@ -71,6 +71,12 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *V
 		result.Merge(schemaResult)
 	}
 
+	if opts.ValidateSubmissionSize {
+		if err := validateSubmissionSize(serverJSON); err != nil {
+			result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, err.path, err, "submission-size"))
+		}
+	}
+
 	// Semantic validation (only if requested)
 	if !opts.ValidateSemantic {
 		return result

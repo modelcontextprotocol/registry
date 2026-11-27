@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -318,4 +319,90 @@ func TestPublishAndEditEndpoints_AllowPrivateRemoteURLs(t *testing.T) {
 		mux.ServeHTTP(editRR, editReq)
 		require.Equal(t, http.StatusOK, editRR.Code, "%s", editRR.Body.String())
 	})
+}
+
+func TestValidateEndpointSubmissionSize(t *testing.T) {
+	mux := http.NewServeMux()
+	api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
+	for _, prefix := range []string{"/v0", "/v0.1"} {
+		v0.RegisterValidateEndpoint(api, prefix)
+	}
+
+	for _, prefix := range []string{"/v0", "/v0.1"} {
+		validate := func(t *testing.T, server apiv0.ServerJSON, wantPath string) {
+			t.Helper()
+			body, err := json.Marshal(server)
+			require.NoError(t, err)
+			req := httptest.NewRequest(http.MethodPost, prefix+"/validate", bytes.NewReader(body))
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+			require.Equal(t, http.StatusOK, rr.Code)
+			var result struct {
+				Valid  bool
+				Issues []issueStruct
+			}
+			require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &result))
+			require.Equal(t, wantPath == "", result.Valid, "%+v", result.Issues)
+			if wantPath == "" {
+				require.Empty(t, result.Issues)
+				return
+			}
+			require.Len(t, result.Issues, 1)
+			issue := result.Issues[0]
+			require.Equal(t, wantPath, issue.Path)
+			require.Equal(t, "submission-size", issue.Reference)
+			require.Equal(t, "semantic", issue.Type)
+			require.Equal(t, "error", issue.Severity)
+			require.NotEmpty(t, issue.Message)
+		}
+
+		base := apiv0.ServerJSON{Schema: model.CurrentSchemaURL, Name: "com.example/size", Description: "Size check", Version: "1.0.0"}
+		t.Run(prefix+"/nested", func(t *testing.T) {
+			server := base
+			server.Packages = []model.Package{{
+				RegistryType: model.RegistryTypeNPM, Identifier: "sample", Version: "1.0.0",
+				Transport: model.Transport{Type: model.TransportTypeStdio}, RunTimeHint: strings.Repeat("é", 2048),
+			}}
+			validate(t, server, "")
+			server.Packages[0].RunTimeHint += "x"
+			validate(t, server, "packages[0].runtimeHint")
+		})
+		t.Run(prefix+"/variable-choice", func(t *testing.T) {
+			server := base
+			server.Remotes = []model.Transport{{
+				Type: model.TransportTypeStreamableHTTP, URL: "https://example.org/{route}",
+				Variables: map[string]model.Input{"route": {Choices: []string{"ok", strings.Repeat("x", 4097)}}},
+			}}
+			validate(t, server, "remotes[0].variables[*].choices[1]")
+		})
+		t.Run(prefix+"/metadata", func(t *testing.T) {
+			server := base
+			value := strings.Repeat("x", 4096-len(`{"k":""}`))
+			server.Meta = &apiv0.ServerMeta{PublisherProvided: map[string]any{"k": value}}
+			validate(t, server, "")
+			server.Meta.PublisherProvided["k"] = value + "x"
+			validate(t, server, `_meta["io.modelcontextprotocol.registry/publisher-provided"]`)
+		})
+		t.Run(prefix+"/record", func(t *testing.T) {
+			server := base
+			server.Remotes = []model.Transport{{Type: model.TransportTypeStreamableHTTP, URL: "https://example.org/mcp"}}
+			// Escaped ampersands let the record reach the limit with small, valid fields.
+			for i := 0; i < 6; i++ {
+				server.Remotes[0].Headers = append(server.Remotes[0].Headers, model.KeyValueInput{Name: fmt.Sprintf("X-Test-%d", i)})
+			}
+			for i := range server.Remotes[0].Headers[:5] {
+				server.Remotes[0].Headers[i].Description = strings.Repeat("&", 4096)
+			}
+			last := &server.Remotes[0].Headers[5]
+			last.Description = "x"
+			body, err := json.Marshal(server)
+			require.NoError(t, err)
+			remaining := 128*1024 - len(body)
+			last.Description += strings.Repeat("&", remaining/6) + strings.Repeat("x", remaining%6)
+			validate(t, server, "")
+			last.Description += "x"
+			validate(t, server, "$")
+		})
+	}
 }
