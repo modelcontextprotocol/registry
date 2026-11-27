@@ -3,6 +3,7 @@ package validators_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,6 +16,30 @@ import (
 )
 
 const websiteURLInvalidCharErrSubstr = "websiteUrl contains an invalid character"
+
+func TestValidateUpdateRequest_PublisherExtensionSize(t *testing.T) {
+	for _, tt := range []struct {
+		name    string
+		enabled bool
+		skip    bool
+	}{
+		{name: "registry validation enabled", enabled: true},
+		{name: "registry validation disabled"},
+		{name: "registry validation skipped", enabled: true, skip: true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &config.Config{EnableRegistryValidation: tt.enabled}
+			// Include the key, quotes, and braces in the serialized size.
+			value := strings.Repeat("x", 4096-len(`{"data":""}`))
+			meta := map[string]any{"data": value}
+			req := apiv0.ServerJSON{Meta: &apiv0.ServerMeta{PublisherProvided: meta}}
+			require.NoError(t, validators.ValidateUpdateRequest(t.Context(), req, cfg, tt.skip))
+
+			meta["data"] = value + "x"
+			require.ErrorContains(t, validators.ValidateUpdateRequest(t.Context(), req, cfg, tt.skip), "exceeds 4KB limit (4097 bytes)")
+		})
+	}
+}
 
 func TestValidate(t *testing.T) {
 	tests := []struct {
