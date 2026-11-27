@@ -3,6 +3,8 @@ package auth_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/modelcontextprotocol/registry/internal/api/handlers/v0/auth"
@@ -24,6 +26,14 @@ func (m *MockGenericOIDCValidator) ValidateToken(ctx context.Context, token stri
 }
 
 func TestOIDCHandler_ExchangeToken(t *testing.T) {
+	mux := http.NewServeMux()
+	issuer := httptest.NewServer(mux)
+	t.Cleanup(issuer.Close)
+	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(w, `{"issuer":%q}`, issuer.URL)
+	})
+
 	tests := []struct {
 		name          string
 		config        *config.Config
@@ -35,7 +45,7 @@ func TestOIDCHandler_ExchangeToken(t *testing.T) {
 			name: "successful token exchange with publish permissions",
 			config: &config.Config{
 				OIDCEnabled:      true,
-				OIDCIssuer:       "https://accounts.google.com",
+				OIDCIssuer:       issuer.URL,
 				OIDCClientID:     "test-client-id",
 				OIDCExtraClaims:  `[{"hd":"modelcontextprotocol.io"}]`,
 				OIDCPublishPerms: "*",
@@ -60,7 +70,7 @@ func TestOIDCHandler_ExchangeToken(t *testing.T) {
 			name: "failed validation with invalid hosted domain",
 			config: &config.Config{
 				OIDCEnabled:      true,
-				OIDCIssuer:       "https://accounts.google.com",
+				OIDCIssuer:       issuer.URL,
 				OIDCClientID:     "test-client-id",
 				OIDCExtraClaims:  `[{"hd":"modelcontextprotocol.io"}]`,
 				OIDCPublishPerms: "*",

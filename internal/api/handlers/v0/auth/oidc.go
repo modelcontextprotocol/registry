@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -212,20 +213,22 @@ func (h *OIDCHandler) validateExtraClaims(claims *OIDCClaims) error {
 
 	// Parse extra claims configuration
 	var extraClaimsRules []map[string]any
-	if err := json.Unmarshal([]byte(h.config.OIDCExtraClaims), &extraClaimsRules); err != nil {
-		return fmt.Errorf("invalid extra claims configuration: %w", err)
+	// JSON null also unmarshals into a nil slice or map without an error.
+	if err := json.Unmarshal([]byte(h.config.OIDCExtraClaims), &extraClaimsRules); err != nil || extraClaimsRules == nil {
+		return fmt.Errorf("invalid extra claims configuration: expected an array of rules")
 	}
-
-	// Validate each rule
 	for _, rule := range extraClaimsRules {
+		if rule == nil {
+			return fmt.Errorf("invalid extra claims configuration: expected a rule object")
+		}
 		for key, expectedValue := range rule {
 			actualValue, exists := claims.ExtraClaims[key]
 			if !exists {
-				return fmt.Errorf("claim validation failed: required claim %s not found", key)
+				return fmt.Errorf("claim validation failed: required claim %q not found", key)
 			}
 
 			if !claimMatches(actualValue, expectedValue) {
-				return fmt.Errorf("claim validation failed: %s expected %v, got %v", key, expectedValue, actualValue)
+				return fmt.Errorf("claim validation failed: %q does not match the configured rule", key)
 			}
 		}
 	}
@@ -233,13 +236,13 @@ func (h *OIDCHandler) validateExtraClaims(claims *OIDCClaims) error {
 	return nil
 }
 
-// claimMatches reports whether a claim value satisfies the expected configuration.
-// Both sides may be a scalar or a slice; for slice-typed claims (groups, roles, scp,
-// aud, etc.) any single overlap is treated as a match, mirroring how OIDC consumers
-// normally interpret list claims.
+// claimMatches checks for overlap only after validating both complete operands.
 func claimMatches(actual, expected any) bool {
 	actualList := toAnySlice(actual)
 	expectedList := toAnySlice(expected)
+	if !validClaimValues(actualList) || !validClaimValues(expectedList) {
+		return false
+	}
 	for _, e := range expectedList {
 		for _, a := range actualList {
 			if a == e {
@@ -248,6 +251,26 @@ func claimMatches(actual, expected any) bool {
 		}
 	}
 	return false
+}
+
+func validClaimValues(values []any) bool {
+	if len(values) == 0 {
+		return false
+	}
+	// JSON uses string, bool and float64. Also allow concrete numeric scalars
+	// supplied by a validator, preserving their original Go equality semantics.
+	first := reflect.ValueOf(values[0])
+	if first.Kind() != reflect.String && first.Kind() != reflect.Bool &&
+		!first.CanInt() && !first.CanUint() && !first.CanFloat() {
+		return false
+	}
+	scalarType := first.Type()
+	for _, v := range values[1:] {
+		if reflect.TypeOf(v) != scalarType {
+			return false
+		}
+	}
+	return true
 }
 
 func toAnySlice(v any) []any {
