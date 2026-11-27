@@ -54,6 +54,11 @@ type Config struct {
 	// registry whether the package still exists.
 	MalwareSweepMissingPackages bool `env:"MALWARE_SWEEP_MISSING_PACKAGES" envDefault:"true"`
 
+	// UIBasePath is a path prefix for browser-side links when the UI is served
+	// behind a reverse proxy under a subpath (e.g. "/mcp/registry"). It does
+	// not affect API routing.
+	UIBasePath string `env:"UI_BASE_PATH" envDefault:""`
+
 	GitHubOIDCAudience string `env:"GITHUB_OIDC_AUDIENCE" envDefault:""`
 
 	// OIDC Configuration
