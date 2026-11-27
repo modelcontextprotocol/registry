@@ -709,9 +709,13 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 	return nil
 }
 
-// ValidateUpdateRequest validates an update request including registry ownership
+// ValidateUpdateRequest validates publisher extensions and, when enabled, registry ownership
 // Note: ValidateServerJSON should be called separately before this function
 func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
+	if err := validatePublisherExtensions(req); err != nil {
+		return err
+	}
+
 	if cfg.EnableRegistryValidation && !skipRegistryValidation {
 		if err := validateRegistryRequest(ctx, req, cfg); err != nil {
 			return err
