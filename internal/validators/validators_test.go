@@ -516,6 +516,51 @@ func TestValidate(t *testing.T) {
 			expectedError: "",
 		},
 		{
+			name: "server with valid serverCard",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				ServerCard: "https://api.example.com/mcp/server-card",
+			},
+			expectedError: "",
+		},
+		{
+			name: "server with serverCard over http",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				ServerCard: "http://api.example.com/mcp/server-card",
+			},
+			expectedError: "serverCard must use https scheme: http://api.example.com/mcp/server-card",
+		},
+		{
+			name: "server with invalid serverCard URL",
+			serverDetail: apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Repository: &model.Repository{
+					URL:    "https://github.com/owner/repo",
+					Source: "github",
+				},
+				Version:    "1.0.0",
+				ServerCard: "not-a-url",
+			},
+			expectedError: "invalid serverCard URL: not-a-url",
+		},
+		{
 			name: "server with invalid websiteUrl - no scheme",
 			serverDetail: apiv0.ServerJSON{
 				Schema:      model.CurrentSchemaURL,

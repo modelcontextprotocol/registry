@@ -469,6 +469,12 @@
           "$ref": "#/definitions/Repository",
           "description": "Optional repository metadata for the MCP server source code. Recommended for transparency and security inspection."
         },
+        "serverCard": {
+          "description": "Optional URL of the server's MCP Server Card (SEP-2127). When present, clients SHOULD fetch this document to verify that the endpoint identifies itself as this server name, instead of inferring the card location from the remote URL.",
+          "example": "https://example.com/mcp/server-card",
+          "format": "uri",
+          "type": "string"
+        },
         "title": {
           "description": "Optional human-readable title or display name for the MCP server. MCP subregistries or clients MAY choose to use this for display purposes.",
           "example": "Weather API",
