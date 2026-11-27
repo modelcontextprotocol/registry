@@ -72,7 +72,7 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *V
 	}
 
 	if opts.ValidateSubmissionLimits {
-		_, preflightResult := validateWritePreflight(serverJSON, opts.EnableRegistryValidation, opts.AllowPrivateRemoteURLs)
+		_, preflightResult := validateWritePreflight(serverJSON, opts, collectAllIssues)
 		result.Merge(preflightResult)
 	}
 
@@ -701,18 +701,28 @@ type writePreflight struct {
 	remoteTargets    []remoteHostLookupTarget
 }
 
-// validateWritePreflight runs every local check enforced on writes before any
+type preflightMode int
+
+const (
+	stopAtFirstIssue preflightMode = iota
+	collectAllIssues
+)
+
+// validateWritePreflight checks the local limits enforced on writes before any
 // external registry, malware, DNS, or database work begins. Both ValidateServerJSON
 // (/validate) and ValidateWriteRequest (publish and edit) call this single function
 // so local submission and preflight budget rules are defined in one place.
-func validateWritePreflight(req *apiv0.ServerJSON, checkRegistryBudgets, allowPrivateRemoteURLs bool) (writePreflight, *ValidationResult) {
+func validateWritePreflight(req *apiv0.ServerJSON, opts ValidationOptions, mode preflightMode) (writePreflight, *ValidationResult) {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 
 	if err := validateSubmissionSize(req); err != nil {
 		result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, err.path, err, "submission-size"))
+		if mode == stopAtFirstIssue {
+			return writePreflight{}, result
+		}
 	}
 
-	if !checkRegistryBudgets {
+	if !opts.EnableRegistryValidation {
 		return writePreflight{}, result
 	}
 
@@ -721,11 +731,14 @@ func validateWritePreflight(req *apiv0.ServerJSON, checkRegistryBudgets, allowPr
 	if err != nil {
 		path := fmt.Sprintf("packages[%d]", pkgIndex)
 		result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, path, err, "package-ownership-limit"))
+		if mode == stopAtFirstIssue {
+			return writePreflight{}, result
+		}
 	} else {
 		preflight.ownershipIndices = ownershipIndices
 	}
 
-	remoteTargets, remoteIndex, err := collectRemoteDNSLookupTargets(req.Remotes, allowPrivateRemoteURLs)
+	remoteTargets, remoteIndex, err := collectRemoteDNSLookupTargets(req.Remotes, opts.AllowPrivateRemoteURLs)
 	if err != nil {
 		path := fmt.Sprintf("remotes[%d].url", remoteIndex)
 		result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, path, err, "remote-host-lookup-limit"))
@@ -742,14 +755,16 @@ func validateWritePreflight(req *apiv0.ServerJSON, checkRegistryBudgets, allowPr
 // (deleted versions skip outbound checks so takedowns and edits on withdrawn records succeed).
 // Note: ValidateServerJSON should be called separately before this function.
 func ValidateWriteRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
-	runRegistryChecks := cfg != nil && cfg.EnableRegistryValidation && !skipRegistryValidation
-	allowPrivate := cfg != nil && cfg.AllowPrivateRemoteURLs
+	opts := ValidationOptions{}.WithConfig(cfg)
+	if skipRegistryValidation {
+		opts.EnableRegistryValidation = false
+	}
 
-	preflight, preflightResult := validateWritePreflight(&req, runRegistryChecks, allowPrivate)
+	preflight, preflightResult := validateWritePreflight(&req, opts, stopAtFirstIssue)
 	if err := preflightResult.FirstError(); err != nil {
 		return err
 	}
-	if !runRegistryChecks {
+	if !opts.EnableRegistryValidation {
 		return nil
 	}
 	return validateRegistryRequest(ctx, req, cfg, preflight)

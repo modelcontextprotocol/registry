@@ -119,7 +119,7 @@ func parityCases() []parityCase {
 	}
 }
 
-func newParityHarness(t *testing.T) (*http.ServeMux, *config.Config, string) {
+func newParityHarness(t *testing.T, registryValidation bool) (*http.ServeMux, string) {
 	t.Helper()
 
 	seed := make([]byte, ed25519.SeedSize)
@@ -128,20 +128,9 @@ func newParityHarness(t *testing.T) (*http.ServeMux, *config.Config, string) {
 
 	cfg := &config.Config{
 		JWTPrivateKey:            hex.EncodeToString(seed),
-		EnableRegistryValidation: false,
+		EnableRegistryValidation: registryValidation,
 	}
 	svc := service.NewRegistryService(database.NewTestDB(t), cfg)
-
-	baseline := &apiv0.ServerJSON{
-		Schema:      model.CurrentSchemaURL,
-		Name:        "com.example/parity-server",
-		Description: "Baseline version",
-		Version:     "1.0.0",
-	}
-	_, err = svc.CreateServer(context.Background(), baseline)
-	require.NoError(t, err)
-
-	cfg.EnableRegistryValidation = true
 
 	mux := http.NewServeMux()
 	humaCfg := huma.DefaultConfig("Parity Test API", "1.0.0")
@@ -159,7 +148,7 @@ func newParityHarness(t *testing.T) (*http.ServeMux, *config.Config, string) {
 	})
 	require.NoError(t, err)
 
-	return mux, cfg, tok.RegistryToken
+	return mux, tok.RegistryToken
 }
 
 func sendJSON(t *testing.T, mux *http.ServeMux, method, path, token string, payload any) *httptest.ResponseRecorder {
@@ -184,69 +173,71 @@ func sendJSON(t *testing.T, mux *http.ServeMux, method, path, token string, payl
 }
 
 func TestSubmissionLimitsParityAcrossValidatePublishAndEdit(t *testing.T) {
-	mux, cfg, token := newParityHarness(t)
-	escapedName := url.PathEscape("com.example/parity-server")
-
-	for _, prefix := range router.APIVersionPrefixes {
-		for _, tc := range parityCases() {
-			t.Run(prefix+"/"+tc.name, func(t *testing.T) {
-				base := apiv0.ServerJSON{
-					Schema:      model.CurrentSchemaURL,
-					Name:        "com.example/parity-server",
-					Description: "Updated description",
-					Version:     "1.0.0",
-				}
-				tc.mutate(&base)
-
-				// 1. /validate reports the structured issue offline.
-				valRR := sendJSON(t, mux, http.MethodPost, prefix+"/validate", "", base)
-				require.Equal(t, http.StatusOK, valRR.Code)
-				var valRes validators.ValidationResult
-				require.NoError(t, json.Unmarshal(valRR.Body.Bytes(), &valRes))
-				require.False(t, valRes.Valid, "%+v", valRes.Issues)
-				require.Len(t, valRes.Issues, 1, "%+v", valRes.Issues)
-				require.Equal(t, tc.wantPath, valRes.Issues[0].Path)
-				require.Equal(t, tc.wantReference, valRes.Issues[0].Reference)
-				require.Contains(t, valRes.Issues[0].Message, tc.wantMessage)
-
-				// 2. /publish rejects with 400 and persists nothing.
-				pubReq := base
-				pubReq.Version = "2.0.0"
-				pubRR := sendJSON(t, mux, http.MethodPost, prefix+"/publish", token, pubReq)
-				require.Equal(t, http.StatusBadRequest, pubRR.Code, "%s", pubRR.Body.String())
-				require.Contains(t, pubRR.Body.String(), tc.wantMessage)
-				getNew := sendJSON(t, mux, http.MethodGet, prefix+"/servers/"+escapedName+"/versions/2.0.0", "", nil)
-				require.Equal(t, http.StatusNotFound, getNew.Code)
-
-				// 3. Edit rejects with 400 and preserves the stored version.
-				editRR := sendJSON(t, mux, http.MethodPut, prefix+"/servers/"+escapedName+"/versions/1.0.0", token, base)
-				require.Equal(t, http.StatusBadRequest, editRR.Code, "%s", editRR.Body.String())
-				require.Contains(t, editRR.Body.String(), tc.wantMessage)
-				getExisting := sendJSON(t, mux, http.MethodGet, prefix+"/servers/"+escapedName+"/versions/1.0.0", "", nil)
-				require.Equal(t, http.StatusOK, getExisting.Code)
-				require.Contains(t, getExisting.Body.String(), "Baseline version")
-			})
-		}
-
-		t.Run(prefix+"/registry-validation-disabled", func(t *testing.T) {
-			cfg.EnableRegistryValidation = false
-			t.Cleanup(func() { cfg.EnableRegistryValidation = true })
-
+	for _, enabled := range []bool{true, false} {
+		mux, token := newParityHarness(t, enabled)
+		for _, prefix := range router.APIVersionPrefixes {
 			for _, tc := range parityCases() {
-				req := apiv0.ServerJSON{
-					Schema:      model.CurrentSchemaURL,
-					Name:        "com.example/parity-server",
-					Description: "Self-hosted check",
-					Version:     "1.0.0",
-				}
-				tc.mutate(&req)
-
-				valRR := sendJSON(t, mux, http.MethodPost, prefix+"/validate", "", req)
-				require.Equal(t, http.StatusOK, valRR.Code)
-				var valRes validators.ValidationResult
-				require.NoError(t, json.Unmarshal(valRR.Body.Bytes(), &valRes))
-				require.Equal(t, tc.registryOnly, valRes.Valid, "%s: %+v", tc.name, valRes.Issues)
+				t.Run(fmt.Sprintf("registry-validation=%t%s/%s", enabled, prefix, tc.name), func(t *testing.T) {
+					testSubmissionLimit(t, mux, token, prefix, tc, !enabled && tc.registryOnly)
+				})
 			}
-		})
+		}
 	}
+}
+
+func testSubmissionLimit(t *testing.T, mux *http.ServeMux, token, prefix string, tc parityCase, wantAccepted bool) {
+	t.Helper()
+	baseline := apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.example/" + strings.TrimPrefix(prefix, "/") + "-" + tc.name,
+		Description: "Baseline version",
+		Version:     "1.0.0",
+	}
+	seed := sendJSON(t, mux, http.MethodPost, prefix+"/publish", token, baseline)
+	require.Equal(t, http.StatusOK, seed.Code, "%s", seed.Body.String())
+	versionsPath := prefix + "/servers/" + url.PathEscape(baseline.Name) + "/versions/"
+
+	edit := baseline
+	edit.Description = "Updated description"
+	tc.mutate(&edit)
+	valRR := sendJSON(t, mux, http.MethodPost, prefix+"/validate", "", edit)
+	require.Equal(t, http.StatusOK, valRR.Code)
+	var result validators.ValidationResult
+	require.NoError(t, json.Unmarshal(valRR.Body.Bytes(), &result))
+	require.Equal(t, wantAccepted, result.Valid, "%+v", result.Issues)
+	if !wantAccepted {
+		require.Len(t, result.Issues, 1)
+		require.Equal(t, tc.wantPath, result.Issues[0].Path)
+		require.Equal(t, tc.wantReference, result.Issues[0].Reference)
+		require.Contains(t, result.Issues[0].Message, tc.wantMessage)
+	}
+
+	publish := edit
+	publish.Version = "2.0.0"
+	pubRR := sendJSON(t, mux, http.MethodPost, prefix+"/publish", token, publish)
+	editRR := sendJSON(t, mux, http.MethodPut, versionsPath+edit.Version, token, edit)
+	getNew := sendJSON(t, mux, http.MethodGet, versionsPath+publish.Version, "", nil)
+	getExisting := sendJSON(t, mux, http.MethodGet, versionsPath+edit.Version, "", nil)
+	require.Equal(t, http.StatusOK, getExisting.Code)
+
+	if wantAccepted {
+		require.Equal(t, http.StatusOK, pubRR.Code, "%s", pubRR.Body.String())
+		require.Equal(t, http.StatusOK, editRR.Code, "%s", editRR.Body.String())
+		require.Equal(t, http.StatusOK, getNew.Code)
+		for _, rr := range []*httptest.ResponseRecorder{getNew, getExisting} {
+			var stored apiv0.ServerResponse
+			require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &stored))
+			require.Equal(t, edit.Description, stored.Server.Description)
+			require.Equal(t, edit.Packages, stored.Server.Packages)
+			require.Equal(t, edit.Remotes, stored.Server.Remotes)
+		}
+		return
+	}
+
+	require.Equal(t, http.StatusBadRequest, pubRR.Code, "%s", pubRR.Body.String())
+	require.Contains(t, pubRR.Body.String(), tc.wantMessage)
+	require.Equal(t, http.StatusBadRequest, editRR.Code, "%s", editRR.Body.String())
+	require.Contains(t, editRR.Body.String(), tc.wantMessage)
+	require.Equal(t, http.StatusNotFound, getNew.Code)
+	require.Contains(t, getExisting.Body.String(), baseline.Description)
 }
