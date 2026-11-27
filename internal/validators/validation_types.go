@@ -39,6 +39,7 @@ type ValidationOptions struct {
 	ValidateSchemaVersion  bool                // Check schema version (empty, non-current). Ignored if ValidateSchema is true.
 	ValidateSchema         bool                // Perform full schema validation (implies ValidateSchemaVersion)
 	ValidateSemantic       bool                // Perform semantic validation
+	ValidateSubmissionSize bool                // Apply the registry write limits to the decoded server record
 	NonCurrentSchemaPolicy SchemaVersionPolicy // Policy for non-current schemas (only used when schema validation is performed)
 	AllowPrivateRemoteURLs bool                // Allow loopback, private, link-local, single-label, and internal-TLD remote URLs (for self-hosted registries)
 }
@@ -69,9 +70,10 @@ var (
 		NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
 	}
 
-	// ValidationAll performs all validation types (schema version, full schema validation, and semantic)
+	// ValidationAll performs schema, semantic and submission size validation
 	ValidationAll = ValidationOptions{
 		ValidateSchema:         true, // Implies ValidateSchemaVersion
+		ValidateSubmissionSize: true,
 		ValidateSemantic:       true,
 		NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
 	}
