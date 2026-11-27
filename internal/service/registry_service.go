@@ -222,7 +222,7 @@ func (s *registryServiceImpl) CreateServer(ctx context.Context, req *apiv0.Serve
 	// introduces no race; the per-server advisory lock was already taken after
 	// validation, and still is.
 	if err = timings.run(phaseValidate, &timings.validateMs, func() error {
-		return validators.ValidatePublishRequest(ctx, serverJSON, s.cfg)
+		return validators.ValidateWriteRequest(ctx, serverJSON, s.cfg, false)
 	}); err != nil {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func pickLatestVersion(versions []database.VersionMetadata, allowDeleted bool) s
 func (s *registryServiceImpl) UpdateServer(ctx context.Context, previous *apiv0.ServerResponse, req *apiv0.ServerJSON, statusChange *StatusChangeRequest) (*apiv0.ServerResponse, error) {
 	meta := previous.Meta.Official
 	skipRegistryValidation := meta.Status == model.StatusDeleted || (statusChange != nil && statusChange.NewStatus == model.StatusDeleted)
-	if err := validators.ValidateUpdateRequest(ctx, *req, s.cfg, skipRegistryValidation); err != nil {
+	if err := validators.ValidateWriteRequest(ctx, *req, s.cfg, skipRegistryValidation); err != nil {
 		return nil, err
 	}
 

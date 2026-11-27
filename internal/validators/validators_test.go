@@ -17,7 +17,7 @@ import (
 
 const websiteURLInvalidCharErrSubstr = "websiteUrl contains an invalid character"
 
-func TestValidateUpdateRequest_PublisherExtensionSize(t *testing.T) {
+func TestValidateWriteRequest_PublisherExtensionSize(t *testing.T) {
 	for _, tt := range []struct {
 		name    string
 		enabled bool
@@ -33,10 +33,10 @@ func TestValidateUpdateRequest_PublisherExtensionSize(t *testing.T) {
 			value := strings.Repeat("x", 4096-len(`{"data":""}`))
 			meta := map[string]any{"data": value}
 			req := apiv0.ServerJSON{Meta: &apiv0.ServerMeta{PublisherProvided: meta}}
-			require.NoError(t, validators.ValidateUpdateRequest(t.Context(), req, cfg, tt.skip))
+			require.NoError(t, validators.ValidateWriteRequest(t.Context(), req, cfg, tt.skip))
 
 			meta["data"] = value + "x"
-			require.ErrorContains(t, validators.ValidateUpdateRequest(t.Context(), req, cfg, tt.skip), "exceeds 4KB limit (4097 bytes)")
+			require.ErrorContains(t, validators.ValidateWriteRequest(t.Context(), req, cfg, tt.skip), "exceeds 4KB limit (4097 bytes)")
 		})
 	}
 }
@@ -2123,9 +2123,9 @@ func TestValidate_RegistryTypesAndUrls(t *testing.T) {
 				},
 			}
 
-			err := validators.ValidatePublishRequest(context.Background(), serverJSON, &config.Config{
+			err := validators.ValidateWriteRequest(context.Background(), serverJSON, &config.Config{
 				EnableRegistryValidation: true,
-			})
+			}, false)
 			if tc.expectError {
 				assert.Error(t, err)
 			} else {

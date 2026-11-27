@@ -18,8 +18,10 @@ type ValidateServerInput struct {
 
 // RegisterValidateEndpoint registers the validate endpoint with a custom path prefix
 func RegisterValidateEndpoint(api huma.API, pathPrefix string, cfgs ...*config.Config) {
-	allowPrivate := len(cfgs) > 0 && cfgs[0] != nil && cfgs[0].AllowPrivateRemoteURLs
-	opts := validators.ValidationAll.WithAllowPrivateRemoteURLs(allowPrivate)
+	var cfg *config.Config
+	if len(cfgs) > 0 {
+		cfg = cfgs[0]
+	}
 
 	huma.Register(api, huma.Operation{
 		OperationID: "validate-server" + strings.ReplaceAll(pathPrefix, "/", "-"),
@@ -30,7 +32,7 @@ func RegisterValidateEndpoint(api huma.API, pathPrefix string, cfgs ...*config.C
 		Tags:        []string{"validate"},
 	}, func(_ context.Context, input *ValidateServerInput) (*Response[validators.ValidationResult], error) {
 		// Check schema, semantics and local submission limits.
-		result := validators.ValidateServerJSON(&input.Body, opts)
+		result := validators.ValidateServerJSON(&input.Body, validators.ValidationAll.WithConfig(cfg))
 
 		// Return validation result (always 200 OK, validity indicated in result.Valid)
 		return &Response[validators.ValidationResult]{

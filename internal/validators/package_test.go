@@ -62,14 +62,14 @@ func TestDistinctPackageOwnershipChecks(t *testing.T) {
 	} {
 		req.Packages[5] = tc.last
 		paths = nil
-		err := validators.ValidatePublishRequest(t.Context(), req, cfg)
+		err := validators.ValidateWriteRequest(t.Context(), req, cfg, false)
 		require.ErrorContains(t, err, "registry validation failed for package 5 (compromised)")
 		require.ErrorContains(t, err, tc.want)
 		require.Equal(t, []string{"/compromised/3.0.0", "/another/3.0.0", "/compromised/4.0.0"}, paths)
 	}
 }
 
-func TestPackageOwnershipLimitOnPublishAndEdit(t *testing.T) {
+func TestPackageOwnershipLimitOnWriteAndValidate(t *testing.T) {
 	osvURL, queries := malwareOSV(t, "GHSA-aaaa-bbbb-cccc")
 	resolver := &fakeHostResolver{}
 	validators.SetHostResolverForTest(t, resolver)
@@ -85,15 +85,18 @@ func TestPackageOwnershipLimitOnPublishAndEdit(t *testing.T) {
 	}
 
 	const overLimit = "package 16 (pkg-15) exceeds the limit of 16 distinct package ownership checks"
-	require.ErrorContains(t, validators.ValidatePublishRequest(t.Context(), req, cfg), overLimit)
-	require.ErrorContains(t, validators.ValidateUpdateRequest(t.Context(), req, cfg, false), overLimit)
+	require.ErrorContains(t, validators.ValidateWriteRequest(t.Context(), req, cfg, false), overLimit)
+	require.NoError(t, validators.ValidateWriteRequest(t.Context(), req, cfg, true))
+	valRes := validators.ValidateServerJSON(&req, validators.ValidationAll.WithConfig(cfg))
+	require.False(t, valRes.Valid)
+	require.ErrorContains(t, valRes.FirstError(), overLimit)
 	require.Zero(t, resolver.calls.Load())
 	require.Zero(t, queries.Load())
 	require.Empty(t, paths)
 
 	// With sixteen distinct checks, an extra duplicate still reaches the normal validator.
 	req.Packages[16] = req.Packages[0]
-	require.NoError(t, validators.ValidatePublishRequest(t.Context(), req, cfg))
+	require.NoError(t, validators.ValidateWriteRequest(t.Context(), req, cfg, false))
 	require.Len(t, paths, 16)
 	require.EqualValues(t, 1, resolver.calls.Load())
 	require.EqualValues(t, 1, queries.Load())
