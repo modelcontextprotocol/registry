@@ -3,15 +3,23 @@ package v0_test
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	v0 "github.com/modelcontextprotocol/registry/internal/api/handlers/v0"
+	"github.com/modelcontextprotocol/registry/internal/auth"
+	"github.com/modelcontextprotocol/registry/internal/config"
+	"github.com/modelcontextprotocol/registry/internal/database"
+	"github.com/modelcontextprotocol/registry/internal/service"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
 	"github.com/modelcontextprotocol/registry/pkg/model"
 	"github.com/stretchr/testify/assert"
@@ -170,4 +178,144 @@ func TestValidateEndpoint(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateEndpoint_AllowPrivateRemoteURLs(t *testing.T) {
+	privateServer := apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.acme/intranet-mcp",
+		Description: "Self-hosted intranet MCP server",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{
+				Type: model.TransportTypeStreamableHTTP,
+				URL:  "https://mcp.acme.internal/mcp",
+			},
+		},
+	}
+	bodyBytes, err := json.Marshal(privateServer)
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		name      string
+		cfg       *config.Config
+		wantValid bool
+	}{
+		{
+			name:      "default rejects private remote URL",
+			cfg:       &config.Config{AllowPrivateRemoteURLs: false},
+			wantValid: false,
+		},
+		{
+			name:      "AllowPrivateRemoteURLs=true accepts private remote URL",
+			cfg:       &config.Config{AllowPrivateRemoteURLs: true},
+			wantValid: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mux := http.NewServeMux()
+			api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
+			v0.RegisterValidateEndpoint(api, "/v0", tc.cfg)
+
+			req := httptest.NewRequest(http.MethodPost, "/v0/validate", bytes.NewReader(bodyBytes))
+			req.Header.Set("Content-Type", "application/json")
+			rr := httptest.NewRecorder()
+			mux.ServeHTTP(rr, req)
+
+			require.Equal(t, http.StatusOK, rr.Code)
+			var res struct {
+				Valid bool `json:"valid"`
+			}
+			require.NoError(t, json.Unmarshal(rr.Body.Bytes(), &res))
+			assert.Equal(t, tc.wantValid, res.Valid)
+		})
+	}
+}
+
+func TestPublishAndEditEndpoints_AllowPrivateRemoteURLs(t *testing.T) {
+	seed := make([]byte, ed25519.SeedSize)
+	_, err := rand.Read(seed)
+	require.NoError(t, err)
+	jwtKey := hex.EncodeToString(seed)
+
+	privateServer := apiv0.ServerJSON{
+		Schema:      model.CurrentSchemaURL,
+		Name:        "com.acme/intranet-mcp",
+		Description: "Self-hosted intranet MCP server",
+		Version:     "1.0.0",
+		Remotes: []model.Transport{
+			{
+				Type: model.TransportTypeStreamableHTTP,
+				URL:  "https://mcp.acme.internal/mcp",
+			},
+		},
+	}
+
+	t.Run("default rejects private remote URL on publish", func(t *testing.T) {
+		cfg := &config.Config{JWTPrivateKey: jwtKey, EnableRegistryValidation: true, AllowPrivateRemoteURLs: false}
+		mux := http.NewServeMux()
+		api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
+		svc := service.NewRegistryService(database.NewTestDB(t), cfg)
+		v0.RegisterPublishEndpoint(api, "/v0", svc, cfg)
+
+		token, err := generateTestJWTToken(cfg, auth.JWTClaims{
+			AuthMethod: auth.MethodNone,
+			Permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+			},
+		})
+		require.NoError(t, err)
+
+		body, err := json.Marshal(privateServer)
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+		assert.Equal(t, http.StatusUnprocessableEntity, rr.Code)
+	})
+
+	t.Run("AllowPrivateRemoteURLs=true accepts private remote URL on publish and edit", func(t *testing.T) {
+		cfg := &config.Config{JWTPrivateKey: jwtKey, EnableRegistryValidation: true, AllowPrivateRemoteURLs: true}
+		mux := http.NewServeMux()
+		api := humago.New(mux, huma.DefaultConfig("Test API", "1.0.0"))
+		svc := service.NewRegistryService(database.NewTestDB(t), cfg)
+		v0.RegisterPublishEndpoint(api, "/v0", svc, cfg)
+		v0.RegisterEditEndpoints(api, "/v0", svc, cfg)
+
+		token, err := generateTestJWTToken(cfg, auth.JWTClaims{
+			AuthMethod: auth.MethodNone,
+			Permissions: []auth.Permission{
+				{Action: auth.PermissionActionPublish, ResourcePattern: "*"},
+				{Action: auth.PermissionActionEdit, ResourcePattern: "*"},
+			},
+		})
+		require.NoError(t, err)
+
+		body, err := json.Marshal(privateServer)
+		require.NoError(t, err)
+		req := httptest.NewRequest(http.MethodPost, "/v0/publish", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+		require.Equal(t, http.StatusOK, rr.Code, "%s", rr.Body.String())
+
+		edited := privateServer
+		edited.Remotes = []model.Transport{{
+			Type: model.TransportTypeStreamableHTTP,
+			URL:  "https://10.20.30.40:8443/mcp",
+		}}
+		editBody, err := json.Marshal(edited)
+		require.NoError(t, err)
+		editPath := "/v0/servers/" + url.PathEscape(edited.Name) + "/versions/" + url.PathEscape(edited.Version)
+		editReq := httptest.NewRequest(http.MethodPut, editPath, bytes.NewReader(editBody))
+		editReq.Header.Set("Content-Type", "application/json")
+		editReq.Header.Set("Authorization", "Bearer "+token)
+		editRR := httptest.NewRecorder()
+		mux.ServeHTTP(editRR, editReq)
+		require.Equal(t, http.StatusOK, editRR.Code, "%s", editRR.Body.String())
+	})
 }

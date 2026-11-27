@@ -396,4 +396,31 @@ func TestJWTManager_BlockedNamespaces(t *testing.T) {
 		require.NoError(t, err)
 		assert.NotEmpty(t, tokenResponse.RegistryToken)
 	})
+
+	t.Run("production denylist blocks configured abusive namespaces", func(t *testing.T) {
+		assert.Contains(t, auth.BlockedNamespaces, "io.github.zz959397ghb")
+
+		jwtManager := auth.NewJWTManager(cfg)
+
+		for _, pattern := range []string{
+			"io.github.zz959397ghb/*",
+			"io.github.zz959397ghb.*",
+		} {
+			claims := auth.JWTClaims{
+				AuthMethod:        auth.MethodGitHubAT,
+				AuthMethodSubject: "zz959397ghb",
+				Permissions: []auth.Permission{
+					{
+						Action:          auth.PermissionActionPublish,
+						ResourcePattern: pattern,
+					},
+				},
+			}
+
+			tokenResponse, err := jwtManager.GenerateTokenResponse(ctx, claims)
+			require.Error(t, err, "expected %s to be blocked", pattern)
+			assert.Contains(t, err.Error(), "your namespace is blocked")
+			assert.Nil(t, tokenResponse)
+		}
+	})
 }

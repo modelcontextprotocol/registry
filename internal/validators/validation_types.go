@@ -40,6 +40,13 @@ type ValidationOptions struct {
 	ValidateSchema         bool                // Perform full schema validation (implies ValidateSchemaVersion)
 	ValidateSemantic       bool                // Perform semantic validation
 	NonCurrentSchemaPolicy SchemaVersionPolicy // Policy for non-current schemas (only used when schema validation is performed)
+	AllowPrivateRemoteURLs bool                // Allow loopback, private, link-local, single-label, and internal-TLD remote URLs (for self-hosted registries)
+}
+
+// WithAllowPrivateRemoteURLs returns a copy of opts with AllowPrivateRemoteURLs set to allow.
+func (opts ValidationOptions) WithAllowPrivateRemoteURLs(allow bool) ValidationOptions {
+	opts.AllowPrivateRemoteURLs = allow
+	return opts
 }
 
 // Common validation configurations

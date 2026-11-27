@@ -234,3 +234,49 @@ func TestImportService_ErrorHandling(t *testing.T) {
 		})
 	}
 }
+
+func TestImportService_AllowPrivateRemoteURLs(t *testing.T) {
+	tempFile := filepath.Join(t.TempDir(), "private_seed.json")
+	seedData := []*apiv0.ServerJSON{
+		{
+			Schema:      model.CurrentSchemaURL,
+			Name:        "com.acme/private-seed-server",
+			Description: "Intranet server in seed file",
+			Version:     "1.0.0",
+			Remotes: []model.Transport{
+				{
+					Type: model.TransportTypeStreamableHTTP,
+					URL:  "https://mcp.acme.internal/mcp",
+				},
+			},
+		},
+	}
+	jsonData, err := json.Marshal(seedData)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(tempFile, jsonData, 0600))
+
+	t.Run("default skips private remote URL", func(t *testing.T) {
+		testDB := database.NewTestDB(t)
+		cfg := &config.Config{EnableRegistryValidation: false, AllowPrivateRemoteURLs: false}
+		registryService := service.NewRegistryService(testDB, cfg)
+		importerService := importer.NewService(registryService, cfg)
+
+		require.NoError(t, importerService.ImportFromPath(context.Background(), tempFile))
+		servers, _, err := registryService.ListServers(context.Background(), nil, "", 10)
+		require.NoError(t, err)
+		assert.Empty(t, servers)
+	})
+
+	t.Run("AllowPrivateRemoteURLs=true imports private remote URL", func(t *testing.T) {
+		testDB := database.NewTestDB(t)
+		cfg := &config.Config{EnableRegistryValidation: false, AllowPrivateRemoteURLs: true}
+		registryService := service.NewRegistryService(testDB, cfg)
+		importerService := importer.NewService(registryService, cfg)
+
+		require.NoError(t, importerService.ImportFromPath(context.Background(), tempFile))
+		servers, _, err := registryService.ListServers(context.Background(), nil, "", 10)
+		require.NoError(t, err)
+		require.Len(t, servers, 1)
+		assert.Equal(t, "com.acme/private-seed-server", servers[0].Server.Name)
+	})
+}

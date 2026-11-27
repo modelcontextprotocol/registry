@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/modelcontextprotocol/registry/internal/config"
 	"github.com/modelcontextprotocol/registry/internal/service"
 	"github.com/modelcontextprotocol/registry/internal/validators"
 	apiv0 "github.com/modelcontextprotocol/registry/pkg/api/v0"
@@ -17,12 +18,17 @@ import (
 
 // Service handles importing seed data into the registry
 type Service struct {
-	registry service.RegistryService
+	registry               service.RegistryService
+	allowPrivateRemoteURLs bool
 }
 
 // NewService creates a new importer service
-func NewService(registry service.RegistryService) *Service {
-	return &Service{registry: registry}
+func NewService(registry service.RegistryService, cfgs ...*config.Config) *Service {
+	allowPrivate := len(cfgs) > 0 && cfgs[0] != nil && cfgs[0].AllowPrivateRemoteURLs
+	return &Service{
+		registry:               registry,
+		allowPrivateRemoteURLs: allowPrivate,
+	}
 }
 
 // ImportFromPath imports seed data from various sources:
@@ -30,7 +36,7 @@ func NewService(registry service.RegistryService) *Service {
 // 2. Direct HTTP URLs to seed.json files - expects ServerJSON array format
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
 func (s *Service) ImportFromPath(ctx context.Context, path string) error {
-	servers, err := readSeedFile(ctx, path)
+	servers, err := readSeedFile(ctx, path, s.allowPrivateRemoteURLs)
 	if err != nil {
 		return fmt.Errorf("failed to read seed data: %w", err)
 	}
@@ -62,7 +68,7 @@ func (s *Service) ImportFromPath(ctx context.Context, path string) error {
 }
 
 // readSeedFile reads seed data from various sources
-func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error) {
+func readSeedFile(ctx context.Context, path string, allowPrivateRemoteURLs bool) ([]*apiv0.ServerJSON, error) {
 	var data []byte
 	var err error
 
@@ -98,10 +104,11 @@ func readSeedFile(ctx context.Context, path string) ([]*apiv0.ServerJSON, error)
 	var invalidServers []string
 	var validationFailures []string
 
+	opts := validators.ValidationSchemaVersionAndSemantic.WithAllowPrivateRemoteURLs(allowPrivateRemoteURLs)
 	for _, response := range serverResponses {
 		// ValidateServerJSON returns all validation results; using FirstError() to preserve existing behavior
 		// In future, consider logging all issues from result.Issues for better diagnostics
-		result := validators.ValidateServerJSON(&response, validators.ValidationSchemaVersionAndSemantic)
+		result := validators.ValidateServerJSON(&response, opts)
 		if err := result.FirstError(); err != nil {
 			// Log warning and track invalid server instead of failing
 			invalidServers = append(invalidServers, response.Name)

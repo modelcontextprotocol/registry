@@ -116,7 +116,7 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *V
 
 	// Validate all remotes
 	for i, remote := range serverJSON.Remotes {
-		remoteResult := validateRemoteTransport(ctx.Field("remotes").Index(i), &remote)
+		remoteResult := validateRemoteTransport(ctx.Field("remotes").Index(i), &remote, opts.AllowPrivateRemoteURLs)
 		result.Merge(remoteResult)
 	}
 
@@ -628,7 +628,7 @@ func validatePackageTransport(ctx *ValidationContext, transport *model.Transport
 }
 
 // validateRemoteTransport validates a remote transport with optional templating
-func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *ValidationResult {
+func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport, allowPrivate bool) *ValidationResult {
 	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
 
 	// Validate transport type is supported - remotes only support streamable-http and sse
@@ -644,8 +644,7 @@ func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport) *Vali
 				"remote-transport-url-required",
 			)
 			result.AddIssue(issue)
-		} else if !IsValidRemoteURL(obj.URL) {
-			// Validate URL format (no templates allowed for remotes, no localhost)
+		} else if !validateRemoteTransportURL(obj, allowPrivate) {
 			issue := NewValidationIssueFromError(
 				ValidationIssueTypeSemantic,
 				ctx.Field("url").String(),
@@ -700,9 +699,9 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 		return err
 	}
 
-	// Validate registry ownership for all packages if validation is enabled
+	// Validate registry ownership and remote URL resolution if validation is enabled
 	if cfg.EnableRegistryValidation {
-		if err := validateRegistryPackages(ctx, req, cfg); err != nil {
+		if err := validateRegistryRequest(ctx, req, cfg); err != nil {
 			return err
 		}
 	}
@@ -714,12 +713,30 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 // Note: ValidateServerJSON should be called separately before this function
 func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
 	if cfg.EnableRegistryValidation && !skipRegistryValidation {
-		if err := validateRegistryPackages(ctx, req, cfg); err != nil {
+		if err := validateRegistryRequest(ctx, req, cfg); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func validateRegistryRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
+	remoteCtx, cancelRemote := context.WithCancel(ctx)
+	defer cancelRemote()
+
+	remoteResult := make(chan error, 1)
+	go func() {
+		remoteResult <- validateRemoteURLs(remoteCtx, req, cfg.AllowPrivateRemoteURLs)
+	}()
+
+	pkgErr := validateRegistryPackages(ctx, req, cfg)
+	if pkgErr != nil {
+		cancelRemote()
+		<-remoteResult
+		return pkgErr
+	}
+	return <-remoteResult
 }
 
 // validateRegistryPackages checks the request's packages against OSV's malware

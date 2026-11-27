@@ -43,6 +43,7 @@ type Config struct {
 	JWTPrivateKey            string `env:"JWT_PRIVATE_KEY" envDefault:""`
 	EnableAnonymousAuth      bool   `env:"ENABLE_ANONYMOUS_AUTH" envDefault:"false"`
 	EnableRegistryValidation bool   `env:"ENABLE_REGISTRY_VALIDATION" envDefault:"true"`
+	AllowPrivateRemoteURLs   bool   `env:"ALLOW_PRIVATE_REMOTE_URLS" envDefault:"false"`
 
 	// Malware checks against OSV.dev. MalwareCheckMode applies on publish and
 	// edit, and only where EnableRegistryValidation is on.

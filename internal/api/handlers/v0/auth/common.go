@@ -407,6 +407,13 @@ func isGitHubPagesDomain(domain string) bool {
 	return d == "github.io" || strings.HasSuffix(d, ".github.io")
 }
 
+var disallowedAuthDomainSuffixes = []string{
+	"localhost",
+	"internal",
+	"local",
+	"home.arpa",
+}
+
 func IsValidDomain(domain string) bool {
 	if len(domain) == 0 || len(domain) > 253 {
 		return false
@@ -422,6 +429,13 @@ func IsValidDomain(domain string) bool {
 	// or "kubernetes" that resolve only inside private networks.
 	if !strings.Contains(domain, ".") {
 		return false
+	}
+
+	lower := strings.ToLower(domain)
+	for _, suffix := range disallowedAuthDomainSuffixes {
+		if lower == suffix || strings.HasSuffix(lower, "."+suffix) {
+			return false
+		}
 	}
 
 	// Check for valid characters and structure
