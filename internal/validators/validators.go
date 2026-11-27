@@ -694,8 +694,7 @@ func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport, allow
 // ValidatePublishRequest validates a complete publish request including extensions
 // Note: ValidateServerJSON should be called separately before this function
 func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
-	// Validate publisher extensions in _meta
-	if err := validatePublisherExtensions(req); err != nil {
+	if err := validateSubmissionSize(&req); err != nil {
 		return err
 	}
 
@@ -709,10 +708,10 @@ func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 	return nil
 }
 
-// ValidateUpdateRequest validates publisher extensions and, when enabled, registry ownership
+// ValidateUpdateRequest validates submission size and, when enabled, registry ownership
 // Note: ValidateServerJSON should be called separately before this function
 func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
-	if err := validatePublisherExtensions(req); err != nil {
+	if err := validateSubmissionSize(&req); err != nil {
 		return err
 	}
 
@@ -826,7 +825,7 @@ func validateRegistryOwnership(ctx context.Context, req apiv0.ServerJSON, owners
 	return nil
 }
 
-func validatePublisherExtensions(req apiv0.ServerJSON) error {
+func validatePublisherExtensions(req *apiv0.ServerJSON) error {
 	const maxExtensionSize = 4 * 1024 // 4KB limit
 
 	// Check size limit for _meta publisher-provided extension
