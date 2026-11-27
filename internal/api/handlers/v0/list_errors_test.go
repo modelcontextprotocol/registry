@@ -43,3 +43,41 @@ func TestListServersError_realFailureDoesNotLeakDetail(t *testing.T) {
 	assert.NotContains(t, string(body), "database unavailable")
 	assert.NotContains(t, string(body), "internal-host")
 }
+
+func TestGetServerDetailsError_clientCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := v0.GetServerDetailsError(ctx, errors.New("query canceled"), "io.github.acme/widget", "1.0.0")
+	require.Error(t, err)
+	var se huma.StatusError
+	require.True(t, errors.As(err, &se))
+	assert.Equal(t, 499, se.GetStatus())
+}
+
+func TestGetServerDetailsError_realFailure(t *testing.T) {
+	err := v0.GetServerDetailsError(context.Background(), errors.New("database unavailable"), "io.github.acme/widget", "1.0.0")
+	require.Error(t, err)
+	var se huma.StatusError
+	require.True(t, errors.As(err, &se))
+	assert.Equal(t, 500, se.GetStatus())
+}
+
+func TestGetServerVersionsError_clientCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := v0.GetServerVersionsError(ctx, errors.New("query canceled"), "io.github.acme/widget")
+	require.Error(t, err)
+	var se huma.StatusError
+	require.True(t, errors.As(err, &se))
+	assert.Equal(t, 499, se.GetStatus())
+}
+
+func TestGetServerVersionsError_realFailure(t *testing.T) {
+	err := v0.GetServerVersionsError(context.Background(), errors.New("database unavailable"), "io.github.acme/widget")
+	require.Error(t, err)
+	var se huma.StatusError
+	require.True(t, errors.As(err, &se))
+	assert.Equal(t, 500, se.GetStatus())
+}
