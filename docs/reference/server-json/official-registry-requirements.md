@@ -13,6 +13,14 @@ While the [generic server.json format](./generic-server-json.md) defines the bas
 - **Restricted registry base urls** - Packages are from trusted public registries
 - **`_meta` namespace restrictions** - Restricted to `publisher` key only
 
+## Size limits for publishing and editing
+
+A submitted server version may use up to 131,072 bytes (128 KiB). The registry measures the compact JSON encoding of the decoded `ServerJSON`, including publisher-provided metadata and JSON escaping. Request whitespace and registry-managed response metadata are outside this measurement.
+
+Each string in `packages` and `remotes` may use up to 4,096 UTF-8 bytes before JSON escaping. This includes transport URLs, header and environment inputs, package and runtime arguments, variable names and definitions, and individual choices. Existing field-specific limits and the 4,096-byte limit on the entire publisher-provided extension also apply.
+
+These limits apply to publish and full edit requests even when external registry validation is disabled. Existing versions remain readable under their usual visibility rules. A full edit of an oversized version must bring the submitted record within both limits. Status-only updates, including moderation, can still operate on the stored version.
+
 ## Namespace Authentication
 
 Publishers must prove ownership of their namespace. For example to publish to `com.example/server`, the publisher must prove they own the `example.com` domain.
