@@ -726,6 +726,12 @@ func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *confi
 }
 
 func validateRegistryRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
+	// Reject over-budget requests before starting any remote, malware or ownership checks.
+	ownershipIndices, err := ownershipCheckIndices(req.Packages)
+	if err != nil {
+		return err
+	}
+
 	remoteCtx, cancelRemote := context.WithCancel(ctx)
 	defer cancelRemote()
 
@@ -734,7 +740,7 @@ func validateRegistryRequest(ctx context.Context, req apiv0.ServerJSON, cfg *con
 		remoteResult <- validateRemoteURLs(remoteCtx, req, cfg.AllowPrivateRemoteURLs)
 	}()
 
-	pkgErr := validateRegistryPackages(ctx, req, cfg)
+	pkgErr := validateRegistryPackages(ctx, req, cfg, ownershipIndices)
 	if pkgErr != nil {
 		cancelRemote()
 		<-remoteResult
@@ -749,12 +755,12 @@ func validateRegistryRequest(ctx context.Context, req apiv0.ServerJSON, cfg *con
 // usually OSV: measured in November 2026 it took about 0.3s to answer, against
 // some 15ms for an npm lookup. Malware is reported in preference to an
 // ownership failure, so that the reason given does not depend on timing.
-func validateRegistryPackages(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
+func validateRegistryPackages(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, ownershipIndices []int) error {
 	malwareResult := make(chan error, 1)
 	go func() {
 		malwareResult <- ValidateNoKnownMalware(ctx, req, cfg)
 	}()
-	ownershipErr := validateRegistryOwnership(ctx, req)
+	ownershipErr := validateRegistryOwnership(ctx, req, ownershipIndices)
 	if err := <-malwareResult; err != nil {
 		return err
 	}
@@ -810,8 +816,9 @@ func ValidateNoKnownMalware(ctx context.Context, req apiv0.ServerJSON, cfg *conf
 	return nil
 }
 
-func validateRegistryOwnership(ctx context.Context, req apiv0.ServerJSON) error {
-	for i, pkg := range req.Packages {
+func validateRegistryOwnership(ctx context.Context, req apiv0.ServerJSON, ownershipIndices []int) error {
+	for _, i := range ownershipIndices {
+		pkg := req.Packages[i]
 		if err := ValidatePackage(ctx, pkg, req.Name); err != nil {
 			return fmt.Errorf("registry validation failed for package %d (%s): %w", i, pkg.Identifier, err)
 		}
