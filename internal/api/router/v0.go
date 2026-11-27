@@ -11,32 +11,29 @@ import (
 	"github.com/modelcontextprotocol/registry/internal/telemetry"
 )
 
-func RegisterV0Routes(
-	api huma.API, cfg *config.Config, registry service.RegistryService, metrics *telemetry.Metrics, versionInfo *v0.VersionBody,
+// APIVersionPrefixes lists the supported versioned route prefixes.
+var APIVersionPrefixes = []string{"/v0", "/v0.1"}
+
+func registerVersionedRoutes(
+	api huma.API, pathPrefix string, cfg *config.Config, registry service.RegistryService, metrics *telemetry.Metrics, versionInfo *v0.VersionBody,
 ) {
-	v0.RegisterHealthEndpoint(api, "/v0", cfg, metrics)
-	v0.RegisterPingEndpoint(api, "/v0")
-	v0.RegisterVersionEndpoint(api, "/v0", versionInfo)
-	v0.RegisterServersEndpoints(api, "/v0", registry, cfg.PreparedListingJSON)
-	v0.RegisterEditEndpoints(api, "/v0", registry, cfg)
-	v0.RegisterStatusEndpoints(api, "/v0", registry, cfg)
-	v0.RegisterAllVersionsStatusEndpoints(api, "/v0", registry, cfg)
-	v0auth.RegisterAuthEndpoints(api, "/v0", cfg)
-	v0.RegisterPublishEndpoint(api, "/v0", registry, cfg)
-	v0.RegisterValidateEndpoint(api, "/v0", cfg)
+	v0.RegisterHealthEndpoint(api, pathPrefix, cfg, metrics)
+	v0.RegisterPingEndpoint(api, pathPrefix)
+	v0.RegisterVersionEndpoint(api, pathPrefix, versionInfo)
+	v0.RegisterServersEndpoints(api, pathPrefix, registry, cfg.PreparedListingJSON)
+	v0.RegisterEditEndpoints(api, pathPrefix, registry, cfg)
+	v0.RegisterStatusEndpoints(api, pathPrefix, registry, cfg)
+	v0.RegisterAllVersionsStatusEndpoints(api, pathPrefix, registry, cfg)
+	v0auth.RegisterAuthEndpoints(api, pathPrefix, cfg)
+	v0.RegisterPublishEndpoint(api, pathPrefix, registry, cfg)
+	v0.RegisterValidateEndpoint(api, pathPrefix, cfg)
 }
 
-func RegisterV0_1Routes(
+// RegisterRoutes registers all endpoints across every supported API version prefix.
+func RegisterRoutes(
 	api huma.API, cfg *config.Config, registry service.RegistryService, metrics *telemetry.Metrics, versionInfo *v0.VersionBody,
 ) {
-	v0.RegisterHealthEndpoint(api, "/v0.1", cfg, metrics)
-	v0.RegisterPingEndpoint(api, "/v0.1")
-	v0.RegisterVersionEndpoint(api, "/v0.1", versionInfo)
-	v0.RegisterServersEndpoints(api, "/v0.1", registry, cfg.PreparedListingJSON)
-	v0.RegisterEditEndpoints(api, "/v0.1", registry, cfg)
-	v0.RegisterStatusEndpoints(api, "/v0.1", registry, cfg)
-	v0.RegisterAllVersionsStatusEndpoints(api, "/v0.1", registry, cfg)
-	v0auth.RegisterAuthEndpoints(api, "/v0.1", cfg)
-	v0.RegisterPublishEndpoint(api, "/v0.1", registry, cfg)
-	v0.RegisterValidateEndpoint(api, "/v0.1", cfg)
+	for _, prefix := range APIVersionPrefixes {
+		registerVersionedRoutes(api, prefix, cfg, registry, metrics, versionInfo)
+	}
 }

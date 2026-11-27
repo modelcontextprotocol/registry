@@ -487,18 +487,14 @@ func TestValidatePublishAndUpdate_RemoteDNSResolution(t *testing.T) {
 				URL:  "https://" + tc.host + "/mcp",
 			})
 
-			err := validators.ValidatePublishRequest(context.Background(), srv, enabledCfg)
-			require.ErrorIs(t, err, validators.ErrInvalidRemoteURL)
-			assert.NotContains(t, err.Error(), tc.secretIP, "error must not leak resolved internal IP")
-
-			err = validators.ValidateUpdateRequest(context.Background(), srv, enabledCfg, false)
+			err := validators.ValidateWriteRequest(context.Background(), srv, enabledCfg, false)
 			require.ErrorIs(t, err, validators.ErrInvalidRemoteURL)
 			assert.NotContains(t, err.Error(), tc.secretIP, "error must not leak resolved internal IP")
 
 			// Deleted-version takedowns/edits skip registry validation, and offline
 			// ValidateServerJSON never performs DNS lookups.
-			require.NoError(t, validators.ValidateUpdateRequest(context.Background(), srv, enabledCfg, true))
-			require.NoError(t, validators.ValidatePublishRequest(context.Background(), srv, disabledCfg))
+			require.NoError(t, validators.ValidateWriteRequest(context.Background(), srv, enabledCfg, true))
+			require.NoError(t, validators.ValidateWriteRequest(context.Background(), srv, disabledCfg, false))
 			offlineRes := validators.ValidateServerJSON(&srv, validators.ValidationSchemaVersionAndSemantic)
 			assert.NoError(t, offlineRes.FirstError())
 		})
@@ -514,7 +510,7 @@ func TestValidatePublishAndUpdate_RemoteDNSResolution(t *testing.T) {
 				URL:       rawURL,
 				Variables: map[string]model.Input{"p": {Value: "/latest/meta-data/"}},
 			})
-			err := validators.ValidatePublishRequest(context.Background(), srv, enabledCfg)
+			err := validators.ValidateWriteRequest(context.Background(), srv, enabledCfg, false)
 			require.ErrorIs(t, err, validators.ErrInvalidRemoteURL, "url: %s", rawURL)
 		}
 
@@ -524,7 +520,7 @@ func TestValidatePublishAndUpdate_RemoteDNSResolution(t *testing.T) {
 			URL:       "https://metadata.attacker.example{p}",
 			Variables: map[string]model.Input{"p": {IsRequired: true}},
 		})
-		require.ErrorIs(t, validators.ValidatePublishRequest(context.Background(), srvNoVal, enabledCfg), validators.ErrInvalidRemoteURL)
+		require.ErrorIs(t, validators.ValidateWriteRequest(context.Background(), srvNoVal, enabledCfg, false), validators.ErrInvalidRemoteURL)
 	})
 
 	t.Run("rejects templated {host} when Value or Choices resolve to disallowed IP", func(t *testing.T) {
@@ -533,14 +529,14 @@ func TestValidatePublishAndUpdate_RemoteDNSResolution(t *testing.T) {
 			URL:       "https://{host}/mcp",
 			Variables: map[string]model.Input{"host": {Value: "gke-svc.attacker.example"}},
 		})
-		require.ErrorIs(t, validators.ValidatePublishRequest(context.Background(), srvVal, enabledCfg), validators.ErrInvalidRemoteURL)
+		require.ErrorIs(t, validators.ValidateWriteRequest(context.Background(), srvVal, enabledCfg, false), validators.ErrInvalidRemoteURL)
 
 		srvChoice := makeServer(model.Transport{
 			Type:      model.TransportTypeStreamableHTTP,
 			URL:       "https://{host}/mcp",
 			Variables: map[string]model.Input{"host": {Choices: []string{"public.service.example", "loopback.attacker.example"}}},
 		})
-		require.ErrorIs(t, validators.ValidatePublishRequest(context.Background(), srvChoice, enabledCfg), validators.ErrInvalidRemoteURL)
+		require.ErrorIs(t, validators.ValidateWriteRequest(context.Background(), srvChoice, enabledCfg, false), validators.ErrInvalidRemoteURL)
 	})
 
 	t.Run("allows public IPs, NXDOMAIN, templated hosts, deduplicates lookups, and queries trailing-dot FQDNs", func(t *testing.T) {
@@ -556,10 +552,9 @@ func TestValidatePublishAndUpdate_RemoteDNSResolution(t *testing.T) {
 				Variables: map[string]model.Input{"tenant": {IsRequired: true}},
 			},
 		)
-		require.NoError(t, validators.ValidatePublishRequest(context.Background(), srv, enabledCfg))
-		require.NoError(t, validators.ValidateUpdateRequest(context.Background(), srv, enabledCfg, false))
-		// 2 unique non-templated DNS hosts ("public.service.example." and "nxdomain.service.example.") x 2 calls = 4 lookups.
-		assert.Equal(t, int32(4), resolver.calls.Load()-before)
+		require.NoError(t, validators.ValidateWriteRequest(context.Background(), srv, enabledCfg, false))
+		// 2 unique non-templated DNS hosts ("public.service.example." and "nxdomain.service.example.").
+		assert.Equal(t, int32(2), resolver.calls.Load()-before)
 
 		resolver.mu.Lock()
 		queried := append([]string(nil), resolver.queried...)
@@ -579,7 +574,7 @@ func TestValidatePublishAndUpdate_RemoteDNSResolution(t *testing.T) {
 				URL:  fmt.Sprintf("https://host-%d.public.service.example/mcp", i),
 			}
 		}
-		err := validators.ValidatePublishRequest(context.Background(), makeServer(remotes...), enabledCfg)
+		err := validators.ValidateWriteRequest(context.Background(), makeServer(remotes...), enabledCfg, false)
 		require.ErrorIs(t, err, validators.ErrInvalidRemoteURL)
 		assert.Contains(t, err.Error(), "unique remote hostnames")
 		assert.Equal(t, before, resolver.calls.Load(), "excessive unique remote hosts must fail before issuing DNS queries")
@@ -608,7 +603,7 @@ func TestValidatePublishAndUpdate_RemoteDNSResolution(t *testing.T) {
 		}
 
 		start := time.Now()
-		err := validators.ValidatePublishRequest(context.Background(), srv, enabledCfg)
+		err := validators.ValidateWriteRequest(context.Background(), srv, enabledCfg, false)
 		elapsed := time.Since(start)
 		require.Error(t, err)
 		assert.Less(t, elapsed, 1*time.Second, "fast package error must cancel in-flight remote DNS lookup")
@@ -645,8 +640,7 @@ func TestValidate_AllowPrivateRemoteURLs(t *testing.T) {
 	require.NoError(t, allowRes.FirstError())
 
 	allowCfg := &config.Config{EnableRegistryValidation: true, AllowPrivateRemoteURLs: true}
-	require.NoError(t, validators.ValidatePublishRequest(context.Background(), privateServer, allowCfg))
-	require.NoError(t, validators.ValidateUpdateRequest(context.Background(), privateServer, allowCfg, false))
+	require.NoError(t, validators.ValidateWriteRequest(context.Background(), privateServer, allowCfg, false))
 	assert.Zero(t, resolver.calls.Load(), "AllowPrivateRemoteURLs=true must skip remote DNS blocklist lookups")
 
 	// Structural rules (https:// scheme, no userinfo) remain enforced even when AllowPrivateRemoteURLs=true.

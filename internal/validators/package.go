@@ -12,10 +12,11 @@ import (
 const maxPackageOwnershipChecks = 16
 
 // ownershipCheckIndices returns the first index of each distinct check in request
-// order. Keep the key in sync with all fields read by ValidatePackage and its
+// order, or the offending package index when the distinct-check cap is exceeded.
+// Keep the key in sync with all fields read by ValidatePackage and its
 // registry validators, including fields they reject when present. The server
 // name is shared by all entries in this request.
-func ownershipCheckIndices(packages []model.Package) ([]int, error) {
+func ownershipCheckIndices(packages []model.Package) ([]int, int, error) {
 	type ownershipKey struct {
 		registryType, registryBaseURL, identifier, version, fileSHA256 string
 	}
@@ -33,13 +34,13 @@ func ownershipCheckIndices(packages []model.Package) ([]int, error) {
 			continue
 		}
 		if len(indices) == maxPackageOwnershipChecks {
-			return nil, fmt.Errorf("package %d (%s) exceeds the limit of %d distinct package ownership checks per server version",
+			return nil, i, fmt.Errorf("package %d (%s) exceeds the limit of %d distinct package ownership checks per server version",
 				i, pkg.Identifier, maxPackageOwnershipChecks)
 		}
 		seen[key] = struct{}{}
 		indices = append(indices, i)
 	}
-	return indices, nil
+	return indices, -1, nil
 }
 
 // ValidatePackage validates that the package referenced in the server configuration is:

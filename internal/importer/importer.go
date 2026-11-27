@@ -18,16 +18,19 @@ import (
 
 // Service handles importing seed data into the registry
 type Service struct {
-	registry               service.RegistryService
-	allowPrivateRemoteURLs bool
+	registry service.RegistryService
+	cfg      *config.Config
 }
 
 // NewService creates a new importer service
 func NewService(registry service.RegistryService, cfgs ...*config.Config) *Service {
-	allowPrivate := len(cfgs) > 0 && cfgs[0] != nil && cfgs[0].AllowPrivateRemoteURLs
+	var cfg *config.Config
+	if len(cfgs) > 0 {
+		cfg = cfgs[0]
+	}
 	return &Service{
-		registry:               registry,
-		allowPrivateRemoteURLs: allowPrivate,
+		registry: registry,
+		cfg:      cfg,
 	}
 }
 
@@ -36,7 +39,7 @@ func NewService(registry service.RegistryService, cfgs ...*config.Config) *Servi
 // 2. Direct HTTP URLs to seed.json files - expects ServerJSON array format
 // 3. Registry root URLs (automatically appends /v0/servers and paginates)
 func (s *Service) ImportFromPath(ctx context.Context, path string) error {
-	servers, err := readSeedFile(ctx, path, s.allowPrivateRemoteURLs)
+	servers, err := readSeedFile(ctx, path, s.cfg)
 	if err != nil {
 		return fmt.Errorf("failed to read seed data: %w", err)
 	}
@@ -68,7 +71,7 @@ func (s *Service) ImportFromPath(ctx context.Context, path string) error {
 }
 
 // readSeedFile reads seed data from various sources
-func readSeedFile(ctx context.Context, path string, allowPrivateRemoteURLs bool) ([]*apiv0.ServerJSON, error) {
+func readSeedFile(ctx context.Context, path string, cfg *config.Config) ([]*apiv0.ServerJSON, error) {
 	var data []byte
 	var err error
 
@@ -104,7 +107,7 @@ func readSeedFile(ctx context.Context, path string, allowPrivateRemoteURLs bool)
 	var invalidServers []string
 	var validationFailures []string
 
-	opts := validators.ValidationSchemaVersionAndSemantic.WithAllowPrivateRemoteURLs(allowPrivateRemoteURLs)
+	opts := validators.ValidationSchemaVersionAndSemantic.WithConfig(cfg)
 	for _, response := range serverResponses {
 		// ValidateServerJSON returns all validation results; using FirstError() to preserve existing behavior
 		// In future, consider logging all issues from result.Issues for better diagnostics

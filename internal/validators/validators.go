@@ -71,10 +71,9 @@ func ValidateServerJSON(serverJSON *apiv0.ServerJSON, opts ValidationOptions) *V
 		result.Merge(schemaResult)
 	}
 
-	if opts.ValidateSubmissionSize {
-		if err := validateSubmissionSize(serverJSON); err != nil {
-			result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, err.path, err, "submission-size"))
-		}
+	if opts.ValidateSubmissionLimits {
+		_, preflightResult := validateWritePreflight(serverJSON, opts.EnableRegistryValidation, opts.AllowPrivateRemoteURLs)
+		result.Merge(preflightResult)
 	}
 
 	// Semantic validation (only if requested)
@@ -697,55 +696,75 @@ func validateRemoteTransport(ctx *ValidationContext, obj *model.Transport, allow
 	return result
 }
 
-// ValidatePublishRequest validates a complete publish request including extensions
-// Note: ValidateServerJSON should be called separately before this function
-func ValidatePublishRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
-	if err := validateSubmissionSize(&req); err != nil {
-		return err
-	}
-
-	// Validate registry ownership and remote URL resolution if validation is enabled
-	if cfg.EnableRegistryValidation {
-		if err := validateRegistryRequest(ctx, req, cfg); err != nil {
-			return err
-		}
-	}
-
-	return nil
+type writePreflight struct {
+	ownershipIndices []int
+	remoteTargets    []remoteHostLookupTarget
 }
 
-// ValidateUpdateRequest validates submission size and, when enabled, registry ownership
-// Note: ValidateServerJSON should be called separately before this function
-func ValidateUpdateRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
-	if err := validateSubmissionSize(&req); err != nil {
-		return err
+// validateWritePreflight runs every local check enforced on writes before any
+// external registry, malware, DNS, or database work begins. Both ValidateServerJSON
+// (/validate) and ValidateWriteRequest (publish and edit) call this single function
+// so local submission and preflight budget rules are defined in one place.
+func validateWritePreflight(req *apiv0.ServerJSON, checkRegistryBudgets, allowPrivateRemoteURLs bool) (writePreflight, *ValidationResult) {
+	result := &ValidationResult{Valid: true, Issues: []ValidationIssue{}}
+
+	if err := validateSubmissionSize(req); err != nil {
+		result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, err.path, err, "submission-size"))
 	}
 
-	if cfg.EnableRegistryValidation && !skipRegistryValidation {
-		if err := validateRegistryRequest(ctx, req, cfg); err != nil {
-			return err
-		}
+	if !checkRegistryBudgets {
+		return writePreflight{}, result
 	}
 
-	return nil
-}
-
-func validateRegistryRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config) error {
-	// Reject over-budget requests before starting any remote, malware or ownership checks.
-	ownershipIndices, err := ownershipCheckIndices(req.Packages)
+	var preflight writePreflight
+	ownershipIndices, pkgIndex, err := ownershipCheckIndices(req.Packages)
 	if err != nil {
-		return err
+		path := fmt.Sprintf("packages[%d]", pkgIndex)
+		result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, path, err, "package-ownership-limit"))
+	} else {
+		preflight.ownershipIndices = ownershipIndices
 	}
 
+	remoteTargets, remoteIndex, err := collectRemoteDNSLookupTargets(req.Remotes, allowPrivateRemoteURLs)
+	if err != nil {
+		path := fmt.Sprintf("remotes[%d].url", remoteIndex)
+		result.AddIssue(NewValidationIssueFromError(ValidationIssueTypeSemantic, path, err, "remote-host-lookup-limit"))
+	} else {
+		preflight.remoteTargets = remoteTargets
+	}
+
+	return preflight, result
+}
+
+// ValidateWriteRequest runs all write-time checks shared by publish and edit.
+// Local submission checks always run; outbound registry, malware, and DNS checks
+// run when cfg.EnableRegistryValidation is true and skipRegistryValidation is false
+// (deleted versions skip outbound checks so takedowns and edits on withdrawn records succeed).
+// Note: ValidateServerJSON should be called separately before this function.
+func ValidateWriteRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, skipRegistryValidation bool) error {
+	runRegistryChecks := cfg != nil && cfg.EnableRegistryValidation && !skipRegistryValidation
+	allowPrivate := cfg != nil && cfg.AllowPrivateRemoteURLs
+
+	preflight, preflightResult := validateWritePreflight(&req, runRegistryChecks, allowPrivate)
+	if err := preflightResult.FirstError(); err != nil {
+		return err
+	}
+	if !runRegistryChecks {
+		return nil
+	}
+	return validateRegistryRequest(ctx, req, cfg, preflight)
+}
+
+func validateRegistryRequest(ctx context.Context, req apiv0.ServerJSON, cfg *config.Config, preflight writePreflight) error {
 	remoteCtx, cancelRemote := context.WithCancel(ctx)
 	defer cancelRemote()
 
 	remoteResult := make(chan error, 1)
 	go func() {
-		remoteResult <- validateRemoteURLs(remoteCtx, req, cfg.AllowPrivateRemoteURLs)
+		remoteResult <- validateRemoteURLs(remoteCtx, req, cfg.AllowPrivateRemoteURLs, preflight.remoteTargets)
 	}()
 
-	pkgErr := validateRegistryPackages(ctx, req, cfg, ownershipIndices)
+	pkgErr := validateRegistryPackages(ctx, req, cfg, preflight.ownershipIndices)
 	if pkgErr != nil {
 		cancelRemote()
 		<-remoteResult

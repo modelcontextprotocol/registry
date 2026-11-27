@@ -39,8 +39,7 @@ func TestPreparedListingActivationAndRollback(t *testing.T) {
 		hc := huma.DefaultConfig("test", "1")
 		hc.CreateHooks = []func(huma.Config) huma.Config{}
 		api := humago.New(mux, hc)
-		router.RegisterV0Routes(api, cfg, svc, nil, nil)
-		router.RegisterV0_1Routes(api, cfg, svc, nil, nil)
+		router.RegisterRoutes(api, cfg, svc, nil, nil)
 		for _, path := range []string{"/v0/servers", "/v0.1/servers"} {
 			w := httptest.NewRecorder()
 			mux.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))

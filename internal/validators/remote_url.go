@@ -656,19 +656,42 @@ type remoteHostLookupTarget struct {
 	host   string
 }
 
-// validateRemoteURLs performs publish/update-time validation on req.Remotes.
-// When allowPrivate is false, concrete remote hostnames (including static
-// prefixes before path variables and concrete variable substitutions) are
-// resolved with a trailing root dot under bounded concurrency, a cap on unique
-// hostnames, and an overall deadline.
-func validateRemoteURLs(ctx context.Context, req apiv0.ServerJSON, allowPrivate bool) error {
-	if len(req.Remotes) == 0 {
-		return nil
+// collectRemoteDNSLookupTargets gathers unique concrete remote DNS hostnames in
+// submission order without performing network I/O, returning the offending remote
+// index if maxRemoteHostLookupsPerRequest is exceeded.
+func collectRemoteDNSLookupTargets(remotes []model.Transport, allowPrivate bool) ([]remoteHostLookupTarget, int, error) {
+	if allowPrivate || len(remotes) == 0 {
+		return nil, -1, nil
 	}
 
-	seenHosts := make(map[string]struct{}, len(req.Remotes))
+	seenHosts := make(map[string]struct{}, len(remotes))
 	var targets []remoteHostLookupTarget
 
+	for i := range remotes {
+		remote := &remotes[i]
+		if remote.URL == "" || !validateRemoteTransportURL(remote, false) {
+			continue
+		}
+		for _, host := range collectConcreteRemoteDNSLookupHosts(remote) {
+			if _, exists := seenHosts[host]; exists {
+				continue
+			}
+			if len(targets) == maxRemoteHostLookupsPerRequest {
+				return nil, i, fmt.Errorf("%w: server specifies more than %d unique remote hostnames",
+					ErrInvalidRemoteURL, maxRemoteHostLookupsPerRequest)
+			}
+			seenHosts[host] = struct{}{}
+			targets = append(targets, remoteHostLookupTarget{rawURL: remote.URL, host: host})
+		}
+	}
+
+	return targets, -1, nil
+}
+
+// validateRemoteURLs performs write-time validation on req.Remotes.
+// When allowPrivate is false, pre-collected concrete remote hostnames are
+// resolved with a trailing root dot under bounded concurrency and an overall deadline.
+func validateRemoteURLs(ctx context.Context, req apiv0.ServerJSON, allowPrivate bool, targets []remoteHostLookupTarget) error {
 	for i := range req.Remotes {
 		remote := &req.Remotes[i]
 		if remote.URL == "" {
@@ -677,24 +700,10 @@ func validateRemoteURLs(ctx context.Context, req apiv0.ServerJSON, allowPrivate 
 		if !validateRemoteTransportURL(remote, allowPrivate) {
 			return fmt.Errorf("remote %d (%s): %w", i, remote.URL, ErrInvalidRemoteURL)
 		}
-		if allowPrivate {
-			continue
-		}
-		for _, host := range collectConcreteRemoteDNSLookupHosts(remote) {
-			if _, exists := seenHosts[host]; exists {
-				continue
-			}
-			seenHosts[host] = struct{}{}
-			targets = append(targets, remoteHostLookupTarget{rawURL: remote.URL, host: host})
-		}
 	}
 
-	if len(targets) == 0 {
+	if allowPrivate || len(targets) == 0 {
 		return nil
-	}
-	if len(targets) > maxRemoteHostLookupsPerRequest {
-		return fmt.Errorf("%w: server specifies more than %d unique remote hostnames",
-			ErrInvalidRemoteURL, maxRemoteHostLookupsPerRequest)
 	}
 
 	return resolveRemoteHostTargets(ctx, targets)

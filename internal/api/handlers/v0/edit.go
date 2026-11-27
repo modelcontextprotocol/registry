@@ -95,7 +95,7 @@ func RegisterEditEndpoints(api huma.API, pathPrefix string, registry service.Reg
 		}
 
 		// Validate server JSON structure and schema (returns 422 on validation failure)
-		opts := validators.ValidationSchemaVersionAndSemantic.WithAllowPrivateRemoteURLs(cfg != nil && cfg.AllowPrivateRemoteURLs)
+		opts := validators.ValidationSchemaVersionAndSemantic.WithConfig(cfg)
 		validationResult := validators.ValidateServerJSON(&input.Body, opts)
 		if !validationResult.Valid {
 			return nil, huma.Error422UnprocessableEntity("Failed to edit server, invalid schema: call /validate for details")

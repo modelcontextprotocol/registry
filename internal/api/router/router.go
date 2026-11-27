@@ -224,8 +224,7 @@ func NewHumaAPI(cfg *config.Config, registry service.RegistryService, mux *http.
 	))
 
 	// Register routes for all API versions
-	RegisterV0Routes(api, cfg, registry, metrics, versionInfo)
-	RegisterV0_1Routes(api, cfg, registry, metrics, versionInfo)
+	RegisterRoutes(api, cfg, registry, metrics, versionInfo)
 
 	// Add /metrics for Prometheus metrics using promhttp
 	mux.Handle("/metrics", metrics.PrometheusHandler())

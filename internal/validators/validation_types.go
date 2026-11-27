@@ -1,6 +1,10 @@
 package validators
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/modelcontextprotocol/registry/internal/config"
+)
 
 // Validation issue type with constrained values
 type ValidationIssueType string
@@ -36,17 +40,28 @@ const (
 // ValidationOptions configures which types of validation to perform
 // ValidateSchema implies ValidateSchemaVersion (the flag is ignored if ValidateSchema is true)
 type ValidationOptions struct {
-	ValidateSchemaVersion  bool                // Check schema version (empty, non-current). Ignored if ValidateSchema is true.
-	ValidateSchema         bool                // Perform full schema validation (implies ValidateSchemaVersion)
-	ValidateSemantic       bool                // Perform semantic validation
-	ValidateSubmissionSize bool                // Apply the registry write limits to the decoded server record
-	NonCurrentSchemaPolicy SchemaVersionPolicy // Policy for non-current schemas (only used when schema validation is performed)
-	AllowPrivateRemoteURLs bool                // Allow loopback, private, link-local, single-label, and internal-TLD remote URLs (for self-hosted registries)
+	ValidateSchemaVersion    bool                // Check schema version (empty, non-current). Ignored if ValidateSchema is true.
+	ValidateSchema           bool                // Perform full schema validation (implies ValidateSchemaVersion)
+	ValidateSemantic         bool                // Perform semantic validation
+	ValidateSubmissionLimits bool                // Apply local write limits (sizes, and registry preflight budgets when EnableRegistryValidation is set)
+	EnableRegistryValidation bool                // Apply local preflight budgets for outbound registry and DNS checks
+	NonCurrentSchemaPolicy   SchemaVersionPolicy // Policy for non-current schemas (only used when schema validation is performed)
+	AllowPrivateRemoteURLs   bool                // Allow loopback, private, link-local, single-label, and internal-TLD remote URLs (for self-hosted registries)
 }
 
 // WithAllowPrivateRemoteURLs returns a copy of opts with AllowPrivateRemoteURLs set to allow.
 func (opts ValidationOptions) WithAllowPrivateRemoteURLs(allow bool) ValidationOptions {
 	opts.AllowPrivateRemoteURLs = allow
+	return opts
+}
+
+// WithConfig returns a copy of opts with config-driven validation settings applied.
+func (opts ValidationOptions) WithConfig(cfg *config.Config) ValidationOptions {
+	if cfg == nil {
+		return opts
+	}
+	opts.AllowPrivateRemoteURLs = cfg.AllowPrivateRemoteURLs
+	opts.EnableRegistryValidation = cfg.EnableRegistryValidation
 	return opts
 }
 
@@ -70,12 +85,12 @@ var (
 		NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
 	}
 
-	// ValidationAll performs schema, semantic and submission size validation
+	// ValidationAll performs schema, semantic and local submission-limit validation
 	ValidationAll = ValidationOptions{
-		ValidateSchema:         true, // Implies ValidateSchemaVersion
-		ValidateSubmissionSize: true,
-		ValidateSemantic:       true,
-		NonCurrentSchemaPolicy: SchemaVersionPolicyWarn,
+		ValidateSchema:           true, // Implies ValidateSchemaVersion
+		ValidateSubmissionLimits: true,
+		ValidateSemantic:         true,
+		NonCurrentSchemaPolicy:   SchemaVersionPolicyWarn,
 	}
 )
 
@@ -86,6 +101,7 @@ type ValidationIssue struct {
 	Message   string                  `json:"message"` // Error description (extracted from error.Error())
 	Severity  ValidationIssueSeverity `json:"severity"`
 	Reference string                  `json:"reference"` // Reference to validation trigger (schema rule path, named rule, etc.)
+	err       error
 }
 
 // ValidationResult contains the results of validation
@@ -118,6 +134,7 @@ func NewValidationIssueFromError(issueType ValidationIssueType, path string, err
 		Message:   err.Error(),                  // Extract string from error
 		Severity:  ValidationIssueSeverityError, // Errors are always severity "error"
 		Reference: reference,
+		err:       err,
 	}
 }
 
@@ -145,6 +162,9 @@ func (vr *ValidationResult) FirstError() error {
 	}
 	for _, issue := range vr.Issues {
 		if issue.Severity == ValidationIssueSeverityError {
+			if issue.err != nil {
+				return issue.err
+			}
 			return fmt.Errorf("%s", issue.Message)
 		}
 	}
