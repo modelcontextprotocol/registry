@@ -444,6 +444,7 @@ func TestGitHubOIDCValidator_DuplicateKidFirstEntryWins(t *testing.T) {
 }
 
 func TestGitHubOIDCValidator_NoUsableKeysIsAFailedFetch(t *testing.T) {
+	realN := newTestSigningKey(t, "n-source").jwk().N
 	emptyDocs := map[string][]JWK{
 		"null keys":  nil,
 		"empty keys": {},
@@ -451,6 +452,12 @@ func TestGitHubOIDCValidator_NoUsableKeysIsAFailedFetch(t *testing.T) {
 			{KTY: "EC", KID: "ec-key", Use: "sig"},
 			{KTY: "RSA", KID: "bad-n", N: "!!not-base64!!", E: "AQAB"},
 		},
+		"only key missing n":   {{KTY: "RSA", KID: "no-n", E: "AQAB"}},
+		"only key missing e":   {{KTY: "RSA", KID: "no-e", N: realN}},
+		"only key with tiny n": {{KTY: "RSA", KID: "tiny-n", N: "Aw", E: "AQAB"}},
+		"only key with even e": {{KTY: "RSA", KID: "even-e", N: realN, E: "Ag"}},
+		// 2^64 + 65537, which would truncate to 65537 in an int.
+		"only key with oversized e": {{KTY: "RSA", KID: "big-e", N: realN, E: "AQAAAAAAAQAB"}},
 	}
 
 	for name, doc := range emptyDocs {

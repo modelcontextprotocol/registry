@@ -320,6 +320,16 @@ func (v *GitHubOIDCValidator) parseRSAPublicKey(jwk JWK) (*rsa.PublicKey, error)
 	n := new(big.Int).SetBytes(nBytes)
 	e := new(big.Int).SetBytes(eBytes)
 
+	// Reject keys that rsa.VerifyPKCS1v15 would refuse, so a missing or
+	// broken n or e cannot be cached in place of keys that still work.
+	// The 31-bit limit also keeps the int conversion below from truncating.
+	if n.BitLen() < 1024 || n.Bit(0) == 0 {
+		return nil, fmt.Errorf("invalid modulus")
+	}
+	if e.BitLen() > 31 || e.Int64() < 3 || e.Bit(0) == 0 {
+		return nil, fmt.Errorf("invalid exponent")
+	}
+
 	return &rsa.PublicKey{
 		N: n,
 		E: int(e.Int64()),
