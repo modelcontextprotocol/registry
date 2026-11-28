@@ -18,3 +18,10 @@ var (
 	ValidatePyPIPackage = validatePyPIPackage
 	ValidateNPMPackage  = validateNPMPackage
 )
+
+// ValidateRubyGemsPackage exposes the package-private validateRubyGemsPackage to
+// the external _test package so httptest-driven tests can exercise the metadata
+// fetch and status-disambiguation pipeline (missing gem vs missing/unpropagated
+// version vs transient upstream) against a mock server, bypassing the
+// exact-baseURL guard that the public ValidateRubyGems enforces.
+var ValidateRubyGemsPackage = validateRubyGemsPackage
