@@ -60,8 +60,9 @@ func ValidatePyPI(ctx context.Context, pkg model.Package, serverName string) err
 func validatePyPIPackage(ctx context.Context, pkg model.Package, serverName string) error {
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// PathEscape so an identifier that smuggles "/" or ".." cannot redirect
-	// the metadata fetch to a different package than the one being claimed.
+	// PathEscape encodes "/" so the identifier or version cannot add path
+	// segments. It leaves a bare "." or ".." as is; on publish and edit,
+	// validatePackageField rejects those before this runs.
 	fetchURL := fmt.Sprintf("%s/pypi/%s/%s/json",
 		pkg.RegistryBaseURL,
 		url.PathEscape(pkg.Identifier),

@@ -2175,6 +2175,59 @@ func createValidServerWithPackageArgument(arg model.Argument) apiv0.ServerJSON {
 	return server
 }
 
+func TestValidate_PackageDotSegments(t *testing.T) {
+	tests := []struct {
+		name       string
+		identifier string
+		version    string
+		errorPath  string // empty means the package is valid
+	}{
+		{"identifier is dot", ".", "1.0.0", "packages[0].identifier"},
+		{"identifier is dot-dot", "..", "1.0.0", "packages[0].identifier"},
+		{"version is dot", "test-package", ".", "packages[0].version"},
+		{"version is dot-dot", "test-package", "..", "packages[0].version"},
+		{"version is dot-dot with build metadata", "test-package", "..+build", "packages[0].version"},
+		{"version is dot with build metadata", "test-package", ".+x", "packages[0].version"},
+		{"identifier is three dots", "...", "1.0.0", ""},
+		{"identifier with leading dot", ".pkg", "1.0.0", ""},
+		{"identifier with dots", "a.b", "1.0.0", ""},
+		{"scoped identifier", "@scope/pkg", "1.0.0", ""},
+		{"prerelease version", "test-package", "1.2.3-rc.1", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := apiv0.ServerJSON{
+				Schema:      model.CurrentSchemaURL,
+				Name:        "com.example/test-server",
+				Description: "A test server",
+				Version:     "1.0.0",
+				Packages: []model.Package{
+					{
+						Identifier:      tt.identifier,
+						RegistryType:    model.RegistryTypeNPM,
+						RegistryBaseURL: model.RegistryURLNPM,
+						Version:         tt.version,
+						Transport: model.Transport{
+							Type: "stdio",
+						},
+					},
+				},
+			}
+
+			result := validators.ValidateServerJSON(&server, validators.ValidationSchemaVersionAndSemantic)
+			if tt.errorPath == "" {
+				assert.NoError(t, result.FirstError())
+				return
+			}
+			require.Len(t, result.Issues, 1)
+			assert.Equal(t, tt.errorPath, result.Issues[0].Path)
+			assert.Equal(t, "package-field-is-dot-segment", result.Issues[0].Reference)
+			assert.Contains(t, result.Issues[0].Message, validators.ErrPackageDotSegment.Error())
+		})
+	}
+}
+
 func TestValidateTitle(t *testing.T) {
 	tests := []struct {
 		name          string

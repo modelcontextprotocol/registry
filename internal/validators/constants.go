@@ -12,6 +12,7 @@ var (
 	ErrPackageNameHasSpaces  = errors.New("package name cannot contain spaces")
 	ErrReservedVersionString = errors.New("version string 'latest' is reserved and cannot be used")
 	ErrVersionLooksLikeRange = errors.New("version must be a specific version, not a range")
+	ErrPackageDotSegment     = errors.New("package identifier and version cannot be '.' or '..'")
 
 	// Transport validation errors
 	ErrInvalidPackageTransportURL = errors.New("invalid package transport URL")

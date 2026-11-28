@@ -216,8 +216,10 @@ func validateReadme(ctx context.Context, serverName, lowerID, lowerVersion strin
 	}
 
 	// Replace placeholders in the template. PathEscape both the id and version
-	// so a publisher cannot smuggle "/" / ".." through the template into a
-	// fetch against an unrelated package's README.
+	// so a publisher cannot add path segments with "/". A bare "." or ".." is
+	// left as is; on publish and edit, validatePackageField rejects those,
+	// including a version that is only "." or ".." once build metadata is
+	// dropped, before this runs.
 	readmeURL := strings.ReplaceAll(readmeURLTemplate, "{lower_id}", url.PathEscape(lowerID))
 	readmeURL = strings.ReplaceAll(readmeURL, "{lower_version}", url.PathEscape(lowerVersion))
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, readmeURL, nil)
@@ -278,8 +280,9 @@ func validatePackageExists(ctx context.Context, lowerID, lowerVersion string, cl
 	}
 
 	// Fetch the package content index to check if package ID and version exist.
-	// PathEscape so an identifier that smuggles "/" or ".." cannot redirect
-	// the metadata fetch to a different package than the one being claimed.
+	// PathEscape encodes "/" so the identifier cannot add path segments. It
+	// leaves a bare "." or ".." as is; on publish and edit,
+	// validatePackageField rejects those before this runs.
 	indexURL := fmt.Sprintf("%s/%s/index.json", strings.TrimRight(packageBaseURL, "/"), url.PathEscape(lowerID))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, indexURL, nil)

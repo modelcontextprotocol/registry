@@ -346,6 +346,31 @@ func validatePackageField(ctx *ValidationContext, obj *model.Package) *Validatio
 	versionResult := validateVersion(ctx.Field("version"), obj.Version)
 	result.Merge(versionResult)
 
+	// The npm, PyPI, NuGet and cargo validators put the identifier and version
+	// into request paths with url.PathEscape, which leaves "." alone, so a bare
+	// "." or ".." would stay a dot segment in the URL.
+	if obj.Identifier == "." || obj.Identifier == ".." {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("identifier").String(),
+			ErrPackageDotSegment,
+			"package-field-is-dot-segment",
+		)
+		result.AddIssue(issue)
+	}
+
+	// NuGet drops build metadata ("+...") from the version before building
+	// its URLs, so check what is left of the version after that.
+	if version, _, _ := strings.Cut(obj.Version, "+"); version == "." || version == ".." {
+		issue := NewValidationIssueFromError(
+			ValidationIssueTypeSemantic,
+			ctx.Field("version").String(),
+			ErrPackageDotSegment,
+			"package-field-is-dot-segment",
+		)
+		result.AddIssue(issue)
+	}
+
 	// Validate runtime arguments
 	for i, arg := range obj.RuntimeArguments {
 		argResult := validateArgument(ctx.Field("runtimeArguments").Index(i), &arg)
