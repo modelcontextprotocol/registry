@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -183,6 +184,14 @@ func probeNPMPackage(ctx context.Context, client *http.Client, baseURL, identifi
 
 	switch {
 	case resp.StatusCode == http.StatusOK:
+		// A 200 from the package-level endpoint does not prove the package is
+		// live: npm keeps a tombstone for an unpublished unscoped package and
+		// answers 200 with `time.unpublished` set and an empty `versions` map.
+		// Reporting "package exists, version missing" for those sends the
+		// publisher looking for a version that can never be published again.
+		if npmPackageIsTombstoned(ctx, client, baseURL, identifier) {
+			return npmPackageMissing
+		}
 		return npmPackageExists
 	case resp.StatusCode == http.StatusNotFound:
 		return npmPackageMissing
@@ -191,4 +200,61 @@ func probeNPMPackage(ctx context.Context, client *http.Client, baseURL, identifi
 	default:
 		return npmPackageUnknown
 	}
+}
+
+// npmPackument is the subset of the packument needed to tell a live package from
+// an unpublished tombstone. The abbreviated packument (Accept:
+// application/vnd.npm.install-v1+json) omits `time`, so this must be a full GET.
+type npmPackument struct {
+	Versions map[string]json.RawMessage `json:"versions"`
+	// npm records an unpublish as an OBJECT, not a timestamp string:
+	//   "time": {"unpublished": {"time": "...", "versions": ["0.1.0", "0.1.1"]}}
+	// Decoding that into a string silently fails and the tombstone goes
+	// undetected, so the shape is modelled exactly.
+	Time struct {
+		Unpublished *struct {
+			Time     string   `json:"time"`
+			Versions []string `json:"versions"`
+		} `json:"unpublished"`
+	} `json:"time"`
+}
+
+// npmPackageIsTombstoned reports whether the package-level endpoint is serving an
+// unpublished tombstone rather than a live package. It is only called after the
+// version-specific request 404s, so the extra full-packument GET is paid on the
+// error path only. Any inconclusive result returns false, which keeps the
+// existing, conservative "package exists" classification.
+func npmPackageIsTombstoned(ctx context.Context, client *http.Client, baseURL, identifier string) bool {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+"/"+url.PathEscape(identifier), nil)
+	if err != nil {
+		return false
+	}
+	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+
+	// Bound the read: the full packument for a package with many versions is
+	// tens of MB, and a bogus version on an existing package should not cost
+	// that much to learn one boolean. 1 MiB is the same cap confirmMissingPackage
+	// uses in internal/malware/existence.go. A packument larger than the cap
+	// fails to decode, which returns false - the same conservative "package
+	// exists" answer as any other inconclusive result.
+	var doc npmPackument
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&doc); err != nil {
+		return false
+	}
+
+	return doc.Time.Unpublished != nil || len(doc.Versions) == 0
 }
