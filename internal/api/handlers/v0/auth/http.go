@@ -328,7 +328,23 @@ func (f *DefaultHTTPKeyFetcher) fetchKeyOnce(ctx context.Context, domain string)
 		return "", false, fmt.Errorf("HTTP auth key response too large")
 	}
 
-	return strings.TrimSpace(string(body)), false, nil
+	// A 200 with an empty body is not a key. Without this check, an endpoint or
+	// edge that answers 200 with zero bytes would be reported as a successful
+	// fetch of "", skipping the retry and surfacing later as the confusing
+	// "no valid MCP public key found" instead of what actually happened.
+	//
+	// This is the empty-body case only: a body cut off mid-read (including by
+	// the client timeout) already comes back as a read error from Do/ReadAll,
+	// not as an empty string, so it is not what this branch catches.
+	//
+	// Treated as transient: an empty response is usually a deploy or edge
+	// glitch, and the second attempt normally carries the key.
+	key := strings.TrimSpace(string(body))
+	if key == "" {
+		return "", true, fmt.Errorf("HTTP auth key response was empty")
+	}
+
+	return key, false, nil
 }
 
 func isRetryableHTTPFetchError(err error) bool {
