@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -399,12 +400,58 @@ func TestGitHubOIDCValidator_SkipsUnusableKeys(t *testing.T) {
 	v := newTestValidator(srv, newFakeClock())
 
 	require.NoError(t, validate(v, good.token(t)))
-	for _, k := range []testSigningKey{ecKid, badN, noKid} {
+	// A token with an empty kid is refused before the key lookup; see
+	// TestGitHubOIDCValidator_EmptyKidDoesNotFetch.
+	for _, k := range []testSigningKey{ecKid, badN} {
 		err := validate(v, k.token(t))
 		require.Error(t, err, "kid %q", k.kid)
 		assert.Contains(t, err.Error(), "not found", "kid %q", k.kid)
 	}
 	assert.Equal(t, int64(1), srv.fetches.Load())
+}
+
+func TestGitHubOIDCValidator_EmptyKidDoesNotFetch(t *testing.T) {
+	key := newTestSigningKey(t, "key-1")
+	noKid := newTestSigningKey(t, "")
+	rotated := newTestSigningKey(t, "key-2")
+	srv := newJWKSServer(t, key)
+	clock := newFakeClock()
+	v := newTestValidator(srv, clock)
+
+	require.NoError(t, validate(v, key.token(t)))
+	clock.Advance(githubJWKSMinRefreshInterval)
+
+	err := validate(v, noKid.token(t))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "missing kid")
+	assert.Equal(t, int64(1), srv.fetches.Load())
+
+	// The refresh window is still open for a kid that is really new.
+	srv.setKeys(key, rotated)
+	require.NoError(t, validate(v, rotated.token(t)))
+	assert.Equal(t, int64(2), srv.fetches.Load())
+}
+
+func TestGitHubOIDCValidator_OversizedJWKSIsAFailedFetch(t *testing.T) {
+	key := newTestSigningKey(t, "key-1")
+	unknown := newTestSigningKey(t, "not-published")
+	srv := newJWKSServer(t, key)
+	clock := newFakeClock()
+	v := newTestValidator(srv, clock)
+
+	require.NoError(t, validate(v, key.token(t)))
+	// A valid document, just over the size limit.
+	srv.setRawKeys([]JWK{key.jwk(), {KTY: "RSA", KID: "padding", Use: strings.Repeat("x", githubJWKSMaxBodySize)}})
+	clock.Advance(githubJWKSMinRefreshInterval)
+
+	err := validate(v, unknown.token(t))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to decode JWKS")
+	assert.Equal(t, int64(2), srv.fetches.Load())
+
+	// The cached key is kept.
+	require.NoError(t, validate(v, key.token(t)))
+	assert.Equal(t, int64(2), srv.fetches.Load())
 }
 
 func TestGitHubOIDCValidator_DuplicateKidFirstEntryWins(t *testing.T) {

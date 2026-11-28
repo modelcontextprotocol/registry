@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"strings"
@@ -89,6 +90,10 @@ const githubJWKSMinRefreshInterval = 30 * time.Second
 // githubJWKSFetchTimeout bounds a single JWKS fetch.
 const githubJWKSFetchTimeout = 10 * time.Second
 
+// githubJWKSMaxBodySize bounds how much of a JWKS response is read. GitHub's
+// document is a few KiB; a larger one fails to decode and the fetch fails.
+const githubJWKSMaxBodySize = 1 << 20
+
 // NewGitHubOIDCValidator creates a new GitHub OIDC validator
 func NewGitHubOIDCValidator() *GitHubOIDCValidator {
 	return newGitHubOIDCValidator(
@@ -120,7 +125,7 @@ func (v *GitHubOIDCValidator) ValidateToken(ctx context.Context, tokenString str
 		func(token *jwt.Token) (any, error) {
 			// Get key ID from header
 			kid, ok := token.Header["kid"].(string)
-			if !ok {
+			if !ok || kid == "" {
 				return nil, fmt.Errorf("missing kid in token header")
 			}
 
@@ -192,7 +197,7 @@ func (v *GitHubOIDCValidator) fetchJWKS(ctx context.Context) (*JWKS, error) {
 	}
 
 	var jwks JWKS
-	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, githubJWKSMaxBodySize)).Decode(&jwks); err != nil {
 		return nil, fmt.Errorf("failed to decode JWKS: %w", err)
 	}
 
