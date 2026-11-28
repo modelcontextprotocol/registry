@@ -6,9 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -49,25 +52,67 @@ type OIDCValidator interface {
 	ValidateToken(ctx context.Context, token string, audience string) (*GitHubOIDCClaims, error)
 }
 
-// GitHubOIDCValidator validates GitHub OIDC tokens
+// GitHubOIDCValidator validates GitHub OIDC tokens. It caches GitHub's
+// signing keys, so it is safe for concurrent use and should be shared.
 type GitHubOIDCValidator struct {
 	jwksURL string
 	issuer  string
+	client  *http.Client
+	now     func() time.Time
+
+	mu        sync.Mutex
+	keys      map[string]*rsa.PublicKey
+	expiresAt time.Time
+	// lastFetch is when the last fetch started, successful or not.
+	lastFetch time.Time
+	inflight  *jwksFetch
 }
+
+// jwksFetch is a JWKS fetch in progress. Callers that need the result wait
+// for done; err is set before done is closed.
+type jwksFetch struct {
+	done chan struct{}
+	err  error
+}
+
+// githubJWKSCacheTTL is how long fetched keys are trusted. It matches the
+// "Cache-Control: max-age=3600" GitHub sends with the JWKS document. After it
+// passes the keys are not used until a fetch succeeds, so a long GitHub outage
+// fails closed rather than serving old keys forever.
+const githubJWKSCacheTTL = time.Hour
+
+// githubJWKSMinRefreshInterval is the minimum gap between fetch attempts. The
+// fetch happens before the token's signature is checked, so without this
+// limit any token with an unknown kid would cost one request to GitHub. It
+// also bounds the delay before a newly rotated key is picked up.
+const githubJWKSMinRefreshInterval = 30 * time.Second
+
+// githubJWKSFetchTimeout bounds a single JWKS fetch.
+const githubJWKSFetchTimeout = 10 * time.Second
+
+// githubJWKSMaxBodySize bounds how much of a JWKS response is read. GitHub's
+// document is a few KiB; a larger one fails to decode and the fetch fails.
+const githubJWKSMaxBodySize = 1 << 20
 
 // NewGitHubOIDCValidator creates a new GitHub OIDC validator
 func NewGitHubOIDCValidator() *GitHubOIDCValidator {
-	return &GitHubOIDCValidator{
-		jwksURL: "https://token.actions.githubusercontent.com/.well-known/jwks",
-		issuer:  "https://token.actions.githubusercontent.com",
-	}
+	return newGitHubOIDCValidator(
+		"https://token.actions.githubusercontent.com/.well-known/jwks",
+		"https://token.actions.githubusercontent.com",
+	)
 }
 
 // NewMockOIDCValidator creates a mock validator for testing
 func NewMockOIDCValidator(jwksURL, issuer string) *GitHubOIDCValidator {
+	return newGitHubOIDCValidator(jwksURL, issuer)
+}
+
+func newGitHubOIDCValidator(jwksURL, issuer string) *GitHubOIDCValidator {
 	return &GitHubOIDCValidator{
 		jwksURL: jwksURL,
 		issuer:  issuer,
+		client:  &http.Client{Timeout: githubJWKSFetchTimeout},
+		now:     time.Now,
 	}
 }
 
@@ -80,7 +125,7 @@ func (v *GitHubOIDCValidator) ValidateToken(ctx context.Context, tokenString str
 		func(token *jwt.Token) (any, error) {
 			// Get key ID from header
 			kid, ok := token.Header["kid"].(string)
-			if !ok {
+			if !ok || kid == "" {
 				return nil, fmt.Errorf("missing kid in token header")
 			}
 
@@ -141,7 +186,7 @@ func (v *GitHubOIDCValidator) fetchJWKS(ctx context.Context) (*JWKS, error) {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := v.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch JWKS: %w", err)
 	}
@@ -152,27 +197,110 @@ func (v *GitHubOIDCValidator) fetchJWKS(ctx context.Context) (*JWKS, error) {
 	}
 
 	var jwks JWKS
-	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, githubJWKSMaxBodySize)).Decode(&jwks); err != nil {
 		return nil, fmt.Errorf("failed to decode JWKS: %w", err)
 	}
 
 	return &jwks, nil
 }
 
-// getPublicKey extracts the RSA public key for the given key ID
+// getPublicKey returns the RSA public key for the given key ID. Keys come from
+// the cache while it is fresh. An unknown kid or an expired cache starts a
+// fetch, at most once per githubJWKSMinRefreshInterval; concurrent callers
+// share the fetch in progress.
 func (v *GitHubOIDCValidator) getPublicKey(ctx context.Context, kid string) (*rsa.PublicKey, error) {
-	// Fetch JWKS from GitHub
-	jwks, err := v.fetchJWKS(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch JWKS: %w", err)
+	v.mu.Lock()
+	now := v.now()
+	fresh := now.Before(v.expiresAt)
+	if key, ok := v.keys[kid]; ok && fresh {
+		v.mu.Unlock()
+		return key, nil
 	}
 
-	for _, key := range jwks.Keys {
-		if key.KID == kid {
-			return v.parseRSAPublicKey(key)
+	call := v.inflight
+	if call == nil {
+		if !v.lastFetch.IsZero() && now.Sub(v.lastFetch) < githubJWKSMinRefreshInterval {
+			v.mu.Unlock()
+			if fresh {
+				return nil, fmt.Errorf("key with ID %s not found", kid)
+			}
+			return nil, fmt.Errorf("JWKS unavailable: last fetch failed less than %s ago", githubJWKSMinRefreshInterval)
 		}
+		v.lastFetch = now
+		call = &jwksFetch{done: make(chan struct{})}
+		v.inflight = call
+		// The fetch must not be cut short by this caller hanging up, or a
+		// client could cancel every fetch and keep the cache empty while the
+		// refresh limit blocks everyone else. It runs detached, bounded by
+		// its own timeout, and this caller stops waiting if ctx ends.
+		fetchCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), githubJWKSFetchTimeout)
+		go func() {
+			defer cancel()
+			v.refreshKeys(fetchCtx, call)
+		}()
+	}
+	v.mu.Unlock()
+
+	select {
+	case <-call.done:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	if call.err != nil {
+		return nil, fmt.Errorf("failed to fetch JWKS: %w", call.err)
+	}
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	if key, ok := v.keys[kid]; ok && v.now().Before(v.expiresAt) {
+		return key, nil
 	}
 	return nil, fmt.Errorf("key with ID %s not found", kid)
+}
+
+// refreshKeys fetches the JWKS and, on success, replaces the cached keys. On
+// failure the cached keys are kept and stay usable until they expire.
+func (v *GitHubOIDCValidator) refreshKeys(ctx context.Context, call *jwksFetch) {
+	var keys map[string]*rsa.PublicKey
+	jwks, err := v.fetchJWKS(ctx)
+	if err == nil {
+		keys = v.usableKeys(jwks)
+		if len(keys) == 0 {
+			// Don't let an empty or broken document evict good keys.
+			err = fmt.Errorf("JWKS contains no usable RSA keys")
+		}
+	}
+
+	v.mu.Lock()
+	if err == nil {
+		v.keys = keys
+		v.expiresAt = v.now().Add(githubJWKSCacheTTL)
+	}
+	call.err = err
+	v.inflight = nil
+	v.mu.Unlock()
+	close(call.done)
+}
+
+// usableKeys returns the RSA keys in jwks by kid. Only the first entry for a
+// kid counts, as it did before keys were cached: if that entry is not a
+// usable RSA key, the kid is left out even when a later entry would parse.
+// Entries without a kid are skipped.
+func (v *GitHubOIDCValidator) usableKeys(jwks *JWKS) map[string]*rsa.PublicKey {
+	keys := make(map[string]*rsa.PublicKey, len(jwks.Keys))
+	seen := make(map[string]bool, len(jwks.Keys))
+	for _, jwk := range jwks.Keys {
+		if jwk.KID == "" || seen[jwk.KID] {
+			continue
+		}
+		seen[jwk.KID] = true
+		key, err := v.parseRSAPublicKey(jwk)
+		if err != nil {
+			continue
+		}
+		keys[jwk.KID] = key
+	}
+	return keys
 }
 
 // parseRSAPublicKey converts JWK to RSA public key
@@ -196,6 +324,16 @@ func (v *GitHubOIDCValidator) parseRSAPublicKey(jwk JWK) (*rsa.PublicKey, error)
 	// Convert to big integers
 	n := new(big.Int).SetBytes(nBytes)
 	e := new(big.Int).SetBytes(eBytes)
+
+	// Reject keys that rsa.VerifyPKCS1v15 would refuse, so a missing or
+	// broken n or e cannot be cached in place of keys that still work.
+	// The 31-bit limit also keeps the int conversion below from truncating.
+	if n.BitLen() < 1024 || n.Bit(0) == 0 {
+		return nil, fmt.Errorf("invalid modulus")
+	}
+	if e.BitLen() > 31 || e.Int64() < 3 || e.Bit(0) == 0 {
+		return nil, fmt.Errorf("invalid exponent")
+	}
 
 	return &rsa.PublicKey{
 		N: n,
