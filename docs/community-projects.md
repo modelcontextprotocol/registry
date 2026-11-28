@@ -12,6 +12,7 @@ Browse the official MCP Registry in your browser!
 - [MCP Registry Database](https://lite.datasette.io/?url=https%3A%2F%2Fraw.githubusercontent.com%2Frosmur%2Fofficial-mcp-registry-database%2Fmain%2Fofficial_mcp_registry.db#/official_mcp_registry/servers)🔎 - A minimal, web browsable, live database of the official MCP Registry [source code](https://github.com/rosmur/official-mcp-registry-database).
 - [TeamSpark AI Server Registry](https://teamsparkai.github.io/ToolCatalog/registry)🔎 - Browse and discover servers from the official MCP Registry ([source code](https://github.com/TeamSparkAI/ToolCatalog)).
 - [MCP Registry UI](https://vemonet.github.io/mcp-registry)🔎 - A fully client‑side app to search, filter, configure, and install servers from MCP Registry APIs ([source code](https://github.com/vemonet/mcp-registry)).
+- [SourceWeft MCP Directory](https://sourceweft.com/mcp)🔎 - Browse and search servers federated from the official MCP Registry, with tools, auth and runtime details and connect guides ([source code](https://github.com/SourceWeft/SourceWeft)).
 
 ### MCP Registry Clients
 
