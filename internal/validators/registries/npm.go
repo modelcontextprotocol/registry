@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -235,8 +236,14 @@ func npmPackageIsTombstoned(ctx context.Context, client *http.Client, baseURL, i
 		return false
 	}
 
+	// Bound the read: the full packument for a package with many versions is
+	// tens of MB, and a bogus version on an existing package should not cost
+	// that much to learn one boolean. 1 MiB is the same cap confirmMissingPackage
+	// uses in internal/malware/existence.go. A packument larger than the cap
+	// fails to decode, which returns false - the same conservative "package
+	// exists" answer as any other inconclusive result.
 	var doc npmPackument
-	if err := json.NewDecoder(resp.Body).Decode(&doc); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&doc); err != nil {
 		return false
 	}
 
